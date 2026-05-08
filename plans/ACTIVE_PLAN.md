@@ -208,7 +208,37 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 185,
       "id": "SRDINV16",
+      "status": "done",
+      "title": "Recursive SRD Inventory Planning Review"
+    },
+    {
+      "number": 186,
+      "id": "SRDINV17",
       "status": "ready-for-research",
+      "title": "Close Character-Creation Class Container Evidence"
+    },
+    {
+      "number": 187,
+      "id": "SRDINV18",
+      "status": "blocked",
+      "title": "Close Character-Creation Class Feature Evidence"
+    },
+    {
+      "number": 188,
+      "id": "SRDINV19",
+      "status": "blocked",
+      "title": "Close Character-Creation Spell Access Evidence"
+    },
+    {
+      "number": 189,
+      "id": "SRDINV20",
+      "status": "blocked",
+      "title": "Close Character-Creation Weapon Mastery Evidence"
+    },
+    {
+      "number": 190,
+      "id": "SRDINV21",
+      "status": "blocked",
       "title": "Recursive SRD Inventory Planning Review"
     }
   ]
@@ -269,11 +299,16 @@ Keep it synchronized with the DAG table and task details.
 | 178   | SRDINV9 - Widen Non-Wizard Spell Access Surface Facts | done | SRDINV7 | SRDINV10, SRDINV11 | [SRDINV7 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes) | Completed Surface Spell Access widening for non-Wizard list-prepared casters, prepared half casters without level-1 cantrips, and the shared Warlock Pact Magic/Pact Slot source shape consumed by SRDINV10. |
 | 179   | SRDINV10 - Widen Level-1 Class Feature Surface Mechanics | done | SRDINV7, SRDINV9 | SRDINV11 | [SRDINV7 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes) | Completed Surface class-feature mechanics widening for the SRDINV3/SRDINV6 level-1 blockers without adding parallel Pact Magic source state. |
 | 180   | SRDINV11 - Recursive SRD Inventory Planning Review | done | SRDINV8-SRDINV10 | SRDINV12-SRDINV16 | [SRDINV11 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV11_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed recursive planning review: level-1 remains open with zero level-1 Surface-widening rows, so the next batch is expressible level-1 authoring plus SRDINV16 review. |
-| 181   | SRDINV12 - Author Expressible Level-1 Class Containers | done | SRDINV11 | SRDINV13-SRDINV16 | [SRDINV11 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV11_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Author Bard, Cleric, Druid, Monk, Paladin, Ranger, Rogue, and Sorcerer class container records from SRD source facts; do not create standalone records for class-owned creation rows. |
+| 181   | SRDINV12 - Author Expressible Level-1 Class Containers | done | SRDINV11 | SRDINV13-SRDINV16 | [SRDINV11 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV11_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed Bard, Cleric, Druid, Monk, Paladin, Ranger, Rogue, and Sorcerer class container records from SRD source facts without creating standalone records for class-owned creation rows. |
 | 182   | SRDINV13 - Author Expressible Level-1 Spell Access Records | done | SRDINV12 | SRDINV16 | [SRDINV11 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV11_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed Bard, Cleric, Druid, Paladin, Ranger, and Sorcerer level-1 Spellcasting access records with class-list preparation, slot, focus, and replacement source facts; individual Spell Definitions remain outside this authoring task. |
 | 183   | SRDINV14 - Author Expressible Level-1 Class Feature Records | done | SRDINV12 | SRDINV16 | [SRDINV11 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV11_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed Bardic Inspiration, Divine Order, Druidic, Primal Order, Martial Arts, Favored Enemy, Expertise, Thieves' Cant, Innate Sorcery, and Eldritch Invocations records using widened class-feature mechanics. |
-| 184   | SRDINV15 - Author Level-1 Weapon Mastery Records | done | SRDINV12 | SRDINV16 | [SRDINV11 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV11_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Author Barbarian, Paladin, Ranger, and Rogue Weapon Mastery records as character-sheet choice facts; do not implement mastery property runtime behavior. |
-| 185   | SRDINV16 - Recursive SRD Inventory Planning Review | ready-for-research | SRDINV12-SRDINV15 | none | [SRDINV11 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV11_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review SRDINV12-SRDINV15 authoring results, refresh inventory metrics, and append the next concrete multi-task batch unless level-1 is explicitly complete. |
+| 184   | SRDINV15 - Author Level-1 Weapon Mastery Records | done | SRDINV12 | SRDINV16 | [SRDINV11 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV11_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed Barbarian, Paladin, Ranger, and Rogue Weapon Mastery records as character-sheet choice facts; mastery property runtime behavior remains separate. |
+| 185   | SRDINV16 - Recursive SRD Inventory Planning Review | done | SRDINV12-SRDINV15 | SRDINV17-SRDINV21 | [SRDINV16 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed recursive planning review: level-1 remains open with 121 owner-evidence-required rows, so the next batch is character-creation owner-evidence closure plus SRDINV21 review. |
+| 186   | SRDINV17 - Close Character-Creation Class Container Evidence | ready-for-research | SRDINV16 | SRDINV18-SRDINV21 | [SRDINV16 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [character-creation owner evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/character-creation-owner-evidence.json), [character-creation runtime README](/workspace/typescript/dnd/packages/character-creation-runtime/README.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Close character-creation owner evidence for authored class containers, core traits, starting equipment, and multiclass-entry facts without creating standalone duplicate records. |
+| 187   | SRDINV18 - Close Character-Creation Class Feature Evidence | blocked | SRDINV17 | SRDINV21 | [SRDINV16 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [character-creation owner evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/character-creation-owner-evidence.json), [character-creation runtime README](/workspace/typescript/dnd/packages/character-creation-runtime/README.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Close character-creation owner evidence for authored level-1 class feature records that are retained on CharacterBuilds or discovered as choices. |
+| 188   | SRDINV19 - Close Character-Creation Spell Access Evidence | blocked | SRDINV17 | SRDINV21 | [SRDINV16 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [character-creation owner evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/character-creation-owner-evidence.json), [character-creation runtime README](/workspace/typescript/dnd/packages/character-creation-runtime/README.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Close character-creation owner evidence for non-Wizard level-1 Spell Access records without admitting individual Spell Definitions as runtime-supported. |
+| 189   | SRDINV20 - Close Character-Creation Weapon Mastery Evidence | blocked | SRDINV17 | SRDINV21 | [SRDINV16 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [character-creation owner evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/character-creation-owner-evidence.json), [character-creation runtime README](/workspace/typescript/dnd/packages/character-creation-runtime/README.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Close character-creation owner evidence for Barbarian, Paladin, Ranger, and Rogue Weapon Mastery choices while leaving mastery property execution separate. |
+| 190   | SRDINV21 - Recursive SRD Inventory Planning Review | blocked | SRDINV17-SRDINV20 | none | [SRDINV16 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review SRDINV17-SRDINV20 owner-evidence closure, refresh inventory metrics, and append the next concrete batch unless level-1 inventory is explicitly complete. |
 
 ## Task Details
 
@@ -1313,14 +1348,14 @@ production code or content changes; `/simplify` convergence.
 
 ### Task 185 - SRDINV16 - Recursive SRD Inventory Planning Review
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV12-SRDINV15
 
-Blocks: none
+Blocks: SRDINV17-SRDINV21
 
 Research / plan:
-[SRDINV11_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV11_RECURSIVE_PLANNING_REVIEW.md),
+[SRDINV16_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md),
 [SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
 [SRDINV_RALPH_BATCH_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md),
 [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
@@ -1331,6 +1366,198 @@ explicitly complete. Candidate next batches include character-creation
 owner-evidence closure, spell Unit Surface blockers, or runtime/MBT planning
 for authored executable rows, but SRDINV16 must select based on the
 post-authoring inventory state.
+
+Out of scope: implementation work not captured by the newly appended batch,
+PHB/XPHB pressure, broad runtime rewrites, and treating catalog admission alone
+as behavior support.
+
+Verification: active-plan consistency across Ralph index, DAG table, and task
+details; regenerated inventory; `pnpm unit-profile-coverage:check`; confirm
+the appended result is either explicit level-1 completion with final metrics or
+a concrete multi-task batch, not a recursive-only placeholder; `/simplify`
+convergence, minimum two rounds unless the final changeset is trivial.
+
+Completed scope: reviewed SRDINV12-SRDINV15 authoring results and refreshed the
+generated inventory. Level-1 authored-record absence is closed, but level-1 is
+not complete: the refreshed inventory still has 121
+`catalog-installed-owner-evidence-required` rows. The appended batch is
+SRDINV17 class-container/source-fact evidence, SRDINV18 class-feature evidence,
+SRDINV19 Spell Access evidence, SRDINV20 Weapon Mastery evidence, and SRDINV21
+recursive review.
+
+Out of scope honored: no implementation work from the appended batch was
+started; no spell Unit Surface blocker, spell runtime, battle-runtime MBT, or
+PHB/XPHB task was promoted; catalog admission remains separate from
+operational owner evidence.
+
+Verification completed: local SRD class passages and `UBIQUITOUS_LANGUAGE.md`
+checked; inventory regenerated; active-plan consistency updated across Ralph
+task index, DAG table, and task details; `pnpm unit-profile-coverage:check`
+passed; `/simplify` convergence is recorded in the SRDINV16 review artifact.
+
+### Task 186 - SRDINV17 - Close Character-Creation Class Container Evidence
+
+Status: `ready-for-research`
+
+Depends on: SRDINV16
+
+Blocks: SRDINV18-SRDINV21
+
+Research / plan:
+[SRDINV16_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md),
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[SRDINV_RALPH_BATCH_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md),
+[character-creation-owner-evidence.json](/workspace/typescript/dnd/plans/unit-profile-coverage/character-creation-owner-evidence.json),
+[character-creation-runtime README](/workspace/typescript/dnd/packages/character-creation-runtime/README.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: close character-creation owner evidence for authored class containers,
+core traits, starting equipment, and multiclass-entry facts. Widen the
+character-creation support profile, runtime evidence, and
+checker-readable manifest where needed, and keep those rows derived from class
+container source facts rather than standalone duplicate records.
+
+Out of scope: class-feature choice evidence from SRDINV18, Spell Access
+evidence from SRDINV19, Weapon Mastery evidence from SRDINV20, shared-algebra
+multiclass prerequisite closure, Wizard Ritual Adept runtime ownership, spell
+Unit runtime, battle-runtime behavior, QNT/MBT work, PHB/XPHB content, and
+catalog admission as owner evidence.
+
+Verification: read relevant local SRD class trait, starting equipment, and
+multiclass-entry passages; check `UBIQUITOUS_LANGUAGE.md` for Class,
+Character Sheet, Multiclassing, Proficiency Bonus, Proficiency Level, and
+equipment terms if touched; focused character-creation discovery, fill,
+finalization, and build-projection tests; update the character-creation owner
+evidence manifest; regenerate inventory; `pnpm unit-profile-coverage:check`;
+package-local typecheck/tests for touched runtime code; `pnpm quality` if
+production code changes; `/simplify` convergence.
+
+### Task 187 - SRDINV18 - Close Character-Creation Class Feature Evidence
+
+Status: `blocked`
+
+Depends on: SRDINV17
+
+Blocks: SRDINV21
+
+Research / plan:
+[SRDINV16_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md),
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[SRDINV_RALPH_BATCH_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md),
+[character-creation-owner-evidence.json](/workspace/typescript/dnd/plans/unit-profile-coverage/character-creation-owner-evidence.json),
+[character-creation-runtime README](/workspace/typescript/dnd/packages/character-creation-runtime/README.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: close character-creation owner evidence for authored level-1 class
+feature records that the character-creation boundary owns as retained
+CharacterBuild Unit refs or discovered choices: Bardic Inspiration, Divine
+Order, Druidic, Primal Order, Martial Arts, Favored Enemy, Expertise, Thieves'
+Cant, Innate Sorcery, Eldritch Invocations, and Pact Magic.
+
+Out of scope: class-container/source-fact evidence from SRDINV17, Spell Access
+evidence from SRDINV19, Weapon Mastery evidence from SRDINV20, Wizard Ritual
+Adept invocation runtime, feature combat execution, spell runtime,
+battle-runtime behavior, QNT/MBT work, PHB/XPHB content, and catalog admission
+as owner evidence.
+
+Verification: read relevant local SRD class-feature passages; check
+`UBIQUITOUS_LANGUAGE.md` for Class Feature, Character Sheet, Spell Access,
+Pool, Spend, Proficiency Level, and any rule terms touched; focused
+character-creation tests for discovery, fill, finalization, and build
+projection; update the owner evidence manifest; regenerate inventory; `pnpm
+unit-profile-coverage:check`; package-local typecheck/tests for touched runtime
+code; `pnpm quality` if production code changes; `/simplify` convergence.
+
+### Task 188 - SRDINV19 - Close Character-Creation Spell Access Evidence
+
+Status: `blocked`
+
+Depends on: SRDINV17
+
+Blocks: SRDINV21
+
+Research / plan:
+[SRDINV16_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md),
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[SRDINV_RALPH_BATCH_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md),
+[character-creation-owner-evidence.json](/workspace/typescript/dnd/plans/unit-profile-coverage/character-creation-owner-evidence.json),
+[character-creation-runtime README](/workspace/typescript/dnd/packages/character-creation-runtime/README.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: close character-creation owner evidence for Bard, Cleric, Druid,
+Paladin, Ranger, and Sorcerer level-1 Spell Access records through durable
+discovery, fill, finalization, build-projection, and manifest evidence.
+
+Out of scope: authoring or admitting individual Spell Definitions as
+runtime-supported, spell invocation/projection runtime, class-container evidence
+from SRDINV17, class-feature evidence from SRDINV18, Weapon Mastery evidence
+from SRDINV20, battle-runtime behavior, QNT/MBT work, PHB/XPHB content, and
+catalog admission as owner evidence.
+
+Verification: read relevant local SRD Spellcasting passages; check
+`UBIQUITOUS_LANGUAGE.md` for Spell Access, Spell Definition, Spell Slot,
+Pact Slot, Class, Character Sheet, and Concentration terms if touched; focused
+character-creation tests for non-Wizard Spell Access discovery, fill,
+finalization, and build projection; update the owner evidence manifest;
+regenerate inventory; `pnpm unit-profile-coverage:check`; package-local
+typecheck/tests for touched runtime code; `pnpm quality` if production code
+changes; `/simplify` convergence.
+
+### Task 189 - SRDINV20 - Close Character-Creation Weapon Mastery Evidence
+
+Status: `blocked`
+
+Depends on: SRDINV17
+
+Blocks: SRDINV21
+
+Research / plan:
+[SRDINV16_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md),
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[SRDINV_RALPH_BATCH_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md),
+[character-creation-owner-evidence.json](/workspace/typescript/dnd/plans/unit-profile-coverage/character-creation-owner-evidence.json),
+[character-creation-runtime README](/workspace/typescript/dnd/packages/character-creation-runtime/README.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: close character-creation owner evidence for Barbarian, Paladin, Ranger,
+and Rogue level-1 Weapon Mastery choices through durable discovery, fill,
+finalization, build-projection, and manifest evidence.
+
+Out of scope: implementing mastery property execution, duplicating weapon
+proficiency/category state already owned by class containers, class-container
+evidence from SRDINV17, class-feature evidence from SRDINV18, Spell Access
+evidence from SRDINV19, battle-runtime behavior, QNT/MBT work, PHB/XPHB
+content, and catalog admission as owner evidence.
+
+Verification: read relevant local SRD Weapon Mastery passages; check
+`UBIQUITOUS_LANGUAGE.md` for Weapon Mastery, Class, Character Sheet,
+Proficiency Level, and Long Rest terms if touched; focused character-creation
+tests for Weapon Mastery discovery, fill, finalization, and build projection;
+update the owner evidence manifest; regenerate inventory; `pnpm
+unit-profile-coverage:check`; package-local typecheck/tests for touched runtime
+code; `pnpm quality` if production code changes; `/simplify` convergence.
+
+### Task 190 - SRDINV21 - Recursive SRD Inventory Planning Review
+
+Status: `blocked`
+
+Depends on: SRDINV17-SRDINV20
+
+Blocks: none
+
+Research / plan:
+[SRDINV16_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md),
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[SRDINV_RALPH_BATCH_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md),
+[ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
+
+Scope: review SRDINV17-SRDINV20 owner-evidence closure, refresh generated
+inventory metrics, and append the next concrete multi-task batch unless SRD
+level-1 inventory is explicitly complete. Remaining candidates include shared
+multiclass prerequisite owner evidence, Wizard Ritual Adept spell-invocation
+ownership, spell Unit Surface blockers, or runtime/MBT planning for authored
+executable spell rows, but SRDINV21 must select based on the refreshed
+post-evidence inventory state.
 
 Out of scope: implementation work not captured by the newly appended batch,
 PHB/XPHB pressure, broad runtime rewrites, and treating catalog admission alone

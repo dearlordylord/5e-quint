@@ -1577,6 +1577,12 @@ function srdinv10SurfaceWideningRows(levelOne) {
   return rowsByIds(levelOne, srdinv10ClassFeatureBlockerIds);
 }
 
+function hasRequiredOwnerEvidence(row, owner) {
+  return row.ownerEvidence?.some(
+    (entry) => entry.owner === owner && entry.status === "owner evidence required",
+  );
+}
+
 function buildRecommendedBatches(rows) {
   const levelOne = rows.filter((row) => row.levelBand === "level-1");
   const spellPressure = rows.filter(
@@ -1652,6 +1658,36 @@ function buildRecommendedBatches(rows) {
     (row) =>
       row.rowKind === "mastery-pressure" &&
       row.finalDisposition === "missing-authored-record",
+  );
+  const srdinv17CharacterCreationClassRows = levelOne.filter(
+    (row) =>
+      row.finalDisposition === "catalog-installed-owner-evidence-required" &&
+      (hasRequiredOwnerEvidence(
+        row,
+        "Surface class container plus character-creation-runtime",
+      ) ||
+        hasRequiredOwnerEvidence(row, "character-creation-runtime")) &&
+      (row.category === "class container" ||
+        row.category === "character-creation or progression mechanic" ||
+        row.category === "equipment/weapon/armor pressure"),
+  );
+  const srdinv18CharacterCreationFeatureRows = levelOne.filter(
+    (row) =>
+      row.finalDisposition === "catalog-installed-owner-evidence-required" &&
+      hasRequiredOwnerEvidence(row, "character-creation-runtime") &&
+      row.category === "class feature",
+  );
+  const srdinv19CharacterCreationSpellAccessRows = levelOne.filter(
+    (row) =>
+      row.finalDisposition === "catalog-installed-owner-evidence-required" &&
+      hasRequiredOwnerEvidence(row, "character-creation-runtime") &&
+      row.category === "spell access/list pressure",
+  );
+  const srdinv20CharacterCreationMasteryRows = levelOne.filter(
+    (row) =>
+      row.finalDisposition === "catalog-installed-owner-evidence-required" &&
+      hasRequiredOwnerEvidence(row, "character-creation-runtime") &&
+      row.category === "mastery pressure",
   );
 
   return [
@@ -1850,64 +1886,119 @@ function buildRecommendedBatches(rows) {
     makeBatch({
       id: "SRDINV12",
       title: "Author Expressible Level-1 Class Containers",
+      suggestedStatus: "done",
       intent:
         "Author missing SRD-provenance class container records now that class-container source facts are expressible.",
       rows: missingClassContainers,
       nextAction:
-        "Author Bard, Cleric, Druid, Monk, Paladin, Ranger, Rogue, and Sorcerer class container records from SRD source facts; do not create standalone records for class-owned creation rows.",
+        "Completed Bard, Cleric, Druid, Monk, Paladin, Ranger, Rogue, and Sorcerer class container records from SRD source facts without creating standalone records for class-owned creation rows.",
       acceptance:
         "Missing level-1 class container count reaches zero, and class-owned creation rows continue to derive from the class container boundary.",
     }),
     makeBatch({
       id: "SRDINV13",
       title: "Author Expressible Level-1 Spell Access Records",
-      suggestedStatus: "blocked-on-SRDINV12",
+      suggestedStatus: "done",
       intent:
         "Author missing SRD-provenance class Spell Access records made expressible by SRDINV9.",
       rows: missingSpellAccessRows,
       nextAction:
-        "Author Bard, Cleric, Druid, Paladin, Ranger, and Sorcerer level-1 Spellcasting access records with their class-list preparation, slot, focus, and replacement source facts.",
+        "Completed Bard, Cleric, Druid, Paladin, Ranger, and Sorcerer level-1 Spellcasting access records with their class-list preparation, slot, focus, and replacement source facts.",
       acceptance:
         "Level-1 class Spellcasting/access rows are authored where Surface can express the source facts, without admitting individual Spell Definitions as runtime-supported.",
     }),
     makeBatch({
       id: "SRDINV14",
       title: "Author Expressible Level-1 Class Feature Records",
-      suggestedStatus: "blocked-on-SRDINV12",
+      suggestedStatus: "done",
       intent:
         "Author missing SRD-provenance class feature records made expressible by SRDINV10.",
       rows: missingClassFeatureRows,
       nextAction:
-        "Author Bardic Inspiration, Divine Order, Druidic, Primal Order, Martial Arts, Favored Enemy, Expertise, Thieves' Cant, Innate Sorcery, and Eldritch Invocations records using the widened class-feature mechanics.",
+        "Completed Bardic Inspiration, Divine Order, Druidic, Primal Order, Martial Arts, Favored Enemy, Expertise, Thieves' Cant, Innate Sorcery, and Eldritch Invocations records using the widened class-feature mechanics.",
       acceptance:
         "Level-1 class-feature rows that are not explicit catalog-only closures are authored or receive a narrower typed follow-up if authoring exposes a real remaining Surface gap.",
     }),
     makeBatch({
       id: "SRDINV15",
       title: "Author Level-1 Weapon Mastery Records",
-      suggestedStatus: "blocked-on-SRDINV12",
+      suggestedStatus: "done",
       intent:
         "Author missing SRD-provenance Weapon Mastery records for level-1 classes that grant mastery choices.",
       rows: missingMasteryRows,
       nextAction:
-        "Author Barbarian, Paladin, Ranger, and Rogue Weapon Mastery records as character-sheet choice facts; do not implement weapon mastery property runtime behavior in this authoring task.",
+        "Completed Barbarian, Paladin, Ranger, and Rogue Weapon Mastery records as character-sheet choice facts; mastery property runtime behavior remains separate.",
       acceptance:
         "Level-1 mastery-pressure rows have authored records or explicit typed closure, while mastery property execution remains separate runtime work.",
     }),
     makeBatch({
       id: "SRDINV16",
       title: "Recursive SRD Inventory Planning Review",
-      suggestedStatus: "blocked-on-SRDINV12-SRDINV15",
+      suggestedStatus: "done",
       intent:
-        "Review SRDINV12-SRDINV15 authoring results and append the next concrete batch unless level-1 inventory is complete.",
-      rows: [
-        ...missingClassContainers,
-        ...missingSpellAccessRows,
-        ...missingClassFeatureRows,
-        ...missingMasteryRows,
-      ],
+        "Reviewed SRDINV12-SRDINV15 authoring results and appended the next concrete character-creation owner-evidence batch.",
+      rows: levelOne,
       nextAction:
-        "Refresh inventory metrics after the authoring batch and choose the next concrete frontier, likely character-creation owner-evidence closure, spell Unit Surface blockers, or runtime/MBT planning for authored executable rows.",
+        "Level-1 remains open; run SRDINV17-SRDINV20 before the next recursive SRDINV21 review.",
+      acceptance:
+        "SRDINV16 closed with inventory metrics and a concrete multi-task next batch, not a recursive-only continuation.",
+    }),
+    makeBatch({
+      id: "SRDINV17",
+      title: "Close Character-Creation Class Container Evidence",
+      intent:
+        "Close character-creation owner evidence for authored class containers and class-owned level-1 creation facts.",
+      rows: srdinv17CharacterCreationClassRows,
+      nextAction:
+        "Widen character-creation support profiles and the checker-readable owner-evidence manifest for class containers, core traits, starting equipment, and multiclass-entry facts without creating standalone duplicate records.",
+      acceptance:
+        "Class container, core trait, equipment, and multiclass-entry rows derive owner evidence from durable discovery, fill, finalization, and build-projection artifacts.",
+    }),
+    makeBatch({
+      id: "SRDINV18",
+      title: "Close Character-Creation Class Feature Evidence",
+      suggestedStatus: "blocked-on-SRDINV17",
+      intent:
+        "Close character-creation owner evidence for authored level-1 class feature records that are retained on CharacterBuilds or discovered as choices.",
+      rows: srdinv18CharacterCreationFeatureRows,
+      nextAction:
+        "Add durable character-creation evidence for Bardic Inspiration, Divine Order, Druidic, Primal Order, Martial Arts, Favored Enemy, Expertise, Thieves' Cant, Innate Sorcery, Eldritch Invocations, and Pact Magic where the current character-creation boundary owns the fact.",
+      acceptance:
+        "Each task-owned feature row either has manifest-backed character-creation owner evidence or a narrower typed closure if the row belongs to a future runtime owner.",
+    }),
+    makeBatch({
+      id: "SRDINV19",
+      title: "Close Character-Creation Spell Access Evidence",
+      suggestedStatus: "blocked-on-SRDINV17",
+      intent:
+        "Close character-creation owner evidence for non-Wizard level-1 Spell Access records without admitting individual Spell Definitions as runtime-supported.",
+      rows: srdinv19CharacterCreationSpellAccessRows,
+      nextAction:
+        "Widen character-creation discovery, fill, finalization, build projection, and manifest evidence for Bard, Cleric, Druid, Paladin, Ranger, and Sorcerer Spellcasting source facts.",
+      acceptance:
+        "Non-Wizard level-1 Spell Access rows have durable character-creation owner evidence while individual Spell Unit pressure remains separate.",
+    }),
+    makeBatch({
+      id: "SRDINV20",
+      title: "Close Character-Creation Weapon Mastery Evidence",
+      suggestedStatus: "blocked-on-SRDINV17",
+      intent:
+        "Close character-creation owner evidence for non-Fighter level-1 Weapon Mastery choice records.",
+      rows: srdinv20CharacterCreationMasteryRows,
+      nextAction:
+        "Widen character-creation discovery, fill, finalization, build projection, and manifest evidence for Barbarian, Paladin, Ranger, and Rogue Weapon Mastery choices.",
+      acceptance:
+        "Non-Fighter level-1 Weapon Mastery rows have durable character-creation owner evidence, and mastery property execution remains separate runtime work.",
+    }),
+    makeBatch({
+      id: "SRDINV21",
+      title: "Recursive SRD Inventory Planning Review",
+      suggestedStatus: "blocked-on-SRDINV17-SRDINV20",
+      intent:
+        "Review SRDINV17-SRDINV20 owner-evidence closure and append the next concrete batch unless level-1 inventory is complete.",
+      rows: levelOne,
+      nextAction:
+        "Refresh inventory metrics after character-creation owner-evidence closure and choose the next concrete frontier, including any remaining shared-algebra or spell-invocation evidence rows before spell Unit Surface/runtime work.",
       acceptance:
         "The next review either records explicit level-1 completion with final metrics or appends another concrete multi-task batch, not a recursive-only placeholder.",
     }),

@@ -48,6 +48,12 @@ Current sequence:
 - `SRDINV14`: author expressible level-1 class feature records.
 - `SRDINV15`: author level-1 Weapon Mastery records.
 - `SRDINV16`: recursive review after the concrete authoring batch.
+- `SRDINV17`: close character-creation class container and class-owned source
+  fact owner evidence.
+- `SRDINV18`: close character-creation class feature owner evidence.
+- `SRDINV19`: close character-creation Spell Access owner evidence.
+- `SRDINV20`: close character-creation Weapon Mastery owner evidence.
+- `SRDINV21`: recursive review after the concrete owner-evidence batch.
 
 The spell-pressure rows are split into `SRDINV5A` through `SRDINV5D` because
 class spell access, missing Spell Unit records, installed Spell Unit evidence,
@@ -121,6 +127,33 @@ recursive review:
 
 Spell Unit Surface blockers and authored executable spell-runtime follow-ups
 remain counted, but they are not the immediate SRDINV12-SRDINV15 frontier.
+
+## Post-SRDINV16 Frontier Loop
+
+SRDINV16 found that SRDINV12-SRDINV15 closed the expressible level-1
+authored-record backlog. Level-1 inventory is still open, but the active
+frontier is now owner-evidence closure for installed authored rows, especially
+character-creation evidence.
+
+The next batch is therefore four concrete character-creation evidence families
+followed by a recursive review:
+
+1. `SRDINV17` closes class-container, core-trait, starting-equipment, and
+   multiclass-entry owner evidence through character-creation support-profile
+   and manifest evidence.
+2. `SRDINV18` closes character-creation owner evidence for authored level-1
+   class features retained on CharacterBuilds or discovered as choices.
+3. `SRDINV19` closes non-Wizard Spell Access owner evidence without admitting
+   individual Spell Definitions as runtime-supported.
+4. `SRDINV20` closes non-Fighter Weapon Mastery owner evidence while keeping
+   mastery property execution separate.
+5. `SRDINV21` reviews the landed evidence work, refreshes inventory metrics,
+   and appends the next concrete batch unless level-1 is explicitly complete.
+
+The two shared-algebra Primary Ability rows and Wizard Ritual Adept remain
+visible for SRDINV21. Spell Unit Surface blockers and authored executable spell
+runtime follow-ups remain counted, but they are not the immediate
+SRDINV17-SRDINV20 frontier.
 
 ## Acceptance Model
 
@@ -447,3 +480,36 @@ Sheet, Proficiency Level, and Long Rest.
 - Round 2: no important changes found; the remaining coupling is localized to
   the `class_proficient_weapons` mechanics shape, its Surface schema, trace
   description, and character-creation discovery reader.
+
+## SRDINV16 Closeout Notes
+
+SRDINV16 reviewed SRDINV12-SRDINV15 findings and confirmed that level-1
+authored-record absence is closed in the generated inventory. The refreshed
+metrics are 367 total rows, 156 level-1 rows, 0 missing level-1 class
+containers, 121 level-1 owner-evidence-required rows, 19 level-1
+owner-evidence-present rows, 4 level-1 catalog-only/dead-for-now rows, and 12
+level-1 non-runtime rows.
+
+The appended batch is not a recursive-only placeholder: `SRDINV17` class
+container and class-owned source fact evidence, `SRDINV18` class-feature
+evidence, `SRDINV19` Spell Access evidence, `SRDINV20` Weapon Mastery evidence,
+and `SRDINV21` recursive review.
+
+Local SRD source review checked level-1 class trait, multiclass-entry,
+Spellcasting, class-feature, and Weapon Mastery passages under
+`.references/srd-5.2.1/Classes/`. `UBIQUITOUS_LANGUAGE.md` was checked for
+Class, Character Sheet, Class Feature, Spell Access, Spell Definition, Spell
+Slot, Pact Slot, Proficiency Bonus, Proficiency Level, Weapon Mastery,
+Multiclassing, Ability Check, Attack Roll, Saving Throw, Armor Class, and the
+Character Sheet versus Stat Block ownership distinction.
+
+`/simplify` convergence:
+
+- Round 1: chose character-creation owner-evidence closure before spell Unit
+  Surface blockers or authored executable spell runtime because the refreshed
+  level-1 denominator is dominated by owner-evidence-required rows.
+- Round 2: split the evidence work by owner boundary so class-owned source
+  facts, class features, Spell Access, and Weapon Mastery cannot drift or
+  accidentally admit unrelated runtime behavior.
+- Round 3: no important changes found; remaining shared-algebra and
+  spell-invocation evidence rows stay visible for SRDINV21.
