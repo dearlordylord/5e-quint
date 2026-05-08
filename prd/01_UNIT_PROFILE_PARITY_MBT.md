@@ -173,14 +173,14 @@ and runtime projection remain separate throughout the flow.
 
 ## Further Notes
 
-Current matrix status after QMBT64:
+Current matrix status after QMBT66:
 
 - 59 authored Units classified in the installed coverage collections.
 - 25 stable executable profiles.
-- 32 of 45 installed executable Units mapped to supported profiles.
+- 33 of 45 installed executable Units mapped to supported profiles.
 - all executable supported profiles currently have QNT modeling, QNT proof,
   runtime mapping, and runtime parity evidence.
-- deterministic admission/projection evidence covers all 32 supported Unit
+- deterministic admission/projection evidence covers all 33 supported Unit
   identities, including the QMBT21 Classic non-SRD mechanics-only
   `mycelium_step` row, QMBT22 `shield`, QMBT25 `healing_word`, and QMBT27
   `feat_archery`, QMBT31 `feat_savage_attacker`, and QMBT32 `cure_wounds` and
@@ -189,8 +189,8 @@ Current matrix status after QMBT64:
   plus QMBT40 `barbarian_fast_movement`, QMBT44 `ranger_roving`, QMBT47
   `orc_relentless_endurance`, QMBT53 `orc_adrenaline_rush`, and QMBT56
   `feat_boon_of_combat_prowess`, QMBT59 `monk_deflect_attacks`, and QMBT62
-  `fighter_tactical_mind`.
-- selected identity MBT covers 10 of 32 supported Unit identities. QMBT16
+  `fighter_tactical_mind`, plus QMBT65 `bard_cutting_words`.
+- selected identity MBT covers 10 of 33 supported Unit identities. QMBT16
   explicitly decided not to add selected identity MBT for currently supported
   spell Units unless later evidence introduces identity-specific risk.
 - authored Surface Unit catalog admission gaps are explicit in the generated
@@ -288,6 +288,9 @@ Current matrix status after QMBT64:
   Ability Check branch promoted through caller-supplied already-rolled facts,
   focused runtime parity, deterministic admission/projection evidence, QNT
   proof coverage, and refreshed matrix artifacts.
+- QMBT66 kept the matrix lane open and selected a projection-cleanup batch for
+  already-supported SRD profiles: Bardic Inspiration reaction reduction facts,
+  Monk Deflect Attacks redirect facts, and the next recursive planning review.
 
-QMBT65 completed the selected Cutting Words implementation slice. The next open
-task is QMBT66 recursive planning review.
+QMBT66 completed the recursive planning checkpoint. The next open task is
+QMBT67 Bardic Inspiration reaction-reduction projection cleanup.

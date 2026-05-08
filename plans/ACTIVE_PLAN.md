@@ -64,7 +64,25 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 161,
       "id": "QMBT66",
-      "status": "ready-for-research",
+      "status": "done",
+      "title": "Recursive Unit Profile Planning Review"
+    },
+    {
+      "number": 162,
+      "id": "QMBT67",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Project Bardic Inspiration Reaction Reduction Facts"
+    },
+    {
+      "number": 163,
+      "id": "QMBT68",
+      "status": "blocked",
+      "title": "Project Monk Deflect Attacks Redirect Facts"
+    },
+    {
+      "number": 164,
+      "id": "QMBT69",
+      "status": "blocked",
       "title": "Recursive Unit Profile Planning Review"
     }
   ]
@@ -105,8 +123,10 @@ Keep it synchronized with the DAG table and task details.
 | Order | Task                                                      | Status             | Depends on | Blocks | Research / plan | Next action |
 | ----- | --------------------------------------------------------- | ------------------ | ---------- | ------ | --------------- | ----------- |
 | 160   | QMBT65 - Promote Cutting Words Ability Check Reaction Reduction | done | none | QMBT66 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [SRD Bard](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Bard.md), [SRD Playing the Game](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [SRD Rules Glossary](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed `bard_cutting_words` Ability Check reduction as part of `unit-feature.reaction-roll-or-damage-reduction`, with authored mechanics admission, caller-supplied already-successful Ability Check facts, Reaction and Bardic Inspiration spend, QNT proof coverage, focused runtime parity, deterministic admission evidence, and refreshed matrix artifacts. |
-| 161   | QMBT66 - Recursive Unit Profile Planning Review | ready-for-research | QMBT65 | QMBT67 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT65 findings, update PRD and plan docs, and append the largest coherent next batch whose tasks are similar enough to run without re-planning between each item unless the Unit profile matrix lane is explicitly complete. |
-| 162   | QMBT67 - Project SRD-Specific Mechanic Formulas Out of Runtime Reducers | blocked | QMBT66 | none | [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [battle reducer](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [unit feature support](/workspace/typescript/dnd/packages/battle-runtime/src/unit-feature-support.ts) | Move necessary SRD-specific mechanics such as Focus Point cost, Martial Arts die scaling, Bardic Inspiration die scaling, and Monk Focus save DC into authored/runtime projection data so generic reducers execute projected facts rather than class-specific formulas. |
+| 161   | QMBT66 - Recursive Unit Profile Planning Review | done | QMBT65 | QMBT67 | [QMBT66 review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT66_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed recursive planning review, kept the matrix lane open, refreshed PRD status, and appended the QMBT67-QMBT69 projection-cleanup batch. |
+| 162   | QMBT67 - Project Bardic Inspiration Reaction Reduction Facts | ready-for-implementation-after-light-research | QMBT66 | QMBT68 | [QMBT66 review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT66_RECURSIVE_PLANNING_REVIEW.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [battle reducer](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [unit feature support](/workspace/typescript/dnd/packages/battle-runtime/src/unit-feature-support.ts), [SRD Bard](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Bard.md), [SRD Playing the Game](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [SRD Rules Glossary](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Move Bardic Inspiration reaction-reduction resource cost and die expression facts into supported profile projection data so generic reaction reducers no longer derive Bard class die thresholds for Cutting Words attack-roll, Ability Check, or damage-roll reduction. |
+| 163   | QMBT68 - Project Monk Deflect Attacks Redirect Facts | blocked | QMBT67 | QMBT69 | [QMBT66 review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT66_RECURSIVE_PLANNING_REVIEW.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [battle reducer](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [unit feature support](/workspace/typescript/dnd/packages/battle-runtime/src/unit-feature-support.ts), [SRD Monk](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Monk.md), [SRD Playing the Game](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [SRD Rules Glossary](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Move Deflect Attacks redirect resource cost, save DC, redirect damage dice, damage ability modifier, and inherited damage-type facts into supported profile projection data so generic reducers no longer derive Focus Point, Martial Arts die, or Monk Focus save formulas. |
+| 164   | QMBT69 - Recursive Unit Profile Planning Review | blocked | QMBT68 | none | [QMBT66 review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT66_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT67-QMBT68 findings, update PRD and plan docs, and append the next coherent widening or cleanup batch unless the Unit profile matrix lane is explicitly complete. |
 
 ## Task Details
 
@@ -188,13 +208,14 @@ selection.
 
 ### Task 161 - QMBT66 - Recursive Unit Profile Planning Review
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QMBT65
 
-Blocks: none
+Blocks: QMBT67
 
 Research / plan:
+[QMBT66_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT66_RECURSIVE_PLANNING_REVIEW.md),
 [UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md),
 [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
 
@@ -220,33 +241,142 @@ details; `pnpm unit-profile-coverage:check` if matrix docs or generated
 artifacts change; `/simplify` convergence, minimum two rounds unless the final
 changeset is trivial.
 
-### Task 162 - QMBT67 - Project SRD-Specific Mechanic Formulas Out of Runtime Reducers
+Completed scope: reviewed QMBT65 findings, kept the Unit profile matrix lane
+open, refreshed the PRD status notes, and selected a projection-cleanup batch
+for already-supported SRD profiles before the next widening family. The batch
+is QMBT67 Bardic Inspiration reaction-reduction projection facts, QMBT68 Monk
+Deflect Attacks redirect projection facts, and QMBT69 recursive review.
+
+Out of scope honored: no runtime behavior, matrix evidence, generated artifacts,
+AC formula support, healing-pool support, resistance support, Breath Weapon,
+Weapon Mastery, spell intake, magic-item intake, or content cleanup was
+implemented in this planning task.
+
+Verification completed: RAW/source review checked `.references/srd-5.2.1`
+`Classes/Bard.md`, `Classes/Monk.md`, `Playing-the-Game.md`,
+`Rules-Glossary.md`, and `UBIQUITOUS_LANGUAGE.md`; active-plan consistency was
+checked across the Ralph task index, DAG table, and task details; PRD status
+notes were refreshed; `/simplify` convergence is recorded in the QMBT66 review
+artifact. `pnpm unit-profile-coverage:check` was not run because generated
+matrix artifacts did not change. MBT was not run because QMBT66 is
+planning-only.
+
+### Task 162 - QMBT67 - Project Bardic Inspiration Reaction Reduction Facts
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: QMBT66
+
+Blocks: QMBT68
+
+Research / plan:
+[QMBT66_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT66_RECURSIVE_PLANNING_REVIEW.md),
+[Surface README](/workspace/typescript/dnd/packages/surface/README.md),
+[battle-reducer.ts](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts),
+[unit-feature-support.ts](/workspace/typescript/dnd/packages/battle-runtime/src/unit-feature-support.ts),
+[Bard.md](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Bard.md),
+[Playing-the-Game.md](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md),
+[Rules-Glossary.md](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: move Bardic Inspiration reaction-reduction executable facts out of
+generic reducer derivation and into supported profile projection data. The
+runtime should parse/project the resource cost and reduction die expression for
+the existing Cutting Words attack-roll, Ability Check, and damage-roll
+reduction branches, then reducers should consume those projected facts without
+deriving Bard class die thresholds or hard-coding Bardic Inspiration die
+validation text as generic reaction behavior.
+
+Out of scope: changing RAW behavior, widening unrelated Unit profiles, changing
+the existing Bardic Inspiration pool, adding a Cutting Words-only profile,
+generic D20 Test reaction reduction, Monk Focus or Martial Arts projection, AC
+formula support, healing/resource pool widening, resistance traits, Breath
+Weapon, Weapon Mastery, spells, magic items, content cleanup, or checker metric
+changes.
+
+Verification: RAW/source review for Bardic Inspiration, Font of Inspiration,
+Cutting Words, Ability Checks, D20 Tests, Difficulty Class, Reactions, Attack
+Rolls, and Damage Rolls; `UBIQUITOUS_LANGUAGE.md` check for Ability Check,
+Attack Roll, Damage Roll, Difficulty Class, Reaction, Pool, Spend, and
+projection terms introduced by the implementation; focused runtime tests
+proving the same attack-roll, Ability Check, and damage-roll reduction behavior
+through projected facts; focused admission/projection tests that malformed
+Bardic Inspiration projection facts remain unsupported; package-local
+typecheck/tests; `pnpm unit-profile-coverage:check` if profile artifacts
+change; battle-runtime MBT only if promoted battle behavior changes; `pnpm
+quality` if the task changes production behavior; `/simplify` convergence,
+minimum two rounds.
+
+### Task 163 - QMBT68 - Project Monk Deflect Attacks Redirect Facts
 
 Status: `blocked`
 
-Depends on: QMBT66
+Depends on: QMBT67
+
+Blocks: QMBT69
+
+Research / plan:
+[QMBT66_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT66_RECURSIVE_PLANNING_REVIEW.md),
+[Surface README](/workspace/typescript/dnd/packages/surface/README.md),
+[battle-reducer.ts](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts),
+[unit-feature-support.ts](/workspace/typescript/dnd/packages/battle-runtime/src/unit-feature-support.ts),
+[Monk.md](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Monk.md),
+[Playing-the-Game.md](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md),
+[Rules-Glossary.md](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: move Deflect Attacks redirect executable facts out of generic reducer
+derivation and into supported profile projection data. The runtime should
+parse/project redirect resource cost, redirect save DC, redirect damage dice
+expression, damage ability modifier, attack-kind target gate facts, and
+inherited original damage type for the existing
+`unit-feature.attack-damage-reduction-zero-damage-redirect` profile. Reducers
+should consume those projected facts without deriving Focus Point cost, Martial
+Arts die scaling, or Monk Focus save DC from class identity.
+
+Out of scope: changing RAW behavior, widening unrelated Unit profiles, changing
+authored Unit ids, changing the existing Deflect Attacks reaction/redirect
+timing, changing ordinary attack-damage reduction, Bardic Inspiration
+projection, AC formula support, healing/resource pool widening, resistance
+traits, Breath Weapon, Weapon Mastery, spells, magic items, content cleanup, or
+checker metric changes.
+
+Verification: RAW/source review for Deflect Attacks, Monk's Focus, Martial
+Arts, Damage Rolls, Saving Throws, Difficulty Class, Reactions, Focus Point
+spend, and Short/Long Rest recovery; `UBIQUITOUS_LANGUAGE.md` check for Pool,
+Spend, Damage Roll, Saving Throw, Difficulty Class, Reaction, Damage Type, and
+projection terms introduced by the implementation; focused runtime tests
+proving the same zero-damage redirect behavior through projected facts; focused
+admission/projection tests that malformed redirect projection facts remain
+unsupported; package-local typecheck/tests; `pnpm unit-profile-coverage:check`
+if profile artifacts change; battle-runtime MBT only if promoted battle
+behavior changes; `pnpm quality` if the task changes production behavior;
+`/simplify` convergence, minimum two rounds.
+
+### Task 164 - QMBT69 - Recursive Unit Profile Planning Review
+
+Status: `blocked`
+
+Depends on: QMBT68
 
 Blocks: none
 
 Research / plan:
-[Surface README](/workspace/typescript/dnd/packages/surface/README.md),
-[battle-reducer.ts](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts),
-[unit-feature-support.ts](/workspace/typescript/dnd/packages/battle-runtime/src/unit-feature-support.ts)
+[QMBT66_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT66_RECURSIVE_PLANNING_REVIEW.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md),
+[ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
 
-Scope: remove the remaining necessary SRD-specific mechanic formulas from
-generic runtime reducers by projecting executable facts before reducer entry.
-The first targets are Focus Point cost, Martial Arts die scaling, Bardic
-Inspiration die scaling, and Monk Focus save DC. Keep SRD authored ids and
-mechanic terms in authored content/provenance, comments, and explicit
-projection data where required; generic reducers should consume neutral facts
-such as resource cost, die expression, save DC, and ability modifier.
+Scope: review QMBT67-QMBT68 findings, update the PRD and plan docs, and append
+the next coherent widening or cleanup batch unless the Unit profile matrix lane
+is explicitly complete. AC/base-formula work is a strong candidate because
+Barbarian and Monk Unarmored Defense have repeatedly been deferred for
+one-formula-at-a-time semantics, but QMBT69 must re-check the refreshed matrix
+and QMBT67-QMBT68 discoveries before selecting the next batch.
 
-Out of scope: changing RAW behavior, widening unrelated Unit profiles, changing
-authored Unit ids, or masking SRD names in authored SRD content.
+Out of scope: implementation work not captured by the new task batch.
 
-Verification: RAW/source review for Monk's Focus, Martial Arts, Bardic
-Inspiration, and every affected feature; `UBIQUITOUS_LANGUAGE.md` check for
-Pool, Spend, Damage Roll, Saving Throw, and Difficulty Class; focused runtime
-tests for all affected profiles; package-local typecheck; `pnpm
-unit-profile-coverage:check` if profile artifacts change; battle-runtime MBT
-only if promoted battle behavior changes.
+Verification: RAW/source review for QMBT67-QMBT68 findings and any appended
+rule slices; active-plan consistency check across Ralph index, DAG table, and
+task details; `pnpm unit-profile-coverage:check` if matrix docs or generated
+artifacts change; `/simplify` convergence, minimum two rounds unless the final
+changeset is trivial.
