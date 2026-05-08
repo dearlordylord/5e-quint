@@ -2,6 +2,30 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "sourceCorpus": ".references/srd-5.2.1/Classes",
   "scope": "SRD 5.2.1 class-derived Unit/catalog backlog rows, prioritized around level 1 plus level-1 spell-list pressure.",
+  "evidenceArtifacts": {
+    "characterCreationOwnerEvidence": {
+      "schema": "dnd.srd-character-creation-owner-evidence.v1",
+      "rowIds": [
+        "srd521:classes/fighter:level-1:class-feature-grant:fighter_fighting_style",
+        "srd521:classes/fighter:level-1:core-trait:fighter_armor_training",
+        "srd521:classes/fighter:level-1:core-trait:fighter_hit_point_die",
+        "srd521:classes/fighter:level-1:core-trait:fighter_saving_throw_proficiencies",
+        "srd521:classes/fighter:level-1:core-trait:fighter_skill_proficiencies",
+        "srd521:classes/fighter:level-1:core-trait:fighter_weapon_proficiencies",
+        "srd521:classes/fighter:level-1:equipment-pressure:fighter_starting_equipment",
+        "srd521:classes/fighter:level-1:mastery-pressure:fighter_weapon_mastery",
+        "srd521:classes/fighter:level-1:multiclass-entry:fighter_multiclass_entry_traits",
+        "srd521:classes/wizard:level-1:core-trait:wizard_armor_training",
+        "srd521:classes/wizard:level-1:core-trait:wizard_hit_point_die",
+        "srd521:classes/wizard:level-1:core-trait:wizard_saving_throw_proficiencies",
+        "srd521:classes/wizard:level-1:core-trait:wizard_skill_proficiencies",
+        "srd521:classes/wizard:level-1:core-trait:wizard_weapon_proficiencies",
+        "srd521:classes/wizard:level-1:equipment-pressure:wizard_starting_equipment",
+        "srd521:classes/wizard:level-1:spell-access:wizard_spellcasting"
+      ],
+      "issues": []
+    }
+  },
   "metrics": {
     "totalRows": 367,
     "levelOneRows": 156,
@@ -9,18 +33,18 @@
     "levelOneClassContainers": 12,
     "levelOneRowsByDisposition": {
       "missing-authored-record": 115,
-      "catalog-installed-owner-evidence-present": 3,
+      "catalog-installed-owner-evidence-present": 19,
       "catalog-only/dead-for-now": 4,
       "non-runtime": 12,
-      "catalog-installed-owner-evidence-required": 22
+      "catalog-installed-owner-evidence-required": 6
     },
     "allRowsByDisposition": {
       "missing-authored-record": 187,
-      "catalog-installed-owner-evidence-present": 3,
+      "catalog-installed-owner-evidence-present": 19,
       "catalog-only/dead-for-now": 104,
       "non-runtime": 12,
       "catalog-installed-needs-owner-evidence": 39,
-      "catalog-installed-owner-evidence-required": 22
+      "catalog-installed-owner-evidence-required": 6
     },
     "spellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 100,
@@ -4726,7 +4750,7 @@
         "state": "installed",
         "unitId": "fighter_fighting_style"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -4735,11 +4759,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV1B level-1 Fighter support profile; Fighter progression discovers and fills the Fighting Style Unit-backed choice, finalizes the selected feat ref, and projects it through CharacterBuild feature Unit refs.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/fighter:level-1:class-feature-grant:fighter_second_wind",
@@ -4838,7 +4862,7 @@
         "state": "installed",
         "unitId": "class_fighter"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -4847,11 +4871,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV1B level-1 Fighter support profile; Fighter class facts are read from the Surface class record and projected from finalized progression into build armor training.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/fighter:level-1:core-trait:fighter_hit_point_die",
@@ -4879,7 +4903,7 @@
         "state": "installed",
         "unitId": "class_fighter"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -4888,11 +4912,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV1B level-1 Fighter support profile; Fighter class facts are read from the Surface class record and projected from finalized progression into build Hit Dice and Hit Point maximum.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/fighter:level-1:core-trait:fighter_primary_ability",
@@ -4961,7 +4985,7 @@
         "state": "installed",
         "unitId": "class_fighter"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -4970,11 +4994,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV1B level-1 Fighter support profile; Fighter class facts are read from the Surface class record and projected from finalized progression into build saving throw proficiencies.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/fighter:level-1:core-trait:fighter_skill_proficiencies",
@@ -5002,7 +5026,7 @@
         "state": "installed",
         "unitId": "class_fighter"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -5011,11 +5035,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV1B level-1 Fighter support profile; Fighter skill choices are discovered from class facts, filled through the support profile, finalized as selected proficiency evidence, and projected into build proficiencies.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/fighter:level-1:core-trait:fighter_weapon_proficiencies",
@@ -5043,7 +5067,7 @@
         "state": "installed",
         "unitId": "class_fighter"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -5052,11 +5076,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV1B level-1 Fighter support profile; Fighter class facts are read from the Surface class record and projected from finalized progression into build weapon proficiencies.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/fighter:level-1:equipment-pressure:fighter_starting_equipment",
@@ -5084,7 +5108,7 @@
         "state": "installed",
         "unitId": "class_fighter"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -5093,11 +5117,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV1B level-1 Fighter support profile; Fighter starting-equipment choice C is discovered from class facts, filled through support-profile equipment choices, finalized as owned equipment, and projected into the build loadout.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/fighter:level-1:mastery-pressure:fighter_weapon_mastery",
@@ -5125,7 +5149,7 @@
         "state": "installed",
         "unitId": "fighter_weapon_mastery"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -5134,11 +5158,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV1B level-1 Fighter support profile; Fighter Weapon Mastery options are discovered from the feature grant, filled through supported weapon choices, finalized as selected class-choice refs, and retained as build Unit refs.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/fighter:level-1:multiclass-entry:fighter_multiclass_entry_traits",
@@ -5166,7 +5190,7 @@
         "state": "installed",
         "unitId": "class_fighter"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -5175,11 +5199,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV1B Wizard then Fighter level-2 support profile; Fighter post-start progression discovers multiclass proficiency holes, fills them through supported proficiency options, finalizes Fighter as an advancement, and projects Fighter Hit Dice, proficiencies, armor training, and feature refs.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/monk:level-1:class-container:monk_class_container",
@@ -10059,7 +10083,7 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -10068,11 +10092,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV1B level-1 Wizard support profile; Wizard class facts are read from the Surface class record and projected from finalized progression into build armor training.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/wizard:level-1:core-trait:wizard_hit_point_die",
@@ -10100,7 +10124,7 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -10109,11 +10133,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV1B level-1 Wizard support profile; Wizard class facts are read from the Surface class record and projected from finalized progression into build Hit Dice and Hit Point maximum.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/wizard:level-1:core-trait:wizard_primary_ability",
@@ -10182,7 +10206,7 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -10191,11 +10215,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV1B level-1 Wizard support profile; Wizard class facts are read from the Surface class record and projected from finalized progression into build saving throw proficiencies.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/wizard:level-1:core-trait:wizard_skill_proficiencies",
@@ -10223,7 +10247,7 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -10232,11 +10256,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV1B level-1 Wizard support profile; Wizard skill choices are discovered from class facts, filled through the support profile, finalized as selected proficiency evidence, and projected into build proficiencies.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/wizard:level-1:core-trait:wizard_weapon_proficiencies",
@@ -10264,7 +10288,7 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -10273,11 +10297,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV1B level-1 Wizard support profile; Wizard class facts are read from the Surface class record and projected from finalized progression into build weapon proficiencies.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/wizard:level-1:equipment-pressure:wizard_starting_equipment",
@@ -10305,7 +10329,7 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -10314,11 +10338,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV1B level-1 Wizard support profile; Wizard starting-equipment choice B is discovered from class facts, filled through support-profile equipment choices, finalized as owned equipment, and projected into the build loadout.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/wizard:level-1:multiclass-entry:wizard_multiclass_entry_traits",
@@ -10387,7 +10411,7 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -10396,11 +10420,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV1B level-1 Wizard support profile; Wizard spellcasting choices are discovered from class spellcasting facts, filled through supported cantrip/spellbook/prepared-spell options, finalized as source-scoped spellcasting, and projected into build spellcasting and slot capacity.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_acid_splash",

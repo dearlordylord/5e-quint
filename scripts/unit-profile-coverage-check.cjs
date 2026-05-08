@@ -41,6 +41,9 @@ function main() {
   const unitClaims = readJsonl(root, paths.unitClaims);
   const unitEvidence = readJsonl(root, paths.unitEvidence);
   const taskClaims = readJsonl(root, paths.taskClaims);
+  const characterCreationOwnerEvidence = readJson(
+    paths.characterCreationOwnerEvidence,
+  );
   const inventory = discoverInventory(root, collections.collections);
   const authoredSurfaceUnits = discoverAuthoredSurfaceUnits(root);
   const srdUnitInventory = buildSrdUnitInventory({
@@ -48,6 +51,7 @@ function main() {
     inventory,
     unitClaims,
     unitEvidence,
+    characterCreationOwnerEvidence,
   });
   const scannedClaims = scanClaimFiles(root);
   const issues = validateCoverageInputs({

@@ -17,10 +17,7 @@ const classOrder = [
   "Wizard",
 ];
 
-const nonRuntimeKinds = new Set([
-  "class-narrative",
-  "class-table-summary",
-]);
+const nonRuntimeKinds = new Set(["class-narrative", "class-table-summary"]);
 
 const exactSurfaceKinds = new Set([
   "class-container",
@@ -43,6 +40,14 @@ const characterCreationEvidenceRequiredRowKinds = new Set([
 
 const deterministicAdmissionProjectionEvidenceTag =
   "deterministic-admission-projection";
+const characterCreationOwnerEvidenceSchema =
+  "dnd.srd-character-creation-owner-evidence.v1";
+const characterCreationOwnerEvidenceKinds = [
+  "discovery",
+  "fill",
+  "finalization",
+  "buildProjection",
+];
 
 const ownerEvidenceRequired = new Map([
   [
@@ -148,7 +153,10 @@ function tableRows(lines, headingPattern) {
 }
 
 function firstLevelRow(lines, className) {
-  const rows = tableRows(lines, new RegExp(`^### ${className} Features$|^## ${className} Features$`));
+  const rows = tableRows(
+    lines,
+    new RegExp(`^### ${className} Features$|^## ${className} Features$`),
+  );
   const header = rows[0]?.cells ?? [];
   const row = rows.find((entry) => entry.cells[0] === "1");
   return row ? { header, row } : undefined;
@@ -265,9 +273,12 @@ function finalDisposition(row, authored, installedIds, ownerEvidenceSources) {
   if (nonRuntimeKinds.has(row.rowKind)) return "non-runtime";
   if (!row.candidateUnitId) return "needs-surface-widening";
   if (!authored.has(row.candidateUnitId)) return "missing-authored-record";
-  if (!installedIds.has(row.candidateUnitId)) return "catalog-only/dead-for-now";
-  const installedLevelOneClassification =
-    installedLevelOneOwnerClassification(row, ownerEvidenceSources);
+  if (!installedIds.has(row.candidateUnitId))
+    return "catalog-only/dead-for-now";
+  const installedLevelOneClassification = installedLevelOneOwnerClassification(
+    row,
+    ownerEvidenceSources,
+  );
   if (installedLevelOneClassification?.kind === "evidence-present") {
     return "catalog-installed-owner-evidence-present";
   }
@@ -281,8 +292,10 @@ function finalDisposition(row, authored, installedIds, ownerEvidenceSources) {
 }
 
 function nextAction(row, disposition, gate, ownerEvidenceSources) {
-  const installedLevelOneClassification =
-    installedLevelOneOwnerClassification(row, ownerEvidenceSources);
+  const installedLevelOneClassification = installedLevelOneOwnerClassification(
+    row,
+    ownerEvidenceSources,
+  );
   if (disposition === "catalog-installed-owner-evidence-present") {
     return "Owner-specific operational evidence is classified and present.";
   }
@@ -295,15 +308,18 @@ function nextAction(row, disposition, gate, ownerEvidenceSources) {
   if (
     disposition === "catalog-only/dead-for-now" &&
     installedLevelOneClassification?.kind === "catalog-only-closure"
-  ) return installedLevelOneClassification.reason;
-  if (disposition === "non-runtime") return "No runtime work; keep classification as explicit closure.";
+  )
+    return installedLevelOneClassification.reason;
+  if (disposition === "non-runtime")
+    return "No runtime work; keep classification as explicit closure.";
   if (disposition === "catalog-only/dead-for-now") {
     return "Decide whether to admit/support, or keep catalog-only closure counted.";
   }
   if (disposition === "missing-authored-record") {
     return "Author an SRD-provenance Surface record or explicitly close the row.";
   }
-  if (disposition === "needs-surface-widening") return `Widen Surface: ${gate.missingConstruct}.`;
+  if (disposition === "needs-surface-widening")
+    return `Widen Surface: ${gate.missingConstruct}.`;
   return "Classify owner-specific evidence before implementation.";
 }
 
@@ -317,6 +333,16 @@ function installedLevelOneOwnerClassification(row, ownerEvidenceSources) {
       kind: "evidence-present",
       owner: "battle-runtime",
       evidence: battleRuntimeEvidence,
+    };
+  }
+  const characterCreationEvidence = ownerEvidenceSources.characterCreation.get(
+    row.id,
+  );
+  if (characterCreationEvidence) {
+    return {
+      kind: "evidence-present",
+      owner: "character-creation-runtime",
+      evidence: characterCreationEvidence,
     };
   }
   const required = ownerEvidenceRequired.get(row.id);
@@ -346,7 +372,10 @@ function installedLevelOneOwnerClassification(row, ownerEvidenceSources) {
 
 function makeRow(input) {
   return {
-    id: `srd521:${input.sourcePath.replace(/^\.references\/srd-5\.2\.1\//, "").replace(/\.md$/, "").toLowerCase()}:${input.levelBand}:${input.rowKind}:${slug(input.concept)}`,
+    id: `srd521:${input.sourcePath
+      .replace(/^\.references\/srd-5\.2\.1\//, "")
+      .replace(/\.md$/, "")
+      .toLowerCase()}:${input.levelBand}:${input.rowKind}:${slug(input.concept)}`,
     source: sourceReference(input.sourcePath, input.lineStart, input.lineEnd),
     className: input.className,
     levelBand: input.levelBand,
@@ -374,16 +403,20 @@ function classRows(root, className) {
       levelBand: "level-1",
       rowKind: "class-container",
       concept: `${className} class container`,
-      detail: "SRD class identity, core traits, level-1 feature grants, and class progression entry.",
+      detail:
+        "SRD class identity, core traits, level-1 feature grants, and class progression entry.",
       lineStart: coreLine ?? 1,
-      lineEnd: becomingLine ? sectionRange(lines, becomingLine).endLine : coreLine,
+      lineEnd: becomingLine
+        ? sectionRange(lines, becomingLine).endLine
+        : coreLine,
       candidateUnitId: `class_${classSlug}`,
     }),
   );
 
   for (const entry of tableRows(lines, /^## Core .* Traits$/).slice(1)) {
     const trait = entry.cells[0].replace(/\*/g, "");
-    const rowKind = trait === "Starting Equipment" ? "equipment-pressure" : "core-trait";
+    const rowKind =
+      trait === "Starting Equipment" ? "equipment-pressure" : "core-trait";
     rows.push(
       makeRow({
         sourcePath,
@@ -407,7 +440,8 @@ function classRows(root, className) {
         levelBand: "level-1",
         rowKind: "multiclass-entry",
         concept: `${className} multiclass entry traits`,
-        detail: "Multiclass entry grants listed under the class's level-1 onboarding section.",
+        detail:
+          "Multiclass entry grants listed under the class's level-1 onboarding section.",
         lineStart: multiclassLine,
         lineEnd: sectionRange(lines, multiclassLine).endLine,
         candidateUnitId: `class_${classSlug}`,
@@ -433,13 +467,16 @@ function classRows(root, className) {
   for (const feature of levelOneFeatureHeadings(lines)) {
     const featureKind = classifyFeature(feature.name);
     const candidateUnitId =
-      feature.name === "Spellcasting" ? `class_${classSlug}` : `${classSlug}_${slug(feature.name)}`;
+      feature.name === "Spellcasting"
+        ? `class_${classSlug}`
+        : `${classSlug}_${slug(feature.name)}`;
     rows.push(
       makeRow({
         sourcePath,
         className,
         levelBand: "level-1",
-        rowKind: featureKind === "class-feature" ? "class-feature-grant" : featureKind,
+        rowKind:
+          featureKind === "class-feature" ? "class-feature-grant" : featureKind,
         concept: `${className} ${feature.name}`,
         detail: "Level 1 class feature.",
         lineStart: feature.lineNumber,
@@ -470,7 +507,12 @@ function classRows(root, className) {
   return rows;
 }
 
-function buildOwnerEvidenceSources({ unitClaims, unitEvidence }) {
+function buildOwnerEvidenceSources({
+  root,
+  unitClaims,
+  unitEvidence,
+  characterCreationOwnerEvidence,
+}) {
   const supportedSrdUnitIds = new Set(
     unitClaims
       .filter(
@@ -497,7 +539,211 @@ function buildOwnerEvidenceSources({ unitClaims, unitEvidence }) {
   }
   return {
     battleRuntime: deterministicEvidenceByUnitId,
+    characterCreation: buildCharacterCreationEvidenceSources(
+      root,
+      characterCreationOwnerEvidence,
+    ),
   };
+}
+
+function buildCharacterCreationEvidenceSources(root, manifest) {
+  if (
+    manifest == null ||
+    manifest.schema !== characterCreationOwnerEvidenceSchema
+  ) {
+    return new Map();
+  }
+  const rows = manifest.rows ?? {};
+  if (!isRecord(rows)) {
+    return new Map();
+  }
+  return new Map(
+    Object.entries(rows)
+      .filter(([, evidence]) =>
+        hasCompleteCharacterCreationOwnerEvidence(evidence),
+      )
+      .filter(
+        ([rowId, evidence]) =>
+          characterCreationOwnerEvidenceReferenceIssues(root, rowId, evidence)
+            .length === 0,
+      )
+      .map(([rowId, evidence]) => [
+        rowId,
+        [
+          "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence",
+          `${evidence.taskId} ${evidence.profile}`,
+          evidence.summary,
+        ].join("; "),
+      ]),
+  );
+}
+
+function hasCompleteCharacterCreationOwnerEvidence(evidence) {
+  return (
+    isRecord(evidence) &&
+    characterCreationOwnerEvidenceKinds.every((kind) =>
+      hasNonEmptyEvidenceList(evidence, kind),
+    )
+  );
+}
+
+function hasNonEmptyEvidenceList(evidence, kind) {
+  return (
+    isRecord(evidence) &&
+    Array.isArray(evidence[kind]) &&
+    evidence[kind].length > 0
+  );
+}
+
+function summarizeCharacterCreationOwnerEvidence(root, manifest) {
+  if (manifest == null) {
+    return {
+      schema: characterCreationOwnerEvidenceSchema,
+      rowIds: [],
+      issues: ["Character-creation owner evidence manifest is missing."],
+    };
+  }
+  const issues = [];
+  if (manifest.schema !== characterCreationOwnerEvidenceSchema) {
+    issues.push(
+      `Character-creation owner evidence manifest schema must be ${characterCreationOwnerEvidenceSchema}.`,
+    );
+  }
+  if (manifest.owner !== "character-creation-runtime") {
+    issues.push(
+      "Character-creation owner evidence manifest owner must be character-creation-runtime.",
+    );
+  }
+  const rows = manifest.rows ?? {};
+  if (!isRecord(rows)) {
+    issues.push(
+      "Character-creation owner evidence manifest rows must be an object keyed by SRD inventory row id.",
+    );
+    return {
+      schema: manifest.schema,
+      rowIds: [],
+      issues,
+    };
+  }
+  for (const [rowId, evidence] of Object.entries(rows)) {
+    if (!isRecord(evidence)) {
+      issues.push(
+        ...characterCreationOwnerEvidenceReferenceIssues(root, rowId, evidence),
+      );
+      continue;
+    }
+    if (!evidence.taskId) {
+      issues.push(`${rowId} lacks taskId.`);
+    }
+    if (!evidence.profile) {
+      issues.push(`${rowId} lacks profile.`);
+    }
+    if (!evidence.summary) {
+      issues.push(`${rowId} lacks summary.`);
+    }
+    for (const kind of characterCreationOwnerEvidenceKinds) {
+      if (!hasNonEmptyEvidenceList(evidence, kind)) {
+        issues.push(`${rowId} lacks ${kind} evidence.`);
+      }
+    }
+    issues.push(
+      ...characterCreationOwnerEvidenceReferenceIssues(root, rowId, evidence),
+    );
+  }
+  return {
+    schema: manifest.schema,
+    rowIds: Object.keys(rows).sort(),
+    issues,
+  };
+}
+
+function characterCreationOwnerEvidenceReferenceIssues(root, rowId, evidence) {
+  const issues = [];
+  if (!isRecord(evidence)) {
+    return [`${rowId} manifest evidence must be an object.`];
+  }
+  for (const kind of characterCreationOwnerEvidenceKinds) {
+    const references = evidence[kind];
+    if (!Array.isArray(references)) continue;
+    for (const reference of references) {
+      issues.push(
+        ...characterCreationOwnerEvidenceReferenceIssue(
+          root,
+          rowId,
+          kind,
+          reference,
+        ),
+      );
+    }
+  }
+  return issues;
+}
+
+function characterCreationOwnerEvidenceReferenceIssue(
+  root,
+  rowId,
+  kind,
+  reference,
+) {
+  if (typeof reference !== "string" || reference.length === 0) {
+    return [`${rowId} has non-string ${kind} evidence reference.`];
+  }
+  const separator = reference.lastIndexOf(":");
+  if (separator === -1) {
+    return [
+      `${rowId} ${kind} evidence reference must be path:symbol: ${reference}`,
+    ];
+  }
+  const relativePath = reference.slice(0, separator);
+  const symbolPath = reference.slice(separator + 1);
+  if (
+    !relativePath.startsWith("packages/character-creation-runtime/src/") ||
+    !relativePath.endsWith(".ts")
+  ) {
+    return [
+      `${rowId} ${kind} evidence reference must point under packages/character-creation-runtime/src: ${reference}`,
+    ];
+  }
+  if (!/^[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/.test(symbolPath)) {
+    return [
+      `${rowId} ${kind} evidence reference has invalid symbol path: ${reference}`,
+    ];
+  }
+  const absolutePath = path.join(root, relativePath);
+  if (!fs.existsSync(absolutePath)) {
+    return [
+      `${rowId} ${kind} evidence reference points to missing file: ${reference}`,
+    ];
+  }
+  const content = fs.readFileSync(absolutePath, "utf8");
+  const [symbolName, ...propertyPath] = symbolPath.split(".");
+  const symbolPattern = new RegExp(
+    `(?:^|\\n)\\s*(?:export\\s+)?(?:const|let|var|function|class|type|interface|enum)\\s+${escapeRegExp(symbolName)}\\b`,
+  );
+  if (!symbolPattern.test(content)) {
+    return [
+      `${rowId} ${kind} evidence reference points to missing symbol ${symbolName}: ${reference}`,
+    ];
+  }
+  for (const propertyName of propertyPath) {
+    const propertyPattern = new RegExp(
+      `\\b${escapeRegExp(propertyName)}\\b\\s*:`,
+    );
+    if (!propertyPattern.test(content)) {
+      return [
+        `${rowId} ${kind} evidence reference points to missing property ${propertyName}: ${reference}`,
+      ];
+    }
+  }
+  return [];
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function isRecord(value) {
+  return value != null && typeof value === "object" && !Array.isArray(value);
 }
 
 function withState(rows, authored, installedIds, ownerEvidenceSources) {
@@ -670,9 +916,10 @@ function buildRecommendedBatches(rows) {
       title: "Classify Installed Level-1 Owner Evidence",
       intent:
         "Stop treating installed level-1 rows as done by catalog load alone; assign operational owner expectations or explicit catalog-only closure.",
-      rows: installedNeedsOwnerEvidence.length === 0
-        ? classifiedInstalledRows
-        : installedNeedsOwnerEvidence,
+      rows:
+        installedNeedsOwnerEvidence.length === 0
+          ? classifiedInstalledRows
+          : installedNeedsOwnerEvidence,
       nextAction:
         installedNeedsOwnerEvidence.length === 0
           ? "Installed level-1 rows have owner-specific classifications; keep evidence-required and catalog-only closures visible in later planning."
@@ -796,6 +1043,7 @@ function buildSrdUnitInventory({
   inventory,
   unitClaims = [],
   unitEvidence = [],
+  characterCreationOwnerEvidence,
 }) {
   const authored = findAuthored(root);
   const installedIds = new Set(
@@ -804,8 +1052,10 @@ function buildSrdUnitInventory({
       .map((unit) => unit.unitId),
   );
   const ownerEvidenceSources = buildOwnerEvidenceSources({
+    root,
     unitClaims,
     unitEvidence,
+    characterCreationOwnerEvidence,
   });
   const rows = withState(
     classOrder.flatMap((className) => classRows(root, className)),
@@ -815,13 +1065,20 @@ function buildSrdUnitInventory({
   ).sort((a, b) => a.id.localeCompare(b.id));
   const levelOneRows = rows.filter((row) => row.levelBand === "level-1");
   const spellPressureRows = rows.filter(
-    (row) => row.levelBand === "spell-level-0" || row.levelBand === "spell-level-1",
+    (row) =>
+      row.levelBand === "spell-level-0" || row.levelBand === "spell-level-1",
   );
   return {
     generatedBy: "scripts/unit-profile-coverage-check.cjs",
     sourceCorpus: ".references/srd-5.2.1/Classes",
     scope:
       "SRD 5.2.1 class-derived Unit/catalog backlog rows, prioritized around level 1 plus level-1 spell-list pressure.",
+    evidenceArtifacts: {
+      characterCreationOwnerEvidence: summarizeCharacterCreationOwnerEvidence(
+        root,
+        characterCreationOwnerEvidence,
+      ),
+    },
     metrics: {
       totalRows: rows.length,
       levelOneRows: levelOneRows.length,
@@ -851,7 +1108,8 @@ function validateSrdUnitInventory(report) {
   const issues = [];
   const seen = new Set();
   for (const row of report.rows) {
-    if (seen.has(row.id)) issues.push(`Duplicate SRD inventory row id ${row.id}.`);
+    if (seen.has(row.id))
+      issues.push(`Duplicate SRD inventory row id ${row.id}.`);
     seen.add(row.id);
     if (!row.category) issues.push(`${row.id} is unclassified.`);
     if (!row.finalDisposition) issues.push(`${row.id} lacks finalDisposition.`);
@@ -859,7 +1117,9 @@ function validateSrdUnitInventory(report) {
       row.finalDisposition === "needs-surface-widening" &&
       !row.surface.missingConstruct
     ) {
-      issues.push(`${row.id} needs Surface widening but lacks missingConstruct.`);
+      issues.push(
+        `${row.id} needs Surface widening but lacks missingConstruct.`,
+      );
     }
     if (
       row.finalDisposition === "catalog-installed-needs-owner-evidence" &&
@@ -894,6 +1154,18 @@ function validateSrdUnitInventory(report) {
       issues.push(
         `${row.id} is an installed level-1 row with generic owner evidence.`,
       );
+    }
+  }
+  const characterCreationArtifact =
+    report.evidenceArtifacts?.characterCreationOwnerEvidence;
+  if (characterCreationArtifact) {
+    issues.push(...characterCreationArtifact.issues);
+    for (const rowId of characterCreationArtifact.rowIds) {
+      if (!seen.has(rowId)) {
+        issues.push(
+          `Character-creation owner evidence references unknown SRD inventory row id ${rowId}.`,
+        );
+      }
     }
   }
   for (const batch of report.recommendedBatches) {

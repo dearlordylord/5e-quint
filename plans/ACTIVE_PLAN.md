@@ -100,7 +100,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 167,
       "id": "SRDINV1B",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Create Character-Creation Owner Evidence Manifest"
     },
     {
@@ -118,7 +118,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 170,
       "id": "SRDINV4",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Classify Level-1 Character Creation Rows"
     },
     {
@@ -219,10 +219,10 @@ Keep it synchronized with the DAG table and task details.
 | 164   | QMBT69 - Recursive Unit Profile Planning Review | deferred | QMBT68 | none | [QMBT66 review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT66_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Still parked by the SRD inventory frontier instruction; QMBT68 is complete, but the older QMBT queue remains deferred until that frontier resumes it. |
 | 165   | SRDINV1 - Classify Installed Level-1 Owner Evidence | done | none | SRDINV1A | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed installed level-1 owner-evidence classification, but follow-up must remove private evidence constants before downstream SRDINV work proceeds. |
 | 166   | SRDINV1A - Derive SRDINV1 Owner Evidence From Durable Sources | done | SRDINV1 | SRDINV1B, SRDINV2-SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [Unit profile evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/unit-evidence.jsonl), [Unit profile claims](/workspace/typescript/dnd/plans/unit-profile-coverage/unit-claims.jsonl), [character-creation-runtime tests](/workspace/typescript/dnd/packages/character-creation-runtime/src/index.test.ts) | Completed durable evidence-source derivation: battle-runtime owner evidence now comes from Unit matrix artifacts, character-creation rows without a row-level manifest remain evidence-required, and private evidence-present allowlists were removed. |
-| 167   | SRDINV1B - Create Character-Creation Owner Evidence Manifest | ready-for-research | SRDINV1A | SRDINV4 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [character-creation-runtime tests](/workspace/typescript/dnd/packages/character-creation-runtime/src/index.test.ts), [character-creation-runtime README](/workspace/typescript/dnd/packages/character-creation-runtime/README.md) | Create a checker-readable character-creation owner-evidence manifest, wire it into the SRD inventory generator, and reclassify only rows covered by durable row-level evidence. |
+| 167   | SRDINV1B - Create Character-Creation Owner Evidence Manifest | done | SRDINV1A | SRDINV4 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [character-creation-runtime tests](/workspace/typescript/dnd/packages/character-creation-runtime/src/index.test.ts), [character-creation-runtime README](/workspace/typescript/dnd/packages/character-creation-runtime/README.md), [character-creation owner evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/character-creation-owner-evidence.json) | Completed checker-readable character-creation owner-evidence manifest and inventory wiring; covered Fighter/Wizard support-profile rows now derive owner-evidence-present from manifest entries, while absent rows remain owner-evidence-required. |
 | 168   | SRDINV2 - Author Missing Level-1 Class Containers | ready-for-research | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Create or explicitly close the ten missing SRD level-1 class container records. |
 | 169   | SRDINV3 - Classify Missing Level-1 Class Feature Rows | ready-for-research | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Decide which missing level-1 class feature rows need authored content, Surface widening, non-runtime closure, or later runtime work. |
-| 170   | SRDINV4 - Classify Level-1 Character Creation Rows | blocked | SRDINV1A, SRDINV1B | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Separate class-container-owned creation/progression facts from rows that require standalone authored records. |
+| 170   | SRDINV4 - Classify Level-1 Character Creation Rows | ready-for-research | SRDINV1A, SRDINV1B | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [character-creation owner evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/character-creation-owner-evidence.json) | Separate remaining class-container-owned creation/progression facts from rows that require standalone authored records; SRDINV1B is complete, so this classification task is runnable. |
 | 171   | SRDINV5A - Classify Level-1 Spell Access Rows | ready-for-research | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Classify class Spellcasting/access rows separately from individual Spell Unit pressure. |
 | 172   | SRDINV5B - Classify Missing Cantrip and Level-1 Spell Units | ready-for-research | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Group missing cantrip and level-1 Spell Unit rows by authoring readiness, Surface blockers, and runtime-support pressure. |
 | 173   | SRDINV5C - Classify Installed Cantrip and Level-1 Spell Units | ready-for-research | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Distinguish catalog evidence from operational owner evidence for installed cantrip and level-1 Spell Unit rows. |
@@ -606,7 +606,7 @@ are read together to derive battle-runtime owner evidence.
 
 ### Task 167 - SRDINV1B - Create Character-Creation Owner Evidence Manifest
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV1A
 
@@ -635,6 +635,15 @@ manifest; rows absent from the manifest remain
 `catalog-installed-owner-evidence-required`; active-plan consistency across
 Ralph index, DAG table, and task details; `pnpm unit-profile-coverage:check`;
 `/simplify` convergence.
+
+Closeout: added
+[character-creation-owner-evidence.json](/workspace/typescript/dnd/plans/unit-profile-coverage/character-creation-owner-evidence.json)
+as the checker-readable row-id keyed manifest and wired the SRD inventory
+generator/checker to accept character-creation owner evidence only from complete
+manifest entries with valid source references. The refreshed inventory promotes
+16 Fighter/Wizard character-creation rows to
+`catalog-installed-owner-evidence-present`; rows absent from the manifest remain
+`catalog-installed-owner-evidence-required`.
 
 ### Task 168 - SRDINV2 - Author Missing Level-1 Class Containers
 
@@ -687,7 +696,7 @@ convergence.
 
 ### Task 170 - SRDINV4 - Classify Level-1 Character Creation Rows
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: SRDINV1A, SRDINV1B
 

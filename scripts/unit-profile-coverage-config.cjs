@@ -138,6 +138,10 @@ function coveragePaths(root) {
     unitClaims: path.join(coverageDir, "unit-claims.jsonl"),
     unitEvidence: path.join(coverageDir, "unit-evidence.jsonl"),
     taskClaims: path.join(coverageDir, "task-claims.jsonl"),
+    characterCreationOwnerEvidence: path.join(
+      coverageDir,
+      "character-creation-owner-evidence.json",
+    ),
     matrix: path.join(coverageDir, "unit-matrix.json"),
     report: path.join(coverageDir, "UNIT_REPORT.md"),
     srdUnitInventory: path.join(coverageDir, "srd-unit-inventory.json"),

@@ -1,0 +1,343 @@
+{
+  "schema": "dnd.srd-character-creation-owner-evidence.v1",
+  "owner": "character-creation-runtime",
+  "notes": "Row-level owner evidence for SRD inventory rows whose installed Surface class records are exercised by the current character-creation support profile. This manifest records durable runtime evidence; it is not authored provenance and does not claim complete SRD option breadth outside the support profile.",
+  "rows": {
+    "srd521:classes/fighter:level-1:class-feature-grant:fighter_fighting_style": {
+      "taskId": "SRDINV1B",
+      "profile": "level-1 Fighter support profile",
+      "summary": "Fighter progression discovers and fills the Fighting Style Unit-backed choice, finalizes the selected feat ref, and projects it through CharacterBuild feature Unit refs.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverClassFeatureGrantHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:finalizedSelections",
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections",
+        "packages/character-creation-runtime/src/finalization.ts:unitChoiceSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:finalizes supported Fighter 1 build"
+      ]
+    },
+    "srd521:classes/fighter:level-1:core-trait:fighter_armor_training": {
+      "taskId": "SRDINV1B",
+      "profile": "level-1 Fighter support profile",
+      "summary": "Fighter class facts are read from the Surface class record and projected from finalized progression into build armor training.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:SUPPORTED_PROGRESSIONS"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildArmorTraining"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:finalizes supported Fighter 1 build"
+      ]
+    },
+    "srd521:classes/fighter:level-1:core-trait:fighter_hit_point_die": {
+      "taskId": "SRDINV1B",
+      "profile": "level-1 Fighter support profile",
+      "summary": "Fighter class facts are read from the Surface class record and projected from finalized progression into build Hit Dice and Hit Point maximum.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:SUPPORTED_PROGRESSIONS"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildHitPoints"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:finalizes supported Fighter 1 build"
+      ]
+    },
+    "srd521:classes/fighter:level-1:core-trait:fighter_saving_throw_proficiencies": {
+      "taskId": "SRDINV1B",
+      "profile": "level-1 Fighter support profile",
+      "summary": "Fighter class facts are read from the Surface class record and projected from finalized progression into build saving throw proficiencies.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:SUPPORTED_PROGRESSIONS"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildProficiencies"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:finalizes supported Fighter 1 build"
+      ]
+    },
+    "srd521:classes/fighter:level-1:core-trait:fighter_skill_proficiencies": {
+      "taskId": "SRDINV1B",
+      "profile": "level-1 Fighter support profile",
+      "summary": "Fighter skill choices are discovered from class facts, filled through the support profile, finalized as selected proficiency evidence, and projected into build proficiencies.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:finalizedSelections",
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections",
+        "packages/character-creation-runtime/src/finalization.ts:unitChoiceSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildProficiencies"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:finalizes supported Fighter 1 build"
+      ]
+    },
+    "srd521:classes/fighter:level-1:core-trait:fighter_weapon_proficiencies": {
+      "taskId": "SRDINV1B",
+      "profile": "level-1 Fighter support profile",
+      "summary": "Fighter class facts are read from the Surface class record and projected from finalized progression into build weapon proficiencies.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:SUPPORTED_PROGRESSIONS"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildProficiencies"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:finalizes supported Fighter 1 build"
+      ]
+    },
+    "srd521:classes/fighter:level-1:equipment-pressure:fighter_starting_equipment": {
+      "taskId": "SRDINV1B",
+      "profile": "level-1 Fighter support profile",
+      "summary": "Fighter starting-equipment choice C is discovered from class facts, filled through support-profile equipment choices, finalized as owned equipment, and projected into the build loadout.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:startingEquipmentChoiceHole"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:finalizedBuildEquipment"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:buildCharacterBuild"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:finalizes supported Fighter 1 build"
+      ]
+    },
+    "srd521:classes/fighter:level-1:mastery-pressure:fighter_weapon_mastery": {
+      "taskId": "SRDINV1B",
+      "profile": "level-1 Fighter support profile",
+      "summary": "Fighter Weapon Mastery options are discovered from the feature grant, filled through supported weapon choices, finalized as selected class-choice refs, and retained as build Unit refs.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverClassFeatureGrantHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/phase1-manifest.ts:SUPPORTED_WEAPON_MASTERY_OPTION_IDS"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:finalizedSelections",
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections",
+        "packages/character-creation-runtime/src/finalization.ts:unitChoiceSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildUnitRefs"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:finalizes supported Fighter 1 build"
+      ]
+    },
+    "srd521:classes/fighter:level-1:multiclass-entry:fighter_multiclass_entry_traits": {
+      "taskId": "SRDINV1B",
+      "profile": "Wizard then Fighter level-2 support profile",
+      "summary": "Fighter post-start progression discovers multiclass proficiency holes, fills them through supported proficiency options, finalizes Fighter as an advancement, and projects Fighter Hit Dice, proficiencies, armor training, and feature refs.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverAdditionalClassGrantedHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:SUPPORTED_PROGRESSIONS"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:finalizedSelections",
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildHitPoints",
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildProficiencies",
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildArmorTraining"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:finalizes supported multiclass proficiencies and class feature choices"
+      ]
+    },
+    "srd521:classes/wizard:level-1:core-trait:wizard_armor_training": {
+      "taskId": "SRDINV1B",
+      "profile": "level-1 Wizard support profile",
+      "summary": "Wizard class facts are read from the Surface class record and projected from finalized progression into build armor training.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:SUPPORTED_PROGRESSIONS"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildArmorTraining"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:finalizes Wizard 1 spellcasting build facts from selected spell access"
+      ]
+    },
+    "srd521:classes/wizard:level-1:core-trait:wizard_hit_point_die": {
+      "taskId": "SRDINV1B",
+      "profile": "level-1 Wizard support profile",
+      "summary": "Wizard class facts are read from the Surface class record and projected from finalized progression into build Hit Dice and Hit Point maximum.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:SUPPORTED_PROGRESSIONS"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildHitPoints"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:finalizes supported multiclass proficiencies and class feature choices"
+      ]
+    },
+    "srd521:classes/wizard:level-1:core-trait:wizard_saving_throw_proficiencies": {
+      "taskId": "SRDINV1B",
+      "profile": "level-1 Wizard support profile",
+      "summary": "Wizard class facts are read from the Surface class record and projected from finalized progression into build saving throw proficiencies.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:SUPPORTED_PROGRESSIONS"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildProficiencies"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:finalizes Wizard 1 spellcasting build facts from selected spell access"
+      ]
+    },
+    "srd521:classes/wizard:level-1:core-trait:wizard_skill_proficiencies": {
+      "taskId": "SRDINV1B",
+      "profile": "level-1 Wizard support profile",
+      "summary": "Wizard skill choices are discovered from class facts, filled through the support profile, finalized as selected proficiency evidence, and projected into build proficiencies.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:finalizedSelections",
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections",
+        "packages/character-creation-runtime/src/finalization.ts:unitChoiceSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildProficiencies"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:finalizes Wizard 1 spellcasting build facts from selected spell access"
+      ]
+    },
+    "srd521:classes/wizard:level-1:core-trait:wizard_weapon_proficiencies": {
+      "taskId": "SRDINV1B",
+      "profile": "level-1 Wizard support profile",
+      "summary": "Wizard class facts are read from the Surface class record and projected from finalized progression into build weapon proficiencies.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:SUPPORTED_PROGRESSIONS"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildProficiencies"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:finalizes Wizard 1 spellcasting build facts from selected spell access"
+      ]
+    },
+    "srd521:classes/wizard:level-1:equipment-pressure:wizard_starting_equipment": {
+      "taskId": "SRDINV1B",
+      "profile": "level-1 Wizard support profile",
+      "summary": "Wizard starting-equipment choice B is discovered from class facts, filled through support-profile equipment choices, finalized as owned equipment, and projected into the build loadout.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:startingEquipmentChoiceHole"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:finalizedBuildEquipment"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:buildCharacterBuild"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:finalizes Wizard 1 spellcasting build facts from selected spell access"
+      ]
+    },
+    "srd521:classes/wizard:level-1:spell-access:wizard_spellcasting": {
+      "taskId": "SRDINV1B",
+      "profile": "level-1 Wizard support profile",
+      "summary": "Wizard spellcasting choices are discovered from class spellcasting facts, filled through supported cantrip/spellbook/prepared-spell options, finalized as source-scoped spellcasting, and projected into build spellcasting and slot capacity.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverWizardSpellcastingHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/phase1-manifest.ts:WIZARD_CANTRIP_CHOICE_KEY",
+        "packages/character-creation-runtime/src/phase1-manifest.ts:WIZARD_SPELLBOOK_CHOICE_KEY",
+        "packages/character-creation-runtime/src/phase1-manifest.ts:WIZARD_PREPARED_SPELL_CHOICE_KEY"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:finalizedSelections",
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections",
+        "packages/character-creation-runtime/src/finalization.ts:unitChoiceSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:finalizedBuildSpellcasting",
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildSpellcastingSlotCapacity"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:finalizes Wizard 1 spellcasting build facts from selected spell access"
+      ]
+    }
+  }
+}
