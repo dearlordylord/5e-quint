@@ -102,6 +102,7 @@
         "srd521:classes/sorcerer:level-1:equipment-pressure:sorcerer_starting_equipment",
         "srd521:classes/sorcerer:level-1:multiclass-entry:sorcerer_multiclass_entry_traits",
         "srd521:classes/warlock:level-1:class-container:warlock_class_container",
+        "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations",
         "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic",
         "srd521:classes/warlock:level-1:core-trait:warlock_armor_training",
         "srd521:classes/warlock:level-1:core-trait:warlock_hit_point_die",
@@ -129,16 +130,16 @@
     "spellPressureRows": 211,
     "levelOneClassContainers": 12,
     "levelOneRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 116,
+      "catalog-installed-owner-evidence-present": 117,
       "catalog-only/dead-for-now": 4,
       "non-runtime": 12,
-      "catalog-installed-owner-evidence-required": 24
+      "catalog-installed-owner-evidence-required": 23
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 134,
+      "catalog-installed-owner-evidence-present": 135,
       "catalog-only/dead-for-now": 78,
       "non-runtime": 12,
-      "catalog-installed-owner-evidence-required": 34,
+      "catalog-installed-owner-evidence-required": 33,
       "catalog-authored-executable-follow-up": 70,
       "needs-surface-widening": 33,
       "missing-authored-record": 6
@@ -12112,7 +12113,7 @@
         "state": "installed",
         "unitId": "warlock_eldritch_invocations"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -12120,12 +12121,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime plus future Eldritch Invocation option catalog",
-          "evidence": "Character creation retains the Eldritch Invocations feature Unit reference, but feature-choice owner evidence still requires discoverable invocation option Units before fill, finalization, and build projection can be completed without treating a retained ref as choice evidence.",
-          "status": "owner evidence required"
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV18A level-1 Warlock Eldritch Invocation choice support profile; Eldritch Invocations are discovered from the Warlock feature-choice Surface record and the runtime SRD invocation option catalog, filled through the eldritch_invocations support profile, finalized as selected invocation ownership, and projected into CharacterBuild features without treating invocation options as retained Unit refs.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Character creation retains the Eldritch Invocations feature Unit reference, but feature-choice owner evidence still requires discoverable invocation option Units before fill, finalization, and build projection can be completed without treating a retained ref as choice evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic",

@@ -2294,6 +2294,30 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
+    "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations": {
+      "taskId": "SRDINV18A",
+      "profile": "level-1 Warlock Eldritch Invocation choice support profile",
+      "summary": "Eldritch Invocations are discovered from the Warlock feature-choice Surface record and the runtime SRD invocation option catalog, filled through the eldritch_invocations support profile, finalized as selected invocation ownership, and projected into CharacterBuild features without treating invocation options as retained Unit refs.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:classFeatureGrantChoiceHoles",
+        "packages/character-creation-runtime/src/eldritch-invocations.ts:levelOneEldritchInvocationChoiceOptions"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey",
+        "packages/character-creation-runtime/src/fill-reducer.ts:applyUnitFill"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:allFinalizedChoicesSupported"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:finalizedClassChoiceFeaturesForSupportedChoices",
+        "packages/character-creation-runtime/src/eldritch-invocations.ts:selectedEldritchInvocationFeatures"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:discovers level-1 Warlock Eldritch Invocation options from the invocation catalog",
+        "packages/character-creation-runtime/src/index.test.ts:finalizes a selected Warlock Eldritch Invocation as option ownership, not a retained Unit ref"
+      ]
+    },
     "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic": {
       "taskId": "SRDINV18",
       "profile": "level-1 Warlock class-feature support profile",

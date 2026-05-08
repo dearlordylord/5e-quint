@@ -19,6 +19,7 @@ import type {
   ClassFeatureRecord,
   EffectAtom,
   FeatRecord,
+  FeatureChoiceMechanics,
   ProficiencyGrant,
   ProficiencyGrantSubject,
   Skill,
@@ -48,7 +49,9 @@ import {
   WIZARD_CANTRIP_CHOICE_KEY,
   WIZARD_PREPARED_SPELL_CHOICE_KEY,
   WIZARD_SPELLBOOK_CHOICE_KEY,
+  ELDRITCH_INVOCATIONS_CHOICE_KEY,
 } from "./phase1-manifest.ts";
+import { levelOneEldritchInvocationChoiceOptions } from "./eldritch-invocations.ts";
 import {
   backgroundAbilityScoreIncreaseOptionId,
   backgroundAbilityScoreIncreaseOptions,
@@ -983,12 +986,47 @@ export function classFeatureGrantChoiceHoles(
     return hole === undefined ? [] : [hole];
   }
 
+  if (mechanics.family === "feature_choice") {
+    return eldritchInvocationChoiceHoles(featureUnitId, mechanics, input);
+  }
+
   if (isWeaponMasteryChoiceFeature(feature)) {
     const hole = weaponMasteryFeatureHoleSource(feature, unitLibrary);
     return hole === undefined ? [] : [hole];
   }
 
   return [];
+}
+
+function eldritchInvocationChoiceHoles(
+  featureUnitId: UnitRecord["id"],
+  mechanics: FeatureChoiceMechanics,
+  input: { readonly classLevel?: number },
+): readonly ChoiceCreationHole[] {
+  if (mechanics.choiceKey !== ELDRITCH_INVOCATIONS_CHOICE_KEY) {
+    return [];
+  }
+
+  const cardinality = exactChoiceCardinality(
+    classLevelChoiceCountAtLevel(mechanics.choiceCount, input.classLevel ?? 1),
+  );
+  if (cardinality === undefined) {
+    return [];
+  }
+
+  const options = levelOneEldritchInvocationChoiceOptions();
+  if (choiceCardinalityMax(cardinality) > options.length) {
+    return [];
+  }
+
+  const hole = requireChoiceCreationHole(
+    choiceHole({
+      source: unitSource(featureUnitId, ELDRITCH_INVOCATIONS_CHOICE_KEY),
+      cardinality,
+      options,
+    }),
+  );
+  return hole === undefined ? [] : [hole];
 }
 
 function passiveGrantChoiceHoles(
@@ -1100,10 +1138,9 @@ function uniqueSkills(skills: readonly Skill[]): readonly Skill[] {
 }
 
 function classLevelChoiceCountAtLevel(
-  choiceCount: Extract<
-    EffectAtom,
-    { readonly kind: "grant_expertise" }
-  >["choiceCount"],
+  choiceCount:
+    | Extract<EffectAtom, { readonly kind: "grant_expertise" }>["choiceCount"]
+    | FeatureChoiceMechanics["choiceCount"],
   classLevel: number,
 ): number {
   if (choiceCount.kind === "class_level_additional_choices") {

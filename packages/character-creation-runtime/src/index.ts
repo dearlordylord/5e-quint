@@ -27,6 +27,7 @@ export {
   creationHoleId,
   creationSessionId,
   draftRevision,
+  eldritchInvocationId,
   exactChoiceCardinality,
   hitDieSize,
   hitDieTotal,
@@ -110,6 +111,7 @@ export {
   type CreationSession,
   type CreationSessionId,
   type DraftRevision,
+  type EldritchInvocationId,
   type DraftChoiceCreationHoleSource,
   type DraftCreationHoleSource,
   type FillIndex,
@@ -137,6 +139,13 @@ export {
   type UnitCatalog,
   type UnitRef,
 } from "./types.ts";
+export {
+  LEVEL_ONE_ELDRITCH_INVOCATION_OPTIONS,
+  SRD_ELDRITCH_INVOCATION_OPTIONS,
+  levelOneEldritchInvocationChoiceOptions,
+  type EldritchInvocationOption,
+  type EldritchInvocationPrerequisite,
+} from "./eldritch-invocations.ts";
 export {
   createCharacterDraft,
   parseCharacterDraft,
@@ -188,6 +197,7 @@ export {
   BACKGROUND_EQUIPMENT_CHOICE_KEY,
   BACKGROUND_TOOL_CHOICE_KEY,
   CLASS_EQUIPMENT_CHOICE_KEY,
+  ELDRITCH_INVOCATIONS_CHOICE_KEY,
   CLASS_FEATURE_FEAT_CHOICE_KEY,
   CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
   EQUIPMENT_PURCHASE_CHOICE_KEY,

@@ -73,7 +73,9 @@ import {
   WIZARD_CANTRIP_CHOICE_KEY,
   WIZARD_PREPARED_SPELL_CHOICE_KEY,
   WIZARD_SPELLBOOK_CHOICE_KEY,
+  ELDRITCH_INVOCATIONS_CHOICE_KEY,
 } from "./phase1-manifest.ts";
+import { selectedEldritchInvocationFeatures } from "./eldritch-invocations.ts";
 import {
   CHARACTER_CREATION_SUPPORT_PROFILE,
   isSupportedProgression,
@@ -893,7 +895,9 @@ export function characterBuildFeatureUnitIds(
         )
         .map((grant) => grant.unitId);
     }),
-    ...build.features.map((feature) => feature.unitId),
+    ...build.features.flatMap((feature) =>
+      feature.kind === "selectedClassChoice" ? [feature.unitId] : [],
+    ),
   ]);
 }
 
@@ -1532,7 +1536,9 @@ export function characterBuildUnitRefs(
     build.background,
     build.species,
     ...derivedFeatureUnitIds,
-    ...build.features.map((feature) => feature.unitId),
+    ...build.features.flatMap((feature) =>
+      feature.kind === "selectedClassChoice" ? [feature.unitId] : [],
+    ),
     ...build.equipment.owned.map((item) => item.unitId),
     ...(build.spellcasting?.sources.flatMap((source) => [
       source.sourceUnitId,
@@ -1596,15 +1602,23 @@ export function finalizedClassChoiceFeatures(
 function finalizedClassChoiceFeaturesForSupportedChoices(
   unitChoices: readonly UnitChoiceSelection[],
 ): readonly CharacterBuildFeature[] {
-  return unitChoices.flatMap((selection) =>
-    unitRefsForSupportedClassChoice(selection.source, selection.options).map(
-      (unitId) => ({
-        kind: "selectedClassChoice" as const,
-        unitId,
+  return unitChoices.flatMap((selection): readonly CharacterBuildFeature[] => {
+    if (selection.source.choiceKey === ELDRITCH_INVOCATIONS_CHOICE_KEY) {
+      return selectedEldritchInvocationFeatures({
         selectedFromUnitId: selection.source.unitId,
-      }),
-    ),
-  );
+        optionIds: selection.options.map((option) => option.optionId),
+      });
+    }
+
+    return unitRefsForSupportedClassChoice(
+      selection.source,
+      selection.options,
+    ).map((unitId) => ({
+      kind: "selectedClassChoice" as const,
+      unitId,
+      selectedFromUnitId: selection.source.unitId,
+    }));
+  });
 }
 
 export function finalizedBuildEquipment(

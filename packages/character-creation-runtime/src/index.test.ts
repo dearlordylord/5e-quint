@@ -36,6 +36,7 @@ import {
   computeTotalLevel,
   CHARACTER_EQUIPMENT_ITEM_SLOTS,
   LOADOUT_SLOTS,
+  SRD_ELDRITCH_INVOCATION_OPTIONS,
   UNIT_CHOICE_KEYS,
   abilityScoreAssignment,
   classUnitIdFromUnitId,
@@ -92,6 +93,7 @@ import {
 } from "./support-gates.ts";
 import {
   abilityScoreIncreaseChoiceOptions,
+  ELDRITCH_INVOCATIONS_CHOICE_KEY,
   progressionOptionId,
   SRD_LEVEL_ONE_CLASS_UNIT_IDS,
 } from "./phase1-manifest.ts";
@@ -2707,6 +2709,81 @@ describe("character creation finalization", () => {
         draft,
       });
     }
+  });
+
+  test("discovers level-1 Warlock Eldritch Invocation options from the invocation catalog", () => {
+    const draft = createTestDraft("draft:warlock-invocation-discovery");
+    const afterInitial = requireAcceptedBatch(
+      fillCreationHoles({
+        draft,
+        unitLibrary,
+        expectedRevision: draft.revision,
+        fills: initialManifestFills("13:class_warlock:level_1:maximum_hit_die"),
+      }),
+    );
+
+    const invocationHole = holeById(
+      discoverCreationHoles({ draft: afterInitial, unitLibrary }),
+      testUnitHoleId(
+        "warlock_eldritch_invocations",
+        ELDRITCH_INVOCATIONS_CHOICE_KEY,
+      ),
+    );
+
+    expect(invocationHole).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 1 },
+      source: {
+        tag: "unitChoice",
+        unitId: "warlock_eldritch_invocations",
+        choiceKey: "eldritch_invocations",
+      },
+    });
+    expect(
+      invocationHole?.kind === "choice" ? invocationHole.options : [],
+    ).toEqual(
+      SRD_ELDRITCH_INVOCATION_OPTIONS.filter(
+        (option) => option.prerequisites.length === 0,
+      ).map((option) => ({
+        optionId: option.optionId,
+        label: option.label,
+      })),
+    );
+  });
+
+  test("finalizes a selected Warlock Eldritch Invocation as option ownership, not a retained Unit ref", () => {
+    const draft = completeSupportedProgressionDraft({
+      draftId: "draft:warlock-invocation-finalization",
+      progression: testProgression("class_warlock", 1),
+    });
+    const result = finalizeCharacterDraft({ draft, unitLibrary });
+
+    expect(result.tag).toBe("ready");
+    if (result.tag !== "ready") return;
+
+    expect(result.build.features).toContainEqual({
+      kind: "selectedEldritchInvocation",
+      selectedFromUnitId: "warlock_eldritch_invocations",
+      invocationId: "armor_of_shadows",
+    });
+    expect(
+      result.build.features.some(
+        (feature) =>
+          feature.kind === "selectedClassChoice" &&
+          feature.selectedFromUnitId === "warlock_eldritch_invocations",
+      ),
+    ).toBe(false);
+    expect(characterBuildFeatureUnitIds(result.build, unitLibrary)).toEqual(
+      expect.arrayContaining([
+        "warlock_eldritch_invocations",
+        "warlock_pact_magic",
+      ]),
+    );
+    expect(
+      characterBuildUnitRefs(result.build, unitLibrary).map(
+        (ref) => ref.unitId,
+      ),
+    ).not.toContain("armor_of_shadows");
   });
 
   test("collects all missing class Unit issues while projecting a build", () => {

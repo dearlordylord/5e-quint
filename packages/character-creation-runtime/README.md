@@ -102,7 +102,8 @@ This package supports these character-creation profiles:
   progression facts;
 - level-1 Wizard spellcasting creation facts;
 - retained SRD level-1 class-feature Unit refs, plus supported acquisition
-  choices for Divine Order, Primal Order, and Rogue Expertise;
+  choices for Divine Order, Primal Order, Rogue Expertise, and Warlock
+  Eldritch Invocations;
 - Orc species;
 - Soldier background;
 - Standard Array ability assignment;
@@ -153,20 +154,27 @@ more legal Units and options.
 
 The finalized `CharacterBuild` carries Character Progression, origin identity,
 final ability scores, selected proficiency evidence, selected class-choice Unit
-refs, selected Expertise evidence, source-scoped spellcasting choices, owned
-equipment, and initial loadout.
+refs, selected Eldritch Invocation option evidence, selected Expertise evidence,
+source-scoped spellcasting choices, owned equipment, and initial loadout.
 It deliberately does not store class feature grant lists, background origin
 feat, species traits, Hit Point maximum, Hit Dice totals, total proficiencies,
 armor training, activation resources, or global spell slot capacity when those
 facts can be derived from retained build facts plus the Unit catalog. Supported
 subclass choices, class-feature feat grants including Ability Score Improvement
-and Epic Boon ability-score increases, proficiency choices, Wizard spellcasting
-choices, loadout refs, and equipment item ids are projected from accepted draft
-selections and Unit readers, not reauthored as parallel constants. The remaining
-finalization gate rejects complete drafts whose progression profile, origin
-facts, choices, or equipment are outside the support profile. `CharacterBuild`
-does not carry current HP, Temporary Hit Points, expended resources or Spell
-Slots, Hit Dice remaining, or battle creature-init types.
+and Epic Boon ability-score increases, proficiency choices, Eldritch Invocation
+options, Wizard spellcasting choices, loadout refs, and equipment item ids are
+projected from accepted draft selections and Unit readers, not reauthored as
+parallel constants. The remaining finalization gate rejects complete drafts whose
+progression profile, origin facts, choices, or equipment are outside the support
+profile. `CharacterBuild` does not carry current HP, Temporary Hit Points,
+expended resources or Spell Slots, Hit Dice remaining, or battle creature-init
+types.
+
+Eldritch Invocation choices are not Unit refs. The Warlock class feature Unit
+remains a retained class-feature ref derived from the Surface class record, while
+selected invocation options are character-creation option ownership facts from
+`src/eldritch-invocations.ts`. Invocation runtime behavior and spell execution
+remain outside this package.
 
 Spellcasting on a build is source-scoped. Each source records the source Unit,
 spellcasting ability, cantrips, spellbook entries, prepared spells, and focus

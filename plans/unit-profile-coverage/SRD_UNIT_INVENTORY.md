@@ -13,8 +13,8 @@ This is a Unit/catalog backlog denominator, not RAW span coverage and not an MBT
 
 ### Level-1 Rows by Disposition
 
-- catalog-installed-owner-evidence-present: 116
-- catalog-installed-owner-evidence-required: 24
+- catalog-installed-owner-evidence-present: 117
+- catalog-installed-owner-evidence-required: 23
 - catalog-only/dead-for-now: 4
 - non-runtime: 12
 
@@ -208,7 +208,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Sorcerer multiclass entry traits|character-creation or progression mechanic|class-container-owned-source-fact|current-surface-can-express-source-facts|authored-record-present|installed|catalog-installed-owner-evidence-present|Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Sorcerer.md:22|
 |Sorcerer Spellcasting|spell access/list pressure||current-surface-can-express-source-facts|authored-record-present|installed|catalog-installed-owner-evidence-required|Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence required|Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.|.references/srd-5.2.1/Classes/Sorcerer.md:56|
 |Warlock class container|class container||current-surface-can-express-source-facts|authored-record-present|installed|catalog-installed-owner-evidence-present|Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Warlock.md:3|
-|Warlock Eldritch Invocations|class feature||current-surface-can-express-source-facts|authored-record-present|installed|catalog-installed-owner-evidence-required|Unit catalog/admission: catalog evidence; character-creation-runtime plus future Eldritch Invocation option catalog: owner evidence required|Character creation retains the Eldritch Invocations feature Unit reference, but feature-choice owner evidence still requires discoverable invocation option Units before fill, finalization, and build projection can be completed without treating a retained ref as choice evidence.|.references/srd-5.2.1/Classes/Warlock.md:56|
+|Warlock Eldritch Invocations|class feature||current-surface-can-express-source-facts|authored-record-present|installed|catalog-installed-owner-evidence-present|Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Warlock.md:56|
 |Warlock Pact Magic|class feature||current-surface-can-express-source-facts|authored-record-present|installed|catalog-installed-owner-evidence-present|Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Warlock.md:68|
 |Warlock level 1 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|non-runtime||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Warlock.md:35|
 |Warlock Armor Training|character-creation or progression mechanic|class-container-owned-source-fact|current-surface-can-express-source-facts|authored-record-present|installed|catalog-installed-owner-evidence-present|Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Warlock.md:12|

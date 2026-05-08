@@ -114,12 +114,18 @@ export const UNIT_CHOICE_KEYS = [
   "bard_multiclass_musical_instrument_proficiency",
   "ranger_multiclass_skill_proficiency",
   "rogue_multiclass_skill_proficiency",
+  "eldritch_invocations",
   "weapon_mastery_options",
   "wizard_cantrip_choices",
   "wizard_spellbook_choices",
   "wizard_prepared_spell_choices",
 ] as const;
 export type UnitChoiceKey = (typeof UNIT_CHOICE_KEYS)[number];
+
+export type EldritchInvocationId = string & Brand.Brand<"EldritchInvocationId">;
+const EldritchInvocationId = Brand.nominal<EldritchInvocationId>();
+export const eldritchInvocationId: (value: string) => EldritchInvocationId =
+  EldritchInvocationId;
 
 export const LOADOUT_SLOTS = ["armor", "shield", "weapon"] as const;
 export type LoadoutSlot = (typeof LOADOUT_SLOTS)[number];
@@ -983,10 +989,17 @@ export type CharacterBuildProficiencyChoiceSubject =
   | { readonly kind: "tool"; readonly toolId: ToolProficiencyId };
 
 export type CharacterBuildFeature = {
-  readonly kind: "selectedClassChoice";
-  readonly unitId: UnitRecord["id"];
   readonly selectedFromUnitId: UnitRecord["id"];
-};
+} & (
+  | {
+      readonly kind: "selectedClassChoice";
+      readonly unitId: UnitRecord["id"];
+    }
+  | {
+      readonly kind: "selectedEldritchInvocation";
+      readonly invocationId: EldritchInvocationId;
+    }
+);
 
 export type CharacterBuildResource = {
   readonly unitId: UnitRecord["id"];

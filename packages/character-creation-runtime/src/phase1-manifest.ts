@@ -190,6 +190,8 @@ export const RANGER_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY =
   "ranger_multiclass_skill_proficiency" satisfies UnitChoiceKey;
 export const ROGUE_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY =
   "rogue_multiclass_skill_proficiency" satisfies UnitChoiceKey;
+export const ELDRITCH_INVOCATIONS_CHOICE_KEY =
+  "eldritch_invocations" satisfies UnitChoiceKey;
 export const MULTICLASS_PROFICIENCY_CHOICE_KEYS = [
   BARD_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY,
   BARD_MULTICLASS_MUSICAL_INSTRUMENT_PROFICIENCY_CHOICE_KEY,
