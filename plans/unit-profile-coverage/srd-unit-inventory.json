@@ -1803,7 +1803,7 @@
     {
       "id": "SRDINV28A",
       "title": "Generalize Spell Damage Invocation Runtime",
-      "suggestedStatus": "ready-for-research",
+      "suggestedStatus": "done",
       "intent": "Generalize the spell attack/save-damage invocation model before admitting more concrete Spell Definitions.",
       "rowCount": 19,
       "rowIds": [
@@ -1833,7 +1833,7 @@
     {
       "id": "SRDINV28B",
       "title": "Promote Pure Spell Damage Runtime",
-      "suggestedStatus": "blocked",
+      "suggestedStatus": "ready-for-research",
       "intent": "Promote the simplest pure damage Spell Definitions after the shared invocation shape exists.",
       "rowCount": 8,
       "rowIds": [
@@ -1852,7 +1852,7 @@
     {
       "id": "SRDINV28C",
       "title": "Promote Spell Attack Damage Runtime",
-      "suggestedStatus": "blocked",
+      "suggestedStatus": "ready-for-research",
       "intent": "Promote spell attack damage without mandatory Ray-of-Frost speed-rider coupling.",
       "rowCount": 14,
       "rowIds": [

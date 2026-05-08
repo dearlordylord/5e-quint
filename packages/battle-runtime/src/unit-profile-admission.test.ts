@@ -2153,7 +2153,7 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
         procedure: "saveGatedDamage",
         spell,
         ability: "dex",
-        area: {
+        targeting: {
           kind: "pointOriginSphere",
           radiusFeet: 5,
         },

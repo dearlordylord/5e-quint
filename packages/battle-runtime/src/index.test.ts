@@ -13,6 +13,7 @@ import {
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   BattleFillSchema,
+  BattleHoleSchema,
   BattleSnapshotSchema,
   battleCombatantSide,
   BattleSubjectSchema,
@@ -11971,6 +11972,369 @@ describe("battle runtime", () => {
     expect(expendedLevelOneSlots(requireResolved(rayMiss), wizardId)).toBe(0);
   });
 
+  test("prepared spell-slot damage can use spell attack or save-gated invocation refs", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-prepared-damage-invocation-refs"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            cantrips: [],
+            preparedSpells: [slotAttackDamageSpell(), slotSaveDamageSpell()],
+            spellSlots: [{ spellLevel: 1, count: 2 }],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+
+    expect(discoverBattleActs(state).map((act) => act.subject)).toEqual(
+      expect.arrayContaining([
+        {
+          tag: "actionSpell",
+          actorId: wizardId,
+          invocation: spellSlotInvocationRef(
+            "slot_attack_damage",
+            1,
+            "spellAttackDamage",
+          ),
+          mode: { tag: "cast" },
+        },
+        {
+          tag: "actionSpell",
+          actorId: wizardId,
+          invocation: spellSlotInvocationRef(
+            "slot_save_damage",
+            1,
+            "saveGatedDamage",
+          ),
+          mode: { tag: "cast" },
+        },
+      ]),
+    );
+
+    const attackSubject: BattleSubject = {
+      tag: "actionSpell",
+      actorId: wizardId,
+      invocation: spellSlotInvocationRef(
+        "slot_attack_damage",
+        1,
+        "spellAttackDamage",
+      ),
+      mode: { tag: "cast" },
+    };
+    const attackTarget = requireHole(
+      resolveBattleSubject({ state, subject: attackSubject, fills: [] }),
+      "targetChoice",
+    );
+    const attackRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [
+          targetFill(attackTarget, skeletonId, [
+            {
+              kind: "spellTarget",
+              casterId: wizardId,
+              targetId: skeletonId,
+              spellId: "slot_attack_damage",
+            },
+          ]),
+        ],
+      }),
+      "attackRoll",
+    );
+    const attackDamage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [
+          targetFill(attackTarget, skeletonId, [
+            {
+              kind: "spellTarget",
+              casterId: wizardId,
+              targetId: skeletonId,
+              spellId: "slot_attack_damage",
+            },
+          ]),
+          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    expect(attackDamage).toMatchObject({
+      label: "Slot Attack Damage damage (2d8-cold)",
+    });
+    const afterAttackSpell = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [
+          targetFill(attackTarget, skeletonId, [
+            {
+              kind: "spellTarget",
+              casterId: wizardId,
+              targetId: skeletonId,
+              spellId: "slot_attack_damage",
+            },
+          ]),
+          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+          damageRollFillWithGroups(attackDamage, [[4, 4]]),
+        ],
+      }),
+    );
+    expect(expendedLevelOneSlots(afterAttackSpell, wizardId)).toBe(1);
+    expect(
+      afterAttackSpell.state.combatants.get(skeletonId)?.activeEffects,
+    ).toHaveLength(0);
+
+    const saveSubject: BattleSubject = {
+      tag: "actionSpell",
+      actorId: wizardId,
+      invocation: spellSlotInvocationRef(
+        "slot_save_damage",
+        1,
+        "saveGatedDamage",
+      ),
+      mode: { tag: "cast" },
+    };
+    const saveOutcome = requireHole(
+      resolveBattleSubject({ state, subject: saveSubject, fills: [] }),
+      "savingThrowOutcome",
+    );
+    const saveDamage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: saveSubject,
+        fills: [
+          savingThrowOutcomeFill(saveOutcome, [
+            { targetId: skeletonId, succeeded: false },
+          ]),
+        ],
+      }),
+      "rolledDice",
+    );
+    expect(saveDamage).toMatchObject({
+      label: "Slot Save Damage damage (2d6-acid)",
+    });
+    const afterSaveSpell = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: saveSubject,
+        fills: [
+          savingThrowOutcomeFill(saveOutcome, [
+            { targetId: skeletonId, succeeded: false },
+          ]),
+          damageRollFillWithGroups(saveDamage, [[3, 3]]),
+        ],
+      }),
+    );
+    expect(expendedLevelOneSlots(afterSaveSpell, wizardId)).toBe(1);
+  });
+
+  test("spell damage invocation holes reject contradictory access and resource pairs", () => {
+    const spell = slotAttackDamageSpell();
+    const baseHole = {
+      kind: "rolledDice",
+      holeId: holeId("battle:test:invalid-spell-damage"),
+      holeInstanceKey: holeInstanceKey("battle:test:invalid-spell-damage"),
+      label: "Invalid spell damage",
+      critical: false,
+      spell: {
+        procedure: "spellAttackDamage",
+        spell,
+        targeting: { kind: "singleCombatant" },
+        damage: { expr: { dice: 1, dieSize: 8 }, damageType: "cold" },
+        rangeFeet: movementFeet(60),
+        attackKind: "ranged_spell_attack",
+        attackBonus: attackBonus(5),
+        postDamageRiders: [],
+      },
+    };
+
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleHoleSchema)({
+          ...baseHole,
+          spell: {
+            ...baseHole.spell,
+            access: { tag: "classCantrip" },
+            resource: { tag: "spellSlot", slotLevel: 1 },
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleHoleSchema)({
+          ...baseHole,
+          spell: {
+            ...baseHole.spell,
+            access: { tag: "prepared" },
+            resource: { tag: "none" },
+          },
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test("prepared spell-slot damage supports only slot-axis linear scaling", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-prepared-damage-axis"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            cantrips: [],
+            preparedSpells: [
+              slotAttackDamageSpell({ axis: "slot" }),
+              slotAttackDamageSpell({
+                id: "character_axis_attack_damage",
+                name: "Character Axis Attack Damage",
+                axis: "character",
+              }),
+            ],
+            spellSlots: [{ spellLevel: 1, count: 2 }],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const spellAttackSubjects = discoverBattleActs(state)
+      .flatMap((act) =>
+        act.subject.tag === "actionSpell" ||
+        act.subject.tag === "bonusActionSpell"
+          ? [act.subject.invocation]
+          : [],
+      )
+      .filter(
+        (invocation) =>
+          invocation.procedure === "spellAttackDamage" &&
+          invocation.tag === "spellSlot",
+      )
+      .map((invocation) => invocation.spellId);
+
+    expect(spellAttackSubjects).toContain("slot_attack_damage");
+    expect(spellAttackSubjects).not.toContain("character_axis_attack_damage");
+  });
+
+  test("cantrip damage uses character-tier scaling from the authored source", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-cantrip-scaling"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          classLevel: 5,
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("ray_of_frost")],
+            preparedSpells: [],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject: BattleSubject = {
+      tag: "actionSpell",
+      actorId: wizardId,
+      invocation: cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
+      mode: { tag: "cast" },
+    };
+    const target = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const attackRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(target, skeletonId, [
+            {
+              kind: "spellTarget",
+              casterId: wizardId,
+              targetId: skeletonId,
+              spellId: "ray_of_frost",
+            },
+          ]),
+        ],
+      }),
+      "attackRoll",
+    );
+    const damage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(target, skeletonId, [
+            {
+              kind: "spellTarget",
+              casterId: wizardId,
+              targetId: skeletonId,
+              spellId: "ray_of_frost",
+            },
+          ]),
+          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        ],
+      }),
+      "rolledDice",
+    );
+
+    expect(damage).toMatchObject({
+      label: "Ray of Frost damage (2d8-cold)",
+    });
+  });
+
+  test("prepared spell-slot damage discovery summaries name Spell Slot casting", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-prepared-damage-summaries"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            cantrips: [],
+            preparedSpells: [slotAttackDamageSpell(), slotSaveDamageSpell()],
+            spellSlots: [{ spellLevel: 1, count: 2 }],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const acts = discoverBattleActs(state);
+
+    expect(
+      acts.find(
+        (act) =>
+          act.subject.tag === "actionSpell" &&
+          act.subject.invocation.tag === "spellSlot" &&
+          act.subject.invocation.spellId === "slot_attack_damage" &&
+          act.subject.invocation.procedure === "spellAttackDamage",
+      )?.summary,
+    ).toBe("Cast Slot Attack Damage using a level 1 Spell Slot.");
+    expect(
+      acts.find(
+        (act) =>
+          act.subject.tag === "actionSpell" &&
+          act.subject.invocation.tag === "spellSlot" &&
+          act.subject.invocation.spellId === "slot_save_damage" &&
+          act.subject.invocation.procedure === "saveGatedDamage",
+      )?.summary,
+    ).toBe(
+      "Cast Slot Save Damage using a level 1 Spell Slot. Table-supplied affected targets make DEX Saving Throws.",
+    );
+  });
+
   test("Acid Splash support is gated to the authored 5-foot point-origin Sphere", () => {
     const unsupportedState = startBattleRight({
       battleId: battleId("battle-acid-splash-unsupported-area"),
@@ -15694,6 +16058,86 @@ function acidSplashWithRadius(radiusFeet: number): SpellRecord {
                 ...phase.attachment.value.shape,
                 radiusFeet,
               },
+            },
+          },
+        },
+      ],
+    },
+  };
+}
+
+function slotAttackDamageSpell(input?: {
+  readonly id?: string;
+  readonly name?: string;
+  readonly axis?: "character" | "slot";
+}): SpellRecord {
+  const spell = spellRecord("ray_of_frost");
+  if (spell.mechanics.family !== "activation") {
+    throw new Error("Expected Ray of Frost activation spell.");
+  }
+  const phase = spell.mechanics.phases[0];
+  if (phase?.kind !== "attack_roll") {
+    throw new Error("Expected Ray of Frost spell attack phase.");
+  }
+  const damageEffect = phase.onHit[0];
+  if (damageEffect?.kind !== "damage") {
+    throw new Error("Expected Ray of Frost damage effect.");
+  }
+  return {
+    ...spell,
+    id: input?.id ?? "slot_attack_damage",
+    name: input?.name ?? "Slot Attack Damage",
+    mechanics: {
+      ...spell.mechanics,
+      level: 1,
+      phases: [
+        {
+          ...phase,
+          onHit: [
+            {
+              ...damageEffect,
+              amount: {
+                kind: "linear_per_level",
+                axis: input?.axis ?? "slot",
+                startingAtLevel: 1,
+                base: { dice: 2, dieSize: 8 },
+                perLevel: { dice: 1 },
+              },
+            },
+          ],
+        },
+      ],
+    },
+  };
+}
+
+function slotSaveDamageSpell(): SpellRecord {
+  const spell = spellRecord("acid_splash");
+  if (spell.mechanics.family !== "activation") {
+    throw new Error("Expected Acid Splash activation spell.");
+  }
+  const phase = spell.mechanics.phases[0];
+  if (phase?.kind !== "save_gate" || phase.onFail.kind !== "damage") {
+    throw new Error("Expected Acid Splash save-gate damage phase.");
+  }
+  return {
+    ...spell,
+    id: "slot_save_damage",
+    name: "Slot Save Damage",
+    mechanics: {
+      ...spell.mechanics,
+      level: 1,
+      phases: [
+        {
+          ...phase,
+          onFail: {
+            ...phase.onFail,
+            amount: {
+              kind: "linear_per_level",
+              axis: "slot",
+              startingAtLevel: 1,
+              base: { dice: 2, dieSize: 6 },
+              perLevel: { dice: 1 },
             },
           },
         },

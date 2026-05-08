@@ -1161,9 +1161,12 @@ export const TargetCountSlotScalingSchema = Schema.Struct({
   baseLevel: SpellSlotLevelSchema,
 });
 
+export const TargetKindSchema = Schema.Literal("creature", "object");
+
 export const TargetSelectionSchema = Schema.Union(
   Schema.Struct({
     mode: Schema.Literal("one"),
+    targetKinds: optionalExact(nonEmpty(TargetKindSchema)),
     typeFilter: optionalExact(TargetTypeFilterSchema),
   }),
   Schema.Struct({
@@ -1174,10 +1177,12 @@ export const TargetSelectionSchema = Schema.Union(
       TargetCountThresholdTiersSchema,
     ),
     repeatsAllowed: optionalExact(Schema.Literal(true)),
+    targetKinds: optionalExact(nonEmpty(TargetKindSchema)),
     typeFilter: optionalExact(TargetTypeFilterSchema),
   }),
   Schema.Struct({
     mode: Schema.Literal("any_number"),
+    targetKinds: optionalExact(nonEmpty(TargetKindSchema)),
     typeFilter: optionalExact(TargetTypeFilterSchema),
   }),
 );
