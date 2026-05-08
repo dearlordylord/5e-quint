@@ -129,9 +129,11 @@ module battleRuntime {
   //   818-826: Dash, Disengage, Dodge, Help, Ready, and standing from Prone
   //   are battle-owned turn/action or movement procedures.
   // - Spells/Descriptions-M-P.md lines 643-654, Descriptions-S-Z.md lines
-  //   7-18, and Descriptions-E-L.md lines 1417-1428: Poison Spray, Sacred
-  //   Flame, and Inflict Wounds are action-time direct damage spells with
-  //   creature targets, cantrip/slot scaling, and the listed save outcomes.
+  //   7-18, Descriptions-E-L.md lines 1417-1428, and
+  //   Descriptions-A-D.md lines 707-720: Poison Spray, Sacred Flame, Inflict
+  //   Wounds, and the damage-only slice of Chill Touch are action-time direct
+  //   damage spells with creature targets, cantrip/slot scaling, and the
+  //   listed attack/save outcomes.
   // - Character-Origins.md lines 253-255, Playing-the-Game.md lines 788-806,
   //   Rules-Glossary.md lines 361-365, and UBIQUITOUS_LANGUAGE.md:
   //   Orc Adrenaline Rush spends a limited-use Bonus Action Dash, grants
@@ -149,8 +151,8 @@ module battleRuntime {
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | SacredFlame | InflictWounds | HealingWord | CureWounds | MassHealingWord | Shield
-  type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | HealingWord | CureWounds | MassHealingWord | Shield
+  type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack
   type SaveGatedDamageInvocation = AcidSplashSaveGate | SacredFlameSaveGate | InflictWoundsSaveGate
   type SaveGatedDamageTargeting = AreaSaveTargets | SingleSaveTarget
   type SaveGatedDamageSuccess = NoDamageOnSaveSuccess | HalfDamageOnSaveSuccess
@@ -190,6 +192,7 @@ module battleRuntime {
     | ResumeAttack({ damage: int })
     | ResumeRayOfFrost
     | ResumePoisonSpray
+    | ResumeChillTouch
     | ResumeSaveGateDamage
     | ResumeAfterDamage
     | ResumeMovement({ speedKind: MovementSpeedKind, movementCost: int })
@@ -893,6 +896,7 @@ module battleRuntime {
             { ...state, goblin: applyDamage(state.goblin, attack.damage, 1, true), actionAvailable: false }
       | ResumeRayOfFrost => resolveRayOfFrost(state, 15, 10, 4, true)
       | ResumePoisonSpray => resolvePoisonSpray(state, 15, 10, 7, true)
+      | ResumeChillTouch => resolveChillTouch(state, 15, 10, 6, true)
       | ResumeSaveGateDamage => resolveAcidSplash(state, false, true, 4, true, true)
       | ResumeAfterDamage => state
       | ResumeMovement(movement) => applyFighterMovementWithSpeedKind(state, movement.speedKind, movement.movementCost)
@@ -1273,6 +1277,34 @@ module battleRuntime {
     else {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
       val adjustedDamage = damageAfterAdjustments(damageRoll, Poison, Set(), Set(), Set())
+      val damaged = applyDamage(state.goblin, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded)
+      { ...rolled, goblin: damaged, actionAvailable: false }
+    }
+
+  pure def resolveChillTouch(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+  ): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state))
+      state
+    else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), 20))) {
+      val rolled = recordFighterAttackRoll(revealFighterHidden(state))
+      { ...rolled, actionAvailable: false }
+    }
+    else if (state.goblin.reactionAvailable and not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
+      openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
+        trigger: AttackHit,
+        eligibleReactors: Set(Goblin),
+        offeredReactors: Set(),
+        continuation: ResumeChillTouch,
+      })
+    }
+    else {
+      val rolled = recordFighterAttackRoll(revealFighterHidden(state))
+      val adjustedDamage = damageAfterAdjustments(damageRoll, Necrotic, Set(), Set(), Set())
       val damaged = applyDamage(state.goblin, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded)
       { ...rolled, goblin: damaged, actionAvailable: false }
     }
@@ -1821,6 +1853,7 @@ module battleRuntime {
       | RayOfFrost => false
       | AcidSplash => false
       | PoisonSpray => false
+      | ChillTouch => false
       | SacredFlame => false
       | InflictWounds => true
       | HealingWord => true
@@ -1871,6 +1904,7 @@ module battleRuntime {
     match invocation {
       | RayOfFrostSpellAttack => Cold
       | PoisonSpraySpellAttack => Poison
+      | ChillTouchSpellAttack => Necrotic
     }
 
   pure def rayOfFrostSpeedEffectActive(
@@ -2567,6 +2601,7 @@ module battleRuntime {
       assert(expendedSlotsAfterInvocation(RayOfFrost, 0) == 0),
       assert(expendedSlotsAfterInvocation(AcidSplash, 0) == 0),
       assert(expendedSlotsAfterInvocation(PoisonSpray, 0) == 0),
+      assert(expendedSlotsAfterInvocation(ChillTouch, 0) == 0),
       assert(expendedSlotsAfterInvocation(SacredFlame, 0) == 0),
       assert(expendedSlotsAfterInvocation(InflictWounds, 0) == 1),
       assert(expendedSlotsAfterInvocation(HealingWord, 0) == 1),
@@ -2622,6 +2657,7 @@ module battleRuntime {
       assert(rayOfFrostSpeedEffectActive(true, Goblin, Fighter)),
       assert(not(rayOfFrostSpeedEffectActive(true, Fighter, Fighter))),
       assert(spellAttackDamageType(PoisonSpraySpellAttack) == Poison),
+      assert(spellAttackDamageType(ChillTouchSpellAttack) == Necrotic),
       assert(saveGatedDamageTargeting(SacredFlameSaveGate) == SingleSaveTarget),
       assert(saveGatedDamageSuccess(SacredFlameSaveGate) == NoDamageOnSaveSuccess),
       assert(saveGatedDamageType(SacredFlameSaveGate) == Radiant),
@@ -2665,6 +2701,16 @@ module battleRuntime {
     all {
       assert(result.actionAvailable == false),
       assert(result.goblin.hp == 3),
+      assert(not(result.spellSlotExpendedThisTurn)),
+    }
+  }
+
+  run test_chill_touch_applies_necrotic_spell_attack_damage = {
+    val noReaction = { ...initialState, goblin: { ...initialState.goblin, reactionAvailable: false } }
+    val result = resolveChillTouch(noReaction, 15, 10, 6, true)
+    all {
+      assert(result.actionAvailable == false),
+      assert(result.goblin.hp == 4),
       assert(not(result.spellSlotExpendedThisTurn)),
     }
   }

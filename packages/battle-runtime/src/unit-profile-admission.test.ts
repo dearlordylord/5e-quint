@@ -2,6 +2,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT8 fighter_action_surge fighter_improved_critical barbarian_rage rogue_cunning_action rogue_uncanny_dodge rogue_sneak_attack
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT14 acid_splash mage_armor magic_missile ray_of_frost
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV28B inflict_wounds poison_spray sacred_flame
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV28C chill_touch
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT25 healing_word
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT32 cure_wounds mass_healing_word
@@ -123,6 +124,7 @@ const archeryUnitId = "feat_archery";
 const boonOfCombatProwessUnitId = "feat_boon_of_combat_prowess";
 const savageAttackerUnitId = "feat_savage_attacker";
 const acidSplashUnitId = "acid_splash";
+const chillTouchUnitId = "chill_touch";
 const fireBoltUnitId = "fire_bolt";
 const inflictWoundsUnitId = "inflict_wounds";
 const mageArmorUnitId = "mage_armor";
@@ -2219,6 +2221,56 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
           damageType: "poison",
         },
         rangeFeet: 30,
+        postDamageRiders: [],
+      }),
+    );
+    expect(act.initialHoles).toEqual([
+      expect.objectContaining({
+        kind: "targetChoice",
+        choices: [spellCasterId, spellTargetId],
+      }),
+    ]);
+  });
+
+  test("chill_touch is admitted as damage-only melee spell attack with healing suppression deferred", () => {
+    const spell = spellRecord(chillTouchUnitId);
+    const act = spellAct({
+      state: spellBattle({ cantrips: [spell] }),
+      spellId: chillTouchUnitId,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: cantripSpellInvocationRef("chill_touch", "spellAttackDamage"),
+      mode: { tag: "cast" },
+    });
+    const attackRoll = requireResultHole(
+      resolveBattleSubject({
+        state: spellBattle({ cantrips: [spell] }),
+        subject: act.subject,
+        fills: [
+          spellTargetFill(
+            requireHole(act.initialHoles, "targetChoice"),
+            chillTouchUnitId,
+            spellCasterId,
+            spellTargetId,
+          ),
+        ],
+      }),
+      "attackRoll",
+    );
+    expect(spellHoleInvocation([attackRoll])).toEqual(
+      expect.objectContaining({
+        procedure: "spellAttackDamage",
+        spell,
+        targeting: { kind: "singleCombatant" },
+        damage: {
+          expr: { dice: 1, dieSize: 10 },
+          damageType: "necrotic",
+        },
+        rangeFeet: 5,
+        attackKind: "melee_spell_attack",
         postDamageRiders: [],
       }),
     );

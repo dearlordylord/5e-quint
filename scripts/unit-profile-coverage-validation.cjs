@@ -188,7 +188,10 @@ function validateUnitClaims(claims, inventory, profiles) {
       );
       continue;
     }
-    if (claim.claim.tag === "supported-profile") {
+    if (
+      claim.claim.tag === "supported-profile" ||
+      claim.claim.tag === "profile-subset-supported"
+    ) {
       if (
         !Array.isArray(claim.claim.profileIds) ||
         claim.claim.profileIds.length === 0
@@ -201,6 +204,37 @@ function validateUnitClaims(claims, inventory, profiles) {
           if (!profileIds.has(profileId)) {
             issues.push(
               `Unit ${claim.unitId} references missing profile ${profileId}.`,
+            );
+          }
+        }
+      }
+    }
+    if (claim.claim.tag === "profile-subset-supported") {
+      if (
+        !Array.isArray(claim.claim.supportedMechanics) ||
+        claim.claim.supportedMechanics.length === 0
+      ) {
+        issues.push(
+          `Profile-subset Unit ${claim.unitId} must list supportedMechanics.`,
+        );
+      }
+      if (
+        !Array.isArray(claim.claim.deferredMechanics) ||
+        claim.claim.deferredMechanics.length === 0
+      ) {
+        issues.push(
+          `Profile-subset Unit ${claim.unitId} must list deferredMechanics.`,
+        );
+      } else {
+        for (const deferredMechanic of claim.claim.deferredMechanics) {
+          if (
+            typeof deferredMechanic.mechanic !== "string" ||
+            deferredMechanic.mechanic.length === 0 ||
+            typeof deferredMechanic.followUpTaskId !== "string" ||
+            deferredMechanic.followUpTaskId.length === 0
+          ) {
+            issues.push(
+              `Profile-subset Unit ${claim.unitId} deferredMechanics entries require mechanic and followUpTaskId.`,
             );
           }
         }
@@ -259,9 +293,13 @@ function validateUnitEvidence(
       issues.push(`Unit evidence references unknown Unit claim ${row.unitId}.`);
       continue;
     }
-    if (!claim.claim || claim.claim.tag !== "supported-profile") {
+    if (
+      !claim.claim ||
+      (claim.claim.tag !== "supported-profile" &&
+        claim.claim.tag !== "profile-subset-supported")
+    ) {
       issues.push(
-        `Unit evidence for ${row.unitId} requires a supported-profile claim.`,
+        `Unit evidence for ${row.unitId} requires a supported-profile or profile-subset-supported claim.`,
       );
       continue;
     }

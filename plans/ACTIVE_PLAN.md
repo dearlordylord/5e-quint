@@ -298,19 +298,19 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 200,
       "id": "SRDINV28C",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Spell Attack Damage Runtime"
     },
     {
       "number": 201,
       "id": "SRDINV28D",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Promote Spell Rider Timing Runtime"
     },
     {
       "number": 202,
       "id": "SRDINV28E",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Decide Starry Wisp Object Targeting"
     },
     {
@@ -420,9 +420,9 @@ Keep it synchronized with the DAG table and task details.
 | 197   | SRDINV27 - Recursive SRD Inventory Planning Review | done | SRDINV22-SRDINV26 | SRDINV28A-SRDINV28E, SRDINV29-SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed recursive planning review: level-1 inventory is complete with 144 owner-evidence-present rows and 12 non-runtime rows, so the next batch is runtime-ready authored spell execution plus SRDINV33 review. |
 | 198   | SRDINV28A - Generalize Spell Damage Invocation Runtime | done | SRDINV27 | SRDINV28B-SRDINV28E, SRDINV29-SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [battle-runtime spell subjects](/workspace/typescript/dnd/packages/battle-runtime/src/battle-subjects.ts), [battle-runtime reducer](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Generalized promoted spell-damage invocation refs and runtime resource plumbing so attack-roll and save-gated damage can be cantrip or spell-slot-backed with typed optional post-damage riders, creature-only target metadata, and source-derived cantrip/slot damage scaling. |
 | 199   | SRDINV28B - Promote Pure Spell Damage Runtime | done | SRDINV28A | SRDINV28C-SRDINV28E, SRDINV29-SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promoted Poison Spray, Sacred Flame, and Inflict Wounds as no-rider direct damage Spell Definitions with deterministic admission/projection and runtime evidence; Burning Hands remains in the area-targeting follow-up because this slice did not add cone target-list support. |
-| 200   | SRDINV28C - Promote Spell Attack Damage Runtime | ready-for-research | SRDINV28A | SRDINV28D-SRDINV28E, SRDINV29-SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [battle-runtime reducer](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote spell attack damage without mandatory speed reduction, covering melee and ranged spell attacks plus cantrip/slot scaling for damage-only or rider-deferred spells. |
-| 201   | SRDINV28D - Promote Spell Rider Timing Runtime | blocked | SRDINV28B-SRDINV28C | SRDINV29-SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [battle-runtime active effects](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Add typed runtime support for the simple riders from the failed SRDINV28 attempts: Poisoned, Opportunity Attack denial, next-attack advantage/disadvantage, healing suppression, and source-owned condition expiration where in scope. |
-| 202   | SRDINV28E - Decide Starry Wisp Object Targeting | blocked | SRDINV28A-SRDINV28C | SRDINV29-SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [battle-runtime target facts](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [SRD Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Decide whether Starry Wisp gets executable object target support now or remains unsupported; do not claim object targeting through metadata without an executable object-target fill/fact boundary. |
+| 200   | SRDINV28C - Promote Spell Attack Damage Runtime | done | SRDINV28A | SRDINV28D-SRDINV28E, SRDINV29-SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [battle-runtime reducer](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promoted spell attack damage without mandatory speed reduction: ranged spell attack paths remain covered, and damage-only Chill Touch now covers melee spell attack damage with checker-visible deferred healing suppression and generic-target eligibility. |
+| 201   | SRDINV28D - Promote Spell Rider Timing Runtime | ready-for-research | SRDINV28B-SRDINV28C | SRDINV29-SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [battle-runtime active effects](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Add typed runtime support for the simple riders from the failed SRDINV28 attempts: Poisoned, Opportunity Attack denial, next-attack advantage/disadvantage, healing suppression, and source-owned condition expiration where in scope. |
+| 202   | SRDINV28E - Decide Starry Wisp Object Targeting | ready-for-research | SRDINV28A-SRDINV28C | SRDINV29-SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [battle-runtime target facts](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [SRD Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [SRD Chill Touch](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Decide whether spell target support gains executable object/non-combatant target facts now or remains explicitly unsupported; do not claim those target scopes through metadata without an executable target fill/fact boundary. |
 | 203   | SRDINV29 - Promote Area, Chain, and Typed-Damage Spell Runtime | blocked | SRDINV28A-SRDINV28E | SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote runtime evidence for Chromatic Orb, Color Spray, Entangle, Grease, and Ice Knife after the SRDINV28A-E spell damage foundation is explicit. |
 | 204   | SRDINV30 - Promote Spell Buff, Debuff, and Protection Runtime | blocked | SRDINV28A-SRDINV28E | SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote runtime evidence for Animal Friendship, Bane, Bless, Faerie Fire, False Life, Guidance, Heroism, Longstrider, Protection from Evil and Good, Resistance, and Shield of Faith. |
 | 205   | SRDINV31 - Promote Attack-Rider and Smite Spell Runtime | blocked | SRDINV28A-SRDINV28E | SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote runtime evidence for Divine Favor, Divine Smite, Ensnaring Strike, Hunter's Mark, Searing Smite, and True Strike. |
@@ -2162,7 +2162,7 @@ behavior is complete and one promoted integrated run is justified.
 
 ### Task 200 - SRDINV28C - Promote Spell Attack Damage Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV28A
 
@@ -2214,7 +2214,7 @@ behavior changes.
 
 ### Task 201 - SRDINV28D - Promote Spell Rider Timing Runtime
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: SRDINV28B-SRDINV28C
 
@@ -2270,7 +2270,7 @@ behavior changes.
 
 ### Task 202 - SRDINV28E - Decide Starry Wisp Object Targeting
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: SRDINV28A-SRDINV28C
 
@@ -2281,31 +2281,37 @@ Research / plan:
 [SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
 [battle-reducer.ts](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts),
 [Starry Wisp](/workspace/typescript/dnd/packages/surface/content/starry_wisp.dhall),
+[Chill Touch](/workspace/typescript/dnd/packages/surface/content/chill_touch.dhall),
 [SRD Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md),
+[SRD Chill Touch](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md),
 [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
 
-Scope: make the Starry Wisp object-target decision executable and
+Scope: make the spell object/non-combatant target decision executable and
 checker-visible. Current battle-runtime target facts are combatant-oriented;
-do not claim Starry Wisp object targeting as metadata if the fill path cannot
-select or validate an object target. Choose one of these outcomes and encode it
-in plan/evidence:
+do not claim Starry Wisp object targeting or Chill Touch's generic
+non-combatant target eligibility as metadata if the fill path cannot select or
+validate that target kind. Choose one of these outcomes and encode it in
+plan/evidence:
 
 - implement object target fill/fact support sufficient for Starry Wisp's
   "one creature or object within range" targeting, with object identity,
   range/spatial fact validation, attack roll, damage disposition, and clear
   statement of what object HP/illumination/invisibility semantics are
-  executable now; or
-- keep Starry Wisp out of supported runtime evidence and record the exact
-  object-target and rider blockers in the matrix/claims.
+  executable now; include an explicit decision for whether the same target
+  facts also cover Chill Touch's generic "target within reach" wording; or
+- keep Starry Wisp out of supported runtime evidence and keep Chill Touch as a
+  combatant-target profile subset, recording the exact object-target,
+  non-combatant-target, and rider blockers in the matrix/claims.
 
 Out of scope: broad object simulation, general illumination simulation,
 Produce Flame held-light state, Fire Bolt object ignition, and inventory-wide
 object support.
 
-Verification: if object targets are implemented, add focused tests for object
-target discovery/fill validation, attack hit/miss, damage, and rejection of
-unsupported object semantics. If deferred, add checker-visible claims/evidence
-showing Starry Wisp remains unsupported for object targeting and no support row
+Verification: if object or non-combatant targets are implemented, add focused
+tests for target discovery/fill validation, attack hit/miss, damage, and
+rejection of unsupported target semantics. If deferred, add checker-visible
+claims/evidence showing Starry Wisp remains unsupported for object targeting,
+Chill Touch remains a combatant-target subset, and no support row
 is accidentally admitted. In either branch run `pnpm unit-profile-coverage:check`
 and `pnpm quality`; MBT only if promoted battle-runtime behavior changes.
 

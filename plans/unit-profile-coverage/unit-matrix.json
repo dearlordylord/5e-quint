@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 348,
-      "numerator": 68,
-      "percent": "19.5%"
+      "numerator": 69,
+      "percent": "19.8%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 415,
-      "numerator": 92,
-      "percent": "22.2%"
+      "numerator": 93,
+      "percent": "22.4%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 93
+      "value": 94
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 40,
@@ -67,8 +67,8 @@
       "percent": "90%"
     },
     "profileClassificationCoverage": {
-      "denominator": 93,
-      "numerator": 93,
+      "denominator": 94,
+      "numerator": 94,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -97,9 +97,9 @@
       "percent": "25%"
     },
     "supportedProfileCoverage": {
-      "denominator": 69,
+      "denominator": 70,
       "numerator": 40,
-      "percent": "58%"
+      "percent": "57.1%"
     }
   },
   "metricSemantics": [
@@ -3492,6 +3492,51 @@
         "status": "installed"
       },
       "claim": {
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "SRDINV28E",
+            "mechanic": "non-combatant target eligibility for the SRD generic target wording"
+          },
+          {
+            "followUpTaskId": "SRDINV28D",
+            "mechanic": "target can't regain Hit Points until the end of the caster's next turn"
+          }
+        ],
+        "profileIds": [
+          "spell.invocation-damage-save-or-attack",
+          "spell.readied-action-time-spell"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "combatant-target melee spell attack damage",
+          "cantrip damage scaling",
+          "readied Action-time spell release"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV28C"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/chill_touch.json",
+      "unitId": "chill_touch"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "spell.hit-point-restoration"
         ],
@@ -5482,24 +5527,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/charm_monster.json",
       "unitId": "charm_monster"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/chill_touch.json",
-      "unitId": "chill_touch"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

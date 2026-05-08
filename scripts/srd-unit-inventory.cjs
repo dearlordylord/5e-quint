@@ -170,7 +170,6 @@ const spellUnitExecutableFollowUpBatches = [
       "Admit these authored Spell Definitions and add battle-runtime spell invocation/projection for attack rolls, saving throws, damage, cantrip scaling, slot-scaled damage, object targeting where SRD permits it, and simple rider outcomes.",
     unitIds: [
       "burning_hands",
-      "chill_touch",
       "guiding_bolt",
       "ray_of_sickness",
       "shocking_grasp",
@@ -2094,7 +2093,7 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
     "spell-attack-and-save-damage-runtime",
   );
   const spellRowsByUnitIds = (unitIds) =>
-    srdinv28SpellAttackAndSaveDamageRows.filter((row) =>
+    spellPressure.filter((row) =>
       unitIds.includes(row.candidateUnitId),
     );
   const srdinv28PureDamageRows = spellRowsByUnitIds([

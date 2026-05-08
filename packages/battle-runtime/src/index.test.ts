@@ -87,6 +87,7 @@ import magicMissileInput from "../../surface/content/magic_missile.json";
 import mageArmorInput from "../../surface/content/mage_armor.json";
 import rayOfFrostInput from "../../surface/content/ray_of_frost.json";
 import acidSplashInput from "../../surface/content/acid_splash.json";
+import chillTouchInput from "../../surface/content/chill_touch.json";
 import poisonSprayInput from "../../surface/content/poison_spray.json";
 import sacredFlameInput from "../../surface/content/sacred_flame.json";
 import inflictWoundsInput from "../../surface/content/inflict_wounds.json";
@@ -206,6 +207,7 @@ const testSpellRecords = new Map(
     mageArmorInput,
     rayOfFrostInput,
     acidSplashInput,
+    chillTouchInput,
     poisonSprayInput,
     sacredFlameInput,
     inflictWoundsInput,
@@ -13321,6 +13323,83 @@ describe("battle runtime", () => {
     });
   });
 
+  test("Chill Touch uses melee spell attack damage with its healing rider deferred", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-chill-touch"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          classLevel: 5,
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("chill_touch")],
+            preparedSpells: [],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject = magicSubject("chill_touch");
+    const target = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const attackRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFill(target, skeletonId)],
+      }),
+      "attackRoll",
+    );
+    expect(attackRoll).toMatchObject({
+      label: "Chill Touch spell attack roll",
+      attackBonus: 5,
+    });
+    const damage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(target, skeletonId),
+          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    expect(damage).toMatchObject({
+      label: "Chill Touch damage (2d10-necrotic)",
+      spell: expect.objectContaining({
+        attackKind: "melee_spell_attack",
+        postDamageRiders: [],
+      }),
+    });
+
+    const result = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFill(target, skeletonId),
+        attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        damageRollFillWithGroups(damage, [[5, 6]]),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId, hp: 12 },
+          { combatantId: skeletonId, hp: 2 },
+        ],
+        turn: { actionResources: [] },
+      },
+    });
+    expect(expendedLevelOneSlots(requireResolved(result), wizardId)).toBe(0);
+  });
+
   test("Sacred Flame uses a creature target before Dexterity Saving Throw damage", () => {
     const state = startBattleRight({
       battleId: battleId("battle-sacred-flame"),
@@ -13935,7 +14014,7 @@ function runCanonicalBattleRuntimeQntSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("100 passing");
+  expect(quintOutput).toContain("105 passing");
 }
 
 function hidePrerequisites(
@@ -14649,6 +14728,7 @@ function spellIdFromTargetHoleLabel(label: string | undefined): string {
   if (label?.startsWith("Ray of Frost") === true) return "ray_of_frost";
   if (label?.startsWith("Mage Armor") === true) return "mage_armor";
   if (label?.startsWith("Poison Spray") === true) return "poison_spray";
+  if (label?.startsWith("Chill Touch") === true) return "chill_touch";
   if (label?.startsWith("Sacred Flame") === true) return "sacred_flame";
   if (label?.startsWith("Inflict Wounds") === true) return "inflict_wounds";
   return "";
@@ -16425,6 +16505,7 @@ function spellRecord(
     | "mage_armor"
     | "ray_of_frost"
     | "acid_splash"
+    | "chill_touch"
     | "poison_spray"
     | "sacred_flame"
     | "inflict_wounds"
@@ -16443,6 +16524,7 @@ function magicSubject(
     | "mage_armor"
     | "ray_of_frost"
     | "acid_splash"
+    | "chill_touch"
     | "poison_spray"
     | "sacred_flame"
     | "inflict_wounds"
@@ -16458,7 +16540,9 @@ function magicSubject(
           ? spellSlotInvocationRef(spellId, 1, "persistentArmorEffect")
           : spellId === "inflict_wounds"
             ? spellSlotInvocationRef(spellId, 1, "saveGatedDamage")
-            : spellId === "ray_of_frost" || spellId === "poison_spray"
+            : spellId === "ray_of_frost" ||
+                spellId === "poison_spray" ||
+                spellId === "chill_touch"
               ? cantripSpellInvocationRef(spellId, "spellAttackDamage")
               : cantripSpellInvocationRef(spellId, "saveGatedDamage"),
     mode: { tag: "cast" },

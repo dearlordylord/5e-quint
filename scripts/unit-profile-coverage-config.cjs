@@ -29,6 +29,7 @@ const profileKinds = new Set([
 ]);
 const claimTags = new Set([
   "supported-profile",
+  "profile-subset-supported",
   "unsupported-profile",
   "needs-surface-widening",
   "needs-assumption",

@@ -24,6 +24,7 @@ import classSorcererInput from "../../content/class_sorcerer.json";
 import classWarlockInput from "../../content/class_warlock.json";
 import classWizardInput from "../../content/class_wizard.json";
 import charmPersonInput from "../../content/charm_person.json";
+import chillTouchInput from "../../content/chill_touch.json";
 import clericDivineOrderInput from "../../content/cleric_divine_order.json";
 import cureWoundsInput from "../../content/cure_wounds.json";
 import druidDruidicInput from "../../content/druid_druidic.json";
@@ -262,6 +263,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     orcDarkvisionInput,
     orcRelentlessEnduranceInput,
     acidSplashInput,
+    chillTouchInput,
     cureWoundsInput,
     fireBoltInput,
     inflictWoundsInput,

@@ -16983,21 +16983,24 @@ function supportedSpellAttackDamageProfile(
     return [];
   }
   const phase = spell.mechanics.phases[0];
+  const targeting =
+    phase?.kind === "attack_roll"
+      ? spellAttackDamageTargeting(phase.attachment)
+      : null;
+  const rangeFeet =
+    targeting?.kind === "singleCombatant"
+      ? singleTargetSpellRangeFeet(spell.mechanics.range)
+      : null;
   if (
     (input.access.tag === "classCantrip"
       ? spell.mechanics.level !== 0
       : spell.mechanics.level < 1) ||
     spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "point" ||
+    rangeFeet === null ||
     spell.mechanics.phases.length !== 1 ||
     phase?.kind !== "attack_roll" ||
     !supportedSpellAttackKind(phase.attackKind) ||
-    phase.attachment.kind !== "hole" ||
-    phase.attachment.value.kind !== "target" ||
-    phase.attachment.value.selection.mode !== "one" ||
-    !sameStringSet(phase.attachment.value.selection.targetKinds ?? [], [
-      "creature",
-    ]) ||
+    targeting === null ||
     phase.onHit.length < 1 ||
     phase.onMiss.length !== 1 ||
     phase.onMiss[0]?.kind !== "none"
@@ -17028,12 +17031,12 @@ function supportedSpellAttackDamageProfile(
   const attackDamageInvocation = {
     procedure: "spellAttackDamage" as const,
     spell,
-    targeting: { kind: "singleCombatant" as const },
+    targeting,
     damage: {
       expr: damageExpr,
       damageType: damageEffect.damageType,
     },
-    rangeFeet: movementFeet(spell.mechanics.range.feet),
+    rangeFeet,
     attackKind: phase.attackKind,
     attackBonus: attackBonus(
       Number(input.spellcastingAbilityModifier) +
@@ -17043,6 +17046,23 @@ function supportedSpellAttackDamageProfile(
   };
 
   return [{ ...damageSpellSource(input), ...attackDamageInvocation }];
+}
+
+function spellAttackDamageTargeting(
+  attachment: Attachment,
+): Extract<SpellTargeting, { readonly kind: "singleCombatant" }> | null {
+  if (
+    attachment.kind !== "hole" ||
+    attachment.value.kind !== "target" ||
+    attachment.value.selection.mode !== "one"
+  ) {
+    return null;
+  }
+  const targetKinds = attachment.value.selection.targetKinds;
+  if (targetKinds !== undefined && !sameStringSet(targetKinds, ["creature"])) {
+    return null;
+  }
+  return { kind: "singleCombatant" };
 }
 
 function supportedCantripSaveGateDamageProfile(

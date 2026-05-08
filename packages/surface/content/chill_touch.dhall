@@ -3,6 +3,9 @@
 -- Melee spell attack; on hit: 1d10 Necrotic damage (cantrip scaling).
 -- OMITTED RIDER: "can't regain Hit Points until end of your next turn"
 -- → requires a new atom not in v4 (block_healing / suppress_healing).
+-- TARGET SUBSET: RAW says generic "target", not "creature"; battle-runtime
+-- projects this Task 200 subset to combatant targets. Non-combatant target
+-- eligibility remains deferred in the unit-profile claim/report.
 -- Cantrip upgrade: 1d10 → 2d10 (L5) → 3d10 (L11) → 4d10 (L17).
 
 let chillTouch =

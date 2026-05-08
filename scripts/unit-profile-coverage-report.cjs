@@ -189,17 +189,25 @@ function metrics({
   const supportedUnitClaims = unitClaims.filter(
     (claim) => claim.claim.tag === "supported-profile",
   );
+  const supportedUnitIds = new Set(
+    supportedUnitClaims.map((claim) => claim.unitId),
+  );
   const deterministicAdmissionProjection = new Set(
     unitEvidence
       .filter(
         (row) =>
-          row.evidence.tag === deterministicAdmissionProjectionEvidenceTag,
+          row.evidence.tag === deterministicAdmissionProjectionEvidenceTag &&
+          supportedUnitIds.has(row.unitId),
       )
       .map((row) => row.unitId),
   );
   const selectedIdentityMbt = new Set(
     unitEvidence
-      .filter((row) => row.evidence.tag === selectedIdentityMbtEvidenceTag)
+      .filter(
+        (row) =>
+          row.evidence.tag === selectedIdentityMbtEvidenceTag &&
+          supportedUnitIds.has(row.unitId),
+      )
       .map((row) => row.unitId),
   );
   const executableUnits = inventory.filter((unit) => unit.executableMechanics);
@@ -533,6 +541,19 @@ function summarizeKindCounts(units) {
     .join(", ");
 }
 
+function renderProfileSubsetDeferredMechanics(claim) {
+  return claim.deferredMechanics
+    .map((entry) => `${entry.mechanic} (${entry.followUpTaskId})`)
+    .join("; ");
+}
+
+function renderClaimPressureDetail(claim) {
+  if (claim?.tag === "profile-subset-supported") {
+    return `supported subset: ${claim.supportedMechanics.join("; ")}; deferred: ${renderProfileSubsetDeferredMechanics(claim)}`;
+  }
+  return claim?.reason ?? claim?.issue ?? claim?.assumptionId ?? "";
+}
+
 function renderReport(
   matrix,
   {
@@ -552,6 +573,9 @@ function renderReport(
   );
   const supported = installedUnits.filter(
     (unit) => unit.claim?.tag === "supported-profile",
+  );
+  const profileSubsetSupported = installedUnits.filter(
+    (unit) => unit.claim?.tag === "profile-subset-supported",
   );
   const authoredNotInCatalogByKind = Array.from(
     authoredNotInCatalog
@@ -667,6 +691,20 @@ function renderReport(
         `| \`${unit.unitId}\` | ${unit.collectionId} | ${unit.claim.profileIds.map((id) => `\`${id}\``).join(", ")} |`,
     ),
     "",
+    "## Profile Subset Supported Unit Claims",
+    "",
+    "| Unit | Collection | Profiles | Supported Mechanics | Deferred Mechanics |",
+    "| --- | --- | --- | --- | --- |",
+    ...(profileSubsetSupported.length === 0
+      ? ["| _none_ | _none_ | _none_ | _none_ | _none_ |"]
+      : profileSubsetSupported.map((unit) => {
+          const supportedMechanics = unit.claim.supportedMechanics.join("; ");
+          const deferredMechanics = renderProfileSubsetDeferredMechanics(
+            unit.claim,
+          );
+          return `| \`${unit.unitId}\` | ${unit.collectionId} | ${unit.claim.profileIds.map((id) => `\`${id}\``).join(", ")} | ${supportedMechanics} | ${deferredMechanics} |`;
+        })),
+    "",
     "## Authored Surface Units Not In Unit Catalog",
     "",
     "This raw inventory lists authored Surface records that are absent from the installed Unit catalog. The triage section below is the planning-pressure view; non-runtime data and duplicate content issues are not counted as runtime implementation pressure.",
@@ -722,6 +760,26 @@ function renderReport(
             `| \`${unit.unitId}\` | ${unit.claim.profileIds.map((id) => `\`${id}\``).join(", ")} | ${evidence.taskId} | \`${evidence.ownerPath}\` |`,
         )),
     "",
+    "## Profile Subset Deterministic Admission/Projection Evidence",
+    "",
+    "| Unit | Profiles | Task | Owner | Deferred Mechanics |",
+    "| --- | --- | --- | --- | --- |",
+    ...(profileSubsetSupported.length === 0
+      ? ["| _none_ | _none_ | _none_ | _none_ | _none_ |"]
+      : profileSubsetSupported.flatMap((unit) =>
+          (unit.evidence ?? [])
+            .filter(
+              (evidence) =>
+                evidence.tag === deterministicAdmissionProjectionEvidenceTag,
+            )
+            .map((evidence) => {
+              const deferredMechanics = renderProfileSubsetDeferredMechanics(
+                unit.claim,
+              );
+              return `| \`${unit.unitId}\` | ${unit.claim.profileIds.map((id) => `\`${id}\``).join(", ")} | ${evidence.taskId} | \`${evidence.ownerPath}\` | ${deferredMechanics} |`;
+            }),
+        )),
+    "",
     "## Selected Identity MBT Evidence",
     "",
     "| Unit | Profiles | Task | Owner |",
@@ -739,7 +797,7 @@ function renderReport(
     "| --- | --- | --- |",
     ...unsupported.map(
       (unit) =>
-        `| \`${unit.unitId}\` | ${unit.claim?.tag ?? "missing"} | ${unit.claim?.reason ?? unit.claim?.issue ?? unit.claim?.assumptionId ?? ""} |`,
+        `| \`${unit.unitId}\` | ${unit.claim?.tag ?? "missing"} | ${renderClaimPressureDetail(unit.claim)} |`,
     ),
     "",
     "## Unsupported Pressure Summary",
