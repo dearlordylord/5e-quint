@@ -54,6 +54,13 @@ Current sequence:
 - `SRDINV19`: close character-creation Spell Access owner evidence.
 - `SRDINV20`: close character-creation Weapon Mastery owner evidence.
 - `SRDINV21`: recursive review after the concrete owner-evidence batch.
+- `SRDINV22`: close shared multiclass Primary Ability owner evidence.
+- `SRDINV23`: promote character-sheet Armor Class formula runtime evidence.
+- `SRDINV24`: promote character-sheet rest and Spell Slot recovery runtime
+  evidence.
+- `SRDINV25`: promote character-sheet healing resource action runtime evidence.
+- `SRDINV26`: close Wizard Ritual Adept spell-invocation owner evidence.
+- `SRDINV27`: recursive review after the promoted-runtime batch.
 
 The spell-pressure rows are split into `SRDINV5A` through `SRDINV5D` because
 class spell access, missing Spell Unit records, installed Spell Unit evidence,
@@ -150,10 +157,43 @@ followed by a recursive review:
 5. `SRDINV21` reviews the landed evidence work, refreshes inventory metrics,
    and appends the next concrete batch unless level-1 is explicitly complete.
 
-The two shared-algebra Primary Ability rows and Wizard Ritual Adept remain
-visible for SRDINV21. Spell Unit Surface blockers and authored executable spell
-runtime follow-ups remain counted, but they are not the immediate
-SRDINV17-SRDINV20 frontier.
+The shared-algebra Primary Ability rows, Wizard Ritual Adept, character-sheet
+Armor Class formulas, rest/Spell Slot recovery, and Lay On Hands remain visible
+for SRDINV21. Spell Unit Surface blockers and authored executable spell runtime
+follow-ups remain counted, but they are not the immediate SRDINV17-SRDINV20
+frontier.
+
+## Post-SRDINV21 Frontier Loop
+
+SRDINV21 found that SRDINV17-SRDINV20 plus SRDINV18A closed the
+character-creation owner-evidence frontier. Level-1 inventory is still open,
+but the active frontier is now promoted runtime ownership outside
+character-creation.
+
+The next batch is therefore five concrete promoted-runtime closure families
+followed by a recursive review:
+
+1. `SRDINV22` closes all 12 Primary Ability rows through shared multiclass
+   prerequisite algebra evidence without duplicating class-container source
+   facts.
+2. `SRDINV23` promotes character-sheet Armor Class derivation for base AC and
+   Barbarian/Monk Unarmored Defense, including the one-formula-at-a-time
+   multiclass rule.
+3. `SRDINV24` promotes character-sheet rest and Spell Slot recovery for Short
+   Rest, Long Rest, and Wizard Arcane Recovery while keeping Spell Slot, Pact
+   Slot, Hit Die, and feature recharge facts distinct.
+4. `SRDINV25` promotes Lay On Hands as a character-sheet healing resource
+   action with one pool for HP restoration and Poisoned-condition removal.
+5. `SRDINV26` closes Wizard Ritual Adept through a promoted
+   spell-access/invocation runtime boundary over spellbook Spell Access and
+   ritual-tagged Spell Definitions.
+6. `SRDINV27` reviews the promoted-runtime closure batch, refreshes inventory
+   metrics, and either records level-1 completion or appends the next concrete
+   frontier.
+
+Spell Unit Surface blockers and authored executable spell-runtime follow-ups
+remain counted, but they are not the immediate SRDINV22-SRDINV26 frontier while
+level-1 rows remain open.
 
 ## Acceptance Model
 

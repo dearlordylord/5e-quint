@@ -1733,6 +1733,37 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
       hasRequiredOwnerEvidence(row, "character-creation-runtime") &&
       row.category === "mastery pressure",
   );
+  const srdinv22SharedMulticlassPrimaryAbilityRows = levelOne.filter(
+    (row) =>
+      row.finalDisposition === "catalog-installed-owner-evidence-required" &&
+      hasRequiredOwnerEvidence(
+        row,
+        "shared-algebras/multiclass-prerequisite-algebra",
+      ),
+  );
+  const srdinv23CharacterSheetArmorClassRows = levelOne.filter(
+    (row) =>
+      row.finalDisposition === "catalog-only/dead-for-now" &&
+      (row.id ===
+        "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense" ||
+        row.id ===
+          "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense"),
+  );
+  const srdinv24CharacterSheetRestRecoveryRows = levelOne.filter(
+    (row) =>
+      row.id ===
+      "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery",
+  );
+  const srdinv25CharacterSheetHealingResourceRows = levelOne.filter(
+    (row) =>
+      row.id ===
+      "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands",
+  );
+  const srdinv26SpellInvocationRows = levelOne.filter(
+    (row) =>
+      row.finalDisposition === "catalog-installed-owner-evidence-required" &&
+      hasRequiredOwnerEvidence(row, "future spell-access/invocation runtime"),
+  );
 
   const batches = [
     makeBatch({
@@ -2037,14 +2068,80 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
     makeBatch({
       id: "SRDINV21",
       title: "Recursive SRD Inventory Planning Review",
-      suggestedStatus: "blocked-on-SRDINV17-SRDINV20",
+      suggestedStatus: "done",
       intent:
-        "Review SRDINV17-SRDINV20 owner-evidence closure and append the next concrete batch unless level-1 inventory is complete.",
+        "Reviewed SRDINV17-SRDINV20 plus SRDINV18A owner-evidence closure and appended the next concrete promoted-runtime batch.",
       rows: levelOne,
       nextAction:
-        "Refresh inventory metrics after character-creation owner-evidence closure and choose the next concrete frontier, including any remaining shared-algebra or spell-invocation evidence rows before spell Unit Surface/runtime work.",
+        "Level-1 remains open; run SRDINV22-SRDINV26 before the next recursive SRDINV27 review.",
       acceptance:
-        "The next review either records explicit level-1 completion with final metrics or appends another concrete multi-task batch, not a recursive-only placeholder.",
+        "SRDINV21 closed with inventory metrics and a concrete multi-task next batch, not a recursive-only continuation.",
+    }),
+    makeBatch({
+      id: "SRDINV22",
+      title: "Close Shared Multiclass Primary Ability Evidence",
+      intent:
+        "Close owner evidence for all level-1 Primary Ability rows through the shared multiclass prerequisite algebra.",
+      rows: srdinv22SharedMulticlassPrimaryAbilityRows,
+      nextAction:
+        "Connect SRD class Primary Ability source facts to shared-algebra prerequisite checks, QNT coverage, runtime tests, and inventory evidence without duplicating character-creation source state.",
+      acceptance:
+        "All level-1 Primary Ability rows derive owner evidence from shared-algebras/multiclass-prerequisite-algebra rather than character-creation build projection.",
+    }),
+    makeBatch({
+      id: "SRDINV23",
+      title: "Promote Character-Sheet Armor Class Formula Runtime",
+      intent:
+        "Promote the character-sheet Armor Class derivation owner for base AC and class-derived Unarmored Defense formulas.",
+      rows: srdinv23CharacterSheetArmorClassRows,
+      nextAction:
+        "Model the character-sheet AC formula selection boundary before runtime support, then close Barbarian and Monk Unarmored Defense as executable character-sheet evidence.",
+      acceptance:
+        "Barbarian and Monk Unarmored Defense rows no longer close as catalog-only/dead-for-now; they have promoted character-sheet runtime evidence for mutually exclusive AC formula derivation.",
+    }),
+    makeBatch({
+      id: "SRDINV24",
+      title: "Promote Character-Sheet Rest and Spell Slot Recovery",
+      intent:
+        "Promote the character-sheet rest recovery owner for Short Rest, Long Rest, Spell Slot recovery, and Wizard Arcane Recovery.",
+      rows: srdinv24CharacterSheetRestRecoveryRows,
+      nextAction:
+        "Model rest completion and spell-slot recovery semantics before runtime support, preserving Spell Slot, Pact Slot, Hit Die, and feature recharge ownership as distinct facts.",
+      acceptance:
+        "Wizard Arcane Recovery no longer closes as catalog-only/dead-for-now; it has promoted character-sheet runtime evidence tied to Short Rest completion and Long Rest recharge.",
+    }),
+    makeBatch({
+      id: "SRDINV25",
+      title: "Promote Character-Sheet Healing Resource Actions",
+      intent:
+        "Promote the character-sheet resource-action owner for Lay On Hands healing and Poisoned-condition removal.",
+      rows: srdinv25CharacterSheetHealingResourceRows,
+      nextAction:
+        "Model the Lay On Hands pool and Bonus Action spend boundary before runtime support, keeping healing amount and Poisoned removal costs coupled to one pool.",
+      acceptance:
+        "Paladin Lay On Hands no longer closes as catalog-only/dead-for-now; it has promoted runtime evidence for pool spend, HP restoration, and Poisoned-condition removal without duplicating resource state.",
+    }),
+    makeBatch({
+      id: "SRDINV26",
+      title: "Close Wizard Ritual Adept Invocation Ownership",
+      intent:
+        "Close Wizard Ritual Adept owner evidence through the promoted spell-access/invocation runtime boundary.",
+      rows: srdinv26SpellInvocationRows,
+      nextAction:
+        "Model ritual casting as spell invocation over spellbook Spell Access and ritual-tagged Spell Definitions before runtime evidence, without treating the retained feature Unit ref as execution support.",
+      acceptance:
+        "Wizard Ritual Adept has owner evidence from the promoted spell-access/invocation runtime, while character creation remains limited to retaining the feature and spellbook facts.",
+    }),
+    makeBatch({
+      id: "SRDINV27",
+      title: "Recursive SRD Inventory Planning Review",
+      intent:
+        "Review SRDINV22-SRDINV26 promoted-runtime closure and append the next concrete batch unless level-1 inventory is complete.",
+      rows: levelOne,
+      nextAction:
+        "Refresh inventory metrics after shared-algebra, character-sheet, and spell-invocation runtime closure; then either record level-1 completion or select the next concrete frontier such as spell Unit Surface/runtime work.",
+      acceptance:
+        "The next review either records explicit level-1 completion with final metrics or appends another concrete multi-task batch, not a passive backlog list.",
     }),
   ];
   return withActivePlanStatuses(batches, activePlanTaskStatuses);

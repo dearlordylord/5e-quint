@@ -238,7 +238,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 190,
       "id": "SRDINV21",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Recursive SRD Inventory Planning Review"
     },
     {
@@ -246,6 +246,42 @@ Keep it synchronized with the DAG table and task details.
       "id": "SRDINV18A",
       "status": "done",
       "title": "Close Eldritch Invocation Choice Evidence"
+    },
+    {
+      "number": 192,
+      "id": "SRDINV22",
+      "status": "ready-for-research",
+      "title": "Close Shared Multiclass Primary Ability Evidence"
+    },
+    {
+      "number": 193,
+      "id": "SRDINV23",
+      "status": "ready-for-research",
+      "title": "Promote Character-Sheet Armor Class Formula Runtime"
+    },
+    {
+      "number": 194,
+      "id": "SRDINV24",
+      "status": "ready-for-research",
+      "title": "Promote Character-Sheet Rest and Spell Slot Recovery"
+    },
+    {
+      "number": 195,
+      "id": "SRDINV25",
+      "status": "ready-for-research",
+      "title": "Promote Character-Sheet Healing Resource Actions"
+    },
+    {
+      "number": 196,
+      "id": "SRDINV26",
+      "status": "ready-for-research",
+      "title": "Close Wizard Ritual Adept Invocation Ownership"
+    },
+    {
+      "number": 197,
+      "id": "SRDINV27",
+      "status": "ready-for-research",
+      "title": "Recursive SRD Inventory Planning Review"
     }
   ]
 }
@@ -314,8 +350,14 @@ Keep it synchronized with the DAG table and task details.
 | 187   | SRDINV18 - Close Character-Creation Class Feature Evidence | done | SRDINV17 | SRDINV18A, SRDINV21 | [SRDINV16 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [character-creation owner evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/character-creation-owner-evidence.json), [character-creation runtime README](/workspace/typescript/dnd/packages/character-creation-runtime/README.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed character-creation owner evidence for retained level-1 class-feature refs and implemented supported acquisition choices for Divine Order, Primal Order, and Rogue Expertise. Eldritch Invocation feature-choice evidence remains split into SRDINV18A because retained feature refs cannot prove invocation option discovery/fill/finalization. |
 | 188   | SRDINV19 - Close Character-Creation Spell Access Evidence | done | SRDINV17 | SRDINV21 | [SRDINV16 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [character-creation owner evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/character-creation-owner-evidence.json), [character-creation runtime README](/workspace/typescript/dnd/packages/character-creation-runtime/README.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed character-creation owner evidence for Bard, Cleric, Druid, Paladin, Ranger, and Sorcerer level-1 Spell Access through discovery, fill admission, finalization, build projection, and manifest evidence without admitting individual Spell Definitions as runtime-supported. |
 | 189   | SRDINV20 - Close Character-Creation Weapon Mastery Evidence | done | SRDINV17 | SRDINV21 | [SRDINV16 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [character-creation owner evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/character-creation-owner-evidence.json), [character-creation runtime README](/workspace/typescript/dnd/packages/character-creation-runtime/README.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed character-creation owner evidence for Barbarian, Paladin, Ranger, and Rogue level-1 Weapon Mastery choices through discovery, fill, finalization, build projection, and manifest evidence while leaving mastery property execution separate. |
-| 190   | SRDINV21 - Recursive SRD Inventory Planning Review | ready-for-research | SRDINV17-SRDINV20, SRDINV18A | none | [SRDINV16 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review SRDINV17-SRDINV20 plus SRDINV18A owner-evidence closure, refresh inventory metrics, and append the next concrete batch unless level-1 inventory is explicitly complete. |
+| 190   | SRDINV21 - Recursive SRD Inventory Planning Review | done | SRDINV17-SRDINV20, SRDINV18A | SRDINV22-SRDINV27 | [SRDINV21 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV21_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed recursive planning review: level-1 remains open with 13 owner-evidence-required rows and 4 catalog-only/dead-for-now rows, so the next batch is shared-algebra, character-sheet runtime, and spell-invocation runtime closure plus SRDINV27 review. |
 | 191   | SRDINV18A - Close Eldritch Invocation Choice Evidence | done | SRDINV18 | SRDINV21 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [character-creation owner evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/character-creation-owner-evidence.json), [Warlock SRD](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [character-creation runtime README](/workspace/typescript/dnd/packages/character-creation-runtime/README.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Close Warlock Eldritch Invocations as actual feature-choice evidence by adding a durable invocation option catalog/discovery path and character-creation fill, finalization, build projection, manifest, and inventory evidence without treating the retained feature Unit ref as sufficient. |
+| 192   | SRDINV22 - Close Shared Multiclass Primary Ability Evidence | ready-for-research | SRDINV21 | SRDINV23-SRDINV27 | [SRDINV21 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV21_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [shared-algebras README](/workspace/typescript/dnd/packages/shared-algebras/README.md), [multiclass prerequisite algebra](/workspace/typescript/dnd/packages/shared-algebras/src/multiclass-prerequisite-algebra.ts), [multiclass prerequisite proof](/workspace/typescript/dnd/packages/shared-algebras/proofs/multiclass-prerequisite-algebra.qnt), [SRD Character Creation](/workspace/typescript/dnd/.references/srd-5.2.1/Character-Creation.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Close owner evidence for all 12 level-1 Primary Ability rows through shared multiclass prerequisite algebra evidence without duplicating character-creation source state. |
+| 193   | SRDINV23 - Promote Character-Sheet Armor Class Formula Runtime | ready-for-research | SRDINV22 | SRDINV24-SRDINV27 | [SRDINV21 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV21_RECURSIVE_PLANNING_REVIEW.md), [character-sheet runtime README](/workspace/typescript/dnd/packages/character-sheet-runtime/README.md), [character-sheet runtime](/workspace/typescript/dnd/packages/character-sheet-runtime/src/index.ts), [armor class algebra](/workspace/typescript/dnd/packages/shared-algebras/src/armor-class-algebra.ts), [SRD Playing the Game](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [SRD Character Creation](/workspace/typescript/dnd/.references/srd-5.2.1/Character-Creation.md), [SRD Barbarian](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Barbarian.md), [SRD Monk](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Monk.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote character-sheet Armor Class derivation for base AC and Barbarian/Monk Unarmored Defense formulas, preserving the SRD rule that only one AC formula applies at a time. |
+| 194   | SRDINV24 - Promote Character-Sheet Rest and Spell Slot Recovery | ready-for-research | SRDINV22 | SRDINV25-SRDINV27 | [SRDINV21 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV21_RECURSIVE_PLANNING_REVIEW.md), [character-sheet runtime README](/workspace/typescript/dnd/packages/character-sheet-runtime/README.md), [character-sheet runtime](/workspace/typescript/dnd/packages/character-sheet-runtime/src/index.ts), [SRD Rules Glossary](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [SRD Character Creation](/workspace/typescript/dnd/.references/srd-5.2.1/Character-Creation.md), [SRD Wizard](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Wizard.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote character-sheet rest recovery for Short Rest, Long Rest, Spell Slot recovery, and Wizard Arcane Recovery while keeping Spell Slot, Pact Slot, Hit Die, and feature recharge facts distinct. |
+| 195   | SRDINV25 - Promote Character-Sheet Healing Resource Actions | ready-for-research | SRDINV22 | SRDINV26-SRDINV27 | [SRDINV21 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV21_RECURSIVE_PLANNING_REVIEW.md), [character-sheet runtime README](/workspace/typescript/dnd/packages/character-sheet-runtime/README.md), [character-sheet runtime](/workspace/typescript/dnd/packages/character-sheet-runtime/src/index.ts), [SRD Paladin](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Paladin.md), [SRD Rules Glossary](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Lay On Hands as a character-sheet healing resource action with one pool for HP restoration and Poisoned-condition removal. |
+| 196   | SRDINV26 - Close Wizard Ritual Adept Invocation Ownership | ready-for-research | SRDINV22 | SRDINV27 | [SRDINV21 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV21_RECURSIVE_PLANNING_REVIEW.md), [Spell ownership surface](/workspace/typescript/dnd/plans/SPELL1_SPELL_OWNERSHIP_SURFACE.md), [character-sheet runtime README](/workspace/typescript/dnd/packages/character-sheet-runtime/README.md), [SRD Wizard](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Wizard.md), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Close Wizard Ritual Adept owner evidence through a promoted spell-access/invocation runtime boundary over spellbook Spell Access and ritual-tagged Spell Definitions. |
+| 197   | SRDINV27 - Recursive SRD Inventory Planning Review | ready-for-research | SRDINV22-SRDINV26 | none | [SRDINV21 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV21_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review SRDINV22-SRDINV26 promoted-runtime closure, refresh inventory metrics, and either record explicit level-1 completion or append the next concrete frontier such as spell Unit Surface/runtime work. |
 
 ## Task Details
 
@@ -1574,14 +1616,14 @@ code; `pnpm quality` if production code changes; `/simplify` convergence.
 
 ### Task 190 - SRDINV21 - Recursive SRD Inventory Planning Review
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV17-SRDINV20, SRDINV18A
 
-Blocks: none
+Blocks: SRDINV22-SRDINV27
 
 Research / plan:
-[SRDINV16_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md),
+[SRDINV21_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV21_RECURSIVE_PLANNING_REVIEW.md),
 [SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
 [SRDINV_RALPH_BATCH_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md),
 [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
@@ -1611,6 +1653,23 @@ the appended result is either explicit level-1 completion with final metrics or
 a concrete promoted-runtime implementation batch, not a recursive-only
 placeholder or passive backlog list; `/simplify` convergence, minimum two
 rounds unless the final changeset is trivial.
+
+Completed scope: reviewed SRDINV17-SRDINV20 plus SRDINV18A, refreshed generated
+inventory recommendations, and appended the SRDINV22-SRDINV26 promoted-runtime
+closure batch plus SRDINV27 recursive review. Level-1 inventory remains open
+with 13 owner-evidence-required rows and 4 catalog-only/dead-for-now rows, so
+the new batch converts those rows into executable owner work rather than
+leaving them as passive backlog.
+
+Verification completed: local SRD passages for multiclass prerequisites,
+Primary Ability, Armor Class, Unarmored Defense, Long Rest, Short Rest, Spell
+Slots, Arcane Recovery, Lay On Hands, and Ritual Adept were checked;
+`UBIQUITOUS_LANGUAGE.md` was checked for the relevant owner terms; inventory
+was regenerated; active-plan consistency was updated across the Ralph index,
+DAG table, and task details; `pnpm unit-profile-coverage:check` passed; two
+`/simplify` rounds are recorded in the SRDINV21 review artifact. MBT was not
+run because this task changed planning and generated inventory recommendations
+only.
 
 ### Task 191 - SRDINV18A - Close Eldritch Invocation Choice Evidence
 
@@ -1648,3 +1707,213 @@ and build projection; update the owner evidence manifest; regenerate inventory;
 `pnpm unit-profile-coverage:check`; package-local typecheck/tests for touched
 runtime code; `pnpm quality` if production code changes; `/simplify`
 convergence.
+
+### Task 192 - SRDINV22 - Close Shared Multiclass Primary Ability Evidence
+
+Status: `ready-for-research`
+
+Depends on: SRDINV21
+
+Blocks: SRDINV23-SRDINV27
+
+Research / plan:
+[SRDINV21_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV21_RECURSIVE_PLANNING_REVIEW.md),
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[shared-algebras README](/workspace/typescript/dnd/packages/shared-algebras/README.md),
+[multiclass-prerequisite-algebra.ts](/workspace/typescript/dnd/packages/shared-algebras/src/multiclass-prerequisite-algebra.ts),
+[multiclass-prerequisite-algebra.qnt](/workspace/typescript/dnd/packages/shared-algebras/proofs/multiclass-prerequisite-algebra.qnt),
+[Character-Creation.md](/workspace/typescript/dnd/.references/srd-5.2.1/Character-Creation.md),
+[Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: close owner evidence for all 12 level-1 Primary Ability rows through
+the shared multiclass prerequisite algebra. Source facts must continue to come
+from class containers; this task should wire checker-visible evidence to the
+existing shared algebra, tests, and QNT proof rather than duplicating Primary
+Ability data in character-creation runtime.
+
+Out of scope: character-creation build projection evidence for Primary Ability,
+class-container authoring, class-feature runtime behavior, character-sheet AC,
+rest recovery, spell invocation, and spell Unit runtime.
+
+Verification: read local SRD Character Creation multiclass prerequisites and
+all class Core Traits Primary Ability rows; check `UBIQUITOUS_LANGUAGE.md` for
+Multiclassing, Ability Score, Class, and Character Sheet; focused
+shared-algebra tests and QNT proof/check as appropriate; update
+checker-visible owner evidence and regenerate inventory; `pnpm
+unit-profile-coverage:check`; package-local typecheck/tests; `pnpm quality` if
+production code changes; `/simplify` convergence.
+
+### Task 193 - SRDINV23 - Promote Character-Sheet Armor Class Formula Runtime
+
+Status: `ready-for-research`
+
+Depends on: SRDINV22
+
+Blocks: SRDINV24-SRDINV27
+
+Research / plan:
+[SRDINV21_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV21_RECURSIVE_PLANNING_REVIEW.md),
+[character-sheet runtime README](/workspace/typescript/dnd/packages/character-sheet-runtime/README.md),
+[character-sheet runtime](/workspace/typescript/dnd/packages/character-sheet-runtime/src/index.ts),
+[armor-class-algebra.ts](/workspace/typescript/dnd/packages/shared-algebras/src/armor-class-algebra.ts),
+[Playing-the-Game.md](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md),
+[Character-Creation.md](/workspace/typescript/dnd/.references/srd-5.2.1/Character-Creation.md),
+[Barbarian.md](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Barbarian.md),
+[Monk.md](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Monk.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote character-sheet Armor Class derivation for base AC and
+class-derived Unarmored Defense formulas, closing Barbarian and Monk Unarmored
+Defense level-1 rows as executable character-sheet evidence. The model must
+make the SRD multiclass AC rule executable: if multiple AC formulas are
+available, only one is used at a time.
+
+Out of scope: battle-runtime attack resolution, magic-item AC, spell AC
+effects, non-SRD class formulas, equipment inventory workflows beyond the
+minimum sheet facts needed for AC, rest recovery, Lay On Hands, and ritual
+casting.
+
+Verification: read local SRD Armor Class, Character Creation multiclass AC,
+Barbarian Unarmored Defense, and Monk Unarmored Defense passages; check
+`UBIQUITOUS_LANGUAGE.md` for Armor Class, Character Sheet, Stat Block, Class
+Feature, and Multiclassing; QNT/spec first if the character-sheet runtime gains
+or extends a proof/spec boundary; focused character-sheet runtime tests;
+update package README if behavior changes; update owner evidence and
+regenerate inventory; `pnpm unit-profile-coverage:check`; package-local
+typecheck/tests; `pnpm quality`; `/simplify` convergence.
+
+### Task 194 - SRDINV24 - Promote Character-Sheet Rest and Spell Slot Recovery
+
+Status: `ready-for-research`
+
+Depends on: SRDINV22
+
+Blocks: SRDINV25-SRDINV27
+
+Research / plan:
+[SRDINV21_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV21_RECURSIVE_PLANNING_REVIEW.md),
+[character-sheet runtime README](/workspace/typescript/dnd/packages/character-sheet-runtime/README.md),
+[character-sheet runtime](/workspace/typescript/dnd/packages/character-sheet-runtime/src/index.ts),
+[Rules-Glossary.md](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Character-Creation.md](/workspace/typescript/dnd/.references/srd-5.2.1/Character-Creation.md),
+[Wizard.md](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Wizard.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote character-sheet rest recovery for Short Rest, Long Rest, Spell
+Slot recovery, and Wizard Arcane Recovery. Keep Spell Slot, Pact Slot, Hit Die,
+HP restoration, feature recharge, and Arcane Recovery slot refund facts
+distinct so rest recovery does not collapse separate SRD concepts into one
+state field.
+
+Out of scope: Wizard Ritual Adept spell invocation, Lay On Hands, battle-runtime
+rest behavior, arbitrary long-rest feature catalog cleanup, and spell Unit
+execution.
+
+Verification: read local SRD Short Rest, Long Rest, Hit Dice, Spell Slot,
+Wizard Spellcasting, and Arcane Recovery passages; check
+`UBIQUITOUS_LANGUAGE.md` for Short Rest, Long Rest, Hit Die, Spell Slot, Pact
+Slot, Pool, Spend, Grant, Refund, and Character Sheet; QNT/spec first if the
+character-sheet runtime gains or extends a proof/spec boundary; focused
+character-sheet runtime tests; update README if behavior changes; update owner
+evidence and regenerate inventory; `pnpm unit-profile-coverage:check`;
+package-local typecheck/tests; `pnpm quality`; `/simplify` convergence.
+
+### Task 195 - SRDINV25 - Promote Character-Sheet Healing Resource Actions
+
+Status: `ready-for-research`
+
+Depends on: SRDINV22
+
+Blocks: SRDINV26-SRDINV27
+
+Research / plan:
+[SRDINV21_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV21_RECURSIVE_PLANNING_REVIEW.md),
+[character-sheet runtime README](/workspace/typescript/dnd/packages/character-sheet-runtime/README.md),
+[character-sheet runtime](/workspace/typescript/dnd/packages/character-sheet-runtime/src/index.ts),
+[Paladin.md](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Paladin.md),
+[Rules-Glossary.md](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Lay On Hands as a character-sheet healing resource action that
+spends one healing pool for HP restoration and Poisoned-condition removal. The
+healing amount and condition-removal cost must stay coupled to the same pool so
+the runtime cannot represent divergent resource balances.
+
+Out of scope: higher-level Restoring Touch, battle action economy integration
+beyond the sheet-owned resource action boundary, general healing spells,
+non-Poisoned condition removal, rest recovery, and spell invocation.
+
+Verification: read local SRD Lay On Hands, Bonus Action, Hit Points, Healing,
+Poisoned, Long Rest, Pool/Spend/Refund terms; check `UBIQUITOUS_LANGUAGE.md`
+for Pool, Spend, Hit Points, Condition, Poisoned, Bonus Action, Character
+Sheet, and Class Feature; QNT/spec first if the character-sheet runtime gains
+or extends a proof/spec boundary; focused character-sheet runtime tests; update
+README if behavior changes; update owner evidence and regenerate inventory;
+`pnpm unit-profile-coverage:check`; package-local typecheck/tests; `pnpm
+quality`; `/simplify` convergence.
+
+### Task 196 - SRDINV26 - Close Wizard Ritual Adept Invocation Ownership
+
+Status: `ready-for-research`
+
+Depends on: SRDINV22
+
+Blocks: SRDINV27
+
+Research / plan:
+[SRDINV21_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV21_RECURSIVE_PLANNING_REVIEW.md),
+[SPELL1_SPELL_OWNERSHIP_SURFACE.md](/workspace/typescript/dnd/plans/SPELL1_SPELL_OWNERSHIP_SURFACE.md),
+[character-sheet runtime README](/workspace/typescript/dnd/packages/character-sheet-runtime/README.md),
+[Wizard.md](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Wizard.md),
+[Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: close Wizard Ritual Adept owner evidence through a promoted
+spell-access/invocation runtime boundary. Ritual casting must be modeled as
+spell invocation over spellbook Spell Access and ritual-tagged Spell
+Definitions; retaining the feature Unit on a CharacterBuild remains
+character-creation evidence only, not execution evidence.
+
+Out of scope: Eldritch Invocation choice evidence already closed by SRDINV18A,
+general authored executable spell rows, battle-runtime spell effects, spell
+Surface blockers not needed for Ritual Adept, and treating ritual casting as a
+separate Spell Definition.
+
+Verification: read local SRD Wizard Spellcasting, Ritual Adept, spellbook, and
+ritual casting passages; check `UBIQUITOUS_LANGUAGE.md` for Spell Access,
+Spell Definition, Spell Slot, Magic Action, Character Sheet, Class Feature,
+and invocation terms used by the implementation; QNT/spec first for the
+promoted invocation boundary where applicable; focused runtime/admission tests;
+update owner evidence and regenerate inventory; `pnpm unit-profile-coverage:check`;
+package-local typecheck/tests; `pnpm quality` if production code changes;
+`/simplify` convergence.
+
+### Task 197 - SRDINV27 - Recursive SRD Inventory Planning Review
+
+Status: `ready-for-research`
+
+Depends on: SRDINV22-SRDINV26
+
+Blocks: none
+
+Research / plan:
+[SRDINV21_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV21_RECURSIVE_PLANNING_REVIEW.md),
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[SRDINV_RALPH_BATCH_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md),
+[ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
+
+Scope: review SRDINV22-SRDINV26 promoted-runtime closure, refresh generated
+inventory metrics, and either record explicit level-1 completion or append the
+next concrete batch. If level-1 is closed, evaluate the remaining spell Unit
+Surface/runtime rows as the next likely frontier.
+
+Out of scope: implementation work not captured by the newly appended batch,
+PHB/XPHB pressure, broad runtime rewrites, and treating catalog admission alone
+as behavior support.
+
+Verification: active-plan consistency across Ralph index, DAG table, and task
+details; regenerated inventory; `pnpm unit-profile-coverage:check`; confirm
+the appended result is either explicit level-1 completion with final metrics or
+a concrete promoted-runtime implementation batch; `/simplify` convergence,
+minimum two rounds unless the final changeset is trivial.
