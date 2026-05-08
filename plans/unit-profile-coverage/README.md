@@ -211,6 +211,16 @@ in `plans/ACTIVE_PLAN.md` as the `SRDINV*` queue when the SRD inventory frontier
 is active. This lane is not QMBT unless a later batch deliberately promotes
 battle-runtime behavior.
 
+Installed SRD inventory rows distinguish catalog admission from operational
+owner evidence. Battle-runtime owner evidence is derived from the durable Unit
+profile matrix: `unit-claims.jsonl` must classify the Unit as an SRD
+`supported-profile`, and `unit-evidence.jsonl` must carry deterministic
+admission/projection evidence for the same Unit id. Character-creation rows
+must not be promoted to owner-evidence-present until a checker-readable
+character-creation evidence artifact maps SRD inventory row ids to discovery,
+fill, finalization, and build projection coverage; executable tests alone are
+not a row-level evidence manifest for this generator.
+
 The first generated scope inventories all SRD class files under
 `.references/srd-5.2.1/Classes/`, with level-1 class rows prioritized first and
 cantrip/level-1 spell-list entries tracked as Spell Unit pressure. Regenerate

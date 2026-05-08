@@ -32,31 +32,17 @@ const exactSurfaceKinds = new Set([
   "equipment-pressure",
 ]);
 
-const battleRuntimeEvidencePresentUnitIds = new Set([
-  "barbarian_rage",
-  "fighter_second_wind",
-  "rogue_sneak_attack",
+const characterCreationEvidenceRequiredRowKinds = new Set([
+  "class-feature-grant",
+  "core-trait",
+  "equipment-pressure",
+  "mastery-pressure",
+  "multiclass-entry",
+  "spell-access",
 ]);
 
-const characterCreationEvidencePresentRowIds = new Set([
-  "srd521:classes/fighter:level-1:class-feature-grant:fighter_fighting_style",
-  "srd521:classes/fighter:level-1:core-trait:fighter_armor_training",
-  "srd521:classes/fighter:level-1:core-trait:fighter_hit_point_die",
-  "srd521:classes/fighter:level-1:core-trait:fighter_saving_throw_proficiencies",
-  "srd521:classes/fighter:level-1:core-trait:fighter_skill_proficiencies",
-  "srd521:classes/fighter:level-1:core-trait:fighter_weapon_proficiencies",
-  "srd521:classes/fighter:level-1:equipment-pressure:fighter_starting_equipment",
-  "srd521:classes/fighter:level-1:mastery-pressure:fighter_weapon_mastery",
-  "srd521:classes/fighter:level-1:multiclass-entry:fighter_multiclass_entry_traits",
-  "srd521:classes/wizard:level-1:core-trait:wizard_armor_training",
-  "srd521:classes/wizard:level-1:core-trait:wizard_hit_point_die",
-  "srd521:classes/wizard:level-1:core-trait:wizard_saving_throw_proficiencies",
-  "srd521:classes/wizard:level-1:core-trait:wizard_skill_proficiencies",
-  "srd521:classes/wizard:level-1:core-trait:wizard_weapon_proficiencies",
-  "srd521:classes/wizard:level-1:equipment-pressure:wizard_starting_equipment",
-  "srd521:classes/wizard:level-1:multiclass-entry:wizard_multiclass_entry_traits",
-  "srd521:classes/wizard:level-1:spell-access:wizard_spellcasting",
-]);
+const deterministicAdmissionProjectionEvidenceTag =
+  "deterministic-admission-projection";
 
 const ownerEvidenceRequired = new Map([
   [
@@ -275,13 +261,13 @@ function surfaceGate(row) {
   };
 }
 
-function finalDisposition(row, authored, installedIds) {
+function finalDisposition(row, authored, installedIds, ownerEvidenceSources) {
   if (nonRuntimeKinds.has(row.rowKind)) return "non-runtime";
   if (!row.candidateUnitId) return "needs-surface-widening";
   if (!authored.has(row.candidateUnitId)) return "missing-authored-record";
   if (!installedIds.has(row.candidateUnitId)) return "catalog-only/dead-for-now";
   const installedLevelOneClassification =
-    installedLevelOneOwnerClassification(row);
+    installedLevelOneOwnerClassification(row, ownerEvidenceSources);
   if (installedLevelOneClassification?.kind === "evidence-present") {
     return "catalog-installed-owner-evidence-present";
   }
@@ -294,9 +280,9 @@ function finalDisposition(row, authored, installedIds) {
   return "catalog-installed-needs-owner-evidence";
 }
 
-function nextAction(row, disposition, gate) {
+function nextAction(row, disposition, gate, ownerEvidenceSources) {
   const installedLevelOneClassification =
-    installedLevelOneOwnerClassification(row);
+    installedLevelOneOwnerClassification(row, ownerEvidenceSources);
   if (disposition === "catalog-installed-owner-evidence-present") {
     return "Owner-specific operational evidence is classified and present.";
   }
@@ -321,25 +307,16 @@ function nextAction(row, disposition, gate) {
   return "Classify owner-specific evidence before implementation.";
 }
 
-function installedLevelOneOwnerClassification(row) {
+function installedLevelOneOwnerClassification(row, ownerEvidenceSources) {
   if (row.levelBand !== "level-1") return undefined;
-  if (
-    row.candidateUnitId &&
-    battleRuntimeEvidencePresentUnitIds.has(row.candidateUnitId)
-  ) {
+  const battleRuntimeEvidence = row.candidateUnitId
+    ? ownerEvidenceSources.battleRuntime.get(row.candidateUnitId)
+    : undefined;
+  if (battleRuntimeEvidence) {
     return {
       kind: "evidence-present",
       owner: "battle-runtime",
-      evidence:
-        "deterministic admission/projection and selected-identity MBT evidence are recorded in plans/unit-profile-coverage/unit-evidence.jsonl",
-    };
-  }
-  if (characterCreationEvidencePresentRowIds.has(row.id)) {
-    return {
-      kind: "evidence-present",
-      owner: "character-creation-runtime",
-      evidence:
-        "character-creation discovery, fill, finalization, and build projection coverage in packages/character-creation-runtime/src/index.test.ts",
+      evidence: battleRuntimeEvidence,
     };
   }
   const required = ownerEvidenceRequired.get(row.id);
@@ -354,6 +331,14 @@ function installedLevelOneOwnerClassification(row) {
     return {
       kind: "catalog-only-closure",
       ...closure,
+    };
+  }
+  if (characterCreationEvidenceRequiredRowKinds.has(row.rowKind)) {
+    return {
+      kind: "evidence-required",
+      owner: "character-creation-runtime",
+      requirement:
+        "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
     };
   }
   return undefined;
@@ -485,20 +470,55 @@ function classRows(root, className) {
   return rows;
 }
 
-function withState(rows, authored, installedIds) {
+function buildOwnerEvidenceSources({ unitClaims, unitEvidence }) {
+  const supportedSrdUnitIds = new Set(
+    unitClaims
+      .filter(
+        (row) =>
+          row.collectionId === "srd-5.2.1" &&
+          row.claim?.tag === "supported-profile",
+      )
+      .map((row) => row.unitId),
+  );
+  const deterministicEvidenceByUnitId = new Map();
+  for (const row of unitEvidence) {
+    if (row.evidence?.tag !== deterministicAdmissionProjectionEvidenceTag) {
+      continue;
+    }
+    if (!supportedSrdUnitIds.has(row.unitId)) continue;
+    deterministicEvidenceByUnitId.set(
+      row.unitId,
+      [
+        "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported",
+        `plans/unit-profile-coverage/unit-evidence.jsonl records ${deterministicAdmissionProjectionEvidenceTag} evidence`,
+        `${row.evidence.taskId} at ${row.evidence.ownerPath}`,
+      ].join("; "),
+    );
+  }
+  return {
+    battleRuntime: deterministicEvidenceByUnitId,
+  };
+}
+
+function withState(rows, authored, installedIds, ownerEvidenceSources) {
   return rows.map((row) => {
     const authoredUnit = row.candidateUnitId
       ? authored.get(row.candidateUnitId)
       : undefined;
     const gate = surfaceGate(row);
-    const disposition = finalDisposition(row, authored, installedIds);
+    const disposition = finalDisposition(
+      row,
+      authored,
+      installedIds,
+      ownerEvidenceSources,
+    );
     const catalogAdmission = row.candidateUnitId
       ? installedIds.has(row.candidateUnitId)
         ? { state: "installed", unitId: row.candidateUnitId }
         : { state: "not-installed", unitId: row.candidateUnitId }
       : { state: "not-applicable" };
     const installedLevelOneClassification =
-      installedLevelOneOwnerClassification(row);
+      installedLevelOneOwnerClassification(row, ownerEvidenceSources);
     return {
       ...row,
       surface: gate,
@@ -529,7 +549,7 @@ function withState(rows, authored, installedIds) {
                 : [ownerEvidenceEntry(installedLevelOneClassification)]),
             ]
           : [],
-      nextAction: nextAction(row, disposition, gate),
+      nextAction: nextAction(row, disposition, gate, ownerEvidenceSources),
     };
   });
 }
@@ -771,17 +791,27 @@ function buildRecommendedBatches(rows) {
   ];
 }
 
-function buildSrdUnitInventory({ root, inventory }) {
+function buildSrdUnitInventory({
+  root,
+  inventory,
+  unitClaims = [],
+  unitEvidence = [],
+}) {
   const authored = findAuthored(root);
   const installedIds = new Set(
     inventory
       .filter((unit) => unit.collectionId === "srd-5.2.1")
       .map((unit) => unit.unitId),
   );
+  const ownerEvidenceSources = buildOwnerEvidenceSources({
+    unitClaims,
+    unitEvidence,
+  });
   const rows = withState(
     classOrder.flatMap((className) => classRows(root, className)),
     authored,
     installedIds,
+    ownerEvidenceSources,
   ).sort((a, b) => a.id.localeCompare(b.id));
   const levelOneRows = rows.filter((row) => row.levelBand === "level-1");
   const spellPressureRows = rows.filter(

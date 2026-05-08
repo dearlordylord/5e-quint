@@ -43,7 +43,12 @@ function main() {
   const taskClaims = readJsonl(root, paths.taskClaims);
   const inventory = discoverInventory(root, collections.collections);
   const authoredSurfaceUnits = discoverAuthoredSurfaceUnits(root);
-  const srdUnitInventory = buildSrdUnitInventory({ root, inventory });
+  const srdUnitInventory = buildSrdUnitInventory({
+    root,
+    inventory,
+    unitClaims,
+    unitEvidence,
+  });
   const scannedClaims = scanClaimFiles(root);
   const issues = validateCoverageInputs({
     root,

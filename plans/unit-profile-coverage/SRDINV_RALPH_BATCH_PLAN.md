@@ -23,6 +23,8 @@ Current sequence:
 - `SRDINV1`: classify installed level-1 owner evidence.
 - `SRDINV1A`: replace private owner-evidence classifications with durable
   evidence sources before downstream tasks proceed.
+- `SRDINV1B`: create a checker-readable character-creation evidence manifest,
+  wire it into the inventory generator, and reclassify only covered rows.
 - `SRDINV2`: author or explicitly close missing level-1 class containers.
 - `SRDINV3`: classify missing level-1 class feature rows.
 - `SRDINV4`: classify level-1 character-creation/progression rows.
@@ -55,6 +57,12 @@ owner evidence and which can be explicitly closed as catalog-only/dead-for-now.
 be reported as present only when the generator derives it from durable matrix,
 runtime, or character-creation evidence artifacts. Rows without durable
 evidence must remain evidence-required or explicit catalog-only closures.
+Because no checker-readable character-creation evidence manifest currently
+exists, SRDINV1A keeps installed character-creation rows evidence-required. The
+active plan includes SRDINV1B as the atomic follow-up before unblocking
+character-creation evidence-present classifications: create that manifest, wire
+it into the SRD inventory generator, and then reclassify only rows covered by
+the manifest.
 
 QMBT68/QMBT69 are deliberately deferred while this lane is active. The next
 Ralph-ready task should be `SRDINV1`, not the older QMBT projection-cleanup
