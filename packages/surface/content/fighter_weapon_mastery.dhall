@@ -8,7 +8,7 @@ let weaponMastery =
       , mechanics =
         { changeOn = { count = 1, kind = "long_rest" }
         , choose = 3
-        , eligibleWeapons = [ "simple", "martial" ]
+        , eligibleWeapons = { kind = "class_proficient_weapons" }
         , family = "weapon_mastery_choice"
         }
       , name = "Weapon Mastery"

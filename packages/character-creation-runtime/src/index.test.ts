@@ -70,6 +70,7 @@ import {
   type CharacterProgression,
   type ClassHitPointRule,
 } from "./index.ts";
+import { classFeatureGrantChoiceHoles } from "./discovery.ts";
 import { parseCharacterProgressionShape } from "./character-progression-algebra.ts";
 import { classUnitId } from "./character-progression-types.ts";
 import {
@@ -441,8 +442,16 @@ describe("character creation hole discovery", () => {
         "cc:draft:draft.progression.initial",
         [
           "15:class_barbarian:level_1:maximum_hit_die",
+          "10:class_bard:level_1:maximum_hit_die",
+          "12:class_cleric:level_1:maximum_hit_die",
+          "11:class_druid:level_1:maximum_hit_die",
           "13:class_fighter:level_1:maximum_hit_die",
           "13:class_fighter|13:class_fighter:level_2:fixed_hp_gain",
+          "10:class_monk:level_1:maximum_hit_die",
+          "13:class_paladin:level_1:maximum_hit_die",
+          "12:class_ranger:level_1:maximum_hit_die",
+          "11:class_rogue:level_1:maximum_hit_die",
+          "14:class_sorcerer:level_1:maximum_hit_die",
           "13:class_warlock:level_1:maximum_hit_die",
           "12:class_wizard:level_1:maximum_hit_die",
           "12:class_wizard|13:class_fighter:level_2:fixed_hp_gain",
@@ -608,6 +617,64 @@ describe("character creation hole discovery", () => {
         ),
       ),
     ).toEqual(["option_a", "option_b", "option_c"]);
+  });
+
+  test("reads non-Fighter Weapon Mastery holes from class proficiencies", () => {
+    const barbarianMasteryHole = classFeatureGrantChoiceHoles(
+      "barbarian_weapon_mastery",
+      unitLibrary,
+    )[0];
+    expect(barbarianMasteryHole).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 2 },
+    });
+    expect(optionIds(barbarianMasteryHole)).toEqual(
+      expect.arrayContaining([
+        "weapon_dagger",
+        "weapon_longsword",
+        "weapon_spear",
+      ]),
+    );
+    expect(optionIds(barbarianMasteryHole)).not.toContain("weapon_shortbow");
+
+    const rogueMasteryHole = classFeatureGrantChoiceHoles(
+      "rogue_weapon_mastery",
+      unitLibrary,
+    )[0];
+    expect(rogueMasteryHole).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 2 },
+    });
+    expect(optionIds(rogueMasteryHole)).toEqual(
+      expect.arrayContaining([
+        "weapon_dagger",
+        "weapon_shortbow",
+        "weapon_shortsword",
+      ]),
+    );
+    expect(optionIds(rogueMasteryHole)).not.toContain("weapon_flail");
+    expect(optionIds(rogueMasteryHole)).not.toContain("weapon_longsword");
+
+    for (const unitId of [
+      "paladin_weapon_mastery",
+      "ranger_weapon_mastery",
+    ] as const) {
+      const masteryHole = classFeatureGrantChoiceHoles(
+        unitId,
+        unitLibrary,
+      )[0];
+      expect(masteryHole).toMatchObject({
+        kind: "choice",
+        cardinality: { tag: "exactly", count: 2 },
+      });
+      expect(optionIds(masteryHole)).toEqual(
+        expect.arrayContaining([
+          "weapon_longsword",
+          "weapon_shortbow",
+          "weapon_spear",
+        ]),
+      );
+    }
   });
 
   test("opens Soldier holes after class and background selections", () => {

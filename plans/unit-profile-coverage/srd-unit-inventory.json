@@ -32,20 +32,19 @@
     "spellPressureRows": 211,
     "levelOneClassContainers": 12,
     "levelOneRowsByDisposition": {
-      "catalog-installed-owner-evidence-required": 117,
+      "catalog-installed-owner-evidence-required": 121,
       "catalog-installed-owner-evidence-present": 19,
       "catalog-only/dead-for-now": 4,
-      "non-runtime": 12,
-      "missing-authored-record": 4
+      "non-runtime": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-required": 127,
+      "catalog-installed-owner-evidence-required": 131,
       "catalog-installed-owner-evidence-present": 37,
       "catalog-only/dead-for-now": 78,
       "non-runtime": 12,
-      "missing-authored-record": 10,
       "catalog-authored-executable-follow-up": 70,
-      "needs-surface-widening": 33
+      "needs-surface-widening": 33,
+      "missing-authored-record": 6
     },
     "spellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 74,
@@ -75,7 +74,7 @@
       "title": "Classify Installed Level-1 Owner Evidence",
       "suggestedStatus": "ready-for-research",
       "intent": "Stop treating installed level-1 rows as done by catalog load alone; assign operational owner expectations or explicit catalog-only closure.",
-      "rowCount": 137,
+      "rowCount": 141,
       "rowIds": [
         "srd521:classes/barbarian:level-1:class-container:barbarian_class_container",
         "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
@@ -86,6 +85,7 @@
         "srd521:classes/barbarian:level-1:core-trait:barbarian_skill_proficiencies",
         "srd521:classes/barbarian:level-1:core-trait:barbarian_weapon_proficiencies",
         "srd521:classes/barbarian:level-1:equipment-pressure:barbarian_starting_equipment",
+        "srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery",
         "srd521:classes/barbarian:level-1:multiclass-entry:barbarian_multiclass_entry_traits",
         "srd521:classes/bard:level-1:class-container:bard_class_container",
         "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
@@ -154,6 +154,7 @@
         "srd521:classes/paladin:level-1:core-trait:paladin_skill_proficiencies",
         "srd521:classes/paladin:level-1:core-trait:paladin_weapon_proficiencies",
         "srd521:classes/paladin:level-1:equipment-pressure:paladin_starting_equipment",
+        "srd521:classes/paladin:level-1:mastery-pressure:paladin_weapon_mastery",
         "srd521:classes/paladin:level-1:multiclass-entry:paladin_multiclass_entry_traits",
         "srd521:classes/paladin:level-1:spell-access:paladin_spellcasting",
         "srd521:classes/ranger:level-1:class-container:ranger_class_container",
@@ -165,6 +166,7 @@
         "srd521:classes/ranger:level-1:core-trait:ranger_skill_proficiencies",
         "srd521:classes/ranger:level-1:core-trait:ranger_weapon_proficiencies",
         "srd521:classes/ranger:level-1:equipment-pressure:ranger_starting_equipment",
+        "srd521:classes/ranger:level-1:mastery-pressure:ranger_weapon_mastery",
         "srd521:classes/ranger:level-1:multiclass-entry:ranger_multiclass_entry_traits",
         "srd521:classes/ranger:level-1:spell-access:ranger_spellcasting",
         "srd521:classes/rogue:level-1:class-container:rogue_class_container",
@@ -179,6 +181,7 @@
         "srd521:classes/rogue:level-1:core-trait:rogue_tool_proficiencies",
         "srd521:classes/rogue:level-1:core-trait:rogue_weapon_proficiencies",
         "srd521:classes/rogue:level-1:equipment-pressure:rogue_starting_equipment",
+        "srd521:classes/rogue:level-1:mastery-pressure:rogue_weapon_mastery",
         "srd521:classes/rogue:level-1:multiclass-entry:rogue_multiclass_entry_traits",
         "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container",
         "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
@@ -1076,13 +1079,8 @@
       "title": "Author Level-1 Weapon Mastery Records",
       "suggestedStatus": "blocked-on-SRDINV12",
       "intent": "Author missing SRD-provenance Weapon Mastery records for level-1 classes that grant mastery choices.",
-      "rowCount": 4,
-      "rowIds": [
-        "srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery",
-        "srd521:classes/paladin:level-1:mastery-pressure:paladin_weapon_mastery",
-        "srd521:classes/ranger:level-1:mastery-pressure:ranger_weapon_mastery",
-        "srd521:classes/rogue:level-1:mastery-pressure:rogue_weapon_mastery"
-      ],
+      "rowCount": 0,
+      "rowIds": [],
       "nextAction": "Author Barbarian, Paladin, Ranger, and Rogue Weapon Mastery records as character-sheet choice facts; do not implement weapon mastery property runtime behavior in this authoring task.",
       "acceptance": "Level-1 mastery-pressure rows have authored records or explicit typed closure, while mastery property execution remains separate runtime work."
     },
@@ -1091,13 +1089,8 @@
       "title": "Recursive SRD Inventory Planning Review",
       "suggestedStatus": "blocked-on-SRDINV12-SRDINV15",
       "intent": "Review SRDINV12-SRDINV15 authoring results and append the next concrete batch unless level-1 inventory is complete.",
-      "rowCount": 4,
-      "rowIds": [
-        "srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery",
-        "srd521:classes/paladin:level-1:mastery-pressure:paladin_weapon_mastery",
-        "srd521:classes/ranger:level-1:mastery-pressure:ranger_weapon_mastery",
-        "srd521:classes/rogue:level-1:mastery-pressure:rogue_weapon_mastery"
-      ],
+      "rowCount": 0,
+      "rowIds": [],
       "nextAction": "Refresh inventory metrics after the authoring batch and choose the next concrete frontier, likely character-creation owner-evidence closure, spell Unit Surface blockers, or runtime/MBT planning for authored executable rows.",
       "acceptance": "The next review either records explicit level-1 completion with final metrics or appends another concrete multi-task batch, not a recursive-only placeholder."
     }
@@ -1597,15 +1590,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "barbarian_weapon_mastery",
+        "sourceRecordPath": "packages/surface/content/barbarian_weapon_mastery.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "barbarian_weapon_mastery"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit barbarian_weapon_mastery is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/barbarian:level-1:multiclass-entry:barbarian_multiclass_entry_traits",
@@ -7645,15 +7651,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "paladin_weapon_mastery",
+        "sourceRecordPath": "packages/surface/content/paladin_weapon_mastery.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "paladin_weapon_mastery"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit paladin_weapon_mastery is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/paladin:level-1:multiclass-entry:paladin_multiclass_entry_traits",
@@ -8612,15 +8631,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "ranger_weapon_mastery",
+        "sourceRecordPath": "packages/surface/content/ranger_weapon_mastery.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "ranger_weapon_mastery"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit ranger_weapon_mastery is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/ranger:level-1:multiclass-entry:ranger_multiclass_entry_traits",
@@ -9709,15 +9741,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "rogue_weapon_mastery",
+        "sourceRecordPath": "packages/surface/content/rogue_weapon_mastery.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "rogue_weapon_mastery"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit rogue_weapon_mastery is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/rogue:level-1:multiclass-entry:rogue_multiclass_entry_traits",

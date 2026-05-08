@@ -29,6 +29,13 @@ const task183ClassFeatureUnitIds = [
   "warlock_eldritch_invocations",
 ] as const;
 
+const task184WeaponMasteryUnitIds = [
+  "barbarian_weapon_mastery",
+  "paladin_weapon_mastery",
+  "ranger_weapon_mastery",
+  "rogue_weapon_mastery",
+] as const;
+
 const requiredFirstVerticalUnitIds = [
   "class_barbarian",
   "class_bard",
@@ -52,6 +59,7 @@ const requiredFirstVerticalUnitIds = [
   "fighter_improved_critical",
   "barbarian_fast_movement",
   ...task183ClassFeatureUnitIds,
+  ...task184WeaponMasteryUnitIds,
   "subclass_fighter_champion",
   "subclass_wizard_evoker",
   "rogue_evasion",
@@ -206,32 +214,79 @@ describe("SRD Unit catalog boundary", () => {
     }
   });
 
-  test("authors Fighter Weapon Mastery as the feature-owned choice grant", () => {
+  test("authors level-1 Weapon Mastery as feature-owned choice grants", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 
     expect(result.tag).toBe("ok");
     if (result.tag === "ok") {
-      const fighter = result.catalog.requireUnit("class_fighter");
-      const weaponMastery = result.catalog.requireUnit(
-        "fighter_weapon_mastery",
-      );
-
-      expect(fighter).toMatchObject({
-        kind: "class",
-        featureGrants: expect.arrayContaining([
-          { level: 1, unitId: "fighter_weapon_mastery" },
-        ]),
-      });
-      expect(fighter).not.toHaveProperty("weaponMastery");
-      expect(weaponMastery).toMatchObject({
-        kind: "class_feature",
-        mechanics: {
-          changeOn: { count: 1, kind: "long_rest" },
+      const weaponMasteryCases = [
+        {
+          classUnitId: "class_fighter",
+          unitId: "fighter_weapon_mastery",
+          className: "fighter",
           choose: 3,
-          eligibleWeapons: ["simple", "martial"],
-          family: "weapon_mastery_choice",
+          changeOn: { count: 1, kind: "long_rest" },
+          eligibleWeapons: { kind: "class_proficient_weapons" },
         },
-      });
+        {
+          classUnitId: "class_barbarian",
+          unitId: "barbarian_weapon_mastery",
+          className: "barbarian",
+          choose: 2,
+          changeOn: { count: 1, kind: "long_rest" },
+          eligibleWeapons: {
+            kind: "class_proficient_weapons",
+            usage: "melee",
+          },
+        },
+        {
+          classUnitId: "class_paladin",
+          unitId: "paladin_weapon_mastery",
+          className: "paladin",
+          choose: 2,
+          changeOn: { count: 2, kind: "long_rest" },
+          eligibleWeapons: { kind: "class_proficient_weapons" },
+        },
+        {
+          classUnitId: "class_ranger",
+          unitId: "ranger_weapon_mastery",
+          className: "ranger",
+          choose: 2,
+          changeOn: { count: 2, kind: "long_rest" },
+          eligibleWeapons: { kind: "class_proficient_weapons" },
+        },
+        {
+          classUnitId: "class_rogue",
+          unitId: "rogue_weapon_mastery",
+          className: "rogue",
+          choose: 2,
+          changeOn: { count: 2, kind: "long_rest" },
+          eligibleWeapons: { kind: "class_proficient_weapons" },
+        },
+      ] as const;
+
+      for (const expected of weaponMasteryCases) {
+        const classRecord = result.catalog.requireUnit(expected.classUnitId);
+        const weaponMastery = result.catalog.requireUnit(expected.unitId);
+
+        expect(classRecord).toMatchObject({
+          kind: "class",
+          featureGrants: expect.arrayContaining([
+            { level: 1, unitId: expected.unitId },
+          ]),
+        });
+        expect(classRecord).not.toHaveProperty("weaponMastery");
+        expect(weaponMastery).toMatchObject({
+          className: expected.className,
+          kind: "class_feature",
+          mechanics: {
+            changeOn: expected.changeOn,
+            choose: expected.choose,
+            eligibleWeapons: expected.eligibleWeapons,
+            family: "weapon_mastery_choice",
+          },
+        });
+      }
     }
   });
 

@@ -6081,7 +6081,8 @@ function traceClassFeatureMechanics(
         atomKind: "class_weapon_mastery_choice",
         label:
           `class_weapon_mastery_choice\nchoose ${m.choose}\n` +
-          `${m.eligibleWeapons.join(", ")}\nchange ${m.changeOn.count} on ${m.changeOn.kind}`,
+          `${describeWeaponMasteryEligibility(m.eligibleWeapons)}\n` +
+          `change ${m.changeOn.count} on ${m.changeOn.kind}`,
       });
       return [masteryId];
     }
@@ -6960,6 +6961,17 @@ function describeToolProficiencyGrant(grant: ToolProficiencyGrant): string {
       return _exhaustive;
     }
   }
+}
+
+function describeWeaponMasteryEligibility(
+  eligibility: Extract<
+    ClassFeatureMechanics,
+    { readonly family: "weapon_mastery_choice" }
+  >["eligibleWeapons"],
+): string {
+  return eligibility.usage === undefined
+    ? "class proficient weapons"
+    : `class proficient ${eligibility.usage} weapons`;
 }
 
 function describeClassWeaponProficiency(

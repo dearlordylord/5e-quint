@@ -543,7 +543,10 @@ export const FailedAbilityCheckResourceBoostMechanicsSchema = Schema.Struct({
 export const WeaponMasteryChoiceMechanicsSchema = Schema.Struct({
   family: Schema.Literal("weapon_mastery_choice"),
   choose: PositiveIntegerSchema,
-  eligibleWeapons: Schema.NonEmptyArray(WeaponCategorySchema),
+  eligibleWeapons: Schema.Struct({
+    kind: Schema.Literal("class_proficient_weapons"),
+    usage: exactOptional(WeaponUsageSchema),
+  }),
   changeOn: Schema.Struct({
     kind: Schema.Literal("long_rest"),
     count: PositiveIntegerSchema,

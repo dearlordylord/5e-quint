@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 344,
-      "numerator": 58,
-      "percent": "16.9%"
+      "denominator": 348,
+      "numerator": 62,
+      "percent": "17.8%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 411,
-      "numerator": 82,
-      "percent": "20%"
+      "denominator": 415,
+      "numerator": 86,
+      "percent": "20.7%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 83
+      "value": 87
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 33,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 83,
-      "numerator": 83,
+      "denominator": 87,
+      "numerator": 87,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -97,9 +97,9 @@
       "percent": "30.3%"
     },
     "supportedProfileCoverage": {
-      "denominator": 59,
+      "denominator": 63,
       "numerator": 33,
-      "percent": "55.9%"
+      "percent": "52.4%"
     }
   },
   "metricSemantics": [
@@ -1938,6 +1938,24 @@
         "status": "installed"
       },
       "claim": {
+        "reason": "Weapon mastery grant container; mastery Unit carries executable pressure.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/barbarian_weapon_mastery.json",
+      "unitId": "barbarian_weapon_mastery"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "reason": "Class feature source facts are authored for character and feature projection; generic D20 Test token use is not promoted as a battle Unit profile.",
         "tag": "unsupported-profile"
       },
@@ -2846,6 +2864,24 @@
         "status": "installed"
       },
       "claim": {
+        "reason": "Weapon mastery grant container; mastery Unit carries executable pressure.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/paladin_weapon_mastery.json",
+      "unitId": "paladin_weapon_mastery"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "unit-feature.attack-action-attack-count-scaling"
         ],
@@ -2951,6 +2987,42 @@
       ],
       "sourceRecordPath": "packages/surface/content/ranger_roving.json",
       "unitId": "ranger_roving"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Weapon mastery grant container; mastery Unit carries executable pressure.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/ranger_weapon_mastery.json",
+      "unitId": "ranger_weapon_mastery"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Weapon mastery grant container; mastery Unit carries executable pressure.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/rogue_weapon_mastery.json",
+      "unitId": "rogue_weapon_mastery"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

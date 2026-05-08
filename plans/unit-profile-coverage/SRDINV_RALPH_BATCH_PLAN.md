@@ -421,3 +421,29 @@ Roll, Saving Throw, Reaction, and Concentration.
   accidentally admit unrelated runtime behavior.
 - Round 3: no important changes found; later spell runtime and
   character-creation evidence closure remain visible for SRDINV16.
+
+## SRDINV15 Closeout Notes
+
+SRDINV15 authored Barbarian, Paladin, Ranger, and Rogue Weapon Mastery records
+as SRD-provenance character-sheet choice/source facts. The records reference
+class weapon proficiencies through `class_proficient_weapons` rather than
+duplicating Simple/Martial category lists on each feature record. Fighter
+Weapon Mastery remains the existing authored record and was updated to the
+same proficiency-derived shape.
+
+Local SRD source review checked the level-1 Weapon Mastery passages in
+`.references/srd-5.2.1/Classes/Barbarian.md`,
+`.references/srd-5.2.1/Classes/Paladin.md`,
+`.references/srd-5.2.1/Classes/Ranger.md`,
+`.references/srd-5.2.1/Classes/Rogue.md`, and the existing Fighter passage.
+`UBIQUITOUS_LANGUAGE.md` was checked for Weapon Mastery, Class, Character
+Sheet, Proficiency Level, and Long Rest.
+
+`/simplify` convergence:
+
+- Round 1: kept Weapon Mastery eligibility as a projection from each owning
+  class record's weapon proficiencies, so the authored feature records do not
+  duplicate category/property lists that already live on class containers.
+- Round 2: no important changes found; the remaining coupling is localized to
+  the `class_proficient_weapons` mechanics shape, its Surface schema, trace
+  description, and character-creation discovery reader.

@@ -14,11 +14,13 @@ import {
 } from "@dnd/surface/surface/character-creation-readers";
 import type {
   BackgroundToolProficiency,
+  ClassRecord,
   ClassFeatureRecord,
   FeatRecord,
   ProficiencyGrant,
   StartingEquipmentChoice,
   UnitRecord,
+  WeaponProficiency,
   WeaponRecord,
 } from "@dnd/surface/surface/types";
 import { proficiencyGrantSubjectOption } from "./choice-option-codecs.ts";
@@ -96,6 +98,8 @@ import {
   classUnitId,
   type CharacterProgression,
 } from "./character-progression-types.ts";
+
+const byKind = Match.discriminator("kind");
 
 const SRD_GAMING_SET_OPTIONS = [
   {
@@ -1040,12 +1044,21 @@ function weaponMasteryFeatureHoleSource(
   unitLibrary: UnitCatalog,
 ): ChoiceCreationHole | undefined {
   const mechanics = feature.mechanics;
+  const classRecord = classRecordForFeature(feature, unitLibrary);
+  if (classRecord === undefined) {
+    return undefined;
+  }
+
   const options = unitLibrary
     .listUnits()
     .filter(
       (unit): unit is WeaponRecord =>
         unit.kind === "weapon" &&
-        mechanics.eligibleWeapons.includes(unit.category),
+        weaponMatchesMasteryEligibility(
+          unit,
+          mechanics.eligibleWeapons,
+          classRecord,
+        ),
     )
     .map(unitOption);
 
@@ -1055,6 +1068,61 @@ function weaponMasteryFeatureHoleSource(
       cardinality: exactChoiceCardinality(mechanics.choose),
       options,
     }),
+  );
+}
+
+function classRecordForFeature(
+  feature: ClassFeatureRecord,
+  unitLibrary: UnitCatalog,
+): ClassRecord | undefined {
+  return unitLibrary
+    .listUnits()
+    .find(
+      (unit): unit is ClassRecord =>
+        unit.kind === "class" && unit.className === feature.className,
+    );
+}
+
+function weaponMatchesMasteryEligibility(
+  weapon: WeaponRecord,
+  eligibility: Extract<
+    ClassFeatureRecord["mechanics"],
+    { readonly family: "weapon_mastery_choice" }
+  >["eligibleWeapons"],
+  classRecord: ClassRecord,
+): boolean {
+  return Match.value(eligibility).pipe(
+    byKind(
+      "class_proficient_weapons",
+      (classProficientWeapons) =>
+        (classProficientWeapons.usage === undefined ||
+          weapon.usage === classProficientWeapons.usage) &&
+        classRecord.weaponProficiencies.some((proficiency) =>
+          weaponMatchesProficiency(weapon, proficiency),
+        ),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function weaponMatchesProficiency(
+  weapon: WeaponRecord,
+  proficiency: WeaponProficiency,
+): boolean {
+  return Match.value(proficiency).pipe(
+    byKind(
+      "weapon_category",
+      (categoryProficiency) => weapon.category === categoryProficiency.category,
+    ),
+    byKind(
+      "weapon_category_with_properties",
+      (propertyProficiency) =>
+        weapon.category === propertyProficiency.category &&
+        weapon.properties?.some((property) =>
+          propertyProficiency.anyOfProperties.includes(property.kind),
+        ) === true,
+    ),
+    Match.exhaustive,
   );
 }
 

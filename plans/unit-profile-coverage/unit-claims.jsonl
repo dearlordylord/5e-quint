@@ -17,6 +17,10 @@
 {"unitId":"fighter_fighting_style","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Choice/grant container; selected Fighting Style feat carries executable pressure."}}
 {"unitId":"fighter_second_wind","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["unit-feature.self-bonus-action-healing"],"rawRequirementIds":["RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}}
 {"unitId":"fighter_weapon_mastery","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Weapon mastery grant container; mastery Unit carries executable pressure."}}
+{"unitId":"barbarian_weapon_mastery","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Weapon mastery grant container; mastery Unit carries executable pressure."}}
+{"unitId":"paladin_weapon_mastery","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Weapon mastery grant container; mastery Unit carries executable pressure."}}
+{"unitId":"ranger_weapon_mastery","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Weapon mastery grant container; mastery Unit carries executable pressure."}}
+{"unitId":"rogue_weapon_mastery","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Weapon mastery grant container; mastery Unit carries executable pressure."}}
 {"unitId":"fighter_action_surge","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["unit-feature.action-surge-resource"],"rawRequirementIds":["RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}}
 {"unitId":"fighter_extra_attack","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["unit-feature.attack-action-attack-count-scaling"],"rawRequirementIds":["RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}}
 {"unitId":"fighter_tactical_mind","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["unit-feature.failed-ability-check-resource-boost"],"rawRequirementIds":["RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}}

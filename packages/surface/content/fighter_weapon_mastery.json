@@ -10,10 +10,9 @@
       "kind": "long_rest"
     },
     "choose": 3,
-    "eligibleWeapons": [
-      "simple",
-      "martial"
-    ],
+    "eligibleWeapons": {
+      "kind": "class_proficient_weapons"
+    },
     "family": "weapon_mastery_choice"
   },
   "name": "Weapon Mastery",

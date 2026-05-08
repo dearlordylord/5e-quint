@@ -9,6 +9,7 @@ import bardCuttingWordsInput from "../../content/bard_cutting_words.json";
 import barbarianRageInput from "../../content/barbarian_rage.json";
 import barbarianFastMovementInput from "../../content/barbarian_fast_movement.json";
 import barbarianRecklessAttackInput from "../../content/barbarian_reckless_attack.json";
+import barbarianWeaponMasteryInput from "../../content/barbarian_weapon_mastery.json";
 import classBardInput from "../../content/class_bard.json";
 import classBarbarianInput from "../../content/class_barbarian.json";
 import classClericInput from "../../content/class_cleric.json";
@@ -57,9 +58,11 @@ import orcAdrenalineRushInput from "../../content/orc_adrenaline_rush.json";
 import orcDarkvisionInput from "../../content/species_orc_darkvision.json";
 import orcRelentlessEnduranceInput from "../../content/orc_relentless_endurance.json";
 import paladinExtraAttackInput from "../../content/paladin_extra_attack.json";
+import paladinWeaponMasteryInput from "../../content/paladin_weapon_mastery.json";
 import rangerExtraAttackInput from "../../content/ranger_extra_attack.json";
 import rangerFavoredEnemyInput from "../../content/ranger_favored_enemy.json";
 import rangerRovingInput from "../../content/ranger_roving.json";
+import rangerWeaponMasteryInput from "../../content/ranger_weapon_mastery.json";
 import speciesOrcInput from "../../content/species_orc.json";
 import subclassFighterChampionInput from "../../content/subclass_fighter_champion.json";
 import subclassWizardEvokerInput from "../../content/subclass_wizard_evoker.json";
@@ -70,6 +73,7 @@ import rogueExpertiseInput from "../../content/rogue_expertise.json";
 import rogueUncannyDodgeInput from "../../content/rogue_uncanny_dodge.json";
 import rogueSneakAttackInput from "../../content/rogue_sneak_attack.json";
 import rogueThievesCantInput from "../../content/rogue_thieves_cant.json";
+import rogueWeaponMasteryInput from "../../content/rogue_weapon_mastery.json";
 import shieldInput from "../../content/shield.json";
 import sleepInput from "../../content/sleep.json";
 import sorcererInnateSorceryInput from "../../content/sorcerer_innate_sorcery.json";
@@ -214,6 +218,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     barbarianRageInput,
     barbarianRecklessAttackInput,
     barbarianFastMovementInput,
+    barbarianWeaponMasteryInput,
     bardBardicInspirationInput,
     bardCuttingWordsInput,
     clericDivineOrderInput,
@@ -238,8 +243,11 @@ export const srdUnitCollection = defineSrdUnitCollection({
     featDefenseInput,
     featSavageAttackerInput,
     paladinExtraAttackInput,
+    paladinWeaponMasteryInput,
     rangerExtraAttackInput,
     rangerRovingInput,
+    rangerWeaponMasteryInput,
+    rogueWeaponMasteryInput,
     masterySapInput,
     orcAdrenalineRushInput,
     orcDarkvisionInput,
