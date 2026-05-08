@@ -37,7 +37,10 @@ let inflictWounds =
                     , label = "target"
                     , value =
                         { kind = "target"
-                        , selection = { mode = "one" }
+                        , selection =
+                            { mode = "one"
+                            , targetKinds = [ "creature" ]
+                            }
                         }
                     }
                 , ability = "con"

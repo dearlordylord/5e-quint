@@ -857,10 +857,7 @@ export type SupportedSpellInvocation =
       readonly spell: SpellRecord;
       readonly ability: Ability;
       readonly dc: DcSource;
-      readonly targeting: Extract<
-        SpellTargeting,
-        { readonly kind: "pointOriginSphere" }
-      >;
+      readonly targeting: SpellTargeting;
       readonly damage: {
         readonly expr: DiceExpr;
         readonly damageType: DamageType;
@@ -1429,10 +1426,16 @@ export type BattleSavingThrowOutcome = {
   readonly targetId: CombatantId;
   readonly succeeded: boolean;
 };
-export type BattleSpellSavingThrowOutcomeValue = {
+export type BattleSpellAreaSavingThrowOutcomeValue = {
   readonly area: BattleSpellAreaChoice;
   readonly outcomes: readonly BattleSavingThrowOutcome[];
 };
+export type BattleSpellTargetSavingThrowOutcomeValue = {
+  readonly outcomes: readonly BattleSavingThrowOutcome[];
+};
+export type BattleSpellSavingThrowOutcomeValue =
+  | BattleSpellAreaSavingThrowOutcomeValue
+  | BattleSpellTargetSavingThrowOutcomeValue;
 export type BattleUnitFeatureSavingThrowOutcomeValue = {
   readonly outcomes: readonly BattleSavingThrowOutcome[];
 };
@@ -1454,7 +1457,10 @@ export type BattleSpellSavingThrowOutcomeHole = {
   readonly holeId: BattleHoleId;
   readonly kind: "savingThrowOutcome";
   readonly label: string;
-  readonly spell: SupportedSpellInvocation;
+  readonly spell: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "saveGatedDamage" }
+  >;
   readonly ability: Ability;
   readonly dc: DcSource;
   readonly areaChoices: readonly BattleSpellAreaChoice[];
@@ -1747,10 +1753,15 @@ const SupportedSpellInvocationSchema = Schema.Union(
     spell: BattleRuntimeObjectSchema,
     ability: Schema.String,
     dc: BattleRuntimeObjectSchema,
-    targeting: Schema.Struct({
-      kind: Schema.Literal("pointOriginSphere"),
-      radiusFeet: MovementFeet,
-    }),
+    targeting: Schema.Union(
+      Schema.Struct({
+        kind: Schema.Literal("singleCombatant"),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("pointOriginSphere"),
+        radiusFeet: MovementFeet,
+      }),
+    ),
     damage: Schema.Struct({
       expr: BattleRuntimeObjectSchema,
       damageType: Schema.String,
@@ -1765,10 +1776,15 @@ const SupportedSpellInvocationSchema = Schema.Union(
     spell: BattleRuntimeObjectSchema,
     ability: Schema.String,
     dc: BattleRuntimeObjectSchema,
-    targeting: Schema.Struct({
-      kind: Schema.Literal("pointOriginSphere"),
-      radiusFeet: MovementFeet,
-    }),
+    targeting: Schema.Union(
+      Schema.Struct({
+        kind: Schema.Literal("singleCombatant"),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("pointOriginSphere"),
+        radiusFeet: MovementFeet,
+      }),
+    ),
     damage: Schema.Struct({
       expr: BattleRuntimeObjectSchema,
       damageType: Schema.String,
@@ -6945,23 +6961,27 @@ function hasAttackDamageReductionRedirectTargetSpatialFact(
   targetGate: AttackDamageReductionRedirectTargetGate,
 ): boolean {
   return Match.value(attackKind).pipe(
-    Match.when("melee", () =>
-      targetGate.melee === "visibleWithin5Feet" &&
-      facts.some(
-        (fact) =>
-          fact.kind === "meleeRedirectTargetWithin5Feet" &&
-          fact.sourceId === sourceId &&
-          fact.targetId === targetId,
-      ),
+    Match.when(
+      "melee",
+      () =>
+        targetGate.melee === "visibleWithin5Feet" &&
+        facts.some(
+          (fact) =>
+            fact.kind === "meleeRedirectTargetWithin5Feet" &&
+            fact.sourceId === sourceId &&
+            fact.targetId === targetId,
+        ),
     ),
-    Match.when("ranged", () =>
-      targetGate.ranged === "visibleWithin60FeetWithoutTotalCover" &&
-      facts.some(
-        (fact) =>
-          fact.kind === "rangedRedirectTargetWithin60FeetWithoutTotalCover" &&
-          fact.sourceId === sourceId &&
-          fact.targetId === targetId,
-      ),
+    Match.when(
+      "ranged",
+      () =>
+        targetGate.ranged === "visibleWithin60FeetWithoutTotalCover" &&
+        facts.some(
+          (fact) =>
+            fact.kind === "rangedRedirectTargetWithin60FeetWithoutTotalCover" &&
+            fact.sourceId === sourceId &&
+            fact.targetId === targetId,
+        ),
     ),
     Match.exhaustive,
   );
@@ -12091,7 +12111,9 @@ function readiedSpellInitialHoles(
   readied: BattleReadiedSpell,
 ): readonly BattleHole[] {
   if (readied.invocation.procedure === "saveGatedDamage") {
-    return [spellSavingThrowOutcomeHole(state, casterId, readied.invocation)];
+    return readied.invocation.targeting.kind === "singleCombatant"
+      ? [spellTargetHole(state, casterId, readied.invocation)]
+      : [spellSavingThrowOutcomeHole(state, casterId, readied.invocation)];
   }
   if (readied.invocation.procedure === "repeatedDamageAllocation") {
     return [spellTargetAllocationHole(state, casterId, readied.invocation)];
@@ -13257,7 +13279,27 @@ function discoverSupportedSpellInvocations(
         return [];
       }
       if (invocation.procedure === "saveGatedDamage") {
-        const savingThrowHole = spellSavingThrowOutcomeHole(
+        if (invocation.targeting.kind === "singleCombatant") {
+          const targetHole = spellTargetHole(state, actorId, invocation);
+          if (targetHole.choices.length === 0) {
+            return [];
+          }
+          const castActs = [
+            {
+              subject: {
+                tag: "actionSpell" as const,
+                actorId,
+                invocation: supportedSpellInvocationRef(invocation),
+                mode: { tag: "cast" as const },
+              },
+              label: invocation.spell.name,
+              summary: `${spellDamageInvocationCastSummary(invocation)} Table-supplied affected targets make ${invocation.ability.toUpperCase()} Saving Throws.`,
+              initialHoles: [targetHole],
+            },
+          ];
+          return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
+        }
+        const initialHole = spellSavingThrowOutcomeHole(
           state,
           actorId,
           invocation,
@@ -13272,7 +13314,7 @@ function discoverSupportedSpellInvocations(
             },
             label: invocation.spell.name,
             summary: `${spellDamageInvocationCastSummary(invocation)} Table-supplied affected targets make ${invocation.ability.toUpperCase()} Saving Throws.`,
-            initialHoles: [savingThrowHole],
+            initialHoles: [initialHole],
           },
         ];
         return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
@@ -14761,10 +14803,23 @@ function spellFillSet(
           message: "Spell saving throw outcomes were filled twice.",
         };
       }
-      if (!("area" in fill.value)) {
+      if (
+        invocation.targeting.kind === "pointOriginSphere" &&
+        !("area" in fill.value)
+      ) {
         return {
           tag: "invalid",
           message: "Spell saving throw outcomes require area facts.",
+        };
+      }
+      if (
+        invocation.targeting.kind === "singleCombatant" &&
+        "area" in fill.value
+      ) {
+        return {
+          tag: "invalid",
+          message:
+            "Single-target save-gate spell outcomes must not include area facts.",
         };
       }
       savingThrowOutcomes = fill.value;
@@ -15172,12 +15227,39 @@ function resolveSaveGateDamageSpellAct(input: {
     input.actorId,
     input.invocation,
   );
-  if (input.fillSet.targetId !== undefined) {
+  if (
+    input.invocation.targeting.kind === "pointOriginSphere" &&
+    input.fillSet.targetId !== undefined
+  ) {
     return invalidResult(
       input.input.state,
       "invalidFill",
       "Save-gate damage spells use saving throw outcome fills, not a single-target fill.",
     );
+  }
+  if (input.invocation.targeting.kind === "singleCombatant") {
+    if (input.fillSet.targetId === undefined) {
+      return needsHolesResult(input.input.state, input.input.subject, [
+        spellTargetHole(input.input.state, input.actorId, input.invocation),
+      ]);
+    }
+    const target = input.input.state.combatants.get(input.fillSet.targetId);
+    if (
+      target === undefined ||
+      !spellTargetIsLegal(
+        input.input.state,
+        input.actorId,
+        target.combatantId,
+        input.invocation,
+        input.fillSet.targetSpatialFacts,
+      )
+    ) {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        "Spell target must be a combatant within the selected spell's supported range.",
+      );
+    }
   }
   if (input.fillSet.attackRoll !== undefined) {
     return invalidResult(
@@ -15197,6 +15279,7 @@ function resolveSaveGateDamageSpellAct(input: {
     savingThrowOutcomes,
     savingThrowHole,
     input.input.state,
+    input.fillSet.targetId,
   );
   if (savingThrowValidation !== null) {
     return invalidResult(
@@ -15445,12 +15528,30 @@ function resolveSaveGateDamageSpellAct(input: {
 
 function validateSavingThrowOutcomes(
   value: BattleSpellSavingThrowOutcomeValue,
-  _hole: BattleSpellSavingThrowOutcomeHole,
+  hole: BattleSpellSavingThrowOutcomeHole,
   state: BattleState,
+  targetId: CombatantId | undefined,
 ): string | null {
   const outcomes = value.outcomes;
   if (outcomes.length === 0) {
     return "Save-gate spell must include at least one affected target Saving Throw outcome.";
+  }
+  if (hole.spell.targeting.kind === "singleCombatant") {
+    if ("area" in value) {
+      return "Single-target save-gate spell outcomes must not include area facts.";
+    }
+    if (targetId === undefined) {
+      return "Single-target save-gate spell requires one target before Saving Throw outcomes.";
+    }
+    if (outcomes.length !== 1 || outcomes[0]?.targetId !== targetId) {
+      return "Single-target save-gate spell Saving Throw outcome must match the selected target.";
+    }
+    return state.combatants.has(targetId)
+      ? null
+      : "Save-gate spell target must be a combatant in this battle.";
+  }
+  if (!("area" in value)) {
+    return "Save-gate spell Saving Throw outcomes require area facts.";
   }
   if (!state.combatants.has(value.area.originAnchorId)) {
     return "Save-gate spell area origin anchor must be a combatant in this battle.";
@@ -16868,13 +16969,15 @@ function supportedPreparedSpellAttackProfile(
   });
 }
 
-function supportedSpellAttackDamageProfile(input: {
-  readonly spell: SpellRecord;
-  readonly spellcastingAbilityModifier: AbilityModifier;
-  readonly proficiencyBonus: ProficiencyBonusType;
-  readonly slotLevel?: SpellSlotLevel;
-  readonly characterLevel?: number;
-} & DamageSpellSource): readonly SupportedSpellInvocation[] {
+function supportedSpellAttackDamageProfile(
+  input: {
+    readonly spell: SpellRecord;
+    readonly spellcastingAbilityModifier: AbilityModifier;
+    readonly proficiencyBonus: ProficiencyBonusType;
+    readonly slotLevel?: SpellSlotLevel;
+    readonly characterLevel?: number;
+  } & DamageSpellSource,
+): readonly SupportedSpellInvocation[] {
   const spell = input.spell;
   if (spell.mechanics.family !== "activation") {
     return [];
@@ -16971,30 +17074,37 @@ function supportedPreparedSaveGateDamageProfile(
   });
 }
 
-function supportedSaveGateDamageProfile(input: {
-  readonly spell: SpellRecord;
-  readonly slotLevel?: SpellSlotLevel;
-  readonly characterLevel?: number;
-} & DamageSpellSource): readonly SupportedSpellInvocation[] {
+function supportedSaveGateDamageProfile(
+  input: {
+    readonly spell: SpellRecord;
+    readonly slotLevel?: SpellSlotLevel;
+    readonly characterLevel?: number;
+  } & DamageSpellSource,
+): readonly SupportedSpellInvocation[] {
   const spell = input.spell;
   if (spell.mechanics.family !== "activation") {
     return [];
   }
   const phase = spell.mechanics.phases[0];
+  const targeting =
+    phase?.kind === "save_gate"
+      ? saveGateDamageTargeting(phase.attachment)
+      : null;
+  const rangeFeet =
+    targeting?.kind === "singleCombatant"
+      ? singleTargetSpellRangeFeet(spell.mechanics.range)
+      : spell.mechanics.range.kind === "point"
+        ? movementFeet(spell.mechanics.range.feet)
+        : null;
   if (
     (input.access.tag === "classCantrip"
       ? spell.mechanics.level !== 0
       : spell.mechanics.level < 1) ||
     spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "point" ||
+    rangeFeet === null ||
     spell.mechanics.phases.length !== 1 ||
     phase?.kind !== "save_gate" ||
-    phase.attachment.kind !== "hole" ||
-    phase.attachment.value.kind !== "area" ||
-    phase.attachment.value.origin.kind !== "point_within_range" ||
-    phase.attachment.value.shape.kind !== "sphere" ||
-    phase.attachment.value.shape.radiusFeet !==
-      SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET ||
+    targeting === null ||
     (phase.onSuccess.kind !== "none" &&
       phase.onSuccess.kind !== "half_damage") ||
     phase.onFail.kind !== "damage" ||
@@ -17017,10 +17127,7 @@ function supportedSaveGateDamageProfile(input: {
     spell,
     ability: phase.ability,
     dc: phase.dc,
-    targeting: {
-      kind: "pointOriginSphere" as const,
-      radiusFeet: movementFeet(phase.attachment.value.shape.radiusFeet),
-    },
+    targeting,
     damage: {
       expr: damageExpr,
       damageType: phase.onFail.damageType,
@@ -17028,10 +17135,48 @@ function supportedSaveGateDamageProfile(input: {
     successDamage: (phase.onSuccess.kind === "half_damage"
       ? "half"
       : "none") as "half" | "none",
-    rangeFeet: movementFeet(spell.mechanics.range.feet),
+    rangeFeet,
   };
 
   return [{ ...damageSpellSource(input), ...saveGatedInvocation }];
+}
+
+function saveGateDamageTargeting(
+  attachment: Attachment,
+): SpellTargeting | null {
+  if (attachment.kind !== "hole") {
+    return null;
+  }
+  if (
+    attachment.value.kind === "target" &&
+    attachment.value.selection.mode === "one" &&
+    sameStringSet(attachment.value.selection.targetKinds ?? [], ["creature"])
+  ) {
+    return { kind: "singleCombatant" };
+  }
+  if (
+    attachment.value.kind === "area" &&
+    attachment.value.origin.kind === "point_within_range" &&
+    attachment.value.shape.kind === "sphere" &&
+    attachment.value.shape.radiusFeet ===
+      SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET
+  ) {
+    return {
+      kind: "pointOriginSphere",
+      radiusFeet: movementFeet(attachment.value.shape.radiusFeet),
+    };
+  }
+  return null;
+}
+
+function singleTargetSpellRangeFeet(
+  range: SpellRecord["mechanics"]["range"],
+): MovementFeet | null {
+  return Match.value(range).pipe(
+    Match.when({ kind: "point" }, (point) => movementFeet(point.feet)),
+    Match.when({ kind: "touch" }, () => movementFeet(5)),
+    Match.orElse(() => null),
+  );
 }
 
 function supportedSpellAttackKind(
@@ -17672,7 +17817,10 @@ function spellSavingThrowOutcomeHole(
     kind: "savingThrowOutcome",
     holeId: spellSavingThrowOutcomeHoleId(invocation),
     holeInstanceKey: holeInstanceKey(holeKey),
-    label: `${invocation.spell.name} point-origin Sphere Saving Throw outcomes`,
+    label:
+      invocation.targeting.kind === "singleCombatant"
+        ? `${invocation.spell.name} Saving Throw outcome`
+        : `${invocation.spell.name} point-origin Sphere Saving Throw outcomes`,
     spell: invocation,
     ability: invocation.ability,
     dc: invocation.dc,

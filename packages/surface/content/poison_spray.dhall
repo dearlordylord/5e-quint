@@ -30,7 +30,10 @@ let poisonSpray =
                     , label = "target"
                     , value =
                         { kind = "target"
-                        , selection = { mode = "one" }
+                        , selection =
+                            { mode = "one"
+                            , targetKinds = [ "creature" ]
+                            }
                         }
                     }
                 , attackKind = "ranged_spell_attack"

@@ -172,10 +172,7 @@ const spellUnitExecutableFollowUpBatches = [
       "burning_hands",
       "chill_touch",
       "guiding_bolt",
-      "inflict_wounds",
-      "poison_spray",
       "ray_of_sickness",
-      "sacred_flame",
       "shocking_grasp",
       "starry_wisp",
       "vicious_mockery",
@@ -2102,14 +2099,10 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
     );
   const srdinv28PureDamageRows = spellRowsByUnitIds([
     "burning_hands",
-    "inflict_wounds",
-    "poison_spray",
-    "sacred_flame",
   ]);
   const srdinv28SpellAttackDamageRows = spellRowsByUnitIds([
     "chill_touch",
     "guiding_bolt",
-    "poison_spray",
     "ray_of_sickness",
     "shocking_grasp",
     "starry_wisp",

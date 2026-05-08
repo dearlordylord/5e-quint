@@ -25,7 +25,8 @@
           "value": {
             "kind": "target",
             "selection": {
-              "mode": "one"
+              "mode": "one",
+              "targetKinds": ["creature"]
             }
           }
         },

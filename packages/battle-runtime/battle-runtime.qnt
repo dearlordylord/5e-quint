@@ -128,6 +128,10 @@ module battleRuntime {
   //   Rules-Glossary.md lines 361-365, 420-428, 528-535, 802-806, and
   //   818-826: Dash, Disengage, Dodge, Help, Ready, and standing from Prone
   //   are battle-owned turn/action or movement procedures.
+  // - Spells/Descriptions-M-P.md lines 643-654, Descriptions-S-Z.md lines
+  //   7-18, and Descriptions-E-L.md lines 1417-1428: Poison Spray, Sacred
+  //   Flame, and Inflict Wounds are action-time direct damage spells with
+  //   creature targets, cantrip/slot scaling, and the listed save outcomes.
   // - Character-Origins.md lines 253-255, Playing-the-Game.md lines 788-806,
   //   Rules-Glossary.md lines 361-365, and UBIQUITOUS_LANGUAGE.md:
   //   Orc Adrenaline Rush spends a limited-use Bonus Action Dash, grants
@@ -143,9 +147,13 @@ module battleRuntime {
   type CombatantSide = PartySide | OppositionSide
 
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
-  type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing
+  type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | HealingWord | CureWounds | MassHealingWord | Shield
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | SacredFlame | InflictWounds | HealingWord | CureWounds | MassHealingWord | Shield
+  type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack
+  type SaveGatedDamageInvocation = AcidSplashSaveGate | SacredFlameSaveGate | InflictWoundsSaveGate
+  type SaveGatedDamageTargeting = AreaSaveTargets | SingleSaveTarget
+  type SaveGatedDamageSuccess = NoDamageOnSaveSuccess | HalfDamageOnSaveSuccess
   type MovementSpeedKind = WalkSpeedKind | ClimbSpeedKind | SwimSpeedKind
   type DirectHitPointRestorationSpell = HealingWordRestoration | CureWoundsRestoration | MassHealingWordRestoration
   type SpellActionCost = SpellMagicAction | SpellBonusAction
@@ -180,7 +188,8 @@ module battleRuntime {
   // TypeScript carries the caller-provided fills in the runtime frame.
   type ReactionContinuation =
     | ResumeAttack({ damage: int })
-    | ResumeSpell
+    | ResumeRayOfFrost
+    | ResumePoisonSpray
     | ResumeSaveGateDamage
     | ResumeAfterDamage
     | ResumeMovement({ speedKind: MovementSpeedKind, movementCost: int })
@@ -882,7 +891,8 @@ module battleRuntime {
             openAttackDamageConcentration(state, ResumeAttackDamageToGoblin, attack.damage)
           else
             { ...state, goblin: applyDamage(state.goblin, attack.damage, 1, true), actionAvailable: false }
-      | ResumeSpell => resolveRayOfFrost(state, 15, 10, 4, true)
+      | ResumeRayOfFrost => resolveRayOfFrost(state, 15, 10, 4, true)
+      | ResumePoisonSpray => resolvePoisonSpray(state, 15, 10, 7, true)
       | ResumeSaveGateDamage => resolveAcidSplash(state, false, true, 4, true, true)
       | ResumeAfterDamage => state
       | ResumeMovement(movement) => applyFighterMovementWithSpeedKind(state, movement.speedKind, movement.movementCost)
@@ -1230,13 +1240,41 @@ module battleRuntime {
         trigger: AttackHit,
         eligibleReactors: Set(Goblin),
         offeredReactors: Set(),
-        continuation: ResumeSpell,
+        continuation: ResumeRayOfFrost,
       })
     }
     else {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
       val damaged = applyDamage(state.goblin, damageRoll, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded)
       { ...rolled, goblin: { ...damaged, activeEffects: damaged.activeEffects.union(Set(RayOfFrostSpeedDelta)) }, actionAvailable: false }
+    }
+
+  pure def resolvePoisonSpray(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+  ): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state))
+      state
+    else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), 20))) {
+      val rolled = recordFighterAttackRoll(revealFighterHidden(state))
+      { ...rolled, actionAvailable: false }
+    }
+    else if (state.goblin.reactionAvailable and not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
+      openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
+        trigger: AttackHit,
+        eligibleReactors: Set(Goblin),
+        offeredReactors: Set(),
+        continuation: ResumePoisonSpray,
+      })
+    }
+    else {
+      val rolled = recordFighterAttackRoll(revealFighterHidden(state))
+      val adjustedDamage = damageAfterAdjustments(damageRoll, Poison, Set(), Set(), Set())
+      val damaged = applyDamage(state.goblin, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded)
+      { ...rolled, goblin: damaged, actionAvailable: false }
     }
 
   pure def concentrationSavingThrowDc(damage: int): int = {
@@ -1772,14 +1810,23 @@ module battleRuntime {
     invocation: SpellInvocation,
     expendedLevelOneSlots: int,
   ): int =
+    if (spellInvocationSpendsLevelOneSlot(invocation))
+      expendedLevelOneSlots + 1
+    else
+      expendedLevelOneSlots
+
+  pure def spellInvocationSpendsLevelOneSlot(invocation: SpellInvocation): bool =
     match invocation {
-      | MagicMissile => expendedLevelOneSlots + 1
-      | RayOfFrost => expendedLevelOneSlots
-      | AcidSplash => expendedLevelOneSlots
-      | HealingWord => expendedLevelOneSlots + 1
-      | CureWounds => expendedLevelOneSlots + 1
-      | MassHealingWord => expendedLevelOneSlots + 1
-      | Shield => expendedLevelOneSlots + 1
+      | MagicMissile => true
+      | RayOfFrost => false
+      | AcidSplash => false
+      | PoisonSpray => false
+      | SacredFlame => false
+      | InflictWounds => true
+      | HealingWord => true
+      | CureWounds => true
+      | MassHealingWord => true
+      | Shield => true
     }
 
   pure def canExpendSpellSlotThisTurn(state: BattleState): bool =
@@ -1820,6 +1867,12 @@ module battleRuntime {
     else
       magicMissileAllocatedDamage(dieTotal, dartCount, flatPerDart)
 
+  pure def spellAttackDamageType(invocation: SpellAttackDamageInvocation): DamageType =
+    match invocation {
+      | RayOfFrostSpellAttack => Cold
+      | PoisonSpraySpellAttack => Poison
+    }
+
   pure def rayOfFrostSpeedEffectActive(
     hit: bool,
     currentActor: Actor,
@@ -1827,19 +1880,93 @@ module battleRuntime {
   ): bool =
     hit and currentActor != caster
 
+  pure def saveGatedDamageTargeting(invocation: SaveGatedDamageInvocation): SaveGatedDamageTargeting =
+    match invocation {
+      | AcidSplashSaveGate => AreaSaveTargets
+      | SacredFlameSaveGate => SingleSaveTarget
+      | InflictWoundsSaveGate => SingleSaveTarget
+    }
+
+  pure def saveGatedDamageSuccess(invocation: SaveGatedDamageInvocation): SaveGatedDamageSuccess =
+    match invocation {
+      | AcidSplashSaveGate => NoDamageOnSaveSuccess
+      | SacredFlameSaveGate => NoDamageOnSaveSuccess
+      | InflictWoundsSaveGate => HalfDamageOnSaveSuccess
+    }
+
+  pure def saveGatedDamageType(invocation: SaveGatedDamageInvocation): DamageType =
+    match invocation {
+      | AcidSplashSaveGate => Acid
+      | SacredFlameSaveGate => Radiant
+      | InflictWoundsSaveGate => Necrotic
+    }
+
+  pure def saveGatedDamageSpendsLevelOneSlot(invocation: SaveGatedDamageInvocation): bool =
+    match invocation {
+      | AcidSplashSaveGate => false
+      | SacredFlameSaveGate => false
+      | InflictWoundsSaveGate => true
+    }
+
+  pure def saveGatedDamageReplayHoles(
+    invocation: SaveGatedDamageInvocation,
+    canCastSpells: bool,
+    targetFilled: bool,
+    savingThrowOutcomesFilled: bool,
+    anyTargetTakesDamage: bool,
+  ): Set[Hole] =
+    if (not(canCastSpells))
+      Set()
+    else if (saveGatedDamageTargeting(invocation) == SingleSaveTarget and not(targetFilled))
+      Set(TargetChoice)
+    else if (not(savingThrowOutcomesFilled))
+      Set(SavingThrowOutcome)
+    else if (anyTargetTakesDamage)
+      Set(DamageRoll)
+    else
+      Set()
+
   pure def acidSplashReplayHoles(
     canCastSpells: bool,
     savingThrowOutcomesFilled: bool,
     anyFailedSavingThrow: bool,
   ): Set[Hole] =
-    if (not(canCastSpells))
-      Set()
-    else if (not(savingThrowOutcomesFilled))
-      Set(SavingThrowOutcome)
-    else if (anyFailedSavingThrow)
-      Set(DamageRoll)
+    saveGatedDamageReplayHoles(AcidSplashSaveGate, canCastSpells, true, savingThrowOutcomesFilled, anyFailedSavingThrow)
+
+  pure def saveGatedDamageAmount(
+    invocation: SaveGatedDamageInvocation,
+    damageRoll: int,
+    savingThrowSucceeded: bool,
+  ): int =
+    if (not(savingThrowSucceeded))
+      damageRoll
+    else if (saveGatedDamageSuccess(invocation) == HalfDamageOnSaveSuccess)
+      damageRoll / 2
     else
-      Set()
+      0
+
+  pure def saveGatedDamageTarget(
+    invocation: SaveGatedDamageInvocation,
+    target: Combatant,
+    savingThrowSucceeded: bool,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+  ): Combatant =
+    if (saveGatedDamageAmount(invocation, damageRoll, savingThrowSucceeded) == 0)
+      target
+    else
+      applyDamage(
+        target,
+        damageAfterAdjustments(
+          saveGatedDamageAmount(invocation, damageRoll, savingThrowSucceeded),
+          saveGatedDamageType(invocation),
+          Set(),
+          Set(),
+          Set()
+        ),
+        1,
+        concentrationSaveSucceeded
+      )
 
   pure def acidSplashDamageTarget(
     target: Combatant,
@@ -1847,10 +1974,7 @@ module battleRuntime {
     damageRoll: int,
     concentrationSaveSucceeded: bool,
   ): Combatant =
-    if (failedSavingThrow)
-      applyDamage(target, damageAfterAdjustments(damageRoll, Acid, Set(), Set(), Set()), 1, concentrationSaveSucceeded)
-    else
-      target
+    saveGatedDamageTarget(AcidSplashSaveGate, target, not(failedSavingThrow), damageRoll, concentrationSaveSucceeded)
 
   pure def dexHalfSaveDamageAfterReplacement(
     damageRoll: int,
@@ -1878,6 +2002,50 @@ module battleRuntime {
         goblin: acidSplashDamageTarget(state.goblin, goblinFailedSavingThrow, damageRoll, goblinConcentrationSaveSucceeded),
         actionAvailable: false,
       }
+
+  pure def resolveSingleTargetSaveGatedDamage(
+    state: BattleState,
+    invocation: SaveGatedDamageInvocation,
+    savingThrowSucceeded: bool,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+  ): BattleState =
+    if (
+      not(state.actionAvailable) or
+      currentActor(state) != Fighter or
+      state.fighter.unconscious or
+      state.fighter.incapacitated or
+      fighterHasRage(state) or
+      saveGatedDamageTargeting(invocation) != SingleSaveTarget or
+      (saveGatedDamageSpendsLevelOneSlot(invocation) and not(canExpendSpellSlotThisTurn(state)))
+    )
+      state
+    else {
+      val damaged = saveGatedDamageTarget(invocation, state.goblin, savingThrowSucceeded, damageRoll, concentrationSaveSucceeded)
+      {
+        ...state,
+        goblin: damaged,
+        actionAvailable: false,
+        spellSlotExpendedThisTurn:
+          if (saveGatedDamageSpendsLevelOneSlot(invocation)) true else state.spellSlotExpendedThisTurn,
+      }
+    }
+
+  pure def resolveSacredFlame(
+    state: BattleState,
+    savingThrowSucceeded: bool,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+  ): BattleState =
+    resolveSingleTargetSaveGatedDamage(state, SacredFlameSaveGate, savingThrowSucceeded, damageRoll, concentrationSaveSucceeded)
+
+  pure def resolveInflictWounds(
+    state: BattleState,
+    savingThrowSucceeded: bool,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+  ): BattleState =
+    resolveSingleTargetSaveGatedDamage(state, InflictWoundsSaveGate, savingThrowSucceeded, damageRoll, concentrationSaveSucceeded)
 
   pure def applyDropToZeroHp(target: Combatant): Combatant =
     match target.lifecycle {
@@ -2333,7 +2501,7 @@ module battleRuntime {
         trigger: AttackHit,
         eligibleReactors: Set(Goblin),
         offeredReactors: Set(),
-        continuation: ResumeSpell,
+        continuation: ResumeRayOfFrost,
       })),
       assert(resolved.goblin.activeEffects.contains(ShieldArmorClassBonus)),
       assert(not(resolved.goblin.reactionAvailable)),
@@ -2356,7 +2524,7 @@ module battleRuntime {
       trigger: SpellCast,
       eligibleReactors: Set(Fighter),
       offeredReactors: Set(),
-      continuation: ResumeSpell,
+      continuation: ResumeRayOfFrost,
     })
     val resolved = resolveReaction(awaiting, Fighter)
     all {
@@ -2371,7 +2539,7 @@ module battleRuntime {
       trigger: SpellCast,
       eligibleReactors: Set(Fighter),
       offeredReactors: Set(),
-      continuation: ResumeSpell,
+      continuation: ResumeRayOfFrost,
     })
     assert(resolveReaction(awaiting, Fighter) == awaiting)
   }
@@ -2398,6 +2566,9 @@ module battleRuntime {
       assert(expendedSlotsAfterInvocation(MagicMissile, 0) == 1),
       assert(expendedSlotsAfterInvocation(RayOfFrost, 0) == 0),
       assert(expendedSlotsAfterInvocation(AcidSplash, 0) == 0),
+      assert(expendedSlotsAfterInvocation(PoisonSpray, 0) == 0),
+      assert(expendedSlotsAfterInvocation(SacredFlame, 0) == 0),
+      assert(expendedSlotsAfterInvocation(InflictWounds, 0) == 1),
       assert(expendedSlotsAfterInvocation(HealingWord, 0) == 1),
       assert(expendedSlotsAfterInvocation(CureWounds, 0) == 1),
       assert(expendedSlotsAfterInvocation(MassHealingWord, 0) == 1),
@@ -2450,6 +2621,13 @@ module battleRuntime {
       assert(magicMissileAllocatedDamage(4, 1, 1) == 5),
       assert(rayOfFrostSpeedEffectActive(true, Goblin, Fighter)),
       assert(not(rayOfFrostSpeedEffectActive(true, Fighter, Fighter))),
+      assert(spellAttackDamageType(PoisonSpraySpellAttack) == Poison),
+      assert(saveGatedDamageTargeting(SacredFlameSaveGate) == SingleSaveTarget),
+      assert(saveGatedDamageSuccess(SacredFlameSaveGate) == NoDamageOnSaveSuccess),
+      assert(saveGatedDamageType(SacredFlameSaveGate) == Radiant),
+      assert(saveGatedDamageTargeting(InflictWoundsSaveGate) == SingleSaveTarget),
+      assert(saveGatedDamageSuccess(InflictWoundsSaveGate) == HalfDamageOnSaveSuccess),
+      assert(saveGatedDamageType(InflictWoundsSaveGate) == Necrotic),
     }
   }
 
@@ -2462,12 +2640,60 @@ module battleRuntime {
     }
   }
 
+  run test_single_target_save_damage_replay_asks_for_target_then_saving_throw_then_damage = {
+    all {
+      assert(saveGatedDamageReplayHoles(SacredFlameSaveGate, true, false, false, false) == Set(TargetChoice)),
+      assert(saveGatedDamageReplayHoles(SacredFlameSaveGate, true, true, false, false) == Set(SavingThrowOutcome)),
+      assert(saveGatedDamageReplayHoles(SacredFlameSaveGate, true, true, true, true) == Set(DamageRoll)),
+      assert(saveGatedDamageReplayHoles(SacredFlameSaveGate, true, true, true, false) == Set()),
+      assert(saveGatedDamageReplayHoles(InflictWoundsSaveGate, true, true, true, true) == Set(DamageRoll)),
+    }
+  }
+
   run test_acid_splash_damage_applies_only_to_failed_saving_throw_targets = {
     val result = resolveAcidSplash(initialState, false, true, 4, true, true)
     all {
       assert(result.actionAvailable == false),
       assert(result.fighter.hp == 12),
       assert(result.goblin.hp == 6),
+    }
+  }
+
+  run test_poison_spray_applies_poison_spell_attack_damage = {
+    val noReaction = { ...initialState, goblin: { ...initialState.goblin, reactionAvailable: false } }
+    val result = resolvePoisonSpray(noReaction, 15, 10, 7, true)
+    all {
+      assert(result.actionAvailable == false),
+      assert(result.goblin.hp == 3),
+      assert(not(result.spellSlotExpendedThisTurn)),
+    }
+  }
+
+  run test_sacred_flame_applies_radiant_damage_only_on_failed_saving_throw = {
+    val failed = resolveSacredFlame(initialState, false, 7, true)
+    val succeeded = resolveSacredFlame(initialState, true, 7, true)
+    all {
+      assert(failed.actionAvailable == false),
+      assert(failed.goblin.hp == 3),
+      assert(not(failed.spellSlotExpendedThisTurn)),
+      assert(succeeded.actionAvailable == false),
+      assert(succeeded.goblin.hp == 10),
+      assert(not(succeeded.spellSlotExpendedThisTurn)),
+    }
+  }
+
+  run test_inflict_wounds_spends_slot_and_halves_damage_on_successful_saving_throw = {
+    val failed = resolveInflictWounds(initialState, false, 10, true)
+    val succeeded = resolveInflictWounds(initialState, true, 10, true)
+    val alreadySpent = { ...initialState, spellSlotExpendedThisTurn: true }
+    all {
+      assert(failed.actionAvailable == false),
+      assert(failed.goblin.hp == 0),
+      assert(failed.spellSlotExpendedThisTurn),
+      assert(succeeded.actionAvailable == false),
+      assert(succeeded.goblin.hp == 5),
+      assert(succeeded.spellSlotExpendedThisTurn),
+      assert(resolveInflictWounds(alreadySpent, false, 10, true) == alreadySpent),
     }
   }
 

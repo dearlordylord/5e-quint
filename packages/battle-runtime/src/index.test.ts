@@ -87,6 +87,9 @@ import magicMissileInput from "../../surface/content/magic_missile.json";
 import mageArmorInput from "../../surface/content/mage_armor.json";
 import rayOfFrostInput from "../../surface/content/ray_of_frost.json";
 import acidSplashInput from "../../surface/content/acid_splash.json";
+import poisonSprayInput from "../../surface/content/poison_spray.json";
+import sacredFlameInput from "../../surface/content/sacred_flame.json";
+import inflictWoundsInput from "../../surface/content/inflict_wounds.json";
 import healingWordInput from "../../surface/content/healing_word.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type {
@@ -203,6 +206,9 @@ const testSpellRecords = new Map(
     mageArmorInput,
     rayOfFrostInput,
     acidSplashInput,
+    poisonSprayInput,
+    sacredFlameInput,
+    inflictWoundsInput,
     healingWordInput,
   ]
     .map((input) => decodeUnitRecordSync(input))
@@ -12245,7 +12251,10 @@ describe("battle runtime", () => {
     const subject: BattleSubject = {
       tag: "actionSpell",
       actorId: wizardId,
-      invocation: cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
+      invocation: cantripSpellInvocationRef(
+        "ray_of_frost",
+        "spellAttackDamage",
+      ),
       mode: { tag: "cast" },
     };
     const target = requireHole(
@@ -13237,6 +13246,265 @@ describe("battle runtime", () => {
         turn: { actionResources: [] },
       },
     });
+  });
+
+  test("Poison Spray uses creature target spell attack damage and cantrip scaling", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-poison-spray"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          classLevel: 5,
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("poison_spray")],
+            preparedSpells: [],
+          }),
+        }),
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Target",
+          initiative: 10,
+          attack: null,
+        }),
+      ],
+    });
+    const subject = magicSubject("poison_spray");
+    const target = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const attackRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFill(target, fighterId)],
+      }),
+      "attackRoll",
+    );
+    const damage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(target, fighterId),
+          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    expect(damage).toMatchObject({
+      label: "Poison Spray damage (2d12-poison)",
+    });
+
+    const result = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFill(target, fighterId),
+        attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        damageRollFillWithGroups(damage, [[5, 6]]),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId, hp: 12 },
+          { combatantId: fighterId, hp: 1 },
+        ],
+        turn: { actionResources: [] },
+      },
+    });
+  });
+
+  test("Sacred Flame uses a creature target before Dexterity Saving Throw damage", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-sacred-flame"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Cleric",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("sacred_flame")],
+            preparedSpells: [],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject = magicSubject("sacred_flame");
+    const target = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const savingThrows = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFill(target, skeletonId)],
+      }),
+      "savingThrowOutcome",
+    );
+    expect(savingThrows).toMatchObject({
+      label: "Sacred Flame Saving Throw outcome",
+      ability: "dex",
+      dc: { kind: "caster_spell_save_dc" },
+    });
+    const damage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(target, skeletonId),
+          savingThrowOutcomeFill(savingThrows, [
+            { targetId: skeletonId, succeeded: false },
+          ]),
+        ],
+      }),
+      "rolledDice",
+    );
+    expect(damage).toMatchObject({
+      label: "Sacred Flame damage (1d8-radiant)",
+    });
+    const result = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFill(target, skeletonId),
+        savingThrowOutcomeFill(savingThrows, [
+          { targetId: skeletonId, succeeded: false },
+        ]),
+        damageRollFill(damage, 7),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId, hp: 12 },
+          { combatantId: skeletonId, hp: 6 },
+        ],
+        turn: { actionResources: [] },
+      },
+    });
+
+    const success = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFill(target, skeletonId),
+        savingThrowOutcomeFill(savingThrows, [
+          { targetId: skeletonId, succeeded: true },
+        ]),
+      ],
+    });
+    expect(success).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId },
+          { combatantId: skeletonId, hp: 13 },
+        ],
+      },
+    });
+  });
+
+  test("Inflict Wounds spends a slot and applies half damage on a successful Constitution save", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-inflict-wounds"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Cleric",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            cantrips: [],
+            preparedSpells: [spellRecord("inflict_wounds")],
+            spellSlots: [{ spellLevel: 2, count: 1 }],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject: BattleSubject = {
+      tag: "actionSpell",
+      actorId: wizardId,
+      invocation: spellSlotInvocationRef(
+        "inflict_wounds",
+        2,
+        "saveGatedDamage",
+      ),
+      mode: { tag: "cast" },
+    };
+    const target = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const savingThrows = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFill(target, skeletonId)],
+      }),
+      "savingThrowOutcome",
+    );
+    const damage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(target, skeletonId),
+          savingThrowOutcomeFill(savingThrows, [
+            { targetId: skeletonId, succeeded: true },
+          ]),
+        ],
+      }),
+      "rolledDice",
+    );
+    expect(damage).toMatchObject({
+      label: "Inflict Wounds damage (3d10-necrotic)",
+    });
+
+    const result = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(target, skeletonId),
+          savingThrowOutcomeFill(savingThrows, [
+            { targetId: skeletonId, succeeded: true },
+          ]),
+          damageRollFillWithGroups(damage, [[5, 5, 5]]),
+        ],
+      }),
+    );
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId, hp: 12 },
+          { combatantId: skeletonId, hp: 6 },
+        ],
+        turn: { actionResources: [] },
+      },
+    });
+    expect(expendedLevelOneSlots(result, wizardId)).toBe(0);
+    const caster = result.state.combatants.get(wizardId);
+    if (caster?.origin.kind !== "character") {
+      throw new Error("Expected character spellcaster.");
+    }
+    expect(caster.origin.spellcasting?.spellSlots).toEqual([
+      { spellLevel: 2, count: 1, expended: 1 },
+    ]);
   });
 
   test("save-damage replacement riders reduce failed half-damage saves", () => {
@@ -14380,6 +14648,9 @@ function spellIdFromTargetHoleLabel(label: string | undefined): string {
   if (label?.startsWith("Magic Missile") === true) return "magic_missile";
   if (label?.startsWith("Ray of Frost") === true) return "ray_of_frost";
   if (label?.startsWith("Mage Armor") === true) return "mage_armor";
+  if (label?.startsWith("Poison Spray") === true) return "poison_spray";
+  if (label?.startsWith("Sacred Flame") === true) return "sacred_flame";
+  if (label?.startsWith("Inflict Wounds") === true) return "inflict_wounds";
   return "";
 }
 
@@ -14518,13 +14789,15 @@ function savingThrowOutcomeFill(
     holeId: hole.holeId,
     value:
       "spell" in hole
-        ? {
-            area: {
-              originAnchorId: wizardId,
-              affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
-            },
-            outcomes,
-          }
+        ? hole.spell.targeting.kind === "singleCombatant"
+          ? { outcomes }
+          : {
+              area: {
+                originAnchorId: wizardId,
+                affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
+              },
+              outcomes,
+            }
         : { outcomes },
   };
 }
@@ -16152,6 +16425,9 @@ function spellRecord(
     | "mage_armor"
     | "ray_of_frost"
     | "acid_splash"
+    | "poison_spray"
+    | "sacred_flame"
+    | "inflict_wounds"
     | "healing_word",
 ) {
   const unit = testSpellRecords.get(spellId);
@@ -16167,6 +16443,9 @@ function magicSubject(
     | "mage_armor"
     | "ray_of_frost"
     | "acid_splash"
+    | "poison_spray"
+    | "sacred_flame"
+    | "inflict_wounds"
     | "dex_half_cantrip",
 ): BattleSubject {
   return {
@@ -16177,9 +16456,11 @@ function magicSubject(
         ? spellSlotInvocationRef(spellId, 1, "repeatedDamageAllocation")
         : spellId === "mage_armor"
           ? spellSlotInvocationRef(spellId, 1, "persistentArmorEffect")
-          : spellId === "ray_of_frost"
-            ? cantripSpellInvocationRef(spellId, "spellAttackDamage")
-            : cantripSpellInvocationRef(spellId, "saveGatedDamage"),
+          : spellId === "inflict_wounds"
+            ? spellSlotInvocationRef(spellId, 1, "saveGatedDamage")
+            : spellId === "ray_of_frost" || spellId === "poison_spray"
+              ? cantripSpellInvocationRef(spellId, "spellAttackDamage")
+              : cantripSpellInvocationRef(spellId, "saveGatedDamage"),
     mode: { tag: "cast" },
   };
 }

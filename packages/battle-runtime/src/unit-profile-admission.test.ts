@@ -1,6 +1,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT7 fighter_second_wind barbarian_reckless_attack rogue_evasion
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT8 fighter_action_surge fighter_improved_critical barbarian_rage rogue_cunning_action rogue_uncanny_dodge rogue_sneak_attack
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT14 acid_splash mage_armor magic_missile ray_of_frost
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV28B inflict_wounds poison_spray sacred_flame
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT25 healing_word
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT32 cure_wounds mass_healing_word
@@ -123,8 +124,11 @@ const boonOfCombatProwessUnitId = "feat_boon_of_combat_prowess";
 const savageAttackerUnitId = "feat_savage_attacker";
 const acidSplashUnitId = "acid_splash";
 const fireBoltUnitId = "fire_bolt";
+const inflictWoundsUnitId = "inflict_wounds";
 const mageArmorUnitId = "mage_armor";
 const magicMissileUnitId = "magic_missile";
+const poisonSprayUnitId = "poison_spray";
+const sacredFlameUnitId = "sacred_flame";
 const cureWoundsUnitId = "cure_wounds";
 const healingWordUnitId = "healing_word";
 const massCureWoundsUnitId = "mass_cure_wounds";
@@ -2170,6 +2174,170 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
         kind: "savingThrowOutcome",
         areaChoices: [],
         targetRollModes: [],
+      }),
+    ]);
+  });
+
+  test("poison_spray is admitted through catalog spell access and projected as a pure damage cantrip spell attack", () => {
+    const spell = spellRecord(poisonSprayUnitId);
+    const act = spellAct({
+      state: spellBattle({ cantrips: [spell] }),
+      spellId: poisonSprayUnitId,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: cantripSpellInvocationRef(
+        "poison_spray",
+        "spellAttackDamage",
+      ),
+      mode: { tag: "cast" },
+    });
+    const attackRoll = requireResultHole(
+      resolveBattleSubject({
+        state: spellBattle({ cantrips: [spell] }),
+        subject: act.subject,
+        fills: [
+          spellTargetFill(
+            requireHole(act.initialHoles, "targetChoice"),
+            poisonSprayUnitId,
+            spellCasterId,
+            spellTargetId,
+          ),
+        ],
+      }),
+      "attackRoll",
+    );
+    expect(spellHoleInvocation([attackRoll])).toEqual(
+      expect.objectContaining({
+        procedure: "spellAttackDamage",
+        spell,
+        targeting: { kind: "singleCombatant" },
+        damage: {
+          expr: { dice: 1, dieSize: 12 },
+          damageType: "poison",
+        },
+        rangeFeet: 30,
+        postDamageRiders: [],
+      }),
+    );
+    expect(act.initialHoles).toEqual([
+      expect.objectContaining({
+        kind: "targetChoice",
+        choices: [spellCasterId, spellTargetId],
+      }),
+    ]);
+  });
+
+  test("sacred_flame is admitted through catalog spell access and projected as single-target save-gated cantrip damage", () => {
+    const spell = spellRecord(sacredFlameUnitId);
+    const act = spellAct({
+      state: spellBattle({ cantrips: [spell] }),
+      spellId: sacredFlameUnitId,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: cantripSpellInvocationRef("sacred_flame", "saveGatedDamage"),
+      mode: { tag: "cast" },
+    });
+    const savingThrow = requireResultHole(
+      resolveBattleSubject({
+        state: spellBattle({ cantrips: [spell] }),
+        subject: act.subject,
+        fills: [
+          spellTargetFill(
+            requireHole(act.initialHoles, "targetChoice"),
+            sacredFlameUnitId,
+            spellCasterId,
+            spellTargetId,
+          ),
+        ],
+      }),
+      "savingThrowOutcome",
+    );
+    expect(spellHoleInvocation([savingThrow])).toEqual(
+      expect.objectContaining({
+        procedure: "saveGatedDamage",
+        spell,
+        ability: "dex",
+        targeting: { kind: "singleCombatant" },
+        damage: {
+          expr: { dice: 1, dieSize: 8 },
+          damageType: "radiant",
+        },
+        successDamage: "none",
+        rangeFeet: 60,
+      }),
+    );
+    expect(act.initialHoles).toEqual([
+      expect.objectContaining({
+        kind: "targetChoice",
+        choices: [spellCasterId, spellTargetId],
+      }),
+    ]);
+  });
+
+  test("inflict_wounds is admitted through prepared spell access and projected as single-target save-gated slot damage", () => {
+    const spell = spellRecord(inflictWoundsUnitId);
+    const act = spellAct({
+      state: spellBattle({
+        preparedSpells: [spell],
+        spellSlots: [{ spellLevel: 3, count: 1 }],
+      }),
+      spellId: inflictWoundsUnitId,
+      slotLevel: 3,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(
+        "inflict_wounds",
+        3,
+        "saveGatedDamage",
+      ),
+      mode: { tag: "cast" },
+    });
+    const savingThrow = requireResultHole(
+      resolveBattleSubject({
+        state: spellBattle({
+          preparedSpells: [spell],
+          spellSlots: [{ spellLevel: 3, count: 1 }],
+        }),
+        subject: act.subject,
+        fills: [
+          spellTargetFill(
+            requireHole(act.initialHoles, "targetChoice"),
+            inflictWoundsUnitId,
+            spellCasterId,
+            spellTargetId,
+          ),
+        ],
+      }),
+      "savingThrowOutcome",
+    );
+    expect(spellHoleInvocation([savingThrow])).toEqual(
+      expect.objectContaining({
+        procedure: "saveGatedDamage",
+        spell,
+        resource: { tag: "spellSlot", slotLevel: 3 },
+        ability: "con",
+        targeting: { kind: "singleCombatant" },
+        damage: {
+          expr: { dice: 4, dieSize: 10 },
+          damageType: "necrotic",
+        },
+        successDamage: "half",
+        rangeFeet: 5,
+      }),
+    );
+    expect(act.initialHoles).toEqual([
+      expect.objectContaining({
+        kind: "targetChoice",
+        choices: [spellCasterId, spellTargetId],
       }),
     ]);
   });
@@ -4983,13 +5151,15 @@ function savingThrowOutcomeFill(
     holeId: hole.holeId,
     value:
       "spell" in hole
-        ? {
-            area: {
-              originAnchorId: spellCasterId,
-              affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
-            },
-            outcomes,
-          }
+        ? hole.spell.targeting.kind === "singleCombatant"
+          ? { outcomes }
+          : {
+              area: {
+                originAnchorId: spellCasterId,
+                affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
+              },
+              outcomes,
+            }
         : { outcomes },
   };
 }
