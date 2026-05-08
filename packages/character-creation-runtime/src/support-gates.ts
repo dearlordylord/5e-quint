@@ -551,7 +551,8 @@ export function unitRefsForSupportedClassChoice(
 ): readonly UnitRecord["id"][] {
   if (
     source.choiceKey !== CLASS_FEATURE_FEAT_CHOICE_KEY &&
-    source.choiceKey !== CLASS_SUBCLASS_CHOICE_KEY
+    source.choiceKey !== CLASS_SUBCLASS_CHOICE_KEY &&
+    source.choiceKey !== WEAPON_MASTERY_OPTIONS_CHOICE_KEY
   ) {
     return [];
   }

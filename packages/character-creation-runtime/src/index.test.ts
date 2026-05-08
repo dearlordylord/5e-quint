@@ -98,6 +98,7 @@ import {
   ELDRITCH_INVOCATIONS_CHOICE_KEY,
   progressionOptionId,
   SRD_LEVEL_ONE_CLASS_UNIT_IDS,
+  WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
 } from "./phase1-manifest.ts";
 import {
   decodeAbilityScoreIncreaseOptionId,
@@ -1935,6 +1936,21 @@ describe("character creation finalization", () => {
         kind: "selectedClassChoice",
         unitId: "defense",
       },
+      {
+        selectedFromUnitId: "fighter_weapon_mastery",
+        kind: "selectedClassChoice",
+        unitId: "weapon_longsword",
+      },
+      {
+        selectedFromUnitId: "fighter_weapon_mastery",
+        kind: "selectedClassChoice",
+        unitId: "weapon_spear",
+      },
+      {
+        selectedFromUnitId: "fighter_weapon_mastery",
+        kind: "selectedClassChoice",
+        unitId: "weapon_flail",
+      },
     ]);
     expect(result.build.equipment).toMatchObject({
       loadout: {
@@ -1979,8 +1995,10 @@ describe("character creation finalization", () => {
       "orc_darkvision",
       "orc_relentless_endurance",
       "defense",
-      "armor_chain_mail",
       "weapon_longsword",
+      "weapon_spear",
+      "weapon_flail",
+      "armor_chain_mail",
       "equipment_shield",
     ]);
   });
@@ -2242,6 +2260,54 @@ describe("character creation finalization", () => {
           },
         },
       });
+    }
+  });
+
+  test("finalizes non-Fighter level-1 Weapon Mastery choices from Surface mastery records", () => {
+    const masteryProfiles = [
+      {
+        classUnitId: "class_barbarian",
+        featureUnitId: "barbarian_weapon_mastery",
+      },
+      { classUnitId: "class_paladin", featureUnitId: "paladin_weapon_mastery" },
+      { classUnitId: "class_ranger", featureUnitId: "ranger_weapon_mastery" },
+      { classUnitId: "class_rogue", featureUnitId: "rogue_weapon_mastery" },
+    ] as const satisfies ReadonlyArray<{
+      readonly classUnitId: UnitRecord["id"];
+      readonly featureUnitId: UnitRecord["id"];
+    }>;
+
+    for (const profile of masteryProfiles) {
+      const draft = completeSupportedProgressionDraft({
+        draftId: `draft:srd-level-1-${profile.classUnitId}-weapon-mastery`,
+        progression: testProgression(profile.classUnitId, 1),
+      });
+      const selectedMasteryWeapons = selectedChoiceOptionIds(
+        draft,
+        profile.featureUnitId,
+        WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
+      );
+      const result = finalizeCharacterDraft({ draft, unitLibrary });
+
+      expect(selectedMasteryWeapons, profile.classUnitId).toHaveLength(2);
+      expect(result.tag, profile.classUnitId).toBe("ready");
+      if (result.tag !== "ready") continue;
+
+      expect(result.build.features, profile.classUnitId).toEqual(
+        expect.arrayContaining(
+          selectedMasteryWeapons.map((unitId) => ({
+            kind: "selectedClassChoice",
+            unitId,
+            selectedFromUnitId: profile.featureUnitId,
+          })),
+        ),
+      );
+      expect(
+        characterBuildUnitRefs(result.build, unitLibrary).map(
+          (ref) => ref.unitId,
+        ),
+        profile.classUnitId,
+      ).toEqual(expect.arrayContaining([...selectedMasteryWeapons]));
     }
   });
 

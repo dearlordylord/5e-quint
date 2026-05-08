@@ -232,13 +232,13 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 189,
       "id": "SRDINV20",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Character-Creation Weapon Mastery Evidence"
     },
     {
       "number": 190,
       "id": "SRDINV21",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Recursive SRD Inventory Planning Review"
     },
     {
@@ -313,8 +313,8 @@ Keep it synchronized with the DAG table and task details.
 | 186   | SRDINV17 - Close Character-Creation Class Container Evidence | done | SRDINV16 | SRDINV18-SRDINV21 | [SRDINV16 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [character-creation owner evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/character-creation-owner-evidence.json), [character-creation runtime README](/workspace/typescript/dnd/packages/character-creation-runtime/README.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed character-creation owner evidence for authored class containers, core traits, starting equipment, and multiclass-entry facts without creating standalone duplicate records. |
 | 187   | SRDINV18 - Close Character-Creation Class Feature Evidence | done | SRDINV17 | SRDINV18A, SRDINV21 | [SRDINV16 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [character-creation owner evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/character-creation-owner-evidence.json), [character-creation runtime README](/workspace/typescript/dnd/packages/character-creation-runtime/README.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed character-creation owner evidence for retained level-1 class-feature refs and implemented supported acquisition choices for Divine Order, Primal Order, and Rogue Expertise. Eldritch Invocation feature-choice evidence remains split into SRDINV18A because retained feature refs cannot prove invocation option discovery/fill/finalization. |
 | 188   | SRDINV19 - Close Character-Creation Spell Access Evidence | done | SRDINV17 | SRDINV21 | [SRDINV16 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [character-creation owner evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/character-creation-owner-evidence.json), [character-creation runtime README](/workspace/typescript/dnd/packages/character-creation-runtime/README.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed character-creation owner evidence for Bard, Cleric, Druid, Paladin, Ranger, and Sorcerer level-1 Spell Access through discovery, fill admission, finalization, build projection, and manifest evidence without admitting individual Spell Definitions as runtime-supported. |
-| 189   | SRDINV20 - Close Character-Creation Weapon Mastery Evidence | ready-for-research | SRDINV17 | SRDINV21 | [SRDINV16 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [character-creation owner evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/character-creation-owner-evidence.json), [character-creation runtime README](/workspace/typescript/dnd/packages/character-creation-runtime/README.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Close character-creation owner evidence for Barbarian, Paladin, Ranger, and Rogue Weapon Mastery choices while leaving mastery property execution separate. |
-| 190   | SRDINV21 - Recursive SRD Inventory Planning Review | blocked | SRDINV17-SRDINV20, SRDINV18A | none | [SRDINV16 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review SRDINV17-SRDINV20 plus SRDINV18A owner-evidence closure, refresh inventory metrics, and append the next concrete batch unless level-1 inventory is explicitly complete. |
+| 189   | SRDINV20 - Close Character-Creation Weapon Mastery Evidence | done | SRDINV17 | SRDINV21 | [SRDINV16 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [character-creation owner evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/character-creation-owner-evidence.json), [character-creation runtime README](/workspace/typescript/dnd/packages/character-creation-runtime/README.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed character-creation owner evidence for Barbarian, Paladin, Ranger, and Rogue level-1 Weapon Mastery choices through discovery, fill, finalization, build projection, and manifest evidence while leaving mastery property execution separate. |
+| 190   | SRDINV21 - Recursive SRD Inventory Planning Review | ready-for-research | SRDINV17-SRDINV20, SRDINV18A | none | [SRDINV16 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review SRDINV17-SRDINV20 plus SRDINV18A owner-evidence closure, refresh inventory metrics, and append the next concrete batch unless level-1 inventory is explicitly complete. |
 | 191   | SRDINV18A - Close Eldritch Invocation Choice Evidence | done | SRDINV18 | SRDINV21 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [character-creation owner evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/character-creation-owner-evidence.json), [Warlock SRD](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [character-creation runtime README](/workspace/typescript/dnd/packages/character-creation-runtime/README.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Close Warlock Eldritch Invocations as actual feature-choice evidence by adding a durable invocation option catalog/discovery path and character-creation fill, finalization, build projection, manifest, and inventory evidence without treating the retained feature Unit ref as sufficient. |
 
 ## Task Details
@@ -1540,7 +1540,7 @@ changes; `/simplify` convergence.
 
 ### Task 189 - SRDINV20 - Close Character-Creation Weapon Mastery Evidence
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV17
 
@@ -1574,7 +1574,7 @@ code; `pnpm quality` if production code changes; `/simplify` convergence.
 
 ### Task 190 - SRDINV21 - Recursive SRD Inventory Planning Review
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: SRDINV17-SRDINV20, SRDINV18A
 

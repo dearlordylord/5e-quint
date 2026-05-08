@@ -105,6 +105,8 @@ This package supports these character-creation profiles:
 - retained SRD level-1 class-feature Unit refs, plus supported acquisition
   choices for Divine Order, Primal Order, Rogue Expertise, and Warlock
   Eldritch Invocations;
+- supported level-1 Weapon Mastery choices for Fighter, Barbarian, Paladin,
+  Ranger, and Rogue as retained build Unit refs for selected weapons;
 - Orc species;
 - Soldier background;
 - Standard Array ability assignment;
