@@ -15,11 +15,14 @@ import { SKILLS } from "@dnd/surface/surface/types";
 import type {
   Ability,
   ArmorTrainingCategory,
+  ClassSpellcastingCreation,
+  ListPreparedSpellcastingCreation,
   ProficiencyGrant,
   ProficiencyGrantSubject,
   Skill,
   StartingEquipmentChoice,
   UnitRecord,
+  WizardSpellcastingCreation,
 } from "@dnd/surface/surface/types";
 import { discoverCreationHoles } from "./discovery.ts";
 import { type CharacterProgression } from "./character-progression-algebra.ts";
@@ -32,6 +35,7 @@ import {
 import {
   backgroundToolChoiceSpec,
   classFeatureGrantChoiceHoles,
+  classSpellcastingChoiceHoles,
   choiceSelectionOptionIds,
   choiceSelectionMatchesHole,
   sameCreationHoleSource,
@@ -59,9 +63,11 @@ import {
 import {
   BACKGROUND_EQUIPMENT_CHOICE_KEY,
   BACKGROUND_TOOL_CHOICE_KEY,
+  CLASS_CANTRIP_CHOICE_KEY,
   CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
   CLASS_FEATURE_FEAT_CHOICE_KEY,
   CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
+  CLASS_PREPARED_SPELL_CHOICE_KEY,
   DIVINE_ORDER_CHOICE_KEY,
   CLASS_SUBCLASS_CHOICE_KEY,
   CLASS_EQUIPMENT_CHOICE_KEY,
@@ -147,6 +153,9 @@ type LoadoutChoiceSelection = Extract<
   CharacterChoiceSelection,
   { readonly kind: "loadout" }
 >;
+type ReadableClassSpellcasting =
+  | ClassSpellcastingCreation
+  | WizardSpellcastingCreation;
 
 const BACKGROUND_ABILITY_SCORE_INCREASE_MAX_SCORE = 20;
 
@@ -1227,13 +1236,10 @@ function supportedFinalizationChoiceHoles(input: {
     input.selections,
     input.unitLibrary,
   );
-  const wizardSpellHoles =
-    input.classFacts.className === "wizard"
-      ? wizardSpellcastingChoiceHoles(
-          startingClassUnitId(input.selections.progression),
-          input.classFacts,
-        )
-      : [];
+  const spellcastingHoles = classSpellcastingChoiceHoles(
+    startingClassUnitId(input.selections.progression),
+    input.classFacts,
+  ).flatMap((hole) => compact([requireUnitChoiceCreationHole(hole)]));
   const backgroundToolHole = backgroundToolChoiceSpec(
     input.backgroundFacts.toolProficiency,
   );
@@ -1246,7 +1252,7 @@ function supportedFinalizationChoiceHoles(input: {
     ...subclassHoles,
     ...multiclassProficiencyHoles,
     ...selectedFeatAbilityScoreHoles,
-    ...wizardSpellHoles,
+    ...spellcastingHoles,
     ...(backgroundToolHole == null
       ? []
       : compact([
@@ -1283,50 +1289,6 @@ function supportedFinalizationChoiceHoles(input: {
         : [],
     ),
   ].filter(isPresent);
-}
-
-function wizardSpellcastingChoiceHoles(
-  classUnitId: UnitRecord["id"],
-  classFacts: WizardClassCreationFacts,
-): readonly UnitChoiceCreationHole[] {
-  const spellcasting = classFacts.spellcasting;
-  return compact([
-    requireUnitChoiceCreationHole(
-      choiceHole({
-        source: unitSource(classUnitId, WIZARD_CANTRIP_CHOICE_KEY),
-        cardinality: exactChoiceCardinality(spellcasting.cantripAccess.choose),
-        options: spellcasting.cantripAccess.spellIds.map((spellId) => ({
-          optionId: creationChoiceOptionId(spellId),
-          label: spellId,
-          unitRef: { unitId: spellId },
-        })),
-      }),
-    ),
-    requireUnitChoiceCreationHole(
-      choiceHole({
-        source: unitSource(classUnitId, WIZARD_SPELLBOOK_CHOICE_KEY),
-        cardinality: exactChoiceCardinality(
-          spellcasting.spellbookAccess.choose,
-        ),
-        options: spellcasting.spellbookAccess.spells.map((spell) => ({
-          optionId: creationChoiceOptionId(spell.spellId),
-          label: spell.spellId,
-          unitRef: { unitId: spell.spellId },
-        })),
-      }),
-    ),
-    requireUnitChoiceCreationHole(
-      choiceHole({
-        source: unitSource(classUnitId, WIZARD_PREPARED_SPELL_CHOICE_KEY),
-        cardinality: exactChoiceCardinality(spellcasting.preparedAccess.choose),
-        options: spellcasting.preparedAccess.spellIds.map((spellId) => ({
-          optionId: creationChoiceOptionId(spellId),
-          label: spellId,
-          unitRef: { unitId: spellId },
-        })),
-      }),
-    ),
-  ]);
 }
 
 function multiclassProficiencyChoiceHoles(
@@ -1724,11 +1686,45 @@ export function finalizedBuildSpellcasting(
   classFacts: ClassCreationFacts,
   supportedSelections: ExecutableSupportSelections,
 ): CharacterBuildSpellcasting | undefined {
-  if (!isWizardClassCreationFacts(classFacts)) {
+  const spellcasting = classSpellcastingCreation(classFacts);
+  if (spellcasting == null) {
     return undefined;
   }
 
-  const spellcasting = classFacts.spellcasting;
+  if (isListPreparedSpellcastingCreation(spellcasting)) {
+    return {
+      sources: [
+        {
+          sourceUnitId: classUnitId,
+          spellcastingAbility: spellcasting.spellcastingAbility,
+          cantrips:
+            spellcasting.cantripAccess == null
+              ? []
+              : selectedUnitRefsForChoice(
+                  supportedSelections.unitChoices,
+                  CLASS_CANTRIP_CHOICE_KEY,
+                ),
+          spellbook: [],
+          preparedSpells: selectedUnitRefsForChoice(
+            supportedSelections.unitChoices,
+            CLASS_PREPARED_SPELL_CHOICE_KEY,
+          ),
+          spellcastingFocuses: [spellcasting.spellcastingFocus],
+        },
+      ],
+      slotPools: {
+        spellcasting: {
+          kind: "spellcasting",
+          slots: spellcasting.spellSlotProjection.slots,
+        },
+      },
+    };
+  }
+
+  if (!isWizardSpellcastingCreation(spellcasting)) {
+    return undefined;
+  }
+
   return {
     sources: [
       {
@@ -1777,12 +1773,31 @@ function isWizardClassCreationFacts(
   return facts.className === "wizard";
 }
 
+function classSpellcastingCreation(
+  facts: ClassCreationFacts,
+): ReadableClassSpellcasting | undefined {
+  if (!("spellcasting" in facts) || facts.spellcasting == null) {
+    return undefined;
+  }
+
+  return facts.spellcasting;
+}
+
+function isListPreparedSpellcastingCreation(
+  spellcasting: ReadableClassSpellcasting,
+): spellcasting is ListPreparedSpellcastingCreation {
+  return spellcasting.kind === "list_prepared_spellcasting_creation";
+}
+
+function isWizardSpellcastingCreation(
+  spellcasting: ReadableClassSpellcasting,
+): spellcasting is WizardSpellcastingCreation {
+  return spellcasting.kind === "wizard_spellcasting_creation";
+}
+
 function selectedUnitRefsForChoice(
   unitChoices: readonly UnitChoiceSelection[],
-  choiceKey:
-    | typeof WIZARD_CANTRIP_CHOICE_KEY
-    | typeof WIZARD_SPELLBOOK_CHOICE_KEY
-    | typeof WIZARD_PREPARED_SPELL_CHOICE_KEY,
+  choiceKey: UnitChoiceKey,
 ): readonly UnitRecord["id"][] {
   return unitChoices
     .filter((choice) => choice.source.choiceKey === choiceKey)

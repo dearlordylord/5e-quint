@@ -33,6 +33,7 @@ import type {
   Ability,
   ActivationResource,
   ArmorTrainingCategory,
+  ClassSpellcastingCreation,
   Skill,
   UnitRecord,
   WeaponProficiency,
@@ -116,6 +117,8 @@ export const UNIT_CHOICE_KEYS = [
   "rogue_multiclass_skill_proficiency",
   "eldritch_invocations",
   "weapon_mastery_options",
+  "class_cantrip_choices",
+  "class_prepared_spell_choices",
   "wizard_cantrip_choices",
   "wizard_spellbook_choices",
   "wizard_prepared_spell_choices",
@@ -1037,7 +1040,11 @@ export type CharacterBuildPactMagicSlotPool = {
 };
 
 export type CharacterBuildSpellcastingFocus =
-  WizardSpellcastingCreation["spellcastingFocuses"][number];
+  | WizardSpellcastingCreation["spellcastingFocuses"][number]
+  | Extract<
+      ClassSpellcastingCreation,
+      { readonly kind: "list_prepared_spellcasting_creation" }
+    >["spellcastingFocus"];
 export type CharacterBuildSpellLevel =
   WizardSpellcastingCreation["spellbookAccess"]["spells"][number]["spellLevel"];
 export type CharacterBuildSpellSlotCount =

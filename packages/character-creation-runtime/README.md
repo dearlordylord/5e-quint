@@ -100,7 +100,8 @@ This package supports these character-creation profiles:
 - SRD level-1 class-container source facts for starting class progression;
 - level-2 Fighter progression and supported level-2 multiclass-entry
   progression facts;
-- level-1 Wizard spellcasting creation facts;
+- level-1 Wizard spellcasting creation facts and non-Wizard list-prepared Spell
+  Access facts;
 - retained SRD level-1 class-feature Unit refs, plus supported acquisition
   choices for Divine Order, Primal Order, Rogue Expertise, and Warlock
   Eldritch Invocations;
@@ -210,6 +211,12 @@ Hit Point gains. Post-start advancement entries carry explicit Hit Point rule
 evidence into `CharacterProgression`, and finalization rejects level/evidence
 combinations that contradict the rules. Rolled HP is outside this support profile and must
 become an explicit creation choice before it can be finalized.
+
+Non-Wizard list-prepared Spell Access support is class-spellcasting shaped. The
+runtime discovers cantrip and prepared-spell choices from the Surface class
+record, stores selected Spell Access as source-scoped build facts, and projects
+Spell Slot capacity and Spellcasting Focus permissions without admitting
+individual Spell Definitions as executable spell runtime.
 
 Support-profile admission is runtime policy: every character-creation shape is
 either admitted by support profiles with executable discovery, fill, and

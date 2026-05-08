@@ -200,6 +200,10 @@ export const MULTICLASS_PROFICIENCY_CHOICE_KEYS = [
 ] as const satisfies ReadonlyArray<UnitChoiceKey>;
 export const WEAPON_MASTERY_OPTIONS_CHOICE_KEY =
   "weapon_mastery_options" satisfies UnitChoiceKey;
+export const CLASS_CANTRIP_CHOICE_KEY =
+  "class_cantrip_choices" satisfies UnitChoiceKey;
+export const CLASS_PREPARED_SPELL_CHOICE_KEY =
+  "class_prepared_spell_choices" satisfies UnitChoiceKey;
 export const WIZARD_CANTRIP_CHOICE_KEY =
   "wizard_cantrip_choices" satisfies UnitChoiceKey;
 export const WIZARD_SPELLBOOK_CHOICE_KEY =

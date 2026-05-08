@@ -10,7 +10,6 @@ import { SUPPORTED_ABILITY_SCORE_METHODS } from "@dnd/shared-algebras/ability-sc
 import {
   readBackgroundCreationFacts,
   readClassCreationFacts,
-  type WizardClassCreationFacts,
 } from "@dnd/surface/surface/character-creation-readers";
 import { SKILLS } from "@dnd/surface/surface/types";
 import type {
@@ -24,9 +23,12 @@ import type {
   ProficiencyGrantSubject,
   Skill,
   StartingEquipmentChoice,
+  ClassSpellcastingCreation,
+  ListPreparedSpellcastingCreation,
   UnitRecord,
   WeaponProficiency,
   WeaponRecord,
+  WizardSpellcastingCreation,
 } from "@dnd/surface/surface/types";
 import { proficiencyGrantSubjectOptions } from "./choice-option-codecs.ts";
 import {
@@ -37,7 +39,9 @@ import {
   CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
   CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
   CLASS_SUBCLASS_CHOICE_KEY,
+  CLASS_CANTRIP_CHOICE_KEY,
   CLASS_EQUIPMENT_CHOICE_KEY,
+  CLASS_PREPARED_SPELL_CHOICE_KEY,
   EQUIPMENT_PURCHASE_CHOICE_KEY,
   EXACTLY_ONE_CHOICE,
   CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
@@ -204,7 +208,7 @@ export function discoverClassGrantedHoles(input: {
         facts.value.startingEquipment,
       ),
     ),
-    ...discoverWizardSpellcastingHoles(classUnitId, facts.value, input.draft),
+    ...discoverClassSpellcastingHoles(classUnitId, facts.value, input.draft),
     ...progressionClassUnitIds(progression).flatMap((progressionClassUnitId) =>
       progressionClassUnitId === startingUnitId
         ? []
@@ -222,63 +226,119 @@ type ReadableClassCreationFacts = Extract<
   ReturnType<typeof readClassCreationFacts>,
   { readonly tag: "readable" }
 >["value"];
+type ReadableClassSpellcasting =
+  | ClassSpellcastingCreation
+  | WizardSpellcastingCreation;
 
-function discoverWizardSpellcastingHoles(
+function discoverClassSpellcastingHoles(
   classUnitId: UnitRecord["id"],
   facts: ReadableClassCreationFacts,
   draft: CharacterDraft,
 ): readonly CreationHole[] {
-  if (!isWizardClassCreationFacts(facts)) {
+  return classSpellcastingChoiceHoles(classUnitId, facts).flatMap((hole) =>
+    unselectedUnitChoiceHole(draft, hole),
+  );
+}
+
+export function classSpellcastingChoiceHoles(
+  classUnitId: UnitRecord["id"],
+  facts: ReadableClassCreationFacts,
+): readonly ChoiceCreationHole[] {
+  const spellcasting = classSpellcastingCreation(facts);
+  if (spellcasting == null) {
     return [];
   }
 
-  const spellcasting = facts.spellcasting;
-  return [
-    ...unselectedUnitChoiceHole(
-      draft,
+  if (isListPreparedSpellcastingCreation(spellcasting)) {
+    return compactChoiceHoles([
+      ...(spellcasting.cantripAccess == null
+        ? []
+        : [
+            choiceHole({
+              source: unitSource(classUnitId, CLASS_CANTRIP_CHOICE_KEY),
+              cardinality: exactChoiceCardinality(
+                spellcasting.cantripAccess.choose,
+              ),
+              options: spellcasting.cantripAccess.spellIds.map((spellId) => ({
+                optionId: creationChoiceOptionId(spellId),
+                label: spellId,
+                unitRef: { unitId: spellId },
+              })),
+            }),
+          ]),
       choiceHole({
-        source: unitSource(classUnitId, WIZARD_CANTRIP_CHOICE_KEY),
-        cardinality: exactChoiceCardinality(spellcasting.cantripAccess.choose),
-        options: spellcasting.cantripAccess.spellIds.map((spellId) => ({
-          optionId: creationChoiceOptionId(spellId),
-          label: spellId,
-          unitRef: { unitId: spellId },
-        })),
-      }),
-    ),
-    ...unselectedUnitChoiceHole(
-      draft,
-      choiceHole({
-        source: unitSource(classUnitId, WIZARD_SPELLBOOK_CHOICE_KEY),
-        cardinality: exactChoiceCardinality(
-          spellcasting.spellbookAccess.choose,
-        ),
-        options: spellcasting.spellbookAccess.spells.map((spell) => ({
+        source: unitSource(classUnitId, CLASS_PREPARED_SPELL_CHOICE_KEY),
+        cardinality: exactChoiceCardinality(spellcasting.preparedAccess.choose),
+        options: spellcasting.preparedAccess.spells.map((spell) => ({
           optionId: creationChoiceOptionId(spell.spellId),
           label: spell.spellId,
           unitRef: { unitId: spell.spellId },
         })),
       }),
-    ),
-    ...unselectedUnitChoiceHole(
-      draft,
-      choiceHole({
-        source: unitSource(classUnitId, WIZARD_PREPARED_SPELL_CHOICE_KEY),
-        cardinality: exactChoiceCardinality(spellcasting.preparedAccess.choose),
-        options: spellcasting.preparedAccess.spellIds.map((spellId) => ({
-          optionId: creationChoiceOptionId(spellId),
-          label: spellId,
-          unitRef: { unitId: spellId },
-        })),
-      }),
-    ),
-  ];
+    ]);
+  }
+
+  if (!isWizardSpellcastingCreation(spellcasting)) {
+    return [];
+  }
+
+  return compactChoiceHoles([
+    choiceHole({
+      source: unitSource(classUnitId, WIZARD_CANTRIP_CHOICE_KEY),
+      cardinality: exactChoiceCardinality(spellcasting.cantripAccess.choose),
+      options: spellcasting.cantripAccess.spellIds.map((spellId) => ({
+        optionId: creationChoiceOptionId(spellId),
+        label: spellId,
+        unitRef: { unitId: spellId },
+      })),
+    }),
+    choiceHole({
+      source: unitSource(classUnitId, WIZARD_SPELLBOOK_CHOICE_KEY),
+      cardinality: exactChoiceCardinality(spellcasting.spellbookAccess.choose),
+      options: spellcasting.spellbookAccess.spells.map((spell) => ({
+        optionId: creationChoiceOptionId(spell.spellId),
+        label: spell.spellId,
+        unitRef: { unitId: spell.spellId },
+      })),
+    }),
+    choiceHole({
+      source: unitSource(classUnitId, WIZARD_PREPARED_SPELL_CHOICE_KEY),
+      cardinality: exactChoiceCardinality(spellcasting.preparedAccess.choose),
+      options: spellcasting.preparedAccess.spellIds.map((spellId) => ({
+        optionId: creationChoiceOptionId(spellId),
+        label: spellId,
+        unitRef: { unitId: spellId },
+      })),
+    }),
+  ]);
 }
 
-function isWizardClassCreationFacts(
+function compactChoiceHoles(
+  holes: readonly (CreationHole | undefined)[],
+): readonly ChoiceCreationHole[] {
+  return holes.flatMap((hole) => (hole?.kind === "choice" ? [hole] : []));
+}
+
+function classSpellcastingCreation(
   facts: ReadableClassCreationFacts,
-): facts is WizardClassCreationFacts {
-  return facts.className === "wizard";
+): ReadableClassSpellcasting | undefined {
+  if (!("spellcasting" in facts) || facts.spellcasting == null) {
+    return undefined;
+  }
+
+  return facts.spellcasting;
+}
+
+function isListPreparedSpellcastingCreation(
+  spellcasting: ReadableClassSpellcasting,
+): spellcasting is ListPreparedSpellcastingCreation {
+  return spellcasting.kind === "list_prepared_spellcasting_creation";
+}
+
+function isWizardSpellcastingCreation(
+  spellcasting: ReadableClassSpellcasting,
+): spellcasting is WizardSpellcastingCreation {
+  return spellcasting.kind === "wizard_spellcasting_creation";
 }
 
 function discoverSubclassHoles(

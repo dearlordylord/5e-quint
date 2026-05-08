@@ -2092,7 +2092,7 @@
       "profile": "level-1 Wizard support profile",
       "summary": "Wizard spellcasting choices are discovered from class spellcasting facts, filled through supported cantrip/spellbook/prepared-spell options, finalized as source-scoped spellcasting, and projected into build spellcasting and slot capacity.",
       "discovery": [
-        "packages/character-creation-runtime/src/discovery.ts:discoverWizardSpellcastingHoles"
+        "packages/character-creation-runtime/src/discovery.ts:discoverClassSpellcastingHoles"
       ],
       "fill": [
         "packages/character-creation-runtime/src/phase1-manifest.ts:WIZARD_CANTRIP_CHOICE_KEY",
@@ -2336,6 +2336,126 @@
       ],
       "tests": [
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
+      ]
+    },
+    "srd521:classes/bard:level-1:spell-access:bard_spellcasting": {
+      "taskId": "SRDINV19",
+      "profile": "level-1 Bard list-prepared Spell Access support profile",
+      "summary": "Bard Spellcasting facts are read from the Surface class record; character creation discovers class cantrip and prepared-spell Spell Access choices, admits the selected source-scoped choices through fill support gates, finalizes them into CharacterBuild spellcasting facts, and projects ordinary Spell Slot capacity and Spellcasting Focus permissions without admitting individual Spell Definitions as executable runtime support.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverClassSpellcastingHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:supportedFinalizationChoiceHoles"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:finalizedBuildSpellcasting"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:finalizes non-Wizard level-1 Spell Access from Surface class spellcasting facts"
+      ]
+    },
+    "srd521:classes/cleric:level-1:spell-access:cleric_spellcasting": {
+      "taskId": "SRDINV19",
+      "profile": "level-1 Cleric list-prepared Spell Access support profile",
+      "summary": "Cleric Spellcasting facts are read from the Surface class record; character creation discovers class cantrip and prepared-spell Spell Access choices, admits the selected source-scoped choices through fill support gates, finalizes them into CharacterBuild spellcasting facts, and projects ordinary Spell Slot capacity and Spellcasting Focus permissions without admitting individual Spell Definitions as executable runtime support.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverClassSpellcastingHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:supportedFinalizationChoiceHoles"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:finalizedBuildSpellcasting"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:finalizes non-Wizard level-1 Spell Access from Surface class spellcasting facts"
+      ]
+    },
+    "srd521:classes/druid:level-1:spell-access:druid_spellcasting": {
+      "taskId": "SRDINV19",
+      "profile": "level-1 Druid list-prepared Spell Access support profile",
+      "summary": "Druid Spellcasting facts are read from the Surface class record; character creation discovers class cantrip and prepared-spell Spell Access choices, admits the selected source-scoped choices through fill support gates, finalizes them into CharacterBuild spellcasting facts, and projects ordinary Spell Slot capacity and Spellcasting Focus permissions without admitting individual Spell Definitions as executable runtime support.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverClassSpellcastingHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:supportedFinalizationChoiceHoles"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:finalizedBuildSpellcasting"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:finalizes non-Wizard level-1 Spell Access from Surface class spellcasting facts"
+      ]
+    },
+    "srd521:classes/paladin:level-1:spell-access:paladin_spellcasting": {
+      "taskId": "SRDINV19",
+      "profile": "level-1 Paladin list-prepared Spell Access support profile",
+      "summary": "Paladin Spellcasting facts are read from the Surface class record; character creation discovers class cantrip and prepared-spell Spell Access choices, admits the selected source-scoped choices through fill support gates, finalizes them into CharacterBuild spellcasting facts, and projects ordinary Spell Slot capacity and Spellcasting Focus permissions without admitting individual Spell Definitions as executable runtime support.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverClassSpellcastingHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:supportedFinalizationChoiceHoles"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:finalizedBuildSpellcasting"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:finalizes non-Wizard level-1 Spell Access from Surface class spellcasting facts"
+      ]
+    },
+    "srd521:classes/ranger:level-1:spell-access:ranger_spellcasting": {
+      "taskId": "SRDINV19",
+      "profile": "level-1 Ranger list-prepared Spell Access support profile",
+      "summary": "Ranger Spellcasting facts are read from the Surface class record; character creation discovers class cantrip and prepared-spell Spell Access choices, admits the selected source-scoped choices through fill support gates, finalizes them into CharacterBuild spellcasting facts, and projects ordinary Spell Slot capacity and Spellcasting Focus permissions without admitting individual Spell Definitions as executable runtime support.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverClassSpellcastingHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:supportedFinalizationChoiceHoles"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:finalizedBuildSpellcasting"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:finalizes non-Wizard level-1 Spell Access from Surface class spellcasting facts"
+      ]
+    },
+    "srd521:classes/sorcerer:level-1:spell-access:sorcerer_spellcasting": {
+      "taskId": "SRDINV19",
+      "profile": "level-1 Sorcerer list-prepared Spell Access support profile",
+      "summary": "Sorcerer Spellcasting facts are read from the Surface class record; character creation discovers class cantrip and prepared-spell Spell Access choices, admits the selected source-scoped choices through fill support gates, finalizes them into CharacterBuild spellcasting facts, and projects ordinary Spell Slot capacity and Spellcasting Focus permissions without admitting individual Spell Definitions as executable runtime support.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverClassSpellcastingHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:supportedFinalizationChoiceHoles"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:finalizedBuildSpellcasting"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:finalizes non-Wizard level-1 Spell Access from Surface class spellcasting facts"
       ]
     }
   }

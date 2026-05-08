@@ -92,6 +92,8 @@ import {
   type SupportedLoadoutChoice,
 } from "./support-gates.ts";
 import {
+  CLASS_CANTRIP_CHOICE_KEY,
+  CLASS_PREPARED_SPELL_CHOICE_KEY,
   abilityScoreIncreaseChoiceOptions,
   ELDRITCH_INVOCATIONS_CHOICE_KEY,
   progressionOptionId,
@@ -2174,6 +2176,73 @@ describe("character creation finalization", () => {
         "class_feature_proficiency_choice",
       ),
     );
+  });
+
+  test("finalizes non-Wizard level-1 Spell Access from Surface class spellcasting facts", () => {
+    const spellAccessClassUnitIds = [
+      "class_bard",
+      "class_cleric",
+      "class_druid",
+      "class_paladin",
+      "class_ranger",
+      "class_sorcerer",
+    ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
+
+    for (const classUnitId of spellAccessClassUnitIds) {
+      const draft = completeSupportedProgressionDraft({
+        draftId: `draft:srd-level-1-${classUnitId}-spell-access`,
+        progression: testProgression(classUnitId, 1),
+      });
+      const classFacts = readableClassFacts(classUnitId);
+      if (
+        !("spellcasting" in classFacts) ||
+        classFacts.spellcasting.kind !== "list_prepared_spellcasting_creation"
+      ) {
+        throw new Error(
+          `Expected list-prepared spellcasting for ${classUnitId}`,
+        );
+      }
+      const result = finalizeCharacterDraft({ draft, unitLibrary });
+
+      expect(result.tag, classUnitId).toBe("ready");
+      if (result.tag !== "ready") continue;
+
+      const spellcasting = classFacts.spellcasting;
+      const expectedCantrips = spellcasting.cantripAccess?.spellIds ?? [];
+      const expectedPreparedSpells = spellcasting.preparedAccess.spells.map(
+        (spell) => spell.spellId,
+      );
+      expect(
+        selectedChoiceOptionIds(draft, classUnitId, CLASS_CANTRIP_CHOICE_KEY),
+        classUnitId,
+      ).toEqual(expectedCantrips);
+      expect(
+        selectedChoiceOptionIds(
+          draft,
+          classUnitId,
+          CLASS_PREPARED_SPELL_CHOICE_KEY,
+        ),
+        classUnitId,
+      ).toEqual(expectedPreparedSpells);
+      expect(result.build.spellcasting, classUnitId).toEqual({
+        sources: [
+          {
+            sourceUnitId: classUnitId,
+            spellcastingAbility: spellcasting.spellcastingAbility,
+            cantrips: expectedCantrips,
+            spellbook: [],
+            preparedSpells: expectedPreparedSpells,
+            spellcastingFocuses: [spellcasting.spellcastingFocus],
+          },
+        ],
+        slotPools: {
+          spellcasting: {
+            kind: "spellcasting",
+            slots: spellcasting.spellSlotProjection.slots,
+          },
+        },
+      });
+    }
   });
 
   test("rejects over-cap parsed ability scores without throwing during finalization", () => {

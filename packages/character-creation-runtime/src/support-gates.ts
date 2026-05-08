@@ -9,6 +9,8 @@ import {
   CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
   CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
   DIVINE_ORDER_CHOICE_KEY,
+  CLASS_CANTRIP_CHOICE_KEY,
+  CLASS_PREPARED_SPELL_CHOICE_KEY,
   CLASS_SUBCLASS_CHOICE_KEY,
   CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
   CLASS_EQUIPMENT_CHOICE_KEY,
@@ -380,6 +382,14 @@ export function supportedHoleOptionIds(
   if (source.tag === "loadout") {
     const loadoutChoice = supportedLoadoutChoiceForSource(source);
     return loadoutChoice == null ? undefined : [loadoutChoice.optionId];
+  }
+
+  if (
+    hole.kind === "choice" &&
+    (source.choiceKey === CLASS_CANTRIP_CHOICE_KEY ||
+      source.choiceKey === CLASS_PREPARED_SPELL_CHOICE_KEY)
+  ) {
+    return hole.options.map((option) => option.optionId);
   }
 
   return supportedUnitOptionIdsForSource(source);
