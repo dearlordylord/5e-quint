@@ -4,8 +4,12 @@
 --   When an attack roll hits you and its damage includes Bludgeoning,
 --   Piercing, or Slashing damage, you can take a Reaction to reduce the
 --   attack's total damage by 1d10 + Dexterity modifier + Monk level.
---   If the damage is reduced to 0, redirect part of that damage to another
---   creature within 5 feet.
+--   If the damage is reduced to 0, expend 1 Focus Point to redirect part of
+--   that damage. Melee redirects choose a visible creature within 5 feet;
+--   ranged redirects choose a visible creature within 60 feet that isn't
+--   behind Total Cover. The target makes a Dexterity saving throw against the
+--   Monk Focus save DC and, on failure, takes two Martial Arts dice plus
+--   Dexterity modifier damage of the same type dealt by the attack.
 
 let deflectAttacks =
       { id = "monk_deflect_attacks"
@@ -30,7 +34,33 @@ let deflectAttacks =
                     , dice = { dice = 1, dieSize = 10 }
                     , ability = "dex"
                     }
-                , zeroDamageRedirect = True
+                , zeroDamageRedirect =
+                    { spends =
+                        { resourceUnitId = "monk_deflect_attacks", amount = 1 }
+                    , save =
+                        { ability = "dex"
+                        , dc =
+                            { kind = "ability_plus_proficiency"
+                            , base = 8
+                            , ability = "wis"
+                            }
+                        }
+                    , damage =
+                        { dice =
+                            { dice = 2
+                            , dieSize = { kind = "martial_arts_die" }
+                            }
+                        , ability = "dex"
+                        , damageType = { kind = "same_type_dealt_by_attack" }
+                        }
+                    , targetGate =
+                        { melee = { kind = "visible_within_5_feet" }
+                        , ranged =
+                            { kind =
+                                "visible_within_60_feet_without_total_cover"
+                            }
+                        }
+                    }
                 }
               ]
           }

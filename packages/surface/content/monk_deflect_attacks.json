@@ -26,7 +26,40 @@
           },
           "ability": "dex"
         },
-        "zeroDamageRedirect": true
+        "zeroDamageRedirect": {
+          "spends": {
+            "resourceUnitId": "monk_deflect_attacks",
+            "amount": 1
+          },
+          "save": {
+            "ability": "dex",
+            "dc": {
+              "kind": "ability_plus_proficiency",
+              "base": 8,
+              "ability": "wis"
+            }
+          },
+          "damage": {
+            "dice": {
+              "dice": 2,
+              "dieSize": {
+                "kind": "martial_arts_die"
+              }
+            },
+            "ability": "dex",
+            "damageType": {
+              "kind": "same_type_dealt_by_attack"
+            }
+          },
+          "targetGate": {
+            "melee": {
+              "kind": "visible_within_5_feet"
+            },
+            "ranged": {
+              "kind": "visible_within_60_feet_without_total_cover"
+            }
+          }
+        }
       }
     ]
   }

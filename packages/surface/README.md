@@ -213,14 +213,12 @@ do not copy the protected name into this repository; use the established
 mushroom/fungi synthetic name policy and comment that the masked reference is
 required by the source rule.
 
-SRD mechanic terms may appear as-is when the code is projecting that SRD
-mechanic and the term is not being used as reusable taxonomy. Examples include
-Focus Point, Martial Arts die, and a Monk Focus save DC. These names are allowed
-only because they are SRD terms that the current promoted profile must project.
-Each such runtime use must carry a nearby TODO pointing at the longer-term
-projection cleanup: authored Surface/projection should provide generic
-executable facts, while runtime reducers execute those facts without
-hard-coding class-specific formulas.
+SRD mechanic terms may appear as-is when authored Surface is projecting that SRD
+mechanic and the term is not being used as reusable taxonomy. For example,
+Deflect Attacks may author that its redirect damage uses the Martial Arts die,
+but the battle-runtime support profile must project executable facts such as
+the concrete die size, resource spend, saving throw DC formula, target gate, and
+inherited damage type before reducers consume it.
 
 ## Relationship to the sub-agent survey corpus
 

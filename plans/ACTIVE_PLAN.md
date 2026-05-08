@@ -76,7 +76,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 163,
       "id": "QMBT68",
-      "status": "deferred",
+      "status": "done",
       "title": "Project Monk Deflect Attacks Redirect Facts"
     },
     {
@@ -185,8 +185,8 @@ Keep it synchronized with the DAG table and task details.
 | 160   | QMBT65 - Promote Cutting Words Ability Check Reaction Reduction | done | none | QMBT66 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [SRD Bard](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Bard.md), [SRD Playing the Game](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [SRD Rules Glossary](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed `bard_cutting_words` Ability Check reduction as part of `unit-feature.reaction-roll-or-damage-reduction`, with authored mechanics admission, caller-supplied already-successful Ability Check facts, Reaction and Bardic Inspiration spend, QNT proof coverage, focused runtime parity, deterministic admission evidence, and refreshed matrix artifacts. |
 | 161   | QMBT66 - Recursive Unit Profile Planning Review | done | QMBT65 | QMBT67 | [QMBT66 review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT66_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed recursive planning review, kept the matrix lane open, refreshed PRD status, and appended the QMBT67-QMBT69 projection-cleanup batch. |
 | 162   | QMBT67 - Project Bardic Inspiration Reaction Reduction Facts | done | QMBT66 | QMBT68 | [QMBT66 review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT66_RECURSIVE_PLANNING_REVIEW.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [battle reducer](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [unit feature support](/workspace/typescript/dnd/packages/battle-runtime/src/unit-feature-support.ts), [SRD Bard](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Bard.md), [SRD Playing the Game](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [SRD Rules Glossary](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Move Bardic Inspiration reaction-reduction resource cost and die expression facts into supported profile projection data so generic reaction reducers no longer derive Bard class die thresholds for Cutting Words attack-roll, Ability Check, or damage-roll reduction. |
-| 163   | QMBT68 - Project Monk Deflect Attacks Redirect Facts | deferred | QMBT67 | QMBT69 | [QMBT66 review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT66_RECURSIVE_PLANNING_REVIEW.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [battle reducer](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [unit feature support](/workspace/typescript/dnd/packages/battle-runtime/src/unit-feature-support.ts), [SRD Monk](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Monk.md), [SRD Playing the Game](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [SRD Rules Glossary](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Parked while the SRD inventory frontier runs; resume after SRDINV establishes the next class/content backlog shape. |
-| 164   | QMBT69 - Recursive Unit Profile Planning Review | deferred | QMBT68 | none | [QMBT66 review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT66_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Parked with QMBT68 so Ralph does not continue the older QMBT queue before the SRD inventory frontier. |
+| 163   | QMBT68 - Project Monk Deflect Attacks Redirect Facts | done | QMBT67 | QMBT69 | [QMBT66 review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT66_RECURSIVE_PLANNING_REVIEW.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [battle reducer](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [unit feature support](/workspace/typescript/dnd/packages/battle-runtime/src/unit-feature-support.ts), [SRD Monk](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Monk.md), [SRD Playing the Game](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [SRD Rules Glossary](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed Deflect Attacks redirect projection cleanup: Surface authors redirect facts, support projection emits executable cost/save/damage/target/damage-type facts, and reducers consume those facts without Monk-specific formula derivation. |
+| 164   | QMBT69 - Recursive Unit Profile Planning Review | deferred | QMBT68 | none | [QMBT66 review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT66_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Still parked by the SRD inventory frontier instruction; QMBT68 is complete, but the older QMBT queue remains deferred until that frontier resumes it. |
 | 165   | SRDINV1 - Classify Installed Level-1 Owner Evidence | ready-for-research | none | SRDINV2-SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Stop treating installed level-1 rows as done by catalog load alone; assign operational owner expectations or explicit catalog-only closure. |
 | 166   | SRDINV2 - Author Missing Level-1 Class Containers | blocked | SRDINV1 | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Create or explicitly close the ten missing SRD level-1 class container records. |
 | 167   | SRDINV3 - Classify Missing Level-1 Class Feature Rows | blocked | SRDINV1 | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Decide which missing level-1 class feature rows need authored content, Surface widening, non-runtime closure, or later runtime work. |
@@ -379,7 +379,7 @@ minimum two rounds.
 
 ### Task 163 - QMBT68 - Project Monk Deflect Attacks Redirect Facts
 
-Status: `deferred`
+Status: `done`
 
 Depends on: QMBT67
 
@@ -395,16 +395,16 @@ Research / plan:
 [Rules-Glossary.md](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
 [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
 
-Scope: deferred while the SRD inventory frontier runs, so Ralph does not
-continue the older QMBT queue before the class/content inventory denominator
-is shaped. When resumed, move Deflect Attacks redirect executable facts out of generic reducer
-derivation and into supported profile projection data. The runtime should
-parse/project redirect resource cost, redirect save DC, redirect damage dice
-expression, damage ability modifier, attack-kind target gate facts, and
-inherited original damage type for the existing
-`unit-feature.attack-damage-reduction-zero-damage-redirect` profile. Reducers
-should consume those projected facts without deriving Focus Point cost, Martial
-Arts die scaling, or Monk Focus save DC from class identity.
+Completed scope: moved Deflect Attacks redirect executable facts out of generic
+reducer derivation and into authored Surface/support projection data. Surface
+now authors redirect resource cost, Dexterity save ability, Monk Focus save DC
+formula, Martial Arts die expression, Dexterity damage ability, attack-kind
+target gate facts, and same-damage-type projection for
+`monk_deflect_attacks`; the support profile projects executable resource spend,
+fixed save DC, concrete damage dice, target gate, and inherited damage-type
+facts for `unit-feature.attack-damage-reduction-zero-damage-redirect`. Reducers
+consume those projected facts without deriving Focus Point cost, Martial Arts
+die scaling, or Monk Focus save DC from class identity.
 
 Out of scope: changing RAW behavior, widening unrelated Unit profiles, changing
 authored Unit ids, changing the existing Deflect Attacks reaction/redirect
@@ -425,6 +425,23 @@ if profile artifacts change; battle-runtime MBT only if promoted battle
 behavior changes; `pnpm quality` if the task changes production behavior;
 `/simplify` convergence, minimum two rounds.
 
+Verification completed: RAW/source review checked `.references/srd-5.2.1`
+`Classes/Monk.md`, `Playing-the-Game.md`, `Rules-Glossary.md`, and
+`UBIQUITOUS_LANGUAGE.md`; focused admission tests passed; focused Deflect
+Attacks and Cutting Words runtime tests passed;
+`pnpm unit-profile-coverage:check` passed; `pnpm quality` passed.
+Battle-runtime MBT was not rerun in the decider because focused and quality
+verification passed and the accepted implementation/review had already recorded
+a passing Tier 1 run.
+
+`/simplify` round 1: kept SRD terms in authored Surface where they are source
+mechanic facts, and projected reducer-facing executable facts instead of
+retaining Monk-specific reducer formulas.
+
+`/simplify` round 2: no important changes found; the remaining coupling is
+localized in the Deflect Attacks projection parser and literal schema, while
+the reducer consumes narrowed profile facts.
+
 ### Task 164 - QMBT69 - Recursive Unit Profile Planning Review
 
 Status: `deferred`
@@ -438,7 +455,7 @@ Research / plan:
 [UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md),
 [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
 
-Scope: deferred with QMBT68 while the SRD inventory frontier runs. When
+Scope: deferred while the SRD inventory frontier runs. QMBT68 is complete; when
 resumed, review QMBT67-QMBT68 findings, update the PRD and plan docs, and append
 the next coherent widening or cleanup batch unless the Unit profile matrix lane
 is explicitly complete. AC/base-formula work is a strong candidate because

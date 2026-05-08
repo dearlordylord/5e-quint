@@ -45,6 +45,7 @@ import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
 
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
+  ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
   FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE,
@@ -114,6 +115,7 @@ const rogueEvasionUnitId = "rogue_evasion";
 const rogueUncannyDodgeUnitId = "rogue_uncanny_dodge";
 const rogueSneakAttackUnitId = "rogue_sneak_attack";
 const bardCuttingWordsUnitId = "bard_cutting_words";
+const monkDeflectAttacksUnitId = "monk_deflect_attacks";
 const defenseUnitId = "defense";
 const myceliumStepUnitId = "mycelium_step";
 const archeryUnitId = "feat_archery";
@@ -544,6 +546,149 @@ describe("QMBT65 Cutting Words deterministic Unit profile admission", () => {
         ]),
       }),
     );
+  });
+});
+
+describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () => {
+  test("monk_deflect_attacks projects zero-damage redirect executable facts", () => {
+    const unit = unitLibrary.requireUnit(monkDeflectAttacksUnitId);
+    const supportProfile =
+      ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE;
+
+    expect(
+      battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
+    ).toEqual(
+      Either.right({
+        unitId: monkDeflectAttacksUnitId,
+        supportProfiles: [supportProfile],
+      }),
+    );
+    expect(battleReactionRollOrDamageReductionSupportForUnit(unit)).toBe(
+      supportProfile,
+    );
+    expect(
+      parseSupportedUnitFeatureProfile(unit, [
+        { className: "monk", level: classLevel(5) },
+      ]),
+    ).toEqual(
+      expect.objectContaining({
+        kind: "reactionRollOrDamageReduction",
+        unit,
+        classLevel: classLevel(5),
+        modifiers: [
+          {
+            kind: "attackDamageReduction",
+            damageIncludes: ["bludgeoning", "piercing", "slashing"],
+            reduction: {
+              kind: "dicePlusAbilityModifierPlusClassLevel",
+              dieSize: 10,
+              ability: "dex",
+            },
+            zeroDamageRedirect: {
+              spends: { resourceUnitId: monkDeflectAttacksUnitId, amount: 1 },
+              save: {
+                ability: "dex",
+                dc: {
+                  kind: "abilityPlusProficiency",
+                  base: 8,
+                  ability: "wis",
+                },
+              },
+              damage: {
+                dice: { dice: 2, dieSize: 8 },
+                ability: "dex",
+                damageType: "sameTypeDealtByAttack",
+              },
+              targetGate: {
+                melee: "visibleWithin5Feet",
+                ranged: "visibleWithin60FeetWithoutTotalCover",
+              },
+            },
+          },
+        ],
+      }),
+    );
+  });
+
+  test("monk_deflect_attacks rejects malformed redirect projection facts", () => {
+    const unit = unitLibrary.requireUnit(monkDeflectAttacksUnitId);
+    if (
+      unit.kind !== "class_feature" ||
+      unit.mechanics.family !== "reaction_roll_or_damage_reduction"
+    ) {
+      throw new Error("Expected Deflect Attacks reaction modifier mechanics.");
+    }
+    const malformedModifier = unit.mechanics.modifiers.map((modifier) =>
+      modifier.kind === "attack_damage_reduction" &&
+      "zeroDamageRedirect" in modifier
+        ? {
+            ...modifier,
+            zeroDamageRedirect: {
+              ...modifier.zeroDamageRedirect,
+              damage: {
+                ...modifier.zeroDamageRedirect.damage,
+                dice: {
+                  ...modifier.zeroDamageRedirect.damage.dice,
+                  dieSize: { kind: "d8" },
+                },
+              },
+            },
+          }
+        : modifier,
+    );
+    const malformedUnit = {
+      ...unit,
+      mechanics: {
+        ...unit.mechanics,
+        modifiers: malformedModifier,
+      },
+      // Cast justification: this fixture intentionally violates the authored
+      // Deflect Attacks Martial Arts die projection invariant while preserving
+      // the rest of the real UnitRecord fixture.
+    } as unknown as UnitRecord;
+
+    expect(
+      battleReactionRollOrDamageReductionSupportForUnit(malformedUnit),
+    ).toBe("unsupported");
+  });
+
+  test("monk_deflect_attacks rejects redirect resource costs for a different Unit", () => {
+    const unit = unitLibrary.requireUnit(monkDeflectAttacksUnitId);
+    if (
+      unit.kind !== "class_feature" ||
+      unit.mechanics.family !== "reaction_roll_or_damage_reduction"
+    ) {
+      throw new Error("Expected Deflect Attacks reaction modifier mechanics.");
+    }
+    const malformedModifier = unit.mechanics.modifiers.map((modifier) =>
+      modifier.kind === "attack_damage_reduction" &&
+      "zeroDamageRedirect" in modifier
+        ? {
+            ...modifier,
+            zeroDamageRedirect: {
+              ...modifier.zeroDamageRedirect,
+              spends: {
+                ...modifier.zeroDamageRedirect.spends,
+                resourceUnitId: "wrong_deflect_attacks_resource",
+              },
+            },
+          }
+        : modifier,
+    );
+    const malformedUnit = {
+      ...unit,
+      mechanics: {
+        ...unit.mechanics,
+        modifiers: malformedModifier,
+      },
+      // Cast justification: this fixture intentionally violates the authored
+      // Deflect Attacks resource ownership invariant while preserving the rest
+      // of the real UnitRecord fixture.
+    } as unknown as UnitRecord;
+
+    expect(
+      battleReactionRollOrDamageReductionSupportForUnit(malformedUnit),
+    ).toBe("unsupported");
   });
 });
 

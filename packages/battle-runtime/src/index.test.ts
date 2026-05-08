@@ -9844,7 +9844,7 @@ describe("battle runtime", () => {
       tag: "invalid",
       reason: "invalidFill",
       message:
-        "Attack damage reduction redirect damage must roll two Martial Arts dice.",
+        "Attack damage reduction redirect damage must match its projected dice.",
     });
   });
 

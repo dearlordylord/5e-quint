@@ -12,6 +12,7 @@ import {
   movementDeltaFeet,
   movementFeet,
   type Condition,
+  type DamageDieSize,
   type MovementDeltaFeet,
   type MovementFeet,
   type ReadonlyNonEmptyArray,
@@ -519,26 +520,165 @@ export type ReactionRollOrDamageReductionProfile =
             readonly ability: "dex";
           };
       readonly zeroDamageRedirect?: {
-        // TODO SRD mechanics projection: Focus Point is allowed here as the
-        // SRD resource cost; project it as a generic resource-spend fact.
-        readonly focusPointCost: 1;
-        readonly saveAbility: "dex";
-        // TODO SRD mechanics projection: the Monk Focus save DC formula is
-        // allowed here as SRD logic; project it as a generic save DC formula.
-        readonly saveDc: {
-          readonly base: 8;
-          readonly ability: "wis";
-          readonly proficiencyBonus: true;
+        readonly spends: ReactionReductionResourceSpend;
+        readonly save: {
+          readonly ability: "dex";
+          readonly dc: {
+            readonly kind: "abilityPlusProficiency";
+            readonly base: 8;
+            readonly ability: "wis";
+          };
         };
         readonly damage: {
-          readonly dice: 2;
-          // TODO SRD mechanics projection: Martial Arts die is allowed here as
-          // the SRD damage die; project it as a generic damage-die expression.
-          readonly dieSize: "martialArts";
+          readonly dice: {
+            readonly dice: 2;
+            readonly dieSize: DamageDieSize;
+          };
           readonly ability: "dex";
+          readonly damageType: "sameTypeDealtByAttack";
+        };
+        readonly targetGate: {
+          readonly melee: "visibleWithin5Feet";
+          readonly ranged: "visibleWithin60FeetWithoutTotalCover";
         };
       };
     };
+
+type AuthoredAttackDamageReductionZeroDamageRedirect = {
+  readonly spends: {
+    readonly resourceUnitId: UnitRecord["id"];
+    readonly amount: 1;
+  };
+  readonly save: {
+    readonly ability: "dex";
+    readonly dc: {
+      readonly kind: "ability_plus_proficiency";
+      readonly base: 8;
+      readonly ability: "wis";
+    };
+  };
+  readonly damage: {
+    readonly dice: {
+      readonly dice: 2;
+      readonly dieSize: { readonly kind: "martial_arts_die" };
+    };
+    readonly ability: "dex";
+    readonly damageType: { readonly kind: "same_type_dealt_by_attack" };
+  };
+  readonly targetGate: {
+    readonly melee: { readonly kind: "visible_within_5_feet" };
+    readonly ranged: {
+      readonly kind: "visible_within_60_feet_without_total_cover";
+    };
+  };
+};
+
+type AttackDamageReductionZeroDamageRedirectProfile = NonNullable<
+  Extract<
+    ReactionRollOrDamageReductionProfile,
+    { readonly kind: "attackDamageReduction" }
+  >["zeroDamageRedirect"]
+>;
+
+function attackDamageReductionZeroDamageRedirectProjection(
+  redirect: unknown,
+  expectedResourceUnitId: UnitRecord["id"],
+  classLevel: ClassLevel,
+): AttackDamageReductionZeroDamageRedirectProfile | null {
+  const authored =
+    parseAuthoredAttackDamageReductionZeroDamageRedirect(
+      redirect,
+      expectedResourceUnitId,
+    );
+  if (authored === null) return null;
+  return {
+    spends: {
+      resourceUnitId: authored.spends.resourceUnitId,
+      amount: authored.spends.amount,
+    },
+    save: {
+      ability: authored.save.ability,
+      dc: {
+        kind: "abilityPlusProficiency",
+        base: authored.save.dc.base,
+        ability: authored.save.dc.ability,
+      },
+    },
+    damage: {
+      dice: {
+        dice: authored.damage.dice.dice,
+        dieSize: martialArtsDieSize(classLevel),
+      },
+      ability: authored.damage.ability,
+      damageType: "sameTypeDealtByAttack",
+    },
+    targetGate: {
+      melee: "visibleWithin5Feet",
+      ranged: "visibleWithin60FeetWithoutTotalCover",
+    },
+  };
+}
+
+function parseAuthoredAttackDamageReductionZeroDamageRedirect(
+  redirect: unknown,
+  expectedResourceUnitId: UnitRecord["id"],
+): AuthoredAttackDamageReductionZeroDamageRedirect | null {
+  if (typeof redirect !== "object" || redirect === null) return null;
+  // Cast justification: the object guard above is the boundary evidence; every
+  // nested field read below is checked before returning a freshly built value.
+  const candidate =
+    redirect as Partial<AuthoredAttackDamageReductionZeroDamageRedirect>;
+  if (
+    candidate.spends?.resourceUnitId !== expectedResourceUnitId ||
+    candidate.spends.amount !== 1 ||
+    candidate.save?.ability !== "dex" ||
+    candidate.save.dc?.kind !== "ability_plus_proficiency" ||
+    candidate.save.dc.base !== 8 ||
+    candidate.save.dc.ability !== "wis" ||
+    candidate.damage?.dice?.dice !== 2 ||
+    candidate.damage.dice.dieSize?.kind !== "martial_arts_die" ||
+    candidate.damage.ability !== "dex" ||
+    candidate.damage.damageType?.kind !== "same_type_dealt_by_attack" ||
+    candidate.targetGate?.melee?.kind !== "visible_within_5_feet" ||
+    candidate.targetGate.ranged?.kind !==
+      "visible_within_60_feet_without_total_cover"
+  ) {
+    return null;
+  }
+  return {
+    spends: {
+      resourceUnitId: expectedResourceUnitId,
+      amount: 1,
+    },
+    save: {
+      ability: "dex",
+      dc: {
+        kind: "ability_plus_proficiency",
+        base: 8,
+        ability: "wis",
+      },
+    },
+    damage: {
+      dice: {
+        dice: 2,
+        dieSize: { kind: "martial_arts_die" },
+      },
+      ability: "dex",
+      damageType: { kind: "same_type_dealt_by_attack" },
+    },
+    targetGate: {
+      melee: { kind: "visible_within_5_feet" },
+      ranged: { kind: "visible_within_60_feet_without_total_cover" },
+    },
+  };
+}
+
+function martialArtsDieSize(classLevel: ClassLevel): DamageDieSize {
+  if (classLevel >= 17) return 12;
+  if (classLevel >= 11) return 10;
+  if (classLevel >= 5) return 8;
+  return 6;
+}
 
 export type ReactionReductionResourceSpend = {
   readonly resourceUnitId: UnitRecord["id"];
@@ -1661,11 +1801,15 @@ function reactionRollOrDamageReductionMechanicsProjection(
         modifier.reduction.dice.dice === 1 &&
         modifier.reduction.dice.dieSize === 10 &&
         modifier.reduction.ability === "dex" &&
-        "zeroDamageRedirect" in modifier &&
-        modifier.zeroDamageRedirect === true
+        "zeroDamageRedirect" in modifier
       ) {
-        // TODO SRD mechanics projection: Focus Point and Martial Arts die are
-        // SRD terms allowed here only until projection emits generic cost/dice.
+        const zeroDamageRedirect =
+          attackDamageReductionZeroDamageRedirectProjection(
+            modifier.zeroDamageRedirect,
+            unit.id,
+            classLevel,
+          );
+        if (zeroDamageRedirect === null) return [];
         return [
           {
             kind: "attackDamageReduction",
@@ -1677,22 +1821,7 @@ function reactionRollOrDamageReductionMechanicsProjection(
               dieSize: 10,
               ability: "dex",
             },
-            zeroDamageRedirect: {
-              focusPointCost: 1,
-              saveAbility: "dex",
-              // TODO SRD mechanics projection: keep this Monk Focus save DC
-              // formula only until projection emits a generic save DC formula.
-              saveDc: {
-                base: 8,
-                ability: "wis",
-                proficiencyBonus: true,
-              },
-              damage: {
-                dice: 2,
-                dieSize: "martialArts",
-                ability: "dex",
-              },
-            },
+            zeroDamageRedirect,
           },
         ];
       }

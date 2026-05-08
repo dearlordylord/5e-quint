@@ -92,7 +92,6 @@ import {
   CONDITIONS as ALL_CONDITIONS,
   AbilityModifier,
   AttackBonus,
-  ClassLevel,
   DamageDieSizeSchema,
   DamageAmount,
   DifficultyClass,
@@ -235,7 +234,6 @@ import {
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   battleReactionRollOrDamageReductionSupportForUnit,
   parseSupportedUnitFeatureProfile,
-  requireCharacterClassLevel,
   type BattleUnitSupportProfile,
   type BattleBonusActionDashTemporaryHitPointsSupportProfile,
   type OngoingFeatureDamageModifier,
@@ -423,12 +421,22 @@ type AttackDamageReductionZeroDamageRedirectAvailableOffer = {
   readonly redirect: AttackDamageReductionZeroDamageRedirectOffer;
 };
 type BattleAttackKindForRedirect = "melee" | "ranged";
+type AttackDamageReductionRedirectTargetGate = NonNullable<
+  Extract<
+    ReactionRollOrDamageReductionProfile,
+    { readonly kind: "attackDamageReduction" }
+  >["zeroDamageRedirect"]
+>["targetGate"];
 type AttackDamageReductionZeroDamageRedirectOffer = {
+  readonly spends: ReactionReductionResourceSpend;
+  readonly saveAbility: "dex";
   readonly saveDc: DifficultyClass;
-  // TODO SRD mechanics projection: Martial Arts die is an allowed SRD
-  // mechanic term here; project it as a generic damage-die fact.
-  readonly martialArtsDieSize: DamageDieSize;
+  readonly damageDice: {
+    readonly dice: 2;
+    readonly dieSize: DamageDieSize;
+  };
   readonly attackKind: BattleAttackKindForRedirect;
+  readonly targetGate: AttackDamageReductionRedirectTargetGate;
   readonly damageAbilityModifier: AbilityModifier;
   readonly originalDamageType: DamageType;
 };
@@ -490,14 +498,16 @@ type BattleReactionModifierChoice =
             readonly dieSize: 10;
           };
       readonly zeroDamageRedirect?: {
-        // TODO SRD mechanics projection: Monk Focus save DC is an allowed SRD
-        // mechanic term here; project it as a generic save DC fact.
+        readonly spends: ReactionReductionResourceSpend;
+        readonly saveAbility: "dex";
         readonly saveDc: DifficultyClass;
-        // TODO SRD mechanics projection: Martial Arts die is an allowed SRD
-        // mechanic term here; project it as a generic damage-die fact.
-        readonly martialArtsDieSize: DamageDieSize;
+        readonly damageDice: {
+          readonly dice: 2;
+          readonly dieSize: DamageDieSize;
+        };
         readonly damageAbilityModifier: AbilityModifier;
         readonly attackKind: BattleAttackKindForRedirect;
+        readonly targetGate: AttackDamageReductionRedirectTargetGate;
         readonly originalDamageType: DamageType;
       };
     };
@@ -3081,12 +3091,22 @@ const BattleReactionModifierChoiceSchema = Schema.Union(
     ),
     zeroDamageRedirect: Schema.optionalWith(
       Schema.Struct({
+        spends: Schema.Struct({
+          resourceUnitId: Schema.String,
+          amount: Schema.Literal(1),
+        }),
+        saveAbility: Schema.Literal("dex"),
         saveDc: DifficultyClass,
-        // TODO SRD mechanics projection: Martial Arts die is an allowed SRD
-        // mechanic term here; project it as a generic damage-die fact.
-        martialArtsDieSize: DamageDieSizeSchema,
+        damageDice: Schema.Struct({
+          dice: Schema.Literal(2),
+          dieSize: DamageDieSizeSchema,
+        }),
         damageAbilityModifier: AbilityModifier,
         attackKind: Schema.Literal("melee", "ranged"),
+        targetGate: Schema.Struct({
+          melee: Schema.Literal("visibleWithin5Feet"),
+          ranged: Schema.Literal("visibleWithin60FeetWithoutTotalCover"),
+        }),
         originalDamageType: DamageTypeSchema,
       }),
       { exact: true },
@@ -5120,10 +5140,8 @@ function attackDamageReductionZeroDamageRedirectSelection(input: {
   ) {
     return {
       tag: "invalid",
-      // TODO SRD mechanics projection: Focus Point is allowed here as the SRD
-      // resource term; replace with projected generic resource display text.
       message:
-        "Attack damage reduction redirect requires an available Focus Point.",
+        "Attack damage reduction redirect requires an available projected resource.",
     };
   }
   if (
@@ -5136,6 +5154,7 @@ function attackDamageReductionZeroDamageRedirectSelection(input: {
       reactorId,
       target.value,
       offer.attackKind,
+      offer.targetGate,
     )
   ) {
     return {
@@ -5161,18 +5180,14 @@ function attackDamageReductionZeroDamageRedirectSelection(input: {
     };
   }
   const redirectedDamageRoll = rolledDiceFillTotal(damage, {
-    dice: 2,
-    // TODO SRD mechanics projection: Martial Arts die is allowed here as the
-    // SRD die term; replace with a projected generic damage-die expression.
-    dieSize: offer.martialArtsDieSize,
+    dice: offer.damageDice.dice,
+    dieSize: offer.damageDice.dieSize,
   });
   if (redirectedDamageRoll === null) {
     return {
       tag: "invalid",
-      // TODO SRD mechanics projection: Martial Arts dice are allowed here as
-      // the SRD die term; replace with projected generic damage-die text.
       message:
-        "Attack damage reduction redirect damage must roll two Martial Arts dice.",
+        "Attack damage reduction redirect damage must match its projected dice.",
     };
   }
   return {
@@ -6573,21 +6588,23 @@ function reactionRollOrDamageReductionChoiceForProfile(
             ...(modifier.zeroDamageRedirect === undefined
               ? {}
               : {
-                  // TODO SRD mechanics projection: Focus save DC, Martial Arts
-                  // die, and damage ability are allowed SRD mechanics here
-                  // only until Surface projection supplies generic facts.
                   zeroDamageRedirect: {
-                    saveDc: monkFocusSaveDc(characterReactor),
-                    martialArtsDieSize: monkMartialArtsDieSize(
-                      profile.classLevel,
+                    spends: modifier.zeroDamageRedirect.spends,
+                    saveAbility: modifier.zeroDamageRedirect.save.ability,
+                    saveDc: abilityProficiencyDifficultyClass(
+                      characterReactor,
+                      modifier.zeroDamageRedirect.save.dc,
                     ),
+                    damageDice: modifier.zeroDamageRedirect.damage.dice,
                     damageAbilityModifier: characterAbilityModifier(
                       characterReactor,
-                      "dex",
+                      modifier.zeroDamageRedirect.damage.ability,
                     ),
                     attackKind: frame.attackKind,
+                    targetGate: modifier.zeroDamageRedirect.targetGate,
                     originalDamageType: attackDamageReductionOriginalDamageType(
                       frame.damageTypes,
+                      modifier.zeroDamageRedirect.damage.damageType,
                     ),
                   },
                 }),
@@ -6728,10 +6745,13 @@ function attackDamageReductionZeroDamageRedirectHoles(
         unitId: offer.unitId,
         label: offer.label,
       },
-      ability: "dex",
+      ability: offer.redirect.saveAbility,
       dc: { kind: "fixed", dc: offer.redirect.saveDc },
       targetIds: targetChoices,
-      targetRollModes: savingThrowRollModeProjections(state, "dex"),
+      targetRollModes: savingThrowRollModeProjections(
+        state,
+        offer.redirect.saveAbility,
+      ),
     },
     {
       kind: "rolledDice",
@@ -6815,20 +6835,13 @@ function attackDamageReductionRedirectResource(
   const characterOrigin = reactor.origin;
   return characterOrigin.resources.find(
     (resource) =>
-      resource.unit.id === unitId &&
+      resource.unit.id === offer.spends.resourceUnitId &&
+      unitId === offer.spends.resourceUnitId &&
+      offer.spends.amount === 1 &&
       resource.unit.kind === "class_feature" &&
       resource.unit.mechanics.family === "reaction_roll_or_damage_reduction" &&
       battleReactionRollOrDamageReductionSupportForUnit(resource.unit) ===
         "attackDamageReductionZeroDamageRedirect" &&
-      // TODO SRD mechanics projection: this Martial Arts die compatibility
-      // check is allowed SRD logic until projected resource/die facts replace it.
-      offer.martialArtsDieSize ===
-        monkMartialArtsDieSize(
-          requireCharacterClassLevel(
-            characterOrigin.classLevels,
-            resource.unit.className,
-          ),
-        ) &&
       resourceHasUsesRemaining(resource),
   );
 }
@@ -6838,9 +6851,11 @@ function hasAttackDamageReductionRedirectTargetSpatialFact(
   sourceId: CombatantId,
   targetId: CombatantId,
   attackKind: BattleAttackKindForRedirect,
+  targetGate: AttackDamageReductionRedirectTargetGate,
 ): boolean {
   return Match.value(attackKind).pipe(
     Match.when("melee", () =>
+      targetGate.melee === "visibleWithin5Feet" &&
       facts.some(
         (fact) =>
           fact.kind === "meleeRedirectTargetWithin5Feet" &&
@@ -6849,6 +6864,7 @@ function hasAttackDamageReductionRedirectTargetSpatialFact(
       ),
     ),
     Match.when("ranged", () =>
+      targetGate.ranged === "visibleWithin60FeetWithoutTotalCover" &&
       facts.some(
         (fact) =>
           fact.kind === "rangedRedirectTargetWithin60FeetWithoutTotalCover" &&
@@ -6872,46 +6888,41 @@ function characterAbilityModifier(
   return combatant.armorClass.abilityModifiers[ability];
 }
 
-function monkFocusSaveDc(
+function abilityProficiencyDifficultyClass(
   combatant: BattleCreatureState & {
     readonly origin: Extract<
       BattleCreatureState["origin"],
       { readonly kind: "character" }
     >;
   },
+  dc: {
+    readonly base: 8;
+    readonly ability: "wis";
+  },
 ): DifficultyClass {
-  // TODO SRD mechanics projection: Monk Focus save DC is an allowed SRD
-  // mechanic formula here; move this derivation to projection data.
-  const characterLevel = combatant.origin.classLevels.reduce(
-    (total, classLevel) => total + Number(classLevel.level),
-    0,
-  );
   return difficultyClass(
-    8 +
-      Number(characterAbilityModifier(combatant, "wis")) +
-      Number(proficiencyBonus(Math.floor((characterLevel - 1) / 4) + 2)),
+    dc.base +
+      Number(characterAbilityModifier(combatant, dc.ability)) +
+      combatantProficiencyBonus(combatant),
   );
-}
-
-function monkMartialArtsDieSize(classLevel: ClassLevel): DamageDieSize {
-  // TODO SRD mechanics projection: Martial Arts die scaling is an allowed SRD
-  // mechanic formula here; move this derivation to projection data.
-  if (classLevel >= 17) return 12;
-  if (classLevel >= 11) return 10;
-  if (classLevel >= 5) return 8;
-  return 6;
 }
 
 function attackDamageReductionOriginalDamageType(
   damageTypes: readonly DamageType[],
+  damageTypeProjection: "sameTypeDealtByAttack",
 ): DamageType {
-  return (
-    damageTypes.find(
-      (damageType) =>
-        damageType === "bludgeoning" ||
-        damageType === "piercing" ||
-        damageType === "slashing",
-    ) ?? "bludgeoning"
+  return Match.value(damageTypeProjection).pipe(
+    Match.when(
+      "sameTypeDealtByAttack",
+      () =>
+        damageTypes.find(
+          (damageType) =>
+            damageType === "bludgeoning" ||
+            damageType === "piercing" ||
+            damageType === "slashing",
+        ) ?? "bludgeoning",
+    ),
+    Match.exhaustive,
   );
 }
 

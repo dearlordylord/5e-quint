@@ -636,6 +636,39 @@ const ReactionAttackDamageReductionUnconditionalTriggerSchema = strictStruct({
   requiresVisibleAttacker: exactOptional(Schema.Boolean),
 });
 
+const AttackDamageReductionZeroDamageRedirectSchema = strictStruct({
+  spends: strictStruct({
+    resourceUnitId: NonEmptyStringSchema,
+    amount: Schema.Literal(1),
+  }),
+  save: strictStruct({
+    ability: Schema.Literal("dex"),
+    dc: strictStruct({
+      kind: Schema.Literal("ability_plus_proficiency"),
+      base: Schema.Literal(8),
+      ability: Schema.Literal("wis"),
+    }),
+  }),
+  damage: strictStruct({
+    dice: strictStruct({
+      dice: Schema.Literal(2),
+      dieSize: strictStruct({ kind: Schema.Literal("martial_arts_die") }),
+    }),
+    ability: Schema.Literal("dex"),
+    damageType: strictStruct({
+      kind: Schema.Literal("same_type_dealt_by_attack"),
+    }),
+  }),
+  targetGate: strictStruct({
+    melee: strictStruct({
+      kind: Schema.Literal("visible_within_5_feet"),
+    }),
+    ranged: strictStruct({
+      kind: Schema.Literal("visible_within_60_feet_without_total_cover"),
+    }),
+  }),
+});
+
 const ReactionRollOrDamageReductionModifierSchema = Schema.Union(
   strictStruct({
     kind: Schema.Literal("attack_roll_reduction"),
@@ -685,7 +718,7 @@ const ReactionRollOrDamageReductionModifierSchema = Schema.Union(
       }),
       ability: Schema.Literal("dex"),
     }),
-    zeroDamageRedirect: Schema.Literal(true),
+    zeroDamageRedirect: AttackDamageReductionZeroDamageRedirectSchema,
   }),
 );
 
