@@ -9,19 +9,19 @@
     "levelOneClassContainers": 12,
     "levelOneRowsByDisposition": {
       "missing-authored-record": 115,
-      "supported": 26,
+      "catalog-installed-needs-owner-evidence": 26,
       "catalog-only/dead-for-now": 3,
       "non-runtime": 12
     },
     "allRowsByDisposition": {
       "missing-authored-record": 187,
-      "supported": 65,
+      "catalog-installed-needs-owner-evidence": 65,
       "catalog-only/dead-for-now": 103,
       "non-runtime": 12
     },
     "spellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 100,
-      "supported": 39,
+      "catalog-installed-needs-owner-evidence": 39,
       "missing-authored-record": 72
     },
     "levelOneRowsByCategory": {
@@ -34,6 +34,682 @@
     },
     "missingClassContainers": 10
   },
+  "recommendedBatches": [
+    {
+      "id": "SRDINV1",
+      "title": "Classify Installed Level-1 Owner Evidence",
+      "suggestedStatus": "ready-for-research",
+      "intent": "Stop treating installed level-1 rows as done by catalog load alone; assign operational owner expectations or explicit catalog-only closure.",
+      "rowCount": 26,
+      "rowIds": [
+        "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
+        "srd521:classes/fighter:level-1:class-container:fighter_class_container",
+        "srd521:classes/fighter:level-1:class-feature-grant:fighter_fighting_style",
+        "srd521:classes/fighter:level-1:class-feature-grant:fighter_second_wind",
+        "srd521:classes/fighter:level-1:core-trait:fighter_armor_training",
+        "srd521:classes/fighter:level-1:core-trait:fighter_hit_point_die",
+        "srd521:classes/fighter:level-1:core-trait:fighter_primary_ability",
+        "srd521:classes/fighter:level-1:core-trait:fighter_saving_throw_proficiencies",
+        "srd521:classes/fighter:level-1:core-trait:fighter_skill_proficiencies",
+        "srd521:classes/fighter:level-1:core-trait:fighter_weapon_proficiencies",
+        "srd521:classes/fighter:level-1:equipment-pressure:fighter_starting_equipment",
+        "srd521:classes/fighter:level-1:mastery-pressure:fighter_weapon_mastery",
+        "srd521:classes/fighter:level-1:multiclass-entry:fighter_multiclass_entry_traits",
+        "srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack",
+        "srd521:classes/wizard:level-1:class-container:wizard_class_container",
+        "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery",
+        "srd521:classes/wizard:level-1:class-feature-grant:wizard_ritual_adept",
+        "srd521:classes/wizard:level-1:core-trait:wizard_armor_training",
+        "srd521:classes/wizard:level-1:core-trait:wizard_hit_point_die",
+        "srd521:classes/wizard:level-1:core-trait:wizard_primary_ability",
+        "srd521:classes/wizard:level-1:core-trait:wizard_saving_throw_proficiencies",
+        "srd521:classes/wizard:level-1:core-trait:wizard_skill_proficiencies",
+        "srd521:classes/wizard:level-1:core-trait:wizard_weapon_proficiencies",
+        "srd521:classes/wizard:level-1:equipment-pressure:wizard_starting_equipment",
+        "srd521:classes/wizard:level-1:multiclass-entry:wizard_multiclass_entry_traits",
+        "srd521:classes/wizard:level-1:spell-access:wizard_spellcasting"
+      ],
+      "nextAction": "For each installed level-1 row, classify the operational owner and evidence requirement, then update generated state names if needed.",
+      "acceptance": "Installed level-1 rows no longer imply support from catalog admission alone; report distinguishes catalog evidence from operational owner evidence."
+    },
+    {
+      "id": "SRDINV2",
+      "title": "Author Missing Level-1 Class Containers",
+      "suggestedStatus": "blocked-on-SRDINV1",
+      "intent": "Create or explicitly close the ten missing SRD level-1 class container records.",
+      "rowCount": 10,
+      "rowIds": [
+        "srd521:classes/barbarian:level-1:class-container:barbarian_class_container",
+        "srd521:classes/bard:level-1:class-container:bard_class_container",
+        "srd521:classes/cleric:level-1:class-container:cleric_class_container",
+        "srd521:classes/druid:level-1:class-container:druid_class_container",
+        "srd521:classes/monk:level-1:class-container:monk_class_container",
+        "srd521:classes/paladin:level-1:class-container:paladin_class_container",
+        "srd521:classes/ranger:level-1:class-container:ranger_class_container",
+        "srd521:classes/rogue:level-1:class-container:rogue_class_container",
+        "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container",
+        "srd521:classes/warlock:level-1:class-container:warlock_class_container"
+      ],
+      "nextAction": "Add SRD-provenance class container records where Surface already expresses the facts, or record explicit closure for any deferred container.",
+      "acceptance": "Missing class container count reaches zero or each remaining row has explicit closure; no PHB/private content enters this pass."
+    },
+    {
+      "id": "SRDINV3",
+      "title": "Classify Missing Level-1 Class Feature Rows",
+      "suggestedStatus": "blocked-on-SRDINV1",
+      "intent": "Decide which missing level-1 class feature rows need authored content, Surface widening, non-runtime closure, or later runtime work.",
+      "rowCount": 11,
+      "rowIds": [
+        "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
+        "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
+        "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
+        "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order",
+        "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
+        "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy",
+        "srd521:classes/rogue:level-1:class-feature-grant:rogue_expertise",
+        "srd521:classes/rogue:level-1:class-feature-grant:rogue_thieves_cant",
+        "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
+        "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations",
+        "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic"
+      ],
+      "nextAction": "Review feature rows by mechanics family and produce the next small authoring or Surface-widening batch.",
+      "acceptance": "Every missing level-1 class feature row has a sharper next action than generic author-or-close wording."
+    },
+    {
+      "id": "SRDINV4",
+      "title": "Classify Level-1 Character Creation Rows",
+      "suggestedStatus": "blocked-on-SRDINV1",
+      "intent": "Separate class-container-owned creation/progression facts from rows that require standalone authored records.",
+      "rowCount": 74,
+      "rowIds": [
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_armor_training",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_hit_point_die",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_primary_ability",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_saving_throw_proficiencies",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_skill_proficiencies",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_weapon_proficiencies",
+        "srd521:classes/barbarian:level-1:multiclass-entry:barbarian_multiclass_entry_traits",
+        "srd521:classes/bard:level-1:core-trait:bard_armor_training",
+        "srd521:classes/bard:level-1:core-trait:bard_hit_point_die",
+        "srd521:classes/bard:level-1:core-trait:bard_primary_ability",
+        "srd521:classes/bard:level-1:core-trait:bard_saving_throw_proficiencies",
+        "srd521:classes/bard:level-1:core-trait:bard_skill_proficiencies",
+        "srd521:classes/bard:level-1:core-trait:bard_tool_proficiencies",
+        "srd521:classes/bard:level-1:core-trait:bard_weapon_proficiencies",
+        "srd521:classes/bard:level-1:multiclass-entry:bard_multiclass_entry_traits",
+        "srd521:classes/cleric:level-1:core-trait:cleric_armor_training",
+        "srd521:classes/cleric:level-1:core-trait:cleric_hit_point_die",
+        "srd521:classes/cleric:level-1:core-trait:cleric_primary_ability",
+        "srd521:classes/cleric:level-1:core-trait:cleric_saving_throw_proficiencies",
+        "srd521:classes/cleric:level-1:core-trait:cleric_skill_proficiencies",
+        "srd521:classes/cleric:level-1:core-trait:cleric_weapon_proficiencies",
+        "srd521:classes/cleric:level-1:multiclass-entry:cleric_multiclass_entry_traits",
+        "srd521:classes/druid:level-1:core-trait:druid_armor_training",
+        "srd521:classes/druid:level-1:core-trait:druid_hit_point_die",
+        "srd521:classes/druid:level-1:core-trait:druid_primary_ability",
+        "srd521:classes/druid:level-1:core-trait:druid_saving_throw_proficiencies",
+        "srd521:classes/druid:level-1:core-trait:druid_skill_proficiencies",
+        "srd521:classes/druid:level-1:core-trait:druid_tool_proficiencies",
+        "srd521:classes/druid:level-1:core-trait:druid_weapon_proficiencies",
+        "srd521:classes/druid:level-1:multiclass-entry:druid_multiclass_entry_traits",
+        "srd521:classes/monk:level-1:core-trait:monk_armor_training",
+        "srd521:classes/monk:level-1:core-trait:monk_hit_point_die",
+        "srd521:classes/monk:level-1:core-trait:monk_primary_ability",
+        "srd521:classes/monk:level-1:core-trait:monk_saving_throw_proficiencies",
+        "srd521:classes/monk:level-1:core-trait:monk_skill_proficiencies",
+        "srd521:classes/monk:level-1:core-trait:monk_tool_proficiencies",
+        "srd521:classes/monk:level-1:core-trait:monk_weapon_proficiencies",
+        "srd521:classes/monk:level-1:multiclass-entry:monk_multiclass_entry_traits",
+        "srd521:classes/paladin:level-1:core-trait:paladin_armor_training",
+        "srd521:classes/paladin:level-1:core-trait:paladin_hit_point_die",
+        "srd521:classes/paladin:level-1:core-trait:paladin_primary_ability",
+        "srd521:classes/paladin:level-1:core-trait:paladin_saving_throw_proficiencies",
+        "srd521:classes/paladin:level-1:core-trait:paladin_skill_proficiencies",
+        "srd521:classes/paladin:level-1:core-trait:paladin_weapon_proficiencies",
+        "srd521:classes/paladin:level-1:multiclass-entry:paladin_multiclass_entry_traits",
+        "srd521:classes/ranger:level-1:core-trait:ranger_armor_training",
+        "srd521:classes/ranger:level-1:core-trait:ranger_hit_point_die",
+        "srd521:classes/ranger:level-1:core-trait:ranger_primary_ability",
+        "srd521:classes/ranger:level-1:core-trait:ranger_saving_throw_proficiencies",
+        "srd521:classes/ranger:level-1:core-trait:ranger_skill_proficiencies",
+        "srd521:classes/ranger:level-1:core-trait:ranger_weapon_proficiencies",
+        "srd521:classes/ranger:level-1:multiclass-entry:ranger_multiclass_entry_traits",
+        "srd521:classes/rogue:level-1:core-trait:rogue_armor_training",
+        "srd521:classes/rogue:level-1:core-trait:rogue_hit_point_die",
+        "srd521:classes/rogue:level-1:core-trait:rogue_primary_ability",
+        "srd521:classes/rogue:level-1:core-trait:rogue_saving_throw_proficiencies",
+        "srd521:classes/rogue:level-1:core-trait:rogue_skill_proficiencies",
+        "srd521:classes/rogue:level-1:core-trait:rogue_tool_proficiencies",
+        "srd521:classes/rogue:level-1:core-trait:rogue_weapon_proficiencies",
+        "srd521:classes/rogue:level-1:multiclass-entry:rogue_multiclass_entry_traits",
+        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_armor_training",
+        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_hit_point_die",
+        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_primary_ability",
+        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_saving_throw_proficiencies",
+        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_skill_proficiencies",
+        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_weapon_proficiencies",
+        "srd521:classes/sorcerer:level-1:multiclass-entry:sorcerer_multiclass_entry_traits",
+        "srd521:classes/warlock:level-1:core-trait:warlock_armor_training",
+        "srd521:classes/warlock:level-1:core-trait:warlock_hit_point_die",
+        "srd521:classes/warlock:level-1:core-trait:warlock_primary_ability",
+        "srd521:classes/warlock:level-1:core-trait:warlock_saving_throw_proficiencies",
+        "srd521:classes/warlock:level-1:core-trait:warlock_skill_proficiencies",
+        "srd521:classes/warlock:level-1:core-trait:warlock_weapon_proficiencies",
+        "srd521:classes/warlock:level-1:multiclass-entry:warlock_multiclass_entry_traits"
+      ],
+      "nextAction": "Group hit dice, proficiencies, equipment, multiclass, and table-summary rows by whether the class container should own the evidence.",
+      "acceptance": "Character-creation rows distinguish class-container ownership from missing standalone records."
+    },
+    {
+      "id": "SRDINV5",
+      "title": "Classify Level-1 Spell Access and Spell List Pressure",
+      "suggestedStatus": "blocked-on-SRDINV1",
+      "intent": "Keep spell access/list pressure separate from spell Unit runtime support and spell identity MBT.",
+      "rowCount": 217,
+      "rowIds": [
+        "srd521:classes/bard:level-1:spell-access:bard_spellcasting",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_dancing_lights",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_light",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mage_hand",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mending",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_message",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_minor_illusion",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_prestidigitation",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_starry_wisp",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_true_strike",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_vicious_mockery",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_animal_friendship",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_bane",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_charm_person",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_color_spray",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_command",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_comprehend_languages",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_cure_wounds",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_detect_magic",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_disguise_self",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_dissonant_whispers",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_faerie_fire",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_feather_fall",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_healing_word",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_heroism",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_hideous_laughter",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_identify",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_illusory_script",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_longstrider",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_silent_image",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_sleep",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_speak_with_animals",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_thunderwave",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_unseen_servant",
+        "srd521:classes/cleric:level-1:spell-access:cleric_spellcasting",
+        "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_guidance",
+        "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_light",
+        "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_mending",
+        "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_resistance",
+        "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_sacred_flame",
+        "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_spare_the_dying",
+        "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_thaumaturgy",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bane",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bless",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_command",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_create_or_destroy_water",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_cure_wounds",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_evil_and_good",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_magic",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_poison_and_disease",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_guiding_bolt",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_healing_word",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_inflict_wounds",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_protection_from_evil_and_good",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_purify_food_and_drink",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_sanctuary",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_shield_of_faith",
+        "srd521:classes/druid:level-1:spell-access:druid_spellcasting",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_druidcraft",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_elementalism",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_guidance",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_mending",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_message",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_poison_spray",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_produce_flame",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_resistance",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_shillelagh",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_spare_the_dying",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_starry_wisp",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_animal_friendship",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_charm_person",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_create_or_destroy_water",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_cure_wounds",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_detect_magic",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_detect_poison_and_disease",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_entangle",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_faerie_fire",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_fog_cloud",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_goodberry",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_healing_word",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_ice_knife",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_jump",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_longstrider",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_protection_from_evil_and_good",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_purify_food_and_drink",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_speak_with_animals",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_thunderwave",
+        "srd521:classes/paladin:level-1:spell-access:paladin_spellcasting",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_bless",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_command",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_cure_wounds",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_detect_evil_and_good",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_detect_magic",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_detect_poison_and_disease",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_divine_favor",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_divine_smite",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_heroism",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_protection_from_evil_and_good",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_purify_food_and_drink",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_searing_smite",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_shield_of_faith",
+        "srd521:classes/ranger:level-1:spell-access:ranger_spellcasting",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_alarm",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_animal_friendship",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_cure_wounds",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_detect_magic",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_detect_poison_and_disease",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_ensnaring_strike",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_entangle",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_fog_cloud",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_goodberry",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_hunters_mark",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_jump",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_longstrider",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_speak_with_animals",
+        "srd521:classes/sorcerer:level-1:spell-access:sorcerer_spellcasting",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_acid_splash",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_chill_touch",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_dancing_lights",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_elementalism",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_fire_bolt",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_light",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_mage_hand",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_mending",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_message",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_minor_illusion",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_poison_spray",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_prestidigitation",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_ray_of_frost",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_shocking_grasp",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_sorcerous_burst",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_true_strike",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_burning_hands",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_charm_person",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_chromatic_orb",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_color_spray",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_comprehend_languages",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_detect_magic",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_disguise_self",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_expeditious_retreat",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_false_life",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_feather_fall",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_fog_cloud",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_grease",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_ice_knife",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_jump",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_mage_armor",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_magic_missile",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_ray_of_sickness",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_shield",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_silent_image",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_sleep",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_thunderwave",
+        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_chill_touch",
+        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_eldritch_blast",
+        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_mage_hand",
+        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_minor_illusion",
+        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_poison_spray",
+        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_prestidigitation",
+        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_true_strike",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_bane",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_charm_person",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_comprehend_languages",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_detect_magic",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_expeditious_retreat",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hellish_rebuke",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hex",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hideous_laughter",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_illusory_script",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_protection_from_evil_and_good",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_speak_with_animals",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_unseen_servant",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_acid_splash",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_chill_touch",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_dancing_lights",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_elementalism",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_fire_bolt",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_light",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_mage_hand",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_mending",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_message",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_minor_illusion",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_poison_spray",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_prestidigitation",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_ray_of_frost",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_shocking_grasp",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_true_strike",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_alarm",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_burning_hands",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_charm_person",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_chromatic_orb",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_color_spray",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_comprehend_languages",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_detect_magic",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_disguise_self",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_expeditious_retreat",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_false_life",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_feather_fall",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_find_familiar",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_floating_disk",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_fog_cloud",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_grease",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_hideous_laughter",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_ice_knife",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_identify",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_illusory_script",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_jump",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_longstrider",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_mage_armor",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_magic_missile",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_protection_from_evil_and_good",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_ray_of_sickness",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_shield",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_silent_image",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_sleep",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_thunderwave",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_unseen_servant"
+      ],
+      "nextAction": "Split spell access owner evidence from individual spell Unit admission/support pressure.",
+      "acceptance": "Level-1 spell access rows and cantrip/level-1 spell pressure rows have separate metrics and next actions."
+    },
+    {
+      "id": "SRDINV6",
+      "title": "Review Catalog-Only and Surface-Widening Rows",
+      "suggestedStatus": "blocked-on-SRDINV1",
+      "intent": "Preserve catalog-only/dead-for-now rows and name missing Surface constructs for any widening blockers.",
+      "rowCount": 103,
+      "rowIds": [
+        "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_dancing_lights",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_minor_illusion",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_starry_wisp",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_true_strike",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_vicious_mockery",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_animal_friendship",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_bane",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_charm_person",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_color_spray",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_comprehend_languages",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_faerie_fire",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_heroism",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_identify",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_longstrider",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_silent_image",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_speak_with_animals",
+        "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_guidance",
+        "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_resistance",
+        "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_sacred_flame",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bane",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bless",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_guiding_bolt",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_inflict_wounds",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_protection_from_evil_and_good",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_shield_of_faith",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_guidance",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_poison_spray",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_produce_flame",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_resistance",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_starry_wisp",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_animal_friendship",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_charm_person",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_entangle",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_faerie_fire",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_ice_knife",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_longstrider",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_protection_from_evil_and_good",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_speak_with_animals",
+        "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense",
+        "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_bless",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_divine_favor",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_divine_smite",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_heroism",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_protection_from_evil_and_good",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_searing_smite",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_shield_of_faith",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_alarm",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_animal_friendship",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_ensnaring_strike",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_entangle",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_hunters_mark",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_longstrider",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_speak_with_animals",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_chill_touch",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_dancing_lights",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_minor_illusion",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_poison_spray",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_shocking_grasp",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_true_strike",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_burning_hands",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_charm_person",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_chromatic_orb",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_color_spray",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_comprehend_languages",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_false_life",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_grease",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_ice_knife",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_ray_of_sickness",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_silent_image",
+        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_chill_touch",
+        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_eldritch_blast",
+        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_minor_illusion",
+        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_poison_spray",
+        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_true_strike",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_bane",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_charm_person",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_comprehend_languages",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hellish_rebuke",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_protection_from_evil_and_good",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_speak_with_animals",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_chill_touch",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_dancing_lights",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_minor_illusion",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_poison_spray",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_shocking_grasp",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_true_strike",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_alarm",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_burning_hands",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_charm_person",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_chromatic_orb",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_color_spray",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_comprehend_languages",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_false_life",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_find_familiar",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_grease",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_ice_knife",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_identify",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_longstrider",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_protection_from_evil_and_good",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_ray_of_sickness",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_silent_image"
+      ],
+      "nextAction": "Either keep rows explicitly catalog-only/dead-for-now or promote a named Surface widening task.",
+      "acceptance": "Catalog-only rows are counted deliberately, and every Surface-widening row names the missing construct."
+    },
+    {
+      "id": "SRDINV7",
+      "title": "Recursive SRD Inventory Planning Review",
+      "suggestedStatus": "blocked-on-SRDINV2-SRDINV6",
+      "intent": "Review SRDINV1-SRDINV6 findings and append the next concrete generated batch set.",
+      "rowCount": 156,
+      "rowIds": [
+        "srd521:classes/barbarian:level-1:class-container:barbarian_class_container",
+        "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
+        "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense",
+        "srd521:classes/barbarian:level-1:class-table-summary:barbarian_level_1_feature_table_row",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_armor_training",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_hit_point_die",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_primary_ability",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_saving_throw_proficiencies",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_skill_proficiencies",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_weapon_proficiencies",
+        "srd521:classes/barbarian:level-1:equipment-pressure:barbarian_starting_equipment",
+        "srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery",
+        "srd521:classes/barbarian:level-1:multiclass-entry:barbarian_multiclass_entry_traits",
+        "srd521:classes/bard:level-1:class-container:bard_class_container",
+        "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
+        "srd521:classes/bard:level-1:class-table-summary:bard_level_1_feature_table_row",
+        "srd521:classes/bard:level-1:core-trait:bard_armor_training",
+        "srd521:classes/bard:level-1:core-trait:bard_hit_point_die",
+        "srd521:classes/bard:level-1:core-trait:bard_primary_ability",
+        "srd521:classes/bard:level-1:core-trait:bard_saving_throw_proficiencies",
+        "srd521:classes/bard:level-1:core-trait:bard_skill_proficiencies",
+        "srd521:classes/bard:level-1:core-trait:bard_tool_proficiencies",
+        "srd521:classes/bard:level-1:core-trait:bard_weapon_proficiencies",
+        "srd521:classes/bard:level-1:equipment-pressure:bard_starting_equipment",
+        "srd521:classes/bard:level-1:multiclass-entry:bard_multiclass_entry_traits",
+        "srd521:classes/bard:level-1:spell-access:bard_spellcasting",
+        "srd521:classes/cleric:level-1:class-container:cleric_class_container",
+        "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
+        "srd521:classes/cleric:level-1:class-table-summary:cleric_level_1_feature_table_row",
+        "srd521:classes/cleric:level-1:core-trait:cleric_armor_training",
+        "srd521:classes/cleric:level-1:core-trait:cleric_hit_point_die",
+        "srd521:classes/cleric:level-1:core-trait:cleric_primary_ability",
+        "srd521:classes/cleric:level-1:core-trait:cleric_saving_throw_proficiencies",
+        "srd521:classes/cleric:level-1:core-trait:cleric_skill_proficiencies",
+        "srd521:classes/cleric:level-1:core-trait:cleric_weapon_proficiencies",
+        "srd521:classes/cleric:level-1:equipment-pressure:cleric_starting_equipment",
+        "srd521:classes/cleric:level-1:multiclass-entry:cleric_multiclass_entry_traits",
+        "srd521:classes/cleric:level-1:spell-access:cleric_spellcasting",
+        "srd521:classes/druid:level-1:class-container:druid_class_container",
+        "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
+        "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order",
+        "srd521:classes/druid:level-1:class-table-summary:druid_level_1_feature_table_row",
+        "srd521:classes/druid:level-1:core-trait:druid_armor_training",
+        "srd521:classes/druid:level-1:core-trait:druid_hit_point_die",
+        "srd521:classes/druid:level-1:core-trait:druid_primary_ability",
+        "srd521:classes/druid:level-1:core-trait:druid_saving_throw_proficiencies",
+        "srd521:classes/druid:level-1:core-trait:druid_skill_proficiencies",
+        "srd521:classes/druid:level-1:core-trait:druid_tool_proficiencies",
+        "srd521:classes/druid:level-1:core-trait:druid_weapon_proficiencies",
+        "srd521:classes/druid:level-1:equipment-pressure:druid_starting_equipment",
+        "srd521:classes/druid:level-1:multiclass-entry:druid_multiclass_entry_traits",
+        "srd521:classes/druid:level-1:spell-access:druid_spellcasting",
+        "srd521:classes/fighter:level-1:class-container:fighter_class_container",
+        "srd521:classes/fighter:level-1:class-feature-grant:fighter_fighting_style",
+        "srd521:classes/fighter:level-1:class-feature-grant:fighter_second_wind",
+        "srd521:classes/fighter:level-1:class-table-summary:fighter_level_1_feature_table_row",
+        "srd521:classes/fighter:level-1:core-trait:fighter_armor_training",
+        "srd521:classes/fighter:level-1:core-trait:fighter_hit_point_die",
+        "srd521:classes/fighter:level-1:core-trait:fighter_primary_ability",
+        "srd521:classes/fighter:level-1:core-trait:fighter_saving_throw_proficiencies",
+        "srd521:classes/fighter:level-1:core-trait:fighter_skill_proficiencies",
+        "srd521:classes/fighter:level-1:core-trait:fighter_weapon_proficiencies",
+        "srd521:classes/fighter:level-1:equipment-pressure:fighter_starting_equipment",
+        "srd521:classes/fighter:level-1:mastery-pressure:fighter_weapon_mastery",
+        "srd521:classes/fighter:level-1:multiclass-entry:fighter_multiclass_entry_traits",
+        "srd521:classes/monk:level-1:class-container:monk_class_container",
+        "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
+        "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense",
+        "srd521:classes/monk:level-1:class-table-summary:monk_level_1_feature_table_row",
+        "srd521:classes/monk:level-1:core-trait:monk_armor_training",
+        "srd521:classes/monk:level-1:core-trait:monk_hit_point_die",
+        "srd521:classes/monk:level-1:core-trait:monk_primary_ability",
+        "srd521:classes/monk:level-1:core-trait:monk_saving_throw_proficiencies",
+        "srd521:classes/monk:level-1:core-trait:monk_skill_proficiencies",
+        "srd521:classes/monk:level-1:core-trait:monk_tool_proficiencies",
+        "srd521:classes/monk:level-1:core-trait:monk_weapon_proficiencies",
+        "srd521:classes/monk:level-1:equipment-pressure:monk_starting_equipment",
+        "srd521:classes/monk:level-1:multiclass-entry:monk_multiclass_entry_traits",
+        "srd521:classes/paladin:level-1:class-container:paladin_class_container",
+        "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands",
+        "srd521:classes/paladin:level-1:class-table-summary:paladin_level_1_feature_table_row",
+        "srd521:classes/paladin:level-1:core-trait:paladin_armor_training",
+        "srd521:classes/paladin:level-1:core-trait:paladin_hit_point_die",
+        "srd521:classes/paladin:level-1:core-trait:paladin_primary_ability",
+        "srd521:classes/paladin:level-1:core-trait:paladin_saving_throw_proficiencies",
+        "srd521:classes/paladin:level-1:core-trait:paladin_skill_proficiencies",
+        "srd521:classes/paladin:level-1:core-trait:paladin_weapon_proficiencies",
+        "srd521:classes/paladin:level-1:equipment-pressure:paladin_starting_equipment",
+        "srd521:classes/paladin:level-1:mastery-pressure:paladin_weapon_mastery",
+        "srd521:classes/paladin:level-1:multiclass-entry:paladin_multiclass_entry_traits",
+        "srd521:classes/paladin:level-1:spell-access:paladin_spellcasting",
+        "srd521:classes/ranger:level-1:class-container:ranger_class_container",
+        "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy",
+        "srd521:classes/ranger:level-1:class-table-summary:ranger_level_1_feature_table_row",
+        "srd521:classes/ranger:level-1:core-trait:ranger_armor_training",
+        "srd521:classes/ranger:level-1:core-trait:ranger_hit_point_die",
+        "srd521:classes/ranger:level-1:core-trait:ranger_primary_ability",
+        "srd521:classes/ranger:level-1:core-trait:ranger_saving_throw_proficiencies",
+        "srd521:classes/ranger:level-1:core-trait:ranger_skill_proficiencies",
+        "srd521:classes/ranger:level-1:core-trait:ranger_weapon_proficiencies",
+        "srd521:classes/ranger:level-1:equipment-pressure:ranger_starting_equipment",
+        "srd521:classes/ranger:level-1:mastery-pressure:ranger_weapon_mastery",
+        "srd521:classes/ranger:level-1:multiclass-entry:ranger_multiclass_entry_traits",
+        "srd521:classes/ranger:level-1:spell-access:ranger_spellcasting",
+        "srd521:classes/rogue:level-1:class-container:rogue_class_container",
+        "srd521:classes/rogue:level-1:class-feature-grant:rogue_expertise",
+        "srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack",
+        "srd521:classes/rogue:level-1:class-feature-grant:rogue_thieves_cant",
+        "srd521:classes/rogue:level-1:class-table-summary:rogue_level_1_feature_table_row",
+        "srd521:classes/rogue:level-1:core-trait:rogue_armor_training",
+        "srd521:classes/rogue:level-1:core-trait:rogue_hit_point_die",
+        "srd521:classes/rogue:level-1:core-trait:rogue_primary_ability",
+        "srd521:classes/rogue:level-1:core-trait:rogue_saving_throw_proficiencies",
+        "srd521:classes/rogue:level-1:core-trait:rogue_skill_proficiencies",
+        "srd521:classes/rogue:level-1:core-trait:rogue_tool_proficiencies",
+        "srd521:classes/rogue:level-1:core-trait:rogue_weapon_proficiencies",
+        "srd521:classes/rogue:level-1:equipment-pressure:rogue_starting_equipment",
+        "srd521:classes/rogue:level-1:mastery-pressure:rogue_weapon_mastery",
+        "srd521:classes/rogue:level-1:multiclass-entry:rogue_multiclass_entry_traits",
+        "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container",
+        "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
+        "srd521:classes/sorcerer:level-1:class-table-summary:sorcerer_level_1_feature_table_row",
+        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_armor_training",
+        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_hit_point_die",
+        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_primary_ability",
+        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_saving_throw_proficiencies",
+        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_skill_proficiencies",
+        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_weapon_proficiencies",
+        "srd521:classes/sorcerer:level-1:equipment-pressure:sorcerer_starting_equipment",
+        "srd521:classes/sorcerer:level-1:multiclass-entry:sorcerer_multiclass_entry_traits",
+        "srd521:classes/sorcerer:level-1:spell-access:sorcerer_spellcasting",
+        "srd521:classes/warlock:level-1:class-container:warlock_class_container",
+        "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations",
+        "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic",
+        "srd521:classes/warlock:level-1:class-table-summary:warlock_level_1_feature_table_row",
+        "srd521:classes/warlock:level-1:core-trait:warlock_armor_training",
+        "srd521:classes/warlock:level-1:core-trait:warlock_hit_point_die",
+        "srd521:classes/warlock:level-1:core-trait:warlock_primary_ability",
+        "srd521:classes/warlock:level-1:core-trait:warlock_saving_throw_proficiencies",
+        "srd521:classes/warlock:level-1:core-trait:warlock_skill_proficiencies",
+        "srd521:classes/warlock:level-1:core-trait:warlock_weapon_proficiencies",
+        "srd521:classes/warlock:level-1:equipment-pressure:warlock_starting_equipment",
+        "srd521:classes/warlock:level-1:multiclass-entry:warlock_multiclass_entry_traits",
+        "srd521:classes/wizard:level-1:class-container:wizard_class_container",
+        "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery",
+        "srd521:classes/wizard:level-1:class-feature-grant:wizard_ritual_adept",
+        "srd521:classes/wizard:level-1:class-table-summary:wizard_level_1_feature_table_row",
+        "srd521:classes/wizard:level-1:core-trait:wizard_armor_training",
+        "srd521:classes/wizard:level-1:core-trait:wizard_hit_point_die",
+        "srd521:classes/wizard:level-1:core-trait:wizard_primary_ability",
+        "srd521:classes/wizard:level-1:core-trait:wizard_saving_throw_proficiencies",
+        "srd521:classes/wizard:level-1:core-trait:wizard_skill_proficiencies",
+        "srd521:classes/wizard:level-1:core-trait:wizard_weapon_proficiencies",
+        "srd521:classes/wizard:level-1:equipment-pressure:wizard_starting_equipment",
+        "srd521:classes/wizard:level-1:multiclass-entry:wizard_multiclass_entry_traits",
+        "srd521:classes/wizard:level-1:spell-access:wizard_spellcasting"
+      ],
+      "nextAction": "Refresh metrics, decide whether level-1 can advance to authoring/support batches, and append at least three concrete next tasks unless level-1 is explicitly complete.",
+      "acceptance": "The SRD inventory lane remains measurable and has a concrete multi-task next batch, or level-1 is explicitly closed with final metrics; do not append a recursive-only continuation."
+    }
+  ],
   "rows": [
     {
       "id": "srd521:classes/barbarian:level-1:class-container:barbarian_class_container",
@@ -89,14 +765,15 @@
         "state": "installed",
         "unitId": "barbarian_rage"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit barbarian_rage is installed in srdUnitCollection"
+          "evidence": "candidate Unit barbarian_rage is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense",
@@ -828,14 +1505,15 @@
         "state": "installed",
         "unitId": "light"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit light is installed in srdUnitCollection"
+          "evidence": "candidate Unit light is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mage_hand",
@@ -1273,14 +1951,15 @@
         "state": "installed",
         "unitId": "cure_wounds"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit cure_wounds is installed in srdUnitCollection"
+          "evidence": "candidate Unit cure_wounds is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_detect_magic",
@@ -1308,14 +1987,15 @@
         "state": "installed",
         "unitId": "detect_magic"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit detect_magic is installed in srdUnitCollection"
+          "evidence": "candidate Unit detect_magic is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_disguise_self",
@@ -1457,14 +2137,15 @@
         "state": "installed",
         "unitId": "healing_word"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit healing_word is installed in srdUnitCollection"
+          "evidence": "candidate Unit healing_word is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_heroism",
@@ -1668,14 +2349,15 @@
         "state": "installed",
         "unitId": "sleep"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit sleep is installed in srdUnitCollection"
+          "evidence": "candidate Unit sleep is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_speak_with_animals",
@@ -1733,14 +2415,15 @@
         "state": "installed",
         "unitId": "thunderwave"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit thunderwave is installed in srdUnitCollection"
+          "evidence": "candidate Unit thunderwave is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_unseen_servant",
@@ -2162,14 +2845,15 @@
         "state": "installed",
         "unitId": "light"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit light is installed in srdUnitCollection"
+          "evidence": "candidate Unit light is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_mending",
@@ -2457,14 +3141,15 @@
         "state": "installed",
         "unitId": "cure_wounds"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit cure_wounds is installed in srdUnitCollection"
+          "evidence": "candidate Unit cure_wounds is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_evil_and_good",
@@ -2520,14 +3205,15 @@
         "state": "installed",
         "unitId": "detect_magic"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit detect_magic is installed in srdUnitCollection"
+          "evidence": "candidate Unit detect_magic is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_poison_and_disease",
@@ -2613,14 +3299,15 @@
         "state": "installed",
         "unitId": "healing_word"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit healing_word is installed in srdUnitCollection"
+          "evidence": "candidate Unit healing_word is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_inflict_wounds",
@@ -3592,14 +4279,15 @@
         "state": "installed",
         "unitId": "cure_wounds"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit cure_wounds is installed in srdUnitCollection"
+          "evidence": "candidate Unit cure_wounds is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_detect_magic",
@@ -3627,14 +4315,15 @@
         "state": "installed",
         "unitId": "detect_magic"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit detect_magic is installed in srdUnitCollection"
+          "evidence": "candidate Unit detect_magic is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_detect_poison_and_disease",
@@ -3806,14 +4495,15 @@
         "state": "installed",
         "unitId": "healing_word"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit healing_word is installed in srdUnitCollection"
+          "evidence": "candidate Unit healing_word is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_ice_knife",
@@ -4017,14 +4707,15 @@
         "state": "installed",
         "unitId": "thunderwave"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit thunderwave is installed in srdUnitCollection"
+          "evidence": "candidate Unit thunderwave is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/fighter:level-1:class-container:fighter_class_container",
@@ -4052,14 +4743,15 @@
         "state": "installed",
         "unitId": "class_fighter"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit class_fighter is installed in srdUnitCollection"
+          "evidence": "candidate Unit class_fighter is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/fighter:level-1:class-feature-grant:fighter_fighting_style",
@@ -4087,14 +4779,15 @@
         "state": "installed",
         "unitId": "fighter_fighting_style"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit fighter_fighting_style is installed in srdUnitCollection"
+          "evidence": "candidate Unit fighter_fighting_style is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/fighter:level-1:class-feature-grant:fighter_second_wind",
@@ -4122,14 +4815,15 @@
         "state": "installed",
         "unitId": "fighter_second_wind"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit fighter_second_wind is installed in srdUnitCollection"
+          "evidence": "candidate Unit fighter_second_wind is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/fighter:level-1:class-table-summary:fighter_level_1_feature_table_row",
@@ -4187,14 +4881,15 @@
         "state": "installed",
         "unitId": "class_fighter"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit class_fighter is installed in srdUnitCollection"
+          "evidence": "candidate Unit class_fighter is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/fighter:level-1:core-trait:fighter_hit_point_die",
@@ -4222,14 +4917,15 @@
         "state": "installed",
         "unitId": "class_fighter"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit class_fighter is installed in srdUnitCollection"
+          "evidence": "candidate Unit class_fighter is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/fighter:level-1:core-trait:fighter_primary_ability",
@@ -4257,14 +4953,15 @@
         "state": "installed",
         "unitId": "class_fighter"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit class_fighter is installed in srdUnitCollection"
+          "evidence": "candidate Unit class_fighter is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/fighter:level-1:core-trait:fighter_saving_throw_proficiencies",
@@ -4292,14 +4989,15 @@
         "state": "installed",
         "unitId": "class_fighter"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit class_fighter is installed in srdUnitCollection"
+          "evidence": "candidate Unit class_fighter is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/fighter:level-1:core-trait:fighter_skill_proficiencies",
@@ -4327,14 +5025,15 @@
         "state": "installed",
         "unitId": "class_fighter"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit class_fighter is installed in srdUnitCollection"
+          "evidence": "candidate Unit class_fighter is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/fighter:level-1:core-trait:fighter_weapon_proficiencies",
@@ -4362,14 +5061,15 @@
         "state": "installed",
         "unitId": "class_fighter"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit class_fighter is installed in srdUnitCollection"
+          "evidence": "candidate Unit class_fighter is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/fighter:level-1:equipment-pressure:fighter_starting_equipment",
@@ -4397,14 +5097,15 @@
         "state": "installed",
         "unitId": "class_fighter"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit class_fighter is installed in srdUnitCollection"
+          "evidence": "candidate Unit class_fighter is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/fighter:level-1:mastery-pressure:fighter_weapon_mastery",
@@ -4432,14 +5133,15 @@
         "state": "installed",
         "unitId": "fighter_weapon_mastery"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit fighter_weapon_mastery is installed in srdUnitCollection"
+          "evidence": "candidate Unit fighter_weapon_mastery is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/fighter:level-1:multiclass-entry:fighter_multiclass_entry_traits",
@@ -4467,14 +5169,15 @@
         "state": "installed",
         "unitId": "class_fighter"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit class_fighter is installed in srdUnitCollection"
+          "evidence": "candidate Unit class_fighter is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/monk:level-1:class-container:monk_class_container",
@@ -5292,14 +5995,15 @@
         "state": "installed",
         "unitId": "cure_wounds"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit cure_wounds is installed in srdUnitCollection"
+          "evidence": "candidate Unit cure_wounds is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_detect_evil_and_good",
@@ -5355,14 +6059,15 @@
         "state": "installed",
         "unitId": "detect_magic"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit detect_magic is installed in srdUnitCollection"
+          "evidence": "candidate Unit detect_magic is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_detect_poison_and_disease",
@@ -6050,14 +6755,15 @@
         "state": "installed",
         "unitId": "cure_wounds"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit cure_wounds is installed in srdUnitCollection"
+          "evidence": "candidate Unit cure_wounds is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_detect_magic",
@@ -6085,14 +6791,15 @@
         "state": "installed",
         "unitId": "detect_magic"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit detect_magic is installed in srdUnitCollection"
+          "evidence": "candidate Unit detect_magic is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_detect_poison_and_disease",
@@ -6438,14 +7145,15 @@
         "state": "installed",
         "unitId": "rogue_sneak_attack"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit rogue_sneak_attack is installed in srdUnitCollection"
+          "evidence": "candidate Unit rogue_sneak_attack is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/rogue:level-1:class-feature-grant:rogue_thieves_cant",
@@ -7145,14 +7853,15 @@
         "state": "installed",
         "unitId": "acid_splash"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit acid_splash is installed in srdUnitCollection"
+          "evidence": "candidate Unit acid_splash is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_chill_touch",
@@ -7268,14 +7977,15 @@
         "state": "installed",
         "unitId": "fire_bolt"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit fire_bolt is installed in srdUnitCollection"
+          "evidence": "candidate Unit fire_bolt is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_light",
@@ -7303,14 +8013,15 @@
         "state": "installed",
         "unitId": "light"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit light is installed in srdUnitCollection"
+          "evidence": "candidate Unit light is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_mage_hand",
@@ -7510,14 +8221,15 @@
         "state": "installed",
         "unitId": "ray_of_frost"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit ray_of_frost is installed in srdUnitCollection"
+          "evidence": "candidate Unit ray_of_frost is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_shocking_grasp",
@@ -7783,14 +8495,15 @@
         "state": "installed",
         "unitId": "detect_magic"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit detect_magic is installed in srdUnitCollection"
+          "evidence": "candidate Unit detect_magic is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_disguise_self",
@@ -8048,14 +8761,15 @@
         "state": "installed",
         "unitId": "mage_armor"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit mage_armor is installed in srdUnitCollection"
+          "evidence": "candidate Unit mage_armor is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_magic_missile",
@@ -8083,14 +8797,15 @@
         "state": "installed",
         "unitId": "magic_missile"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit magic_missile is installed in srdUnitCollection"
+          "evidence": "candidate Unit magic_missile is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_ray_of_sickness",
@@ -8148,14 +8863,15 @@
         "state": "installed",
         "unitId": "shield"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit shield is installed in srdUnitCollection"
+          "evidence": "candidate Unit shield is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_silent_image",
@@ -8213,14 +8929,15 @@
         "state": "installed",
         "unitId": "sleep"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit sleep is installed in srdUnitCollection"
+          "evidence": "candidate Unit sleep is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_thunderwave",
@@ -8248,14 +8965,15 @@
         "state": "installed",
         "unitId": "thunderwave"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit thunderwave is installed in srdUnitCollection"
+          "evidence": "candidate Unit thunderwave is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/warlock:level-1:class-container:warlock_class_container",
@@ -8915,14 +9633,15 @@
         "state": "installed",
         "unitId": "detect_magic"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit detect_magic is installed in srdUnitCollection"
+          "evidence": "candidate Unit detect_magic is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_expeditious_retreat",
@@ -9180,14 +9899,15 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit class_wizard is installed in srdUnitCollection"
+          "evidence": "candidate Unit class_wizard is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery",
@@ -9215,14 +9935,15 @@
         "state": "installed",
         "unitId": "wizard_arcane_recovery"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit wizard_arcane_recovery is installed in srdUnitCollection"
+          "evidence": "candidate Unit wizard_arcane_recovery is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/wizard:level-1:class-feature-grant:wizard_ritual_adept",
@@ -9250,14 +9971,15 @@
         "state": "installed",
         "unitId": "wizard_ritual_adept"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit wizard_ritual_adept is installed in srdUnitCollection"
+          "evidence": "candidate Unit wizard_ritual_adept is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/wizard:level-1:class-table-summary:wizard_level_1_feature_table_row",
@@ -9315,14 +10037,15 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit class_wizard is installed in srdUnitCollection"
+          "evidence": "candidate Unit class_wizard is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/wizard:level-1:core-trait:wizard_hit_point_die",
@@ -9350,14 +10073,15 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit class_wizard is installed in srdUnitCollection"
+          "evidence": "candidate Unit class_wizard is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/wizard:level-1:core-trait:wizard_primary_ability",
@@ -9385,14 +10109,15 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit class_wizard is installed in srdUnitCollection"
+          "evidence": "candidate Unit class_wizard is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/wizard:level-1:core-trait:wizard_saving_throw_proficiencies",
@@ -9420,14 +10145,15 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit class_wizard is installed in srdUnitCollection"
+          "evidence": "candidate Unit class_wizard is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/wizard:level-1:core-trait:wizard_skill_proficiencies",
@@ -9455,14 +10181,15 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit class_wizard is installed in srdUnitCollection"
+          "evidence": "candidate Unit class_wizard is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/wizard:level-1:core-trait:wizard_weapon_proficiencies",
@@ -9490,14 +10217,15 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit class_wizard is installed in srdUnitCollection"
+          "evidence": "candidate Unit class_wizard is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/wizard:level-1:equipment-pressure:wizard_starting_equipment",
@@ -9525,14 +10253,15 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit class_wizard is installed in srdUnitCollection"
+          "evidence": "candidate Unit class_wizard is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/wizard:level-1:multiclass-entry:wizard_multiclass_entry_traits",
@@ -9560,14 +10289,15 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit class_wizard is installed in srdUnitCollection"
+          "evidence": "candidate Unit class_wizard is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/wizard:level-1:spell-access:wizard_spellcasting",
@@ -9595,14 +10325,15 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit class_wizard is installed in srdUnitCollection"
+          "evidence": "candidate Unit class_wizard is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_acid_splash",
@@ -9630,14 +10361,15 @@
         "state": "installed",
         "unitId": "acid_splash"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit acid_splash is installed in srdUnitCollection"
+          "evidence": "candidate Unit acid_splash is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_chill_touch",
@@ -9753,14 +10485,15 @@
         "state": "installed",
         "unitId": "fire_bolt"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit fire_bolt is installed in srdUnitCollection"
+          "evidence": "candidate Unit fire_bolt is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_light",
@@ -9788,14 +10521,15 @@
         "state": "installed",
         "unitId": "light"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit light is installed in srdUnitCollection"
+          "evidence": "candidate Unit light is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_mage_hand",
@@ -9995,14 +10729,15 @@
         "state": "installed",
         "unitId": "ray_of_frost"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit ray_of_frost is installed in srdUnitCollection"
+          "evidence": "candidate Unit ray_of_frost is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_shocking_grasp",
@@ -10270,14 +11005,15 @@
         "state": "installed",
         "unitId": "detect_magic"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit detect_magic is installed in srdUnitCollection"
+          "evidence": "candidate Unit detect_magic is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_disguise_self",
@@ -10709,14 +11445,15 @@
         "state": "installed",
         "unitId": "mage_armor"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit mage_armor is installed in srdUnitCollection"
+          "evidence": "candidate Unit mage_armor is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_magic_missile",
@@ -10744,14 +11481,15 @@
         "state": "installed",
         "unitId": "magic_missile"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit magic_missile is installed in srdUnitCollection"
+          "evidence": "candidate Unit magic_missile is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_protection_from_evil_and_good",
@@ -10839,14 +11577,15 @@
         "state": "installed",
         "unitId": "shield"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit shield is installed in srdUnitCollection"
+          "evidence": "candidate Unit shield is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_silent_image",
@@ -10904,14 +11643,15 @@
         "state": "installed",
         "unitId": "sleep"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit sleep is installed in srdUnitCollection"
+          "evidence": "candidate Unit sleep is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_thunderwave",
@@ -10939,14 +11679,15 @@
         "state": "installed",
         "unitId": "thunderwave"
       },
-      "finalDisposition": "supported",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
-          "evidence": "candidate Unit thunderwave is installed in srdUnitCollection"
+          "evidence": "candidate Unit thunderwave is installed in srdUnitCollection",
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Keep row in generated denominator and preserve owner evidence."
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_unseen_servant",
