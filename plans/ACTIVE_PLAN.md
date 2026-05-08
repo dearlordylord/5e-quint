@@ -154,26 +154,32 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 176,
       "id": "SRDINV7",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Recursive SRD Inventory Planning Review"
     },
     {
       "number": 177,
       "id": "SRDINV8",
-      "status": "blocked",
-      "title": "Surface Widening Gate for SRD Level-1 Frontier"
+      "status": "ready-for-research",
+      "title": "Widen Class Container Proficiency Surface Facts"
     },
     {
       "number": 178,
       "id": "SRDINV9",
-      "status": "blocked",
-      "title": "Author Expressible SRD Level-1 Surface Records"
+      "status": "ready-for-research",
+      "title": "Widen Non-Wizard Spell Access Surface Facts"
     },
     {
       "number": 179,
       "id": "SRDINV10",
       "status": "blocked",
-      "title": "Plan SRD Level-1 Runtime and MBT Support"
+      "title": "Widen Level-1 Class Feature Surface Mechanics"
+    },
+    {
+      "number": 180,
+      "id": "SRDINV11",
+      "status": "blocked",
+      "title": "Recursive SRD Inventory Planning Review"
     }
   ]
 }
@@ -228,10 +234,11 @@ Keep it synchronized with the DAG table and task details.
 | 173   | SRDINV5C - Classify Installed Cantrip and Level-1 Spell Units | done | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Completed installed cantrip and level-1 Spell Unit classification: supported installed spell rows derive owner evidence from Unit matrix claims plus deterministic admission/projection evidence; unsupported Sleep rows remain evidence-required; Fire Bolt and Thunderwave rows carry Surface/runtime blockers; Detect Magic and Light close as catalog-only/dead-for-now. |
 | 174   | SRDINV5D - Review Catalog-Only Cantrip and Level-1 Spell Units | done | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Completed catalog-only spell-pressure review: the 151-row denominator now splits into 74 explicit catalog-only/dead-for-now closures and 77 authored executable follow-up rows across six named spell runtime batches. |
 | 175   | SRDINV6 - Review Catalog-Only and Surface-Widening Rows | done | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Completed catalog-only and Surface-widening review: the SRDINV6 denominator remains 62 rows, with 4 explicit nonspell catalog-only/dead-for-now closures and 58 rows that name concrete Surface-widening blockers for SRDINV7/SRDINV8. |
-| 176   | SRDINV7 - Recursive SRD Inventory Planning Review | ready-for-research | SRDINV2-SRDINV5D, SRDINV6 | SRDINV8 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review SRDINV1A-SRDINV6 findings and append a concrete multi-task next batch, or explicitly close level-1 with final metrics. |
-| 177   | SRDINV8 - Surface Widening Gate for SRD Level-1 Frontier | blocked | SRDINV7 | SRDINV9-SRDINV10 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | If Surface cannot express important frontier rows, append atomic Surface-widening tasks and then append this gate again; otherwise mark Surface ready for authoring. |
-| 178   | SRDINV9 - Author Expressible SRD Level-1 Surface Records | blocked | SRDINV8 | SRDINV10 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes) | Author SRD-provenance Surface records for the expressible frontier, then run the Surface gate again if authoring exposes missing Surface constructs. |
-| 179   | SRDINV10 - Plan SRD Level-1 Runtime and MBT Support | blocked | SRDINV9 | none | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [battle-runtime README](/workspace/typescript/dnd/packages/battle-runtime/README.md), [rule-core README](/workspace/typescript/dnd/packages/shared-algebras/proofs/rule-core/README.md) | Append behavior-support tasks for authored executable rows: QNT/MBT procedure parity where needed, runtime implementation, deterministic admission/projection evidence, and selected identity MBT only for high-risk Units. |
+| 176   | SRDINV7 - Recursive SRD Inventory Planning Review | done | SRDINV2-SRDINV5D, SRDINV6 | SRDINV8-SRDINV11 | [SRDINV7 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed recursive planning review: level-1 remains open, so the next batch is three concrete Surface-widening families plus SRDINV11 review. |
+| 177   | SRDINV8 - Widen Class Container Proficiency Surface Facts | ready-for-research | SRDINV7 | SRDINV11 | [SRDINV7 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes) | Widen Surface class-container facts for Bard/Druid tool choices, Monk/Rogue property-filtered Martial weapon and tool proficiencies, and Ranger fixed-plus-choice multiclass proficiencies. |
+| 178   | SRDINV9 - Widen Non-Wizard Spell Access Surface Facts | ready-for-research | SRDINV7 | SRDINV10, SRDINV11 | [SRDINV7 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes) | Widen Surface Spell Access facts for non-Wizard list-prepared casters, prepared half casters without level-1 cantrips, and own the shared Warlock Pact Magic/Pact Slot source shape consumed by SRDINV10. |
+| 179   | SRDINV10 - Widen Level-1 Class Feature Surface Mechanics | blocked | SRDINV7, SRDINV9 | SRDINV11 | [SRDINV7 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes) | Widen Surface mechanics for the level-1 class-feature blockers named by SRDINV3/SRDINV6 after SRDINV9 lands the shared Pact Magic source shape; do not remodel Pact Magic source facts. |
+| 180   | SRDINV11 - Recursive SRD Inventory Planning Review | blocked | SRDINV8-SRDINV10 | none | [SRDINV7 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review SRDINV8-SRDINV10 findings, refresh inventory metrics, and append the next concrete multi-task batch unless level-1 is explicitly complete. |
 
 ## Task Details
 
@@ -909,13 +916,14 @@ planning.
 
 ### Task 176 - SRDINV7 - Recursive SRD Inventory Planning Review
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV2-SRDINV5D, SRDINV6
 
-Blocks: SRDINV8
+Blocks: SRDINV8-SRDINV11
 
 Research / plan:
+[SRDINV7_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md),
 [SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
 [SRDINV_RALPH_BATCH_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md),
 [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
@@ -935,96 +943,159 @@ the appended result is either explicit level-1 completion with final metrics or
 a concrete multi-task batch, not a recursive-only placeholder; `/simplify`
 convergence, minimum two rounds unless the final changeset is trivial.
 
-### Task 177 - SRDINV8 - Surface Widening Gate for SRD Level-1 Frontier
+Completed scope: reviewed SRDINV1A-SRDINV6 findings and generated inventory
+metrics. Level-1 inventory remains open, with 25 level-1 Surface-widening rows,
+58 all-row Surface-widening rows, and 77 authored executable spell follow-up
+rows, so SRDINV7 appended a concrete Surface-widening batch instead of a
+recursive-only continuation: SRDINV8 class-container proficiency/multiclass
+facts, SRDINV9 non-Wizard Spell Access facts, SRDINV10 level-1 class-feature
+mechanics, and SRDINV11 recursive review.
 
-Status: `blocked`
+Out of scope honored: no Surface implementation, record authoring, runtime
+support, QNT/MBT work, spell runtime planning, or PHB/XPHB pressure was
+implemented in this planning task.
+
+Verification completed: active-plan consistency was updated across the Ralph
+task index, DAG table, and task details; generated inventory was checked with
+`pnpm unit-profile-coverage:check`; local SRD source review checked Bard,
+Cleric, Druid, Monk, Paladin, Ranger, Rogue, Sorcerer, and Warlock
+representative blocker passages plus `UBIQUITOUS_LANGUAGE.md`; `/simplify`
+convergence is recorded in the SRDINV7 review artifact.
+
+### Task 177 - SRDINV8 - Widen Class Container Proficiency Surface Facts
+
+Status: `ready-for-research`
 
 Depends on: SRDINV7
 
-Blocks: SRDINV9-SRDINV10
+Blocks: SRDINV11
 
 Research / plan:
+[SRDINV7_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md),
 [SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
 [SRDINV_RALPH_BATCH_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md),
 [Surface README](/workspace/typescript/dnd/packages/surface/README.md),
-[ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
+[Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
 
-Scope: inspect the classified SRD level-1 frontier and decide whether Surface
-can express every important row selected for the next authoring batch. If not,
-append atomic Surface-widening tasks to the end of `ACTIVE_PLAN.md`, followed
-by a fresh copy of this gate task so the frontier is checked again after those
-widening tasks land. If Surface can express the selected frontier, mark this
-gate done and unblock authoring.
+Scope: widen Surface class-container source facts for the SRD level-1
+proficiency and multiclass-entry blockers named by SRDINV2/SRDINV6. Cover
+Bard's Musical Instrument choices, Druid's Herbalism Kit proficiency, Monk and
+Rogue tool proficiencies plus property-filtered Martial weapon proficiencies,
+and Ranger multiclass entry facts that combine fixed Martial weapon proficiency
+with one chosen skill.
 
-Out of scope: authoring SRD records, implementing runtime behavior, adding
-parallel runtime-only data to work around Surface, PHB/XPHB content, and
-closing important rows without a named reason.
+Out of scope: non-Wizard Spell Access, Pact Magic, level-1 class-feature
+mechanics, authoring SRD records, character-creation runtime implementation,
+battle-runtime behavior, QNT/MBT work, and PHB/XPHB content.
 
-Verification: every important `needs-surface-widening` or insufficient-Surface
-row has either an appended atomic Surface-widening task or an explicit
-deferred/closure rationale; active-plan consistency across Ralph index, DAG
-table, and task details; `pnpm unit-profile-coverage:check`; `/simplify`
-convergence.
+Verification: read the relevant local SRD class trait and multiclass passages;
+check `UBIQUITOUS_LANGUAGE.md` for Class, Proficiency Level, Class Feature,
+Weapon Mastery if touched, and Character Sheet terms; focused Surface tests for
+the new source shapes; regenerate inventory if classifications change;
+`pnpm unit-profile-coverage:check`; package-local typecheck/tests for touched
+Surface code; `/simplify` convergence.
 
-### Task 178 - SRDINV9 - Author Expressible SRD Level-1 Surface Records
+### Task 178 - SRDINV9 - Widen Non-Wizard Spell Access Surface Facts
 
-Status: `blocked`
+Status: `ready-for-research`
 
-Depends on: SRDINV8
+Depends on: SRDINV7
 
-Blocks: SRDINV10
+Blocks: SRDINV10, SRDINV11
 
 Research / plan:
+[SRDINV7_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md),
 [SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
 [Surface README](/workspace/typescript/dnd/packages/surface/README.md),
 [Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes),
 [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
 
-Scope: author SRD-provenance Surface records for the expressible SRD level-1
-frontier selected by SRDINV8. Preserve SRD provenance and make invalid
-source/provenance states unrepresentable at the collection boundary. If
-authoring exposes additional Surface expressivity gaps, stop broad authoring,
-append this task's discovered rows back through SRDINV8, and keep the loop
-measurable.
+Scope: widen Surface Spell Access facts for non-Wizard SRD level-1 casters and
+own the shared Surface source shape for Warlock Pact Magic.
+Cover Bard, Cleric, Druid, and Sorcerer list-prepared spellcasting with cantrip
+choices, prepared spells, Spell Slot projection, spellcasting ability,
+spellcasting focus, and replacement timing; Paladin and Ranger prepared
+spellcasting without level-1 cantrips; and Warlock Pact Magic with Pact Slot
+projection and Short or Long Rest recovery. The Pact Magic shape produced here
+is the only Pact Magic source shape; SRDINV10 must consume it for class-feature
+projections instead of defining parallel Pact Magic state.
 
-Out of scope: PHB/XPHB content, private-source identity, runtime support,
-QNT/QMBT work, selected identity MBT, and authoring rows that SRDINV8 has not
-declared expressible.
+Out of scope: authoring individual Spell Definition records, implementing spell
+runtime behavior, adding Spell Invocation support, class-container proficiency
+widening from SRDINV8, class-feature mechanics from SRDINV10, QNT/MBT work, and
+PHB/XPHB content.
 
-Verification: read local SRD source for every authored record; check
-`UBIQUITOUS_LANGUAGE.md`; catalog/admission checks for authored records;
-regenerate SRD inventory; `pnpm unit-profile-coverage:check`; run the
-smallest relevant package tests for touched Surface code; `/simplify`
-convergence.
+Verification: read the relevant local SRD Spellcasting and Pact Magic passages;
+check `UBIQUITOUS_LANGUAGE.md` for Spell Access, Spell Definition, Spell Slot,
+Pact Slot, Class, Pool, Spend, and Concentration terms if touched; focused
+Surface tests for the new source shapes; regenerate inventory if
+classifications change; `pnpm unit-profile-coverage:check`; package-local
+typecheck/tests for touched Surface code; `/simplify` convergence.
 
-### Task 179 - SRDINV10 - Plan SRD Level-1 Runtime and MBT Support
+### Task 179 - SRDINV10 - Widen Level-1 Class Feature Surface Mechanics
 
 Status: `blocked`
 
-Depends on: SRDINV9
+Depends on: SRDINV7, SRDINV9
+
+Blocks: SRDINV11
+
+Research / plan:
+[SRDINV7_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md),
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[Surface README](/workspace/typescript/dnd/packages/surface/README.md),
+[Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: widen Surface mechanics for the level-1 class-feature blockers named by
+SRDINV3/SRDINV6 after SRDINV9 lands the shared Pact Magic source shape: Bardic
+Inspiration, Cleric Divine Order, Druidic, Druid Primal Order, Monk Martial
+Arts, Ranger Favored Enemy, Rogue Expertise, Rogue
+Thieves' Cant, Sorcerer Innate Sorcery, Warlock Eldritch Invocations, and
+Warlock Pact Magic class-feature projections derived from SRDINV9's shared
+Pact Magic source shape. Do not add another Pact Magic source shape or copied
+Pact Slot/recovery state.
+
+Out of scope: authoring SRD records, runtime support, generic D20 Test engines,
+spell runtime, class-container proficiency widening from SRDINV8, Spell Access
+source widening from SRDINV9, QNT/MBT work, and PHB/XPHB content.
+
+Verification: read the relevant local SRD class-feature passages; check
+`UBIQUITOUS_LANGUAGE.md` for Class Feature, Pool, Spend, Ability Check, Attack
+Roll, Saving Throw, Spell Access, Pact Slot, Reaction, Concentration, and
+Weapon Mastery if touched; focused Surface tests for new source shapes;
+regenerate inventory if classifications change; `pnpm unit-profile-coverage:check`;
+package-local typecheck/tests for touched Surface code; `/simplify`
+convergence.
+
+### Task 180 - SRDINV11 - Recursive SRD Inventory Planning Review
+
+Status: `blocked`
+
+Depends on: SRDINV8-SRDINV10
 
 Blocks: none
 
 Research / plan:
-[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md),
+[SRDINV7_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md),
 [SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
-[battle-runtime README](/workspace/typescript/dnd/packages/battle-runtime/README.md),
-[rule-core README](/workspace/typescript/dnd/packages/shared-algebras/proofs/rule-core/README.md),
+[SRDINV_RALPH_BATCH_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md),
 [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
 
-Scope: inspect authored SRD level-1 rows that imply executable behavior and
-append the next behavior-support task batch. For behavior shapes not already
-covered, plan QNT/MBT procedure parity first, then runtime implementation
-against that model. For concrete authored Unit ids, plan deterministic
-admission/projection evidence. Add selected identity MBT only for
-representative or high-risk Units; do not enumerate all Units in QNT.
+Scope: review SRDINV8-SRDINV10 findings, refresh generated inventory metrics,
+and append the next concrete multi-task batch unless SRD level-1 inventory is
+explicitly complete. Candidate next batches include authoring records made
+expressible by SRDINV8-SRDINV10, spell Unit Surface blockers, or runtime/MBT
+planning for authored executable rows, but SRDINV11 must select based on the
+post-widening inventory state.
 
-Out of scope: implementing the appended behavior tasks in this planning task,
+Out of scope: implementation work not captured by the newly appended batch,
 PHB/XPHB pressure, broad runtime rewrites, and treating catalog admission alone
 as behavior support.
 
 Verification: active-plan consistency across Ralph index, DAG table, and task
-details; appended tasks are atomic enough to execute independently; every
-runtime-support task names its QNT/MBT/procedure-parity expectation or explains
-why an existing profile already covers it; `pnpm unit-profile-coverage:check`;
-`/simplify` convergence.
+details; regenerated inventory; `pnpm unit-profile-coverage:check`; confirm
+the appended result is either explicit level-1 completion with final metrics or
+a concrete multi-task batch, not a recursive-only placeholder; `/simplify`
+convergence, minimum two rounds unless the final changeset is trivial.

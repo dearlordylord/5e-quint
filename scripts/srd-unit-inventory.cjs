@@ -1620,6 +1620,50 @@ function makeBatch({
   };
 }
 
+const srdinv8ClassContainerBlockerIds = [
+  "srd521:classes/bard:level-1:class-container:bard_class_container",
+  "srd521:classes/druid:level-1:class-container:druid_class_container",
+  "srd521:classes/monk:level-1:class-container:monk_class_container",
+  "srd521:classes/ranger:level-1:class-container:ranger_class_container",
+  "srd521:classes/rogue:level-1:class-container:rogue_class_container",
+];
+
+const warlockPactMagicFeatureRowId =
+  "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic";
+
+function srdinv8SurfaceWideningRows(levelOne) {
+  const classContainerConstructs = new Set(
+    srdinv8ClassContainerBlockerIds.map((id) =>
+      classContainerSurfaceBlockers.get(id),
+    ),
+  );
+  return levelOne.filter((row) => {
+    if (row.finalDisposition !== "needs-surface-widening") return false;
+    return classContainerConstructs.has(row.surface.missingConstruct);
+  });
+}
+
+function srdinv9SurfaceWideningRows(levelOne) {
+  const spellAccessConstructs = new Set(spellAccessSurfaceBlockers.values());
+  return levelOne.filter((row) => {
+    if (row.finalDisposition !== "needs-surface-widening") return false;
+    return (
+      spellAccessConstructs.has(row.surface.missingConstruct) ||
+      row.id === warlockPactMagicFeatureRowId
+    );
+  });
+}
+
+function srdinv10SurfaceWideningRows(levelOne) {
+  return levelOne.filter((row) => {
+    if (row.finalDisposition !== "needs-surface-widening") return false;
+    return (
+      classFeatureSurfaceBlockers.has(row.id) &&
+      row.id !== warlockPactMagicFeatureRowId
+    );
+  });
+}
+
 function buildRecommendedBatches(rows) {
   const levelOne = rows.filter((row) => row.levelBand === "level-1");
   const spellPressure = rows.filter(
@@ -1689,6 +1733,9 @@ function buildRecommendedBatches(rows) {
   const surfaceWideningRows = rows.filter(
     (row) => row.finalDisposition === "needs-surface-widening",
   );
+  const srdinv8Rows = srdinv8SurfaceWideningRows(levelOne);
+  const srdinv9Rows = srdinv9SurfaceWideningRows(levelOne);
+  const srdinv10Rows = srdinv10SurfaceWideningRows(levelOne);
 
   return [
     makeBatch({
@@ -1826,14 +1873,62 @@ function buildRecommendedBatches(rows) {
     makeBatch({
       id: "SRDINV7",
       title: "Recursive SRD Inventory Planning Review",
-      suggestedStatus: "blocked-on-SRDINV2-SRDINV5D-and-SRDINV6",
+      suggestedStatus: "done",
       intent:
-        "Review SRDINV1-SRDINV6 findings and append the next concrete generated batch set.",
+        "Reviewed SRDINV1-SRDINV6 findings and appended the next concrete Surface-widening batch.",
       rows: levelOne,
       nextAction:
-        "Refresh metrics, decide whether level-1 can advance to authoring/support batches, and append at least three concrete next tasks unless level-1 is explicitly complete.",
+        "Level-1 remains open; run SRDINV8-SRDINV10 before the next recursive SRDINV11 review.",
       acceptance:
-        "The SRD inventory lane remains measurable and has a concrete multi-task next batch, or level-1 is explicitly closed with final metrics; do not append a recursive-only continuation.",
+        "SRDINV7 closed with inventory metrics and a concrete multi-task next batch, not a recursive-only continuation.",
+    }),
+    makeBatch({
+      id: "SRDINV8",
+      title: "Widen Class Container Proficiency Surface Facts",
+      suggestedStatus: "ready-for-research",
+      intent:
+        "Widen class-container proficiency and multiclass-entry Surface facts.",
+      rows: srdinv8Rows,
+      nextAction:
+        "Cover Bard and Druid tool proficiency blockers, Monk and Rogue tool plus property-filtered Martial weapon proficiency blockers, and Ranger fixed-plus-choice multiclass-entry blockers.",
+      acceptance:
+        "Class-container proficiency and multiclass-entry blockers are expressible in Surface without parallel runtime data.",
+    }),
+    makeBatch({
+      id: "SRDINV9",
+      title: "Widen Non-Wizard Spell Access Surface Facts",
+      suggestedStatus: "ready-for-research",
+      intent:
+        "Widen non-Wizard spell-access facts and own the shared Warlock Pact Magic source shape.",
+      rows: srdinv9Rows,
+      nextAction:
+        "Cover non-Wizard list-prepared and prepared-half-caster Spell Access, Spell Slot projection, focus and replacement timing facts, plus Warlock Pact Magic and Pact Slot recovery source facts.",
+      acceptance:
+        "Non-Wizard Spell Access blockers are expressible in Surface, and Pact Magic has one shared source shape for downstream class-feature projections.",
+    }),
+    makeBatch({
+      id: "SRDINV10",
+      title: "Widen Level-1 Class Feature Surface Mechanics",
+      suggestedStatus: "blocked-on-SRDINV9",
+      intent:
+        "Widen level-1 class-feature Surface mechanics after SRDINV9 lands the Pact Magic source shape.",
+      rows: srdinv10Rows,
+      nextAction:
+        "Cover Bardic Inspiration, Divine Order, Druidic, Primal Order, Martial Arts, Favored Enemy, Expertise, Thieves' Cant, Innate Sorcery, and Eldritch Invocation blockers while consuming SRDINV9 Pact Magic facts.",
+      acceptance:
+        "Level-1 class-feature blockers are expressible in Surface without duplicating Pact Slot or recovery state.",
+    }),
+    makeBatch({
+      id: "SRDINV11",
+      title: "Recursive SRD Inventory Planning Review",
+      suggestedStatus: "blocked-on-SRDINV8-SRDINV10",
+      intent:
+        "Review the SRDINV8-SRDINV10 widening results and append the next concrete batch.",
+      rows: [...srdinv8Rows, ...srdinv9Rows, ...srdinv10Rows],
+      nextAction:
+        "Refresh inventory metrics after the Surface-widening batch and select the next concrete batch, such as authoring, spell Surface blockers, or runtime/MBT planning.",
+      acceptance:
+        "The next review either explicitly closes level-1 with final metrics or appends another concrete multi-task batch.",
     }),
   ];
 }

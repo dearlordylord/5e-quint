@@ -35,11 +35,14 @@ Current sequence:
 - `SRDINV5D`: review catalog-only cantrip and level-1 Spell Unit rows.
 - `SRDINV6`: review nonspell catalog-only/dead-for-now and Surface-widening
   rows.
-- `SRDINV7`: recursive review and append the next concrete multi-task batch,
-  or explicitly close level-1 with final metrics.
-- `SRDINV8`: Surface Widening Gate for the classified SRD level-1 frontier.
-- `SRDINV9`: author expressible SRD level-1 Surface records.
-- `SRDINV10`: plan runtime and MBT support for authored executable rows.
+- `SRDINV7`: recursive review and append the next concrete multi-task batch.
+- `SRDINV8`: widen class-container proficiency and multiclass-entry Surface
+  facts.
+- `SRDINV9`: widen non-Wizard spell-access Surface facts and own the shared
+  Warlock Pact Magic source shape.
+- `SRDINV10`: widen level-1 class-feature Surface mechanics after SRDINV9,
+  consuming the shared Pact Magic source shape instead of remodeling it.
+- `SRDINV11`: recursive review after the concrete Surface-widening batch.
 
 The spell-pressure rows are split into `SRDINV5A` through `SRDINV5D` because
 class spell access, missing Spell Unit records, installed Spell Unit evidence,
@@ -68,26 +71,25 @@ QMBT68/QMBT69 are deliberately deferred while this lane is active. The next
 Ralph-ready task should be `SRDINV1`, not the older QMBT projection-cleanup
 queue.
 
-## Post-Inventory Frontier Loop
+## Post-SRDINV7 Frontier Loop
 
-After SRDINV classification is complete, the lane advances the frontier in this
-order:
+SRDINV7 found that level-1 inventory is still open and that the highest-signal
+frontier is Surface expressivity, not runtime promotion. The next batch is
+therefore three concrete Surface-widening families followed by a recursive
+review:
 
-1. `SRDINV8` checks whether Surface can express the selected important SRD
-   level-1 rows. If not, it appends atomic Surface-widening tasks and then
-   appends another copy of the same gate after them. If Surface is sufficient,
-   it marks the gate done and unblocks authoring.
-2. `SRDINV9` authors SRD-provenance Surface records for rows the gate declared
-   expressible. If authoring exposes more Surface gaps, it sends those rows
-   back through the gate instead of adding workaround data.
-3. `SRDINV10` appends behavior-support tasks for authored executable rows:
-   QNT/MBT procedure parity first when the behavior shape needs it, runtime
-   implementation against that model, deterministic admission/projection
-   evidence for concrete Unit ids, and selected identity MBT only for
-   representative or high-risk Units.
+1. `SRDINV8` handles class-container proficiency and multiclass-entry blockers.
+2. `SRDINV9` handles non-Wizard Spell Access blockers and owns the shared
+   Warlock Pact Magic source shape.
+3. `SRDINV10` handles level-1 class-feature blockers after SRDINV9, consuming
+   the Pact Magic source shape for class-feature projections instead of
+   defining parallel Pact Magic state.
+4. `SRDINV11` reviews the landed widening work, refreshes inventory metrics, and
+   appends the next concrete batch.
 
 The loop may recurse, but recursion must append concrete atomic work before it
-re-adds the gate. A recursive-only continuation is not an acceptable closeout.
+re-adds a review task. A recursive-only continuation is not an acceptable
+closeout.
 
 ## Acceptance Model
 
@@ -331,3 +333,29 @@ SRDINV6 reason.
   widening rows as named blocker facts for SRDINV7/SRDINV8 instead of promoting
   broad runtime or Surface implementation in this review task; no further
   important changes found.
+
+## SRDINV7 Closeout Notes
+
+SRDINV7 reviewed SRDINV1A-SRDINV6 findings and confirmed that level-1 inventory
+is not complete. The generated inventory still reports 156 level-1 rows, 25
+level-1 `needs-surface-widening` rows, 58 all-row Surface-widening rows, and 77
+authored executable spell follow-up rows. The next batch is not a recursive-only
+placeholder: `SRDINV8` widens class-container proficiency and multiclass-entry
+Surface facts, `SRDINV9` widens non-Wizard Spell Access facts and owns the
+shared Warlock Pact Magic source shape, `SRDINV10` widens level-1 class-feature
+Surface mechanics after consuming SRDINV9's Pact Magic shape, and `SRDINV11` is
+the next recursive planning review after those concrete tasks.
+
+The local SRD source review used representative SRD 5.2.1 class passages for
+Bard, Cleric, Druid, Monk, Paladin, Ranger, Rogue, Sorcerer, and Warlock
+blocker families, and `UBIQUITOUS_LANGUAGE.md` was checked for the class,
+proficiency, spell-access, pool/spend, d20 roll, Reaction, Armor Class, and
+Concentration terms used by the batch. Detailed notes are in
+`plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md`.
+
+`/simplify` convergence:
+
+- Round 1: grouped the next work by Surface blocker family rather than by class
+  row or a generic gate.
+- Round 2: no important changes found; the batch references generated row
+  groups and does not duplicate inventory state in a new tracking table.
