@@ -75,7 +75,6 @@
         "packages/character-sheet-runtime/src/index.ts:completeShortRest",
         "packages/character-sheet-runtime/src/index.ts:spendHitDice",
         "packages/character-sheet-runtime/src/index.ts:applyArcaneRecovery",
-        "packages/character-sheet-runtime/src/index.ts:arcaneRecoveryMechanics",
         "packages/character-sheet-runtime/src/index.ts:arcaneRecoverySpellSlotRefund",
         "packages/character-sheet-runtime/src/index.ts:completeLongRest"
       ],
