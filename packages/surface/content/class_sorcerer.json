@@ -3,7 +3,7 @@
     "kind": "none"
   },
   "className": "sorcerer",
-  "description": "SRD Sorcerer class creation facts for a level-1 character.",
+  "description": "SRD Sorcerer class creation facts for a level-1 character, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts.",
   "featureGrants": [
     {
       "level": 1,
@@ -29,7 +29,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Sorcerer.md:3-24,33-35"
+    "section": "Classes/Sorcerer.md:3-24,33-35,56-76"
   },
   "savingThrowProficiencies": [
     "con",
@@ -46,6 +46,56 @@
       "religion"
     ]
   },
+  "spellcasting": {
+    "cantripAccess": {
+      "changeOn": {
+        "count": 1,
+        "kind": "class_level"
+      },
+      "choose": 4,
+      "kind": "known_cantrips_from_class_spell_list",
+      "spellIds": [
+        "light",
+        "prestidigitation",
+        "shocking_grasp",
+        "sorcerous_burst"
+      ]
+    },
+    "kind": "list_prepared_spellcasting_creation",
+    "preparedAccess": {
+      "changeOn": {
+        "kind": "class_level",
+        "replacementCount": 1
+      },
+      "choose": 2,
+      "kind": "prepared_from_class_spell_list",
+      "spells": [
+        {
+          "spellId": "burning_hands",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "detect_magic",
+          "spellLevel": 1
+        }
+      ]
+    },
+    "spellSlotProjection": {
+      "kind": "leveled_spell_slots",
+      "resetCadence": {
+        "kind": "long_rest"
+      },
+      "slots": [
+        {
+          "count": 2,
+          "spellLevel": 1
+        }
+      ]
+    },
+    "spellcastingAbility": "cha",
+    "spellcastingFocus": "arcane_focus"
+  },
+  "subclassChoices": [],
   "startingEquipment": [
     {
       "coinsGp": 28,
@@ -77,7 +127,6 @@
       "kind": "coin_grant"
     }
   ],
-  "subclassChoices": [],
   "toolProficiencies": {
     "kind": "none"
   },

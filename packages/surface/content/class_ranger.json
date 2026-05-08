@@ -8,7 +8,7 @@
     "kind": "trained"
   },
   "className": "ranger",
-  "description": "SRD Ranger class creation facts for a level-1 character.",
+  "description": "SRD Ranger class creation facts for a level-1 character, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts.",
   "featureGrants": [
     {
       "level": 1,
@@ -95,7 +95,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Ranger.md:3-24,33-35"
+    "section": "Classes/Ranger.md:3-24,33-35,58-74"
   },
   "savingThrowProficiencies": [
     "str",
@@ -114,6 +114,42 @@
       "survival"
     ]
   },
+  "spellcasting": {
+    "kind": "list_prepared_spellcasting_creation",
+    "preparedAccess": {
+      "changeOn": {
+        "kind": "long_rest",
+        "replacementCount": 1
+      },
+      "choose": 2,
+      "kind": "prepared_from_class_spell_list",
+      "spells": [
+        {
+          "spellId": "cure_wounds",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "ensnaring_strike",
+          "spellLevel": 1
+        }
+      ]
+    },
+    "spellSlotProjection": {
+      "kind": "leveled_spell_slots",
+      "resetCadence": {
+        "kind": "long_rest"
+      },
+      "slots": [
+        {
+          "count": 2,
+          "spellLevel": 1
+        }
+      ]
+    },
+    "spellcastingAbility": "wis",
+    "spellcastingFocus": "druidic_focus"
+  },
+  "subclassChoices": [],
   "startingEquipment": [
     {
       "coinsGp": 7,
@@ -161,7 +197,6 @@
       "kind": "coin_grant"
     }
   ],
-  "subclassChoices": [],
   "toolProficiencies": {
     "kind": "none"
   },

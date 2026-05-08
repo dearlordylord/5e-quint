@@ -76,10 +76,10 @@ import wizardRitualAdeptInput from "../../content/wizard_ritual_adept.json";
 import acidSplashInput from "../../content/acid_splash.json";
 import { decodeUnitRecordSync } from "./schema.ts";
 import type {
-  ClassSpellcastingCreation,
   Provenance,
   StartingEquipmentChoice,
   UnitRecord,
+  WizardSpellcastingCreation,
 } from "./types.ts";
 
 export type Srd521CollectionProvenance = {
@@ -277,7 +277,7 @@ export function buildUnitCatalog(input: {
   for (const collection of input.collections) {
     for (const unit of collection.units) {
       issues.push(...findUnknownStartingEquipmentRefs(unit, records));
-      issues.push(...findUnknownClassSpellRefs(unit, records));
+      issues.push(...findUnknownWizardSpellRefs(unit, records));
       issues.push(...findInvalidSubclassChoiceRefs(unit, records));
     }
   }
@@ -333,19 +333,23 @@ function hasStartingEquipment(unit: UnitRecord): unit is UnitRecord & {
   return unit.kind === "class" || unit.kind === "background";
 }
 
-function findUnknownClassSpellRefs(
+// Wizard spellbook access names authored Spell Definition records; class-list
+// Spell Access records source legality from class spell lists and do not force
+// every selected Spell Definition to be installed in this catalog.
+function findUnknownWizardSpellRefs(
   unit: UnitRecord,
   records: ReadonlyMap<UnitId, UnitRecord>,
 ): readonly UnitCatalogBuildIssue[] {
   if (
     unit.kind !== "class" ||
     !("spellcasting" in unit) ||
-    unit.spellcasting === undefined
+    unit.spellcasting === undefined ||
+    unit.spellcasting.kind !== "wizard_spellcasting_creation"
   ) {
     return [];
   }
 
-  const spellIds = classSpellReferenceIds(unit.spellcasting);
+  const spellIds = wizardSpellReferenceIds(unit.spellcasting);
 
   return spellIds.flatMap((spellId) =>
     records.has(spellId)
@@ -360,20 +364,13 @@ function findUnknownClassSpellRefs(
   );
 }
 
-function classSpellReferenceIds(
-  spellcasting: ClassSpellcastingCreation,
+function wizardSpellReferenceIds(
+  spellcasting: WizardSpellcastingCreation,
 ): readonly UnitId[] {
-  if (spellcasting.kind === "wizard_spellcasting_creation") {
-    return distinctUnitIds([
-      ...spellcasting.cantripAccess.spellIds,
-      ...spellcasting.spellbookAccess.spells.map((spell) => spell.spellId),
-      ...spellcasting.preparedAccess.spellIds,
-    ]);
-  }
-
   return distinctUnitIds([
-    ...(spellcasting.cantripAccess?.spellIds ?? []),
-    ...spellcasting.preparedAccess.spells.map((spell) => spell.spellId),
+    ...spellcasting.cantripAccess.spellIds,
+    ...spellcasting.spellbookAccess.spells.map((spell) => spell.spellId),
+    ...spellcasting.preparedAccess.spellIds,
   ]);
 }
 

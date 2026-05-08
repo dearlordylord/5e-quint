@@ -7,7 +7,7 @@
     "kind": "trained"
   },
   "className": "druid",
-  "description": "SRD Druid class creation facts for a level-1 character.",
+  "description": "SRD Druid class creation facts for a level-1 character, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts.",
   "featureGrants": [
     {
       "level": 1,
@@ -47,7 +47,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Druid.md:3-25,30-32"
+    "section": "Classes/Druid.md:3-25,30-32,57-79"
   },
   "savingThrowProficiencies": [
     "int",
@@ -66,6 +66,62 @@
       "survival"
     ]
   },
+  "spellcasting": {
+    "cantripAccess": {
+      "changeOn": {
+        "count": 1,
+        "kind": "class_level"
+      },
+      "choose": 2,
+      "kind": "known_cantrips_from_class_spell_list",
+      "spellIds": [
+        "druidcraft",
+        "produce_flame"
+      ]
+    },
+    "kind": "list_prepared_spellcasting_creation",
+    "preparedAccess": {
+      "changeOn": {
+        "kind": "long_rest",
+        "replacementCount": "any"
+      },
+      "choose": 4,
+      "kind": "prepared_from_class_spell_list",
+      "spells": [
+        {
+          "spellId": "animal_friendship",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "cure_wounds",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "faerie_fire",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "thunderwave",
+          "spellLevel": 1
+        }
+      ]
+    },
+    "spellSlotProjection": {
+      "kind": "leveled_spell_slots",
+      "resetCadence": {
+        "kind": "long_rest"
+      },
+      "slots": [
+        {
+          "count": 2,
+          "spellLevel": 1
+        }
+      ]
+    },
+    "spellcastingAbility": "wis",
+    "spellcastingFocus": "druidic_focus"
+  },
+  "subclassChoices": [],
   "startingEquipment": [
     {
       "coinsGp": 9,
@@ -104,7 +160,6 @@
       "kind": "coin_grant"
     }
   ],
-  "subclassChoices": [],
   "toolProficiencies": {
     "kind": "fixed",
     "proficiencies": [

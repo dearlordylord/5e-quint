@@ -9,7 +9,7 @@
     "kind": "trained"
   },
   "className": "paladin",
-  "description": "SRD Paladin class creation facts for a level-1 character.",
+  "description": "SRD Paladin class creation facts for a level-1 character, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts.",
   "featureGrants": [
     {
       "level": 1,
@@ -58,7 +58,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Paladin.md:3-24,33-35"
+    "section": "Classes/Paladin.md:3-24,33-35,66-82"
   },
   "savingThrowProficiencies": [
     "wis",
@@ -75,6 +75,42 @@
       "religion"
     ]
   },
+  "spellcasting": {
+    "kind": "list_prepared_spellcasting_creation",
+    "preparedAccess": {
+      "changeOn": {
+        "kind": "long_rest",
+        "replacementCount": 1
+      },
+      "choose": 2,
+      "kind": "prepared_from_class_spell_list",
+      "spells": [
+        {
+          "spellId": "heroism",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "searing_smite",
+          "spellLevel": 1
+        }
+      ]
+    },
+    "spellSlotProjection": {
+      "kind": "leveled_spell_slots",
+      "resetCadence": {
+        "kind": "long_rest"
+      },
+      "slots": [
+        {
+          "count": 2,
+          "spellLevel": 1
+        }
+      ]
+    },
+    "spellcastingAbility": "cha",
+    "spellcastingFocus": "holy_symbol"
+  },
+  "subclassChoices": [],
   "startingEquipment": [
     {
       "coinsGp": 9,
@@ -114,7 +150,6 @@
       "kind": "coin_grant"
     }
   ],
-  "subclassChoices": [],
   "toolProficiencies": {
     "kind": "none"
   },

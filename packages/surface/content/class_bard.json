@@ -6,7 +6,7 @@
     "kind": "trained"
   },
   "className": "bard",
-  "description": "SRD Bard class creation facts for a level-1 character.",
+  "description": "SRD Bard class creation facts for a level-1 character, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts.",
   "featureGrants": [
     {
       "level": 1,
@@ -128,7 +128,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Bard.md:3-25,34-36"
+    "section": "Classes/Bard.md:3-25,34-36,69-91"
   },
   "savingThrowProficiencies": [
     "dex",
@@ -157,6 +157,62 @@
       "survival"
     ]
   },
+  "spellcasting": {
+    "cantripAccess": {
+      "changeOn": {
+        "count": 1,
+        "kind": "class_level"
+      },
+      "choose": 2,
+      "kind": "known_cantrips_from_class_spell_list",
+      "spellIds": [
+        "dancing_lights",
+        "vicious_mockery"
+      ]
+    },
+    "kind": "list_prepared_spellcasting_creation",
+    "preparedAccess": {
+      "changeOn": {
+        "kind": "class_level",
+        "replacementCount": 1
+      },
+      "choose": 4,
+      "kind": "prepared_from_class_spell_list",
+      "spells": [
+        {
+          "spellId": "charm_person",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "color_spray",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "dissonant_whispers",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "healing_word",
+          "spellLevel": 1
+        }
+      ]
+    },
+    "spellSlotProjection": {
+      "kind": "leveled_spell_slots",
+      "resetCadence": {
+        "kind": "long_rest"
+      },
+      "slots": [
+        {
+          "count": 2,
+          "spellLevel": 1
+        }
+      ]
+    },
+    "spellcastingAbility": "cha",
+    "spellcastingFocus": "musical_instrument"
+  },
+  "subclassChoices": [],
   "startingEquipment": [
     {
       "coinsGp": 19,
@@ -188,7 +244,6 @@
       "kind": "coin_grant"
     }
   ],
-  "subclassChoices": [],
   "toolProficiencies": {
     "count": 3,
     "kind": "choice",

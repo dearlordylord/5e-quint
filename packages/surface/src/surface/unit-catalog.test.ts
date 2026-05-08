@@ -755,7 +755,7 @@ describe("SRD Unit catalog boundary", () => {
     ).toThrow("SRD Unit collection contains non-SRD provenance");
   });
 
-  test("rejects non-Wizard class spell access refs when a selected Spell Unit is absent", () => {
+  test("allows non-Wizard class spell access without admitting selected Spell Units", () => {
     const collectionWithoutHellishRebuke = defineSrdUnitCollection({
       units: srdUnitCollection.units.filter(
         (unit) => unit.id !== "hellish_rebuke",
@@ -765,15 +765,11 @@ describe("SRD Unit catalog boundary", () => {
       collections: [collectionWithoutHellishRebuke],
     });
 
-    expect(result).toEqual({
-      tag: "invalid",
-      issues: expect.arrayContaining([
-        {
-          code: "unknownUnitReference",
-          referringUnitId: "class_warlock",
-          referencedUnitId: "hellish_rebuke",
-        },
-      ]),
-    });
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      expect(
+        result.catalog.listUnits().some((unit) => unit.id === "hellish_rebuke"),
+      ).toBe(false);
+    }
   });
 });

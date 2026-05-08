@@ -4,6 +4,8 @@ let StartingItem : Type =
 let StartingEquipmentOption : Type =
       { coinsGp : Natural, id : Text, items : Optional (List StartingItem), kind : Text }
 
+let ClassSpellAccess : Type = { spellId : Text, spellLevel : Natural }
+
 
 let rangerSkills =
       [ "animal_handling", "athletics", "insight", "investigation", "nature", "perception", "stealth", "survival" ]
@@ -11,7 +13,7 @@ let rangerSkills =
 let ranger =
       { armorTraining = { categories = [ "light", "medium", "shield" ], kind = "trained" }
       , className = "ranger"
-      , description = "SRD Ranger class creation facts for a level-1 character."
+      , description = "SRD Ranger class creation facts for a level-1 character, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts."
       , featureGrants =
         [ { level = 1, unitId = "ranger_spellcasting" }
         , { level = 1, unitId = "ranger_favored_enemy" }
@@ -45,9 +47,28 @@ let ranger =
           }
       , name = "Ranger"
       , primaryAbilities = { abilities = [ "dex", "wis" ], kind = "all_of" }
-      , provenance = { kind = "srd-5.2.1", section = "Classes/Ranger.md:3-24,33-35" }
+      , provenance = { kind = "srd-5.2.1", section = "Classes/Ranger.md:3-24,33-35,58-74" }
       , savingThrowProficiencies = [ "str", "dex" ]
       , skillProficiencyChoice = { choose = 3, options = rangerSkills }
+      , spellcasting =
+          { kind = "list_prepared_spellcasting_creation"
+          , spellcastingAbility = "wis"
+          , preparedAccess =
+              { kind = "prepared_from_class_spell_list"
+              , choose = 2
+              , spells =
+                [ { spellId = "cure_wounds", spellLevel = 1 }
+                , { spellId = "ensnaring_strike", spellLevel = 1 }
+                ] : List ClassSpellAccess
+              , changeOn = { kind = "long_rest", replacementCount = 1 }
+              }
+          , spellSlotProjection =
+              { kind = "leveled_spell_slots"
+              , slots = [ { spellLevel = 1, count = 2 } ]
+              , resetCadence = { kind = "long_rest" }
+              }
+          , spellcastingFocus = "druidic_focus"
+          }
       , subclassChoices = [] : List { level : Natural, options : List Text }
       , startingEquipment =
         [ { coinsGp = 7

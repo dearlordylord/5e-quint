@@ -4,6 +4,8 @@ let StartingItem : Type =
 let StartingEquipmentOption : Type =
       { coinsGp : Natural, id : Text, items : Optional (List StartingItem), kind : Text }
 
+let ClassSpellAccess : Type = { spellId : Text, spellLevel : Natural }
+
 
 let ProficiencySubject : Type =
       { category : Optional Text
@@ -18,7 +20,7 @@ let allSkills =
 let bard =
       { armorTraining = { categories = [ "light" ], kind = "trained" }
       , className = "bard"
-      , description = "SRD Bard class creation facts for a level-1 character."
+      , description = "SRD Bard class creation facts for a level-1 character, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts."
       , featureGrants =
         [ { level = 1, unitId = "bard_bardic_inspiration" }
         , { level = 1, unitId = "bard_spellcasting" }
@@ -67,9 +69,36 @@ let bard =
           }
       , name = "Bard"
       , primaryAbilities = { abilities = [ "cha" ], kind = "all_of" }
-      , provenance = { kind = "srd-5.2.1", section = "Classes/Bard.md:3-25,34-36" }
+      , provenance = { kind = "srd-5.2.1", section = "Classes/Bard.md:3-25,34-36,69-91" }
       , savingThrowProficiencies = [ "dex", "cha" ]
       , skillProficiencyChoice = { choose = 3, options = allSkills }
+      , spellcasting =
+          { kind = "list_prepared_spellcasting_creation"
+          , spellcastingAbility = "cha"
+          , cantripAccess =
+              { kind = "known_cantrips_from_class_spell_list"
+              , choose = 2
+              , spellIds = [ "dancing_lights", "vicious_mockery" ]
+              , changeOn = { kind = "class_level", count = 1 }
+              }
+          , preparedAccess =
+              { kind = "prepared_from_class_spell_list"
+              , choose = 4
+              , spells =
+                [ { spellId = "charm_person", spellLevel = 1 }
+                , { spellId = "color_spray", spellLevel = 1 }
+                , { spellId = "dissonant_whispers", spellLevel = 1 }
+                , { spellId = "healing_word", spellLevel = 1 }
+                ] : List ClassSpellAccess
+              , changeOn = { kind = "class_level", replacementCount = 1 }
+              }
+          , spellSlotProjection =
+              { kind = "leveled_spell_slots"
+              , slots = [ { spellLevel = 1, count = 2 } ]
+              , resetCadence = { kind = "long_rest" }
+              }
+          , spellcastingFocus = "musical_instrument"
+          }
       , subclassChoices = [] : List { level : Natural, options : List Text }
       , startingEquipment =
         [ { coinsGp = 19

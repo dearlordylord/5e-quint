@@ -254,29 +254,133 @@ describe("character-creation Surface records", () => {
     });
   });
 
-  test("decodes and reads authored SRDINV12 class container records without closing Spell Access rows", () => {
+  test("decodes and reads authored SRDINV13 class Spell Access records", () => {
     const cases = [
-      { input: classBardInput, className: "bard", hitPointDie: 8 },
-      { input: classClericInput, className: "cleric", hitPointDie: 8 },
-      { input: classDruidInput, className: "druid", hitPointDie: 8 },
+      {
+        input: classBardInput,
+        className: "bard",
+        hitPointDie: 8,
+        spellcasting: listPreparedSpellcasting({
+          className: "bard",
+          spellcastingAbility: "cha",
+          spellcastingFocus: "musical_instrument",
+          preparedChangeOn: "class_level",
+          preparedReplacementCount: 1,
+          preparedCount: 4,
+          preparedSpells: [
+            "charm_person",
+            "color_spray",
+            "dissonant_whispers",
+            "healing_word",
+          ],
+          cantrips: ["dancing_lights", "vicious_mockery"],
+        }),
+      },
+      {
+        input: classClericInput,
+        className: "cleric",
+        hitPointDie: 8,
+        spellcasting: listPreparedSpellcasting({
+          className: "cleric",
+          spellcastingAbility: "wis",
+          spellcastingFocus: "holy_symbol",
+          preparedChangeOn: "long_rest",
+          preparedReplacementCount: "any",
+          preparedCount: 4,
+          preparedSpells: [
+            "bless",
+            "cure_wounds",
+            "guiding_bolt",
+            "shield_of_faith",
+          ],
+          cantrips: ["guidance", "sacred_flame", "thaumaturgy"],
+        }),
+      },
+      {
+        input: classDruidInput,
+        className: "druid",
+        hitPointDie: 8,
+        spellcasting: listPreparedSpellcasting({
+          className: "druid",
+          spellcastingAbility: "wis",
+          spellcastingFocus: "druidic_focus",
+          preparedChangeOn: "long_rest",
+          preparedReplacementCount: "any",
+          preparedCount: 4,
+          preparedSpells: [
+            "animal_friendship",
+            "cure_wounds",
+            "faerie_fire",
+            "thunderwave",
+          ],
+          cantrips: ["druidcraft", "produce_flame"],
+        }),
+      },
       { input: classMonkInput, className: "monk", hitPointDie: 8 },
-      { input: classPaladinInput, className: "paladin", hitPointDie: 10 },
-      { input: classRangerInput, className: "ranger", hitPointDie: 10 },
+      {
+        input: classPaladinInput,
+        className: "paladin",
+        hitPointDie: 10,
+        spellcasting: listPreparedSpellcasting({
+          className: "paladin",
+          spellcastingAbility: "cha",
+          spellcastingFocus: "holy_symbol",
+          preparedChangeOn: "long_rest",
+          preparedReplacementCount: 1,
+          preparedCount: 2,
+          preparedSpells: ["heroism", "searing_smite"],
+        }),
+      },
+      {
+        input: classRangerInput,
+        className: "ranger",
+        hitPointDie: 10,
+        spellcasting: listPreparedSpellcasting({
+          className: "ranger",
+          spellcastingAbility: "wis",
+          spellcastingFocus: "druidic_focus",
+          preparedChangeOn: "long_rest",
+          preparedReplacementCount: 1,
+          preparedCount: 2,
+          preparedSpells: ["cure_wounds", "ensnaring_strike"],
+        }),
+      },
       { input: classRogueInput, className: "rogue", hitPointDie: 8 },
-      { input: classSorcererInput, className: "sorcerer", hitPointDie: 6 },
+      {
+        input: classSorcererInput,
+        className: "sorcerer",
+        hitPointDie: 6,
+        spellcasting: listPreparedSpellcasting({
+          className: "sorcerer",
+          spellcastingAbility: "cha",
+          spellcastingFocus: "arcane_focus",
+          preparedChangeOn: "class_level",
+          preparedReplacementCount: 1,
+          preparedCount: 2,
+          preparedSpells: ["burning_hands", "detect_magic"],
+          cantrips: [
+            "light",
+            "prestidigitation",
+            "shocking_grasp",
+            "sorcerous_burst",
+          ],
+        }),
+      },
     ] as const;
 
     for (const entry of cases) {
       const classRecord = decodeClassRecordSync(entry.input);
       const result = readClassCreationFacts(decodeUnitRecordSync(entry.input));
 
-      expect("spellcasting" in classRecord).toBe(false);
       expect(classRecord.className).toBe(entry.className);
       expect(result).toMatchObject({
         tag: "readable",
         value: {
           className: entry.className,
           hitPointDie: entry.hitPointDie,
+          ...("spellcasting" in entry
+            ? { spellcasting: entry.spellcasting }
+            : {}),
         },
       });
     }

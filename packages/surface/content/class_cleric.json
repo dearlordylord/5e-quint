@@ -8,7 +8,7 @@
     "kind": "trained"
   },
   "className": "cleric",
-  "description": "SRD Cleric class creation facts for a level-1 character.",
+  "description": "SRD Cleric class creation facts for a level-1 character, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts.",
   "featureGrants": [
     {
       "level": 1,
@@ -48,7 +48,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Cleric.md:3-24,33-35"
+    "section": "Classes/Cleric.md:3-24,33-35,56-78"
   },
   "savingThrowProficiencies": [
     "wis",
@@ -64,6 +64,63 @@
       "religion"
     ]
   },
+  "spellcasting": {
+    "cantripAccess": {
+      "changeOn": {
+        "count": 1,
+        "kind": "class_level"
+      },
+      "choose": 3,
+      "kind": "known_cantrips_from_class_spell_list",
+      "spellIds": [
+        "guidance",
+        "sacred_flame",
+        "thaumaturgy"
+      ]
+    },
+    "kind": "list_prepared_spellcasting_creation",
+    "preparedAccess": {
+      "changeOn": {
+        "kind": "long_rest",
+        "replacementCount": "any"
+      },
+      "choose": 4,
+      "kind": "prepared_from_class_spell_list",
+      "spells": [
+        {
+          "spellId": "bless",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "cure_wounds",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "guiding_bolt",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "shield_of_faith",
+          "spellLevel": 1
+        }
+      ]
+    },
+    "spellSlotProjection": {
+      "kind": "leveled_spell_slots",
+      "resetCadence": {
+        "kind": "long_rest"
+      },
+      "slots": [
+        {
+          "count": 2,
+          "spellLevel": 1
+        }
+      ]
+    },
+    "spellcastingAbility": "wis",
+    "spellcastingFocus": "holy_symbol"
+  },
+  "subclassChoices": [],
   "startingEquipment": [
     {
       "coinsGp": 7,
@@ -98,7 +155,6 @@
       "kind": "coin_grant"
     }
   ],
-  "subclassChoices": [],
   "toolProficiencies": {
     "kind": "none"
   },
