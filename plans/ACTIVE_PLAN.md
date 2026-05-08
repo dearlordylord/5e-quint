@@ -2062,7 +2062,13 @@ next turn, and the target's next attack before the end of its next turn. For
 Starry Wisp, either make object targeting executable at the spell target fill
 boundary or keep the spell out of supported runtime evidence until object
 targets are representable; do not project object target support as metadata
-without an executable fill path.
+without an executable fill path. Condition riders must preserve unrelated
+pre-existing conditions when the spell effect expires; represent condition
+application ownership/source in the active-effect model or an equivalent typed
+composition so one expiring spell cannot remove another source's condition.
+Vicious Mockery support gates must prove the authored modifier is specifically
+the target's next attack roll before the end of its next turn; do not infer
+attack-roll behavior from disadvantage mode and count alone.
 
 ### Task 199 - SRDINV29 - Promote Area, Chain, and Typed-Damage Spell Runtime
 
