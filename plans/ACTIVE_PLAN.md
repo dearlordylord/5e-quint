@@ -1468,6 +1468,14 @@ projection; update the owner evidence manifest; regenerate inventory; `pnpm
 unit-profile-coverage:check`; package-local typecheck/tests for touched runtime
 code; `pnpm quality` if production code changes; `/simplify` convergence.
 
+Retry Guidance: do not mark choice-bearing class-feature rows as owner-evidence
+present from retained `CharacterBuild` Unit refs alone. Either implement and
+test real discovery, fill, finalization, and build projection for their
+acquisition choices (`suborder_choice`, `grant_expertise`, and
+`feature_choice`), or split retained-ref evidence from still-open choice
+evidence with concrete follow-up task coverage before updating the manifest and
+inventory.
+
 ### Task 188 - SRDINV19 - Close Character-Creation Spell Access Evidence
 
 Status: `ready-for-research`
