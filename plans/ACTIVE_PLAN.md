@@ -1588,10 +1588,17 @@ Research / plan:
 
 Scope: review SRDINV17-SRDINV20 plus SRDINV18A owner-evidence closure, refresh generated
 inventory metrics, and append the next concrete multi-task batch unless SRD
-level-1 inventory is explicitly complete. Remaining candidates include shared
-multiclass prerequisite owner evidence, Wizard Ritual Adept spell-invocation
-ownership, spell Unit Surface blockers, or runtime/MBT planning for authored
-executable spell rows, but SRDINV21 must select based on the refreshed
+level-1 inventory is explicitly complete. If any level-1 row remains
+`catalog-only/dead-for-now`, owner-evidence-required, catalog-only without
+promoted behavior, or otherwise outside promoted runtime coverage, SRDINV21
+must convert that row into executable follow-up work grouped by promoted runtime
+owner. That follow-up must preserve the architecture chain where applicable:
+QNT first, MBT/parity against the real reducers, then promoted runtime support.
+Remaining candidates include shared multiclass prerequisite owner evidence,
+Wizard Ritual Adept spell-invocation ownership, spell Unit Surface blockers,
+character-sheet AC derivation, rest/spell-slot recovery, healing/resource
+actions, or runtime/MBT planning for authored executable spell rows, but
+SRDINV21 must select and split concrete tasks based on the refreshed
 post-evidence inventory state.
 
 Out of scope: implementation work not captured by the newly appended batch,
@@ -1601,8 +1608,9 @@ as behavior support.
 Verification: active-plan consistency across Ralph index, DAG table, and task
 details; regenerated inventory; `pnpm unit-profile-coverage:check`; confirm
 the appended result is either explicit level-1 completion with final metrics or
-a concrete multi-task batch, not a recursive-only placeholder; `/simplify`
-convergence, minimum two rounds unless the final changeset is trivial.
+a concrete promoted-runtime implementation batch, not a recursive-only
+placeholder or passive backlog list; `/simplify` convergence, minimum two
+rounds unless the final changeset is trivial.
 
 ### Task 191 - SRDINV18A - Close Eldritch Invocation Choice Evidence
 
