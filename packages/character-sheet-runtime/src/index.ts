@@ -85,12 +85,14 @@ import type {
   ChargePoolResource,
   ClassFeatureComponentMechanics,
   EquipmentPredicate,
+  SpellRecord,
   UnitRecord,
 } from "@dnd/surface/surface/types";
 import { Brand, Either, Option } from "effect";
 
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.armor-class-base-formula
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.healing-resource-action
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.spellbook-ritual-invocation
 
 const WEAPON_PROFICIENCY_CATEGORY_VALUES = ["simple", "martial"] as const;
 const ARMOR_TRAINING_CATEGORY_VALUES = [
@@ -100,6 +102,7 @@ const ARMOR_TRAINING_CATEGORY_VALUES = [
   "shield",
 ] as const;
 const LAY_ON_HANDS_POISONED_REMOVAL_COST = resourceCount(5);
+const RITUAL_ADDITIONAL_CASTING_TIME_MINUTES = 10;
 const CHARACTER_SHEET_CONDITIONS = CONDITIONS.filter(
   (condition): condition is CharacterSheetCondition =>
     condition !== "unconscious",
@@ -359,6 +362,33 @@ export type CharacterSheetArmorClassStateInput = {
   readonly unitLibrary: UnitCatalog;
   readonly baseChoice?: CharacterSheetArmorClassBaseChoice;
 };
+
+export type CharacterSheetSpellInvocationInput = {
+  readonly sheet: CharacterSheet;
+  readonly unitLibrary: UnitCatalog;
+  readonly spellId: UnitRecord["id"];
+  readonly invocation: CharacterSheetSpellInvocationKind;
+};
+
+export type CharacterSheetSpellInvocationKind = {
+  readonly kind: "ritual";
+};
+
+export type CharacterSheetSpellbookRitualInvocation = {
+  readonly tag: "spellbookRitual";
+  readonly spellId: UnitRecord["id"];
+  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellcastingSourceUnitId: UnitRecord["id"];
+  readonly featureUnitId: UnitRecord["id"];
+  readonly spellSlotCost: { readonly kind: "none" };
+  readonly preparationRequirement: "not_required";
+  readonly requiredSpellAccess: "spellbook";
+  readonly additionalCastingTimeMinutes: typeof RITUAL_ADDITIONAL_CASTING_TIME_MINUTES;
+  readonly requiresReadingSpellbook: true;
+};
+
+export type CharacterSheetSpellInvocation =
+  CharacterSheetSpellbookRitualInvocation;
 
 export function characterSheetIssue(
   message: string,
@@ -634,6 +664,12 @@ export function characterSheetResources(
   ]);
 }
 
+export function characterSheetSpellInvocation(
+  input: CharacterSheetSpellInvocationInput,
+): Either.Either<CharacterSheetSpellInvocation, CharacterSheetIssue> {
+  return characterSheetSpellbookRitualInvocation(input);
+}
+
 export function completeShortRest(
   input: CharacterSheetShortRestInput,
 ): Either.Either<CharacterSheet, CharacterSheetIssue> {
@@ -874,6 +910,13 @@ type CharacterSheetRestSpellSlotRecoveryProfile = {
   readonly feature: CharacterSheetRestSpellSlotRecoveryFeature;
   readonly classUnitId: UnitRecord["id"];
 };
+type SpellbookRitualAccessMechanics = Extract<
+  CharacterSheetClassFeatureRecord["mechanics"],
+  { readonly family: "spellbook_ritual_access" }
+>;
+type CharacterSheetSpellbookRitualFeature = CharacterSheetClassFeatureRecord & {
+  readonly mechanics: SpellbookRitualAccessMechanics;
+};
 
 function selectedUnarmoredBaseSource(
   input: CharacterSheetArmorClassStateInput,
@@ -1081,6 +1124,92 @@ function getRequiredUnit(
   return Option.isSome(unit)
     ? Either.right(unit.value)
     : characterSheetIssue(`Unknown Unit id: ${unitId}`);
+}
+
+function characterSheetSpellbookRitualInvocation(
+  input: CharacterSheetSpellInvocationInput,
+): Either.Either<CharacterSheetSpellbookRitualInvocation, CharacterSheetIssue> {
+  if (!isSpellcastingBuild(input.sheet.build)) {
+    return characterSheetIssue(
+      "Ritual spell invocation requires spellcasting Spell Access.",
+    );
+  }
+  const spell = getRequiredUnit(input.unitLibrary, input.spellId);
+  if (Either.isLeft(spell)) return Either.left(spell.left);
+  if (!isSpellRecord(spell.right)) {
+    return characterSheetIssue("Ritual spell invocation requires a Spell.");
+  }
+  if (!spellHasRitualTag(spell.right)) {
+    return characterSheetIssue(
+      "Ritual spell invocation requires a ritual-tagged Spell Definition.",
+    );
+  }
+  const source = input.sheet.build.spellcasting.sources.find((candidate) =>
+    candidate.spellbook.some((spellId) => spellId === input.spellId),
+  );
+  if (source === undefined) {
+    return characterSheetIssue(
+      "Wizard Ritual Adept requires the spell in the spellbook.",
+    );
+  }
+  const feature = spellbookRitualAccessFeatureForBuild(
+    input.sheet.build,
+    input.unitLibrary,
+  );
+  if (Either.isLeft(feature)) return Either.left(feature.left);
+  return Either.right({
+    tag: "spellbookRitual",
+    spellId: input.spellId,
+    spellLevel: spell.right.mechanics.level,
+    spellcastingSourceUnitId: source.sourceUnitId,
+    featureUnitId: feature.right.id,
+    spellSlotCost: { kind: "none" },
+    preparationRequirement: "not_required",
+    requiredSpellAccess: "spellbook",
+    additionalCastingTimeMinutes: RITUAL_ADDITIONAL_CASTING_TIME_MINUTES,
+    requiresReadingSpellbook: true,
+  });
+}
+
+function spellbookRitualAccessFeatureForBuild(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): Either.Either<CharacterSheetSpellbookRitualFeature, CharacterSheetIssue> {
+  const features: CharacterSheetSpellbookRitualFeature[] = [];
+  for (const unitId of characterBuildFeatureUnitIds(build, unitLibrary)) {
+    const unit = getRequiredUnit(unitLibrary, unitId);
+    if (Either.isLeft(unit)) return Either.left(unit.left);
+    if (isSpellbookRitualAccessFeature(unit.right)) {
+      features.push(unit.right);
+    }
+  }
+  if (features.length === 0) {
+    return characterSheetIssue(
+      "Spellbook ritual invocation requires a spellbook Ritual Access feature.",
+    );
+  }
+  if (features.length > 1) {
+    return characterSheetIssue(
+      "Character Sheet supports only one spellbook Ritual Access feature.",
+    );
+  }
+  const feature = features[0];
+  if (feature === undefined) {
+    return characterSheetIssue(
+      "Spellbook ritual invocation requires a spellbook Ritual Access feature.",
+    );
+  }
+  return Either.right(feature);
+}
+
+function isSpellRecord(unit: UnitRecord): unit is SpellRecord {
+  return unit.kind === "spell";
+}
+
+function spellHasRitualTag(spell: SpellRecord): boolean {
+  return "ritual" in spell.mechanics.castingTime
+    ? spell.mechanics.castingTime.ritual === true
+    : false;
 }
 
 function requireSpellSlotExpenditure(
@@ -1865,6 +1994,17 @@ function isRestSpellSlotRecoveryFeature(
     unit.mechanics.recoveryTrigger === "short_rest" &&
     unit.mechanics.resetCadence.kind === "long_rest" &&
     unit.mechanics.recoveredSlotLevelCap.kind === "half_class_level_rounded_up"
+  );
+}
+
+function isSpellbookRitualAccessFeature(
+  unit: UnitRecord,
+): unit is CharacterSheetSpellbookRitualFeature {
+  return (
+    unit.kind === "class_feature" &&
+    unit.mechanics.family === "spellbook_ritual_access" &&
+    unit.mechanics.source === "spellbook" &&
+    unit.mechanics.preparationRequirement === "not_prepared"
   );
 }
 

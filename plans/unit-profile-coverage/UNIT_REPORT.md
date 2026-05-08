@@ -17,13 +17,13 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Authored Surface Unit catalog admission | 89/415 | 21.4% |
 | Authored Surface executable catalog admission | 65/348 | 18.7% |
 | Installed Unit profile classification coverage | 90/90 | 100% |
-| Supported executable Unit coverage | 36/66 | 54.5% |
+| Supported executable Unit coverage | 37/66 | 56.1% |
 | QNT profile modeling coverage | 25/25 | 100% |
 | QNT proof coverage | 25/25 | 100% |
 | Runtime mapping coverage | 25/25 | 100% |
 | Runtime parity coverage | 25/25 | 100% |
-| Deterministic admission/projection coverage | 33/36 | 91.7% |
-| Selected identity MBT coverage | 10/36 | 27.8% |
+| Deterministic admission/projection coverage | 33/37 | 89.2% |
+| Selected identity MBT coverage | 10/37 | 27% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -63,6 +63,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `rogue_evasion` | srd-5.2.1 | `unit-feature.save-damage-replacement` |
 | `rogue_uncanny_dodge` | srd-5.2.1 | `unit-feature.reaction-roll-or-damage-reduction` |
 | `rogue_sneak_attack` | srd-5.2.1 | `unit-feature.attack-damage-rider` |
+| `wizard_ritual_adept` | srd-5.2.1 | `character-sheet.spellbook-ritual-invocation` |
 | `feat_archery` | srd-5.2.1 | `unit-feature.passive-ranged-attack-roll-bonus` |
 | `feat_boon_of_combat_prowess` | srd-5.2.1 | `unit-feature.attack-roll-miss-to-hit-replacement` |
 | `defense` | srd-5.2.1 | `unit-feature.passive-armor-class-bonus` |
@@ -858,7 +859,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `rogue_thieves_cant` | unsupported-profile | Language source facts are authored; exploration/language execution is not promoted as a battle Unit profile. |
 | `sorcerer_innate_sorcery` | unsupported-profile | Class feature source facts are authored; Sorcerer spell save DC and spell attack projection is not promoted as a battle Unit profile yet. |
 | `warlock_eldritch_invocations` | unsupported-profile | Invocation choice source facts are authored; individual invocation option execution is outside this class-feature Unit profile. |
-| `wizard_ritual_adept` | unsupported-profile | Ritual casting is character/spell access pressure, not a promoted battle execution profile yet. |
 | `wizard_arcane_recovery` | unsupported-profile | Spell slot recovery outside battle is not a promoted Unit profile yet. |
 | `feat_ability_score_improvement` | unsupported-profile | Character-creation ability score mutation is outside promoted battle Unit profile scope. |
 | `paladin_weapon_mastery` | unsupported-profile | Weapon mastery grant container; mastery Unit carries executable pressure. |
@@ -888,7 +888,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
-| srd-5.2.1 | unassigned | unsupported-profile | 52 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `bard_bardic_inspiration`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `monk_martial_arts`, `ranger_favored_enemy`, `rogue_expertise`, `rogue_thieves_cant`, `sorcerer_innate_sorcery`, `warlock_eldritch_invocations`, `wizard_ritual_adept`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `mastery_sap`, `orc_darkvision`, `light`, `detect_magic`, `sleep`, `eldritch_blast`, `minor_illusion`, `charm_person`, `hellish_rebuke`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
+| srd-5.2.1 | unassigned | unsupported-profile | 51 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `bard_bardic_inspiration`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `monk_martial_arts`, `ranger_favored_enemy`, `rogue_expertise`, `rogue_thieves_cant`, `sorcerer_innate_sorcery`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `mastery_sap`, `orc_darkvision`, `light`, `detect_magic`, `sleep`, `eldritch_blast`, `minor_illusion`, `charm_person`, `hellish_rebuke`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
 | srd-5.2.1 | QCORE10 | needs-surface-widening | 1 | `fire_bolt` |
 | srd-5.2.1 | unassigned | needs-surface-widening | 1 | `thunderwave` |
 
@@ -926,6 +926,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | QMBT65 | completed-runtime-parity | `unit-feature.reaction-roll-or-damage-reduction` |
 | SRDINV23 | completed-runtime-parity | `character-sheet.armor-class-base-formula` |
 | SRDINV25 | completed-runtime-parity | `character-sheet.healing-resource-action` |
+| SRDINV26 | completed-runtime-parity | `character-sheet.spellbook-ritual-invocation` |
 
 ## Supported Profiles Lacking Runtime Parity
 

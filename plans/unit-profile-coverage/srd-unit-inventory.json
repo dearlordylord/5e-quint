@@ -139,7 +139,8 @@
         "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense",
         "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense",
         "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands",
-        "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery"
+        "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery",
+        "srd521:classes/wizard:level-1:class-feature-grant:wizard_ritual_adept"
       ],
       "issues": [
         "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery runtimeProjection evidence reference points to missing symbol arcaneRecoveryMechanics: packages/character-sheet-runtime/src/index.ts:arcaneRecoveryMechanics"
@@ -157,17 +158,16 @@
     "spellPressureRows": 211,
     "levelOneClassContainers": 12,
     "levelOneRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 142,
+      "catalog-installed-owner-evidence-present": 143,
       "non-runtime": 12,
-      "catalog-only/dead-for-now": 1,
-      "catalog-installed-owner-evidence-required": 1
+      "catalog-only/dead-for-now": 1
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 160,
+      "catalog-installed-owner-evidence-present": 161,
       "non-runtime": 12,
       "catalog-only/dead-for-now": 75,
       "catalog-authored-executable-follow-up": 70,
-      "catalog-installed-owner-evidence-required": 11,
+      "catalog-installed-owner-evidence-required": 10,
       "needs-surface-widening": 33,
       "missing-authored-record": 6
     },
@@ -1618,7 +1618,7 @@
     {
       "id": "SRDINV25",
       "title": "Promote Character-Sheet Healing Resource Actions",
-      "suggestedStatus": "ready-for-research",
+      "suggestedStatus": "done",
       "intent": "Promote the character-sheet resource-action owner for Lay On Hands healing and Poisoned-condition removal.",
       "rowCount": 1,
       "rowIds": [
@@ -1630,12 +1630,10 @@
     {
       "id": "SRDINV26",
       "title": "Close Wizard Ritual Adept Invocation Ownership",
-      "suggestedStatus": "ready-for-research",
+      "suggestedStatus": "done",
       "intent": "Close Wizard Ritual Adept owner evidence through the promoted spell-access/invocation runtime boundary.",
-      "rowCount": 1,
-      "rowIds": [
-        "srd521:classes/wizard:level-1:class-feature-grant:wizard_ritual_adept"
-      ],
+      "rowCount": 0,
+      "rowIds": [],
       "nextAction": "Model ritual casting as spell invocation over spellbook Spell Access and ritual-tagged Spell Definitions before runtime evidence, without treating the retained feature Unit ref as execution support.",
       "acceptance": "Wizard Ritual Adept has owner evidence from the promoted spell-access/invocation runtime, while character creation remains limited to retaining the feature and spellbook facts."
     },
@@ -13573,7 +13571,7 @@
         "state": "installed",
         "unitId": "wizard_ritual_adept"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -13581,12 +13579,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "future spell-access/invocation runtime",
-          "evidence": "Character creation retains the feature Unit reference, but ritual casting execution is not a promoted runtime owner yet.",
-          "status": "owner evidence required"
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; SRDINV26 Character Sheet spellbook ritual invocation runtime; Wizard Ritual Adept is read from the installed Surface class-feature record and projected as a Character Sheet ritual spell invocation. The runtime derives eligibility from existing CharacterBuild spellbook Spell Access and the Surface Spell Definition ritual tag, admits spellbook rituals without requiring preparation or spending a Spell Slot, rejects prepared-only spells, rejects non-ritual Spell Definitions, and rejects spellbook ritual invocation without the spellbook Ritual Access feature.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Character creation retains the feature Unit reference, but ritual casting execution is not a promoted runtime owner yet."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/wizard:level-1:class-table-summary:wizard_level_1_feature_table_row",

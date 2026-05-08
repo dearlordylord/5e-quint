@@ -26,6 +26,7 @@ import {
   characterSheetHitDice,
   characterSheetPactSlots,
   characterSheetResources,
+  characterSheetSpellInvocation,
   characterSheetSpellSlots,
   completeLongRest,
   completeShortRest,
@@ -40,6 +41,7 @@ import {
 
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.armor-class-base-formula
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.healing-resource-action
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.spellbook-ritual-invocation
 
 const build = armorClassBuild({ startingClass: "class_fighter" });
 
@@ -57,6 +59,14 @@ const layOnHandsRejectsDivergentPoolsTestName =
   "Lay On Hands cannot split HP and Poisoned costs across divergent pools";
 const layOnHandsLongRestRecoveryTestName =
   "Long Rest restores the Lay On Hands healing pool";
+const ritualAdeptAdmitsSpellbookRitualTestName =
+  "admits Wizard Ritual Adept for a ritual-tagged Spell Definition in the spellbook";
+const ritualAdeptRejectsPreparedOnlySpellTestName =
+  "rejects Wizard Ritual Adept when a ritual spell is prepared but absent from the spellbook";
+const ritualAdeptRejectsNonRitualSpellTestName =
+  "rejects Wizard Ritual Adept for a spellbook spell without the Ritual tag";
+const ritualAdeptRejectsMissingFeatureTestName =
+  "rejects spellbook ritual invocation without a spellbook Ritual Access feature";
 
 function createFreshCharacterSheet(
   input: Omit<CharacterSheetInput, "conditions"> &
@@ -910,6 +920,106 @@ describe("Character Sheet runtime", () => {
       },
     });
   });
+
+  test(ritualAdeptAdmitsSpellbookRitualTestName, () => {
+    const sheet = spellbookRitualSheet({
+      characterIdText: "character:wizard-ritual",
+      spellbook: ["detect_magic"],
+    });
+
+    expect(
+      characterSheetSpellInvocation({
+        sheet,
+        unitLibrary,
+        spellId: "detect_magic",
+        invocation: { kind: "ritual" },
+      }),
+    ).toMatchObject({
+      _tag: "Right",
+      right: {
+        tag: "spellbookRitual",
+        spellId: "detect_magic",
+        spellLevel: 1,
+        spellcastingSourceUnitId: "class_wizard",
+        featureUnitId: "wizard_ritual_adept",
+        spellSlotCost: { kind: "none" },
+        preparationRequirement: "not_required",
+        requiredSpellAccess: "spellbook",
+        additionalCastingTimeMinutes: 10,
+        requiresReadingSpellbook: true,
+      },
+    });
+    expect(characterSheetSpellSlots(sheet)).toEqual([
+      { spellLevel: 1, count: 2, expended: 0 },
+    ]);
+  });
+
+  test(ritualAdeptRejectsPreparedOnlySpellTestName, () => {
+    const sheet = spellbookRitualSheet({
+      characterIdText: "character:wizard-prepared-not-book",
+      spellbook: [],
+      preparedSpells: ["detect_magic"],
+    });
+
+    expect(
+      characterSheetSpellInvocation({
+        sheet,
+        unitLibrary,
+        spellId: "detect_magic",
+        invocation: { kind: "ritual" },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: "Wizard Ritual Adept requires the spell in the spellbook.",
+      },
+    });
+  });
+
+  test(ritualAdeptRejectsNonRitualSpellTestName, () => {
+    const sheet = spellbookRitualSheet({
+      characterIdText: "character:wizard-non-ritual",
+      spellbook: ["mage_armor"],
+    });
+
+    expect(
+      characterSheetSpellInvocation({
+        sheet,
+        unitLibrary,
+        spellId: "mage_armor",
+        invocation: { kind: "ritual" },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Ritual spell invocation requires a ritual-tagged Spell Definition.",
+      },
+    });
+  });
+
+  test(ritualAdeptRejectsMissingFeatureTestName, () => {
+    const sheet = spellbookRitualSheet({
+      characterIdText: "character:no-ritual-feature",
+      spellbook: ["detect_magic"],
+      startingClass: "class_fighter",
+    });
+
+    expect(
+      characterSheetSpellInvocation({
+        sheet,
+        unitLibrary,
+        spellId: "detect_magic",
+        invocation: { kind: "ritual" },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Spellbook ritual invocation requires a spellbook Ritual Access feature.",
+      },
+    });
+  });
 });
 
 function stableSheet(characterIdText: string): CharacterSheet {
@@ -928,6 +1038,52 @@ function stableSheet(characterIdText: string): CharacterSheet {
           elapsedBeforeRecoveryRoll: elapsedTimeTicks(0),
         },
       },
+    }),
+  );
+}
+
+function spellbookRitualSheet(input: {
+  readonly characterIdText: string;
+  readonly spellbook: readonly string[];
+  readonly preparedSpells?: readonly string[];
+  readonly startingClass?: string;
+}): CharacterSheet {
+  return requireRight(
+    createFreshCharacterSheet({
+      characterId: characterSheetId(input.characterIdText),
+      build: {
+        ...wizardBuild({ wizardAdvancements: 0 }),
+        ...(input.startingClass === undefined
+          ? {}
+          : {
+              progression: {
+                startingClass: classUnitId(input.startingClass),
+                advancements: [],
+              },
+            }),
+        spellcasting: {
+          sources: [
+            {
+              sourceUnitId: "class_wizard",
+              spellcastingAbility: "int",
+              cantrips: [],
+              spellbook: input.spellbook,
+              preparedSpells: input.preparedSpells ?? [],
+              spellcastingFocuses: ["spellbook"],
+            },
+          ],
+          slotPools: {
+            spellcasting: {
+              kind: "spellcasting",
+              slots: [{ spellLevel: 1, count: 2 }],
+            },
+          },
+        },
+      },
+      maximumHp: Hp(8),
+      currentHp: Hp(8),
+      tempHp: Hp(0),
+      unitLibrary,
     }),
   );
 }

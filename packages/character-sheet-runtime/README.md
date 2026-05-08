@@ -48,6 +48,11 @@ Current executable state:
   character-sheet resource action. The same pool spend restores target HP and
   pays the SRD 5 HP cost to remove Poisoned, so those costs cannot drift into
   separate balances.
+- `characterSheetSpellInvocation` admits Wizard Ritual Adept ritual casting by
+  projecting a ritual invocation from existing build spellbook Spell Access, a
+  ritual-tagged Surface Spell Definition, and the installed spellbook Ritual
+  Access feature. It does not store a separate ritual spell list or treat the
+  retained feature Unit reference as execution evidence by itself.
 - `characterSheetArmorClassState` projects build ability scores, current
   loadout armor and Shield facts, and installed class-feature AC formulas into
   a single current Armor Class calculation. Barbarian and Monk Unarmored

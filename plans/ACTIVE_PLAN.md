@@ -274,7 +274,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 196,
       "id": "SRDINV26",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Wizard Ritual Adept Invocation Ownership"
     },
     {
@@ -356,7 +356,7 @@ Keep it synchronized with the DAG table and task details.
 | 193   | SRDINV23 - Promote Character-Sheet Armor Class Formula Runtime | done | SRDINV22 | SRDINV24-SRDINV27 | [SRDINV21 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV21_RECURSIVE_PLANNING_REVIEW.md), [character-sheet runtime README](/workspace/typescript/dnd/packages/character-sheet-runtime/README.md), [character-sheet runtime](/workspace/typescript/dnd/packages/character-sheet-runtime/src/index.ts), [armor class algebra](/workspace/typescript/dnd/packages/shared-algebras/src/armor-class-algebra.ts), [SRD Playing the Game](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [SRD Character Creation](/workspace/typescript/dnd/.references/srd-5.2.1/Character-Creation.md), [SRD Barbarian](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Barbarian.md), [SRD Monk](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Monk.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote character-sheet Armor Class derivation for base AC and Barbarian/Monk Unarmored Defense formulas, preserving the SRD rule that only one AC formula applies at a time. |
 | 194   | SRDINV24 - Promote Character-Sheet Rest and Spell Slot Recovery | done | SRDINV22 | SRDINV25-SRDINV27 | [SRDINV21 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV21_RECURSIVE_PLANNING_REVIEW.md), [character-sheet runtime README](/workspace/typescript/dnd/packages/character-sheet-runtime/README.md), [character-sheet runtime](/workspace/typescript/dnd/packages/character-sheet-runtime/src/index.ts), [SRD Rules Glossary](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [SRD Character Creation](/workspace/typescript/dnd/.references/srd-5.2.1/Character-Creation.md), [SRD Wizard](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Wizard.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed character-sheet rest recovery for Short Rest Hit Dice spending, Long Rest HP/Hit Dice/Spell Slot restoration, Pact Slot recovery, and Wizard Arcane Recovery while keeping Spell Slot, Pact Slot, Hit Die, HP restoration, feature recharge, and Arcane Recovery slot refund facts distinct. |
 | 195   | SRDINV25 - Promote Character-Sheet Healing Resource Actions | done | SRDINV22 | SRDINV26-SRDINV27 | [SRDINV21 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV21_RECURSIVE_PLANNING_REVIEW.md), [character-sheet runtime README](/workspace/typescript/dnd/packages/character-sheet-runtime/README.md), [character-sheet runtime](/workspace/typescript/dnd/packages/character-sheet-runtime/src/index.ts), [SRD Paladin](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Paladin.md), [SRD Rules Glossary](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Lay On Hands as a character-sheet healing resource action with one pool for HP restoration and Poisoned-condition removal. |
-| 196   | SRDINV26 - Close Wizard Ritual Adept Invocation Ownership | ready-for-research | SRDINV22 | SRDINV27 | [SRDINV21 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV21_RECURSIVE_PLANNING_REVIEW.md), [Spell ownership surface](/workspace/typescript/dnd/plans/SPELL1_SPELL_OWNERSHIP_SURFACE.md), [character-sheet runtime README](/workspace/typescript/dnd/packages/character-sheet-runtime/README.md), [SRD Wizard](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Wizard.md), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Close Wizard Ritual Adept owner evidence through a promoted spell-access/invocation runtime boundary over spellbook Spell Access and ritual-tagged Spell Definitions. |
+| 196   | SRDINV26 - Close Wizard Ritual Adept Invocation Ownership | done | SRDINV22 | SRDINV27 | [SRDINV21 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV21_RECURSIVE_PLANNING_REVIEW.md), [Spell ownership surface](/workspace/typescript/dnd/plans/SPELL1_SPELL_OWNERSHIP_SURFACE.md), [character-sheet runtime README](/workspace/typescript/dnd/packages/character-sheet-runtime/README.md), [SRD Wizard](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Wizard.md), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed Wizard Ritual Adept owner evidence through a character-sheet spellbook ritual invocation boundary over spellbook Spell Access, ritual-tagged Spell Definitions, and the installed spellbook Ritual Access feature. |
 | 197   | SRDINV27 - Recursive SRD Inventory Planning Review | ready-for-research | SRDINV22-SRDINV26 | none | [SRDINV21 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV21_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review SRDINV22-SRDINV26 promoted-runtime closure, refresh inventory metrics, and either record explicit level-1 completion or append the next concrete frontier such as spell Unit Surface/runtime work. |
 
 ## Task Details
@@ -1855,7 +1855,7 @@ quality`; `/simplify` convergence.
 
 ### Task 196 - SRDINV26 - Close Wizard Ritual Adept Invocation Ownership
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV22
 
@@ -1888,6 +1888,31 @@ promoted invocation boundary where applicable; focused runtime/admission tests;
 update owner evidence and regenerate inventory; `pnpm unit-profile-coverage:check`;
 package-local typecheck/tests; `pnpm quality` if production code changes;
 `/simplify` convergence.
+
+Completed scope: added `characterSheetSpellInvocation` for spellbook ritual
+invocation. Wizard Ritual Adept is admitted only from existing build spellbook
+Spell Access, a ritual-tagged Surface Spell Definition, and the installed
+spellbook Ritual Access feature. The runtime reports no Spell Slot cost,
+does not require preparation, requires reading the spellbook, and rejects
+prepared-only, non-ritual, and missing-feature cases.
+
+Out of scope honored: no general executable spell rows, battle-runtime spell
+effects, Eldritch Invocation choice changes, separate Ritual Spell Definition,
+or duplicate ritual spell list was introduced.
+
+Verification completed: RAW/source review checked local Wizard Spellcasting,
+Ritual Adept, spellbook, and Rules Glossary ritual casting text plus
+`UBIQUITOUS_LANGUAGE.md`; focused character-sheet runtime tests and package
+typecheck passed; owner evidence and inventory/profile artifacts were
+regenerated; `pnpm unit-profile-coverage:check` passed; `pnpm quality` passed.
+MBT was not run because promoted battle-runtime behavior did not change.
+
+`/simplify` round 1: retained Ritual Adept as spell invocation over existing
+spellbook Spell Access and ritual-tagged Spell Definitions instead of adding
+parallel ritual state.
+
+`/simplify` round 2: no important changes found; remaining coupling is
+localized to the spellbook ritual invocation projection and evidence artifacts.
 
 ### Task 197 - SRDINV27 - Recursive SRD Inventory Planning Review
 
