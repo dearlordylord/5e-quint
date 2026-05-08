@@ -21,6 +21,8 @@ batches so Ralph can execute them.
 Current sequence:
 
 - `SRDINV1`: classify installed level-1 owner evidence.
+- `SRDINV1A`: replace private owner-evidence classifications with durable
+  evidence sources before downstream tasks proceed.
 - `SRDINV2`: author or explicitly close missing level-1 class containers.
 - `SRDINV3`: classify missing level-1 class feature rows.
 - `SRDINV4`: classify level-1 character-creation/progression rows.
@@ -49,6 +51,10 @@ because they all mention spells.
 `SRDINV1` is intentionally first because installed/catalog-loaded rows should
 not imply full support. It must decide which installed rows need operational
 owner evidence and which can be explicitly closed as catalog-only/dead-for-now.
+`SRDINV1A` is the correction gate for that classification: owner evidence may
+be reported as present only when the generator derives it from durable matrix,
+runtime, or character-creation evidence artifacts. Rows without durable
+evidence must remain evidence-required or explicit catalog-only closures.
 
 QMBT68/QMBT69 are deliberately deferred while this lane is active. The next
 Ralph-ready task should be `SRDINV1`, not the older QMBT projection-cleanup

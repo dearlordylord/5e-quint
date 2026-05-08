@@ -93,72 +93,78 @@ Keep it synchronized with the DAG table and task details.
     },
     {
       "number": 166,
-      "id": "SRDINV2",
+      "id": "SRDINV1A",
       "status": "ready-for-research",
-      "title": "Author Missing Level-1 Class Containers"
+      "title": "Derive SRDINV1 Owner Evidence From Durable Sources"
     },
     {
       "number": 167,
-      "id": "SRDINV3",
-      "status": "ready-for-research",
-      "title": "Classify Missing Level-1 Class Feature Rows"
+      "id": "SRDINV2",
+      "status": "blocked",
+      "title": "Author Missing Level-1 Class Containers"
     },
     {
       "number": 168,
-      "id": "SRDINV4",
-      "status": "ready-for-research",
-      "title": "Classify Level-1 Character Creation Rows"
+      "id": "SRDINV3",
+      "status": "blocked",
+      "title": "Classify Missing Level-1 Class Feature Rows"
     },
     {
       "number": 169,
-      "id": "SRDINV5A",
-      "status": "ready-for-research",
-      "title": "Classify Level-1 Spell Access Rows"
+      "id": "SRDINV4",
+      "status": "blocked",
+      "title": "Classify Level-1 Character Creation Rows"
     },
     {
       "number": 170,
-      "id": "SRDINV5B",
-      "status": "ready-for-research",
-      "title": "Classify Missing Cantrip and Level-1 Spell Units"
+      "id": "SRDINV5A",
+      "status": "blocked",
+      "title": "Classify Level-1 Spell Access Rows"
     },
     {
       "number": 171,
-      "id": "SRDINV5C",
-      "status": "ready-for-research",
-      "title": "Classify Installed Cantrip and Level-1 Spell Units"
+      "id": "SRDINV5B",
+      "status": "blocked",
+      "title": "Classify Missing Cantrip and Level-1 Spell Units"
     },
     {
       "number": 172,
-      "id": "SRDINV5D",
-      "status": "ready-for-research",
-      "title": "Review Catalog-Only Cantrip and Level-1 Spell Units"
+      "id": "SRDINV5C",
+      "status": "blocked",
+      "title": "Classify Installed Cantrip and Level-1 Spell Units"
     },
     {
       "number": 173,
-      "id": "SRDINV6",
-      "status": "ready-for-research",
-      "title": "Review Catalog-Only and Surface-Widening Rows"
+      "id": "SRDINV5D",
+      "status": "blocked",
+      "title": "Review Catalog-Only Cantrip and Level-1 Spell Units"
     },
     {
       "number": 174,
+      "id": "SRDINV6",
+      "status": "blocked",
+      "title": "Review Catalog-Only and Surface-Widening Rows"
+    },
+    {
+      "number": 175,
       "id": "SRDINV7",
       "status": "blocked",
       "title": "Recursive SRD Inventory Planning Review"
     },
     {
-      "number": 175,
+      "number": 176,
       "id": "SRDINV8",
       "status": "blocked",
       "title": "Surface Widening Gate for SRD Level-1 Frontier"
     },
     {
-      "number": 176,
+      "number": 177,
       "id": "SRDINV9",
       "status": "blocked",
       "title": "Author Expressible SRD Level-1 Surface Records"
     },
     {
-      "number": 177,
+      "number": 178,
       "id": "SRDINV10",
       "status": "blocked",
       "title": "Plan SRD Level-1 Runtime and MBT Support"
@@ -205,19 +211,20 @@ Keep it synchronized with the DAG table and task details.
 | 162   | QMBT67 - Project Bardic Inspiration Reaction Reduction Facts | done | QMBT66 | QMBT68 | [QMBT66 review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT66_RECURSIVE_PLANNING_REVIEW.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [battle reducer](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [unit feature support](/workspace/typescript/dnd/packages/battle-runtime/src/unit-feature-support.ts), [SRD Bard](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Bard.md), [SRD Playing the Game](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [SRD Rules Glossary](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Move Bardic Inspiration reaction-reduction resource cost and die expression facts into supported profile projection data so generic reaction reducers no longer derive Bard class die thresholds for Cutting Words attack-roll, Ability Check, or damage-roll reduction. |
 | 163   | QMBT68 - Project Monk Deflect Attacks Redirect Facts | done | QMBT67 | QMBT69 | [QMBT66 review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT66_RECURSIVE_PLANNING_REVIEW.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [battle reducer](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [unit feature support](/workspace/typescript/dnd/packages/battle-runtime/src/unit-feature-support.ts), [SRD Monk](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Monk.md), [SRD Playing the Game](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [SRD Rules Glossary](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed Deflect Attacks redirect projection cleanup: Surface authors redirect facts, support projection emits executable cost/save/damage/target/damage-type facts, and reducers consume those facts without Monk-specific formula derivation. |
 | 164   | QMBT69 - Recursive Unit Profile Planning Review | deferred | QMBT68 | none | [QMBT66 review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT66_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Still parked by the SRD inventory frontier instruction; QMBT68 is complete, but the older QMBT queue remains deferred until that frontier resumes it. |
-| 165   | SRDINV1 - Classify Installed Level-1 Owner Evidence | done | none | SRDINV2-SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed installed level-1 owner-evidence classification: catalog admission, owner evidence present, owner evidence required, and catalog-only closure are now distinct in the generated SRD inventory. |
-| 166   | SRDINV2 - Author Missing Level-1 Class Containers | ready-for-research | SRDINV1 | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Create or explicitly close the ten missing SRD level-1 class container records. |
-| 167   | SRDINV3 - Classify Missing Level-1 Class Feature Rows | ready-for-research | SRDINV1 | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Decide which missing level-1 class feature rows need authored content, Surface widening, non-runtime closure, or later runtime work. |
-| 168   | SRDINV4 - Classify Level-1 Character Creation Rows | ready-for-research | SRDINV1 | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Separate class-container-owned creation/progression facts from rows that require standalone authored records. |
-| 169   | SRDINV5A - Classify Level-1 Spell Access Rows | ready-for-research | SRDINV1 | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Classify class Spellcasting/access rows separately from individual Spell Unit pressure. |
-| 170   | SRDINV5B - Classify Missing Cantrip and Level-1 Spell Units | ready-for-research | SRDINV1 | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Group missing cantrip and level-1 Spell Unit rows by authoring readiness, Surface blockers, and runtime-support pressure. |
-| 171   | SRDINV5C - Classify Installed Cantrip and Level-1 Spell Units | ready-for-research | SRDINV1 | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Distinguish catalog evidence from operational owner evidence for installed cantrip and level-1 Spell Unit rows. |
-| 172   | SRDINV5D - Review Catalog-Only Cantrip and Level-1 Spell Units | ready-for-research | SRDINV1 | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Keep catalog-only spell pressure explicit and counted, or promote concrete follow-up batches. |
-| 173   | SRDINV6 - Review Catalog-Only and Surface-Widening Rows | ready-for-research | SRDINV1 | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Preserve nonspell catalog-only/dead-for-now rows and name missing Surface constructs for any widening blockers. |
-| 174   | SRDINV7 - Recursive SRD Inventory Planning Review | blocked | SRDINV2-SRDINV5D, SRDINV6 | SRDINV8 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review SRDINV1-SRDINV6 findings and append a concrete multi-task next batch, or explicitly close level-1 with final metrics. |
-| 175   | SRDINV8 - Surface Widening Gate for SRD Level-1 Frontier | blocked | SRDINV7 | SRDINV9-SRDINV10 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | If Surface cannot express important frontier rows, append atomic Surface-widening tasks and then append this gate again; otherwise mark Surface ready for authoring. |
-| 176   | SRDINV9 - Author Expressible SRD Level-1 Surface Records | blocked | SRDINV8 | SRDINV10 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes) | Author SRD-provenance Surface records for the expressible frontier, then run the Surface gate again if authoring exposes missing Surface constructs. |
-| 177   | SRDINV10 - Plan SRD Level-1 Runtime and MBT Support | blocked | SRDINV9 | none | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [battle-runtime README](/workspace/typescript/dnd/packages/battle-runtime/README.md), [rule-core README](/workspace/typescript/dnd/packages/shared-algebras/proofs/rule-core/README.md) | Append behavior-support tasks for authored executable rows: QNT/MBT procedure parity where needed, runtime implementation, deterministic admission/projection evidence, and selected identity MBT only for high-risk Units. |
+| 165   | SRDINV1 - Classify Installed Level-1 Owner Evidence | done | none | SRDINV1A | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed installed level-1 owner-evidence classification, but follow-up must remove private evidence constants before downstream SRDINV work proceeds. |
+| 166   | SRDINV1A - Derive SRDINV1 Owner Evidence From Durable Sources | ready-for-research | SRDINV1 | SRDINV2-SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [Unit profile evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/unit-evidence.jsonl), [Unit profile claims](/workspace/typescript/dnd/plans/unit-profile-coverage/unit-claims.jsonl), [character-creation-runtime tests](/workspace/typescript/dnd/packages/character-creation-runtime/src/index.test.ts) | Replace SRDINV1 hardcoded owner-evidence classifications with derived durable evidence sources, or downgrade rows to evidence-required and append evidence-manifest tasks. |
+| 167   | SRDINV2 - Author Missing Level-1 Class Containers | blocked | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Create or explicitly close the ten missing SRD level-1 class container records. |
+| 168   | SRDINV3 - Classify Missing Level-1 Class Feature Rows | blocked | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Decide which missing level-1 class feature rows need authored content, Surface widening, non-runtime closure, or later runtime work. |
+| 169   | SRDINV4 - Classify Level-1 Character Creation Rows | blocked | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Separate class-container-owned creation/progression facts from rows that require standalone authored records. |
+| 170   | SRDINV5A - Classify Level-1 Spell Access Rows | blocked | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Classify class Spellcasting/access rows separately from individual Spell Unit pressure. |
+| 171   | SRDINV5B - Classify Missing Cantrip and Level-1 Spell Units | blocked | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Group missing cantrip and level-1 Spell Unit rows by authoring readiness, Surface blockers, and runtime-support pressure. |
+| 172   | SRDINV5C - Classify Installed Cantrip and Level-1 Spell Units | blocked | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Distinguish catalog evidence from operational owner evidence for installed cantrip and level-1 Spell Unit rows. |
+| 173   | SRDINV5D - Review Catalog-Only Cantrip and Level-1 Spell Units | blocked | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Keep catalog-only spell pressure explicit and counted, or promote concrete follow-up batches. |
+| 174   | SRDINV6 - Review Catalog-Only and Surface-Widening Rows | blocked | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Preserve nonspell catalog-only/dead-for-now rows and name missing Surface constructs for any widening blockers. |
+| 175   | SRDINV7 - Recursive SRD Inventory Planning Review | blocked | SRDINV2-SRDINV5D, SRDINV6 | SRDINV8 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review SRDINV1A-SRDINV6 findings and append a concrete multi-task next batch, or explicitly close level-1 with final metrics. |
+| 176   | SRDINV8 - Surface Widening Gate for SRD Level-1 Frontier | blocked | SRDINV7 | SRDINV9-SRDINV10 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | If Surface cannot express important frontier rows, append atomic Surface-widening tasks and then append this gate again; otherwise mark Surface ready for authoring. |
+| 177   | SRDINV9 - Author Expressible SRD Level-1 Surface Records | blocked | SRDINV8 | SRDINV10 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes) | Author SRD-provenance Surface records for the expressible frontier, then run the Surface gate again if authoring exposes missing Surface constructs. |
+| 178   | SRDINV10 - Plan SRD Level-1 Runtime and MBT Support | blocked | SRDINV9 | none | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [battle-runtime README](/workspace/typescript/dnd/packages/battle-runtime/README.md), [rule-core README](/workspace/typescript/dnd/packages/shared-algebras/proofs/rule-core/README.md) | Append behavior-support tasks for authored executable rows: QNT/MBT procedure parity where needed, runtime implementation, deterministic admission/projection evidence, and selected identity MBT only for high-risk Units. |
 
 ## Task Details
 
@@ -498,7 +505,7 @@ Status: `done`
 
 Depends on: none
 
-Blocks: SRDINV2-SRDINV7
+Blocks: SRDINV1A
 
 Research / plan:
 [SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
@@ -517,6 +524,9 @@ operational owner evidence present, owner evidence still required, and explicit
 catalog-only/dead-for-now closure. SRDINV2-SRDINV6/SRDINV5D are unblocked for
 their narrower follow-up classification and authoring tasks.
 
+Follow-up required: SRDINV1A must replace private generator constants with
+durable evidence sources before downstream SRDINV work proceeds.
+
 Out of scope: PHB/XPHB pressure, QMBT expansion, battle-runtime behavior
 changes, authoring missing class containers, and one task per Unit.
 
@@ -526,11 +536,51 @@ if semantics change; `pnpm unit-profile-coverage:check`; `/simplify`
 convergence, minimum two rounds unless the final changeset is trivial. MBT is
 not required for inventory planning.
 
-### Task 166 - SRDINV2 - Author Missing Level-1 Class Containers
+### Task 166 - SRDINV1A - Derive SRDINV1 Owner Evidence From Durable Sources
 
 Status: `ready-for-research`
 
 Depends on: SRDINV1
+
+Blocks: SRDINV2-SRDINV7
+
+Research / plan:
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[SRDINV_RALPH_BATCH_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md),
+[unit-evidence.jsonl](/workspace/typescript/dnd/plans/unit-profile-coverage/unit-evidence.jsonl),
+[unit-claims.jsonl](/workspace/typescript/dnd/plans/unit-profile-coverage/unit-claims.jsonl),
+[character-creation-runtime index.test.ts](/workspace/typescript/dnd/packages/character-creation-runtime/src/index.test.ts)
+
+Scope: fix the SRDINV1 evidence-source contract. Remove private hardcoded
+owner-evidence truth from `scripts/srd-unit-inventory.cjs`. Battle-runtime
+`owner-evidence-present` classifications must derive from the Unit profile
+matrix artifacts, especially `unit-claims.jsonl` and `unit-evidence.jsonl`.
+Character-creation owner evidence must either derive from a durable
+checker-readable artifact or be downgraded to `owner-evidence-required`; if no
+durable character-creation evidence artifact exists, append an atomic task to
+create one instead of encoding a private row-id allowlist. Catalog-only closures
+may remain explicit only when the closure rationale is generated from a
+documented source or task-owned closure table whose purpose is closure, not
+evidence truth.
+
+Out of scope: authoring SRD records, adding runtime behavior, broad
+character-creation refactors, PHB/XPHB content, and reclassifying rows by
+memory rather than durable artifacts.
+
+Verification: generated SRD inventory has zero
+`catalog-installed-needs-owner-evidence` level-1 rows; every
+`catalog-installed-owner-evidence-present` row has traceable durable evidence;
+the generator contains no private `*EvidencePresent*` row-id or Unit-id
+allowlist; rows without durable evidence are `catalog-installed-owner-evidence-required`
+or explicit catalog-only closures; `pnpm unit-profile-coverage:check`; active
+plan consistency across Ralph index, DAG table, and task details; `/simplify`
+convergence.
+
+### Task 167 - SRDINV2 - Author Missing Level-1 Class Containers
+
+Status: `blocked`
+
+Depends on: SRDINV1A
 
 Blocks: SRDINV7
 
@@ -551,11 +601,11 @@ Verification: SRD class source review for every container touched;
 regenerate inventory; `pnpm unit-profile-coverage:check`; `/simplify`
 convergence.
 
-### Task 167 - SRDINV3 - Classify Missing Level-1 Class Feature Rows
+### Task 168 - SRDINV3 - Classify Missing Level-1 Class Feature Rows
 
-Status: `ready-for-research`
+Status: `blocked`
 
-Depends on: SRDINV1
+Depends on: SRDINV1A
 
 Blocks: SRDINV7
 
@@ -575,11 +625,11 @@ Verification: SRD source review for classified features; `UBIQUITOUS_LANGUAGE.md
 regenerate inventory; `pnpm unit-profile-coverage:check`; `/simplify`
 convergence.
 
-### Task 168 - SRDINV4 - Classify Level-1 Character Creation Rows
+### Task 169 - SRDINV4 - Classify Level-1 Character Creation Rows
 
-Status: `ready-for-research`
+Status: `blocked`
 
-Depends on: SRDINV1
+Depends on: SRDINV1A
 
 Blocks: SRDINV7
 
@@ -599,11 +649,11 @@ Verification: SRD source review; `UBIQUITOUS_LANGUAGE.md`; update
 character-creation docs if architecture/vocabulary changes; regenerate
 inventory; `pnpm unit-profile-coverage:check`; `/simplify` convergence.
 
-### Task 169 - SRDINV5A - Classify Level-1 Spell Access Rows
+### Task 170 - SRDINV5A - Classify Level-1 Spell Access Rows
 
-Status: `ready-for-research`
+Status: `blocked`
 
-Depends on: SRDINV1
+Depends on: SRDINV1A
 
 Blocks: SRDINV7
 
@@ -623,11 +673,11 @@ Verification: SRD class Spellcasting/access source review;
 `UBIQUITOUS_LANGUAGE.md`; regenerate inventory; `pnpm
 unit-profile-coverage:check`; `/simplify` convergence.
 
-### Task 170 - SRDINV5B - Classify Missing Cantrip and Level-1 Spell Units
+### Task 171 - SRDINV5B - Classify Missing Cantrip and Level-1 Spell Units
 
-Status: `ready-for-research`
+Status: `blocked`
 
-Depends on: SRDINV1
+Depends on: SRDINV1A
 
 Blocks: SRDINV7
 
@@ -647,11 +697,11 @@ Verification: SRD spell-list and relevant spell description source review for
 rows changed; `UBIQUITOUS_LANGUAGE.md`; regenerate inventory; `pnpm
 unit-profile-coverage:check`; `/simplify` convergence.
 
-### Task 171 - SRDINV5C - Classify Installed Cantrip and Level-1 Spell Units
+### Task 172 - SRDINV5C - Classify Installed Cantrip and Level-1 Spell Units
 
-Status: `ready-for-research`
+Status: `blocked`
 
-Depends on: SRDINV1
+Depends on: SRDINV1A
 
 Blocks: SRDINV7
 
@@ -671,11 +721,11 @@ Verification: SRD spell source review for rows changed;
 `UBIQUITOUS_LANGUAGE.md`; regenerate inventory; `pnpm
 unit-profile-coverage:check`; `/simplify` convergence.
 
-### Task 172 - SRDINV5D - Review Catalog-Only Cantrip and Level-1 Spell Units
+### Task 173 - SRDINV5D - Review Catalog-Only Cantrip and Level-1 Spell Units
 
-Status: `ready-for-research`
+Status: `blocked`
 
-Depends on: SRDINV1
+Depends on: SRDINV1A
 
 Blocks: SRDINV7
 
@@ -695,11 +745,11 @@ MBT expansion.
 Verification: SRD spell source review for rows changed; regenerate inventory;
 `pnpm unit-profile-coverage:check`; `/simplify` convergence.
 
-### Task 173 - SRDINV6 - Review Catalog-Only and Surface-Widening Rows
+### Task 174 - SRDINV6 - Review Catalog-Only and Surface-Widening Rows
 
-Status: `ready-for-research`
+Status: `blocked`
 
-Depends on: SRDINV1
+Depends on: SRDINV1A
 
 Blocks: SRDINV7
 
@@ -719,7 +769,7 @@ not backed by a named blocker.
 Verification: SRD source review for rows changed; regenerate inventory; `pnpm
 unit-profile-coverage:check`; `/simplify` convergence.
 
-### Task 174 - SRDINV7 - Recursive SRD Inventory Planning Review
+### Task 175 - SRDINV7 - Recursive SRD Inventory Planning Review
 
 Status: `blocked`
 
@@ -732,7 +782,7 @@ Research / plan:
 [SRDINV_RALPH_BATCH_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md),
 [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
 
-Scope: review SRDINV1-SRDINV6 findings, update the SRD inventory report and
+Scope: review SRDINV1A-SRDINV6 findings, update the SRD inventory report and
 plan docs, and append a concrete multi-task next batch unless SRD level-1
 inventory is explicitly complete. This task must not append only one recursive
 continuation task. If level-1 remains open, it should add at least three
@@ -747,7 +797,7 @@ the appended result is either explicit level-1 completion with final metrics or
 a concrete multi-task batch, not a recursive-only placeholder; `/simplify`
 convergence, minimum two rounds unless the final changeset is trivial.
 
-### Task 175 - SRDINV8 - Surface Widening Gate for SRD Level-1 Frontier
+### Task 176 - SRDINV8 - Surface Widening Gate for SRD Level-1 Frontier
 
 Status: `blocked`
 
@@ -778,7 +828,7 @@ deferred/closure rationale; active-plan consistency across Ralph index, DAG
 table, and task details; `pnpm unit-profile-coverage:check`; `/simplify`
 convergence.
 
-### Task 176 - SRDINV9 - Author Expressible SRD Level-1 Surface Records
+### Task 177 - SRDINV9 - Author Expressible SRD Level-1 Surface Records
 
 Status: `blocked`
 
@@ -809,7 +859,7 @@ regenerate SRD inventory; `pnpm unit-profile-coverage:check`; run the
 smallest relevant package tests for touched Surface code; `/simplify`
 convergence.
 
-### Task 177 - SRDINV10 - Plan SRD Level-1 Runtime and MBT Support
+### Task 178 - SRDINV10 - Plan SRD Level-1 Runtime and MBT Support
 
 Status: `blocked`
 
