@@ -19,6 +19,11 @@ const {
   buildMatrix,
   renderReport,
 } = require("./unit-profile-coverage-report.cjs");
+const {
+  buildSrdUnitInventory,
+  renderSrdUnitInventory,
+  validateSrdUnitInventory,
+} = require("./srd-unit-inventory.cjs");
 const { scanClaimFiles } = require("./unit-profile-coverage-claim-scan.cjs");
 const { runSelfTest } = require("./unit-profile-coverage-self-test.cjs");
 const {
@@ -38,6 +43,7 @@ function main() {
   const taskClaims = readJsonl(root, paths.taskClaims);
   const inventory = discoverInventory(root, collections.collections);
   const authoredSurfaceUnits = discoverAuthoredSurfaceUnits(root);
+  const srdUnitInventory = buildSrdUnitInventory({ root, inventory });
   const scannedClaims = scanClaimFiles(root);
   const issues = validateCoverageInputs({
     root,
@@ -49,6 +55,7 @@ function main() {
     taskClaims,
     scannedClaims,
   });
+  issues.push(...validateSrdUnitInventory(srdUnitInventory));
   if (issues.length > 0) {
     for (const issue of issues)
       console.error(`unit-profile-coverage: ${issue}`);
@@ -85,6 +92,16 @@ function main() {
       deterministicAdmissionProjectionEvidenceTag,
       selectedIdentityMbtEvidenceTag,
     }),
+  );
+  writeOrCompare(
+    { root, write },
+    paths.srdUnitInventory,
+    `${JSON.stringify(srdUnitInventory, null, 2)}\n`,
+  );
+  writeOrCompare(
+    { root, write },
+    paths.srdUnitInventoryReport,
+    renderSrdUnitInventory(srdUnitInventory),
   );
   console.log(
     `Unit profile coverage OK: ${inventory.length} Units, ${profiles.length} profiles.`,

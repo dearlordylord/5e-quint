@@ -196,6 +196,25 @@ expected-inventory boundary. Passive profiles count in the executable profile
 evidence denominator when they have production runtime semantics, even though
 they do not create a player-selectable action.
 
+## SRD Unit Inventory
+
+`srd-unit-inventory.json` and `SRD_UNIT_INVENTORY.md` are generated backlog
+artifacts for SRD text-derived Unit/catalog rows. They are intentionally a
+separate denominator from RAW span coverage and from model-based tests: the
+rows answer what class/class-feature/spell-access/equipment/mastery pressure
+exists, whether current Surface can author it, whether authored Surface content
+exists, whether it is installed in the SRD Unit catalog, and what explicit
+disposition closes the row for planning.
+
+The first generated scope inventories all SRD class files under
+`.references/srd-5.2.1/Classes/`, with level-1 class rows prioritized first and
+cantrip/level-1 spell-list entries tracked as Spell Unit pressure. Regenerate
+these artifacts with:
+
+```sh
+node scripts/unit-profile-coverage-check.cjs --write
+```
+
 QMBT16 decided not to add selected spell identity MBT rows for the currently
 supported spell Units. The rationale is recorded in
 [QMBT16_SELECTED_SPELL_IDENTITY_MBT_DECISION.md](QMBT16_SELECTED_SPELL_IDENTITY_MBT_DECISION.md):
