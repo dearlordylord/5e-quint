@@ -115,3 +115,32 @@ Regenerate after intentional inventory changes:
 ```sh
 node scripts/unit-profile-coverage-check.cjs --write
 ```
+
+## SRDINV4 Closeout Notes
+
+SRDINV4 classifies level-1 character-creation and progression inventory rows;
+it does not model new runtime behavior. The local SRD source review used the
+SRD 5.2.1 class files under `.references/srd-5.2.1/Classes/`, specifically the
+Core Class Traits tables, the "As a Level 1 Character" and "As a Multiclass
+Character" paragraphs, and each class's level-1 feature table row. Those sources
+show that hit dice, primary ability, saving throws, skill/weapon/tool
+proficiencies, armor training, starting equipment, and multiclass entry traits
+are facts of the class container rather than standalone SRD records. The
+feature table rows summarize level progression; narrower class trait, feature,
+spell-access, mastery, and equipment rows own executable evidence.
+
+`UBIQUITOUS_LANGUAGE.md` was checked for Class, Character Sheet, Hit Die,
+Proficiency Bonus, Proficiency Level, Skill, Multiclassing, Weapon Mastery, and
+the distinction between character-derived facts and stat-block-authored facts.
+The inventory now records `class-container-owned-source-fact` for level-1
+`core-trait`, `equipment-pressure`, and `multiclass-entry` rows, and
+`non-runtime-table-summary` for `class-table-summary` rows.
+
+`/simplify` convergence:
+
+- Round 1: kept the classification at the existing SRD row-kind boundary
+  instead of adding standalone evidence rows or duplicating class-container
+  facts.
+- Round 2: no important changes found; spell-access rows remain reserved for
+  SRDINV5A, individual spell pressure remains reserved for SRDINV5B-SRDINV5D,
+  and Surface widening/runtime work remains deferred to later SRDINV tasks.

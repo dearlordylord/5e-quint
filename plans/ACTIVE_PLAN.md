@@ -222,7 +222,7 @@ Keep it synchronized with the DAG table and task details.
 | 167   | SRDINV1B - Create Character-Creation Owner Evidence Manifest | done | SRDINV1A | SRDINV4 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [character-creation-runtime tests](/workspace/typescript/dnd/packages/character-creation-runtime/src/index.test.ts), [character-creation-runtime README](/workspace/typescript/dnd/packages/character-creation-runtime/README.md), [character-creation owner evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/character-creation-owner-evidence.json) | Completed checker-readable character-creation owner-evidence manifest and inventory wiring; covered Fighter/Wizard support-profile rows now derive owner-evidence-present from manifest entries, while absent rows remain owner-evidence-required. |
 | 168   | SRDINV2 - Author Missing Level-1 Class Containers | done | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Completed missing class-container closure: Barbarian and Warlock are authored and installed; Fighter/Wizard now carry primary ability source facts; the other eight class containers are explicit named Surface-widening closures in the generated inventory. |
 | 169   | SRDINV3 - Classify Missing Level-1 Class Feature Rows | done | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Completed missing level-1 class-feature classification: all 11 rows now carry named Surface-widening blockers in the generated inventory, reducing SRDINV3 generated row count to zero and moving those rows into SRDINV6. |
-| 170   | SRDINV4 - Classify Level-1 Character Creation Rows | ready-for-research | SRDINV1A, SRDINV1B | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [character-creation owner evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/character-creation-owner-evidence.json) | Separate remaining class-container-owned creation/progression facts from rows that require standalone authored records; SRDINV1B is complete, so this classification task is runnable. |
+| 170   | SRDINV4 - Classify Level-1 Character Creation Rows | done | SRDINV1A, SRDINV1B | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [character-creation owner evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/character-creation-owner-evidence.json) | Completed level-1 character-creation classification: generated inventory now marks class-container-owned source facts and non-runtime table summaries, and SRDINV4 rows steer class-owned facts toward class-container work rather than standalone records. |
 | 171   | SRDINV5A - Classify Level-1 Spell Access Rows | ready-for-research | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Classify class Spellcasting/access rows separately from individual Spell Unit pressure. |
 | 172   | SRDINV5B - Classify Missing Cantrip and Level-1 Spell Units | ready-for-research | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Group missing cantrip and level-1 Spell Unit rows by authoring readiness, Surface blockers, and runtime-support pressure. |
 | 173   | SRDINV5C - Classify Installed Cantrip and Level-1 Spell Units | ready-for-research | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Distinguish catalog evidence from operational owner evidence for installed cantrip and level-1 Spell Unit rows. |
@@ -709,7 +709,7 @@ convergence.
 
 ### Task 170 - SRDINV4 - Classify Level-1 Character Creation Rows
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV1A, SRDINV1B
 
@@ -730,6 +730,12 @@ character-creation runtime feature.
 Verification: SRD source review; `UBIQUITOUS_LANGUAGE.md`; update
 character-creation docs if architecture/vocabulary changes; regenerate
 inventory; `pnpm unit-profile-coverage:check`; `/simplify` convergence.
+
+Closeout: generated inventory records `class-container-owned-source-fact` for
+level-1 core traits, equipment pressure, and multiclass entry rows, plus
+`non-runtime-table-summary` for class table summaries. Missing class-owned
+creation rows now point at class-container authoring or Surface widening instead
+of standalone authored records.
 
 ### Task 171 - SRDINV5A - Classify Level-1 Spell Access Rows
 

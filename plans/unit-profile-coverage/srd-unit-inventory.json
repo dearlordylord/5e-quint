@@ -61,6 +61,10 @@
       "mastery pressure": 5,
       "spell access/list pressure": 7
     },
+    "levelOneCharacterCreationOwnership": {
+      "non-runtime-table-summary": 12,
+      "class-container-owned-source-fact": 100
+    },
     "missingClassContainers": 0
   },
   "recommendedBatches": [
@@ -144,7 +148,7 @@
       "title": "Classify Level-1 Character Creation Rows",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Separate class-container-owned creation/progression facts from rows that require standalone authored records.",
-      "rowCount": 60,
+      "rowCount": 68,
       "rowIds": [
         "srd521:classes/bard:level-1:core-trait:bard_armor_training",
         "srd521:classes/bard:level-1:core-trait:bard_hit_point_die",
@@ -153,6 +157,7 @@
         "srd521:classes/bard:level-1:core-trait:bard_skill_proficiencies",
         "srd521:classes/bard:level-1:core-trait:bard_tool_proficiencies",
         "srd521:classes/bard:level-1:core-trait:bard_weapon_proficiencies",
+        "srd521:classes/bard:level-1:equipment-pressure:bard_starting_equipment",
         "srd521:classes/bard:level-1:multiclass-entry:bard_multiclass_entry_traits",
         "srd521:classes/cleric:level-1:core-trait:cleric_armor_training",
         "srd521:classes/cleric:level-1:core-trait:cleric_hit_point_die",
@@ -160,6 +165,7 @@
         "srd521:classes/cleric:level-1:core-trait:cleric_saving_throw_proficiencies",
         "srd521:classes/cleric:level-1:core-trait:cleric_skill_proficiencies",
         "srd521:classes/cleric:level-1:core-trait:cleric_weapon_proficiencies",
+        "srd521:classes/cleric:level-1:equipment-pressure:cleric_starting_equipment",
         "srd521:classes/cleric:level-1:multiclass-entry:cleric_multiclass_entry_traits",
         "srd521:classes/druid:level-1:core-trait:druid_armor_training",
         "srd521:classes/druid:level-1:core-trait:druid_hit_point_die",
@@ -168,6 +174,7 @@
         "srd521:classes/druid:level-1:core-trait:druid_skill_proficiencies",
         "srd521:classes/druid:level-1:core-trait:druid_tool_proficiencies",
         "srd521:classes/druid:level-1:core-trait:druid_weapon_proficiencies",
+        "srd521:classes/druid:level-1:equipment-pressure:druid_starting_equipment",
         "srd521:classes/druid:level-1:multiclass-entry:druid_multiclass_entry_traits",
         "srd521:classes/monk:level-1:core-trait:monk_armor_training",
         "srd521:classes/monk:level-1:core-trait:monk_hit_point_die",
@@ -176,6 +183,7 @@
         "srd521:classes/monk:level-1:core-trait:monk_skill_proficiencies",
         "srd521:classes/monk:level-1:core-trait:monk_tool_proficiencies",
         "srd521:classes/monk:level-1:core-trait:monk_weapon_proficiencies",
+        "srd521:classes/monk:level-1:equipment-pressure:monk_starting_equipment",
         "srd521:classes/monk:level-1:multiclass-entry:monk_multiclass_entry_traits",
         "srd521:classes/paladin:level-1:core-trait:paladin_armor_training",
         "srd521:classes/paladin:level-1:core-trait:paladin_hit_point_die",
@@ -183,6 +191,7 @@
         "srd521:classes/paladin:level-1:core-trait:paladin_saving_throw_proficiencies",
         "srd521:classes/paladin:level-1:core-trait:paladin_skill_proficiencies",
         "srd521:classes/paladin:level-1:core-trait:paladin_weapon_proficiencies",
+        "srd521:classes/paladin:level-1:equipment-pressure:paladin_starting_equipment",
         "srd521:classes/paladin:level-1:multiclass-entry:paladin_multiclass_entry_traits",
         "srd521:classes/ranger:level-1:core-trait:ranger_armor_training",
         "srd521:classes/ranger:level-1:core-trait:ranger_hit_point_die",
@@ -190,6 +199,7 @@
         "srd521:classes/ranger:level-1:core-trait:ranger_saving_throw_proficiencies",
         "srd521:classes/ranger:level-1:core-trait:ranger_skill_proficiencies",
         "srd521:classes/ranger:level-1:core-trait:ranger_weapon_proficiencies",
+        "srd521:classes/ranger:level-1:equipment-pressure:ranger_starting_equipment",
         "srd521:classes/ranger:level-1:multiclass-entry:ranger_multiclass_entry_traits",
         "srd521:classes/rogue:level-1:core-trait:rogue_armor_training",
         "srd521:classes/rogue:level-1:core-trait:rogue_hit_point_die",
@@ -198,6 +208,7 @@
         "srd521:classes/rogue:level-1:core-trait:rogue_skill_proficiencies",
         "srd521:classes/rogue:level-1:core-trait:rogue_tool_proficiencies",
         "srd521:classes/rogue:level-1:core-trait:rogue_weapon_proficiencies",
+        "srd521:classes/rogue:level-1:equipment-pressure:rogue_starting_equipment",
         "srd521:classes/rogue:level-1:multiclass-entry:rogue_multiclass_entry_traits",
         "srd521:classes/sorcerer:level-1:core-trait:sorcerer_armor_training",
         "srd521:classes/sorcerer:level-1:core-trait:sorcerer_hit_point_die",
@@ -205,9 +216,10 @@
         "srd521:classes/sorcerer:level-1:core-trait:sorcerer_saving_throw_proficiencies",
         "srd521:classes/sorcerer:level-1:core-trait:sorcerer_skill_proficiencies",
         "srd521:classes/sorcerer:level-1:core-trait:sorcerer_weapon_proficiencies",
+        "srd521:classes/sorcerer:level-1:equipment-pressure:sorcerer_starting_equipment",
         "srd521:classes/sorcerer:level-1:multiclass-entry:sorcerer_multiclass_entry_traits"
       ],
-      "nextAction": "Group hit dice, proficiencies, equipment, multiclass, and table-summary rows by whether the class container should own the evidence.",
+      "nextAction": "For each missing class-container-owned creation row, unblock or author the SRD class container instead of creating standalone records.",
       "acceptance": "Character-creation rows distinguish class-container ownership from missing standalone records."
     },
     {
@@ -812,6 +824,11 @@
         "state": "installed",
         "unitId": "class_barbarian"
       },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
       "finalDisposition": "non-runtime",
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure."
@@ -841,6 +858,12 @@
       "catalogAdmission": {
         "state": "installed",
         "unitId": "class_barbarian"
+      },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/barbarian:level-1:class-container:barbarian_class_container"
       },
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
@@ -883,6 +906,12 @@
         "state": "installed",
         "unitId": "class_barbarian"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/barbarian:level-1:class-container:barbarian_class_container"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {
@@ -923,6 +952,12 @@
       "catalogAdmission": {
         "state": "installed",
         "unitId": "class_barbarian"
+      },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/barbarian:level-1:class-container:barbarian_class_container"
       },
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
@@ -965,6 +1000,12 @@
         "state": "installed",
         "unitId": "class_barbarian"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/barbarian:level-1:class-container:barbarian_class_container"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {
@@ -1005,6 +1046,12 @@
       "catalogAdmission": {
         "state": "installed",
         "unitId": "class_barbarian"
+      },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/barbarian:level-1:class-container:barbarian_class_container"
       },
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
@@ -1047,6 +1094,12 @@
         "state": "installed",
         "unitId": "class_barbarian"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/barbarian:level-1:class-container:barbarian_class_container"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {
@@ -1087,6 +1140,12 @@
       "catalogAdmission": {
         "state": "installed",
         "unitId": "class_barbarian"
+      },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/barbarian:level-1:class-container:barbarian_class_container"
       },
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
@@ -1156,6 +1215,12 @@
       "catalogAdmission": {
         "state": "installed",
         "unitId": "class_barbarian"
+      },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/barbarian:level-1:class-container:barbarian_class_container"
       },
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
@@ -1254,6 +1319,11 @@
         "state": "not-installed",
         "unitId": "class_bard"
       },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
       "finalDisposition": "non-runtime",
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure."
@@ -1282,9 +1352,15 @@
         "state": "not-installed",
         "unitId": "class_bard"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Bard's Musical Instrument choice."
     },
     {
       "id": "srd521:classes/bard:level-1:core-trait:bard_hit_point_die",
@@ -1310,9 +1386,15 @@
         "state": "not-installed",
         "unitId": "class_bard"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Bard's Musical Instrument choice."
     },
     {
       "id": "srd521:classes/bard:level-1:core-trait:bard_primary_ability",
@@ -1338,9 +1420,15 @@
         "state": "not-installed",
         "unitId": "class_bard"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Bard's Musical Instrument choice."
     },
     {
       "id": "srd521:classes/bard:level-1:core-trait:bard_saving_throw_proficiencies",
@@ -1366,9 +1454,15 @@
         "state": "not-installed",
         "unitId": "class_bard"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Bard's Musical Instrument choice."
     },
     {
       "id": "srd521:classes/bard:level-1:core-trait:bard_skill_proficiencies",
@@ -1394,9 +1488,15 @@
         "state": "not-installed",
         "unitId": "class_bard"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Bard's Musical Instrument choice."
     },
     {
       "id": "srd521:classes/bard:level-1:core-trait:bard_tool_proficiencies",
@@ -1422,9 +1522,15 @@
         "state": "not-installed",
         "unitId": "class_bard"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Bard's Musical Instrument choice."
     },
     {
       "id": "srd521:classes/bard:level-1:core-trait:bard_weapon_proficiencies",
@@ -1450,9 +1556,15 @@
         "state": "not-installed",
         "unitId": "class_bard"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Bard's Musical Instrument choice."
     },
     {
       "id": "srd521:classes/bard:level-1:equipment-pressure:bard_starting_equipment",
@@ -1478,9 +1590,15 @@
         "state": "not-installed",
         "unitId": "class_bard"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Bard's Musical Instrument choice."
     },
     {
       "id": "srd521:classes/bard:level-1:multiclass-entry:bard_multiclass_entry_traits",
@@ -1506,9 +1624,15 @@
         "state": "not-installed",
         "unitId": "class_bard"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Bard's Musical Instrument choice."
     },
     {
       "id": "srd521:classes/bard:level-1:spell-access:bard_spellcasting",
@@ -2624,6 +2748,11 @@
         "state": "not-installed",
         "unitId": "class_cleric"
       },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
       "finalDisposition": "non-runtime",
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure."
@@ -2652,9 +2781,15 @@
         "state": "not-installed",
         "unitId": "class_cleric"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/cleric:level-1:class-container:cleric_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard prepared casters: Cleric cantrip choices, prepared Cleric spells, Spell Slot projection, spellcasting ability, and Holy Symbol focus."
     },
     {
       "id": "srd521:classes/cleric:level-1:core-trait:cleric_hit_point_die",
@@ -2680,9 +2815,15 @@
         "state": "not-installed",
         "unitId": "class_cleric"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/cleric:level-1:class-container:cleric_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard prepared casters: Cleric cantrip choices, prepared Cleric spells, Spell Slot projection, spellcasting ability, and Holy Symbol focus."
     },
     {
       "id": "srd521:classes/cleric:level-1:core-trait:cleric_primary_ability",
@@ -2708,9 +2849,15 @@
         "state": "not-installed",
         "unitId": "class_cleric"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/cleric:level-1:class-container:cleric_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard prepared casters: Cleric cantrip choices, prepared Cleric spells, Spell Slot projection, spellcasting ability, and Holy Symbol focus."
     },
     {
       "id": "srd521:classes/cleric:level-1:core-trait:cleric_saving_throw_proficiencies",
@@ -2736,9 +2883,15 @@
         "state": "not-installed",
         "unitId": "class_cleric"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/cleric:level-1:class-container:cleric_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard prepared casters: Cleric cantrip choices, prepared Cleric spells, Spell Slot projection, spellcasting ability, and Holy Symbol focus."
     },
     {
       "id": "srd521:classes/cleric:level-1:core-trait:cleric_skill_proficiencies",
@@ -2764,9 +2917,15 @@
         "state": "not-installed",
         "unitId": "class_cleric"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/cleric:level-1:class-container:cleric_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard prepared casters: Cleric cantrip choices, prepared Cleric spells, Spell Slot projection, spellcasting ability, and Holy Symbol focus."
     },
     {
       "id": "srd521:classes/cleric:level-1:core-trait:cleric_weapon_proficiencies",
@@ -2792,9 +2951,15 @@
         "state": "not-installed",
         "unitId": "class_cleric"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/cleric:level-1:class-container:cleric_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard prepared casters: Cleric cantrip choices, prepared Cleric spells, Spell Slot projection, spellcasting ability, and Holy Symbol focus."
     },
     {
       "id": "srd521:classes/cleric:level-1:equipment-pressure:cleric_starting_equipment",
@@ -2820,9 +2985,15 @@
         "state": "not-installed",
         "unitId": "class_cleric"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/cleric:level-1:class-container:cleric_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard prepared casters: Cleric cantrip choices, prepared Cleric spells, Spell Slot projection, spellcasting ability, and Holy Symbol focus."
     },
     {
       "id": "srd521:classes/cleric:level-1:multiclass-entry:cleric_multiclass_entry_traits",
@@ -2848,9 +3019,15 @@
         "state": "not-installed",
         "unitId": "class_cleric"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/cleric:level-1:class-container:cleric_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard prepared casters: Cleric cantrip choices, prepared Cleric spells, Spell Slot projection, spellcasting ability, and Holy Symbol focus."
     },
     {
       "id": "srd521:classes/cleric:level-1:spell-access:cleric_spellcasting",
@@ -3657,6 +3834,11 @@
         "state": "not-installed",
         "unitId": "class_druid"
       },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
       "finalDisposition": "non-runtime",
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure."
@@ -3685,9 +3867,15 @@
         "state": "not-installed",
         "unitId": "class_druid"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Druid's Herbalism Kit proficiency."
     },
     {
       "id": "srd521:classes/druid:level-1:core-trait:druid_hit_point_die",
@@ -3713,9 +3901,15 @@
         "state": "not-installed",
         "unitId": "class_druid"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Druid's Herbalism Kit proficiency."
     },
     {
       "id": "srd521:classes/druid:level-1:core-trait:druid_primary_ability",
@@ -3741,9 +3935,15 @@
         "state": "not-installed",
         "unitId": "class_druid"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Druid's Herbalism Kit proficiency."
     },
     {
       "id": "srd521:classes/druid:level-1:core-trait:druid_saving_throw_proficiencies",
@@ -3769,9 +3969,15 @@
         "state": "not-installed",
         "unitId": "class_druid"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Druid's Herbalism Kit proficiency."
     },
     {
       "id": "srd521:classes/druid:level-1:core-trait:druid_skill_proficiencies",
@@ -3797,9 +4003,15 @@
         "state": "not-installed",
         "unitId": "class_druid"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Druid's Herbalism Kit proficiency."
     },
     {
       "id": "srd521:classes/druid:level-1:core-trait:druid_tool_proficiencies",
@@ -3825,9 +4037,15 @@
         "state": "not-installed",
         "unitId": "class_druid"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Druid's Herbalism Kit proficiency."
     },
     {
       "id": "srd521:classes/druid:level-1:core-trait:druid_weapon_proficiencies",
@@ -3853,9 +4071,15 @@
         "state": "not-installed",
         "unitId": "class_druid"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Druid's Herbalism Kit proficiency."
     },
     {
       "id": "srd521:classes/druid:level-1:equipment-pressure:druid_starting_equipment",
@@ -3881,9 +4105,15 @@
         "state": "not-installed",
         "unitId": "class_druid"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Druid's Herbalism Kit proficiency."
     },
     {
       "id": "srd521:classes/druid:level-1:multiclass-entry:druid_multiclass_entry_traits",
@@ -3909,9 +4139,15 @@
         "state": "not-installed",
         "unitId": "class_druid"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Druid's Herbalism Kit proficiency."
     },
     {
       "id": "srd521:classes/druid:level-1:spell-access:druid_spellcasting",
@@ -4960,6 +5196,11 @@
         "state": "installed",
         "unitId": "class_fighter"
       },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
       "finalDisposition": "non-runtime",
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure."
@@ -4989,6 +5230,12 @@
       "catalogAdmission": {
         "state": "installed",
         "unitId": "class_fighter"
+      },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/fighter:level-1:class-container:fighter_class_container"
       },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
@@ -5031,6 +5278,12 @@
         "state": "installed",
         "unitId": "class_fighter"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/fighter:level-1:class-container:fighter_class_container"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -5071,6 +5324,12 @@
       "catalogAdmission": {
         "state": "installed",
         "unitId": "class_fighter"
+      },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/fighter:level-1:class-container:fighter_class_container"
       },
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
@@ -5113,6 +5372,12 @@
         "state": "installed",
         "unitId": "class_fighter"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/fighter:level-1:class-container:fighter_class_container"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -5153,6 +5418,12 @@
       "catalogAdmission": {
         "state": "installed",
         "unitId": "class_fighter"
+      },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/fighter:level-1:class-container:fighter_class_container"
       },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
@@ -5195,6 +5466,12 @@
         "state": "installed",
         "unitId": "class_fighter"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/fighter:level-1:class-container:fighter_class_container"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -5235,6 +5512,12 @@
       "catalogAdmission": {
         "state": "installed",
         "unitId": "class_fighter"
+      },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/fighter:level-1:class-container:fighter_class_container"
       },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
@@ -5317,6 +5600,12 @@
       "catalogAdmission": {
         "state": "installed",
         "unitId": "class_fighter"
+      },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/fighter:level-1:class-container:fighter_class_container"
       },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
@@ -5445,6 +5734,11 @@
         "state": "not-installed",
         "unitId": "class_monk"
       },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
       "finalDisposition": "non-runtime",
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure."
@@ -5473,9 +5767,15 @@
         "state": "not-installed",
         "unitId": "class_monk"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Monk."
     },
     {
       "id": "srd521:classes/monk:level-1:core-trait:monk_hit_point_die",
@@ -5501,9 +5801,15 @@
         "state": "not-installed",
         "unitId": "class_monk"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Monk."
     },
     {
       "id": "srd521:classes/monk:level-1:core-trait:monk_primary_ability",
@@ -5529,9 +5835,15 @@
         "state": "not-installed",
         "unitId": "class_monk"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Monk."
     },
     {
       "id": "srd521:classes/monk:level-1:core-trait:monk_saving_throw_proficiencies",
@@ -5557,9 +5869,15 @@
         "state": "not-installed",
         "unitId": "class_monk"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Monk."
     },
     {
       "id": "srd521:classes/monk:level-1:core-trait:monk_skill_proficiencies",
@@ -5585,9 +5903,15 @@
         "state": "not-installed",
         "unitId": "class_monk"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Monk."
     },
     {
       "id": "srd521:classes/monk:level-1:core-trait:monk_tool_proficiencies",
@@ -5613,9 +5937,15 @@
         "state": "not-installed",
         "unitId": "class_monk"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Monk."
     },
     {
       "id": "srd521:classes/monk:level-1:core-trait:monk_weapon_proficiencies",
@@ -5641,9 +5971,15 @@
         "state": "not-installed",
         "unitId": "class_monk"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Monk."
     },
     {
       "id": "srd521:classes/monk:level-1:equipment-pressure:monk_starting_equipment",
@@ -5669,9 +6005,15 @@
         "state": "not-installed",
         "unitId": "class_monk"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Monk."
     },
     {
       "id": "srd521:classes/monk:level-1:multiclass-entry:monk_multiclass_entry_traits",
@@ -5697,9 +6039,15 @@
         "state": "not-installed",
         "unitId": "class_monk"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Monk."
     },
     {
       "id": "srd521:classes/paladin:level-1:class-container:paladin_class_container",
@@ -5784,6 +6132,11 @@
         "state": "not-installed",
         "unitId": "class_paladin"
       },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
       "finalDisposition": "non-runtime",
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure."
@@ -5812,9 +6165,15 @@
         "state": "not-installed",
         "unitId": "class_paladin"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/paladin:level-1:class-container:paladin_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard prepared casters: Paladin prepared spells, Spell Slot projection, spellcasting ability, and Holy Symbol focus."
     },
     {
       "id": "srd521:classes/paladin:level-1:core-trait:paladin_hit_point_die",
@@ -5840,9 +6199,15 @@
         "state": "not-installed",
         "unitId": "class_paladin"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/paladin:level-1:class-container:paladin_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard prepared casters: Paladin prepared spells, Spell Slot projection, spellcasting ability, and Holy Symbol focus."
     },
     {
       "id": "srd521:classes/paladin:level-1:core-trait:paladin_primary_ability",
@@ -5868,9 +6233,15 @@
         "state": "not-installed",
         "unitId": "class_paladin"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/paladin:level-1:class-container:paladin_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard prepared casters: Paladin prepared spells, Spell Slot projection, spellcasting ability, and Holy Symbol focus."
     },
     {
       "id": "srd521:classes/paladin:level-1:core-trait:paladin_saving_throw_proficiencies",
@@ -5896,9 +6267,15 @@
         "state": "not-installed",
         "unitId": "class_paladin"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/paladin:level-1:class-container:paladin_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard prepared casters: Paladin prepared spells, Spell Slot projection, spellcasting ability, and Holy Symbol focus."
     },
     {
       "id": "srd521:classes/paladin:level-1:core-trait:paladin_skill_proficiencies",
@@ -5924,9 +6301,15 @@
         "state": "not-installed",
         "unitId": "class_paladin"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/paladin:level-1:class-container:paladin_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard prepared casters: Paladin prepared spells, Spell Slot projection, spellcasting ability, and Holy Symbol focus."
     },
     {
       "id": "srd521:classes/paladin:level-1:core-trait:paladin_weapon_proficiencies",
@@ -5952,9 +6335,15 @@
         "state": "not-installed",
         "unitId": "class_paladin"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/paladin:level-1:class-container:paladin_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard prepared casters: Paladin prepared spells, Spell Slot projection, spellcasting ability, and Holy Symbol focus."
     },
     {
       "id": "srd521:classes/paladin:level-1:equipment-pressure:paladin_starting_equipment",
@@ -5980,9 +6369,15 @@
         "state": "not-installed",
         "unitId": "class_paladin"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/paladin:level-1:class-container:paladin_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard prepared casters: Paladin prepared spells, Spell Slot projection, spellcasting ability, and Holy Symbol focus."
     },
     {
       "id": "srd521:classes/paladin:level-1:mastery-pressure:paladin_weapon_mastery",
@@ -6036,9 +6431,15 @@
         "state": "not-installed",
         "unitId": "class_paladin"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/paladin:level-1:class-container:paladin_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard prepared casters: Paladin prepared spells, Spell Slot projection, spellcasting ability, and Holy Symbol focus."
     },
     {
       "id": "srd521:classes/paladin:level-1:spell-access:paladin_spellcasting",
@@ -6544,6 +6945,11 @@
         "state": "not-installed",
         "unitId": "class_ranger"
       },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
       "finalDisposition": "non-runtime",
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure."
@@ -6572,9 +6978,15 @@
         "state": "not-installed",
         "unitId": "class_ranger"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/ranger:level-1:class-container:ranger_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.multiclassProficiencies cannot combine fixed grants with Ranger's skill choice."
     },
     {
       "id": "srd521:classes/ranger:level-1:core-trait:ranger_hit_point_die",
@@ -6600,9 +7012,15 @@
         "state": "not-installed",
         "unitId": "class_ranger"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/ranger:level-1:class-container:ranger_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.multiclassProficiencies cannot combine fixed grants with Ranger's skill choice."
     },
     {
       "id": "srd521:classes/ranger:level-1:core-trait:ranger_primary_ability",
@@ -6628,9 +7046,15 @@
         "state": "not-installed",
         "unitId": "class_ranger"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/ranger:level-1:class-container:ranger_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.multiclassProficiencies cannot combine fixed grants with Ranger's skill choice."
     },
     {
       "id": "srd521:classes/ranger:level-1:core-trait:ranger_saving_throw_proficiencies",
@@ -6656,9 +7080,15 @@
         "state": "not-installed",
         "unitId": "class_ranger"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/ranger:level-1:class-container:ranger_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.multiclassProficiencies cannot combine fixed grants with Ranger's skill choice."
     },
     {
       "id": "srd521:classes/ranger:level-1:core-trait:ranger_skill_proficiencies",
@@ -6684,9 +7114,15 @@
         "state": "not-installed",
         "unitId": "class_ranger"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/ranger:level-1:class-container:ranger_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.multiclassProficiencies cannot combine fixed grants with Ranger's skill choice."
     },
     {
       "id": "srd521:classes/ranger:level-1:core-trait:ranger_weapon_proficiencies",
@@ -6712,9 +7148,15 @@
         "state": "not-installed",
         "unitId": "class_ranger"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/ranger:level-1:class-container:ranger_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.multiclassProficiencies cannot combine fixed grants with Ranger's skill choice."
     },
     {
       "id": "srd521:classes/ranger:level-1:equipment-pressure:ranger_starting_equipment",
@@ -6740,9 +7182,15 @@
         "state": "not-installed",
         "unitId": "class_ranger"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/ranger:level-1:class-container:ranger_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.multiclassProficiencies cannot combine fixed grants with Ranger's skill choice."
     },
     {
       "id": "srd521:classes/ranger:level-1:mastery-pressure:ranger_weapon_mastery",
@@ -6796,9 +7244,15 @@
         "state": "not-installed",
         "unitId": "class_ranger"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/ranger:level-1:class-container:ranger_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.multiclassProficiencies cannot combine fixed grants with Ranger's skill choice."
     },
     {
       "id": "srd521:classes/ranger:level-1:spell-access:ranger_spellcasting",
@@ -7374,6 +7828,11 @@
         "state": "not-installed",
         "unitId": "class_rogue"
       },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
       "finalDisposition": "non-runtime",
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure."
@@ -7402,9 +7861,15 @@
         "state": "not-installed",
         "unitId": "class_rogue"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Rogue."
     },
     {
       "id": "srd521:classes/rogue:level-1:core-trait:rogue_hit_point_die",
@@ -7430,9 +7895,15 @@
         "state": "not-installed",
         "unitId": "class_rogue"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Rogue."
     },
     {
       "id": "srd521:classes/rogue:level-1:core-trait:rogue_primary_ability",
@@ -7458,9 +7929,15 @@
         "state": "not-installed",
         "unitId": "class_rogue"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Rogue."
     },
     {
       "id": "srd521:classes/rogue:level-1:core-trait:rogue_saving_throw_proficiencies",
@@ -7486,9 +7963,15 @@
         "state": "not-installed",
         "unitId": "class_rogue"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Rogue."
     },
     {
       "id": "srd521:classes/rogue:level-1:core-trait:rogue_skill_proficiencies",
@@ -7514,9 +7997,15 @@
         "state": "not-installed",
         "unitId": "class_rogue"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Rogue."
     },
     {
       "id": "srd521:classes/rogue:level-1:core-trait:rogue_tool_proficiencies",
@@ -7542,9 +8031,15 @@
         "state": "not-installed",
         "unitId": "class_rogue"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Rogue."
     },
     {
       "id": "srd521:classes/rogue:level-1:core-trait:rogue_weapon_proficiencies",
@@ -7570,9 +8065,15 @@
         "state": "not-installed",
         "unitId": "class_rogue"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Rogue."
     },
     {
       "id": "srd521:classes/rogue:level-1:equipment-pressure:rogue_starting_equipment",
@@ -7598,9 +8099,15 @@
         "state": "not-installed",
         "unitId": "class_rogue"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Rogue."
     },
     {
       "id": "srd521:classes/rogue:level-1:mastery-pressure:rogue_weapon_mastery",
@@ -7654,9 +8161,15 @@
         "state": "not-installed",
         "unitId": "class_rogue"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Rogue."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container",
@@ -7740,6 +8253,11 @@
         "state": "not-installed",
         "unitId": "class_sorcerer"
       },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
       "finalDisposition": "non-runtime",
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure."
@@ -7768,9 +8286,15 @@
         "state": "not-installed",
         "unitId": "class_sorcerer"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard known casters: Sorcerer cantrip choices, prepared Sorcerer spells, Spell Slot projection, spellcasting ability, and Arcane Focus."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_hit_point_die",
@@ -7796,9 +8320,15 @@
         "state": "not-installed",
         "unitId": "class_sorcerer"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard known casters: Sorcerer cantrip choices, prepared Sorcerer spells, Spell Slot projection, spellcasting ability, and Arcane Focus."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_primary_ability",
@@ -7824,9 +8354,15 @@
         "state": "not-installed",
         "unitId": "class_sorcerer"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard known casters: Sorcerer cantrip choices, prepared Sorcerer spells, Spell Slot projection, spellcasting ability, and Arcane Focus."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_saving_throw_proficiencies",
@@ -7852,9 +8388,15 @@
         "state": "not-installed",
         "unitId": "class_sorcerer"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard known casters: Sorcerer cantrip choices, prepared Sorcerer spells, Spell Slot projection, spellcasting ability, and Arcane Focus."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_skill_proficiencies",
@@ -7880,9 +8422,15 @@
         "state": "not-installed",
         "unitId": "class_sorcerer"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard known casters: Sorcerer cantrip choices, prepared Sorcerer spells, Spell Slot projection, spellcasting ability, and Arcane Focus."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_weapon_proficiencies",
@@ -7908,9 +8456,15 @@
         "state": "not-installed",
         "unitId": "class_sorcerer"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard known casters: Sorcerer cantrip choices, prepared Sorcerer spells, Spell Slot projection, spellcasting ability, and Arcane Focus."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:equipment-pressure:sorcerer_starting_equipment",
@@ -7936,9 +8490,15 @@
         "state": "not-installed",
         "unitId": "class_sorcerer"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard known casters: Sorcerer cantrip choices, prepared Sorcerer spells, Spell Slot projection, spellcasting ability, and Arcane Focus."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:multiclass-entry:sorcerer_multiclass_entry_traits",
@@ -7964,9 +8524,15 @@
         "state": "not-installed",
         "unitId": "class_sorcerer"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
+      },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard known casters: Sorcerer cantrip choices, prepared Sorcerer spells, Spell Slot projection, spellcasting ability, and Arcane Focus."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:spell-access:sorcerer_spellcasting",
@@ -9269,6 +9835,11 @@
         "state": "installed",
         "unitId": "class_warlock"
       },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
       "finalDisposition": "non-runtime",
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure."
@@ -9298,6 +9869,12 @@
       "catalogAdmission": {
         "state": "installed",
         "unitId": "class_warlock"
+      },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/warlock:level-1:class-container:warlock_class_container"
       },
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
@@ -9340,6 +9917,12 @@
         "state": "installed",
         "unitId": "class_warlock"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/warlock:level-1:class-container:warlock_class_container"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {
@@ -9380,6 +9963,12 @@
       "catalogAdmission": {
         "state": "installed",
         "unitId": "class_warlock"
+      },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/warlock:level-1:class-container:warlock_class_container"
       },
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
@@ -9422,6 +10011,12 @@
         "state": "installed",
         "unitId": "class_warlock"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/warlock:level-1:class-container:warlock_class_container"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {
@@ -9462,6 +10057,12 @@
       "catalogAdmission": {
         "state": "installed",
         "unitId": "class_warlock"
+      },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/warlock:level-1:class-container:warlock_class_container"
       },
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
@@ -9504,6 +10105,12 @@
         "state": "installed",
         "unitId": "class_warlock"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/warlock:level-1:class-container:warlock_class_container"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {
@@ -9545,6 +10152,12 @@
         "state": "installed",
         "unitId": "class_warlock"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/warlock:level-1:class-container:warlock_class_container"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {
@@ -9585,6 +10198,12 @@
       "catalogAdmission": {
         "state": "installed",
         "unitId": "class_warlock"
+      },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/warlock:level-1:class-container:warlock_class_container"
       },
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
@@ -10312,6 +10931,11 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
       "finalDisposition": "non-runtime",
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure."
@@ -10341,6 +10965,12 @@
       "catalogAdmission": {
         "state": "installed",
         "unitId": "class_wizard"
+      },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/wizard:level-1:class-container:wizard_class_container"
       },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
@@ -10383,6 +11013,12 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/wizard:level-1:class-container:wizard_class_container"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -10423,6 +11059,12 @@
       "catalogAdmission": {
         "state": "installed",
         "unitId": "class_wizard"
+      },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/wizard:level-1:class-container:wizard_class_container"
       },
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
@@ -10465,6 +11107,12 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/wizard:level-1:class-container:wizard_class_container"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -10505,6 +11153,12 @@
       "catalogAdmission": {
         "state": "installed",
         "unitId": "class_wizard"
+      },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/wizard:level-1:class-container:wizard_class_container"
       },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
@@ -10547,6 +11201,12 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/wizard:level-1:class-container:wizard_class_container"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -10588,6 +11248,12 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/wizard:level-1:class-container:wizard_class_container"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -10628,6 +11294,12 @@
       "catalogAdmission": {
         "state": "installed",
         "unitId": "class_wizard"
+      },
+      "characterCreationOwnership": {
+        "state": "class-container-owned-source-fact",
+        "owner": "Surface class container",
+        "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+        "classContainerRowId": "srd521:classes/wizard:level-1:class-container:wizard_class_container"
       },
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [

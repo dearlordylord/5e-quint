@@ -38,6 +38,12 @@ const characterCreationEvidenceRequiredRowKinds = new Set([
   "spell-access",
 ]);
 
+const classContainerOwnedCreationRowKinds = new Set([
+  "core-trait",
+  "equipment-pressure",
+  "multiclass-entry",
+]);
+
 const deterministicAdmissionProjectionEvidenceTag =
   "deterministic-admission-projection";
 const characterCreationOwnerEvidenceSchema =
@@ -326,6 +332,31 @@ function rowCategory(rowKind) {
   return categories[rowKind] ?? "unsupported/out of promoted scope";
 }
 
+function classContainerRowId(row) {
+  return `srd521:classes/${slug(row.className)}:level-1:class-container:${slug(row.className)}_class_container`;
+}
+
+function characterCreationOwnership(row) {
+  if (classContainerOwnedCreationRowKinds.has(row.rowKind)) {
+    return {
+      state: "class-container-owned-source-fact",
+      owner: "Surface class container",
+      evidenceBoundary:
+        "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
+      classContainerRowId: classContainerRowId(row),
+    };
+  }
+  if (row.rowKind === "class-table-summary") {
+    return {
+      state: "non-runtime-table-summary",
+      owner: "not-applicable",
+      evidenceBoundary:
+        "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence.",
+    };
+  }
+  return undefined;
+}
+
 function surfaceGate(row) {
   const classContainerBlocker = classContainerSurfaceBlockers.get(row.id);
   if (classContainerBlocker !== undefined) {
@@ -417,6 +448,16 @@ function nextAction(row, disposition, gate, ownerEvidenceSources) {
     return "Decide whether to admit/support, or keep catalog-only closure counted.";
   }
   if (disposition === "missing-authored-record") {
+    const ownership = characterCreationOwnership(row);
+    if (ownership?.state === "class-container-owned-source-fact") {
+      const classContainerBlocker = classContainerSurfaceBlockers.get(
+        ownership.classContainerRowId,
+      );
+      if (classContainerBlocker !== undefined) {
+        return `Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ${classContainerBlocker}.`;
+      }
+      return "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage.";
+    }
     return "Author an SRD-provenance Surface record or explicitly close the row.";
   }
   if (disposition === "needs-surface-widening")
@@ -885,6 +926,7 @@ function withState(rows, authored, installedIds, ownerEvidenceSources) {
           }
         : { state: "missing-authored-record" },
       catalogAdmission,
+      characterCreationOwnership: characterCreationOwnership(row),
       finalDisposition: disposition,
       ownerEvidence:
         catalogAdmission.state === "installed" &&
@@ -937,6 +979,16 @@ function countBy(rows, key) {
     counts[value] = (counts[value] ?? 0) + 1;
     return counts;
   }, {});
+}
+
+function countCharacterCreationOwnership(rows) {
+  return rows
+    .filter((row) => row.characterCreationOwnership !== undefined)
+    .reduce((counts, row) => {
+      const value = row.characterCreationOwnership.state;
+      counts[value] = (counts[value] ?? 0) + 1;
+      return counts;
+    }, {});
 }
 
 function rowRefs(rows) {
@@ -992,8 +1044,11 @@ function buildRecommendedBatches(rows) {
   );
   const missingCharacterCreationRows = levelOne.filter(
     (row) =>
-      row.category === "character-creation or progression mechanic" &&
+      row.characterCreationOwnership !== undefined &&
       row.finalDisposition === "missing-authored-record",
+  );
+  const classifiedCharacterCreationRows = levelOne.filter(
+    (row) => row.characterCreationOwnership !== undefined,
   );
   const missingSpellAccessRows = levelOne.filter(
     (row) =>
@@ -1066,9 +1121,14 @@ function buildRecommendedBatches(rows) {
       suggestedStatus: "blocked-on-SRDINV1",
       intent:
         "Separate class-container-owned creation/progression facts from rows that require standalone authored records.",
-      rows: missingCharacterCreationRows,
+      rows:
+        missingCharacterCreationRows.length === 0
+          ? classifiedCharacterCreationRows
+          : missingCharacterCreationRows,
       nextAction:
-        "Group hit dice, proficiencies, equipment, multiclass, and table-summary rows by whether the class container should own the evidence.",
+        missingCharacterCreationRows.length === 0
+          ? "Level-1 hit dice, proficiencies, equipment, multiclass, and table-summary rows have class-container ownership or non-runtime closure classifications."
+          : "For each missing class-container-owned creation row, unblock or author the SRD class container instead of creating standalone records.",
       acceptance:
         "Character-creation rows distinguish class-container ownership from missing standalone records.",
     }),
@@ -1202,6 +1262,8 @@ function buildSrdUnitInventory({
         "finalDisposition",
       ),
       levelOneRowsByCategory: countBy(levelOneRows, "category"),
+      levelOneCharacterCreationOwnership:
+        countCharacterCreationOwnership(levelOneRows),
       missingClassContainers: levelOneRows.filter(
         (row) =>
           row.rowKind === "class-container" &&
@@ -1339,6 +1401,12 @@ function renderSrdUnitInventory(report) {
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, count]) => `- ${key}: ${count}`),
     "",
+    "### Level-1 Character-Creation Ownership",
+    "",
+    ...Object.entries(report.metrics.levelOneCharacterCreationOwnership)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, count]) => `- ${key}: ${count}`),
+    "",
     "### Spell Unit Pressure by Disposition",
     "",
     ...Object.entries(report.metrics.spellPressureRowsByDisposition)
@@ -1368,12 +1436,13 @@ function renderSrdUnitInventory(report) {
     "",
     "## Level-1 Backlog Rows",
     "",
-    "| Row | Category | Surface | Authored | Catalog | Disposition | Owner evidence | Next action | Source |",
-    "|---|---|---|---|---|---|---|---|---|",
+    "| Row | Category | Creation ownership | Surface | Authored | Catalog | Disposition | Owner evidence | Next action | Source |",
+    "|---|---|---|---|---|---|---|---|---|---|",
     ...levelOne.map((row) =>
       [
         row.concept,
         row.category,
+        row.characterCreationOwnership?.state ?? "",
         row.surface.state,
         row.authoredContent.state,
         row.catalogAdmission.state,
