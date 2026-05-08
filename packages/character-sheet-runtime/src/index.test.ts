@@ -7,7 +7,12 @@ import {
 } from "@dnd/character-creation-runtime";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { elapsedTimeTicks, timeSpanDuration } from "@dnd/shared/elapsed-time";
-import { DieRollResult, Hp } from "@dnd/shared/types";
+import {
+  DieRollResult,
+  Hp,
+  resourceCount,
+  spellSlotLevel,
+} from "@dnd/shared/types";
 import {
   buildUnitCatalog,
   srdUnitCollection,
@@ -17,6 +22,11 @@ import { describe, expect, test } from "vitest";
 
 import {
   characterSheetArmorClassState,
+  characterSheetHitDice,
+  characterSheetPactSlots,
+  characterSheetSpellSlots,
+  completeLongRest,
+  completeShortRest,
   characterSheetId,
   characterSheetTempHp,
   createFreshCharacterSheet,
@@ -27,9 +37,7 @@ import {
 
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.armor-class-base-formula
 
-// These tests exercise Character Sheet HP invariants; the fixture only needs
-// the non-spellcasting discriminator read by createFreshCharacterSheet.
-const build = { spellcasting: undefined } as unknown as CharacterBuild;
+const build = armorClassBuild({ startingClass: "class_fighter" });
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -47,6 +55,7 @@ describe("Character Sheet runtime", () => {
       maximumHp: Hp(12),
       currentHp: Hp(12),
       tempHp: Hp(0),
+      unitLibrary,
     });
 
     expect(Either.isRight(sheet)).toBe(true);
@@ -66,6 +75,7 @@ describe("Character Sheet runtime", () => {
       maximumHp: Hp(12),
       currentHp: Hp(12),
       tempHp: Hp(5),
+      unitLibrary,
     });
 
     expect(Either.isRight(sheet)).toBe(true);
@@ -81,6 +91,7 @@ describe("Character Sheet runtime", () => {
       maximumHp: Hp(12),
       currentHp: Hp(1),
       tempHp: Hp(0),
+      unitLibrary,
       zeroHpLifecycle: {
         tag: "unstable",
         deathSaves: { successes: 0, failures: 0 },
@@ -97,27 +108,32 @@ describe("Character Sheet runtime", () => {
       maximumHp: Hp(12),
       currentHp: Hp(13),
       tempHp: Hp(0),
+      unitLibrary,
     });
 
     expect(Either.isLeft(sheet)).toBe(true);
   });
 
   test("rejects stored sheets with malformed Character Build shape", () => {
-    const sheet = parseCharacterSheet({
-      tag: "available",
-      characterId: "character:test",
-      build: {
-        progression: {},
-        background: "background_soldier",
-        species: "species_orc",
-        abilityScores: {},
-        proficiencyChoices: [],
-        features: [],
-        equipment: {},
+    const sheet = parseCharacterSheet(
+      {
+        tag: "available",
+        characterId: "character:test",
+        build: {
+          progression: {},
+          background: "background_soldier",
+          species: "species_orc",
+          abilityScores: {},
+          proficiencyChoices: [],
+          features: [],
+          equipment: {},
+        },
+        maximumHp: 12,
+        hitPoints: { tag: "positive", currentHp: 12 },
+        spentHitDice: [],
       },
-      maximumHp: 12,
-      hitPoints: { tag: "positive", currentHp: 12 },
-    });
+      unitLibrary,
+    );
 
     expect(Either.isLeft(sheet)).toBe(true);
   });
@@ -414,6 +430,348 @@ describe("Character Sheet runtime", () => {
     });
     expect(currentArmorClass(state)).toBe(16);
   });
+
+  test("Long Rest restores HP, Spell Slots, Pact Slots, and Arcane Recovery use", () => {
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:long-rest"),
+        build: wizardWarlockBuild(),
+        maximumHp: Hp(12),
+        currentHp: Hp(4),
+        tempHp: Hp(3),
+        unitLibrary,
+        spentHitDice: [{ classUnitId: "class_wizard", spent: resourceCount(1) }],
+        spellSlots: [
+          {
+            spellLevel: spellSlotLevel(1),
+            count: resourceCount(2),
+            expended: resourceCount(2),
+          },
+        ],
+        pactSlots: {
+          slotLevel: spellSlotLevel(1),
+          count: resourceCount(1),
+          expended: resourceCount(1),
+        },
+        restFeatureUses: [
+          {
+            tag: "arcaneRecovery",
+            usedSinceLongRest: true,
+          },
+        ],
+      }),
+    );
+
+    const rested = requireRight(completeLongRest({ sheet }));
+
+    expect(rested.hitPoints).toEqual({
+      tag: "positive",
+      currentHp: 12,
+      tempHp: 0,
+    });
+    expect(requireRight(characterSheetHitDice(rested, unitLibrary))).toEqual([
+      { classUnitId: "class_wizard", dieSize: 6, total: 1, spent: 0 },
+    ]);
+    expect(characterSheetSpellSlots(rested)).toEqual([
+      { spellLevel: 1, count: 2, expended: 0 },
+    ]);
+    expect(characterSheetPactSlots(rested)).toEqual({
+      slotLevel: 1,
+      count: 1,
+      expended: 0,
+    });
+    expect(rested.restFeatureUses).toEqual([]);
+  });
+
+  test("Short Rest restores Pact Slots without touching ordinary Spell Slots", () => {
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:short-rest-pact"),
+        build: wizardWarlockBuild(),
+        maximumHp: Hp(12),
+        currentHp: Hp(12),
+        tempHp: Hp(0),
+        unitLibrary,
+        spellSlots: [
+          {
+            spellLevel: spellSlotLevel(1),
+            count: resourceCount(2),
+            expended: resourceCount(1),
+          },
+        ],
+        pactSlots: {
+          slotLevel: spellSlotLevel(1),
+          count: resourceCount(1),
+          expended: resourceCount(1),
+        },
+      }),
+    );
+
+    const rested = requireRight(completeShortRest({ sheet, unitLibrary }));
+
+    expect(characterSheetSpellSlots(rested)).toEqual([
+      { spellLevel: 1, count: 2, expended: 1 },
+    ]);
+    expect(characterSheetPactSlots(rested)).toEqual({
+      slotLevel: 1,
+      count: 1,
+      expended: 0,
+    });
+  });
+
+  test("Short Rest spends Hit Dice to restore HP without touching Spell Slots", () => {
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:short-rest-hit-dice"),
+        build: wizardBuild({ wizardAdvancements: 1 }),
+        maximumHp: Hp(18),
+        currentHp: Hp(7),
+        tempHp: Hp(2),
+        unitLibrary,
+        spellSlots: [
+          {
+            spellLevel: spellSlotLevel(1),
+            count: resourceCount(3),
+            expended: resourceCount(1),
+          },
+        ],
+      }),
+    );
+
+    const rested = requireRight(
+      completeShortRest({
+        sheet,
+        unitLibrary,
+        spendHitDice: [
+          { classUnitId: "class_wizard", roll: DieRollResult(4) },
+        ],
+      }),
+    );
+
+    expect(rested.hitPoints).toEqual({
+      tag: "positive",
+      currentHp: 12,
+      tempHp: 2,
+    });
+    expect(requireRight(characterSheetHitDice(rested, unitLibrary))).toEqual([
+      { classUnitId: "class_wizard", dieSize: 6, total: 2, spent: 1 },
+    ]);
+    expect(characterSheetSpellSlots(rested)).toEqual([
+      { spellLevel: 1, count: 3, expended: 1 },
+    ]);
+  });
+
+  test("Short Rest applies minimum healing to each spent Hit Die", () => {
+    const lowConWizardBuild: CharacterBuild = {
+      ...wizardBuild({ wizardAdvancements: 1 }),
+      abilityScores: expectRight(
+        abilityScoreAssignment({
+          str: 13,
+          dex: 14,
+          con: 8,
+          int: 16,
+          wis: 12,
+          cha: 10,
+        }),
+      ),
+    };
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:short-rest-minimum-hit-dice"),
+        build: lowConWizardBuild,
+        maximumHp: Hp(18),
+        currentHp: Hp(7),
+        tempHp: Hp(0),
+        unitLibrary,
+        spellSlots: [
+          {
+            spellLevel: spellSlotLevel(1),
+            count: resourceCount(3),
+            expended: resourceCount(0),
+          },
+        ],
+      }),
+    );
+
+    const rested = requireRight(
+      completeShortRest({
+        sheet,
+        unitLibrary,
+        spendHitDice: [
+          { classUnitId: "class_wizard", roll: DieRollResult(1) },
+          { classUnitId: "class_wizard", roll: DieRollResult(1) },
+        ],
+      }),
+    );
+
+    expect(rested.hitPoints).toEqual({
+      tag: "positive",
+      currentHp: 9,
+      tempHp: 0,
+    });
+    expect(requireRight(characterSheetHitDice(rested, unitLibrary))).toEqual([
+      { classUnitId: "class_wizard", dieSize: 6, total: 2, spent: 2 },
+    ]);
+  });
+
+  test("Short Rest rejects spending more Hit Dice than remain", () => {
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:short-rest-spent-hit-dice"),
+        build: wizardBuild({ wizardAdvancements: 0 }),
+        maximumHp: Hp(8),
+        currentHp: Hp(4),
+        tempHp: Hp(0),
+        unitLibrary,
+        spentHitDice: [
+          { classUnitId: "class_wizard", spent: resourceCount(1) },
+        ],
+        spellSlots: [
+          {
+            spellLevel: spellSlotLevel(1),
+            count: resourceCount(3),
+            expended: resourceCount(0),
+          },
+        ],
+      }),
+    );
+
+    expect(
+      completeShortRest({
+        sheet,
+        unitLibrary,
+        spendHitDice: [
+          { classUnitId: "class_wizard", roll: DieRollResult(4) },
+        ],
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: "Short Rest cannot spend more Hit Dice than remain." },
+    });
+  });
+
+  test("Arcane Recovery refunds expended ordinary Spell Slots once per Long Rest", () => {
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:arcane-recovery"),
+        build: wizardBuild({ wizardAdvancements: 3 }),
+        maximumHp: Hp(12),
+        currentHp: Hp(12),
+        tempHp: Hp(0),
+        unitLibrary,
+        spellSlots: [
+          {
+            spellLevel: spellSlotLevel(1),
+            count: resourceCount(4),
+            expended: resourceCount(2),
+          },
+          {
+            spellLevel: spellSlotLevel(2),
+            count: resourceCount(3),
+            expended: resourceCount(1),
+          },
+        ],
+      }),
+    );
+
+    const rested = requireRight(
+      completeShortRest({
+        sheet,
+        unitLibrary,
+        arcaneRecovery: {
+          refundSpellSlots: [
+            { spellLevel: spellSlotLevel(2), count: resourceCount(1) },
+          ],
+        },
+      }),
+    );
+
+    expect(characterSheetSpellSlots(rested)).toEqual([
+      { spellLevel: 1, count: 4, expended: 2 },
+      { spellLevel: 2, count: 3, expended: 0 },
+    ]);
+    expect(rested.restFeatureUses).toEqual([
+      { tag: "arcaneRecovery", usedSinceLongRest: true },
+    ]);
+    expect(
+      completeShortRest({
+        sheet: rested,
+        unitLibrary,
+        arcaneRecovery: {
+          refundSpellSlots: [
+            { spellLevel: spellSlotLevel(1), count: resourceCount(1) },
+          ],
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: "Arcane Recovery cannot be used again until a Long Rest.",
+      },
+    });
+  });
+
+  test("Arcane Recovery rejects refunds above its level budget", () => {
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:arcane-recovery-budget"),
+        build: wizardBuild({ wizardAdvancements: 1 }),
+        maximumHp: Hp(12),
+        currentHp: Hp(12),
+        tempHp: Hp(0),
+        unitLibrary,
+        spellSlots: [
+          {
+            spellLevel: spellSlotLevel(1),
+            count: resourceCount(3),
+            expended: resourceCount(2),
+          },
+        ],
+      }),
+    );
+
+    expect(
+      completeShortRest({
+        sheet,
+        unitLibrary,
+        arcaneRecovery: {
+          refundSpellSlots: [
+            { spellLevel: spellSlotLevel(1), count: resourceCount(2) },
+          ],
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: "Arcane Recovery refund exceeds half Wizard level rounded up.",
+      },
+    });
+  });
+
+  test("rejects Arcane Recovery use state for sheets without the feature", () => {
+    const sheet = createFreshCharacterSheet({
+      characterId: characterSheetId("character:arcane-recovery-non-owner"),
+      build: armorClassBuild({ startingClass: "class_fighter" }),
+      maximumHp: Hp(12),
+      currentHp: Hp(12),
+      tempHp: Hp(0),
+      unitLibrary,
+      restFeatureUses: [
+        {
+          tag: "arcaneRecovery",
+          usedSinceLongRest: true,
+        },
+      ],
+    });
+
+    expect(sheet).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Arcane Recovery rest feature use requires the Wizard Arcane Recovery feature.",
+      },
+    });
+  });
 });
 
 function stableSheet(characterIdText: string): CharacterSheet {
@@ -424,6 +782,7 @@ function stableSheet(characterIdText: string): CharacterSheet {
       maximumHp: Hp(12),
       currentHp: Hp(0),
       tempHp: Hp(0),
+      unitLibrary,
       zeroHpLifecycle: {
         tag: "stable",
         recovery: {
@@ -496,6 +855,64 @@ function armorClassBuild(input: {
       loadout: {
         ...(armorItemId === undefined ? {} : { armor: armorItemId }),
         ...(shieldItemId === undefined ? {} : { shield: shieldItemId }),
+      },
+    },
+  };
+}
+
+function wizardBuild(input: {
+  readonly wizardAdvancements: number;
+}): CharacterBuild {
+  return {
+    ...armorClassBuild({
+      startingClass: "class_wizard",
+      advancements: Array.from(
+        { length: input.wizardAdvancements },
+        () => "class_wizard",
+      ),
+    }),
+    spellcasting: {
+      sources: [
+        {
+          sourceUnitId: "class_wizard",
+          spellcastingAbility: "int",
+          cantrips: [],
+          spellbook: [],
+          preparedSpells: [],
+          spellcastingFocuses: ["arcane_focus"],
+        },
+      ],
+      slotPools: {
+        spellcasting: {
+          kind: "spellcasting",
+          slots:
+            input.wizardAdvancements >= 3
+              ? [
+                  { spellLevel: 1, count: 4 },
+                  { spellLevel: 2, count: 3 },
+                ]
+              : [{ spellLevel: 1, count: 3 }],
+        },
+      },
+    },
+  };
+}
+
+function wizardWarlockBuild(): CharacterBuild {
+  return {
+    ...wizardBuild({ wizardAdvancements: 0 }),
+    spellcasting: {
+      ...wizardBuild({ wizardAdvancements: 0 }).spellcasting!,
+      slotPools: {
+        spellcasting: {
+          kind: "spellcasting",
+          slots: [{ spellLevel: 1, count: 2 }],
+        },
+        pactMagic: {
+          kind: "pactMagic",
+          slotLevel: 1,
+          count: 1,
+        },
       },
     },
   };

@@ -137,7 +137,8 @@
       "schema": "dnd.srd-character-sheet-owner-evidence.v1",
       "rowIds": [
         "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense",
-        "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense"
+        "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense",
+        "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery"
       ],
       "issues": []
     },
@@ -153,15 +154,15 @@
     "spellPressureRows": 211,
     "levelOneClassContainers": 12,
     "levelOneRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 141,
+      "catalog-installed-owner-evidence-present": 142,
       "non-runtime": 12,
-      "catalog-only/dead-for-now": 2,
+      "catalog-only/dead-for-now": 1,
       "catalog-installed-owner-evidence-required": 1
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 159,
+      "catalog-installed-owner-evidence-present": 160,
       "non-runtime": 12,
-      "catalog-only/dead-for-now": 76,
+      "catalog-only/dead-for-now": 75,
       "catalog-authored-executable-follow-up": 70,
       "catalog-installed-owner-evidence-required": 11,
       "needs-surface-widening": 33,
@@ -743,7 +744,7 @@
       "title": "Review Catalog-Only and Surface-Widening Rows",
       "suggestedStatus": "done",
       "intent": "Preserve catalog-only/dead-for-now rows and name missing Surface constructs for nonspell and spell Surface-widening blockers.",
-      "rowCount": 35,
+      "rowCount": 34,
       "rowIds": [
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_command",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_dissonant_whispers",
@@ -772,7 +773,6 @@
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_expeditious_retreat",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hex",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hideous_laughter",
-        "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_fire_bolt",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_expeditious_retreat",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_feather_fall",
@@ -1592,7 +1592,7 @@
     {
       "id": "SRDINV23",
       "title": "Promote Character-Sheet Armor Class Formula Runtime",
-      "suggestedStatus": "ready-for-research",
+      "suggestedStatus": "done",
       "intent": "Promote the character-sheet Armor Class derivation owner for base AC and class-derived Unarmored Defense formulas.",
       "rowCount": 0,
       "rowIds": [],
@@ -1602,7 +1602,7 @@
     {
       "id": "SRDINV24",
       "title": "Promote Character-Sheet Rest and Spell Slot Recovery",
-      "suggestedStatus": "ready-for-research",
+      "suggestedStatus": "done",
       "intent": "Promote the character-sheet rest recovery owner for Short Rest, Long Rest, Spell Slot recovery, and Wizard Arcane Recovery.",
       "rowCount": 1,
       "rowIds": [
@@ -13517,7 +13517,7 @@
         "state": "installed",
         "unitId": "wizard_arcane_recovery"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -13525,12 +13525,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "catalog-only/dead-for-now",
-          "evidence": "Spell Slot recovery after a Short Rest belongs to a future character-sheet/rest runtime, not the current character-creation or battle-runtime boundary.",
-          "status": "catalog-only/dead-for-now closure"
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; SRDINV24 Character Sheet Rest and Spell Slot Recovery runtime; Character Sheet rest completion models Short Rest Hit Dice spending, Long Rest spent Hit Dice recovery, Pact Slot recovery, ordinary Spell Slot recovery, and Wizard Arcane Recovery as distinct runtime facts. Wizard Arcane Recovery is read from the installed Surface class-feature record and applied during Short Rest completion as a distinct ordinary Spell Slot refund; the runtime enforces feature ownership, the Short Rest trigger, once-per-Long-Rest feature use, half-Wizard-level rounded-up recovery budget, level 6+ exclusion, and expended-slot ceiling.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Spell Slot recovery after a Short Rest belongs to a future character-sheet/rest runtime, not the current character-creation or battle-runtime boundary."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/wizard:level-1:class-feature-grant:wizard_ritual_adept",

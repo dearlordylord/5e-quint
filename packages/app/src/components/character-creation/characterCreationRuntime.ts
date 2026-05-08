@@ -20,6 +20,7 @@ import {
   type CharacterSheet,
   characterSheetCurrentHp,
   characterSheetId,
+  characterSheetSpellSlots,
   characterSheetTempHp,
   createFreshCharacterSheet
 } from "@dnd/character-sheet-runtime"
@@ -62,7 +63,8 @@ export function createCharacterSheetFromDraft(draft: CharacterDraft): Either.Eit
     build: finalization.build,
     maximumHp: Hp(hitPoints.right.maximum),
     currentHp: Hp(hitPoints.right.maximum),
-    tempHp: Hp(0)
+    tempHp: Hp(0),
+    unitLibrary: characterCreationUnitLibrary
   })
   return Either.isLeft(sheet) ? Either.left(sheet.left.message) : Either.right(sheet.right)
 }
@@ -88,7 +90,7 @@ export function characterSheetSummary(sheet: CharacterSheet): {
     tempHp: characterSheetTempHp(sheet),
     maximumHp: sheet.maximumHp,
     hitPointState: sheet.hitPoints.tag,
-    spellSlotLevels: "spellSlotExpenditures" in sheet ? sheet.spellSlotExpenditures.map((slot) => slot.spellLevel) : []
+    spellSlotLevels: characterSheetSpellSlots(sheet)?.map((slot) => slot.spellLevel) ?? []
   }
 }
 

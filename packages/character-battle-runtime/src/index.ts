@@ -7,6 +7,7 @@ import {
 import {
   CHARACTER_SHEET_KNOCKED_OUT_UNCONSCIOUS,
   characterSheetCurrentHp,
+  characterSheetPactSlots,
   characterSheetSpellSlots,
   characterSheetTempHp,
   createFreshCharacterSheet,
@@ -89,6 +90,7 @@ export function characterSheetBattleInit(input: CharacterSheetBattleInitInput) {
 export function applyBattleHandoffToCharacterSheet(input: {
   readonly sheet: CharacterSheet;
   readonly combatant: BattleCreatureState;
+  readonly unitLibrary: UnitCatalog;
 }): Either.Either<CharacterSheet, CharacterSheetBattleHandoffIssue> {
   if (input.combatant.origin.kind !== "character") {
     return characterSheetBattleHandoffIssue(
@@ -122,6 +124,7 @@ export function applyBattleHandoffToCharacterSheet(input: {
   if (Either.isLeft(knockedOut)) {
     return characterSheetBattleHandoffIssue(knockedOut.left.message);
   }
+  const pactSlots = characterSheetPactSlots(input.sheet);
 
   return createFreshCharacterSheet({
     characterId: input.sheet.characterId,
@@ -129,6 +132,7 @@ export function applyBattleHandoffToCharacterSheet(input: {
     maximumHp: input.sheet.maximumHp,
     currentHp: input.combatant.hp,
     tempHp: input.combatant.tempHp,
+    unitLibrary: input.unitLibrary,
     ...(knockedOut.right === null
       ? {}
       : {
@@ -141,6 +145,9 @@ export function applyBattleHandoffToCharacterSheet(input: {
     ...(input.combatant.origin.spellcasting === undefined
       ? {}
       : { spellSlots: input.combatant.origin.spellcasting.spellSlots }),
+    ...(pactSlots === undefined ? {} : { pactSlots }),
+    spentHitDice: input.sheet.spentHitDice,
+    restFeatureUses: input.sheet.restFeatureUses,
   });
 }
 

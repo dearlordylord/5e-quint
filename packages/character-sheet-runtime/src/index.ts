@@ -4,7 +4,9 @@ import {
   abilityScoreAssignment,
   characterBuildArmorTraining,
   characterBuildFeatureUnitIds,
+  characterBuildHitPoints,
   characterBuildSpellcastingSlotCapacity,
+  classLevelForUnit,
   classUnitId,
   CHARACTER_CLASS_LEVELS,
   characterEquipmentItemSourceFromId,
@@ -13,6 +15,8 @@ import {
   type CharacterBuild,
   type CharacterBuildEquipment,
   type CharacterBuildFeature,
+  type CharacterBuildHitDiePool,
+  type CharacterBuildPactMagicSlotPool,
   type CharacterBuildProficiencyChoiceSubject,
   type CharacterBuildSpellcasting,
   type CharacterBuildSpellcastingFocus,
@@ -84,6 +88,7 @@ const ARMOR_TRAINING_CATEGORY_VALUES = [
   "heavy",
   "shield",
 ] as const;
+const WIZARD_ARCANE_RECOVERY_UNIT_ID = "wizard_arcane_recovery" as const;
 
 export type CharacterSheetId = string & Brand.Brand<"CharacterId">;
 const CharacterSheetId = Brand.nominal<CharacterSheetId>();
@@ -100,6 +105,11 @@ type NonSpellcastingCharacterBuild = CharacterBuild & {
   readonly spellcasting?: undefined;
 };
 
+type CharacterSheetWithSpellSlots = CharacterSheet & {
+  readonly build: SpellcastingCharacterBuild;
+  readonly spellSlotExpenditures: readonly CharacterSpellSlotExpenditure[];
+};
+
 export type CharacterSheet =
   | {
       readonly tag: "available";
@@ -107,7 +117,10 @@ export type CharacterSheet =
       readonly build: SpellcastingCharacterBuild;
       readonly maximumHp: HpType;
       readonly hitPoints: CharacterSheetHitPoints;
+      readonly spentHitDice: readonly CharacterSheetSpentHitDiePool[];
+      readonly restFeatureUses: readonly CharacterSheetRestFeatureUse[];
       readonly spellSlotExpenditures: readonly CharacterSpellSlotExpenditure[];
+      readonly pactSlotExpenditure: CharacterPactSlotExpenditure | undefined;
     }
   | {
       readonly tag: "available";
@@ -115,11 +128,20 @@ export type CharacterSheet =
       readonly build: NonSpellcastingCharacterBuild;
       readonly maximumHp: HpType;
       readonly hitPoints: CharacterSheetHitPoints;
-      readonly spellSlots?: never;
+      readonly spentHitDice: readonly CharacterSheetSpentHitDiePool[];
+      readonly restFeatureUses: readonly CharacterSheetRestFeatureUse[];
+      readonly spellSlotExpenditures?: never;
+      readonly pactSlotExpenditure?: never;
     };
 
 export type CharacterSpellSlotExpenditure = {
   readonly spellLevel: SpellSlotLevel;
+  readonly expended: ResourceCount;
+};
+
+export type CharacterPactSlotExpenditure = {
+  readonly slotLevel: SpellSlotLevel;
+  readonly count: ResourceCount;
   readonly expended: ResourceCount;
 };
 
@@ -129,15 +151,58 @@ export type CharacterSheetSpellSlotState = {
   readonly expended: ResourceCount;
 };
 
+export type CharacterSheetPactSlotState = CharacterPactSlotExpenditure;
+
+export type CharacterSheetSpentHitDiePool = {
+  readonly classUnitId: UnitRecord["id"];
+  readonly spent: ResourceCount;
+};
+
+export type CharacterSheetHitDieState = CharacterBuildHitDiePool & {
+  readonly spent: ResourceCount;
+};
+
+export type CharacterSheetHitDieSpend = {
+  readonly classUnitId: UnitRecord["id"];
+  readonly roll: DieRollResult;
+};
+
+export type CharacterSheetRestFeatureUse = {
+  readonly tag: "arcaneRecovery";
+  readonly usedSinceLongRest: true;
+};
+
+export type CharacterSheetArcaneRecoverySlotRefund = {
+  readonly spellLevel: SpellSlotLevel;
+  readonly count: ResourceCount;
+};
+
+export type CharacterSheetShortRestInput = {
+  readonly sheet: CharacterSheet;
+  readonly unitLibrary: UnitCatalog;
+  readonly spendHitDice?: readonly CharacterSheetHitDieSpend[];
+  readonly arcaneRecovery?: {
+    readonly refundSpellSlots: readonly CharacterSheetArcaneRecoverySlotRefund[];
+  };
+};
+
+export type CharacterSheetLongRestInput = {
+  readonly sheet: CharacterSheet;
+};
+
 export type CharacterSheetInput = {
   readonly characterId: CharacterSheetId;
   readonly build: CharacterBuild;
   readonly maximumHp: HpType;
   readonly currentHp: HpType;
   readonly tempHp: HpType;
+  readonly unitLibrary: UnitCatalog;
   readonly positiveHpUnconscious?: CharacterSheetPositiveHpUnconscious;
   readonly zeroHpLifecycle?: CharacterSheetZeroHpLifecycleInput;
+  readonly spentHitDice?: readonly CharacterSheetSpentHitDiePool[];
   readonly spellSlots?: readonly CharacterSheetSpellSlotState[];
+  readonly pactSlots?: CharacterSheetPactSlotState;
+  readonly restFeatureUses?: readonly CharacterSheetRestFeatureUse[];
 };
 
 export type CharacterSheetPositiveHpUnconscious = {
@@ -256,11 +321,20 @@ export function createFreshCharacterSheet(
   const hitPointCapacity = characterSheetHitPointCapacity(input);
   if (Either.isLeft(hitPointCapacity))
     return Either.left(hitPointCapacity.left);
+  const spentHitDice = spentHitDiceFromInput(input);
+  if (Either.isLeft(spentHitDice)) return Either.left(spentHitDice.left);
+  const restFeatureUses = restFeatureUsesFromInput(input);
+  if (Either.isLeft(restFeatureUses)) return Either.left(restFeatureUses.left);
 
   if (isNonSpellcastingBuild(input.build)) {
     if (input.spellSlots !== undefined) {
       return characterSheetIssue(
         "Non-spellcasting Character Sheet cannot carry Spell Slot state.",
+      );
+    }
+    if (input.pactSlots !== undefined) {
+      return characterSheetIssue(
+        "Non-spellcasting Character Sheet cannot carry Pact Slot state.",
       );
     }
     const hitPoints = characterSheetHitPoints(input);
@@ -271,6 +345,8 @@ export function createFreshCharacterSheet(
       build: input.build,
       maximumHp: input.maximumHp,
       hitPoints: hitPoints.right,
+      spentHitDice: spentHitDice.right,
+      restFeatureUses: restFeatureUses.right,
     });
   }
 
@@ -284,14 +360,17 @@ export function createFreshCharacterSheet(
   if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
   const spellSlotExpenditures = spellSlotExpendituresFromInput({
     build,
-    characterId: input.characterId,
-    maximumHp: input.maximumHp,
-    currentHp: input.currentHp,
-    tempHp: input.tempHp,
     ...(input.spellSlots === undefined ? {} : { spellSlots: input.spellSlots }),
   });
   if (Either.isLeft(spellSlotExpenditures)) {
     return Either.left(spellSlotExpenditures.left);
+  }
+  const pactSlotExpenditure = pactSlotExpenditureFromInput({
+    build,
+    ...(input.pactSlots === undefined ? {} : { pactSlots: input.pactSlots }),
+  });
+  if (Either.isLeft(pactSlotExpenditure)) {
+    return Either.left(pactSlotExpenditure.left);
   }
 
   return Either.right({
@@ -300,12 +379,16 @@ export function createFreshCharacterSheet(
     build,
     maximumHp: input.maximumHp,
     hitPoints: hitPoints.right,
+    spentHitDice: spentHitDice.right,
+    restFeatureUses: restFeatureUses.right,
     spellSlotExpenditures: spellSlotExpenditures.right,
+    pactSlotExpenditure: pactSlotExpenditure.right,
   });
 }
 
 export function parseCharacterSheet(
   value: unknown,
+  unitLibrary: UnitCatalog,
 ): Either.Either<CharacterSheet, CharacterSheetIssue> {
   if (!isRecord(value)) return characterSheetIssue("Expected Character Sheet.");
   if (value.tag !== "available") {
@@ -320,8 +403,18 @@ export function parseCharacterSheet(
   if (Either.isLeft(maximumHp)) return Either.left(maximumHp.left);
   const hitPoints = parseStoredHitPoints(value.hitPoints);
   if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
+  const spentHitDice = parseStoredSpentHitDice(value.spentHitDice);
+  if (Either.isLeft(spentHitDice)) return Either.left(spentHitDice.left);
   const spellSlots = parseStoredSpellSlots(build.right, value);
   if (Either.isLeft(spellSlots)) return Either.left(spellSlots.left);
+  const pactSlots = parseStoredPactSlots(build.right, value);
+  if (Either.isLeft(pactSlots)) return Either.left(pactSlots.left);
+  const restFeatureUses = parseStoredRestFeatureUses(
+    build.right,
+    unitLibrary,
+    value.restFeatureUses,
+  );
+  if (Either.isLeft(restFeatureUses)) return Either.left(restFeatureUses.left);
 
   return createFreshCharacterSheet({
     characterId: characterSheetId(value.characterId),
@@ -329,6 +422,7 @@ export function parseCharacterSheet(
     maximumHp: maximumHp.right,
     currentHp: hitPoints.right.currentHp,
     tempHp: hitPoints.right.tempHp,
+    unitLibrary,
     ...(hitPoints.right.positiveHpUnconscious === undefined
       ? {}
       : { positiveHpUnconscious: hitPoints.right.positiveHpUnconscious }),
@@ -336,6 +430,9 @@ export function parseCharacterSheet(
       ? {}
       : { zeroHpLifecycle: hitPoints.right.zeroHpLifecycle }),
     ...(spellSlots.right === undefined ? {} : { spellSlots: spellSlots.right }),
+    ...(pactSlots.right === undefined ? {} : { pactSlots: pactSlots.right }),
+    spentHitDice: spentHitDice.right,
+    restFeatureUses: restFeatureUses.right,
   });
 }
 
@@ -402,7 +499,7 @@ export function characterSheetHitPointsCurrentHp(
 export function characterSheetSpellSlots(
   sheet: CharacterSheet,
 ): readonly CharacterSheetSpellSlotState[] | undefined {
-  if (!("spellSlotExpenditures" in sheet)) return undefined;
+  if (!isCharacterSheetWithSpellSlots(sheet)) return undefined;
   return characterBuildSpellcastingSlotCapacity(sheet.build).map((slot) => {
     const expenditure = requireSpellSlotExpenditure(
       sheet.spellSlotExpenditures,
@@ -413,6 +510,91 @@ export function characterSheetSpellSlots(
       count: resourceCount(slot.count),
       expended: expenditure.expended,
     };
+  });
+}
+
+export function characterSheetPactSlots(
+  sheet: CharacterSheet,
+): CharacterSheetPactSlotState | undefined {
+  return "pactSlotExpenditure" in sheet ? sheet.pactSlotExpenditure : undefined;
+}
+
+export function characterSheetHitDice(
+  sheet: CharacterSheet,
+  unitLibrary: UnitCatalog,
+): Either.Either<readonly CharacterSheetHitDieState[], CharacterSheetIssue> {
+  const capacity = characterBuildHitDice(sheet.build, unitLibrary);
+  if (Either.isLeft(capacity)) return Either.left(capacity.left);
+  return Either.right(
+    capacity.right.map((pool) => ({
+      ...pool,
+      spent:
+        sheet.spentHitDice.find(
+          (spent) => spent.classUnitId === pool.classUnitId,
+        )?.spent ?? resourceCount(0),
+    })),
+  );
+}
+
+export function completeShortRest(
+  input: CharacterSheetShortRestInput,
+): Either.Either<CharacterSheet, CharacterSheetIssue> {
+  if (characterSheetCurrentHp(input.sheet) < Hp(1)) {
+    return characterSheetIssue(
+      "Short Rest requires the Character Sheet to have at least 1 HP.",
+    );
+  }
+  const pactRecovered = recoverPactSlots(input.sheet);
+  const hitDiceSpent = spendHitDice({
+    sheet: pactRecovered,
+    unitLibrary: input.unitLibrary,
+    spendHitDice: input.spendHitDice,
+  });
+  if (Either.isLeft(hitDiceSpent)) return Either.left(hitDiceSpent.left);
+  if (input.arcaneRecovery === undefined) return Either.right(hitDiceSpent.right);
+  return applyArcaneRecovery({
+    sheet: hitDiceSpent.right,
+    unitLibrary: input.unitLibrary,
+    refundSpellSlots: input.arcaneRecovery.refundSpellSlots,
+  });
+}
+
+export function completeLongRest(
+  input: CharacterSheetLongRestInput,
+): Either.Either<CharacterSheet, CharacterSheetIssue> {
+  if (characterSheetCurrentHp(input.sheet) < Hp(1)) {
+    return characterSheetIssue(
+      "Long Rest requires the Character Sheet to have at least 1 HP.",
+    );
+  }
+  const hitPoints = characterSheetHitPoints({
+    currentHp: input.sheet.maximumHp,
+    tempHp: Hp(0),
+  });
+  if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
+  if (isCharacterSheetWithSpellSlots(input.sheet)) {
+    return Either.right({
+      ...input.sheet,
+      hitPoints: hitPoints.right,
+      spentHitDice: [],
+      restFeatureUses: [],
+      spellSlotExpenditures: input.sheet.spellSlotExpenditures.map(
+        (expenditure) => ({
+          ...expenditure,
+          expended: resourceCount(0),
+        }),
+      ),
+      pactSlotExpenditure:
+        input.sheet.pactSlotExpenditure === undefined
+          ? undefined
+          : { ...input.sheet.pactSlotExpenditure, expended: resourceCount(0) },
+    });
+  }
+  return Either.right({
+    ...input.sheet,
+    hitPoints: hitPoints.right,
+    spentHitDice: [],
+    restFeatureUses: [],
   });
 }
 
@@ -541,6 +723,10 @@ type ModifyAcSetBaseGrant = Extract<
   >["grants"][number],
   { readonly kind: "modify_ac_set_base" }
 >;
+type RestSpellSlotRecoveryMechanics = Extract<
+  CharacterSheetClassFeatureRecord["mechanics"],
+  { readonly family: "rest_spell_slot_recovery" }
+>;
 
 function selectedUnarmoredBaseSource(
   input: CharacterSheetArmorClassStateInput,
@@ -596,9 +782,7 @@ function characterSheetClassFeatureArmorClassBaseCandidates(
   for (const unitId of characterBuildFeatureUnitIds(build, unitLibrary)) {
     const unit = getRequiredUnit(unitLibrary, unitId);
     if (Either.isLeft(unit)) return Either.left(unit.left);
-    candidates.push(
-      ...armorClassBaseCandidatesForUnit(unit.right, equipment),
-    );
+    candidates.push(...armorClassBaseCandidatesForUnit(unit.right, equipment));
   }
   return Either.right(candidates);
 }
@@ -622,11 +806,7 @@ function armorClassBaseCandidatesForClassFeatureMechanics(
 ): readonly CharacterSheetArmorClassBaseCandidate[] {
   if (mechanics.family === "composite") {
     return mechanics.parts.flatMap((part) =>
-      armorClassBaseCandidatesForClassFeatureComponent(
-        unitId,
-        part,
-        equipment,
-      ),
+      armorClassBaseCandidatesForClassFeatureComponent(unitId, part, equipment),
     );
   }
   if (mechanics.family !== "passive") return [];
@@ -770,7 +950,7 @@ function requireSpellSlotExpenditure(
 }
 
 function spellSlotExpendituresFromInput(
-  input: CharacterSheetInput & {
+  input: Pick<CharacterSheetInput, "spellSlots"> & {
     readonly build: SpellcastingCharacterBuild;
   },
 ): Either.Either<
@@ -822,6 +1002,382 @@ function spellSlotExpendituresFromInput(
     });
   }
   return Either.right(expenditures);
+}
+
+function pactSlotExpenditureFromInput(
+  input: Pick<CharacterSheetInput, "pactSlots"> & {
+    readonly build: SpellcastingCharacterBuild;
+  },
+): Either.Either<
+  CharacterPactSlotExpenditure | undefined,
+  CharacterSheetIssue
+> {
+  const pactMagic = characterBuildPactSlotCapacity(input.build);
+  if (pactMagic === undefined) {
+    return input.pactSlots === undefined
+      ? Either.right(undefined)
+      : characterSheetIssue(
+          "Pact Slot state must match Pact Magic build capacity.",
+        );
+  }
+  const pactSlots =
+    input.pactSlots ??
+    ({
+      slotLevel: spellSlotLevel(pactMagic.slotLevel),
+      count: resourceCount(pactMagic.count),
+      expended: resourceCount(0),
+    } satisfies CharacterSheetPactSlotState);
+  if (
+    pactSlots.slotLevel !== spellSlotLevel(pactMagic.slotLevel) ||
+    pactSlots.count !== resourceCount(pactMagic.count) ||
+    !Number.isInteger(pactSlots.expended) ||
+    pactSlots.expended < 0 ||
+    pactSlots.expended > pactMagic.count
+  ) {
+    return characterSheetIssue(
+      "Pact Slot state must match Pact Magic build capacity.",
+    );
+  }
+  return Either.right({
+    slotLevel: spellSlotLevel(pactMagic.slotLevel),
+    count: resourceCount(pactMagic.count),
+    expended: resourceCount(pactSlots.expended),
+  });
+}
+
+function spentHitDiceFromInput(
+  input: Pick<
+    CharacterSheetInput,
+    "build" | "spentHitDice" | "unitLibrary"
+  >,
+): Either.Either<readonly CharacterSheetSpentHitDiePool[], CharacterSheetIssue> {
+  const capacity = characterBuildHitDice(input.build, input.unitLibrary);
+  if (Either.isLeft(capacity)) return Either.left(capacity.left);
+  const spentHitDice = input.spentHitDice ?? [];
+  const spentByClass = new Map<UnitRecord["id"], ResourceCount>();
+  for (const spent of spentHitDice) {
+    if (spentByClass.has(spent.classUnitId)) {
+      return characterSheetIssue("Spent Hit Dice state must not duplicate.");
+    }
+    spentByClass.set(spent.classUnitId, spent.spent);
+  }
+  const capacityByClass = new Map(
+    capacity.right.map((pool) => [pool.classUnitId, pool]),
+  );
+  const result = [];
+  for (const spent of spentHitDice) {
+    const pool = capacityByClass.get(spent.classUnitId);
+    if (pool === undefined) {
+      return characterSheetIssue(
+        "Spent Hit Dice state must match build Hit Dice exactly.",
+      );
+    }
+    if (
+      !Number.isInteger(spent.spent) ||
+      spent.spent < 0 ||
+      spent.spent > pool.total
+    ) {
+      return characterSheetIssue(
+        "Spent Hit Dice state cannot exceed build Hit Dice.",
+      );
+    }
+    if (spent.spent > 0) {
+      result.push({
+        classUnitId: spent.classUnitId,
+        spent: resourceCount(spent.spent),
+      });
+    }
+  }
+  return Either.right(result);
+}
+
+function restFeatureUsesFromInput(
+  input: Pick<CharacterSheetInput, "build" | "restFeatureUses" | "unitLibrary">,
+): Either.Either<readonly CharacterSheetRestFeatureUse[], CharacterSheetIssue> {
+  const uses = input.restFeatureUses ?? [];
+  const usedFeatureTags = new Set<string>();
+  for (const use of uses) {
+    if (use.tag !== "arcaneRecovery" || use.usedSinceLongRest !== true) {
+      return characterSheetIssue("Expected supported rest feature use state.");
+    }
+    if (usedFeatureTags.has(use.tag)) {
+      return characterSheetIssue("Rest feature use state must not duplicate.");
+    }
+    if (!characterBuildHasArcaneRecovery(input.build, input.unitLibrary)) {
+      return characterSheetIssue(
+        "Arcane Recovery rest feature use requires the Wizard Arcane Recovery feature.",
+      );
+    }
+    usedFeatureTags.add(use.tag);
+  }
+  return Either.right([...uses]);
+}
+
+function characterBuildHitDice(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): Either.Either<readonly CharacterBuildHitDiePool[], CharacterSheetIssue> {
+  const hitPoints = characterBuildHitPoints(build, unitLibrary);
+  return Either.isLeft(hitPoints)
+    ? characterSheetIssue(
+        hitPoints.left.map((issue) => issue.message).join("; "),
+      )
+    : Either.right(hitPoints.right.hitDice);
+}
+
+function characterBuildPactSlotCapacity(
+  build: Pick<CharacterBuild, "spellcasting">,
+): CharacterBuildPactMagicSlotPool | undefined {
+  return build.spellcasting?.slotPools.pactMagic;
+}
+
+function recoverPactSlots(sheet: CharacterSheet): CharacterSheet {
+  if (
+    !("pactSlotExpenditure" in sheet) ||
+    sheet.pactSlotExpenditure === undefined
+  ) {
+    return sheet;
+  }
+  return {
+    ...sheet,
+    pactSlotExpenditure: {
+      ...sheet.pactSlotExpenditure,
+      expended: resourceCount(0),
+    },
+  };
+}
+
+function spendHitDice(input: {
+  readonly sheet: CharacterSheet;
+  readonly unitLibrary: UnitCatalog;
+  readonly spendHitDice: readonly CharacterSheetHitDieSpend[] | undefined;
+}): Either.Either<CharacterSheet, CharacterSheetIssue> {
+  if (input.spendHitDice === undefined) return Either.right(input.sheet);
+  if (input.spendHitDice.length === 0) {
+    return characterSheetIssue("Short Rest Hit Dice spending cannot be empty.");
+  }
+  const hitDice = characterSheetHitDice(input.sheet, input.unitLibrary);
+  if (Either.isLeft(hitDice)) return Either.left(hitDice.left);
+  const hitDiceByClass = new Map(
+    hitDice.right.map((pool) => [pool.classUnitId, pool]),
+  );
+  const spentThisRest = new Map<UnitRecord["id"], ResourceCount>();
+  let healingTotal = 0;
+  const constitutionModifier = abilityScoreToMod(
+    input.sheet.build.abilityScores.con,
+  );
+  for (const spend of input.spendHitDice) {
+    const pool = hitDiceByClass.get(spend.classUnitId);
+    if (pool === undefined) {
+      return characterSheetIssue(
+        "Short Rest Hit Dice spend must match build Hit Dice.",
+      );
+    }
+    if (
+      !Number.isInteger(Number(spend.roll)) ||
+      spend.roll < 1 ||
+      spend.roll > pool.dieSize
+    ) {
+      return characterSheetIssue(
+        `Short Rest Hit Die roll must be within d${pool.dieSize}.`,
+      );
+    }
+    healingTotal += Math.max(1, spend.roll + constitutionModifier);
+    spentThisRest.set(
+      spend.classUnitId,
+      resourceCount((spentThisRest.get(spend.classUnitId) ?? 0) + 1),
+    );
+  }
+  const nextSpentHitDice = input.sheet.spentHitDice.map((spent) => ({
+    ...spent,
+  }));
+  for (const [classUnitId, spentCount] of spentThisRest.entries()) {
+    const pool = hitDiceByClass.get(classUnitId);
+    if (pool === undefined || pool.spent + spentCount > pool.total) {
+      return characterSheetIssue(
+        "Short Rest cannot spend more Hit Dice than remain.",
+      );
+    }
+    const existingIndex = nextSpentHitDice.findIndex(
+      (spent) => spent.classUnitId === classUnitId,
+    );
+    if (existingIndex === -1) {
+      nextSpentHitDice.push({ classUnitId, spent: spentCount });
+    } else {
+      nextSpentHitDice[existingIndex] = {
+        classUnitId,
+        spent: resourceCount(nextSpentHitDice[existingIndex].spent + spentCount),
+      };
+    }
+  }
+  const currentHp = characterSheetCurrentHp(input.sheet);
+  const healedHp = Hp(
+    Math.min(input.sheet.maximumHp, currentHp + healingTotal),
+  );
+  const hitPoints = characterSheetHitPoints({
+    currentHp: healedHp,
+    tempHp: characterSheetTempHp(input.sheet),
+  });
+  if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
+  return Either.right({
+    ...input.sheet,
+    hitPoints: hitPoints.right,
+    spentHitDice: nextSpentHitDice,
+  });
+}
+
+function applyArcaneRecovery(input: {
+  readonly sheet: CharacterSheet;
+  readonly unitLibrary: UnitCatalog;
+  readonly refundSpellSlots: readonly CharacterSheetArcaneRecoverySlotRefund[];
+}): Either.Either<CharacterSheet, CharacterSheetIssue> {
+  if (!isCharacterSheetWithSpellSlots(input.sheet)) {
+    return characterSheetIssue(
+      "Arcane Recovery requires ordinary Spell Slot state.",
+    );
+  }
+  if (!characterHasArcaneRecovery(input.sheet, input.unitLibrary)) {
+    return characterSheetIssue(
+      "Arcane Recovery requires the Wizard Arcane Recovery feature.",
+    );
+  }
+  const mechanics = arcaneRecoveryMechanics(input.unitLibrary);
+  if (Either.isLeft(mechanics)) return Either.left(mechanics.left);
+  if (input.sheet.restFeatureUses.some((use) => use.tag === "arcaneRecovery")) {
+    return characterSheetIssue(
+      "Arcane Recovery cannot be used again until a Long Rest.",
+    );
+  }
+  const sheet = input.sheet;
+  const refund = arcaneRecoverySpellSlotRefund({
+    sheet,
+    mechanics: mechanics.right,
+    refundSpellSlots: input.refundSpellSlots,
+  });
+  if (Either.isLeft(refund)) return Either.left(refund.left);
+  return Either.right({
+    ...sheet,
+    spellSlotExpenditures: refund.right,
+    restFeatureUses: [
+      ...sheet.restFeatureUses,
+      {
+        tag: "arcaneRecovery",
+        usedSinceLongRest: true,
+      },
+    ],
+  });
+}
+
+function arcaneRecoverySpellSlotRefund(input: {
+  readonly sheet: CharacterSheetWithSpellSlots;
+  readonly mechanics: RestSpellSlotRecoveryMechanics;
+  readonly refundSpellSlots: readonly CharacterSheetArcaneRecoverySlotRefund[];
+}): Either.Either<
+  readonly CharacterSpellSlotExpenditure[],
+  CharacterSheetIssue
+> {
+  if (input.refundSpellSlots.length === 0) {
+    return characterSheetIssue("Arcane Recovery must recover expended slots.");
+  }
+  const wizardLevel = classLevelForUnit(
+    input.sheet.build.progression,
+    "class_wizard",
+  );
+  const maximumCombinedSlotLevels = Math.ceil(wizardLevel / 2);
+  const maximumSlotLevelExclusive =
+    input.mechanics.recoveredSlotLevelCap.maximumSlotLevelExclusive;
+  let combinedSlotLevels = 0;
+  const refundByLevel = new Map<SpellSlotLevel, ResourceCount>();
+  for (const refund of input.refundSpellSlots) {
+    if (refund.spellLevel >= spellSlotLevel(maximumSlotLevelExclusive)) {
+      return characterSheetIssue(
+        "Arcane Recovery cannot recover level 6 or higher Spell Slots.",
+      );
+    }
+    if (!Number.isInteger(refund.count) || refund.count < 1) {
+      return characterSheetIssue(
+        "Arcane Recovery refund counts must be positive.",
+      );
+    }
+    combinedSlotLevels += refund.spellLevel * refund.count;
+    refundByLevel.set(
+      refund.spellLevel,
+      resourceCount((refundByLevel.get(refund.spellLevel) ?? 0) + refund.count),
+    );
+  }
+  if (combinedSlotLevels > maximumCombinedSlotLevels) {
+    return characterSheetIssue(
+      "Arcane Recovery refund exceeds half Wizard level rounded up.",
+    );
+  }
+  const updated = input.sheet.spellSlotExpenditures.map((expenditure) => {
+    const refundCount = refundByLevel.get(expenditure.spellLevel) ?? 0;
+    return {
+      ...expenditure,
+      expended: resourceCount(expenditure.expended - refundCount),
+    };
+  });
+  const knownLevels = new Set(
+    input.sheet.spellSlotExpenditures.map((slot) => slot.spellLevel),
+  );
+  for (const [spellLevel, refundCount] of refundByLevel.entries()) {
+    if (!knownLevels.has(spellLevel)) {
+      return characterSheetIssue(
+        "Arcane Recovery refund must match existing Spell Slot levels.",
+      );
+    }
+    const original = input.sheet.spellSlotExpenditures.find(
+      (slot) => slot.spellLevel === spellLevel,
+    );
+    if (original === undefined || refundCount > original.expended) {
+      return characterSheetIssue(
+        "Arcane Recovery cannot refund more Spell Slots than are expended.",
+      );
+    }
+  }
+  return Either.right(updated);
+}
+
+function arcaneRecoveryMechanics(
+  unitLibrary: UnitCatalog,
+): Either.Either<RestSpellSlotRecoveryMechanics, CharacterSheetIssue> {
+  const unit = getRequiredUnit(unitLibrary, WIZARD_ARCANE_RECOVERY_UNIT_ID);
+  if (Either.isLeft(unit)) return Either.left(unit.left);
+  if (
+    unit.right.kind !== "class_feature" ||
+    unit.right.mechanics.family !== "rest_spell_slot_recovery" ||
+    unit.right.mechanics.recoveryTrigger !== "short_rest" ||
+    unit.right.mechanics.resetCadence.kind !== "long_rest" ||
+    unit.right.mechanics.recoveredSlotLevelCap.kind !==
+      "half_class_level_rounded_up"
+  ) {
+    return characterSheetIssue(
+      "Wizard Arcane Recovery Unit must define Short Rest Spell Slot recovery mechanics.",
+    );
+  }
+  return Either.right(unit.right.mechanics);
+}
+
+function isCharacterSheetWithSpellSlots(
+  sheet: CharacterSheet,
+): sheet is CharacterSheetWithSpellSlots {
+  return "spellSlotExpenditures" in sheet;
+}
+
+function characterHasArcaneRecovery(
+  sheet: CharacterSheet,
+  unitLibrary: UnitCatalog,
+): boolean {
+  return characterBuildHasArcaneRecovery(sheet.build, unitLibrary);
+}
+
+function characterBuildHasArcaneRecovery(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): boolean {
+  return characterBuildFeatureUnitIds(build, unitLibrary).includes(
+    WIZARD_ARCANE_RECOVERY_UNIT_ID,
+  );
 }
 
 function characterSheetHitPointCapacity(
@@ -992,6 +1548,90 @@ function parseStoredSpellSlots(
     });
   }
   return Either.right(parsed);
+}
+
+function parseStoredPactSlots(
+  build: CharacterBuild,
+  value: Readonly<Record<string, unknown>>,
+): Either.Either<CharacterSheetPactSlotState | undefined, CharacterSheetIssue> {
+  const pactMagic = characterBuildPactSlotCapacity(build);
+  if (pactMagic === undefined) {
+    return value.pactSlotExpenditure === undefined
+      ? Either.right(undefined)
+      : characterSheetIssue(
+          "Character Sheet without Pact Magic cannot carry Pact Slot state.",
+        );
+  }
+  if (!isRecord(value.pactSlotExpenditure)) {
+    return characterSheetIssue(
+      "Pact Magic Character Sheet requires Pact Slot state.",
+    );
+  }
+  const slotLevel = parseSpellSlotLevel(value.pactSlotExpenditure.slotLevel);
+  const count = parseResourceCount(value.pactSlotExpenditure.count);
+  const expended = parseResourceCount(value.pactSlotExpenditure.expended);
+  if (Either.isLeft(slotLevel)) return Either.left(slotLevel.left);
+  if (Either.isLeft(count)) return Either.left(count.left);
+  if (Either.isLeft(expended)) return Either.left(expended.left);
+  if (
+    slotLevel.right !== spellSlotLevel(pactMagic.slotLevel) ||
+    count.right !== resourceCount(pactMagic.count)
+  ) {
+    return characterSheetIssue(
+      "Pact Slot state must match Pact Magic build capacity.",
+    );
+  }
+  return Either.right({
+    slotLevel: slotLevel.right,
+    count: count.right,
+    expended: expended.right,
+  });
+}
+
+function parseStoredSpentHitDice(
+  value: unknown,
+): Either.Either<readonly CharacterSheetSpentHitDiePool[], CharacterSheetIssue> {
+  if (!Array.isArray(value)) {
+    return characterSheetIssue("Character Sheet requires spent Hit Dice state.");
+  }
+  const spentHitDice = [];
+  for (const spent of value) {
+    if (!isRecord(spent) || typeof spent.classUnitId !== "string") {
+      return characterSheetIssue("Expected spent Hit Dice state.");
+    }
+    const spentCount = parseResourceCount(spent.spent);
+    if (Either.isLeft(spentCount)) return Either.left(spentCount.left);
+    spentHitDice.push({
+      classUnitId: spent.classUnitId,
+      spent: spentCount.right,
+    });
+  }
+  return Either.right(spentHitDice);
+}
+
+function parseStoredRestFeatureUses(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+  value: unknown,
+): Either.Either<readonly CharacterSheetRestFeatureUse[], CharacterSheetIssue> {
+  if (value === undefined) return Either.right([]);
+  if (!Array.isArray(value)) {
+    return characterSheetIssue("Expected Character Sheet rest feature uses.");
+  }
+  const uses: CharacterSheetRestFeatureUse[] = [];
+  for (const use of value) {
+    if (!isRecord(use)) {
+      return characterSheetIssue("Expected Character Sheet rest feature use.");
+    }
+    if (use.tag !== "arcaneRecovery" || use.usedSinceLongRest !== true) {
+      return characterSheetIssue("Expected supported rest feature use state.");
+    }
+    uses.push({
+      tag: "arcaneRecovery",
+      usedSinceLongRest: true,
+    });
+  }
+  return restFeatureUsesFromInput({ build, unitLibrary, restFeatureUses: uses });
 }
 
 function passStableRecoveryTime(input: {
@@ -1225,7 +1865,7 @@ function replaceCharacterSheetHitPoints(
   sheet: CharacterSheet,
   hitPoints: CharacterSheetHitPoints,
 ): CharacterSheet {
-  return "spellSlotExpenditures" in sheet
+  return isCharacterSheetWithSpellSlots(sheet)
     ? {
         ...sheet,
         hitPoints,

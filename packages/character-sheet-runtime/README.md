@@ -19,8 +19,24 @@ Current executable state:
 - `hitPoints` owns current HP, Temporary Hit Points, the zero-HP Death Saving
   Throw lifecycle, Stable state, death, and Knock Out's positive-HP Unconscious
   state. Current HP cannot exceed `maximumHp`.
+- `spentHitDice` stores only spent player-character Hit Dice by class. Hit Die
+  capacity and die size remain derived from `CharacterBuild` through
+  `characterBuildHitPoints`, so rest state cannot duplicate build Hit Die
+  facts.
 - `spellSlotExpenditures` is present only for spellcasting builds and stores
   spent Spell Slots against build-derived capacity.
+- `pactSlotExpenditure` is stored separately from ordinary Spell Slots for
+  builds that have Pact Magic, preserving the SRD distinction between Spell
+  Slots and Pact Slots.
+- `completeShortRest` requires at least 1 current HP, can spend Hit Dice to
+  restore HP, restores Pact Slots, and can apply one Wizard Arcane Recovery
+  Spell Slot refund. Arcane Recovery uses Wizard level to enforce the
+  half-level rounded-up recovery budget, rejects level 6+ slots, and records a
+  distinct rest feature use until Long Rest.
+- `completeLongRest` requires at least 1 current HP, restores HP to
+  `maximumHp`, clears Temporary Hit Points, restores spent Hit Dice, restores
+  ordinary Spell Slots and Pact Slots, and recharges tracked rest feature uses
+  such as Arcane Recovery.
 - `characterSheetArmorClassState` projects build ability scores, current
   loadout armor and Shield facts, and installed class-feature AC formulas into
   a single current Armor Class calculation. Barbarian and Monk Unarmored
@@ -32,8 +48,6 @@ Current executable state:
 
 Deferred homes:
 
-- remaining Hit Dice belong in a future Hit Dice module, initialized from the
-  build-derived pool once Short/Long Rest workflows exist.
 - non-spell feature resources belong in a future resource module that can spend
   and restore them outside battle.
 - mutable carried/equipped equipment belongs in a future equipment module,

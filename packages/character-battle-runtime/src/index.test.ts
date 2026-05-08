@@ -1,4 +1,7 @@
-import type { BattleCreatureState } from "@dnd/battle-runtime";
+import type {
+  BattleCreatureState,
+  CharacterBattleSpellcastingState,
+} from "@dnd/battle-runtime";
 import {
   battleCombatantSide,
   characterId,
@@ -13,13 +16,21 @@ import {
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
 import {
+  characterSheetPactSlots,
+  characterSheetSpellSlots,
   characterSheetId,
   characterSheetTempHp,
   createFreshCharacterSheet,
 } from "@dnd/character-sheet-runtime";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
-import { Hp } from "@dnd/shared/types";
+import {
+  Hp,
+  abilityModifier,
+  proficiencyBonus,
+  resourceCount,
+  spellSlotLevel,
+} from "@dnd/shared/types";
 import {
   buildUnitCatalog,
   srdUnitCollection,
@@ -33,9 +44,7 @@ import {
   characterArmorClassState,
 } from "./index.ts";
 
-// The handoff test exercises identity rejection before build-derived fields are
-// inspected; this fixture only needs the non-spellcasting discriminator.
-const build = { spellcasting: undefined } as unknown as CharacterBuild;
+const build = defenseBuild({ wearingArmor: false });
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -53,12 +62,14 @@ describe("Character Sheet battle handoff", () => {
       maximumHp: Hp(10),
       currentHp: Hp(10),
       tempHp: Hp(0),
+      unitLibrary,
     });
     expect(Either.isRight(sheet)).toBe(true);
     if (Either.isLeft(sheet)) return;
 
     const handoff = applyBattleHandoffToCharacterSheet({
       sheet: sheet.right,
+      unitLibrary,
       combatant: handoffBranchCombatant({
         origin: {
           kind: "character",
@@ -77,12 +88,14 @@ describe("Character Sheet battle handoff", () => {
       maximumHp: Hp(10),
       currentHp: Hp(10),
       tempHp: Hp(0),
+      unitLibrary,
     });
     expect(Either.isRight(sheet)).toBe(true);
     if (Either.isLeft(sheet)) return;
 
     const handoff = applyBattleHandoffToCharacterSheet({
       sheet: sheet.right,
+      unitLibrary,
       combatant: handoffBranchCombatant({
         origin: {
           kind: "character",
@@ -103,12 +116,14 @@ describe("Character Sheet battle handoff", () => {
       maximumHp: Hp(10),
       currentHp: Hp(10),
       tempHp: Hp(0),
+      unitLibrary,
     });
     expect(Either.isRight(sheet)).toBe(true);
     if (Either.isLeft(sheet)) return;
 
     const handoff = applyBattleHandoffToCharacterSheet({
       sheet: sheet.right,
+      unitLibrary,
       combatant: handoffBranchCombatant({
         origin: {
           kind: "character",
@@ -134,6 +149,7 @@ describe("Character Sheet battle handoff", () => {
       maximumHp: Hp(10),
       currentHp: Hp(0),
       tempHp: Hp(0),
+      unitLibrary,
       zeroHpLifecycle: {
         tag: "stable",
         recovery: {
@@ -147,6 +163,7 @@ describe("Character Sheet battle handoff", () => {
 
     const handoff = applyBattleHandoffToCharacterSheet({
       sheet: sheet.right,
+      unitLibrary,
       combatant: handoffBranchCombatant({
         origin: {
           kind: "character",
@@ -169,6 +186,66 @@ describe("Character Sheet battle handoff", () => {
     });
 
     expect(Either.isLeft(handoff)).toBe(true);
+  });
+
+  test("preserves non-battle rest state while settling battle-owned HP and Spell Slots", () => {
+    const sheet = createFreshCharacterSheet({
+      characterId: characterSheetId("character:rest-state"),
+      build: wizardWarlockBuild(),
+      maximumHp: Hp(10),
+      currentHp: Hp(10),
+      tempHp: Hp(0),
+      unitLibrary,
+      spentHitDice: [{ classUnitId: "class_wizard", spent: resourceCount(1) }],
+      spellSlots: [
+        {
+          spellLevel: spellSlotLevel(1),
+          count: resourceCount(2),
+          expended: resourceCount(1),
+        },
+      ],
+      pactSlots: {
+        slotLevel: spellSlotLevel(1),
+        count: resourceCount(1),
+        expended: resourceCount(1),
+      },
+      restFeatureUses: [{ tag: "arcaneRecovery", usedSinceLongRest: true }],
+    });
+    expect(Either.isRight(sheet)).toBe(true);
+    if (Either.isLeft(sheet)) return;
+
+    const handoff = applyBattleHandoffToCharacterSheet({
+      sheet: sheet.right,
+      unitLibrary,
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:rest-state"),
+          spellcasting: handoffSpellcastingState(),
+        },
+        hp: Hp(6),
+        maxHp: Hp(10),
+        tempHp: Hp(3),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    const settled = expectRight(handoff);
+    expect(settled.spentHitDice).toEqual([
+      { classUnitId: "class_wizard", spent: 1 },
+    ]);
+    expect(settled.restFeatureUses).toEqual([
+      { tag: "arcaneRecovery", usedSinceLongRest: true },
+    ]);
+    expect(characterSheetPactSlots(settled)).toEqual({
+      slotLevel: 1,
+      count: 1,
+      expended: 1,
+    });
+    expect(characterSheetSpellSlots(settled)).toEqual([
+      { spellLevel: 1, count: 2, expended: 2 },
+    ]);
+    expect(characterSheetTempHp(settled)).toBe(3);
   });
 });
 
@@ -306,6 +383,75 @@ function defenseBuild(input: {
     equipment: {
       owned: [{ itemId: armorItemId, unitId: "armor_chain_mail" }],
       loadout: input.wearingArmor ? { armor: armorItemId } : {},
+    },
+  };
+}
+
+function handoffSpellcastingState(): CharacterBattleSpellcastingState {
+  return {
+    spellcastingAbilityModifier: abilityModifier(3),
+    proficiencyBonus: proficiencyBonus(2),
+    canCastSpells: true,
+    cantrips: [],
+    preparedSpells: [],
+    spellSlots: [
+      {
+        spellLevel: spellSlotLevel(1),
+        count: resourceCount(2),
+        expended: resourceCount(2),
+      },
+    ],
+  };
+}
+
+function wizardWarlockBuild(): CharacterBuild {
+  return {
+    progression: {
+      startingClass: classUnitId("class_wizard"),
+      advancements: [],
+    },
+    background: "background_soldier",
+    species: "species_orc",
+    originLanguages: ["Common", "Dwarvish", "Goblin"],
+    alignment: { order: "lawful", morality: "good" },
+    abilityScores: expectRight(
+      abilityScoreAssignment({
+        str: 13,
+        dex: 14,
+        con: 13,
+        int: 16,
+        wis: 10,
+        cha: 12,
+      }),
+    ),
+    proficiencyChoices: [],
+    features: [],
+    equipment: {
+      owned: [],
+      loadout: {},
+    },
+    spellcasting: {
+      sources: [
+        {
+          sourceUnitId: "class_wizard",
+          spellcastingAbility: "int",
+          cantrips: [],
+          spellbook: [],
+          preparedSpells: [],
+          spellcastingFocuses: ["arcane_focus"],
+        },
+      ],
+      slotPools: {
+        spellcasting: {
+          kind: "spellcasting",
+          slots: [{ spellLevel: 1, count: 2 }],
+        },
+        pactMagic: {
+          kind: "pactMagic",
+          slotLevel: 1,
+          count: 1,
+        },
+      },
     },
   };
 }

@@ -178,6 +178,7 @@ export function handleCharacterToolCall(
           maximumHp: Hp(hitPoints.right.maximum),
           currentHp: Hp(hitPoints.right.maximum),
           tempHp: Hp(0),
+          unitLibrary: root.unitLibrary,
         });
         if (Either.isLeft(session)) {
           return errorContent("Character finalization session failed.", {

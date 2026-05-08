@@ -2466,6 +2466,8 @@ describe("MCP server route", () => {
       build: finalized.finalization.build,
       maximumHp: 12,
       hitPoints: { tag: "positive", currentHp: 12, tempHp: 0 },
+      spentHitDice: [],
+      restFeatureUses: [],
     });
     expect(finalized.session).toMatchObject({
       draftIds: [],
@@ -3050,6 +3052,7 @@ describe("MCP server route", () => {
         maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
         currentHp: Hp(1),
         tempHp: Hp(4),
+        unitLibrary: root.unitLibrary,
         positiveHpUnconscious: KNOCKED_OUT_UNCONSCIOUS,
       }),
     );
@@ -3105,6 +3108,7 @@ describe("MCP server route", () => {
         maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
         currentHp: Hp(6),
         tempHp: Hp(0),
+        unitLibrary: root.unitLibrary,
         positiveHpUnconscious: KNOCKED_OUT_UNCONSCIOUS,
       }),
     ).toEqual(
@@ -3127,6 +3131,7 @@ describe("MCP server route", () => {
         maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
         currentHp: Hp(0),
         tempHp: Hp(0),
+        unitLibrary: root.unitLibrary,
         zeroHpLifecycle: {
           tag: "stable",
           recovery: {
@@ -3192,6 +3197,7 @@ describe("MCP server route", () => {
         maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
         currentHp: Hp(0),
         tempHp: Hp(0),
+        unitLibrary: root.unitLibrary,
         zeroHpLifecycle: {
           tag: "dead",
           deathSaves: { successes: 0, failures: 3 },
@@ -3260,6 +3266,7 @@ describe("MCP server route", () => {
       maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
       currentHp: Hp(0),
       tempHp: Hp(0),
+      unitLibrary: root.unitLibrary,
     };
 
     expect(() =>
@@ -4013,6 +4020,7 @@ describe("MCP server route", () => {
           characterBuildMaximumHp(spellcastingBuild, root.unitLibrary),
         ),
         tempHp: Hp(0),
+        unitLibrary: root.unitLibrary,
         spellSlots: [
           {
             spellLevel: spellSlotLevel(1),
@@ -4052,6 +4060,7 @@ describe("MCP server route", () => {
           characterBuildMaximumHp(spellcastingBuild, root.unitLibrary),
         ),
         tempHp: Hp(0),
+        unitLibrary: root.unitLibrary,
         spellSlots: [
           {
             spellLevel: spellSlotLevel(1),
@@ -4234,6 +4243,7 @@ function createFinalizedFighterSheet(
       maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
       currentHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
       tempHp: Hp(0),
+      unitLibrary: root.unitLibrary,
     }),
   );
   return build;
