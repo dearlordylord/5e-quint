@@ -24,11 +24,27 @@ Current sequence:
 - `SRDINV2`: author or explicitly close missing level-1 class containers.
 - `SRDINV3`: classify missing level-1 class feature rows.
 - `SRDINV4`: classify level-1 character-creation/progression rows.
-- `SRDINV5`: classify level-1 spell access/list pressure separately from
-  individual Spell Unit support.
-- `SRDINV6`: review catalog-only/dead-for-now and Surface-widening rows.
+- `SRDINV5A`: classify level-1 class Spellcasting/access rows.
+- `SRDINV5B`: classify missing cantrip and level-1 Spell Unit rows.
+- `SRDINV5C`: classify installed cantrip and level-1 Spell Unit owner
+  evidence.
+- `SRDINV5D`: review catalog-only cantrip and level-1 Spell Unit rows.
+- `SRDINV6`: review nonspell catalog-only/dead-for-now and Surface-widening
+  rows.
 - `SRDINV7`: recursive review and append the next concrete multi-task batch,
   or explicitly close level-1 with final metrics.
+
+## Context Budget Guardrail
+
+Ralph tasks should fit comfortably inside a 250k-token model window after
+including the plan, prompts, source snippets, generated reports, diffs, logs,
+and reviewer feedback. A generated inventory task should stay under roughly
+100 rows unless the rows are trivial closures that do not require broad SRD
+source reading.
+
+The original spell-pressure batch had 217 rows and could make an agent load
+class spell lists plus a large share of spell descriptions in one task. It is
+therefore split into `SRDINV5A` through `SRDINV5D`.
 
 `SRDINV1` is intentionally first because installed/catalog-loaded rows should
 not imply full support. It must decide which installed rows need operational

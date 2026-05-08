@@ -438,11 +438,20 @@ function buildRecommendedBatches(rows) {
       row.rowKind === "spell-access" &&
       row.finalDisposition === "missing-authored-record",
   );
-  const spellPressureRows = spellPressure.filter(
-    (row) => row.finalDisposition !== "non-runtime",
+  const missingSpellUnitPressureRows = spellPressure.filter(
+    (row) => row.finalDisposition === "missing-authored-record",
+  );
+  const installedSpellUnitPressureRows = spellPressure.filter(
+    (row) => row.finalDisposition === "catalog-installed-needs-owner-evidence",
+  );
+  const catalogOnlySpellUnitPressureRows = spellPressure.filter(
+    (row) => row.finalDisposition === "catalog-only/dead-for-now",
   );
   const catalogOnlyRows = rows.filter(
-    (row) => row.finalDisposition === "catalog-only/dead-for-now",
+    (row) =>
+      row.finalDisposition === "catalog-only/dead-for-now" &&
+      row.levelBand !== "spell-level-0" &&
+      row.levelBand !== "spell-level-1",
   );
   const surfaceWideningRows = rows.filter(
     (row) => row.finalDisposition === "needs-surface-widening",
@@ -497,33 +506,69 @@ function buildRecommendedBatches(rows) {
         "Character-creation rows distinguish class-container ownership from missing standalone records.",
     }),
     makeBatch({
-      id: "SRDINV5",
-      title: "Classify Level-1 Spell Access and Spell List Pressure",
+      id: "SRDINV5A",
+      title: "Classify Level-1 Spell Access Rows",
       suggestedStatus: "blocked-on-SRDINV1",
       intent:
-        "Keep spell access/list pressure separate from spell Unit runtime support and spell identity MBT.",
-      rows: [...missingSpellAccessRows, ...spellPressureRows],
+        "Keep class spell access/list facts separate from individual Spell Unit support.",
+      rows: missingSpellAccessRows,
       nextAction:
-        "Split spell access owner evidence from individual spell Unit admission/support pressure.",
+        "Classify missing class Spellcasting/access rows by class-container ownership, Surface widening, authored content, or closure.",
       acceptance:
-        "Level-1 spell access rows and cantrip/level-1 spell pressure rows have separate metrics and next actions.",
+        "Level-1 spell access rows have owner-specific next actions and are not mixed with individual Spell Unit pressure.",
+    }),
+    makeBatch({
+      id: "SRDINV5B",
+      title: "Classify Missing Cantrip and Level-1 Spell Units",
+      suggestedStatus: "blocked-on-SRDINV1",
+      intent:
+        "Classify missing SRD cantrip and level-1 Spell Unit records without loading the whole spell-pressure backlog into one task.",
+      rows: missingSpellUnitPressureRows,
+      nextAction:
+        "Group missing Spell Unit rows by authoring readiness, Surface blockers, and runtime-support pressure.",
+      acceptance:
+        "Missing cantrip and level-1 Spell Unit pressure rows have sharper next actions than generic author-or-close wording.",
+    }),
+    makeBatch({
+      id: "SRDINV5C",
+      title: "Classify Installed Cantrip and Level-1 Spell Units",
+      suggestedStatus: "blocked-on-SRDINV1",
+      intent:
+        "Classify installed SRD cantrip and level-1 Spell Unit owner evidence separately from missing and catalog-only spell rows.",
+      rows: installedSpellUnitPressureRows,
+      nextAction:
+        "For each installed Spell Unit pressure row, classify whether catalog/access/invocation/projection evidence is required or whether the row closes as catalog-only.",
+      acceptance:
+        "Installed cantrip and level-1 Spell Unit rows distinguish catalog evidence from operational owner evidence.",
+    }),
+    makeBatch({
+      id: "SRDINV5D",
+      title: "Review Catalog-Only Cantrip and Level-1 Spell Units",
+      suggestedStatus: "blocked-on-SRDINV1",
+      intent:
+        "Keep catalog-only spell pressure explicit and counted without forcing unrelated class or nonspell rows into the same task.",
+      rows: catalogOnlySpellUnitPressureRows,
+      nextAction:
+        "Confirm catalog-only/dead-for-now closure or promote named follow-up batches for any spell rows that should become executable.",
+      acceptance:
+        "Catalog-only cantrip and level-1 Spell Unit rows remain counted deliberately, or become explicit follow-up work.",
     }),
     makeBatch({
       id: "SRDINV6",
       title: "Review Catalog-Only and Surface-Widening Rows",
       suggestedStatus: "blocked-on-SRDINV1",
       intent:
-        "Preserve catalog-only/dead-for-now rows and name missing Surface constructs for any widening blockers.",
+        "Preserve nonspell catalog-only/dead-for-now rows and name missing Surface constructs for any widening blockers.",
       rows: [...catalogOnlyRows, ...surfaceWideningRows],
       nextAction:
-        "Either keep rows explicitly catalog-only/dead-for-now or promote a named Surface widening task.",
+        "Either keep nonspell rows explicitly catalog-only/dead-for-now or promote a named Surface widening task.",
       acceptance:
-        "Catalog-only rows are counted deliberately, and every Surface-widening row names the missing construct.",
+        "Nonspell catalog-only rows are counted deliberately, and every Surface-widening row names the missing construct.",
     }),
     makeBatch({
       id: "SRDINV7",
       title: "Recursive SRD Inventory Planning Review",
-      suggestedStatus: "blocked-on-SRDINV2-SRDINV6",
+      suggestedStatus: "blocked-on-SRDINV2-SRDINV5D-and-SRDINV6",
       intent:
         "Review SRDINV1-SRDINV6 findings and append the next concrete generated batch set.",
       rows: levelOne,
