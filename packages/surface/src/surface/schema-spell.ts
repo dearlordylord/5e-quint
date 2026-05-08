@@ -1,7 +1,11 @@
 import { Schema } from "effect";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import type { ClassName } from "@dnd/shared/game-facts";
 import {
   AbilitySchema,
+  ClassLevelChoiceCountSchema,
+  CLASS_SPELLCASTING_CLASS_NAMES,
+  ClassNameSchema,
   ConditionSchema,
   CreatureTypeSchema,
   DamageTypeSchema,
@@ -23,7 +27,11 @@ import {
   UsageLimitSchema,
   WeaponFilterSchema,
 } from "./schema-base.ts";
-import { exactOptional as optionalExact, nonEmpty } from "./schema-helpers.ts";
+import {
+  exactOptional as optionalExact,
+  nonEmpty,
+  strictStruct,
+} from "./schema-helpers.ts";
 
 // Handwritten spell / mechanics surface schema slice built on the shared base
 // vocabulary in schema-base.ts.
@@ -176,6 +184,10 @@ type ExileDestination =
   | "ethereal_plane"
   | "plane_of_origin"
   | "different_plane";
+type ClassLevelChoiceCount = Schema.Schema.Type<
+  typeof ClassLevelChoiceCountSchema
+>;
+type ClassSpellListName = (typeof CLASS_SPELLCASTING_CLASS_NAMES)[number];
 type SpellGrantedWeaponAttack = {
   readonly kind: "make_weapon_attack";
   readonly weapon: "material_component";
@@ -342,7 +354,11 @@ type EffectAtom =
     }
   | { readonly kind: "modify_ac"; readonly delta: DiceDelta }
   | ModifyAcSetBaseEffect
-  | { readonly kind: "modify_save_dc"; readonly delta: DiceDelta }
+  | {
+      readonly kind: "modify_save_dc";
+      readonly delta: DiceDelta;
+      readonly spellSourceFilter?: { readonly className: ClassName };
+    }
   | {
       readonly kind: "apply_condition";
       readonly condition:
@@ -439,6 +455,7 @@ type EffectAtom =
       readonly mode: "advantage" | "disadvantage";
       readonly affects?: "self_roll" | "rolls_against_self";
       readonly on: ReadonlyNonEmptyArray<RollKind>;
+      readonly spellSourceFilter?: { readonly className: ClassName };
       readonly attackerTypeFilter?: ReadonlyNonEmptyArray<CreatureType>;
       readonly skillFilter?:
         | {
@@ -722,6 +739,40 @@ type EffectAtom =
       readonly proficiency: Schema.Schema.Type<typeof ProficiencyGrantSchema>;
     }
   | {
+      readonly kind: "grant_expertise";
+      readonly choiceCount: ClassLevelChoiceCount;
+      readonly skills: {
+        readonly kind: "owned_skill_proficiencies_without_expertise";
+      };
+    }
+  | {
+      readonly kind: "grant_language";
+      readonly languageId: string;
+    }
+  | {
+      readonly kind: "grant_hidden_language_messages";
+      readonly languageId: string;
+      readonly message: {
+        readonly kind: "hidden_language_message";
+      };
+      readonly spotting: {
+        readonly languageKnowers: "automatic";
+        readonly others: {
+          readonly ability: "int";
+          readonly skill: "investigation";
+          readonly dc: 15;
+        };
+      };
+      readonly deciphering: {
+        readonly withoutLanguageRequires: "magic";
+      };
+    }
+  | {
+      readonly kind: "grant_language_choice";
+      readonly source: "character_creation_language_tables";
+      readonly count: number;
+    }
+  | {
       readonly kind: "grant_spell_access";
       readonly spellId: string;
       readonly mode: Schema.Schema.Type<typeof SpellAccessModeSchema>;
@@ -733,6 +784,51 @@ type EffectAtom =
       readonly durationOverride?: Schema.Schema.Type<
         typeof GrantedSpellDurationOverrideSchema
       >;
+    }
+  | {
+      readonly kind: "grant_spell_access_choice";
+      readonly spellList: ClassSpellListName;
+      readonly spellLevel: Schema.Schema.Type<typeof SpellLevelSchema>;
+      readonly mode: Schema.Schema.Type<typeof SpellAccessModeSchema>;
+      readonly count: number;
+    }
+  | {
+      readonly kind: "grant_spell_free_casts";
+      readonly spellId: string;
+      readonly count: number;
+      readonly resetCadence: "long_rest" | "short_or_long_rest";
+      readonly scaling?: {
+        readonly axis: "class";
+        readonly tiers: ReadonlyNonEmptyArray<{
+          readonly atLevel: number;
+          readonly count: number;
+        }>;
+      };
+    }
+  | {
+      readonly kind: "grant_die_token";
+      readonly die: DiceAmount;
+      readonly trigger: "failed_d20_test";
+      readonly duration: { readonly unit: "hour"; readonly amount: number };
+      readonly maxHeld: number;
+    }
+  | {
+      readonly kind: "grant_bonus_action_attack";
+      readonly attack: "unarmed_strike";
+    }
+  | {
+      readonly kind: "replace_damage_die";
+      readonly die: DiceAmount;
+      readonly scope: "unarmed_or_monk_weapon";
+    }
+  | {
+      readonly kind: "substitute_ability_for_rolls";
+      readonly use: Ability;
+      readonly replaces: Ability;
+      readonly on: ReadonlyNonEmptyArray<
+        "attack_roll" | "damage_roll" | "unarmed_strike_save_dc"
+      >;
+      readonly scope: "unarmed_or_monk_weapon";
     }
   | {
       readonly kind: "composite";
@@ -1520,6 +1616,9 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       Schema.Struct({
         kind: Schema.Literal("modify_save_dc"),
         delta: DiceDeltaSchema,
+        spellSourceFilter: optionalExact(
+          Schema.Struct({ className: ClassNameSchema }),
+        ),
       }),
       Schema.Struct({
         kind: Schema.Literal("apply_condition"),
@@ -1631,6 +1730,9 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
           Schema.Literal("self_roll", "rolls_against_self"),
         ),
         on: nonEmpty(RollKindSchema),
+        spellSourceFilter: optionalExact(
+          Schema.Struct({ className: ClassNameSchema }),
+        ),
         attackerTypeFilter: optionalExact(nonEmpty(CreatureTypeSchema)),
         skillFilter: optionalExact(
           Schema.Union(
@@ -1886,6 +1988,40 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         proficiency: ProficiencyGrantSchema,
       }),
       Schema.Struct({
+        kind: Schema.Literal("grant_expertise"),
+        choiceCount: ClassLevelChoiceCountSchema,
+        skills: Schema.Struct({
+          kind: Schema.Literal("owned_skill_proficiencies_without_expertise"),
+        }),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("grant_language"),
+        languageId: Schema.NonEmptyTrimmedString,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("grant_hidden_language_messages"),
+        languageId: Schema.NonEmptyTrimmedString,
+        message: Schema.Struct({
+          kind: Schema.Literal("hidden_language_message"),
+        }),
+        spotting: Schema.Struct({
+          languageKnowers: Schema.Literal("automatic"),
+          others: Schema.Struct({
+            ability: Schema.Literal("int"),
+            skill: Schema.Literal("investigation"),
+            dc: Schema.Literal(15),
+          }),
+        }),
+        deciphering: Schema.Struct({
+          withoutLanguageRequires: Schema.Literal("magic"),
+        }),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("grant_language_choice"),
+        source: Schema.Literal("character_creation_language_tables"),
+        count: PositiveIntegerSchema,
+      }),
+      strictStruct({
         kind: Schema.Literal("grant_spell_access"),
         spellId: Schema.String,
         mode: SpellAccessModeSchema,
@@ -1893,6 +2029,62 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         areaOverride: optionalExact(AreaShapeSpecSchema),
         targetRestriction: optionalExact(GrantedSpellTargetRestrictionSchema),
         durationOverride: optionalExact(GrantedSpellDurationOverrideSchema),
+      }),
+      strictStruct({
+        kind: Schema.Literal("grant_spell_access_choice"),
+        spellList: Schema.Literal(...CLASS_SPELLCASTING_CLASS_NAMES),
+        spellLevel: SpellLevelSchema,
+        mode: SpellAccessModeSchema,
+        count: PositiveIntegerSchema,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("grant_spell_free_casts"),
+        spellId: Schema.NonEmptyTrimmedString,
+        count: PositiveIntegerSchema,
+        resetCadence: Schema.Literal("long_rest", "short_or_long_rest"),
+        scaling: optionalExact(
+          Schema.Struct({
+            axis: Schema.Literal("class"),
+            tiers: nonEmpty(
+              Schema.Struct({
+                atLevel: PositiveIntegerSchema,
+                count: PositiveIntegerSchema,
+              }),
+            ),
+          }),
+        ),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("grant_die_token"),
+        die: DiceAmountSchema,
+        trigger: Schema.Literal("failed_d20_test"),
+        duration: Schema.Struct({
+          unit: Schema.Literal("hour"),
+          amount: PositiveIntegerSchema,
+        }),
+        maxHeld: PositiveIntegerSchema,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("grant_bonus_action_attack"),
+        attack: Schema.Literal("unarmed_strike"),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("replace_damage_die"),
+        die: DiceAmountSchema,
+        scope: Schema.Literal("unarmed_or_monk_weapon"),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("substitute_ability_for_rolls"),
+        use: AbilitySchema,
+        replaces: AbilitySchema,
+        on: nonEmpty(
+          Schema.Literal(
+            "attack_roll",
+            "damage_roll",
+            "unarmed_strike_save_dc",
+          ),
+        ),
+        scope: Schema.Literal("unarmed_or_monk_weapon"),
       }),
       Schema.Struct({
         kind: Schema.Literal("grant_condition_immunity"),

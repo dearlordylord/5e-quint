@@ -172,13 +172,13 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 179,
       "id": "SRDINV10",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Widen Level-1 Class Feature Surface Mechanics"
     },
     {
       "number": 180,
       "id": "SRDINV11",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Recursive SRD Inventory Planning Review"
     }
   ]
@@ -237,8 +237,8 @@ Keep it synchronized with the DAG table and task details.
 | 176   | SRDINV7 - Recursive SRD Inventory Planning Review | done | SRDINV2-SRDINV5D, SRDINV6 | SRDINV8-SRDINV11 | [SRDINV7 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed recursive planning review: level-1 remains open, so the next batch is three concrete Surface-widening families plus SRDINV11 review. |
 | 177   | SRDINV8 - Widen Class Container Proficiency Surface Facts | done | SRDINV7 | SRDINV11 | [SRDINV7 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes) | Completed Surface class-container source-fact widening for Bard/Druid tool choices, Monk/Rogue property-filtered Martial weapon and tool proficiencies, and Ranger fixed-plus-choice multiclass proficiencies. |
 | 178   | SRDINV9 - Widen Non-Wizard Spell Access Surface Facts | done | SRDINV7 | SRDINV10, SRDINV11 | [SRDINV7 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes) | Completed Surface Spell Access widening for non-Wizard list-prepared casters, prepared half casters without level-1 cantrips, and the shared Warlock Pact Magic/Pact Slot source shape consumed by SRDINV10. |
-| 179   | SRDINV10 - Widen Level-1 Class Feature Surface Mechanics | ready-for-research | SRDINV7, SRDINV9 | SRDINV11 | [SRDINV7 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes) | Widen Surface mechanics for the level-1 class-feature blockers named by SRDINV3/SRDINV6 after SRDINV9 lands the shared Pact Magic source shape; do not remodel Pact Magic source facts. |
-| 180   | SRDINV11 - Recursive SRD Inventory Planning Review | blocked | SRDINV8-SRDINV10 | none | [SRDINV7 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review SRDINV8-SRDINV10 findings, refresh inventory metrics, and append the next concrete multi-task batch unless level-1 is explicitly complete. |
+| 179   | SRDINV10 - Widen Level-1 Class Feature Surface Mechanics | done | SRDINV7, SRDINV9 | SRDINV11 | [SRDINV7 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes) | Completed Surface class-feature mechanics widening for the SRDINV3/SRDINV6 level-1 blockers without adding parallel Pact Magic source state. |
+| 180   | SRDINV11 - Recursive SRD Inventory Planning Review | ready-for-research | SRDINV8-SRDINV10 | none | [SRDINV7 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review SRDINV8-SRDINV10 findings, refresh inventory metrics, and append the next concrete multi-task batch unless level-1 is explicitly complete. |
 
 ## Task Details
 
@@ -1041,7 +1041,7 @@ Magic state.
 
 ### Task 179 - SRDINV10 - Widen Level-1 Class Feature Surface Mechanics
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV7, SRDINV9
 
@@ -1075,9 +1075,24 @@ regenerate inventory if classifications change; `pnpm unit-profile-coverage:chec
 package-local typecheck/tests for touched Surface code; `/simplify`
 convergence.
 
+Closeout: Surface now admits the level-1 class-feature source shapes needed
+for Bardic Inspiration, Cleric Divine Order, Druidic, Druid Primal Order, Monk
+Martial Arts, Ranger Favored Enemy, Rogue Expertise, Rogue Thieves' Cant,
+Sorcerer Innate Sorcery, Warlock Eldritch Invocations, and Warlock Pact Magic
+class-feature projection. Pact Magic remains derived from the SRDINV9 class
+record spellcasting source shape instead of copied feature-local Pact Slot
+state.
+
+Verification completed: local SRD class-feature passages and
+`UBIQUITOUS_LANGUAGE.md` checked; focused Surface source-shape tests added;
+Surface typecheck and focused tests passed; `pnpm unit-profile-coverage:check`
+and `pnpm quality` passed; `/simplify` round 1 fixed reviewed schema
+over-admission for spell-list and Warlock option ownership; `/simplify` round 2
+found no remaining task-owned changes.
+
 ### Task 180 - SRDINV11 - Recursive SRD Inventory Planning Review
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: SRDINV8-SRDINV10
 

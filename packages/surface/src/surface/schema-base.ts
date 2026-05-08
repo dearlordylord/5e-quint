@@ -212,6 +212,7 @@ export const DiceDeltaSchema = Schema.Union(
     kind: Schema.Literal("ability_modifier"),
     ability: AbilitySchema,
     sign: Schema.Literal("+", "-"),
+    minimum: exactOptional(Schema.Number),
   }),
   Schema.Struct({
     kind: Schema.Literal("threshold_tiers"),
@@ -432,6 +433,28 @@ export const ReadonlyNonEmptyArrayToolProficiencyGrantSubjectSchema =
 const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(1),
+);
+
+export const ClassLevelChoiceCountSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("class_level_additional_choices"),
+    initial: PositiveIntegerSchema,
+    increases: Schema.NonEmptyArray(
+      Schema.Struct({
+        atLevel: PositiveIntegerSchema,
+        choose: PositiveIntegerSchema,
+      }),
+    ),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("class_level_total_choices"),
+    levels: Schema.NonEmptyArray(
+      Schema.Struct({
+        atLevel: PositiveIntegerSchema,
+        total: PositiveIntegerSchema,
+      }),
+    ),
+  }),
 );
 
 const ProficiencyGrantChoiceSchema = Schema.Struct({

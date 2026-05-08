@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Either, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import backgroundSoldierInput from "../../content/background_soldier.json";
@@ -16,10 +16,12 @@ import {
 } from "./character-creation-readers.ts";
 import {
   decodeBackgroundRecordSync,
+  decodeClassFeatureRecordSync,
   decodeClassRecordSync,
   decodeSpeciesRecordSync,
   decodeUnitRecordEither,
   decodeUnitRecordSync,
+  EffectAtomSchema,
 } from "./schema.ts";
 
 const classRecordWithSpellcasting = (
@@ -561,6 +563,431 @@ describe("character-creation Surface records", () => {
     });
   });
 
+  test("decodes level-1 class-feature Surface mechanics widened for SRD inventory blockers", () => {
+    const base = {
+      acquiredAtLevel: 1,
+      kind: "class_feature",
+      provenance: { kind: "srd-5.2.1", section: "Classes/Test#Feature" },
+    } as const;
+
+    const records = [
+      {
+        ...base,
+        id: "bard_bardic_inspiration_test",
+        name: "Bardic Inspiration",
+        className: "bard",
+        description: "Bardic Inspiration test shape.",
+        mechanics: {
+          activationCost: { kind: "bonus_action" },
+          family: "activation",
+          phases: [
+            {
+              attachment: { kind: "target", selection: { mode: "one" } },
+              effects: [
+                {
+                  die: {
+                    axis: "class",
+                    base: { dice: 1, dieSize: 6 },
+                    kind: "threshold_tiers",
+                    tiers: [
+                      { atLevel: 5, override: { dieSize: 8 } },
+                      { atLevel: 10, override: { dieSize: 10 } },
+                      { atLevel: 15, override: { dieSize: 12 } },
+                    ],
+                  },
+                  duration: { amount: 1, unit: "hour" },
+                  kind: "grant_die_token",
+                  maxHeld: 1,
+                  trigger: "failed_d20_test",
+                },
+              ],
+              kind: "direct",
+            },
+          ],
+          range: { kind: "point", feet: 60 },
+          resetCadence: { kind: "long_rest" },
+          resource: {
+            cap: { ability: "cha", kind: "ability_modifier", minimum: 1 },
+            kind: "use_count",
+          },
+        },
+      },
+      {
+        ...base,
+        id: "cleric_divine_order_test",
+        name: "Divine Order",
+        className: "cleric",
+        description: "Divine Order test shape.",
+        mechanics: {
+          choiceKey: "divine_order",
+          family: "suborder_choice",
+          timing: "class_feature_acquisition",
+          options: [
+            {
+              displayName: "Protector",
+              id: "protector",
+              mechanics: {
+                family: "passive",
+                grants: [
+                  {
+                    kind: "grant_proficiency",
+                    proficiency: {
+                      kind: "fixed",
+                      proficiencies: [
+                        { category: "martial", kind: "weapon_category" },
+                        { category: "heavy", kind: "armor_category" },
+                      ],
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              displayName: "Thaumaturge",
+              id: "thaumaturge",
+              mechanics: {
+                family: "passive",
+                grants: [
+                  {
+                    count: 1,
+                    kind: "grant_spell_access_choice",
+                    mode: "known",
+                    spellLevel: 0,
+                    spellList: "cleric",
+                  },
+                  {
+                    delta: {
+                      ability: "wis",
+                      kind: "ability_modifier",
+                      minimum: 1,
+                      sign: "+",
+                    },
+                    kind: "modify_roll_numeric",
+                    on: ["ability_check"],
+                    skillFilter: {
+                      kind: "fixed",
+                      skills: ["arcana", "religion"],
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      },
+      {
+        ...base,
+        id: "druid_druidic_test",
+        name: "Druidic",
+        className: "druid",
+        description: "Druidic test shape.",
+        mechanics: {
+          family: "passive",
+          grants: [
+            { kind: "grant_language", languageId: "druidic" },
+            {
+              kind: "grant_spell_access",
+              mode: "prepared",
+              spellId: "speak_with_animals",
+            },
+            {
+              deciphering: { withoutLanguageRequires: "magic" },
+              kind: "grant_hidden_language_messages",
+              languageId: "druidic",
+              message: { kind: "hidden_language_message" },
+              spotting: {
+                languageKnowers: "automatic",
+                others: {
+                  ability: "int",
+                  dc: 15,
+                  skill: "investigation",
+                },
+              },
+            },
+          ],
+        },
+      },
+      {
+        ...base,
+        id: "druid_primal_order_test",
+        name: "Primal Order",
+        className: "druid",
+        description: "Primal Order test shape.",
+        mechanics: {
+          choiceKey: "primal_order",
+          family: "suborder_choice",
+          timing: "class_feature_acquisition",
+          options: [
+            {
+              displayName: "Magician",
+              id: "magician",
+              mechanics: {
+                family: "passive",
+                grants: [
+                  {
+                    count: 1,
+                    kind: "grant_spell_access_choice",
+                    mode: "known",
+                    spellLevel: 0,
+                    spellList: "druid",
+                  },
+                  {
+                    delta: {
+                      ability: "wis",
+                      kind: "ability_modifier",
+                      minimum: 1,
+                      sign: "+",
+                    },
+                    kind: "modify_roll_numeric",
+                    on: ["ability_check"],
+                    skillFilter: {
+                      kind: "fixed",
+                      skills: ["arcana", "nature"],
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              displayName: "Warden",
+              id: "warden",
+              mechanics: {
+                family: "passive",
+                grants: [
+                  {
+                    kind: "grant_proficiency",
+                    proficiency: {
+                      kind: "fixed",
+                      proficiencies: [
+                        { category: "martial", kind: "weapon_category" },
+                        { category: "medium", kind: "armor_category" },
+                      ],
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      },
+      {
+        ...base,
+        id: "monk_martial_arts_test",
+        name: "Martial Arts",
+        className: "monk",
+        description: "Martial Arts test shape.",
+        mechanics: {
+          condition: {
+            kind: "all_of",
+            predicates: [
+              { kind: "unarmed_or_monk_weapons_only" },
+              {
+                categories: ["light", "medium", "heavy"],
+                kind: "not_wearing_armor",
+              },
+              { kind: "not_wielding_shield" },
+            ],
+          },
+          family: "passive",
+          grants: [
+            { attack: "unarmed_strike", kind: "grant_bonus_action_attack" },
+            {
+              die: {
+                axis: "class",
+                base: { dice: 1, dieSize: 6 },
+                kind: "threshold_tiers",
+                tiers: [
+                  { atLevel: 5, override: { dieSize: 8 } },
+                  { atLevel: 11, override: { dieSize: 10 } },
+                  { atLevel: 17, override: { dieSize: 12 } },
+                ],
+              },
+              kind: "replace_damage_die",
+              scope: "unarmed_or_monk_weapon",
+            },
+            {
+              kind: "substitute_ability_for_rolls",
+              on: ["attack_roll", "damage_roll", "unarmed_strike_save_dc"],
+              replaces: "str",
+              scope: "unarmed_or_monk_weapon",
+              use: "dex",
+            },
+          ],
+        },
+      },
+      {
+        ...base,
+        id: "ranger_favored_enemy_test",
+        name: "Favored Enemy",
+        className: "ranger",
+        description: "Favored Enemy test shape.",
+        mechanics: {
+          family: "passive",
+          grants: [
+            {
+              kind: "grant_spell_access",
+              mode: "prepared",
+              spellId: "hunters_mark",
+            },
+            {
+              count: 2,
+              kind: "grant_spell_free_casts",
+              resetCadence: "long_rest",
+              scaling: {
+                axis: "class",
+                tiers: [
+                  { atLevel: 5, count: 3 },
+                  { atLevel: 9, count: 4 },
+                  { atLevel: 13, count: 5 },
+                  { atLevel: 17, count: 6 },
+                ],
+              },
+              spellId: "hunters_mark",
+            },
+          ],
+        },
+      },
+      {
+        ...base,
+        id: "rogue_expertise_test",
+        name: "Expertise",
+        className: "rogue",
+        description: "Expertise test shape.",
+        mechanics: {
+          family: "passive",
+          grants: [
+            {
+              choiceCount: {
+                kind: "class_level_additional_choices",
+                initial: 2,
+                increases: [{ atLevel: 6, choose: 2 }],
+              },
+              kind: "grant_expertise",
+              skills: { kind: "owned_skill_proficiencies_without_expertise" },
+            },
+          ],
+        },
+      },
+      {
+        ...base,
+        id: "rogue_thieves_cant_test",
+        name: "Thieves' Cant",
+        className: "rogue",
+        description: "Thieves' Cant test shape.",
+        mechanics: {
+          family: "passive",
+          grants: [
+            { kind: "grant_language", languageId: "thieves_cant" },
+            {
+              count: 1,
+              kind: "grant_language_choice",
+              source: "character_creation_language_tables",
+            },
+          ],
+        },
+      },
+      {
+        ...base,
+        id: "sorcerer_innate_sorcery_test",
+        name: "Innate Sorcery",
+        className: "sorcerer",
+        description: "Innate Sorcery test shape.",
+        mechanics: {
+          activationCost: { kind: "bonus_action" },
+          duration: {
+            kind: "timed",
+            value: { amount: 1, unit: "minute" },
+          },
+          family: "activation",
+          phases: [
+            {
+              attachment: { kind: "self" },
+              effects: [
+                {
+                  delta: { amount: 1, kind: "fixed_number", sign: "+" },
+                  kind: "modify_save_dc",
+                  spellSourceFilter: { className: "sorcerer" },
+                },
+                {
+                  kind: "modify_roll_advantage",
+                  mode: "advantage",
+                  on: ["spell_attack_roll"],
+                  spellSourceFilter: { className: "sorcerer" },
+                },
+              ],
+              kind: "direct",
+            },
+          ],
+          resetCadence: { kind: "long_rest" },
+          resource: { cap: { kind: "fixed", uses: 2 }, kind: "use_count" },
+        },
+      },
+      {
+        ...base,
+        id: "warlock_eldritch_invocations_test",
+        name: "Eldritch Invocations",
+        className: "warlock",
+        description: "Eldritch Invocations test shape.",
+        mechanics: {
+          changeOn: { count: 1, kind: "class_level" },
+          choiceKey: "eldritch_invocations",
+          choiceCount: {
+            kind: "class_level_total_choices",
+            levels: [
+              { atLevel: 1, total: 1 },
+              { atLevel: 2, total: 3 },
+              { atLevel: 5, total: 5 },
+              { atLevel: 7, total: 6 },
+              { atLevel: 9, total: 7 },
+              { atLevel: 12, total: 8 },
+              { atLevel: 15, total: 9 },
+              { atLevel: 18, total: 10 },
+            ],
+          },
+          constraints: {
+            prerequisiteForKnownOptionLocksReplacement: true,
+            prerequisitesRequired: true,
+            uniqueSelections: true,
+          },
+          family: "feature_choice",
+          optionSource: {
+            className: "warlock",
+            kind: "class_feature_options",
+            optionKind: "eldritch_invocation",
+          },
+          timing: "class_feature_acquisition",
+        },
+      },
+      {
+        ...base,
+        id: "warlock_pact_magic_feature_test",
+        name: "Pact Magic",
+        className: "warlock",
+        description: "Pact Magic feature projection test shape.",
+        mechanics: {
+          family: "class_spellcasting_projection",
+          source: "class_record_spellcasting",
+          spellcastingKind: "pact_magic_spellcasting_creation",
+        },
+      },
+    ];
+
+    for (const record of records) {
+      let decoded: ReturnType<typeof decodeClassFeatureRecordSync>;
+      try {
+        decoded = decodeClassFeatureRecordSync(record);
+      } catch (error) {
+        throw new Error(`failed to decode ${record.id}: ${String(error)}`);
+      }
+
+      expect(decoded).toMatchObject({
+        id: record.id,
+        kind: "class_feature",
+        mechanics: { family: record.mechanics.family },
+      });
+    }
+  });
+
   test("decodes and reads Soldier background creation facts", () => {
     const backgroundRecord = decodeBackgroundRecordSync(backgroundSoldierInput);
     const unit = decodeUnitRecordSync(backgroundSoldierInput);
@@ -625,6 +1052,88 @@ describe("character-creation Surface records", () => {
           skillProficiencyChoice: {
             ...classFighterInput.skillProficiencyChoice,
             options: [],
+          },
+        }),
+      ),
+    ).toBe(true);
+
+    expect(
+      Either.isLeft(
+        decodeUnitRecordEither({
+          ...classWarlockInput,
+          id: "bard_pact_magic_projection",
+          kind: "class_feature",
+          className: "bard",
+          acquiredAtLevel: 1,
+          mechanics: {
+            family: "class_spellcasting_projection",
+            source: "class_record_spellcasting",
+            spellcastingKind: "pact_magic_spellcasting_creation",
+          },
+        }),
+      ),
+    ).toBe(true);
+
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(EffectAtomSchema)({
+          kind: "grant_spell_access",
+          spellId: "thaumaturgy",
+          spellList: "cleric",
+          spellLevel: 0,
+          mode: "known",
+          count: 1,
+        }),
+      ),
+    ).toBe(true);
+
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(EffectAtomSchema)({
+          kind: "grant_spell_access_choice",
+          spellList: "fighter",
+          spellLevel: 0,
+          mode: "known",
+          count: 1,
+        }),
+      ),
+    ).toBe(true);
+
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(EffectAtomSchema)({
+          kind: "grant_spell_access_choice",
+          spellId: "thaumaturgy",
+          spellList: "cleric",
+          spellLevel: 0,
+          mode: "known",
+          count: 1,
+        }),
+      ),
+    ).toBe(true);
+
+    expect(
+      Either.isLeft(
+        decodeUnitRecordEither({
+          ...classWarlockInput,
+          id: "bard_eldritch_invocations",
+          kind: "class_feature",
+          className: "bard",
+          acquiredAtLevel: 1,
+          mechanics: {
+            changeOn: { count: 1, kind: "class_level" },
+            choiceKey: "eldritch_invocations",
+            choiceCount: {
+              kind: "class_level_total_choices",
+              levels: [{ atLevel: 1, total: 1 }],
+            },
+            family: "feature_choice",
+            optionSource: {
+              className: "warlock",
+              kind: "class_feature_options",
+              optionKind: "eldritch_invocation",
+            },
+            timing: "class_feature_acquisition",
           },
         }),
       ),

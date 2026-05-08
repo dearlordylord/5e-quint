@@ -545,6 +545,15 @@ export type ClassFeatureComponentMechanics = Schema.Schema.Type<
 export type CompositeClassFeatureMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.CompositeClassFeatureMechanicsSchema
 >;
+export type SuborderChoiceMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.SuborderChoiceMechanicsSchema
+>;
+export type FeatureChoiceMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.FeatureChoiceMechanicsSchema
+>;
+export type ClassSpellcastingProjectionMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.ClassSpellcastingProjectionMechanicsSchema
+>;
 export type WeaponMasteryChoiceMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.WeaponMasteryChoiceMechanicsSchema
 >;
@@ -709,6 +718,9 @@ export type NonWizardClassRecord = Schema.Schema.Type<
 >;
 export type ClassFeatureRecord = Schema.Schema.Type<
   typeof SurfaceSchema.ClassFeatureRecordSchema
+>;
+export type WarlockClassFeatureRecord = Schema.Schema.Type<
+  typeof SurfaceSchema.WarlockClassFeatureRecordSchema
 >;
 export type BackgroundToolProficiency = Schema.Schema.Type<
   typeof SurfaceSchema.BackgroundToolProficiencySchema

@@ -6,7 +6,9 @@ import {
   ArmorCategorySchema,
   ArmorTrainingCategorySchema,
   BackgroundRecordKindSchema,
+  ClassLevelChoiceCountSchema,
   ClassRecordKindSchema,
+  CLASS_NAMES,
   SubclassRecordKindSchema,
   ClassNameSchema,
   ConditionSchema,
@@ -20,7 +22,6 @@ import {
   MagicItemRaritySchema,
   MediumArmorAcFormulaSchema,
   NON_SPELLCASTING_CLASS_NAMES,
-  NON_FIGHTER_NON_WIZARD_CLASS_NAMES,
   ProficiencyGrantSchema,
   ProvenanceSchema,
   RollKindSchema,
@@ -63,9 +64,30 @@ const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.greaterThanOrEqualTo(1),
 );
 
+const NON_FIGHTER_NON_WIZARD_NON_WARLOCK_CLASS_NAMES = CLASS_NAMES.filter(
+  (
+    className,
+  ): className is Exclude<ClassName, "fighter" | "wizard" | "warlock"> =>
+    className !== "fighter" &&
+    className !== "wizard" &&
+    className !== "warlock",
+  // Brands and literal unions are erased at runtime; the filter above removes
+  // exactly the excluded class names, and Schema.Literal requires a non-empty
+  // tuple rather than a narrowed readonly array.
+) as unknown as readonly [
+  Exclude<ClassName, "fighter" | "wizard" | "warlock">,
+  ...Array<Exclude<ClassName, "fighter" | "wizard" | "warlock">>,
+];
+
 const numberTierSchema = Schema.Struct({
   atLevel: Schema.Number,
   value: Schema.Number,
+});
+
+const AbilityModifierCapSchema = Schema.Struct({
+  kind: Schema.Literal("ability_modifier"),
+  ability: AbilitySchema,
+  minimum: exactOptional(Schema.Number),
 });
 
 export const ClassFeatureActivationCostSchema = Schema.Union(
@@ -107,10 +129,7 @@ export const UseCountCapSchema = Schema.Union(
     startingAtLevel: Schema.Number,
   }),
   Schema.Struct({ kind: Schema.Literal("proficiency_bonus") }),
-  Schema.Struct({
-    kind: Schema.Literal("ability_modifier"),
-    ability: AbilitySchema,
-  }),
+  AbilityModifierCapSchema,
   Schema.Struct({ kind: Schema.Literal("unlimited") }),
 );
 
@@ -137,10 +156,7 @@ export const ChargePoolResourceSchema = Schema.Struct({
       startingAtLevel: Schema.Number,
     }),
     Schema.Struct({ kind: Schema.Literal("proficiency_bonus") }),
-    Schema.Struct({
-      kind: Schema.Literal("ability_modifier"),
-      ability: AbilitySchema,
-    }),
+    AbilityModifierCapSchema,
   ),
   initialCount: exactOptional(DiceAmountSchema),
   lifetimeAbsorptionCap: exactOptional(Schema.Number),
@@ -270,6 +286,7 @@ const baseEquipmentPredicateSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("peering_through_item") }),
   Schema.Struct({ kind: Schema.Literal("wearing_item") }),
   Schema.Struct({ kind: Schema.Literal("unarmored") }),
+  Schema.Struct({ kind: Schema.Literal("unarmed_or_monk_weapons_only") }),
   Schema.Struct({
     kind: Schema.Literal("wearing_armor"),
     categories: Schema.Array(Schema.Literal("light", "medium", "heavy")),
@@ -410,6 +427,57 @@ export const AlternateActionCostMechanicsSchema = Schema.Struct({
   }),
 });
 
+const BuildTimeFeatureChoiceChangeSchema = Schema.Union(
+  Schema.Struct({ kind: Schema.Literal("never") }),
+  Schema.Struct({
+    kind: Schema.Literal("class_level"),
+    count: PositiveIntegerSchema,
+  }),
+);
+
+export const SuborderChoiceMechanicsSchema = Schema.Struct({
+  family: Schema.Literal("suborder_choice"),
+  choiceKey: NonEmptyStringSchema,
+  timing: Schema.Literal("class_feature_acquisition"),
+  options: Schema.NonEmptyArray(
+    Schema.Struct({
+      id: NonEmptyStringSchema,
+      displayName: NonEmptyStringSchema,
+      mechanics: Schema.suspend(() => PassiveMechanicsSchema),
+    }),
+  ),
+});
+
+export const FeatureChoiceMechanicsSchema = Schema.Union(
+  Schema.Struct({
+    family: Schema.Literal("feature_choice"),
+    choiceKey: Schema.Literal("eldritch_invocations"),
+    timing: Schema.Literal("class_feature_acquisition"),
+    choiceCount: ClassLevelChoiceCountSchema,
+    optionSource: Schema.Struct({
+      kind: Schema.Literal("class_feature_options"),
+      className: Schema.Literal("warlock"),
+      optionKind: Schema.Literal("eldritch_invocation"),
+    }),
+    changeOn: BuildTimeFeatureChoiceChangeSchema,
+    constraints: exactOptional(
+      Schema.Struct({
+        prerequisitesRequired: Schema.Boolean,
+        uniqueSelections: Schema.Boolean,
+        prerequisiteForKnownOptionLocksReplacement: exactOptional(
+          Schema.Boolean,
+        ),
+      }),
+    ),
+  }),
+);
+
+export const ClassSpellcastingProjectionMechanicsSchema = Schema.Struct({
+  family: Schema.Literal("class_spellcasting_projection"),
+  source: Schema.Literal("class_record_spellcasting"),
+  spellcastingKind: Schema.Literal("pact_magic_spellcasting_creation"),
+});
+
 export const ClassFeatureComponentMechanicsSchema = Schema.Union(
   Schema.suspend(() => PassiveMechanicsSchema),
   ActivatedAbilityMechanicsSchema,
@@ -477,6 +545,9 @@ export const PassiveMechanicsSchema = Schema.Struct({
 export const ClassFeatureMechanicsSchema = Schema.Union(
   ClassFeatureComponentMechanicsSchema,
   CompositeClassFeatureMechanicsSchema,
+  FeatureChoiceMechanicsSchema,
+  SuborderChoiceMechanicsSchema,
+  ClassSpellcastingProjectionMechanicsSchema,
   WeaponMasteryChoiceMechanicsSchema,
   SpellbookRitualAccessMechanicsSchema,
   RestSpellSlotRecoveryMechanicsSchema,
@@ -486,6 +557,7 @@ export const ClassFeatureMechanicsSchema = Schema.Union(
 export const ClassGeneralFeatureMechanicsSchema = Schema.Union(
   ClassFeatureComponentMechanicsSchema,
   CompositeClassFeatureMechanicsSchema,
+  SuborderChoiceMechanicsSchema,
   WeaponMasteryChoiceMechanicsSchema,
 );
 
@@ -1743,15 +1815,26 @@ export const FighterClassFeatureRecordSchema = Schema.Struct({
   ),
 });
 
+export const WarlockClassFeatureRecordSchema = Schema.Struct({
+  ...ClassFeatureRecordBaseFields,
+  className: Schema.Literal("warlock"),
+  mechanics: Schema.Union(
+    ClassGeneralFeatureMechanicsSchema,
+    FeatureChoiceMechanicsSchema,
+    ClassSpellcastingProjectionMechanicsSchema,
+  ),
+});
+
 export const OtherClassFeatureRecordSchema = Schema.Struct({
   ...ClassFeatureRecordBaseFields,
-  className: Schema.Literal(...NON_FIGHTER_NON_WIZARD_CLASS_NAMES),
+  className: Schema.Literal(...NON_FIGHTER_NON_WIZARD_NON_WARLOCK_CLASS_NAMES),
   mechanics: ClassGeneralFeatureMechanicsSchema,
 });
 
 export const ClassFeatureRecordSchema = Schema.Union(
   WizardClassFeatureRecordSchema,
   FighterClassFeatureRecordSchema,
+  WarlockClassFeatureRecordSchema,
   OtherClassFeatureRecordSchema,
 );
 

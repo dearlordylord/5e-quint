@@ -462,11 +462,15 @@ function traceEffectAtom(
     }
     case "modify_save_dc": {
       const id = ids("eff");
+      const source =
+        e.spellSourceFilter === undefined
+          ? ""
+          : `\nsource: ${e.spellSourceFilter.className} spells`;
       nodes.push({
         id,
         category: "effect",
         atomKind: "modify_save_dc",
-        label: `modify_save_dc\n${describeDelta(e.delta)}`,
+        label: `modify_save_dc\n${describeDelta(e.delta)}${source}`,
       });
       return id;
     }
@@ -598,12 +602,16 @@ function traceEffectAtom(
         e.contextRangeFeet !== undefined
           ? `\ncontext: within ${e.contextRangeFeet} ft`
           : "";
+      const spellSource =
+        e.spellSourceFilter === undefined
+          ? ""
+          : `\nsource: ${e.spellSourceFilter.className} spells`;
       const saveSource = describeSavingThrowSourceFilter(e.saveSourceFilter);
       nodes.push({
         id,
         category: "effect",
         atomKind: "modify_roll_advantage",
-        label: `modify_roll_advantage\n${e.mode} on ${e.on.join(", ")}${by}${condition}${ability}${saveSource}${contextRange}`,
+        label: `modify_roll_advantage\n${e.mode} on ${e.on.join(", ")}${by}${condition}${ability}${spellSource}${saveSource}${contextRange}`,
       });
       return id;
     }
@@ -1063,6 +1071,49 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "grant_expertise": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "grant_expertise",
+        label: `grant_expertise\n${describeClassLevelChoiceCount(e.choiceCount)} owned skill proficiencies without Expertise`,
+      });
+      return id;
+    }
+    case "grant_language": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "grant_language",
+        label: `grant_language\n${e.languageId}`,
+      });
+      return id;
+    }
+    case "grant_hidden_language_messages": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "grant_hidden_language_messages",
+        label:
+          `grant_hidden_language_messages\n${e.languageId}\n` +
+          `knowers ${e.spotting.languageKnowers}; others DC ${e.spotting.others.dc} ` +
+          `${e.spotting.others.ability.toUpperCase()} (${e.spotting.others.skill})`,
+      });
+      return id;
+    }
+    case "grant_language_choice": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "grant_language_choice",
+        label: `grant_language_choice\nchoose ${e.count} from ${e.source}`,
+      });
+      return id;
+    }
     case "grant_spell_access": {
       const id = ids("eff");
       nodes.push({
@@ -1075,6 +1126,70 @@ function traceEffectAtom(
           describeGrantedSpellAreaOverride(e.areaOverride) +
           describeGrantedSpellTargetRestriction(e.targetRestriction) +
           describeGrantedSpellDurationOverride(e.durationOverride),
+      });
+      return id;
+    }
+    case "grant_spell_access_choice": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "grant_spell_access_choice",
+        label: `grant_spell_access_choice\nchoose ${e.count} ${e.spellList} level ${e.spellLevel}\n(${describeSpellAccessMode(e.mode)})`,
+      });
+      return id;
+    }
+    case "grant_spell_free_casts": {
+      const id = ids("eff");
+      const scaling =
+        e.scaling === undefined
+          ? ""
+          : `\n${e.scaling.tiers.map((tier) => `L${tier.atLevel}: ${tier.count}`).join(", ")}`;
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "grant_spell_free_casts",
+        label: `grant_spell_free_casts\n${e.spellId} x${e.count}\nreset ${e.resetCadence}${scaling}`,
+      });
+      return id;
+    }
+    case "grant_die_token": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "grant_die_token",
+        label: `grant_die_token\n${describeDiceAmount(e.die)}\n${e.trigger}, max held ${e.maxHeld}\n${e.duration.amount} ${e.duration.unit}`,
+      });
+      return id;
+    }
+    case "grant_bonus_action_attack": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "grant_bonus_action_attack",
+        label: `grant_bonus_action_attack\n${e.attack}`,
+      });
+      return id;
+    }
+    case "replace_damage_die": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "replace_damage_die",
+        label: `replace_damage_die\n${describeDiceAmount(e.die)}\n${e.scope}`,
+      });
+      return id;
+    }
+    case "substitute_ability_for_rolls": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "substitute_ability_for_rolls",
+        label: `substitute_ability_for_rolls\n${e.use} for ${e.replaces}\n${e.on.join(", ")}\n${e.scope}`,
       });
       return id;
     }
@@ -1976,7 +2091,17 @@ function traceEffectAtomScaling(
     case "deny_opportunity_attack":
     case "grant_feat":
     case "grant_proficiency":
+    case "grant_expertise":
+    case "grant_language":
+    case "grant_hidden_language_messages":
+    case "grant_language_choice":
     case "grant_spell_access":
+    case "grant_spell_access_choice":
+    case "grant_spell_free_casts":
+    case "grant_die_token":
+    case "grant_bonus_action_attack":
+    case "replace_damage_die":
+    case "substitute_ability_for_rolls":
     case "grant_condition_immunity":
     case "suppress_condition_benefit":
     case "prevent_drop_to_0_hp":
@@ -5940,6 +6065,8 @@ function traceClassFeatureMechanics(
       return [tracePassiveMechanics(m, nodes, edges, ids)];
     case "alternate_action_cost":
       return [traceAlternateActionCostMechanics(m, nodes, ids)];
+    case "feature_choice":
+      return [traceFeatureChoiceMechanics(m, nodes, ids)];
     case "on_hit_trigger":
       return [traceOnHitTriggerMechanics(m, nodes, edges, ids)];
     case "save_damage_replacement":
@@ -5957,6 +6084,35 @@ function traceClassFeatureMechanics(
           `${m.eligibleWeapons.join(", ")}\nchange ${m.changeOn.count} on ${m.changeOn.kind}`,
       });
       return [masteryId];
+    }
+    case "suborder_choice": {
+      const choiceId = ids("suborder");
+      nodes.push({
+        id: choiceId,
+        category: "procedure",
+        atomKind: "suborder_choice",
+        label: `suborder_choice\n${m.choiceKey}\n${m.options.map((option) => option.displayName).join(" | ")}`,
+      });
+      for (const option of m.options) {
+        const optionId = tracePassiveMechanics(
+          option.mechanics,
+          nodes,
+          edges,
+          ids,
+        );
+        edges.push({ from: choiceId, to: optionId, relation: option.id });
+      }
+      return [choiceId];
+    }
+    case "class_spellcasting_projection": {
+      const spellcastingId = ids("spellcasting");
+      nodes.push({
+        id: spellcastingId,
+        category: "procedure",
+        atomKind: "class_spellcasting_projection",
+        label: `class_spellcasting_projection\n${m.spellcastingKind}\nsource ${m.source}`,
+      });
+      return [spellcastingId];
     }
     case "spellbook_ritual_access": {
       const ritualId = ids("ritual");
@@ -6029,6 +6185,70 @@ function traceClassFeatureMechanics(
       throw new Error(
         `unhandled class-feature family: ${String((_exhaustive as { family: string }).family)}`,
       );
+    }
+  }
+}
+
+function traceFeatureChoiceMechanics(
+  m: Extract<ClassFeatureMechanics, { readonly family: "feature_choice" }>,
+  nodes: TraceNode[],
+  ids: IdGen,
+): string {
+  const choiceId = ids("feature-choice");
+  nodes.push({
+    id: choiceId,
+    category: "procedure",
+    atomKind: "feature_choice",
+    label:
+      `feature_choice\n${m.choiceKey}\n${describeClassLevelChoiceCount(m.choiceCount)}\n` +
+      `${m.optionSource.className} ${m.optionSource.optionKind}\n${describeFeatureChoiceChange(m.changeOn)}`,
+  });
+  return choiceId;
+}
+
+type SurfaceChoiceCount =
+  | Extract<
+      ClassFeatureMechanics,
+      { readonly family: "feature_choice" }
+    >["choiceCount"]
+  | Extract<EffectAtom, { readonly kind: "grant_expertise" }>["choiceCount"];
+
+function describeClassLevelChoiceCount(
+  choiceCount: SurfaceChoiceCount,
+): string {
+  switch (choiceCount.kind) {
+    case "class_level_additional_choices":
+      return (
+        `choose ${choiceCount.initial} at acquisition; ` +
+        choiceCount.increases
+          .map((increase) => `L${increase.atLevel}: +${increase.choose}`)
+          .join(", ")
+      );
+    case "class_level_total_choices":
+      return `choose by class level: ${choiceCount.levels
+        .map((level) => `L${level.atLevel}: ${level.total}`)
+        .join(", ")}`;
+    default: {
+      const _exhaustive: never = choiceCount;
+      return _exhaustive;
+    }
+  }
+}
+
+function describeFeatureChoiceChange(
+  changeOn: Extract<
+    ClassFeatureMechanics,
+    { readonly family: "feature_choice" }
+  >["changeOn"],
+): string {
+  switch (changeOn.kind) {
+    case "never":
+      return "no replacement";
+    case "class_level":
+      return `change ${changeOn.count} on class_level`;
+    default: {
+      const _exhaustive: never = changeOn;
+      return _exhaustive;
     }
   }
 }
@@ -6273,6 +6493,16 @@ function traceEquipmentPredicate(
         category: "resolution",
         atomKind: "wielding_weapon",
         label: `wielding_weapon\n${p.weaponKind}`,
+      });
+      return [id];
+    }
+    case "unarmed_or_monk_weapons_only": {
+      const id = ids("pred");
+      nodes.push({
+        id,
+        category: "resolution",
+        atomKind: "unarmed_or_monk_weapons_only",
+        label: "unarmed_or_monk_weapons_only",
       });
       return [id];
     }
@@ -6667,7 +6897,7 @@ function describeUseCountCap(cap: UseCountResource["cap"]): string {
     case "proficiency_bonus":
       return "max = proficiency bonus";
     case "ability_modifier":
-      return `max = ${cap.ability.toUpperCase()} modifier`;
+      return `max = ${cap.ability.toUpperCase()} modifier${cap.minimum === undefined ? "" : ` (minimum ${cap.minimum})`}`;
     case "unlimited":
       return "unlimited";
     default: {
@@ -7515,7 +7745,7 @@ function describeDelta(d: DiceDelta): string {
     case "proficiency_bonus":
       return d.scale === "half" ? `${d.sign}½ PB` : `${d.sign}PB`;
     case "ability_modifier":
-      return `${d.sign}${d.ability.toUpperCase()} mod`;
+      return `${d.sign}${d.ability.toUpperCase()} mod${d.minimum === undefined ? "" : ` (min ${d.minimum})`}`;
     case "threshold_tiers":
       return `${d.sign}${d.base} (${d.axis} tiers ${d.tiers
         .map((t) => `L${t.atLevel}:${t.value}`)
