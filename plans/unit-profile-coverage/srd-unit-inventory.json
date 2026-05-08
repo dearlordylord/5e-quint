@@ -159,7 +159,7 @@
     {
       "id": "SRDINV1",
       "title": "Classify Installed Level-1 Owner Evidence",
-      "suggestedStatus": "ready-for-research",
+      "suggestedStatus": "done",
       "intent": "Stop treating installed level-1 rows as done by catalog load alone; assign operational owner expectations or explicit catalog-only closure.",
       "rowCount": 141,
       "rowIds": [
@@ -311,7 +311,7 @@
     {
       "id": "SRDINV2",
       "title": "Author Missing Level-1 Class Containers",
-      "suggestedStatus": "blocked-on-SRDINV1",
+      "suggestedStatus": "done",
       "intent": "Create or explicitly close missing SRD level-1 class container records.",
       "rowCount": 0,
       "rowIds": [],
@@ -321,7 +321,7 @@
     {
       "id": "SRDINV3",
       "title": "Classify Missing Level-1 Class Feature Rows",
-      "suggestedStatus": "blocked-on-SRDINV1",
+      "suggestedStatus": "done",
       "intent": "Decide which missing level-1 class feature rows need authored content, Surface widening, non-runtime closure, or later runtime work.",
       "rowCount": 0,
       "rowIds": [],
@@ -331,7 +331,7 @@
     {
       "id": "SRDINV4",
       "title": "Classify Level-1 Character Creation Rows",
-      "suggestedStatus": "blocked-on-SRDINV1",
+      "suggestedStatus": "done",
       "intent": "Separate class-container-owned creation/progression facts from rows that require standalone authored records.",
       "rowCount": 112,
       "rowIds": [
@@ -454,7 +454,7 @@
     {
       "id": "SRDINV5A",
       "title": "Classify Level-1 Spell Access Rows",
-      "suggestedStatus": "blocked-on-SRDINV1",
+      "suggestedStatus": "done",
       "intent": "Keep class spell access/list facts separate from individual Spell Unit support.",
       "rowCount": 7,
       "rowIds": [
@@ -472,7 +472,7 @@
     {
       "id": "SRDINV5B",
       "title": "Classify Missing Cantrip and Level-1 Spell Units",
-      "suggestedStatus": "blocked-on-SRDINV1",
+      "suggestedStatus": "done",
       "intent": "Classify missing SRD cantrip and level-1 Spell Unit records without loading the whole spell-pressure backlog into one task.",
       "rowCount": 6,
       "rowIds": [
@@ -489,7 +489,7 @@
     {
       "id": "SRDINV5C",
       "title": "Classify Installed Cantrip and Level-1 Spell Units",
-      "suggestedStatus": "blocked-on-SRDINV1",
+      "suggestedStatus": "done",
       "intent": "Classify installed SRD cantrip and level-1 Spell Unit owner evidence separately from missing and catalog-only spell rows.",
       "rowCount": 50,
       "rowIds": [
@@ -550,7 +550,7 @@
     {
       "id": "SRDINV5D",
       "title": "Review Catalog-Only Cantrip and Level-1 Spell Units",
-      "suggestedStatus": "blocked-on-SRDINV1",
+      "suggestedStatus": "done",
       "intent": "Keep catalog-only spell pressure explicit and counted without forcing unrelated class or nonspell rows into the same task.",
       "rowCount": 144,
       "rowIds": [
@@ -705,7 +705,7 @@
     {
       "id": "SRDINV6",
       "title": "Review Catalog-Only and Surface-Widening Rows",
-      "suggestedStatus": "blocked-on-SRDINV1",
+      "suggestedStatus": "done",
       "intent": "Preserve catalog-only/dead-for-now rows and name missing Surface constructs for nonspell and spell Surface-widening blockers.",
       "rowCount": 37,
       "rowIds": [
@@ -1341,7 +1341,7 @@
     {
       "id": "SRDINV17",
       "title": "Close Character-Creation Class Container Evidence",
-      "suggestedStatus": "ready-for-research",
+      "suggestedStatus": "done",
       "intent": "Close character-creation owner evidence for authored class containers and class-owned level-1 creation facts.",
       "rowCount": 0,
       "rowIds": [],
@@ -1351,7 +1351,7 @@
     {
       "id": "SRDINV18",
       "title": "Close Character-Creation Class Feature Evidence",
-      "suggestedStatus": "blocked-on-SRDINV17",
+      "suggestedStatus": "ready-for-research",
       "intent": "Close character-creation owner evidence for authored level-1 class feature records that are retained on CharacterBuilds or discovered as choices.",
       "rowCount": 11,
       "rowIds": [
@@ -1373,7 +1373,7 @@
     {
       "id": "SRDINV19",
       "title": "Close Character-Creation Spell Access Evidence",
-      "suggestedStatus": "blocked-on-SRDINV17",
+      "suggestedStatus": "ready-for-research",
       "intent": "Close character-creation owner evidence for non-Wizard level-1 Spell Access records without admitting individual Spell Definitions as runtime-supported.",
       "rowCount": 6,
       "rowIds": [
@@ -1390,7 +1390,7 @@
     {
       "id": "SRDINV20",
       "title": "Close Character-Creation Weapon Mastery Evidence",
-      "suggestedStatus": "blocked-on-SRDINV17",
+      "suggestedStatus": "ready-for-research",
       "intent": "Close character-creation owner evidence for non-Fighter level-1 Weapon Mastery choice records.",
       "rowCount": 4,
       "rowIds": [
@@ -1405,7 +1405,7 @@
     {
       "id": "SRDINV21",
       "title": "Recursive SRD Inventory Planning Review",
-      "suggestedStatus": "blocked-on-SRDINV17-SRDINV20",
+      "suggestedStatus": "blocked",
       "intent": "Review SRDINV17-SRDINV20 owner-evidence closure and append the next concrete batch unless level-1 inventory is complete.",
       "rowCount": 156,
       "rowIds": [

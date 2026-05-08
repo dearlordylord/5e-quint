@@ -1525,6 +1525,44 @@ function makeBatch({
   };
 }
 
+function readActivePlanTaskStatuses(root) {
+  const activePlanPath = path.join(root, "plans/ACTIVE_PLAN.md");
+  if (!fs.existsSync(activePlanPath)) {
+    return new Map();
+  }
+  const content = fs.readFileSync(activePlanPath, "utf8");
+  const match = content.match(/<!-- ralph-task-index\s*([\s\S]*?)\s*-->/m);
+  if (match == null) {
+    return new Map();
+  }
+  try {
+    const parsed = JSON.parse(match[1]);
+    if (!Array.isArray(parsed.tasks)) {
+      return new Map();
+    }
+    return new Map(
+      parsed.tasks
+        .filter(
+          (task) =>
+            task != null &&
+            typeof task.id === "string" &&
+            typeof task.status === "string",
+        )
+        .map((task) => [task.id, task.status]),
+    );
+  } catch {
+    return new Map();
+  }
+}
+
+function withActivePlanStatuses(batches, activePlanTaskStatuses) {
+  return batches.map((batch) => ({
+    ...batch,
+    suggestedStatus:
+      activePlanTaskStatuses.get(batch.id) ?? batch.suggestedStatus,
+  }));
+}
+
 const srdinv8ClassContainerBlockerIds = [
   "srd521:classes/bard:level-1:class-container:bard_class_container",
   "srd521:classes/druid:level-1:class-container:druid_class_container",
@@ -1575,11 +1613,12 @@ function srdinv10SurfaceWideningRows(levelOne) {
 
 function hasRequiredOwnerEvidence(row, owner) {
   return row.ownerEvidence?.some(
-    (entry) => entry.owner === owner && entry.status === "owner evidence required",
+    (entry) =>
+      entry.owner === owner && entry.status === "owner evidence required",
   );
 }
 
-function buildRecommendedBatches(rows) {
+function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
   const levelOne = rows.filter((row) => row.levelBand === "level-1");
   const spellPressure = rows.filter(
     (row) =>
@@ -1686,7 +1725,7 @@ function buildRecommendedBatches(rows) {
       row.category === "mastery pressure",
   );
 
-  return [
+  const batches = [
     makeBatch({
       id: "SRDINV1",
       title: "Classify Installed Level-1 Owner Evidence",
@@ -1999,6 +2038,7 @@ function buildRecommendedBatches(rows) {
         "The next review either records explicit level-1 completion with final metrics or appends another concrete multi-task batch, not a recursive-only placeholder.",
     }),
   ];
+  return withActivePlanStatuses(batches, activePlanTaskStatuses);
 }
 
 function buildSrdUnitInventory({
@@ -2064,7 +2104,10 @@ function buildSrdUnitInventory({
           row.finalDisposition === "missing-authored-record",
       ).length,
     },
-    recommendedBatches: buildRecommendedBatches(rows),
+    recommendedBatches: buildRecommendedBatches(
+      rows,
+      readActivePlanTaskStatuses(root),
+    ),
     rows,
   };
 }
@@ -2381,7 +2424,7 @@ function renderSrdUnitInventory(report) {
     "",
     "## Recommended Ralph Batches",
     "",
-    "These batches are generated planning recommendations for a separate SRD inventory Ralph run. They are not QMBT tasks unless a later batch explicitly promotes battle-runtime behavior.",
+    "These batches are generated planning recommendations for a separate SRD inventory Ralph run. Status values mirror `plans/ACTIVE_PLAN.md` when that task is present. They are not QMBT tasks unless a later batch explicitly promotes battle-runtime behavior.",
     "",
     "| Batch | Status | Rows | Intent | Next action | Acceptance |",
     "|---|---|---:|---|---|---|",
