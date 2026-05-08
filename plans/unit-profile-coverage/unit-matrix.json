@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 334,
-      "numerator": 48,
-      "percent": "14.4%"
+      "denominator": 344,
+      "numerator": 58,
+      "percent": "16.9%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 401,
-      "numerator": 72,
-      "percent": "18%"
+      "denominator": 411,
+      "numerator": 82,
+      "percent": "20%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 73
+      "value": 83
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 33,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 73,
-      "numerator": 73,
+      "denominator": 83,
+      "numerator": 83,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -97,9 +97,9 @@
       "percent": "30.3%"
     },
     "supportedProfileCoverage": {
-      "denominator": 49,
+      "denominator": 59,
       "numerator": 33,
-      "percent": "67.3%"
+      "percent": "55.9%"
     }
   },
   "metricSemantics": [
@@ -1938,6 +1938,24 @@
         "status": "installed"
       },
       "claim": {
+        "reason": "Class feature source facts are authored for character and feature projection; generic D20 Test token use is not promoted as a battle Unit profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/bard_bardic_inspiration.json",
+      "unitId": "bard_bardic_inspiration"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "unit-feature.reaction-roll-or-damage-reduction"
         ],
@@ -2009,6 +2027,78 @@
         "status": "installed"
       },
       "claim": {
+        "reason": "Class feature source facts are authored for character creation choices; no promoted battle Unit profile consumes this suborder choice directly.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/cleric_divine_order.json",
+      "unitId": "cleric_divine_order"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Language, hidden-message, and prepared-spell source facts are authored; exploration/language execution is not promoted as a battle Unit profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/druid_druidic.json",
+      "unitId": "druid_druidic"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Class feature source facts are authored for character creation choices; no promoted battle Unit profile consumes this suborder choice directly.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/druid_primal_order.json",
+      "unitId": "druid_primal_order"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Class feature source facts are authored for downstream Monk feature projection; Martial Arts is not currently a standalone promoted battle Unit profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/monk_martial_arts.json",
+      "unitId": "monk_martial_arts"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "unit-feature.attack-damage-reduction-zero-damage-redirect"
         ],
@@ -2062,6 +2152,24 @@
       ],
       "sourceRecordPath": "packages/surface/content/monk_deflect_attacks.json",
       "unitId": "monk_deflect_attacks"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Prepared spell and free-cast source facts are authored; Hunter's Mark spell execution is outside this class-feature Unit profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/ranger_favored_enemy.json",
+      "unitId": "ranger_favored_enemy"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -2267,6 +2375,24 @@
         "status": "installed"
       },
       "claim": {
+        "reason": "Class feature source facts are authored for character creation skill Expertise choices; no promoted battle Unit profile consumes this choice directly.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/rogue_expertise.json",
+      "unitId": "rogue_expertise"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "unit-feature.attack-damage-rider"
         ],
@@ -2320,6 +2446,60 @@
       ],
       "sourceRecordPath": "packages/surface/content/rogue_sneak_attack.json",
       "unitId": "rogue_sneak_attack"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Language source facts are authored; exploration/language execution is not promoted as a battle Unit profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/rogue_thieves_cant.json",
+      "unitId": "rogue_thieves_cant"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Class feature source facts are authored; Sorcerer spell save DC and spell attack projection is not promoted as a battle Unit profile yet.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/sorcerer_innate_sorcery.json",
+      "unitId": "sorcerer_innate_sorcery"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Invocation choice source facts are authored; individual invocation option execution is outside this class-feature Unit profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/warlock_eldritch_invocations.json",
+      "unitId": "warlock_eldritch_invocations"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

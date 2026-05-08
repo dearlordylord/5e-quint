@@ -16,6 +16,19 @@ import {
 import type { Srd521Unit, SrdUnitCollection } from "./unit-catalog.ts";
 import type { WeaponRecord } from "./types.ts";
 
+const task183ClassFeatureUnitIds = [
+  "bard_bardic_inspiration",
+  "cleric_divine_order",
+  "druid_druidic",
+  "druid_primal_order",
+  "monk_martial_arts",
+  "ranger_favored_enemy",
+  "rogue_expertise",
+  "rogue_thieves_cant",
+  "sorcerer_innate_sorcery",
+  "warlock_eldritch_invocations",
+] as const;
+
 const requiredFirstVerticalUnitIds = [
   "class_barbarian",
   "class_bard",
@@ -38,6 +51,7 @@ const requiredFirstVerticalUnitIds = [
   "fighter_tactical_mind",
   "fighter_improved_critical",
   "barbarian_fast_movement",
+  ...task183ClassFeatureUnitIds,
   "subclass_fighter_champion",
   "subclass_wizard_evoker",
   "rogue_evasion",
@@ -218,6 +232,126 @@ describe("SRD Unit catalog boundary", () => {
           family: "weapon_mastery_choice",
         },
       });
+    }
+  });
+
+  test("installs expressible SRD level-1 class feature records", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      expect(
+        task183ClassFeatureUnitIds.map((unitId) =>
+          result.catalog.requireUnit(unitId),
+        ),
+      ).toEqual([
+        expect.objectContaining({
+          className: "bard",
+          kind: "class_feature",
+          mechanics: expect.objectContaining({
+            family: "activation",
+            resource: {
+              cap: { ability: "cha", kind: "ability_modifier", minimum: 1 },
+              kind: "use_count",
+            },
+          }),
+        }),
+        expect.objectContaining({
+          className: "cleric",
+          kind: "class_feature",
+          mechanics: expect.objectContaining({
+            choiceKey: "divine_order",
+            family: "suborder_choice",
+          }),
+        }),
+        expect.objectContaining({
+          className: "druid",
+          kind: "class_feature",
+          mechanics: expect.objectContaining({
+            family: "passive",
+            grants: expect.arrayContaining([
+              { kind: "grant_language", languageId: "druidic" },
+            ]),
+          }),
+        }),
+        expect.objectContaining({
+          className: "druid",
+          kind: "class_feature",
+          mechanics: expect.objectContaining({
+            choiceKey: "primal_order",
+            family: "suborder_choice",
+          }),
+        }),
+        expect.objectContaining({
+          className: "monk",
+          kind: "class_feature",
+          mechanics: expect.objectContaining({
+            family: "passive",
+            grants: expect.arrayContaining([
+              { attack: "unarmed_strike", kind: "grant_bonus_action_attack" },
+            ]),
+          }),
+        }),
+        expect.objectContaining({
+          className: "ranger",
+          kind: "class_feature",
+          mechanics: expect.objectContaining({
+            family: "passive",
+            grants: expect.arrayContaining([
+              {
+                kind: "grant_spell_access",
+                mode: "prepared",
+                spellId: "hunters_mark",
+              },
+            ]),
+          }),
+        }),
+        expect.objectContaining({
+          className: "rogue",
+          kind: "class_feature",
+          mechanics: expect.objectContaining({
+            family: "passive",
+            grants: expect.arrayContaining([
+              expect.objectContaining({ kind: "grant_expertise" }),
+            ]),
+          }),
+        }),
+        expect.objectContaining({
+          className: "rogue",
+          kind: "class_feature",
+          mechanics: expect.objectContaining({
+            family: "passive",
+            grants: expect.arrayContaining([
+              { kind: "grant_language", languageId: "thieves_cant" },
+            ]),
+          }),
+        }),
+        expect.objectContaining({
+          className: "sorcerer",
+          kind: "class_feature",
+          mechanics: expect.objectContaining({
+            family: "activation",
+            resource: { cap: { kind: "fixed", uses: 2 }, kind: "use_count" },
+          }),
+        }),
+        expect.objectContaining({
+          className: "warlock",
+          kind: "class_feature",
+          mechanics: expect.objectContaining({
+            choiceKey: "eldritch_invocations",
+            constraints: expect.objectContaining({
+              selectionRepeatability: {
+                default: "once",
+                kind: "per_option",
+                repeatableWhen: {
+                  kind: "option_description_repeatable_clause",
+                },
+              },
+            }),
+            family: "feature_choice",
+          }),
+        }),
+      ]);
     }
   });
 

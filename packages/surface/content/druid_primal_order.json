@@ -1,0 +1,79 @@
+{
+  "acquiredAtLevel": 1,
+  "className": "druid",
+  "description": "Choose Magician for one Druid cantrip and a Wisdom-modifier bonus to Arcana or Nature checks, or Warden for Martial weapon proficiency and Medium armor training.",
+  "id": "druid_primal_order",
+  "kind": "class_feature",
+  "mechanics": {
+    "choiceKey": "primal_order",
+    "family": "suborder_choice",
+    "options": [
+      {
+        "displayName": "Magician",
+        "id": "magician",
+        "mechanics": {
+          "family": "passive",
+          "grants": [
+            {
+              "count": 1,
+              "kind": "grant_spell_access_choice",
+              "mode": "known",
+              "spellLevel": 0,
+              "spellList": "druid"
+            },
+            {
+              "delta": {
+                "ability": "wis",
+                "kind": "ability_modifier",
+                "minimum": 1,
+                "sign": "+"
+              },
+              "kind": "modify_roll_numeric",
+              "on": [
+                "ability_check"
+              ],
+              "skillFilter": {
+                "kind": "fixed",
+                "skills": [
+                  "arcana",
+                  "nature"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "displayName": "Warden",
+        "id": "warden",
+        "mechanics": {
+          "family": "passive",
+          "grants": [
+            {
+              "kind": "grant_proficiency",
+              "proficiency": {
+                "kind": "fixed",
+                "proficiencies": [
+                  {
+                    "category": "martial",
+                    "kind": "weapon_category"
+                  },
+                  {
+                    "category": "medium",
+                    "kind": "armor_category"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "timing": "class_feature_acquisition"
+  },
+  "name": "Primal Order",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Druid#Primal Order"
+  }
+}

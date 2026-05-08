@@ -1,0 +1,66 @@
+{
+  "acquiredAtLevel": 1,
+  "className": "sorcerer",
+  "description": "As a Bonus Action, unleash your magic for 1 minute, increasing Sorcerer spell save DCs by 1 and giving Advantage on Sorcerer spell attack rolls.",
+  "id": "sorcerer_innate_sorcery",
+  "kind": "class_feature",
+  "mechanics": {
+    "activationCost": {
+      "kind": "bonus_action"
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "activation",
+    "phases": [
+      {
+        "attachment": {
+          "kind": "self"
+        },
+        "effects": [
+          {
+            "delta": {
+              "amount": 1,
+              "kind": "fixed_number",
+              "sign": "+"
+            },
+            "kind": "modify_save_dc",
+            "spellSourceFilter": {
+              "className": "sorcerer"
+            }
+          },
+          {
+            "kind": "modify_roll_advantage",
+            "mode": "advantage",
+            "on": [
+              "spell_attack_roll"
+            ],
+            "spellSourceFilter": {
+              "className": "sorcerer"
+            }
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "resetCadence": {
+      "kind": "long_rest"
+    },
+    "resource": {
+      "cap": {
+        "kind": "fixed",
+        "uses": 2
+      },
+      "kind": "use_count"
+    }
+  },
+  "name": "Innate Sorcery",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Sorcerer#Innate Sorcery"
+  }
+}

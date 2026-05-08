@@ -1,0 +1,83 @@
+{
+  "acquiredAtLevel": 1,
+  "className": "monk",
+  "description": "While unarmed or wielding Monk weapons and not wearing armor or wielding a Shield, you gain a Bonus Action Unarmed Strike, the Martial Arts die, and Dexterous Attacks.",
+  "id": "monk_martial_arts",
+  "kind": "class_feature",
+  "mechanics": {
+    "condition": {
+      "kind": "all_of",
+      "predicates": [
+        {
+          "kind": "unarmed_or_monk_weapons_only"
+        },
+        {
+          "categories": [
+            "light",
+            "medium",
+            "heavy"
+          ],
+          "kind": "not_wearing_armor"
+        },
+        {
+          "kind": "not_wielding_shield"
+        }
+      ]
+    },
+    "family": "passive",
+    "grants": [
+      {
+        "attack": "unarmed_strike",
+        "kind": "grant_bonus_action_attack"
+      },
+      {
+        "die": {
+          "axis": "class",
+          "base": {
+            "dice": 1,
+            "dieSize": 6
+          },
+          "kind": "threshold_tiers",
+          "tiers": [
+            {
+              "atLevel": 5,
+              "override": {
+                "dieSize": 8
+              }
+            },
+            {
+              "atLevel": 11,
+              "override": {
+                "dieSize": 10
+              }
+            },
+            {
+              "atLevel": 17,
+              "override": {
+                "dieSize": 12
+              }
+            }
+          ]
+        },
+        "kind": "replace_damage_die",
+        "scope": "unarmed_or_monk_weapon"
+      },
+      {
+        "kind": "substitute_ability_for_rolls",
+        "on": [
+          "attack_roll",
+          "damage_roll",
+          "unarmed_strike_save_dc"
+        ],
+        "replaces": "str",
+        "scope": "unarmed_or_monk_weapon",
+        "use": "dex"
+      }
+    ]
+  },
+  "name": "Martial Arts",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Monk#Martial Arts"
+  }
+}

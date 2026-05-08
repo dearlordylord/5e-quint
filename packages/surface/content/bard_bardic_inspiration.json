@@ -1,0 +1,83 @@
+{
+  "acquiredAtLevel": 1,
+  "className": "bard",
+  "description": "As a Bonus Action, inspire another creature within 60 feet who can see or hear you. The creature gains one Bardic Inspiration die for the next hour.",
+  "id": "bard_bardic_inspiration",
+  "kind": "class_feature",
+  "mechanics": {
+    "activationCost": {
+      "kind": "bonus_action"
+    },
+    "family": "activation",
+    "phases": [
+      {
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        },
+        "effects": [
+          {
+            "die": {
+              "axis": "class",
+              "base": {
+                "dice": 1,
+                "dieSize": 6
+              },
+              "kind": "threshold_tiers",
+              "tiers": [
+                {
+                  "atLevel": 5,
+                  "override": {
+                    "dieSize": 8
+                  }
+                },
+                {
+                  "atLevel": 10,
+                  "override": {
+                    "dieSize": 10
+                  }
+                },
+                {
+                  "atLevel": 15,
+                  "override": {
+                    "dieSize": 12
+                  }
+                }
+              ]
+            },
+            "duration": {
+              "amount": 1,
+              "unit": "hour"
+            },
+            "kind": "grant_die_token",
+            "maxHeld": 1,
+            "trigger": "failed_d20_test"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "feet": 60,
+      "kind": "point"
+    },
+    "resetCadence": {
+      "kind": "long_rest"
+    },
+    "resource": {
+      "cap": {
+        "ability": "cha",
+        "kind": "ability_modifier",
+        "minimum": 1
+      },
+      "kind": "use_count"
+    }
+  },
+  "name": "Bardic Inspiration",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Bard#Bardic Inspiration"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "acquiredAtLevel": 1,
+  "className": "rogue",
+  "description": "You know Thieves' Cant and one other language of your choice from the Character Creation language tables.",
+  "id": "rogue_thieves_cant",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "kind": "grant_language",
+        "languageId": "thieves_cant"
+      },
+      {
+        "count": 1,
+        "kind": "grant_language_choice",
+        "source": "character_creation_language_tables"
+      }
+    ]
+  },
+  "name": "Thieves' Cant",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Rogue#Thieves' Cant"
+  }
+}

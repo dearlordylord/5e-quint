@@ -1,0 +1,33 @@
+{
+  "acquiredAtLevel": 1,
+  "className": "rogue",
+  "description": "Gain Expertise in two skill proficiencies of your choice, then two more at Rogue level 6.",
+  "id": "rogue_expertise",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "choiceCount": {
+          "increases": [
+            {
+              "atLevel": 6,
+              "choose": 2
+            }
+          ],
+          "initial": 2,
+          "kind": "class_level_additional_choices"
+        },
+        "kind": "grant_expertise",
+        "skills": {
+          "kind": "owned_skill_proficiencies_without_expertise"
+        }
+      }
+    ]
+  },
+  "name": "Expertise",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Rogue#Expertise"
+  }
+}

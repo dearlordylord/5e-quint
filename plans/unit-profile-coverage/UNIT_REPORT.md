@@ -8,16 +8,16 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Metric | Value |
 | --- | ---: |
-| Installed collection inventory count | 73 Units |
+| Installed collection inventory count | 83 Units |
 
 ## Coverage Metrics
 
 | Metric | Covered | Percent |
 | --- | ---: | ---: |
-| Authored Surface Unit catalog admission | 72/401 | 18% |
-| Authored Surface executable catalog admission | 48/334 | 14.4% |
-| Installed Unit profile classification coverage | 73/73 | 100% |
-| Supported executable Unit coverage | 33/49 | 67.3% |
+| Authored Surface Unit catalog admission | 82/411 | 20% |
+| Authored Surface executable catalog admission | 58/344 | 16.9% |
+| Installed Unit profile classification coverage | 83/83 | 100% |
+| Supported executable Unit coverage | 33/59 | 55.9% |
 | QNT profile modeling coverage | 25/25 | 100% |
 | QNT proof coverage | 25/25 | 100% |
 | Runtime mapping coverage | 25/25 | 100% |
@@ -850,6 +850,16 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `subclass_wizard_evoker` | unsupported-profile | Subclass container record; no promoted execution profile yet. |
 | `fighter_fighting_style` | unsupported-profile | Choice/grant container; selected Fighting Style feat carries executable pressure. |
 | `fighter_weapon_mastery` | unsupported-profile | Weapon mastery grant container; mastery Unit carries executable pressure. |
+| `bard_bardic_inspiration` | unsupported-profile | Class feature source facts are authored for character and feature projection; generic D20 Test token use is not promoted as a battle Unit profile. |
+| `cleric_divine_order` | unsupported-profile | Class feature source facts are authored for character creation choices; no promoted battle Unit profile consumes this suborder choice directly. |
+| `druid_druidic` | unsupported-profile | Language, hidden-message, and prepared-spell source facts are authored; exploration/language execution is not promoted as a battle Unit profile. |
+| `druid_primal_order` | unsupported-profile | Class feature source facts are authored for character creation choices; no promoted battle Unit profile consumes this suborder choice directly. |
+| `monk_martial_arts` | unsupported-profile | Class feature source facts are authored for downstream Monk feature projection; Martial Arts is not currently a standalone promoted battle Unit profile. |
+| `ranger_favored_enemy` | unsupported-profile | Prepared spell and free-cast source facts are authored; Hunter's Mark spell execution is outside this class-feature Unit profile. |
+| `rogue_expertise` | unsupported-profile | Class feature source facts are authored for character creation skill Expertise choices; no promoted battle Unit profile consumes this choice directly. |
+| `rogue_thieves_cant` | unsupported-profile | Language source facts are authored; exploration/language execution is not promoted as a battle Unit profile. |
+| `sorcerer_innate_sorcery` | unsupported-profile | Class feature source facts are authored; Sorcerer spell save DC and spell attack projection is not promoted as a battle Unit profile yet. |
+| `warlock_eldritch_invocations` | unsupported-profile | Invocation choice source facts are authored; individual invocation option execution is outside this class-feature Unit profile. |
 | `wizard_ritual_adept` | unsupported-profile | Ritual casting is character/spell access pressure, not a promoted battle execution profile yet. |
 | `wizard_arcane_recovery` | unsupported-profile | Spell slot recovery outside battle is not a promoted Unit profile yet. |
 | `feat_ability_score_improvement` | unsupported-profile | Character-creation ability score mutation is outside promoted battle Unit profile scope. |
@@ -877,7 +887,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
-| srd-5.2.1 | unassigned | unsupported-profile | 38 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `wizard_ritual_adept`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `mastery_sap`, `orc_darkvision`, `light`, `detect_magic`, `sleep`, `eldritch_blast`, `minor_illusion`, `charm_person`, `hellish_rebuke`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
+| srd-5.2.1 | unassigned | unsupported-profile | 48 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `bard_bardic_inspiration`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `monk_martial_arts`, `ranger_favored_enemy`, `rogue_expertise`, `rogue_thieves_cant`, `sorcerer_innate_sorcery`, `warlock_eldritch_invocations`, `wizard_ritual_adept`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `mastery_sap`, `orc_darkvision`, `light`, `detect_magic`, `sleep`, `eldritch_blast`, `minor_illusion`, `charm_person`, `hellish_rebuke`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
 | srd-5.2.1 | QCORE10 | needs-surface-widening | 1 | `fire_bolt` |
 | srd-5.2.1 | unassigned | needs-surface-widening | 1 | `thunderwave` |
 

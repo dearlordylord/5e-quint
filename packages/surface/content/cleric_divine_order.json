@@ -1,0 +1,79 @@
+{
+  "acquiredAtLevel": 1,
+  "className": "cleric",
+  "description": "Choose Protector for Martial weapon proficiency and Heavy armor training, or Thaumaturge for one Cleric cantrip and a Wisdom-modifier bonus to Arcana or Religion checks.",
+  "id": "cleric_divine_order",
+  "kind": "class_feature",
+  "mechanics": {
+    "choiceKey": "divine_order",
+    "family": "suborder_choice",
+    "options": [
+      {
+        "displayName": "Protector",
+        "id": "protector",
+        "mechanics": {
+          "family": "passive",
+          "grants": [
+            {
+              "kind": "grant_proficiency",
+              "proficiency": {
+                "kind": "fixed",
+                "proficiencies": [
+                  {
+                    "category": "martial",
+                    "kind": "weapon_category"
+                  },
+                  {
+                    "category": "heavy",
+                    "kind": "armor_category"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "displayName": "Thaumaturge",
+        "id": "thaumaturge",
+        "mechanics": {
+          "family": "passive",
+          "grants": [
+            {
+              "count": 1,
+              "kind": "grant_spell_access_choice",
+              "mode": "known",
+              "spellLevel": 0,
+              "spellList": "cleric"
+            },
+            {
+              "delta": {
+                "ability": "wis",
+                "kind": "ability_modifier",
+                "minimum": 1,
+                "sign": "+"
+              },
+              "kind": "modify_roll_numeric",
+              "on": [
+                "ability_check"
+              ],
+              "skillFilter": {
+                "kind": "fixed",
+                "skills": [
+                  "arcana",
+                  "religion"
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "timing": "class_feature_acquisition"
+  },
+  "name": "Divine Order",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Cleric#Divine Order"
+  }
+}

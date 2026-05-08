@@ -1087,7 +1087,13 @@ describe("character-creation Surface records", () => {
           constraints: {
             prerequisiteForKnownOptionLocksReplacement: true,
             prerequisitesRequired: true,
-            uniqueSelections: true,
+            selectionRepeatability: {
+              default: "once",
+              kind: "per_option",
+              repeatableWhen: {
+                kind: "option_description_repeatable_clause",
+              },
+            },
           },
           family: "feature_choice",
           optionSource: {

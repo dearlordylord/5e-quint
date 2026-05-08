@@ -440,6 +440,17 @@ const BuildTimeFeatureChoiceChangeSchema = Schema.Union(
   }),
 );
 
+const FeatureChoiceSelectionRepeatabilitySchema = Schema.Union(
+  Schema.Struct({ kind: Schema.Literal("unique") }),
+  Schema.Struct({
+    kind: Schema.Literal("per_option"),
+    default: Schema.Literal("once"),
+    repeatableWhen: Schema.Struct({
+      kind: Schema.Literal("option_description_repeatable_clause"),
+    }),
+  }),
+);
+
 export const SuborderChoiceMechanicsSchema = Schema.Struct({
   family: Schema.Literal("suborder_choice"),
   choiceKey: NonEmptyStringSchema,
@@ -468,7 +479,7 @@ export const FeatureChoiceMechanicsSchema = Schema.Union(
     constraints: exactOptional(
       Schema.Struct({
         prerequisitesRequired: Schema.Boolean,
-        uniqueSelections: Schema.Boolean,
+        selectionRepeatability: FeatureChoiceSelectionRepeatabilitySchema,
         prerequisiteForKnownOptionLocksReplacement: exactOptional(
           Schema.Boolean,
         ),

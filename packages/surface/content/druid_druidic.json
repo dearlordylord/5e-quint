@@ -1,0 +1,44 @@
+{
+  "acquiredAtLevel": 1,
+  "className": "druid",
+  "description": "You know Druidic, always have Speak with Animals prepared, and can use Druidic to leave hidden messages.",
+  "id": "druid_druidic",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "kind": "grant_language",
+        "languageId": "druidic"
+      },
+      {
+        "kind": "grant_spell_access",
+        "mode": "prepared",
+        "spellId": "speak_with_animals"
+      },
+      {
+        "deciphering": {
+          "withoutLanguageRequires": "magic"
+        },
+        "kind": "grant_hidden_language_messages",
+        "languageId": "druidic",
+        "message": {
+          "kind": "hidden_language_message"
+        },
+        "spotting": {
+          "languageKnowers": "automatic",
+          "others": {
+            "ability": "int",
+            "dc": 15,
+            "skill": "investigation"
+          }
+        }
+      }
+    ]
+  },
+  "name": "Druidic",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Druid#Druidic"
+  }
+}

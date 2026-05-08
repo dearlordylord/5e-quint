@@ -4,6 +4,7 @@ import { Option } from "effect";
 // Keep authoring changes in Dhall, then regenerate JSON and trace output.
 import armorChainMailInput from "../../content/armor_chain_mail.json";
 import backgroundSoldierInput from "../../content/background_soldier.json";
+import bardBardicInspirationInput from "../../content/bard_bardic_inspiration.json";
 import bardCuttingWordsInput from "../../content/bard_cutting_words.json";
 import barbarianRageInput from "../../content/barbarian_rage.json";
 import barbarianFastMovementInput from "../../content/barbarian_fast_movement.json";
@@ -21,7 +22,10 @@ import classSorcererInput from "../../content/class_sorcerer.json";
 import classWarlockInput from "../../content/class_warlock.json";
 import classWizardInput from "../../content/class_wizard.json";
 import charmPersonInput from "../../content/charm_person.json";
+import clericDivineOrderInput from "../../content/cleric_divine_order.json";
 import cureWoundsInput from "../../content/cure_wounds.json";
+import druidDruidicInput from "../../content/druid_druidic.json";
+import druidPrimalOrderInput from "../../content/druid_primal_order.json";
 import eldritchBlastInput from "../../content/eldritch_blast.json";
 import equipmentShieldInput from "../../content/equipment_shield.json";
 import featAbilityScoreImprovementInput from "../../content/feat_ability_score_improvement.json";
@@ -48,11 +52,13 @@ import massHealingWordInput from "../../content/mass_healing_word.json";
 import masterySapInput from "../../content/mastery_sap.json";
 import minorIllusionInput from "../../content/minor_illusion.json";
 import monkDeflectAttacksInput from "../../content/monk_deflect_attacks.json";
+import monkMartialArtsInput from "../../content/monk_martial_arts.json";
 import orcAdrenalineRushInput from "../../content/orc_adrenaline_rush.json";
 import orcDarkvisionInput from "../../content/species_orc_darkvision.json";
 import orcRelentlessEnduranceInput from "../../content/orc_relentless_endurance.json";
 import paladinExtraAttackInput from "../../content/paladin_extra_attack.json";
 import rangerExtraAttackInput from "../../content/ranger_extra_attack.json";
+import rangerFavoredEnemyInput from "../../content/ranger_favored_enemy.json";
 import rangerRovingInput from "../../content/ranger_roving.json";
 import speciesOrcInput from "../../content/species_orc.json";
 import subclassFighterChampionInput from "../../content/subclass_fighter_champion.json";
@@ -60,11 +66,15 @@ import subclassWizardEvokerInput from "../../content/subclass_wizard_evoker.json
 import rayOfFrostInput from "../../content/ray_of_frost.json";
 import rogueCunningActionInput from "../../content/rogue_cunning_action.json";
 import rogueEvasionInput from "../../content/rogue_evasion.json";
+import rogueExpertiseInput from "../../content/rogue_expertise.json";
 import rogueUncannyDodgeInput from "../../content/rogue_uncanny_dodge.json";
 import rogueSneakAttackInput from "../../content/rogue_sneak_attack.json";
+import rogueThievesCantInput from "../../content/rogue_thieves_cant.json";
 import shieldInput from "../../content/shield.json";
 import sleepInput from "../../content/sleep.json";
+import sorcererInnateSorceryInput from "../../content/sorcerer_innate_sorcery.json";
 import thunderwaveInput from "../../content/thunderwave.json";
+import warlockEldritchInvocationsInput from "../../content/warlock_eldritch_invocations.json";
 import weaponDaggerInput from "../../content/weapon_dagger.json";
 import weaponFlailInput from "../../content/weapon_flail.json";
 import weaponLongswordInput from "../../content/weapon_longsword.json";
@@ -204,12 +214,22 @@ export const srdUnitCollection = defineSrdUnitCollection({
     barbarianRageInput,
     barbarianRecklessAttackInput,
     barbarianFastMovementInput,
+    bardBardicInspirationInput,
     bardCuttingWordsInput,
+    clericDivineOrderInput,
+    druidDruidicInput,
+    druidPrimalOrderInput,
+    monkMartialArtsInput,
     monkDeflectAttacksInput,
+    rangerFavoredEnemyInput,
     rogueCunningActionInput,
     rogueEvasionInput,
     rogueUncannyDodgeInput,
+    rogueExpertiseInput,
     rogueSneakAttackInput,
+    rogueThievesCantInput,
+    sorcererInnateSorceryInput,
+    warlockEldritchInvocationsInput,
     wizardRitualAdeptInput,
     wizardArcaneRecoveryInput,
     featAbilityScoreImprovementInput,

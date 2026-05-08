@@ -1,0 +1,74 @@
+{
+  "acquiredAtLevel": 1,
+  "className": "warlock",
+  "description": "You gain Eldritch Invocations of your choice, meeting prerequisites, replacing eligible invocations when you gain a Warlock level, and not choosing the same invocation twice unless its description allows it.",
+  "id": "warlock_eldritch_invocations",
+  "kind": "class_feature",
+  "mechanics": {
+    "changeOn": {
+      "count": 1,
+      "kind": "class_level"
+    },
+    "choiceCount": {
+      "kind": "class_level_total_choices",
+      "levels": [
+        {
+          "atLevel": 1,
+          "total": 1
+        },
+        {
+          "atLevel": 2,
+          "total": 3
+        },
+        {
+          "atLevel": 5,
+          "total": 5
+        },
+        {
+          "atLevel": 7,
+          "total": 6
+        },
+        {
+          "atLevel": 9,
+          "total": 7
+        },
+        {
+          "atLevel": 12,
+          "total": 8
+        },
+        {
+          "atLevel": 15,
+          "total": 9
+        },
+        {
+          "atLevel": 18,
+          "total": 10
+        }
+      ]
+    },
+    "choiceKey": "eldritch_invocations",
+    "constraints": {
+      "prerequisiteForKnownOptionLocksReplacement": true,
+      "prerequisitesRequired": true,
+      "selectionRepeatability": {
+        "default": "once",
+        "kind": "per_option",
+        "repeatableWhen": {
+          "kind": "option_description_repeatable_clause"
+        }
+      }
+    },
+    "family": "feature_choice",
+    "optionSource": {
+      "className": "warlock",
+      "kind": "class_feature_options",
+      "optionKind": "eldritch_invocation"
+    },
+    "timing": "class_feature_acquisition"
+  },
+  "name": "Eldritch Invocations",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Warlock#Eldritch Invocations"
+  }
+}
