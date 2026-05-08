@@ -36,17 +36,16 @@
       "catalog-installed-owner-evidence-present": 19,
       "catalog-only/dead-for-now": 4,
       "non-runtime": 12,
-      "missing-authored-record": 81,
-      "needs-surface-widening": 15
+      "missing-authored-record": 96
     },
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-required": 35,
       "catalog-installed-owner-evidence-present": 37,
       "catalog-only/dead-for-now": 78,
       "non-runtime": 12,
-      "missing-authored-record": 87,
-      "needs-surface-widening": 48,
-      "catalog-authored-executable-follow-up": 70
+      "missing-authored-record": 102,
+      "catalog-authored-executable-follow-up": 70,
+      "needs-surface-widening": 33
     },
     "spellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 74,
@@ -68,7 +67,7 @@
       "non-runtime-table-summary": 12,
       "class-container-owned-source-fact": 100
     },
-    "missingClassContainers": 3
+    "missingClassContainers": 8
   },
   "recommendedBatches": [
     {
@@ -131,11 +130,16 @@
       "id": "SRDINV2",
       "title": "Author Missing Level-1 Class Containers",
       "suggestedStatus": "blocked-on-SRDINV1",
-      "intent": "Create or explicitly close the ten missing SRD level-1 class container records.",
-      "rowCount": 3,
+      "intent": "Create or explicitly close missing SRD level-1 class container records.",
+      "rowCount": 8,
       "rowIds": [
+        "srd521:classes/bard:level-1:class-container:bard_class_container",
         "srd521:classes/cleric:level-1:class-container:cleric_class_container",
+        "srd521:classes/druid:level-1:class-container:druid_class_container",
+        "srd521:classes/monk:level-1:class-container:monk_class_container",
         "srd521:classes/paladin:level-1:class-container:paladin_class_container",
+        "srd521:classes/ranger:level-1:class-container:ranger_class_container",
+        "srd521:classes/rogue:level-1:class-container:rogue_class_container",
         "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
       ],
       "nextAction": "Add SRD-provenance class container records where Surface already expresses the facts, or record explicit closure for any deferred container.",
@@ -146,8 +150,19 @@
       "title": "Classify Missing Level-1 Class Feature Rows",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Decide which missing level-1 class feature rows need authored content, Surface widening, non-runtime closure, or later runtime work.",
-      "rowCount": 0,
-      "rowIds": [],
+      "rowCount": 10,
+      "rowIds": [
+        "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
+        "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
+        "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
+        "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order",
+        "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
+        "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy",
+        "srd521:classes/rogue:level-1:class-feature-grant:rogue_expertise",
+        "srd521:classes/rogue:level-1:class-feature-grant:rogue_thieves_cant",
+        "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
+        "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations"
+      ],
       "nextAction": "Review feature rows by mechanics family and produce the next small authoring or Surface-widening batch.",
       "acceptance": "Every missing level-1 class feature row has a sharper next action than generic author-or-close wording."
     },
@@ -485,41 +500,27 @@
       "title": "Review Catalog-Only and Surface-Widening Rows",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Preserve catalog-only/dead-for-now rows and name missing Surface constructs for nonspell and spell Surface-widening blockers.",
-      "rowCount": 52,
+      "rowCount": 37,
       "rowIds": [
         "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense",
-        "srd521:classes/bard:level-1:class-container:bard_class_container",
-        "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_command",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_dissonant_whispers",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_feather_fall",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_hideous_laughter",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_thunderwave",
-        "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
         "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_spare_the_dying",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_command",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_sanctuary",
-        "srd521:classes/druid:level-1:class-container:druid_class_container",
-        "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
-        "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_shillelagh",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_spare_the_dying",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_fog_cloud",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_jump",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_thunderwave",
-        "srd521:classes/monk:level-1:class-container:monk_class_container",
-        "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
         "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense",
         "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_command",
-        "srd521:classes/ranger:level-1:class-container:ranger_class_container",
-        "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_fog_cloud",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_jump",
-        "srd521:classes/rogue:level-1:class-container:rogue_class_container",
-        "srd521:classes/rogue:level-1:class-feature-grant:rogue_expertise",
-        "srd521:classes/rogue:level-1:class-feature-grant:rogue_thieves_cant",
-        "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_fire_bolt",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_sorcerous_burst",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_expeditious_retreat",
@@ -527,7 +528,6 @@
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_fog_cloud",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_jump",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_thunderwave",
-        "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_expeditious_retreat",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hex",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hideous_laughter",
@@ -713,7 +713,7 @@
     {
       "id": "SRDINV8",
       "title": "Widen Class Container Proficiency Surface Facts",
-      "suggestedStatus": "ready-for-research",
+      "suggestedStatus": "done",
       "intent": "Widen class-container proficiency and multiclass-entry Surface facts.",
       "rowCount": 5,
       "rowIds": [
@@ -723,7 +723,7 @@
         "srd521:classes/ranger:level-1:class-container:ranger_class_container",
         "srd521:classes/rogue:level-1:class-container:rogue_class_container"
       ],
-      "nextAction": "Cover Bard and Druid tool proficiency blockers, Monk and Rogue tool plus property-filtered Martial weapon proficiency blockers, and Ranger fixed-plus-choice multiclass-entry blockers.",
+      "nextAction": "Completed Bard and Druid tool proficiency blockers, Monk and Rogue tool plus property-filtered Martial weapon proficiency blockers, and Ranger fixed-plus-choice multiclass-entry blockers.",
       "acceptance": "Class-container proficiency and multiclass-entry blockers are expressible in Surface without parallel runtime data."
     },
     {
@@ -739,7 +739,7 @@
     {
       "id": "SRDINV10",
       "title": "Widen Level-1 Class Feature Surface Mechanics",
-      "suggestedStatus": "ready-for-research",
+      "suggestedStatus": "done",
       "intent": "Widen level-1 class-feature Surface mechanics after SRDINV9 lands the Pact Magic source shape.",
       "rowCount": 10,
       "rowIds": [
@@ -754,34 +754,286 @@
         "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
         "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations"
       ],
-      "nextAction": "Cover Bardic Inspiration, Divine Order, Druidic, Primal Order, Martial Arts, Favored Enemy, Expertise, Thieves' Cant, Innate Sorcery, and Eldritch Invocation blockers while consuming SRDINV9 Pact Magic facts.",
+      "nextAction": "Completed Bardic Inspiration, Divine Order, Druidic, Primal Order, Martial Arts, Favored Enemy, Expertise, Thieves' Cant, Innate Sorcery, and Eldritch Invocation blockers while consuming SRDINV9 Pact Magic facts.",
       "acceptance": "Level-1 class-feature blockers are expressible in Surface without duplicating Pact Slot or recovery state."
     },
     {
       "id": "SRDINV11",
       "title": "Recursive SRD Inventory Planning Review",
-      "suggestedStatus": "blocked-on-SRDINV8-SRDINV10",
-      "intent": "Review the SRDINV8-SRDINV10 widening results and append the next concrete batch.",
-      "rowCount": 15,
+      "suggestedStatus": "done",
+      "intent": "Reviewed the SRDINV8-SRDINV10 widening results and appended the next concrete authoring batch.",
+      "rowCount": 156,
       "rowIds": [
+        "srd521:classes/barbarian:level-1:class-container:barbarian_class_container",
+        "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
+        "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense",
+        "srd521:classes/barbarian:level-1:class-table-summary:barbarian_level_1_feature_table_row",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_armor_training",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_hit_point_die",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_primary_ability",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_saving_throw_proficiencies",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_skill_proficiencies",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_weapon_proficiencies",
+        "srd521:classes/barbarian:level-1:equipment-pressure:barbarian_starting_equipment",
+        "srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery",
+        "srd521:classes/barbarian:level-1:multiclass-entry:barbarian_multiclass_entry_traits",
         "srd521:classes/bard:level-1:class-container:bard_class_container",
         "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
+        "srd521:classes/bard:level-1:class-table-summary:bard_level_1_feature_table_row",
+        "srd521:classes/bard:level-1:core-trait:bard_armor_training",
+        "srd521:classes/bard:level-1:core-trait:bard_hit_point_die",
+        "srd521:classes/bard:level-1:core-trait:bard_primary_ability",
+        "srd521:classes/bard:level-1:core-trait:bard_saving_throw_proficiencies",
+        "srd521:classes/bard:level-1:core-trait:bard_skill_proficiencies",
+        "srd521:classes/bard:level-1:core-trait:bard_tool_proficiencies",
+        "srd521:classes/bard:level-1:core-trait:bard_weapon_proficiencies",
+        "srd521:classes/bard:level-1:equipment-pressure:bard_starting_equipment",
+        "srd521:classes/bard:level-1:multiclass-entry:bard_multiclass_entry_traits",
+        "srd521:classes/bard:level-1:spell-access:bard_spellcasting",
+        "srd521:classes/cleric:level-1:class-container:cleric_class_container",
         "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
+        "srd521:classes/cleric:level-1:class-table-summary:cleric_level_1_feature_table_row",
+        "srd521:classes/cleric:level-1:core-trait:cleric_armor_training",
+        "srd521:classes/cleric:level-1:core-trait:cleric_hit_point_die",
+        "srd521:classes/cleric:level-1:core-trait:cleric_primary_ability",
+        "srd521:classes/cleric:level-1:core-trait:cleric_saving_throw_proficiencies",
+        "srd521:classes/cleric:level-1:core-trait:cleric_skill_proficiencies",
+        "srd521:classes/cleric:level-1:core-trait:cleric_weapon_proficiencies",
+        "srd521:classes/cleric:level-1:equipment-pressure:cleric_starting_equipment",
+        "srd521:classes/cleric:level-1:multiclass-entry:cleric_multiclass_entry_traits",
+        "srd521:classes/cleric:level-1:spell-access:cleric_spellcasting",
         "srd521:classes/druid:level-1:class-container:druid_class_container",
         "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
         "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order",
+        "srd521:classes/druid:level-1:class-table-summary:druid_level_1_feature_table_row",
+        "srd521:classes/druid:level-1:core-trait:druid_armor_training",
+        "srd521:classes/druid:level-1:core-trait:druid_hit_point_die",
+        "srd521:classes/druid:level-1:core-trait:druid_primary_ability",
+        "srd521:classes/druid:level-1:core-trait:druid_saving_throw_proficiencies",
+        "srd521:classes/druid:level-1:core-trait:druid_skill_proficiencies",
+        "srd521:classes/druid:level-1:core-trait:druid_tool_proficiencies",
+        "srd521:classes/druid:level-1:core-trait:druid_weapon_proficiencies",
+        "srd521:classes/druid:level-1:equipment-pressure:druid_starting_equipment",
+        "srd521:classes/druid:level-1:multiclass-entry:druid_multiclass_entry_traits",
+        "srd521:classes/druid:level-1:spell-access:druid_spellcasting",
+        "srd521:classes/fighter:level-1:class-container:fighter_class_container",
+        "srd521:classes/fighter:level-1:class-feature-grant:fighter_fighting_style",
+        "srd521:classes/fighter:level-1:class-feature-grant:fighter_second_wind",
+        "srd521:classes/fighter:level-1:class-table-summary:fighter_level_1_feature_table_row",
+        "srd521:classes/fighter:level-1:core-trait:fighter_armor_training",
+        "srd521:classes/fighter:level-1:core-trait:fighter_hit_point_die",
+        "srd521:classes/fighter:level-1:core-trait:fighter_primary_ability",
+        "srd521:classes/fighter:level-1:core-trait:fighter_saving_throw_proficiencies",
+        "srd521:classes/fighter:level-1:core-trait:fighter_skill_proficiencies",
+        "srd521:classes/fighter:level-1:core-trait:fighter_weapon_proficiencies",
+        "srd521:classes/fighter:level-1:equipment-pressure:fighter_starting_equipment",
+        "srd521:classes/fighter:level-1:mastery-pressure:fighter_weapon_mastery",
+        "srd521:classes/fighter:level-1:multiclass-entry:fighter_multiclass_entry_traits",
         "srd521:classes/monk:level-1:class-container:monk_class_container",
         "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
+        "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense",
+        "srd521:classes/monk:level-1:class-table-summary:monk_level_1_feature_table_row",
+        "srd521:classes/monk:level-1:core-trait:monk_armor_training",
+        "srd521:classes/monk:level-1:core-trait:monk_hit_point_die",
+        "srd521:classes/monk:level-1:core-trait:monk_primary_ability",
+        "srd521:classes/monk:level-1:core-trait:monk_saving_throw_proficiencies",
+        "srd521:classes/monk:level-1:core-trait:monk_skill_proficiencies",
+        "srd521:classes/monk:level-1:core-trait:monk_tool_proficiencies",
+        "srd521:classes/monk:level-1:core-trait:monk_weapon_proficiencies",
+        "srd521:classes/monk:level-1:equipment-pressure:monk_starting_equipment",
+        "srd521:classes/monk:level-1:multiclass-entry:monk_multiclass_entry_traits",
+        "srd521:classes/paladin:level-1:class-container:paladin_class_container",
+        "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands",
+        "srd521:classes/paladin:level-1:class-table-summary:paladin_level_1_feature_table_row",
+        "srd521:classes/paladin:level-1:core-trait:paladin_armor_training",
+        "srd521:classes/paladin:level-1:core-trait:paladin_hit_point_die",
+        "srd521:classes/paladin:level-1:core-trait:paladin_primary_ability",
+        "srd521:classes/paladin:level-1:core-trait:paladin_saving_throw_proficiencies",
+        "srd521:classes/paladin:level-1:core-trait:paladin_skill_proficiencies",
+        "srd521:classes/paladin:level-1:core-trait:paladin_weapon_proficiencies",
+        "srd521:classes/paladin:level-1:equipment-pressure:paladin_starting_equipment",
+        "srd521:classes/paladin:level-1:mastery-pressure:paladin_weapon_mastery",
+        "srd521:classes/paladin:level-1:multiclass-entry:paladin_multiclass_entry_traits",
+        "srd521:classes/paladin:level-1:spell-access:paladin_spellcasting",
         "srd521:classes/ranger:level-1:class-container:ranger_class_container",
         "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy",
+        "srd521:classes/ranger:level-1:class-table-summary:ranger_level_1_feature_table_row",
+        "srd521:classes/ranger:level-1:core-trait:ranger_armor_training",
+        "srd521:classes/ranger:level-1:core-trait:ranger_hit_point_die",
+        "srd521:classes/ranger:level-1:core-trait:ranger_primary_ability",
+        "srd521:classes/ranger:level-1:core-trait:ranger_saving_throw_proficiencies",
+        "srd521:classes/ranger:level-1:core-trait:ranger_skill_proficiencies",
+        "srd521:classes/ranger:level-1:core-trait:ranger_weapon_proficiencies",
+        "srd521:classes/ranger:level-1:equipment-pressure:ranger_starting_equipment",
+        "srd521:classes/ranger:level-1:mastery-pressure:ranger_weapon_mastery",
+        "srd521:classes/ranger:level-1:multiclass-entry:ranger_multiclass_entry_traits",
+        "srd521:classes/ranger:level-1:spell-access:ranger_spellcasting",
         "srd521:classes/rogue:level-1:class-container:rogue_class_container",
+        "srd521:classes/rogue:level-1:class-feature-grant:rogue_expertise",
+        "srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack",
+        "srd521:classes/rogue:level-1:class-feature-grant:rogue_thieves_cant",
+        "srd521:classes/rogue:level-1:class-table-summary:rogue_level_1_feature_table_row",
+        "srd521:classes/rogue:level-1:core-trait:rogue_armor_training",
+        "srd521:classes/rogue:level-1:core-trait:rogue_hit_point_die",
+        "srd521:classes/rogue:level-1:core-trait:rogue_primary_ability",
+        "srd521:classes/rogue:level-1:core-trait:rogue_saving_throw_proficiencies",
+        "srd521:classes/rogue:level-1:core-trait:rogue_skill_proficiencies",
+        "srd521:classes/rogue:level-1:core-trait:rogue_tool_proficiencies",
+        "srd521:classes/rogue:level-1:core-trait:rogue_weapon_proficiencies",
+        "srd521:classes/rogue:level-1:equipment-pressure:rogue_starting_equipment",
+        "srd521:classes/rogue:level-1:mastery-pressure:rogue_weapon_mastery",
+        "srd521:classes/rogue:level-1:multiclass-entry:rogue_multiclass_entry_traits",
+        "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container",
+        "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
+        "srd521:classes/sorcerer:level-1:class-table-summary:sorcerer_level_1_feature_table_row",
+        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_armor_training",
+        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_hit_point_die",
+        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_primary_ability",
+        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_saving_throw_proficiencies",
+        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_skill_proficiencies",
+        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_weapon_proficiencies",
+        "srd521:classes/sorcerer:level-1:equipment-pressure:sorcerer_starting_equipment",
+        "srd521:classes/sorcerer:level-1:multiclass-entry:sorcerer_multiclass_entry_traits",
+        "srd521:classes/sorcerer:level-1:spell-access:sorcerer_spellcasting",
+        "srd521:classes/warlock:level-1:class-container:warlock_class_container",
+        "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations",
+        "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic",
+        "srd521:classes/warlock:level-1:class-table-summary:warlock_level_1_feature_table_row",
+        "srd521:classes/warlock:level-1:core-trait:warlock_armor_training",
+        "srd521:classes/warlock:level-1:core-trait:warlock_hit_point_die",
+        "srd521:classes/warlock:level-1:core-trait:warlock_primary_ability",
+        "srd521:classes/warlock:level-1:core-trait:warlock_saving_throw_proficiencies",
+        "srd521:classes/warlock:level-1:core-trait:warlock_skill_proficiencies",
+        "srd521:classes/warlock:level-1:core-trait:warlock_weapon_proficiencies",
+        "srd521:classes/warlock:level-1:equipment-pressure:warlock_starting_equipment",
+        "srd521:classes/warlock:level-1:multiclass-entry:warlock_multiclass_entry_traits",
+        "srd521:classes/wizard:level-1:class-container:wizard_class_container",
+        "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery",
+        "srd521:classes/wizard:level-1:class-feature-grant:wizard_ritual_adept",
+        "srd521:classes/wizard:level-1:class-table-summary:wizard_level_1_feature_table_row",
+        "srd521:classes/wizard:level-1:core-trait:wizard_armor_training",
+        "srd521:classes/wizard:level-1:core-trait:wizard_hit_point_die",
+        "srd521:classes/wizard:level-1:core-trait:wizard_primary_ability",
+        "srd521:classes/wizard:level-1:core-trait:wizard_saving_throw_proficiencies",
+        "srd521:classes/wizard:level-1:core-trait:wizard_skill_proficiencies",
+        "srd521:classes/wizard:level-1:core-trait:wizard_weapon_proficiencies",
+        "srd521:classes/wizard:level-1:equipment-pressure:wizard_starting_equipment",
+        "srd521:classes/wizard:level-1:multiclass-entry:wizard_multiclass_entry_traits",
+        "srd521:classes/wizard:level-1:spell-access:wizard_spellcasting"
+      ],
+      "nextAction": "Level-1 remains open; run SRDINV12-SRDINV15 before the next recursive SRDINV16 review.",
+      "acceptance": "The next review either explicitly closes level-1 with final metrics or appends another concrete multi-task batch."
+    },
+    {
+      "id": "SRDINV12",
+      "title": "Author Expressible Level-1 Class Containers",
+      "suggestedStatus": "ready-for-research",
+      "intent": "Author missing SRD-provenance class container records now that class-container source facts are expressible.",
+      "rowCount": 8,
+      "rowIds": [
+        "srd521:classes/bard:level-1:class-container:bard_class_container",
+        "srd521:classes/cleric:level-1:class-container:cleric_class_container",
+        "srd521:classes/druid:level-1:class-container:druid_class_container",
+        "srd521:classes/monk:level-1:class-container:monk_class_container",
+        "srd521:classes/paladin:level-1:class-container:paladin_class_container",
+        "srd521:classes/ranger:level-1:class-container:ranger_class_container",
+        "srd521:classes/rogue:level-1:class-container:rogue_class_container",
+        "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
+      ],
+      "nextAction": "Author Bard, Cleric, Druid, Monk, Paladin, Ranger, Rogue, and Sorcerer class container records from SRD source facts; do not create standalone records for class-owned creation rows.",
+      "acceptance": "Missing level-1 class container count reaches zero, and class-owned creation rows continue to derive from the class container boundary."
+    },
+    {
+      "id": "SRDINV13",
+      "title": "Author Expressible Level-1 Spell Access Records",
+      "suggestedStatus": "blocked-on-SRDINV12",
+      "intent": "Author missing SRD-provenance class Spell Access records made expressible by SRDINV9.",
+      "rowCount": 6,
+      "rowIds": [
+        "srd521:classes/bard:level-1:spell-access:bard_spellcasting",
+        "srd521:classes/cleric:level-1:spell-access:cleric_spellcasting",
+        "srd521:classes/druid:level-1:spell-access:druid_spellcasting",
+        "srd521:classes/paladin:level-1:spell-access:paladin_spellcasting",
+        "srd521:classes/ranger:level-1:spell-access:ranger_spellcasting",
+        "srd521:classes/sorcerer:level-1:spell-access:sorcerer_spellcasting"
+      ],
+      "nextAction": "Author Bard, Cleric, Druid, Paladin, Ranger, and Sorcerer level-1 Spellcasting access records with their class-list preparation, slot, focus, and replacement source facts.",
+      "acceptance": "Level-1 class Spellcasting/access rows are authored where Surface can express the source facts, without admitting individual Spell Definitions as runtime-supported."
+    },
+    {
+      "id": "SRDINV14",
+      "title": "Author Expressible Level-1 Class Feature Records",
+      "suggestedStatus": "blocked-on-SRDINV12",
+      "intent": "Author missing SRD-provenance class feature records made expressible by SRDINV10.",
+      "rowCount": 10,
+      "rowIds": [
+        "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
+        "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
+        "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
+        "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order",
+        "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
+        "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy",
         "srd521:classes/rogue:level-1:class-feature-grant:rogue_expertise",
         "srd521:classes/rogue:level-1:class-feature-grant:rogue_thieves_cant",
         "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
         "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations"
       ],
-      "nextAction": "Refresh inventory metrics after the Surface-widening batch and select the next concrete batch, such as authoring, spell Surface blockers, or runtime/MBT planning.",
-      "acceptance": "The next review either explicitly closes level-1 with final metrics or appends another concrete multi-task batch."
+      "nextAction": "Author Bardic Inspiration, Divine Order, Druidic, Primal Order, Martial Arts, Favored Enemy, Expertise, Thieves' Cant, Innate Sorcery, and Eldritch Invocations records using the widened class-feature mechanics.",
+      "acceptance": "Level-1 class-feature rows that are not explicit catalog-only closures are authored or receive a narrower typed follow-up if authoring exposes a real remaining Surface gap."
+    },
+    {
+      "id": "SRDINV15",
+      "title": "Author Level-1 Weapon Mastery Records",
+      "suggestedStatus": "blocked-on-SRDINV12",
+      "intent": "Author missing SRD-provenance Weapon Mastery records for level-1 classes that grant mastery choices.",
+      "rowCount": 4,
+      "rowIds": [
+        "srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery",
+        "srd521:classes/paladin:level-1:mastery-pressure:paladin_weapon_mastery",
+        "srd521:classes/ranger:level-1:mastery-pressure:ranger_weapon_mastery",
+        "srd521:classes/rogue:level-1:mastery-pressure:rogue_weapon_mastery"
+      ],
+      "nextAction": "Author Barbarian, Paladin, Ranger, and Rogue Weapon Mastery records as character-sheet choice facts; do not implement weapon mastery property runtime behavior in this authoring task.",
+      "acceptance": "Level-1 mastery-pressure rows have authored records or explicit typed closure, while mastery property execution remains separate runtime work."
+    },
+    {
+      "id": "SRDINV16",
+      "title": "Recursive SRD Inventory Planning Review",
+      "suggestedStatus": "blocked-on-SRDINV12-SRDINV15",
+      "intent": "Review SRDINV12-SRDINV15 authoring results and append the next concrete batch unless level-1 inventory is complete.",
+      "rowCount": 28,
+      "rowIds": [
+        "srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery",
+        "srd521:classes/bard:level-1:class-container:bard_class_container",
+        "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
+        "srd521:classes/bard:level-1:spell-access:bard_spellcasting",
+        "srd521:classes/cleric:level-1:class-container:cleric_class_container",
+        "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
+        "srd521:classes/cleric:level-1:spell-access:cleric_spellcasting",
+        "srd521:classes/druid:level-1:class-container:druid_class_container",
+        "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
+        "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order",
+        "srd521:classes/druid:level-1:spell-access:druid_spellcasting",
+        "srd521:classes/monk:level-1:class-container:monk_class_container",
+        "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
+        "srd521:classes/paladin:level-1:class-container:paladin_class_container",
+        "srd521:classes/paladin:level-1:mastery-pressure:paladin_weapon_mastery",
+        "srd521:classes/paladin:level-1:spell-access:paladin_spellcasting",
+        "srd521:classes/ranger:level-1:class-container:ranger_class_container",
+        "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy",
+        "srd521:classes/ranger:level-1:mastery-pressure:ranger_weapon_mastery",
+        "srd521:classes/ranger:level-1:spell-access:ranger_spellcasting",
+        "srd521:classes/rogue:level-1:class-container:rogue_class_container",
+        "srd521:classes/rogue:level-1:class-feature-grant:rogue_expertise",
+        "srd521:classes/rogue:level-1:class-feature-grant:rogue_thieves_cant",
+        "srd521:classes/rogue:level-1:mastery-pressure:rogue_weapon_mastery",
+        "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container",
+        "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
+        "srd521:classes/sorcerer:level-1:spell-access:sorcerer_spellcasting",
+        "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations"
+      ],
+      "nextAction": "Refresh inventory metrics after the authoring batch and choose the next concrete frontier, likely character-creation owner-evidence closure, spell Unit Surface blockers, or runtime/MBT planning for authored executable rows.",
+      "acceptance": "The next review either records explicit level-1 completion with final metrics or appends another concrete multi-task batch, not a recursive-only placeholder."
     }
   ],
   "rows": [
@@ -1351,8 +1603,7 @@
       "detail": "SRD class identity, core traits, level-1 feature grants, and class progression entry.",
       "candidateUnitId": "class_bard",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "ClassRecord.toolProficiencies for Bard's Musical Instrument choice"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -1361,9 +1612,9 @@
         "state": "not-installed",
         "unitId": "class_bard"
       },
-      "finalDisposition": "needs-surface-widening",
+      "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Widen Surface: ClassRecord.toolProficiencies for Bard's Musical Instrument choice."
+      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
     },
     {
       "id": "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
@@ -1380,8 +1631,7 @@
       "detail": "Level 1 class feature.",
       "candidateUnitId": "bard_bardic_inspiration",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "ClassFeature transferable timed Bardic Inspiration die with holder uniqueness, Charisma-modifier use-count floor, Bardic die tiers, and later failed D20 Test boost"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -1390,9 +1640,9 @@
         "state": "not-installed",
         "unitId": "bard_bardic_inspiration"
       },
-      "finalDisposition": "needs-surface-widening",
+      "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Widen Surface: ClassFeature transferable timed Bardic Inspiration die with holder uniqueness, Charisma-modifier use-count floor, Bardic die tiers, and later failed D20 Test boost."
+      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
     },
     {
       "id": "srd521:classes/bard:level-1:class-table-summary:bard_level_1_feature_table_row",
@@ -1459,7 +1709,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Bard's Musical Instrument choice."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/bard:level-1:core-trait:bard_hit_point_die",
@@ -1493,7 +1743,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Bard's Musical Instrument choice."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/bard:level-1:core-trait:bard_primary_ability",
@@ -1527,7 +1777,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Bard's Musical Instrument choice."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/bard:level-1:core-trait:bard_saving_throw_proficiencies",
@@ -1561,7 +1811,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Bard's Musical Instrument choice."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/bard:level-1:core-trait:bard_skill_proficiencies",
@@ -1595,7 +1845,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Bard's Musical Instrument choice."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/bard:level-1:core-trait:bard_tool_proficiencies",
@@ -1629,7 +1879,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Bard's Musical Instrument choice."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/bard:level-1:core-trait:bard_weapon_proficiencies",
@@ -1663,7 +1913,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Bard's Musical Instrument choice."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/bard:level-1:equipment-pressure:bard_starting_equipment",
@@ -1697,7 +1947,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Bard's Musical Instrument choice."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/bard:level-1:multiclass-entry:bard_multiclass_entry_traits",
@@ -1731,7 +1981,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Bard's Musical Instrument choice."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/bard:level-1:spell-access:bard_spellcasting",
@@ -2865,8 +3115,7 @@
       "detail": "Level 1 class feature.",
       "candidateUnitId": "cleric_divine_order",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "ClassFeature choice branches that grant alternate proficiencies, extra spell access, and ability-modifier-derived Ability Check bonuses with a minimum +1 floor"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -2875,9 +3124,9 @@
         "state": "not-installed",
         "unitId": "cleric_divine_order"
       },
-      "finalDisposition": "needs-surface-widening",
+      "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Widen Surface: ClassFeature choice branches that grant alternate proficiencies, extra spell access, and ability-modifier-derived Ability Check bonuses with a minimum +1 floor."
+      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
     },
     {
       "id": "srd521:classes/cleric:level-1:class-table-summary:cleric_level_1_feature_table_row",
@@ -3916,8 +4165,7 @@
       "detail": "SRD class identity, core traits, level-1 feature grants, and class progression entry.",
       "candidateUnitId": "class_druid",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "ClassRecord.toolProficiencies for Druid's Herbalism Kit proficiency"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -3926,9 +4174,9 @@
         "state": "not-installed",
         "unitId": "class_druid"
       },
-      "finalDisposition": "needs-surface-widening",
+      "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Widen Surface: ClassRecord.toolProficiencies for Druid's Herbalism Kit proficiency."
+      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
     },
     {
       "id": "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
@@ -3945,8 +4193,7 @@
       "detail": "Level 1 class feature.",
       "candidateUnitId": "druid_druidic",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "ClassFeature language knowledge grants plus always-prepared spell access and noncombat hidden-message capability"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -3955,9 +4202,9 @@
         "state": "not-installed",
         "unitId": "druid_druidic"
       },
-      "finalDisposition": "needs-surface-widening",
+      "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Widen Surface: ClassFeature language knowledge grants plus always-prepared spell access and noncombat hidden-message capability."
+      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
     },
     {
       "id": "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order",
@@ -3974,8 +4221,7 @@
       "detail": "Level 1 class feature.",
       "candidateUnitId": "druid_primal_order",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "ClassFeature choice branches that grant alternate proficiencies, extra spell access, and ability-modifier-derived Ability Check bonuses with a minimum +1 floor"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -3984,9 +4230,9 @@
         "state": "not-installed",
         "unitId": "druid_primal_order"
       },
-      "finalDisposition": "needs-surface-widening",
+      "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Widen Surface: ClassFeature choice branches that grant alternate proficiencies, extra spell access, and ability-modifier-derived Ability Check bonuses with a minimum +1 floor."
+      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
     },
     {
       "id": "srd521:classes/druid:level-1:class-table-summary:druid_level_1_feature_table_row",
@@ -4053,7 +4299,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Druid's Herbalism Kit proficiency."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/druid:level-1:core-trait:druid_hit_point_die",
@@ -4087,7 +4333,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Druid's Herbalism Kit proficiency."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/druid:level-1:core-trait:druid_primary_ability",
@@ -4121,7 +4367,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Druid's Herbalism Kit proficiency."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/druid:level-1:core-trait:druid_saving_throw_proficiencies",
@@ -4155,7 +4401,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Druid's Herbalism Kit proficiency."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/druid:level-1:core-trait:druid_skill_proficiencies",
@@ -4189,7 +4435,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Druid's Herbalism Kit proficiency."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/druid:level-1:core-trait:druid_tool_proficiencies",
@@ -4223,7 +4469,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Druid's Herbalism Kit proficiency."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/druid:level-1:core-trait:druid_weapon_proficiencies",
@@ -4257,7 +4503,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Druid's Herbalism Kit proficiency."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/druid:level-1:equipment-pressure:druid_starting_equipment",
@@ -4291,7 +4537,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Druid's Herbalism Kit proficiency."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/druid:level-1:multiclass-entry:druid_multiclass_entry_traits",
@@ -4325,7 +4571,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies for Druid's Herbalism Kit proficiency."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/druid:level-1:spell-access:druid_spellcasting",
@@ -5851,8 +6097,7 @@
       "detail": "SRD class identity, core traits, level-1 feature grants, and class progression entry.",
       "candidateUnitId": "class_monk",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Monk"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -5861,9 +6106,9 @@
         "state": "not-installed",
         "unitId": "class_monk"
       },
-      "finalDisposition": "needs-surface-widening",
+      "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Widen Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Monk."
+      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
     },
     {
       "id": "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
@@ -5880,8 +6125,7 @@
       "detail": "Level 1 class feature.",
       "candidateUnitId": "monk_martial_arts",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "ClassFeature Martial Arts combat package: Monk weapon predicate, Bonus Action Unarmed Strike, Martial Arts die replacement, Dexterity attack/damage substitution, and Unarmed Strike DC substitution"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -5890,9 +6134,9 @@
         "state": "not-installed",
         "unitId": "monk_martial_arts"
       },
-      "finalDisposition": "needs-surface-widening",
+      "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Widen Surface: ClassFeature Martial Arts combat package: Monk weapon predicate, Bonus Action Unarmed Strike, Martial Arts die replacement, Dexterity attack/damage substitution, and Unarmed Strike DC substitution."
+      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
     },
     {
       "id": "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense",
@@ -5989,7 +6233,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Monk."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/monk:level-1:core-trait:monk_hit_point_die",
@@ -6023,7 +6267,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Monk."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/monk:level-1:core-trait:monk_primary_ability",
@@ -6057,7 +6301,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Monk."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/monk:level-1:core-trait:monk_saving_throw_proficiencies",
@@ -6091,7 +6335,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Monk."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/monk:level-1:core-trait:monk_skill_proficiencies",
@@ -6125,7 +6369,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Monk."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/monk:level-1:core-trait:monk_tool_proficiencies",
@@ -6159,7 +6403,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Monk."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/monk:level-1:core-trait:monk_weapon_proficiencies",
@@ -6193,7 +6437,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Monk."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/monk:level-1:equipment-pressure:monk_starting_equipment",
@@ -6227,7 +6471,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Monk."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/monk:level-1:multiclass-entry:monk_multiclass_entry_traits",
@@ -6261,7 +6505,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Monk."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/paladin:level-1:class-container:paladin_class_container",
@@ -7102,8 +7346,7 @@
       "detail": "SRD class identity, core traits, level-1 feature grants, and class progression entry.",
       "candidateUnitId": "class_ranger",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "ClassRecord.multiclassProficiencies cannot combine fixed grants with Ranger's skill choice"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -7112,9 +7355,9 @@
         "state": "not-installed",
         "unitId": "class_ranger"
       },
-      "finalDisposition": "needs-surface-widening",
+      "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Widen Surface: ClassRecord.multiclassProficiencies cannot combine fixed grants with Ranger's skill choice."
+      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
     },
     {
       "id": "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy",
@@ -7131,8 +7374,7 @@
       "detail": "Level 1 class feature.",
       "candidateUnitId": "ranger_favored_enemy",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "ClassFeature spell access that grants Hunter's Mark as always prepared plus a level-scaling Long Rest casting pool without expending a Spell Slot"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -7141,9 +7383,9 @@
         "state": "not-installed",
         "unitId": "ranger_favored_enemy"
       },
-      "finalDisposition": "needs-surface-widening",
+      "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Widen Surface: ClassFeature spell access that grants Hunter's Mark as always prepared plus a level-scaling Long Rest casting pool without expending a Spell Slot."
+      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
     },
     {
       "id": "srd521:classes/ranger:level-1:class-table-summary:ranger_level_1_feature_table_row",
@@ -7210,7 +7452,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.multiclassProficiencies cannot combine fixed grants with Ranger's skill choice."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/ranger:level-1:core-trait:ranger_hit_point_die",
@@ -7244,7 +7486,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.multiclassProficiencies cannot combine fixed grants with Ranger's skill choice."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/ranger:level-1:core-trait:ranger_primary_ability",
@@ -7278,7 +7520,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.multiclassProficiencies cannot combine fixed grants with Ranger's skill choice."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/ranger:level-1:core-trait:ranger_saving_throw_proficiencies",
@@ -7312,7 +7554,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.multiclassProficiencies cannot combine fixed grants with Ranger's skill choice."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/ranger:level-1:core-trait:ranger_skill_proficiencies",
@@ -7346,7 +7588,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.multiclassProficiencies cannot combine fixed grants with Ranger's skill choice."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/ranger:level-1:core-trait:ranger_weapon_proficiencies",
@@ -7380,7 +7622,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.multiclassProficiencies cannot combine fixed grants with Ranger's skill choice."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/ranger:level-1:equipment-pressure:ranger_starting_equipment",
@@ -7414,7 +7656,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.multiclassProficiencies cannot combine fixed grants with Ranger's skill choice."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/ranger:level-1:mastery-pressure:ranger_weapon_mastery",
@@ -7476,7 +7718,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.multiclassProficiencies cannot combine fixed grants with Ranger's skill choice."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/ranger:level-1:spell-access:ranger_spellcasting",
@@ -7927,8 +8169,7 @@
       "detail": "SRD class identity, core traits, level-1 feature grants, and class progression entry.",
       "candidateUnitId": "class_rogue",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Rogue"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -7937,9 +8178,9 @@
         "state": "not-installed",
         "unitId": "class_rogue"
       },
-      "finalDisposition": "needs-surface-widening",
+      "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Widen Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Rogue."
+      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
     },
     {
       "id": "srd521:classes/rogue:level-1:class-feature-grant:rogue_expertise",
@@ -7956,8 +8197,7 @@
       "detail": "Level 1 class feature.",
       "candidateUnitId": "rogue_expertise",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "ClassFeature Expertise choice grants over already-proficient skills, including later additional Expertise choices"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -7966,9 +8206,9 @@
         "state": "not-installed",
         "unitId": "rogue_expertise"
       },
-      "finalDisposition": "needs-surface-widening",
+      "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Widen Surface: ClassFeature Expertise choice grants over already-proficient skills, including later additional Expertise choices."
+      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
     },
     {
       "id": "srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack",
@@ -8026,8 +8266,7 @@
       "detail": "Level 1 class feature.",
       "candidateUnitId": "rogue_thieves_cant",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "ClassFeature character-sheet language ownership grants for fixed Thieves' Cant plus one player-chosen language from Character Creation language tables"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -8036,9 +8275,9 @@
         "state": "not-installed",
         "unitId": "rogue_thieves_cant"
       },
-      "finalDisposition": "needs-surface-widening",
+      "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Widen Surface: ClassFeature character-sheet language ownership grants for fixed Thieves' Cant plus one player-chosen language from Character Creation language tables."
+      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
     },
     {
       "id": "srd521:classes/rogue:level-1:class-table-summary:rogue_level_1_feature_table_row",
@@ -8105,7 +8344,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Rogue."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/rogue:level-1:core-trait:rogue_hit_point_die",
@@ -8139,7 +8378,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Rogue."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/rogue:level-1:core-trait:rogue_primary_ability",
@@ -8173,7 +8412,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Rogue."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/rogue:level-1:core-trait:rogue_saving_throw_proficiencies",
@@ -8207,7 +8446,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Rogue."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/rogue:level-1:core-trait:rogue_skill_proficiencies",
@@ -8241,7 +8480,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Rogue."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/rogue:level-1:core-trait:rogue_tool_proficiencies",
@@ -8275,7 +8514,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Rogue."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/rogue:level-1:core-trait:rogue_weapon_proficiencies",
@@ -8309,7 +8548,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Rogue."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/rogue:level-1:equipment-pressure:rogue_starting_equipment",
@@ -8343,7 +8582,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Rogue."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/rogue:level-1:mastery-pressure:rogue_weapon_mastery",
@@ -8405,7 +8644,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Rogue."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container",
@@ -8450,8 +8689,7 @@
       "detail": "Level 1 class feature.",
       "candidateUnitId": "sorcerer_innate_sorcery",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "ClassFeature timed self buff that scopes Spell Save DC increase and spell Attack Roll Advantage to Sorcerer spell invocations"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -8460,9 +8698,9 @@
         "state": "not-installed",
         "unitId": "sorcerer_innate_sorcery"
       },
-      "finalDisposition": "needs-surface-widening",
+      "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Widen Surface: ClassFeature timed self buff that scopes Spell Save DC increase and spell Attack Roll Advantage to Sorcerer spell invocations."
+      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:class-table-summary:sorcerer_level_1_feature_table_row",
@@ -10080,8 +10318,7 @@
       "detail": "Level 1 class feature.",
       "candidateUnitId": "warlock_eldritch_invocations",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "ClassFeature invocation choice grants with prerequisites, uniqueness, replacement rules, and invocation-count level progression"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -10090,9 +10327,9 @@
         "state": "not-installed",
         "unitId": "warlock_eldritch_invocations"
       },
-      "finalDisposition": "needs-surface-widening",
+      "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Widen Surface: ClassFeature invocation choice grants with prerequisites, uniqueness, replacement rules, and invocation-count level progression."
+      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
     },
     {
       "id": "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic",

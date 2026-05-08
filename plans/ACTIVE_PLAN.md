@@ -178,7 +178,37 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 180,
       "id": "SRDINV11",
+      "status": "done",
+      "title": "Recursive SRD Inventory Planning Review"
+    },
+    {
+      "number": 181,
+      "id": "SRDINV12",
       "status": "ready-for-research",
+      "title": "Author Expressible Level-1 Class Containers"
+    },
+    {
+      "number": 182,
+      "id": "SRDINV13",
+      "status": "blocked",
+      "title": "Author Expressible Level-1 Spell Access Records"
+    },
+    {
+      "number": 183,
+      "id": "SRDINV14",
+      "status": "blocked",
+      "title": "Author Expressible Level-1 Class Feature Records"
+    },
+    {
+      "number": 184,
+      "id": "SRDINV15",
+      "status": "blocked",
+      "title": "Author Level-1 Weapon Mastery Records"
+    },
+    {
+      "number": 185,
+      "id": "SRDINV16",
+      "status": "blocked",
       "title": "Recursive SRD Inventory Planning Review"
     }
   ]
@@ -238,7 +268,12 @@ Keep it synchronized with the DAG table and task details.
 | 177   | SRDINV8 - Widen Class Container Proficiency Surface Facts | done | SRDINV7 | SRDINV11 | [SRDINV7 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes) | Completed Surface class-container source-fact widening for Bard/Druid tool choices, Monk/Rogue property-filtered Martial weapon and tool proficiencies, and Ranger fixed-plus-choice multiclass proficiencies. |
 | 178   | SRDINV9 - Widen Non-Wizard Spell Access Surface Facts | done | SRDINV7 | SRDINV10, SRDINV11 | [SRDINV7 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes) | Completed Surface Spell Access widening for non-Wizard list-prepared casters, prepared half casters without level-1 cantrips, and the shared Warlock Pact Magic/Pact Slot source shape consumed by SRDINV10. |
 | 179   | SRDINV10 - Widen Level-1 Class Feature Surface Mechanics | done | SRDINV7, SRDINV9 | SRDINV11 | [SRDINV7 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes) | Completed Surface class-feature mechanics widening for the SRDINV3/SRDINV6 level-1 blockers without adding parallel Pact Magic source state. |
-| 180   | SRDINV11 - Recursive SRD Inventory Planning Review | ready-for-research | SRDINV8-SRDINV10 | none | [SRDINV7 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review SRDINV8-SRDINV10 findings, refresh inventory metrics, and append the next concrete multi-task batch unless level-1 is explicitly complete. |
+| 180   | SRDINV11 - Recursive SRD Inventory Planning Review | done | SRDINV8-SRDINV10 | SRDINV12-SRDINV16 | [SRDINV11 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV11_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed recursive planning review: level-1 remains open with zero level-1 Surface-widening rows, so the next batch is expressible level-1 authoring plus SRDINV16 review. |
+| 181   | SRDINV12 - Author Expressible Level-1 Class Containers | ready-for-research | SRDINV11 | SRDINV13-SRDINV16 | [SRDINV11 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV11_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Author Bard, Cleric, Druid, Monk, Paladin, Ranger, Rogue, and Sorcerer class container records from SRD source facts; do not create standalone records for class-owned creation rows. |
+| 182   | SRDINV13 - Author Expressible Level-1 Spell Access Records | blocked | SRDINV12 | SRDINV16 | [SRDINV11 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV11_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Author Bard, Cleric, Druid, Paladin, Ranger, and Sorcerer level-1 Spellcasting access records with class-list preparation, slot, focus, and replacement source facts; do not admit individual Spell Definitions as runtime-supported. |
+| 183   | SRDINV14 - Author Expressible Level-1 Class Feature Records | blocked | SRDINV12 | SRDINV16 | [SRDINV11 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV11_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Author Bardic Inspiration, Divine Order, Druidic, Primal Order, Martial Arts, Favored Enemy, Expertise, Thieves' Cant, Innate Sorcery, and Eldritch Invocations records using widened class-feature mechanics. |
+| 184   | SRDINV15 - Author Level-1 Weapon Mastery Records | blocked | SRDINV12 | SRDINV16 | [SRDINV11 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV11_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Author Barbarian, Paladin, Ranger, and Rogue Weapon Mastery records as character-sheet choice facts; do not implement mastery property runtime behavior. |
+| 185   | SRDINV16 - Recursive SRD Inventory Planning Review | blocked | SRDINV12-SRDINV15 | none | [SRDINV11 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV11_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review SRDINV12-SRDINV15 authoring results, refresh inventory metrics, and append the next concrete multi-task batch unless level-1 is explicitly complete. |
 
 ## Task Details
 
@@ -1092,13 +1127,14 @@ found no remaining task-owned changes.
 
 ### Task 180 - SRDINV11 - Recursive SRD Inventory Planning Review
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV8-SRDINV10
 
-Blocks: none
+Blocks: SRDINV12-SRDINV16
 
 Research / plan:
+[SRDINV11_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV11_RECURSIVE_PLANNING_REVIEW.md),
 [SRDINV7_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md),
 [SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
 [SRDINV_RALPH_BATCH_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md),
@@ -1110,6 +1146,191 @@ explicitly complete. Candidate next batches include authoring records made
 expressible by SRDINV8-SRDINV10, spell Unit Surface blockers, or runtime/MBT
 planning for authored executable rows, but SRDINV11 must select based on the
 post-widening inventory state.
+
+Out of scope: implementation work not captured by the newly appended batch,
+PHB/XPHB pressure, broad runtime rewrites, and treating catalog admission alone
+as behavior support.
+
+Verification: active-plan consistency across Ralph index, DAG table, and task
+details; regenerated inventory; `pnpm unit-profile-coverage:check`; confirm
+the appended result is either explicit level-1 completion with final metrics or
+a concrete multi-task batch, not a recursive-only placeholder; `/simplify`
+convergence, minimum two rounds unless the final changeset is trivial.
+
+Completed scope: reviewed SRDINV8-SRDINV10 findings and refreshed generated
+inventory metrics. Level-1 inventory remains open with 8 missing class
+containers, 0 level-1 `needs-surface-widening` rows, 33 all-row
+`needs-surface-widening` rows, 96 level-1 `missing-authored-record` rows, and
+70 authored executable spell follow-up rows. SRDINV11 appended a concrete
+authoring batch instead of a recursive-only continuation: SRDINV12 class
+containers, SRDINV13 class Spell Access, SRDINV14 class features, SRDINV15
+Weapon Mastery, and SRDINV16 recursive review.
+
+Out of scope honored: no SRD records were authored, no runtime behavior or MBT
+planning was promoted, no spell Unit Surface blocker task was started, and
+catalog admission remains separate from operational owner evidence.
+
+Verification completed: local SRD class passages and `UBIQUITOUS_LANGUAGE.md`
+checked; inventory regenerated; active-plan consistency updated across Ralph
+task index, DAG table, and task details; `pnpm unit-profile-coverage:check`
+passed; `/simplify` convergence is recorded in the SRDINV11 review artifact.
+
+### Task 181 - SRDINV12 - Author Expressible Level-1 Class Containers
+
+Status: `ready-for-research`
+
+Depends on: SRDINV11
+
+Blocks: SRDINV13-SRDINV16
+
+Research / plan:
+[SRDINV11_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV11_RECURSIVE_PLANNING_REVIEW.md),
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[SRDINV_RALPH_BATCH_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md),
+[Surface README](/workspace/typescript/dnd/packages/surface/README.md),
+[Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: author SRD-provenance class container records for Bard, Cleric, Druid,
+Monk, Paladin, Ranger, Rogue, and Sorcerer using the Surface class-container
+source facts made expressible by SRDINV8 and SRDINV9. Class-owned
+character-creation rows must remain derived from the class container boundary;
+do not author standalone records for hit dice, proficiencies, equipment, or
+multiclass entry traits.
+
+Out of scope: Spell Definition authoring, class feature authoring, Weapon
+Mastery authoring, character-creation runtime implementation, battle-runtime
+behavior, QNT/MBT work, PHB/XPHB content, and broad owner-evidence cleanup.
+
+Verification: read the relevant local SRD class trait, Spellcasting, and
+multiclass passages; check `UBIQUITOUS_LANGUAGE.md` for Class, Character Sheet,
+Spell Access, Proficiency Bonus, Proficiency Level, and Weapon Mastery terms if
+touched; focused Surface decoding/reader tests for authored records;
+regenerate inventory; `pnpm unit-profile-coverage:check`; package-local
+typecheck/tests for touched Surface code; `pnpm quality` if production code or
+content changes; `/simplify` convergence.
+
+### Task 182 - SRDINV13 - Author Expressible Level-1 Spell Access Records
+
+Status: `blocked`
+
+Depends on: SRDINV12
+
+Blocks: SRDINV16
+
+Research / plan:
+[SRDINV11_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV11_RECURSIVE_PLANNING_REVIEW.md),
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[SRDINV_RALPH_BATCH_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md),
+[Surface README](/workspace/typescript/dnd/packages/surface/README.md),
+[Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: author missing SRD-provenance level-1 Spell Access records for Bard,
+Cleric, Druid, Paladin, Ranger, and Sorcerer using the class-list preparation,
+slot, focus, and replacement source facts made expressible by SRDINV9.
+
+Out of scope: authoring individual Spell Definition records, admitting spells
+as runtime-supported, spell invocation/projection runtime, class-container
+authoring from SRDINV12, class feature authoring, QNT/MBT work, and PHB/XPHB
+content.
+
+Verification: read the relevant local SRD Spellcasting passages; check
+`UBIQUITOUS_LANGUAGE.md` for Spell Access, Spell Definition, Spell Slot,
+Pact Slot, Class, Character Sheet, and Concentration terms if touched; focused
+Surface decoding/reader tests; regenerated inventory; `pnpm
+unit-profile-coverage:check`; package-local typecheck/tests for touched Surface
+code; `pnpm quality` if production code or content changes; `/simplify`
+convergence.
+
+### Task 183 - SRDINV14 - Author Expressible Level-1 Class Feature Records
+
+Status: `blocked`
+
+Depends on: SRDINV12
+
+Blocks: SRDINV16
+
+Research / plan:
+[SRDINV11_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV11_RECURSIVE_PLANNING_REVIEW.md),
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[SRDINV_RALPH_BATCH_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md),
+[Surface README](/workspace/typescript/dnd/packages/surface/README.md),
+[Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: author missing SRD-provenance class feature records for Bardic
+Inspiration, Divine Order, Druidic, Primal Order, Martial Arts, Favored Enemy,
+Expertise, Thieves' Cant, Innate Sorcery, and Eldritch Invocations using the
+class-feature mechanics made expressible by SRDINV10. If authoring exposes a
+real remaining Surface gap, narrow the task-owned follow-up instead of encoding
+a workaround.
+
+Out of scope: class container authoring from SRDINV12, Spell Access authoring
+from SRDINV13, Weapon Mastery authoring from SRDINV15, runtime behavior,
+generic D20 Test engines, spell runtime, QNT/MBT work, PHB/XPHB content, and
+catalog-only closures for Lay On Hands, Unarmored Defense, or Arcane Recovery.
+
+Verification: read the relevant local SRD class-feature passages; check
+`UBIQUITOUS_LANGUAGE.md` for Class Feature, Pool, Spend, Ability Check, Attack
+Roll, Saving Throw, Spell Access, Pact Slot, Reaction, Concentration, and
+Weapon Mastery if touched; focused Surface decoding/reader tests; regenerated
+inventory; `pnpm unit-profile-coverage:check`; package-local typecheck/tests
+for touched Surface code; `pnpm quality` if production code or content changes;
+`/simplify` convergence.
+
+### Task 184 - SRDINV15 - Author Level-1 Weapon Mastery Records
+
+Status: `blocked`
+
+Depends on: SRDINV12
+
+Blocks: SRDINV16
+
+Research / plan:
+[SRDINV11_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV11_RECURSIVE_PLANNING_REVIEW.md),
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[SRDINV_RALPH_BATCH_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md),
+[Surface README](/workspace/typescript/dnd/packages/surface/README.md),
+[Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: author missing SRD-provenance Weapon Mastery records for Barbarian,
+Paladin, Ranger, and Rogue as character-sheet choice/source facts. Fighter
+Weapon Mastery already has owner evidence and should not be duplicated.
+
+Out of scope: implementing weapon mastery property runtime behavior, class
+container authoring from SRDINV12, class feature authoring from SRDINV14,
+Spell Access authoring, battle-runtime behavior, QNT/MBT work, and PHB/XPHB
+content.
+
+Verification: read the relevant local SRD Weapon Mastery passages; check
+`UBIQUITOUS_LANGUAGE.md` for Weapon Mastery, Class, Character Sheet,
+Proficiency Level, and Long Rest terms if touched; focused Surface
+decoding/reader tests; regenerated inventory; `pnpm unit-profile-coverage:check`;
+package-local typecheck/tests for touched Surface code; `pnpm quality` if
+production code or content changes; `/simplify` convergence.
+
+### Task 185 - SRDINV16 - Recursive SRD Inventory Planning Review
+
+Status: `blocked`
+
+Depends on: SRDINV12-SRDINV15
+
+Blocks: none
+
+Research / plan:
+[SRDINV11_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV11_RECURSIVE_PLANNING_REVIEW.md),
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[SRDINV_RALPH_BATCH_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md),
+[ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
+
+Scope: review SRDINV12-SRDINV15 findings, refresh generated inventory metrics,
+and append the next concrete multi-task batch unless SRD level-1 inventory is
+explicitly complete. Candidate next batches include character-creation
+owner-evidence closure, spell Unit Surface blockers, or runtime/MBT planning
+for authored executable rows, but SRDINV16 must select based on the
+post-authoring inventory state.
 
 Out of scope: implementation work not captured by the newly appended batch,
 PHB/XPHB pressure, broad runtime rewrites, and treating catalog admission alone

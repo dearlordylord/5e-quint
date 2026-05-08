@@ -250,71 +250,9 @@ const spellUnitExecutableFollowUps = new Map(
   ),
 );
 
-const classContainerSurfaceBlockers = new Map([
-  [
-    "srd521:classes/bard:level-1:class-container:bard_class_container",
-    "ClassRecord.toolProficiencies for Bard's Musical Instrument choice",
-  ],
-  [
-    "srd521:classes/druid:level-1:class-container:druid_class_container",
-    "ClassRecord.toolProficiencies for Druid's Herbalism Kit proficiency",
-  ],
-  [
-    "srd521:classes/monk:level-1:class-container:monk_class_container",
-    "ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Monk",
-  ],
-  [
-    "srd521:classes/ranger:level-1:class-container:ranger_class_container",
-    "ClassRecord.multiclassProficiencies cannot combine fixed grants with Ranger's skill choice",
-  ],
-  [
-    "srd521:classes/rogue:level-1:class-container:rogue_class_container",
-    "ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Rogue",
-  ],
-]);
+const classContainerSurfaceBlockers = new Map();
 
-const classFeatureSurfaceBlockers = new Map([
-  [
-    "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
-    "ClassFeature transferable timed Bardic Inspiration die with holder uniqueness, Charisma-modifier use-count floor, Bardic die tiers, and later failed D20 Test boost",
-  ],
-  [
-    "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
-    "ClassFeature choice branches that grant alternate proficiencies, extra spell access, and ability-modifier-derived Ability Check bonuses with a minimum +1 floor",
-  ],
-  [
-    "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
-    "ClassFeature language knowledge grants plus always-prepared spell access and noncombat hidden-message capability",
-  ],
-  [
-    "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order",
-    "ClassFeature choice branches that grant alternate proficiencies, extra spell access, and ability-modifier-derived Ability Check bonuses with a minimum +1 floor",
-  ],
-  [
-    "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
-    "ClassFeature Martial Arts combat package: Monk weapon predicate, Bonus Action Unarmed Strike, Martial Arts die replacement, Dexterity attack/damage substitution, and Unarmed Strike DC substitution",
-  ],
-  [
-    "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy",
-    "ClassFeature spell access that grants Hunter's Mark as always prepared plus a level-scaling Long Rest casting pool without expending a Spell Slot",
-  ],
-  [
-    "srd521:classes/rogue:level-1:class-feature-grant:rogue_expertise",
-    "ClassFeature Expertise choice grants over already-proficient skills, including later additional Expertise choices",
-  ],
-  [
-    "srd521:classes/rogue:level-1:class-feature-grant:rogue_thieves_cant",
-    "ClassFeature character-sheet language ownership grants for fixed Thieves' Cant plus one player-chosen language from Character Creation language tables",
-  ],
-  [
-    "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
-    "ClassFeature timed self buff that scopes Spell Save DC increase and spell Attack Roll Advantage to Sorcerer spell invocations",
-  ],
-  [
-    "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations",
-    "ClassFeature invocation choice grants with prerequisites, uniqueness, replacement rules, and invocation-count level progression",
-  ],
-]);
+const classFeatureSurfaceBlockers = new Map();
 
 const spellAccessSurfaceBlockers = new Map();
 
@@ -1573,16 +1511,26 @@ const srdinv8ClassContainerBlockerIds = [
 const warlockPactMagicFeatureRowId =
   "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic";
 
+const srdinv10ClassFeatureBlockerIds = [
+  "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
+  "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
+  "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
+  "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order",
+  "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
+  "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy",
+  "srd521:classes/rogue:level-1:class-feature-grant:rogue_expertise",
+  "srd521:classes/rogue:level-1:class-feature-grant:rogue_thieves_cant",
+  "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
+  "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations",
+];
+
+function rowsByIds(rows, rowIds) {
+  const ids = new Set(rowIds);
+  return rows.filter((row) => ids.has(row.id));
+}
+
 function srdinv8SurfaceWideningRows(levelOne) {
-  const classContainerConstructs = new Set(
-    srdinv8ClassContainerBlockerIds.map((id) =>
-      classContainerSurfaceBlockers.get(id),
-    ),
-  );
-  return levelOne.filter((row) => {
-    if (row.finalDisposition !== "needs-surface-widening") return false;
-    return classContainerConstructs.has(row.surface.missingConstruct);
-  });
+  return rowsByIds(levelOne, srdinv8ClassContainerBlockerIds);
 }
 
 function srdinv9SurfaceWideningRows(levelOne) {
@@ -1597,13 +1545,7 @@ function srdinv9SurfaceWideningRows(levelOne) {
 }
 
 function srdinv10SurfaceWideningRows(levelOne) {
-  return levelOne.filter((row) => {
-    if (row.finalDisposition !== "needs-surface-widening") return false;
-    return (
-      classFeatureSurfaceBlockers.has(row.id) &&
-      row.id !== warlockPactMagicFeatureRowId
-    );
-  });
+  return rowsByIds(levelOne, srdinv10ClassFeatureBlockerIds);
 }
 
 function buildRecommendedBatches(rows) {
@@ -1677,6 +1619,11 @@ function buildRecommendedBatches(rows) {
   const srdinv8Rows = srdinv8SurfaceWideningRows(levelOne);
   const srdinv9Rows = srdinv9SurfaceWideningRows(levelOne);
   const srdinv10Rows = srdinv10SurfaceWideningRows(levelOne);
+  const missingMasteryRows = levelOne.filter(
+    (row) =>
+      row.rowKind === "mastery-pressure" &&
+      row.finalDisposition === "missing-authored-record",
+  );
 
   return [
     makeBatch({
@@ -1700,7 +1647,7 @@ function buildRecommendedBatches(rows) {
       title: "Author Missing Level-1 Class Containers",
       suggestedStatus: "blocked-on-SRDINV1",
       intent:
-        "Create or explicitly close the ten missing SRD level-1 class container records.",
+        "Create or explicitly close missing SRD level-1 class container records.",
       rows: missingClassContainers,
       nextAction:
         "Add SRD-provenance class container records where Surface already expresses the facts, or record explicit closure for any deferred container.",
@@ -1826,12 +1773,12 @@ function buildRecommendedBatches(rows) {
     makeBatch({
       id: "SRDINV8",
       title: "Widen Class Container Proficiency Surface Facts",
-      suggestedStatus: "ready-for-research",
+      suggestedStatus: "done",
       intent:
         "Widen class-container proficiency and multiclass-entry Surface facts.",
       rows: srdinv8Rows,
       nextAction:
-        "Cover Bard and Druid tool proficiency blockers, Monk and Rogue tool plus property-filtered Martial weapon proficiency blockers, and Ranger fixed-plus-choice multiclass-entry blockers.",
+        "Completed Bard and Druid tool proficiency blockers, Monk and Rogue tool plus property-filtered Martial weapon proficiency blockers, and Ranger fixed-plus-choice multiclass-entry blockers.",
       acceptance:
         "Class-container proficiency and multiclass-entry blockers are expressible in Surface without parallel runtime data.",
     }),
@@ -1850,26 +1797,90 @@ function buildRecommendedBatches(rows) {
     makeBatch({
       id: "SRDINV10",
       title: "Widen Level-1 Class Feature Surface Mechanics",
-      suggestedStatus: "ready-for-research",
+      suggestedStatus: "done",
       intent:
         "Widen level-1 class-feature Surface mechanics after SRDINV9 lands the Pact Magic source shape.",
       rows: srdinv10Rows,
       nextAction:
-        "Cover Bardic Inspiration, Divine Order, Druidic, Primal Order, Martial Arts, Favored Enemy, Expertise, Thieves' Cant, Innate Sorcery, and Eldritch Invocation blockers while consuming SRDINV9 Pact Magic facts.",
+        "Completed Bardic Inspiration, Divine Order, Druidic, Primal Order, Martial Arts, Favored Enemy, Expertise, Thieves' Cant, Innate Sorcery, and Eldritch Invocation blockers while consuming SRDINV9 Pact Magic facts.",
       acceptance:
         "Level-1 class-feature blockers are expressible in Surface without duplicating Pact Slot or recovery state.",
     }),
     makeBatch({
       id: "SRDINV11",
       title: "Recursive SRD Inventory Planning Review",
-      suggestedStatus: "blocked-on-SRDINV8-SRDINV10",
+      suggestedStatus: "done",
       intent:
-        "Review the SRDINV8-SRDINV10 widening results and append the next concrete batch.",
-      rows: [...srdinv8Rows, ...srdinv9Rows, ...srdinv10Rows],
+        "Reviewed the SRDINV8-SRDINV10 widening results and appended the next concrete authoring batch.",
+      rows: levelOne,
       nextAction:
-        "Refresh inventory metrics after the Surface-widening batch and select the next concrete batch, such as authoring, spell Surface blockers, or runtime/MBT planning.",
+        "Level-1 remains open; run SRDINV12-SRDINV15 before the next recursive SRDINV16 review.",
       acceptance:
         "The next review either explicitly closes level-1 with final metrics or appends another concrete multi-task batch.",
+    }),
+    makeBatch({
+      id: "SRDINV12",
+      title: "Author Expressible Level-1 Class Containers",
+      intent:
+        "Author missing SRD-provenance class container records now that class-container source facts are expressible.",
+      rows: missingClassContainers,
+      nextAction:
+        "Author Bard, Cleric, Druid, Monk, Paladin, Ranger, Rogue, and Sorcerer class container records from SRD source facts; do not create standalone records for class-owned creation rows.",
+      acceptance:
+        "Missing level-1 class container count reaches zero, and class-owned creation rows continue to derive from the class container boundary.",
+    }),
+    makeBatch({
+      id: "SRDINV13",
+      title: "Author Expressible Level-1 Spell Access Records",
+      suggestedStatus: "blocked-on-SRDINV12",
+      intent:
+        "Author missing SRD-provenance class Spell Access records made expressible by SRDINV9.",
+      rows: missingSpellAccessRows,
+      nextAction:
+        "Author Bard, Cleric, Druid, Paladin, Ranger, and Sorcerer level-1 Spellcasting access records with their class-list preparation, slot, focus, and replacement source facts.",
+      acceptance:
+        "Level-1 class Spellcasting/access rows are authored where Surface can express the source facts, without admitting individual Spell Definitions as runtime-supported.",
+    }),
+    makeBatch({
+      id: "SRDINV14",
+      title: "Author Expressible Level-1 Class Feature Records",
+      suggestedStatus: "blocked-on-SRDINV12",
+      intent:
+        "Author missing SRD-provenance class feature records made expressible by SRDINV10.",
+      rows: missingClassFeatureRows,
+      nextAction:
+        "Author Bardic Inspiration, Divine Order, Druidic, Primal Order, Martial Arts, Favored Enemy, Expertise, Thieves' Cant, Innate Sorcery, and Eldritch Invocations records using the widened class-feature mechanics.",
+      acceptance:
+        "Level-1 class-feature rows that are not explicit catalog-only closures are authored or receive a narrower typed follow-up if authoring exposes a real remaining Surface gap.",
+    }),
+    makeBatch({
+      id: "SRDINV15",
+      title: "Author Level-1 Weapon Mastery Records",
+      suggestedStatus: "blocked-on-SRDINV12",
+      intent:
+        "Author missing SRD-provenance Weapon Mastery records for level-1 classes that grant mastery choices.",
+      rows: missingMasteryRows,
+      nextAction:
+        "Author Barbarian, Paladin, Ranger, and Rogue Weapon Mastery records as character-sheet choice facts; do not implement weapon mastery property runtime behavior in this authoring task.",
+      acceptance:
+        "Level-1 mastery-pressure rows have authored records or explicit typed closure, while mastery property execution remains separate runtime work.",
+    }),
+    makeBatch({
+      id: "SRDINV16",
+      title: "Recursive SRD Inventory Planning Review",
+      suggestedStatus: "blocked-on-SRDINV12-SRDINV15",
+      intent:
+        "Review SRDINV12-SRDINV15 authoring results and append the next concrete batch unless level-1 inventory is complete.",
+      rows: [
+        ...missingClassContainers,
+        ...missingSpellAccessRows,
+        ...missingClassFeatureRows,
+        ...missingMasteryRows,
+      ],
+      nextAction:
+        "Refresh inventory metrics after the authoring batch and choose the next concrete frontier, likely character-creation owner-evidence closure, spell Unit Surface blockers, or runtime/MBT planning for authored executable rows.",
+      acceptance:
+        "The next review either records explicit level-1 completion with final metrics or appends another concrete multi-task batch, not a recursive-only placeholder.",
     }),
   ];
 }
@@ -2107,6 +2118,18 @@ function validateSrdUnitInventory(report) {
       issues.push(
         `Surface blocker ${rowId} must classify as needs-surface-widening.`,
       );
+    }
+  }
+  for (const [taskId, rowIds] of Object.entries({
+    SRDINV8: srdinv8ClassContainerBlockerIds,
+    SRDINV10: srdinv10ClassFeatureBlockerIds,
+  })) {
+    for (const rowId of rowIds) {
+      if (!seen.has(rowId)) {
+        issues.push(
+          `${taskId} historical row group references unknown row ${rowId}.`,
+        );
+      }
     }
   }
   const spellUnitRowsByUnitId = new Map(

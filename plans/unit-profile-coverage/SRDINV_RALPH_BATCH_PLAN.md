@@ -43,6 +43,11 @@ Current sequence:
 - `SRDINV10`: widen level-1 class-feature Surface mechanics after SRDINV9,
   consuming the shared Pact Magic source shape instead of remodeling it.
 - `SRDINV11`: recursive review after the concrete Surface-widening batch.
+- `SRDINV12`: author expressible level-1 class container records.
+- `SRDINV13`: author expressible level-1 class Spell Access records.
+- `SRDINV14`: author expressible level-1 class feature records.
+- `SRDINV15`: author level-1 Weapon Mastery records.
+- `SRDINV16`: recursive review after the concrete authoring batch.
 
 The spell-pressure rows are split into `SRDINV5A` through `SRDINV5D` because
 class spell access, missing Spell Unit records, installed Spell Unit evidence,
@@ -90,6 +95,32 @@ review:
 The loop may recurse, but recursion must append concrete atomic work before it
 re-adds a review task. A recursive-only continuation is not an acceptable
 closeout.
+
+## Post-SRDINV11 Frontier Loop
+
+SRDINV11 found that SRDINV8-SRDINV10 removed active level-1 Surface-widening
+blockers. Level-1 inventory is still open, but the active frontier is now
+authored SRD record absence, not more Surface expressivity.
+
+The next batch is therefore four concrete authoring families followed by a
+recursive review:
+
+1. `SRDINV12` authors missing level-1 class containers for Bard, Cleric, Druid,
+   Monk, Paladin, Ranger, Rogue, and Sorcerer.
+2. `SRDINV13` authors missing level-1 Spell Access records for Bard, Cleric,
+   Druid, Paladin, Ranger, and Sorcerer, without admitting individual Spell
+   Definitions as runtime-supported.
+3. `SRDINV14` authors missing level-1 class feature records for Bardic
+   Inspiration, Divine Order, Druidic, Primal Order, Martial Arts, Favored
+   Enemy, Expertise, Thieves' Cant, Innate Sorcery, and Eldritch Invocations.
+4. `SRDINV15` authors missing level-1 Weapon Mastery records for Barbarian,
+   Paladin, Ranger, and Rogue. Fighter Weapon Mastery already has owner
+   evidence.
+5. `SRDINV16` reviews the authoring batch, refreshes inventory metrics, and
+   appends the next concrete batch unless level-1 is explicitly complete.
+
+Spell Unit Surface blockers and authored executable spell-runtime follow-ups
+remain counted, but they are not the immediate SRDINV12-SRDINV15 frontier.
 
 ## Acceptance Model
 
@@ -359,3 +390,34 @@ Concentration terms used by the batch. Detailed notes are in
   row or a generic gate.
 - Round 2: no important changes found; the batch references generated row
   groups and does not duplicate inventory state in a new tracking table.
+
+## SRDINV11 Closeout Notes
+
+SRDINV11 reviewed SRDINV8-SRDINV10 findings and confirmed that level-1
+Surface-widening pressure is closed in the generated inventory. The refreshed
+metrics are 367 total rows, 156 level-1 rows, 8 missing level-1 class
+containers, 0 level-1 `needs-surface-widening` rows, 33 all-row
+`needs-surface-widening` rows, 96 level-1 `missing-authored-record` rows, and
+70 authored executable spell follow-up rows.
+
+The appended batch is not a recursive-only placeholder: `SRDINV12` class
+containers, `SRDINV13` class Spell Access, `SRDINV14` class features,
+`SRDINV15` Weapon Mastery authoring, and `SRDINV16` recursive review.
+
+Local SRD source review checked level-1 class trait, Spellcasting, Pact Magic,
+class-feature, and Weapon Mastery passages under `.references/srd-5.2.1/Classes/`.
+`UBIQUITOUS_LANGUAGE.md` was checked for Class, Character Sheet, Class Feature,
+Spell Access, Spell Definition, Spell Slot, Pact Slot, Pool, Spend,
+Proficiency Bonus, Proficiency Level, Weapon Mastery, Ability Check, Attack
+Roll, Saving Throw, Reaction, and Concentration.
+
+`/simplify` convergence:
+
+- Round 1: chose expressible level-1 authoring before spell runtime or spell
+  Surface blockers because the refreshed level-1 denominator has no active
+  Surface-widening rows.
+- Round 2: split the authoring work by owner boundary so class-owned creation
+  facts, class Spell Access, class features, and Weapon Mastery cannot drift or
+  accidentally admit unrelated runtime behavior.
+- Round 3: no important changes found; later spell runtime and
+  character-creation evidence closure remain visible for SRDINV16.
