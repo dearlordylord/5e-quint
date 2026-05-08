@@ -6,6 +6,7 @@ import type {
   BackgroundToolProficiency,
   ClassFeatureGrant,
   ClassRecord,
+  ClassSpellcastingCreation,
   NonWizardClassRecord,
   OrcSpeciesRecord,
   PrimaryAbilityExpression,
@@ -61,9 +62,11 @@ export type WizardClassCreationFacts =
   };
 
 export type NonWizardClassCreationFacts =
-  CommonClassCreationFacts<NonWizardClassRecord> & {
-    readonly spellcasting?: never;
-  };
+  CommonClassCreationFacts<NonWizardClassRecord> &
+    (
+      | { readonly spellcasting: ClassSpellcastingCreation }
+      | { readonly spellcasting?: never }
+    );
 
 export type ClassCreationFacts =
   | WizardClassCreationFacts
@@ -104,6 +107,16 @@ export function readClassCreationFacts(
   }
 
   if (unit.className === "wizard") {
+    return {
+      tag: "readable",
+      value: {
+        ...readCommonClassCreationFacts(unit),
+        spellcasting: unit.spellcasting,
+      },
+    };
+  }
+
+  if ("spellcasting" in unit && unit.spellcasting !== undefined) {
     return {
       tag: "readable",
       value: {

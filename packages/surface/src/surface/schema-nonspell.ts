@@ -1,4 +1,5 @@
 import { Schema } from "effect";
+import type { ClassName } from "@dnd/shared/game-facts";
 
 import {
   AbilitySchema,
@@ -13,12 +14,13 @@ import {
   DiceAmountSchema,
   FeatCategorySchema,
   HeavyArmorAcFormulaSchema,
+  LIST_PREPARED_SPELLCASTING_CLASS_NAMES,
   LevelAxisSchema,
   LightArmorAcFormulaSchema,
   MagicItemRaritySchema,
   MediumArmorAcFormulaSchema,
+  NON_SPELLCASTING_CLASS_NAMES,
   NON_FIGHTER_NON_WIZARD_CLASS_NAMES,
-  NON_WIZARD_CLASS_NAMES,
   ProficiencyGrantSchema,
   ProvenanceSchema,
   RollKindSchema,
@@ -983,13 +985,516 @@ const SpellSlotProjectionSchema = Schema.Struct({
   resetCadence: Schema.Struct({ kind: Schema.Literal("long_rest") }),
 });
 
+const PactSlotProjectionSchema = Schema.Struct({
+  kind: Schema.Literal("pact_slots"),
+  count: PositiveIntegerSchema,
+  spellLevel: PositiveIntegerSchema,
+  resetCadence: Schema.Struct({
+    kind: Schema.Literal("short_or_long_rest"),
+  }),
+});
+
 const SpellbookSpellAccessSchema = Schema.Struct({
+  spellId: NonEmptyStringSchema,
+  spellLevel: PositiveIntegerSchema,
+});
+
+const ClassSpellAccessSchema = Schema.Struct({
   spellId: NonEmptyStringSchema,
   spellLevel: PositiveIntegerSchema,
 });
 
 const distinctStrings = (values: readonly string[]): boolean =>
   new Set(values).size === values.length;
+
+const distinctSlotLevels = (
+  slots: readonly { readonly spellLevel: number }[],
+): boolean => distinctStrings(slots.map((slot) => slot.spellLevel.toString()));
+
+const availableSlotLevels = (
+  slots: readonly { readonly spellLevel: number; readonly count: number }[],
+): ReadonlySet<number> =>
+  new Set(
+    slots.filter((slot) => slot.count > 0).map((slot) => slot.spellLevel),
+  );
+
+const allSpellIdsDistinct = (
+  spells: readonly { readonly spellId: string }[],
+): boolean => distinctStrings(spells.map((spell) => spell.spellId));
+
+const allSpellLevelsAvailable = (
+  spells: readonly { readonly spellLevel: number }[],
+  levels: ReadonlySet<number>,
+): boolean => spells.every((spell) => levels.has(spell.spellLevel));
+
+const allSpellLevelsAtOrBelow = (
+  spells: readonly { readonly spellLevel: number }[],
+  maxSpellLevel: number,
+): boolean => spells.every((spell) => spell.spellLevel <= maxSpellLevel);
+
+type ClassSpellcastingClassName = Extract<
+  ClassName,
+  (typeof LIST_PREPARED_SPELLCASTING_CLASS_NAMES)[number] | "warlock"
+>;
+
+type ClassSpellList = {
+  readonly cantrips: readonly string[];
+  readonly leveled: Readonly<Partial<Record<number, readonly string[]>>>;
+};
+
+const CLASS_SPELL_LISTS = {
+  bard: {
+    cantrips: [
+      "dancing_lights",
+      "light",
+      "mage_hand",
+      "mending",
+      "message",
+      "minor_illusion",
+      "prestidigitation",
+      "starry_wisp",
+      "true_strike",
+      "vicious_mockery",
+    ],
+    leveled: {
+      1: [
+        "animal_friendship",
+        "bane",
+        "charm_person",
+        "color_spray",
+        "command",
+        "comprehend_languages",
+        "cure_wounds",
+        "detect_magic",
+        "disguise_self",
+        "dissonant_whispers",
+        "faerie_fire",
+        "feather_fall",
+        "healing_word",
+        "heroism",
+        "hideous_laughter",
+        "identify",
+        "illusory_script",
+        "longstrider",
+        "silent_image",
+        "sleep",
+        "speak_with_animals",
+        "thunderwave",
+        "unseen_servant",
+      ],
+    },
+  },
+  cleric: {
+    cantrips: [
+      "guidance",
+      "light",
+      "mending",
+      "resistance",
+      "sacred_flame",
+      "spare_the_dying",
+      "thaumaturgy",
+    ],
+    leveled: {
+      1: [
+        "bane",
+        "bless",
+        "command",
+        "create_or_destroy_water",
+        "cure_wounds",
+        "detect_evil_and_good",
+        "detect_magic",
+        "detect_poison_and_disease",
+        "guiding_bolt",
+        "healing_word",
+        "inflict_wounds",
+        "protection_from_evil_and_good",
+        "purify_food_and_drink",
+        "sanctuary",
+        "shield_of_faith",
+      ],
+    },
+  },
+  druid: {
+    cantrips: [
+      "druidcraft",
+      "elementalism",
+      "guidance",
+      "mending",
+      "message",
+      "poison_spray",
+      "produce_flame",
+      "resistance",
+      "shillelagh",
+      "spare_the_dying",
+      "starry_wisp",
+    ],
+    leveled: {
+      1: [
+        "animal_friendship",
+        "charm_person",
+        "create_or_destroy_water",
+        "cure_wounds",
+        "detect_magic",
+        "detect_poison_and_disease",
+        "entangle",
+        "faerie_fire",
+        "fog_cloud",
+        "goodberry",
+        "healing_word",
+        "ice_knife",
+        "jump",
+        "longstrider",
+        "protection_from_evil_and_good",
+        "purify_food_and_drink",
+        "speak_with_animals",
+        "thunderwave",
+      ],
+    },
+  },
+  paladin: {
+    cantrips: [],
+    leveled: {
+      1: [
+        "bless",
+        "command",
+        "cure_wounds",
+        "detect_evil_and_good",
+        "detect_magic",
+        "detect_poison_and_disease",
+        "divine_favor",
+        "divine_smite",
+        "heroism",
+        "protection_from_evil_and_good",
+        "purify_food_and_drink",
+        "searing_smite",
+        "shield_of_faith",
+      ],
+    },
+  },
+  ranger: {
+    cantrips: [],
+    leveled: {
+      1: [
+        "alarm",
+        "animal_friendship",
+        "cure_wounds",
+        "detect_magic",
+        "detect_poison_and_disease",
+        "ensnaring_strike",
+        "entangle",
+        "fog_cloud",
+        "goodberry",
+        "hunters_mark",
+        "jump",
+        "longstrider",
+        "speak_with_animals",
+      ],
+    },
+  },
+  sorcerer: {
+    cantrips: [
+      "acid_splash",
+      "chill_touch",
+      "dancing_lights",
+      "elementalism",
+      "fire_bolt",
+      "light",
+      "mage_hand",
+      "mending",
+      "message",
+      "minor_illusion",
+      "poison_spray",
+      "prestidigitation",
+      "ray_of_frost",
+      "shocking_grasp",
+      "sorcerous_burst",
+      "true_strike",
+    ],
+    leveled: {
+      1: [
+        "burning_hands",
+        "charm_person",
+        "chromatic_orb",
+        "color_spray",
+        "comprehend_languages",
+        "detect_magic",
+        "disguise_self",
+        "expeditious_retreat",
+        "false_life",
+        "feather_fall",
+        "fog_cloud",
+        "grease",
+        "ice_knife",
+        "jump",
+        "mage_armor",
+        "magic_missile",
+        "ray_of_sickness",
+        "shield",
+        "silent_image",
+        "sleep",
+        "thunderwave",
+      ],
+    },
+  },
+  warlock: {
+    cantrips: [
+      "chill_touch",
+      "eldritch_blast",
+      "mage_hand",
+      "minor_illusion",
+      "poison_spray",
+      "prestidigitation",
+      "true_strike",
+    ],
+    leveled: {
+      1: [
+        "bane",
+        "charm_person",
+        "comprehend_languages",
+        "detect_magic",
+        "expeditious_retreat",
+        "hellish_rebuke",
+        "hex",
+        "hideous_laughter",
+        "illusory_script",
+        "protection_from_evil_and_good",
+        "speak_with_animals",
+        "unseen_servant",
+      ],
+    },
+  },
+} as const satisfies Record<ClassSpellcastingClassName, ClassSpellList>;
+
+const classSpellList = (
+  className: ClassSpellcastingClassName,
+): ClassSpellList => CLASS_SPELL_LISTS[className];
+
+const allCantripsFromClassSpellList = (
+  className: ClassSpellcastingClassName,
+  spellIds: readonly string[],
+): boolean => {
+  const cantrips = new Set(classSpellList(className).cantrips);
+
+  return spellIds.every((spellId) => cantrips.has(spellId));
+};
+
+const allPreparedSpellsFromClassSpellList = (
+  className: ClassSpellcastingClassName,
+  spells: readonly { readonly spellId: string; readonly spellLevel: number }[],
+): boolean =>
+  spells.every((spell) =>
+    (classSpellList(className).leveled[spell.spellLevel] ?? []).includes(
+      spell.spellId,
+    ),
+  );
+
+const CLASS_PREPARED_SPELLCASTING_FACTS = [
+  {
+    className: "bard",
+    spellcastingAbility: "cha",
+    spellcastingFocus: "musical_instrument",
+    preparedChangeOn: { kind: "class_level", replacementCount: 1 },
+    cantripCount: 2,
+    preparedCount: 4,
+    spellSlotCount: 2,
+    spellSlotLevel: 1,
+  },
+  {
+    className: "cleric",
+    spellcastingAbility: "wis",
+    spellcastingFocus: "holy_symbol",
+    preparedChangeOn: { kind: "long_rest", replacementCount: "any" },
+    cantripCount: 3,
+    preparedCount: 4,
+    spellSlotCount: 2,
+    spellSlotLevel: 1,
+  },
+  {
+    className: "druid",
+    spellcastingAbility: "wis",
+    spellcastingFocus: "druidic_focus",
+    preparedChangeOn: { kind: "long_rest", replacementCount: "any" },
+    cantripCount: 2,
+    preparedCount: 4,
+    spellSlotCount: 2,
+    spellSlotLevel: 1,
+  },
+  {
+    className: "paladin",
+    spellcastingAbility: "cha",
+    spellcastingFocus: "holy_symbol",
+    preparedChangeOn: { kind: "long_rest", replacementCount: 1 },
+    cantripCount: 0,
+    preparedCount: 2,
+    spellSlotCount: 2,
+    spellSlotLevel: 1,
+  },
+  {
+    className: "ranger",
+    spellcastingAbility: "wis",
+    spellcastingFocus: "druidic_focus",
+    preparedChangeOn: { kind: "long_rest", replacementCount: 1 },
+    cantripCount: 0,
+    preparedCount: 2,
+    spellSlotCount: 2,
+    spellSlotLevel: 1,
+  },
+  {
+    className: "sorcerer",
+    spellcastingAbility: "cha",
+    spellcastingFocus: "arcane_focus",
+    preparedChangeOn: { kind: "class_level", replacementCount: 1 },
+    cantripCount: 4,
+    preparedCount: 2,
+    spellSlotCount: 2,
+    spellSlotLevel: 1,
+  },
+] as const;
+
+const ClassSpellcastingClassNameSchema = Schema.Literal(
+  ...LIST_PREPARED_SPELLCASTING_CLASS_NAMES,
+);
+
+const ClassCantripAccessSchema = Schema.Struct({
+  kind: Schema.Literal("known_cantrips_from_class_spell_list"),
+  choose: PositiveIntegerSchema,
+  spellIds: Schema.NonEmptyArray(NonEmptyStringSchema),
+  changeOn: Schema.Struct({
+    kind: Schema.Literal("class_level"),
+    count: PositiveIntegerSchema,
+  }),
+});
+
+const ClassPreparedAccessSchema = Schema.Struct({
+  kind: Schema.Literal("prepared_from_class_spell_list"),
+  choose: PositiveIntegerSchema,
+  spells: Schema.NonEmptyArray(ClassSpellAccessSchema),
+  changeOn: Schema.Union(
+    Schema.Struct({
+      kind: Schema.Literal("class_level"),
+      replacementCount: Schema.Literal(1),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("long_rest"),
+      replacementCount: Schema.Literal(1, "any"),
+    }),
+  ),
+});
+
+const spellSlotProjectionMatchesLevelOneFacts = (
+  spellcasting: {
+    readonly spellSlotProjection: {
+      readonly slots: readonly {
+        readonly count: number;
+        readonly spellLevel: number;
+      }[];
+    };
+  },
+  facts: {
+    readonly spellSlotCount: number;
+    readonly spellSlotLevel: number;
+  },
+): boolean =>
+  spellcasting.spellSlotProjection.slots.length === 1 &&
+  spellcasting.spellSlotProjection.slots[0]?.count === facts.spellSlotCount &&
+  spellcasting.spellSlotProjection.slots[0]?.spellLevel ===
+    facts.spellSlotLevel;
+
+export const ListPreparedSpellcastingCreationSchema = Schema.Struct({
+  kind: Schema.Literal("list_prepared_spellcasting_creation"),
+  spellcastingAbility: Schema.Literal("cha", "wis"),
+  cantripAccess: exactOptional(ClassCantripAccessSchema),
+  preparedAccess: ClassPreparedAccessSchema,
+  spellSlotProjection: SpellSlotProjectionSchema,
+  spellcastingFocus: Schema.Literal(
+    "arcane_focus",
+    "druidic_focus",
+    "holy_symbol",
+    "musical_instrument",
+  ),
+}).pipe(
+  Schema.filter(
+    (spellcasting) => {
+      return (
+        spellcasting.preparedAccess.choose ===
+          spellcasting.preparedAccess.spells.length &&
+        allSpellIdsDistinct(spellcasting.preparedAccess.spells) &&
+        distinctSlotLevels(spellcasting.spellSlotProjection.slots) &&
+        (spellcasting.cantripAccess === undefined ||
+          (spellcasting.cantripAccess.choose ===
+            spellcasting.cantripAccess.spellIds.length &&
+            distinctStrings(spellcasting.cantripAccess.spellIds))) &&
+        allSpellLevelsAvailable(
+          spellcasting.preparedAccess.spells,
+          availableSlotLevels(spellcasting.spellSlotProjection.slots),
+        )
+      );
+    },
+    {
+      message: () =>
+        "List-prepared spellcasting choices must match class Spellcasting facts, counts, uniqueness, and available Spell Slot levels.",
+    },
+  ),
+);
+
+export const PactMagicSpellcastingCreationSchema = Schema.Struct({
+  kind: Schema.Literal("pact_magic_spellcasting_creation"),
+  spellcastingAbility: Schema.Literal("cha"),
+  cantripAccess: Schema.Struct({
+    kind: Schema.Literal("known_cantrips_from_class_spell_list"),
+    choose: PositiveIntegerSchema,
+    spellIds: Schema.NonEmptyArray(NonEmptyStringSchema),
+    changeOn: Schema.Struct({
+      kind: Schema.Literal("class_level"),
+      count: PositiveIntegerSchema,
+    }),
+  }),
+  preparedAccess: Schema.Struct({
+    kind: Schema.Literal("prepared_from_class_spell_list"),
+    choose: PositiveIntegerSchema,
+    spells: Schema.NonEmptyArray(ClassSpellAccessSchema),
+    changeOn: Schema.Struct({
+      kind: Schema.Literal("class_level"),
+      replacementCount: Schema.Literal(1),
+    }),
+  }),
+  pactSlotProjection: PactSlotProjectionSchema,
+  spellcastingFocus: Schema.Literal("arcane_focus"),
+}).pipe(
+  Schema.filter(
+    (spellcasting) => {
+      if (
+        spellcasting.cantripAccess.choose !==
+          spellcasting.cantripAccess.spellIds.length ||
+        spellcasting.preparedAccess.choose !==
+          spellcasting.preparedAccess.spells.length
+      ) {
+        return false;
+      }
+
+      return (
+        distinctStrings(spellcasting.cantripAccess.spellIds) &&
+        allSpellIdsDistinct(spellcasting.preparedAccess.spells) &&
+        allSpellLevelsAtOrBelow(
+          spellcasting.preparedAccess.spells,
+          spellcasting.pactSlotProjection.spellLevel,
+        ) &&
+        allCantripsFromClassSpellList(
+          "warlock",
+          spellcasting.cantripAccess.spellIds,
+        ) &&
+        allPreparedSpellsFromClassSpellList(
+          "warlock",
+          spellcasting.preparedAccess.spells,
+        )
+      );
+    },
+    {
+      message: () =>
+        "Pact Magic choices must match their counts, be unique, use the Warlock spell list, and prepare only spells at or below the Pact Slot level.",
+    },
+  ),
+);
 
 export const WizardSpellcastingCreationSchema = Schema.Struct({
   kind: Schema.Literal("wizard_spellcasting_creation"),
@@ -1074,6 +1579,12 @@ export const WizardSpellcastingCreationSchema = Schema.Struct({
   ),
 );
 
+export const ClassSpellcastingCreationSchema = Schema.Union(
+  ListPreparedSpellcastingCreationSchema,
+  PactMagicSpellcastingCreationSchema,
+  WizardSpellcastingCreationSchema,
+);
+
 const ClassRecordBaseFields = {
   ...UnitMetadataSchema.fields,
   kind: ClassRecordKindSchema,
@@ -1103,15 +1614,107 @@ export const WizardClassRecordSchema = Schema.Struct({
   spellcasting: WizardSpellcastingCreationSchema,
 });
 
-export const NonWizardClassRecordSchema = Schema.Struct({
+export const ListPreparedSpellcastingClassRecordSchema = Schema.Struct({
   ...ClassRecordBaseFields,
-  className: Schema.Literal(...NON_WIZARD_CLASS_NAMES),
+  className: ClassSpellcastingClassNameSchema,
+  spellcasting: ListPreparedSpellcastingCreationSchema,
+}).pipe(
+  Schema.filter(
+    (unit) => {
+      const classFacts = CLASS_PREPARED_SPELLCASTING_FACTS.find(
+        (facts) => facts.className === unit.className,
+      );
+      if (classFacts === undefined) {
+        return false;
+      }
+
+      return (
+        unit.spellcasting.spellcastingAbility ===
+          classFacts.spellcastingAbility &&
+        unit.spellcasting.spellcastingFocus === classFacts.spellcastingFocus &&
+        unit.spellcasting.preparedAccess.changeOn.kind ===
+          classFacts.preparedChangeOn.kind &&
+        unit.spellcasting.preparedAccess.changeOn.replacementCount ===
+          classFacts.preparedChangeOn.replacementCount &&
+        unit.spellcasting.preparedAccess.choose === classFacts.preparedCount &&
+        unit.spellcasting.preparedAccess.spells.length ===
+          classFacts.preparedCount &&
+        spellSlotProjectionMatchesLevelOneFacts(
+          unit.spellcasting,
+          classFacts,
+        ) &&
+        (classFacts.cantripCount === 0
+          ? unit.spellcasting.cantripAccess === undefined
+          : unit.spellcasting.cantripAccess?.choose ===
+              classFacts.cantripCount &&
+            unit.spellcasting.cantripAccess.spellIds.length ===
+              classFacts.cantripCount &&
+            allCantripsFromClassSpellList(
+              unit.className,
+              unit.spellcasting.cantripAccess.spellIds,
+            )) &&
+        allPreparedSpellsFromClassSpellList(
+          unit.className,
+          unit.spellcasting.preparedAccess.spells,
+        )
+      );
+    },
+    {
+      message: () =>
+        "List-prepared class records must match class-specific level-1 spellcasting ability, focus, cantrip count, prepared-spell count, Spell Slot projection, prepared-spell replacement timing/cardinality, and class spell list.",
+    },
+  ),
+);
+
+export const PactMagicClassRecordSchema = Schema.Struct({
+  ...ClassRecordBaseFields,
+  className: Schema.Literal("warlock"),
+  spellcasting: PactMagicSpellcastingCreationSchema,
+}).pipe(
+  Schema.filter(
+    (unit) =>
+      unit.spellcasting.cantripAccess.choose === 2 &&
+      unit.spellcasting.cantripAccess.spellIds.length === 2 &&
+      unit.spellcasting.preparedAccess.choose === 2 &&
+      unit.spellcasting.preparedAccess.spells.length === 2 &&
+      unit.spellcasting.pactSlotProjection.count === 1 &&
+      unit.spellcasting.pactSlotProjection.spellLevel === 1 &&
+      allCantripsFromClassSpellList(
+        unit.className,
+        unit.spellcasting.cantripAccess.spellIds,
+      ) &&
+      allPreparedSpellsFromClassSpellList(
+        unit.className,
+        unit.spellcasting.preparedAccess.spells,
+      ),
+    {
+      message: () =>
+        "Warlock Pact Magic class records must match level-1 cantrip, prepared-spell, Pact Slot count, Pact Slot level, and Warlock spell list facts.",
+    },
+  ),
+);
+
+export const SpellcastingClassRecordSchema = Schema.Union(
+  ListPreparedSpellcastingClassRecordSchema,
+  PactMagicClassRecordSchema,
+  WizardClassRecordSchema,
+);
+
+export const NonSpellcastingClassRecordSchema = Schema.Struct({
+  ...ClassRecordBaseFields,
+  className: Schema.Literal(...NON_SPELLCASTING_CLASS_NAMES),
   spellcasting: exactOptional(Schema.Never),
 });
 
+export const NonWizardClassRecordSchema = Schema.Union(
+  ListPreparedSpellcastingClassRecordSchema,
+  PactMagicClassRecordSchema,
+  NonSpellcastingClassRecordSchema,
+);
+
 export const ClassRecordSchema = Schema.Union(
-  WizardClassRecordSchema,
   NonWizardClassRecordSchema,
+  WizardClassRecordSchema,
 );
 
 const ClassFeatureRecordBaseFields = {

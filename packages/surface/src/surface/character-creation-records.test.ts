@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 
 import backgroundSoldierInput from "../../content/background_soldier.json";
 import classFighterInput from "../../content/class_fighter.json";
+import classWarlockInput from "../../content/class_warlock.json";
 import classWizardInput from "../../content/class_wizard.json";
 import fighterTacticalMindInput from "../../content/fighter_tactical_mind.json";
 import rogueCunningActionInput from "../../content/rogue_cunning_action.json";
@@ -20,6 +21,63 @@ import {
   decodeUnitRecordEither,
   decodeUnitRecordSync,
 } from "./schema.ts";
+
+const classRecordWithSpellcasting = (
+  className: string,
+  spellcasting: unknown,
+) => ({
+  ...classWarlockInput,
+  className,
+  id: `class_${className}`,
+  name: className,
+  spellcasting,
+});
+
+const listPreparedSpellcasting = (input: {
+  readonly className: string;
+  readonly spellcastingAbility: "cha" | "wis";
+  readonly spellcastingFocus:
+    | "arcane_focus"
+    | "druidic_focus"
+    | "holy_symbol"
+    | "musical_instrument";
+  readonly preparedChangeOn: "class_level" | "long_rest";
+  readonly preparedReplacementCount: 1 | "any";
+  readonly preparedCount: number;
+  readonly preparedSpells: readonly string[];
+  readonly cantrips?: readonly string[];
+}) => ({
+  ...(input.cantrips === undefined
+    ? {}
+    : {
+        cantripAccess: {
+          changeOn: { count: 1, kind: "class_level" },
+          choose: input.cantrips.length,
+          kind: "known_cantrips_from_class_spell_list",
+          spellIds: input.cantrips,
+        },
+      }),
+  kind: "list_prepared_spellcasting_creation",
+  preparedAccess: {
+    changeOn: {
+      kind: input.preparedChangeOn,
+      replacementCount: input.preparedReplacementCount,
+    },
+    choose: input.preparedCount,
+    kind: "prepared_from_class_spell_list",
+    spells: input.preparedSpells.map((spellId) => ({
+      spellId,
+      spellLevel: 1,
+    })),
+  },
+  spellSlotProjection: {
+    kind: "leveled_spell_slots",
+    resetCadence: { kind: "long_rest" },
+    slots: [{ count: 2, spellLevel: 1 }],
+  },
+  spellcastingAbility: input.spellcastingAbility,
+  spellcastingFocus: input.spellcastingFocus,
+});
 
 describe("character-creation Surface records", () => {
   test("decodes and reads Fighter class creation facts", () => {
@@ -132,6 +190,158 @@ describe("character-creation Surface records", () => {
         },
       },
     });
+  });
+
+  test("decodes and reads Warlock Pact Magic creation facts", () => {
+    const classRecord = decodeClassRecordSync(classWarlockInput);
+    const unit = decodeUnitRecordSync(classWarlockInput);
+    const result = readClassCreationFacts(unit);
+
+    expect(classRecord.kind).toBe("class");
+    expect(result).toMatchObject({
+      tag: "readable",
+      value: {
+        recordId: "class_warlock",
+        className: "warlock",
+        spellcasting: {
+          kind: "pact_magic_spellcasting_creation",
+          spellcastingAbility: "cha",
+          cantripAccess: {
+            choose: 2,
+            kind: "known_cantrips_from_class_spell_list",
+            spellIds: ["eldritch_blast", "minor_illusion"],
+            changeOn: { count: 1, kind: "class_level" },
+          },
+          preparedAccess: {
+            choose: 2,
+            kind: "prepared_from_class_spell_list",
+            spells: [
+              { spellId: "charm_person", spellLevel: 1 },
+              { spellId: "hellish_rebuke", spellLevel: 1 },
+            ],
+            changeOn: { kind: "class_level", replacementCount: 1 },
+          },
+          pactSlotProjection: {
+            count: 1,
+            kind: "pact_slots",
+            resetCadence: { kind: "short_or_long_rest" },
+            spellLevel: 1,
+          },
+          spellcastingFocus: "arcane_focus",
+        },
+      },
+    });
+  });
+
+  test("decodes non-Wizard list-prepared spellcasting creation facts", () => {
+    const cases = [
+      {
+        className: "bard",
+        spellcastingAbility: "cha",
+        spellcastingFocus: "musical_instrument",
+        preparedChangeOn: "class_level",
+        preparedReplacementCount: 1,
+        preparedCount: 4,
+        preparedSpells: [
+          "charm_person",
+          "color_spray",
+          "dissonant_whispers",
+          "healing_word",
+        ],
+        cantrips: ["dancing_lights", "vicious_mockery"],
+      },
+      {
+        className: "cleric",
+        spellcastingAbility: "wis",
+        spellcastingFocus: "holy_symbol",
+        preparedChangeOn: "long_rest",
+        preparedReplacementCount: "any",
+        preparedCount: 4,
+        preparedSpells: [
+          "bless",
+          "cure_wounds",
+          "guiding_bolt",
+          "shield_of_faith",
+        ],
+        cantrips: ["guidance", "sacred_flame", "thaumaturgy"],
+      },
+      {
+        className: "druid",
+        spellcastingAbility: "wis",
+        spellcastingFocus: "druidic_focus",
+        preparedChangeOn: "long_rest",
+        preparedReplacementCount: "any",
+        preparedCount: 4,
+        preparedSpells: [
+          "animal_friendship",
+          "cure_wounds",
+          "faerie_fire",
+          "thunderwave",
+        ],
+        cantrips: ["druidcraft", "produce_flame"],
+      },
+      {
+        className: "paladin",
+        spellcastingAbility: "cha",
+        spellcastingFocus: "holy_symbol",
+        preparedChangeOn: "long_rest",
+        preparedReplacementCount: 1,
+        preparedCount: 2,
+        preparedSpells: ["heroism", "searing_smite"],
+      },
+      {
+        className: "ranger",
+        spellcastingAbility: "wis",
+        spellcastingFocus: "druidic_focus",
+        preparedChangeOn: "long_rest",
+        preparedReplacementCount: 1,
+        preparedCount: 2,
+        preparedSpells: ["cure_wounds", "ensnaring_strike"],
+      },
+      {
+        className: "sorcerer",
+        spellcastingAbility: "cha",
+        spellcastingFocus: "arcane_focus",
+        preparedChangeOn: "class_level",
+        preparedReplacementCount: 1,
+        preparedCount: 2,
+        preparedSpells: ["burning_hands", "detect_magic"],
+        cantrips: [
+          "light",
+          "prestidigitation",
+          "shocking_grasp",
+          "sorcerous_burst",
+        ],
+      },
+    ] as const;
+
+    for (const entry of cases) {
+      const spellcasting = listPreparedSpellcasting(entry);
+      const result = readClassCreationFacts(
+        decodeUnitRecordSync(
+          classRecordWithSpellcasting(entry.className, spellcasting),
+        ),
+      );
+
+      expect(result).toMatchObject({
+        tag: "readable",
+        value: {
+          className: entry.className,
+          spellcasting: {
+            ...spellcasting,
+            preparedAccess: {
+              ...spellcasting.preparedAccess,
+              changeOn: {
+                kind: entry.preparedChangeOn,
+                replacementCount: entry.preparedReplacementCount,
+              },
+            },
+            spellcastingAbility: entry.spellcastingAbility,
+            spellcastingFocus: entry.spellcastingFocus,
+          },
+        },
+      });
+    }
   });
 
   test("decodes Rogue Cunning Action as alternate Bonus Action cost facts", () => {
@@ -313,6 +523,237 @@ describe("character-creation Surface records", () => {
       classWizardInput;
     expect(
       Either.isLeft(decodeUnitRecordEither(wizardWithoutSpellcasting)),
+    ).toBe(true);
+
+    const bardSpellcasting = listPreparedSpellcasting({
+      className: "bard",
+      spellcastingAbility: "cha",
+      spellcastingFocus: "musical_instrument",
+      preparedChangeOn: "class_level",
+      preparedReplacementCount: 1,
+      preparedCount: 4,
+      preparedSpells: [
+        "charm_person",
+        "color_spray",
+        "dissonant_whispers",
+        "healing_word",
+      ],
+      cantrips: ["dancing_lights", "vicious_mockery"],
+    });
+
+    expect(
+      Either.isLeft(
+        decodeUnitRecordEither(
+          classRecordWithSpellcasting("cleric", bardSpellcasting),
+        ),
+      ),
+    ).toBe(true);
+
+    expect(
+      Either.isLeft(
+        decodeUnitRecordEither(
+          classRecordWithSpellcasting(
+            "bard",
+            listPreparedSpellcasting({
+              className: "bard",
+              spellcastingAbility: "cha",
+              spellcastingFocus: "arcane_focus",
+              preparedChangeOn: "class_level",
+              preparedReplacementCount: 1,
+              preparedCount: 4,
+              preparedSpells: [
+                "charm_person",
+                "color_spray",
+                "dissonant_whispers",
+                "healing_word",
+              ],
+              cantrips: ["dancing_lights", "vicious_mockery"],
+            }),
+          ),
+        ),
+      ),
+    ).toBe(true);
+
+    expect(
+      Either.isLeft(
+        decodeUnitRecordEither(
+          classRecordWithSpellcasting("bard", {
+            ...bardSpellcasting,
+            preparedAccess: {
+              ...bardSpellcasting.preparedAccess,
+              spells: [
+                { spellId: "charm_person", spellLevel: 1 },
+                { spellId: "magic_missile", spellLevel: 1 },
+                { spellId: "dissonant_whispers", spellLevel: 1 },
+                { spellId: "healing_word", spellLevel: 1 },
+              ],
+            },
+          }),
+        ),
+      ),
+    ).toBe(true);
+
+    expect(
+      Either.isLeft(
+        decodeUnitRecordEither(
+          classRecordWithSpellcasting(
+            "cleric",
+            listPreparedSpellcasting({
+              className: "cleric",
+              spellcastingAbility: "wis",
+              spellcastingFocus: "holy_symbol",
+              preparedChangeOn: "long_rest",
+              preparedReplacementCount: "any",
+              preparedCount: 4,
+              preparedSpells: [
+                "bless",
+                "cure_wounds",
+                "guiding_bolt",
+                "shield_of_faith",
+              ],
+              cantrips: ["guidance", "dancing_lights", "thaumaturgy"],
+            }),
+          ),
+        ),
+      ),
+    ).toBe(true);
+
+    expect(
+      Either.isLeft(
+        decodeUnitRecordEither(
+          classRecordWithSpellcasting("cleric", {
+            ...listPreparedSpellcasting({
+              className: "cleric",
+              spellcastingAbility: "wis",
+              spellcastingFocus: "holy_symbol",
+              preparedChangeOn: "long_rest",
+              preparedReplacementCount: 1,
+              preparedCount: 4,
+              preparedSpells: [
+                "bless",
+                "cure_wounds",
+                "guiding_bolt",
+                "shield_of_faith",
+              ],
+              cantrips: ["guidance", "sacred_flame", "thaumaturgy"],
+            }),
+          }),
+        ),
+      ),
+    ).toBe(true);
+
+    expect(
+      Either.isLeft(
+        decodeUnitRecordEither(
+          classRecordWithSpellcasting(
+            "bard",
+            listPreparedSpellcasting({
+              className: "bard",
+              spellcastingAbility: "cha",
+              spellcastingFocus: "musical_instrument",
+              preparedChangeOn: "class_level",
+              preparedReplacementCount: 1,
+              preparedCount: 2,
+              preparedSpells: ["charm_person", "color_spray"],
+              cantrips: ["dancing_lights", "vicious_mockery"],
+            }),
+          ),
+        ),
+      ),
+    ).toBe(true);
+
+    expect(
+      Either.isLeft(
+        decodeUnitRecordEither(
+          classRecordWithSpellcasting("paladin", {
+            ...listPreparedSpellcasting({
+              className: "paladin",
+              spellcastingAbility: "cha",
+              spellcastingFocus: "holy_symbol",
+              preparedChangeOn: "long_rest",
+              preparedReplacementCount: "any",
+              preparedCount: 2,
+              preparedSpells: ["heroism", "searing_smite"],
+            }),
+          }),
+        ),
+      ),
+    ).toBe(true);
+
+    expect(
+      Either.isLeft(
+        decodeUnitRecordEither(
+          classRecordWithSpellcasting(
+            "paladin",
+            listPreparedSpellcasting({
+              className: "paladin",
+              spellcastingAbility: "cha",
+              spellcastingFocus: "holy_symbol",
+              preparedChangeOn: "long_rest",
+              preparedReplacementCount: 1,
+              preparedCount: 2,
+              preparedSpells: ["heroism", "searing_smite"],
+              cantrips: ["light"],
+            }),
+          ),
+        ),
+      ),
+    ).toBe(true);
+
+    expect(
+      Either.isLeft(
+        decodeUnitRecordEither(
+          classRecordWithSpellcasting("bard", {
+            ...bardSpellcasting,
+            preparedAccess: {
+              ...bardSpellcasting.preparedAccess,
+              spells: [
+                { spellId: "charm_person", spellLevel: 1 },
+                { spellId: "charm_person", spellLevel: 1 },
+                { spellId: "dissonant_whispers", spellLevel: 1 },
+                { spellId: "healing_word", spellLevel: 1 },
+              ],
+            },
+          }),
+        ),
+      ),
+    ).toBe(true);
+
+    expect(
+      Either.isLeft(
+        decodeUnitRecordEither(
+          classRecordWithSpellcasting("bard", {
+            ...bardSpellcasting,
+            preparedAccess: {
+              ...bardSpellcasting.preparedAccess,
+              spells: [
+                { spellId: "charm_person", spellLevel: 1 },
+                { spellId: "scorching_ray", spellLevel: 2 },
+                { spellId: "dissonant_whispers", spellLevel: 1 },
+                { spellId: "healing_word", spellLevel: 1 },
+              ],
+            },
+          }),
+        ),
+      ),
+    ).toBe(true);
+
+    expect(
+      Either.isLeft(
+        decodeUnitRecordEither({
+          ...classWarlockInput,
+          spellcasting: {
+            ...classWarlockInput.spellcasting,
+            preparedAccess: {
+              ...classWarlockInput.spellcasting.preparedAccess,
+              spells: [
+                { spellId: "charm_person", spellLevel: 1 },
+                { spellId: "magic_missile", spellLevel: 1 },
+              ],
+            },
+          },
+        }),
+      ),
     ).toBe(true);
 
     const { armorTraining: _armorTraining, ...fighterWithoutArmorTraining } =

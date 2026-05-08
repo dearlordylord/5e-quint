@@ -55,6 +55,10 @@ const requiredFirstVerticalUnitIds = [
   "shield",
   "sleep",
   "thunderwave",
+  "eldritch_blast",
+  "minor_illusion",
+  "charm_person",
+  "hellish_rebuke",
   "armor_chain_mail",
   "equipment_shield",
   "weapon_dagger",
@@ -693,5 +697,27 @@ describe("SRD Unit catalog boundary", () => {
         units: [privateRecord as Srd521Unit],
       }),
     ).toThrow("SRD Unit collection contains non-SRD provenance");
+  });
+
+  test("rejects non-Wizard class spell access refs when a selected Spell Unit is absent", () => {
+    const collectionWithoutHellishRebuke = defineSrdUnitCollection({
+      units: srdUnitCollection.units.filter(
+        (unit) => unit.id !== "hellish_rebuke",
+      ),
+    });
+    const result = buildUnitCatalog({
+      collections: [collectionWithoutHellishRebuke],
+    });
+
+    expect(result).toEqual({
+      tag: "invalid",
+      issues: expect.arrayContaining([
+        {
+          code: "unknownUnitReference",
+          referringUnitId: "class_warlock",
+          referencedUnitId: "hellish_rebuke",
+        },
+      ]),
+    });
   });
 });

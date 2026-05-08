@@ -166,13 +166,13 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 178,
       "id": "SRDINV9",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Widen Non-Wizard Spell Access Surface Facts"
     },
     {
       "number": 179,
       "id": "SRDINV10",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Widen Level-1 Class Feature Surface Mechanics"
     },
     {
@@ -236,8 +236,8 @@ Keep it synchronized with the DAG table and task details.
 | 175   | SRDINV6 - Review Catalog-Only and Surface-Widening Rows | done | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Completed catalog-only and Surface-widening review: the SRDINV6 denominator remains 62 rows, with 4 explicit nonspell catalog-only/dead-for-now closures and 58 rows that name concrete Surface-widening blockers for SRDINV7/SRDINV8. |
 | 176   | SRDINV7 - Recursive SRD Inventory Planning Review | done | SRDINV2-SRDINV5D, SRDINV6 | SRDINV8-SRDINV11 | [SRDINV7 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed recursive planning review: level-1 remains open, so the next batch is three concrete Surface-widening families plus SRDINV11 review. |
 | 177   | SRDINV8 - Widen Class Container Proficiency Surface Facts | ready-for-research | SRDINV7 | SRDINV11 | [SRDINV7 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes) | Widen Surface class-container facts for Bard/Druid tool choices, Monk/Rogue property-filtered Martial weapon and tool proficiencies, and Ranger fixed-plus-choice multiclass proficiencies. |
-| 178   | SRDINV9 - Widen Non-Wizard Spell Access Surface Facts | ready-for-research | SRDINV7 | SRDINV10, SRDINV11 | [SRDINV7 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes) | Widen Surface Spell Access facts for non-Wizard list-prepared casters, prepared half casters without level-1 cantrips, and own the shared Warlock Pact Magic/Pact Slot source shape consumed by SRDINV10. |
-| 179   | SRDINV10 - Widen Level-1 Class Feature Surface Mechanics | blocked | SRDINV7, SRDINV9 | SRDINV11 | [SRDINV7 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes) | Widen Surface mechanics for the level-1 class-feature blockers named by SRDINV3/SRDINV6 after SRDINV9 lands the shared Pact Magic source shape; do not remodel Pact Magic source facts. |
+| 178   | SRDINV9 - Widen Non-Wizard Spell Access Surface Facts | done | SRDINV7 | SRDINV10, SRDINV11 | [SRDINV7 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes) | Completed Surface Spell Access widening for non-Wizard list-prepared casters, prepared half casters without level-1 cantrips, and the shared Warlock Pact Magic/Pact Slot source shape consumed by SRDINV10. |
+| 179   | SRDINV10 - Widen Level-1 Class Feature Surface Mechanics | ready-for-research | SRDINV7, SRDINV9 | SRDINV11 | [SRDINV7 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes) | Widen Surface mechanics for the level-1 class-feature blockers named by SRDINV3/SRDINV6 after SRDINV9 lands the shared Pact Magic source shape; do not remodel Pact Magic source facts. |
 | 180   | SRDINV11 - Recursive SRD Inventory Planning Review | blocked | SRDINV8-SRDINV10 | none | [SRDINV7 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review SRDINV8-SRDINV10 findings, refresh inventory metrics, and append the next concrete multi-task batch unless level-1 is explicitly complete. |
 
 ## Task Details
@@ -998,7 +998,7 @@ Surface code; `/simplify` convergence.
 
 ### Task 178 - SRDINV9 - Widen Non-Wizard Spell Access Surface Facts
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV7
 
@@ -1033,9 +1033,15 @@ Surface tests for the new source shapes; regenerate inventory if
 classifications change; `pnpm unit-profile-coverage:check`; package-local
 typecheck/tests for touched Surface code; `/simplify` convergence.
 
+Completion: Surface now has class spellcasting source shapes for list-prepared
+non-Wizard casters and Warlock Pact Magic, including replacement
+timing/cardinality and catalog-validated selected Spell Unit refs. SRDINV10 may
+consume the shared Pact Magic source shape instead of defining parallel Pact
+Magic state.
+
 ### Task 179 - SRDINV10 - Widen Level-1 Class Feature Surface Mechanics
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: SRDINV7, SRDINV9
 

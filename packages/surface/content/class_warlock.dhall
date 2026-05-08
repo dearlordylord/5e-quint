@@ -27,6 +27,32 @@ let warlock =
         { choose = 2
         , options = [ "arcana", "deception", "history", "intimidation", "investigation", "nature", "religion" ]
         }
+      , spellcasting =
+          { cantripAccess =
+              { changeOn = { count = 1, kind = "class_level" }
+              , choose = 2
+              , kind = "known_cantrips_from_class_spell_list"
+              , spellIds = [ "eldritch_blast", "minor_illusion" ]
+              }
+          , kind = "pact_magic_spellcasting_creation"
+          , pactSlotProjection =
+              { count = 1
+              , kind = "pact_slots"
+              , resetCadence = { kind = "short_or_long_rest" }
+              , spellLevel = 1
+              }
+          , preparedAccess =
+              { changeOn = { kind = "class_level", replacementCount = 1 }
+              , choose = 2
+              , kind = "prepared_from_class_spell_list"
+              , spells =
+                [ { spellId = "charm_person", spellLevel = 1 }
+                , { spellId = "hellish_rebuke", spellLevel = 1 }
+                ]
+              }
+          , spellcastingAbility = "cha"
+          , spellcastingFocus = "arcane_focus"
+          }
       , subclassChoices = [] : List { level : Natural, options : List Text }
       , startingEquipment =
         [ { coinsGp = 15

@@ -12,7 +12,9 @@ import classBarbarianInput from "../../content/class_barbarian.json";
 import classFighterInput from "../../content/class_fighter.json";
 import classWarlockInput from "../../content/class_warlock.json";
 import classWizardInput from "../../content/class_wizard.json";
+import charmPersonInput from "../../content/charm_person.json";
 import cureWoundsInput from "../../content/cure_wounds.json";
+import eldritchBlastInput from "../../content/eldritch_blast.json";
 import equipmentShieldInput from "../../content/equipment_shield.json";
 import featAbilityScoreImprovementInput from "../../content/feat_ability_score_improvement.json";
 import featArcheryInput from "../../content/feat_archery.json";
@@ -29,12 +31,14 @@ import fighterWeaponMasteryInput from "../../content/fighter_weapon_mastery.json
 import detectMagicInput from "../../content/detect_magic.json";
 import fireBoltInput from "../../content/fire_bolt.json";
 import healingWordInput from "../../content/healing_word.json";
+import hellishRebukeInput from "../../content/hellish_rebuke.json";
 import lightInput from "../../content/light.json";
 import mageArmorInput from "../../content/mage_armor.json";
 import magicMissileInput from "../../content/magic_missile.json";
 import massCureWoundsInput from "../../content/mass_cure_wounds.json";
 import massHealingWordInput from "../../content/mass_healing_word.json";
 import masterySapInput from "../../content/mastery_sap.json";
+import minorIllusionInput from "../../content/minor_illusion.json";
 import monkDeflectAttacksInput from "../../content/monk_deflect_attacks.json";
 import orcAdrenalineRushInput from "../../content/orc_adrenaline_rush.json";
 import orcDarkvisionInput from "../../content/species_orc_darkvision.json";
@@ -64,10 +68,10 @@ import wizardRitualAdeptInput from "../../content/wizard_ritual_adept.json";
 import acidSplashInput from "../../content/acid_splash.json";
 import { decodeUnitRecordSync } from "./schema.ts";
 import type {
+  ClassSpellcastingCreation,
   Provenance,
   StartingEquipmentChoice,
   UnitRecord,
-  WizardClassRecord,
 } from "./types.ts";
 
 export type Srd521CollectionProvenance = {
@@ -218,6 +222,10 @@ export const srdUnitCollection = defineSrdUnitCollection({
     shieldInput,
     sleepInput,
     thunderwaveInput,
+    eldritchBlastInput,
+    minorIllusionInput,
+    charmPersonInput,
+    hellishRebukeInput,
     armorChainMailInput,
     equipmentShieldInput,
     weaponDaggerInput,
@@ -313,18 +321,15 @@ function findUnknownClassSpellRefs(
   unit: UnitRecord,
   records: ReadonlyMap<UnitId, UnitRecord>,
 ): readonly UnitCatalogBuildIssue[] {
-  if (!isWizardClassRecord(unit)) {
+  if (
+    unit.kind !== "class" ||
+    !("spellcasting" in unit) ||
+    unit.spellcasting === undefined
+  ) {
     return [];
   }
 
-  const spellcasting = unit.spellcasting;
-  const spellIds = Array.from(
-    new Set([
-      ...spellcasting.cantripAccess.spellIds,
-      ...spellcasting.spellbookAccess.spells.map((spell) => spell.spellId),
-      ...spellcasting.preparedAccess.spellIds,
-    ]),
-  );
+  const spellIds = classSpellReferenceIds(unit.spellcasting);
 
   return spellIds.flatMap((spellId) =>
     records.has(spellId)
@@ -339,8 +344,25 @@ function findUnknownClassSpellRefs(
   );
 }
 
-function isWizardClassRecord(unit: UnitRecord): unit is WizardClassRecord {
-  return unit.kind === "class" && unit.className === "wizard";
+function classSpellReferenceIds(
+  spellcasting: ClassSpellcastingCreation,
+): readonly UnitId[] {
+  if (spellcasting.kind === "wizard_spellcasting_creation") {
+    return distinctUnitIds([
+      ...spellcasting.cantripAccess.spellIds,
+      ...spellcasting.spellbookAccess.spells.map((spell) => spell.spellId),
+      ...spellcasting.preparedAccess.spellIds,
+    ]);
+  }
+
+  return distinctUnitIds([
+    ...(spellcasting.cantripAccess?.spellIds ?? []),
+    ...spellcasting.preparedAccess.spells.map((spell) => spell.spellId),
+  ]);
+}
+
+function distinctUnitIds(unitIds: readonly UnitId[]): readonly UnitId[] {
+  return Array.from(new Set(unitIds));
 }
 
 function findInvalidSubclassChoiceRefs(

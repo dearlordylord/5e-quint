@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 334,
-      "numerator": 44,
-      "percent": "13.2%"
+      "numerator": 48,
+      "percent": "14.4%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 393,
-      "numerator": 60,
-      "percent": "15.3%"
+      "numerator": 64,
+      "percent": "16.3%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 61
+      "value": 65
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 33,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 61,
-      "numerator": 61,
+      "denominator": 65,
+      "numerator": 65,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -97,9 +97,9 @@
       "percent": "30.3%"
     },
     "supportedProfileCoverage": {
-      "denominator": 45,
+      "denominator": 49,
       "numerator": 33,
-      "percent": "73.3%"
+      "percent": "67.3%"
     }
   },
   "metricSemantics": [
@@ -3503,6 +3503,78 @@
         "status": "installed"
       },
       "claim": {
+        "reason": "Spell Definition is installed for Warlock Spell Access validation; promoted invocation/projectile runtime evidence is not present yet.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/eldritch_blast.json",
+      "unitId": "eldritch_blast"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Sound/image illusion creation, physical-interaction reveal, faint rendering after Study, and recast expiry are illusion/exploration state outside promoted runtime owners.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/minor_illusion.json",
+      "unitId": "minor_illusion"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Spell Definition is installed for class Spell Access validation; promoted charm/condition runtime evidence is not present yet.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/charm_person.json",
+      "unitId": "charm_person"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Spell Definition is installed for Warlock Spell Access validation; promoted Reaction casting-window runtime evidence is not present yet.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/hellish_rebuke.json",
+      "unitId": "hellish_rebuke"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "reason": "Equipment AC data is authored but not represented as an executable Unit profile row.",
         "tag": "unsupported-profile"
       },
@@ -4574,24 +4646,6 @@
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [],
-      "sourceRecordPath": "packages/surface/content/charm_person.json",
-      "unitId": "charm_person"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
       "sourceRecordPath": "packages/surface/content/chill_touch.json",
       "unitId": "chill_touch"
     },
@@ -5204,24 +5258,6 @@
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [],
-      "sourceRecordPath": "packages/surface/content/eldritch_blast.json",
-      "unitId": "eldritch_blast"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
       "sourceRecordPath": "packages/surface/content/ensnaring_strike.json",
       "unitId": "ensnaring_strike"
     },
@@ -5728,24 +5764,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/heat_metal.json",
       "unitId": "heat_metal"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/hellish_rebuke.json",
-      "unitId": "hellish_rebuke"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -7600,24 +7618,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/mind_spike.json",
       "unitId": "mind_spike"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/minor_illusion.json",
-      "unitId": "minor_illusion"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

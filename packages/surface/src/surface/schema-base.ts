@@ -107,6 +107,34 @@ export const CLASS_NAMES = SHARED_CLASS_NAMES;
 
 type NonEmptyReadonlyArray<T> = readonly [T, ...T[]];
 
+export const LIST_PREPARED_SPELLCASTING_CLASS_NAMES = [
+  "bard",
+  "cleric",
+  "druid",
+  "paladin",
+  "ranger",
+  "sorcerer",
+] as const satisfies ReadonlyArray<ClassName>;
+
+export const PACT_MAGIC_CLASS_NAMES = [
+  "warlock",
+] as const satisfies ReadonlyArray<ClassName>;
+
+export const CLASS_SPELLCASTING_CLASS_NAMES = [
+  ...LIST_PREPARED_SPELLCASTING_CLASS_NAMES,
+  ...PACT_MAGIC_CLASS_NAMES,
+  "wizard",
+] as const satisfies ReadonlyArray<ClassName>;
+
+export const NON_SPELLCASTING_CLASS_NAMES = [
+  "barbarian",
+  "fighter",
+  "monk",
+  "rogue",
+] as const satisfies NonEmptyReadonlyArray<
+  Exclude<ClassName, (typeof CLASS_SPELLCASTING_CLASS_NAMES)[number]>
+>;
+
 export const NON_FIGHTER_NON_WIZARD_CLASS_NAMES = CLASS_NAMES.filter(
   (className): className is Exclude<ClassName, "fighter" | "wizard"> =>
     className !== "fighter" && className !== "wizard",

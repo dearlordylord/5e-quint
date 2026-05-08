@@ -650,6 +650,15 @@ export type ArmorTraining = Schema.Schema.Type<
 export type WizardSpellcastingCreation = Schema.Schema.Type<
   typeof SurfaceSchema.WizardSpellcastingCreationSchema
 >;
+export type ListPreparedSpellcastingCreation = Schema.Schema.Type<
+  typeof SurfaceSchema.ListPreparedSpellcastingCreationSchema
+>;
+export type PactMagicSpellcastingCreation = Schema.Schema.Type<
+  typeof SurfaceSchema.PactMagicSpellcastingCreationSchema
+>;
+export type ClassSpellcastingCreation = Schema.Schema.Type<
+  typeof SurfaceSchema.ClassSpellcastingCreationSchema
+>;
 export type SpellbookRitualAccessMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.SpellbookRitualAccessMechanicsSchema
 >;
@@ -667,6 +676,18 @@ export type SubclassRecord = Schema.Schema.Type<
 >;
 export type WizardClassRecord = Schema.Schema.Type<
   typeof SurfaceSchema.WizardClassRecordSchema
+>;
+export type ListPreparedSpellcastingClassRecord = Schema.Schema.Type<
+  typeof SurfaceSchema.ListPreparedSpellcastingClassRecordSchema
+>;
+export type PactMagicClassRecord = Schema.Schema.Type<
+  typeof SurfaceSchema.PactMagicClassRecordSchema
+>;
+export type SpellcastingClassRecord = Schema.Schema.Type<
+  typeof SurfaceSchema.SpellcastingClassRecordSchema
+>;
+export type NonSpellcastingClassRecord = Schema.Schema.Type<
+  typeof SurfaceSchema.NonSpellcastingClassRecordSchema
 >;
 export type NonWizardClassRecord = Schema.Schema.Type<
   typeof SurfaceSchema.NonWizardClassRecordSchema

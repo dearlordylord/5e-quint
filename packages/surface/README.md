@@ -119,12 +119,17 @@ choice key across source Units only when the slot semantics are the same; split
 keys when cardinality, eligibility, timing, or projection differs.
 
 Spellcasting creation facts stay inside the class record when they are class
-legality facts. Wizard 1 uses one `spellcasting` aggregate that keeps Spell
-Access and runtime projection separate: known cantrips, spellbook Spell Access,
-prepared Spell Access chosen from that spellbook, level-1 Spell Slot projection,
-spellcasting ability, and allowed focuses are distinct fields. The decode
-boundary rejects prepared spells that are absent from the spellbook or above the
-available Spell Slot levels.
+legality facts. A class `spellcasting` aggregate keeps Spell Access and runtime
+projection separate: known cantrips, prepared Spell Access, Spell Slot or Pact
+Slot projection, spellcasting ability, replacement timing/cardinality, and
+allowed focuses are distinct fields. Wizard keeps spellbook Spell Access
+separate from prepared Spell Access chosen from that spellbook. Bard, Cleric,
+Druid, Paladin, Ranger, and Sorcerer use list-prepared Spell Access from their
+class spell lists. Warlock uses the shared Pact Magic shape with Pact Slots that
+recover on a Short or Long Rest. The decode boundary rejects prepared spells
+that are absent from the Wizard spellbook, above available Spell Slot levels,
+above a Warlock's Pact Slot level, duplicated, or paired with a class-mismatched
+spellcasting ability/focus/source/replacement rule.
 
 Runtime packages may narrow these records through package-private support gates,
 but `@dnd/surface` exports only structural readers. Do not export `Supported*`

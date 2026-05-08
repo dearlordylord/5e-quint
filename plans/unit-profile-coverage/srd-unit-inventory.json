@@ -32,28 +32,28 @@
     "spellPressureRows": 211,
     "levelOneClassContainers": 12,
     "levelOneRowsByDisposition": {
-      "catalog-installed-owner-evidence-required": 24,
+      "catalog-installed-owner-evidence-required": 25,
       "catalog-installed-owner-evidence-present": 19,
       "catalog-only/dead-for-now": 4,
       "non-runtime": 12,
-      "missing-authored-record": 72,
-      "needs-surface-widening": 25
+      "missing-authored-record": 81,
+      "needs-surface-widening": 15
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-required": 27,
+      "catalog-installed-owner-evidence-required": 35,
       "catalog-installed-owner-evidence-present": 37,
       "catalog-only/dead-for-now": 78,
       "non-runtime": 12,
-      "missing-authored-record": 78,
-      "needs-surface-widening": 58,
-      "catalog-authored-executable-follow-up": 77
+      "missing-authored-record": 87,
+      "needs-surface-widening": 48,
+      "catalog-authored-executable-follow-up": 70
     },
     "spellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 74,
-      "catalog-authored-executable-follow-up": 77,
+      "catalog-authored-executable-follow-up": 70,
+      "catalog-installed-owner-evidence-required": 10,
       "needs-surface-widening": 33,
       "catalog-installed-owner-evidence-present": 18,
-      "catalog-installed-owner-evidence-required": 3,
       "missing-authored-record": 6
     },
     "levelOneRowsByCategory": {
@@ -68,7 +68,7 @@
       "non-runtime-table-summary": 12,
       "class-container-owned-source-fact": 100
     },
-    "missingClassContainers": 0
+    "missingClassContainers": 3
   },
   "recommendedBatches": [
     {
@@ -76,7 +76,7 @@
       "title": "Classify Installed Level-1 Owner Evidence",
       "suggestedStatus": "ready-for-research",
       "intent": "Stop treating installed level-1 rows as done by catalog load alone; assign operational owner expectations or explicit catalog-only closure.",
-      "rowCount": 44,
+      "rowCount": 45,
       "rowIds": [
         "srd521:classes/barbarian:level-1:class-container:barbarian_class_container",
         "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
@@ -102,6 +102,7 @@
         "srd521:classes/fighter:level-1:multiclass-entry:fighter_multiclass_entry_traits",
         "srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack",
         "srd521:classes/warlock:level-1:class-container:warlock_class_container",
+        "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic",
         "srd521:classes/warlock:level-1:core-trait:warlock_armor_training",
         "srd521:classes/warlock:level-1:core-trait:warlock_hit_point_die",
         "srd521:classes/warlock:level-1:core-trait:warlock_primary_ability",
@@ -131,8 +132,12 @@
       "title": "Author Missing Level-1 Class Containers",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Create or explicitly close the ten missing SRD level-1 class container records.",
-      "rowCount": 0,
-      "rowIds": [],
+      "rowCount": 3,
+      "rowIds": [
+        "srd521:classes/cleric:level-1:class-container:cleric_class_container",
+        "srd521:classes/paladin:level-1:class-container:paladin_class_container",
+        "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
+      ],
       "nextAction": "Add SRD-provenance class container records where Surface already expresses the facts, or record explicit closure for any deferred container.",
       "acceptance": "Missing class container count reaches zero or each remaining row has explicit closure; no PHB/private content enters this pass."
     },
@@ -230,17 +235,16 @@
       "title": "Classify Level-1 Spell Access Rows",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Keep class spell access/list facts separate from individual Spell Unit support.",
-      "rowCount": 7,
+      "rowCount": 6,
       "rowIds": [
         "srd521:classes/bard:level-1:spell-access:bard_spellcasting",
         "srd521:classes/cleric:level-1:spell-access:cleric_spellcasting",
         "srd521:classes/druid:level-1:spell-access:druid_spellcasting",
         "srd521:classes/paladin:level-1:spell-access:paladin_spellcasting",
         "srd521:classes/ranger:level-1:spell-access:ranger_spellcasting",
-        "srd521:classes/sorcerer:level-1:spell-access:sorcerer_spellcasting",
-        "srd521:classes/wizard:level-1:spell-access:wizard_spellcasting"
+        "srd521:classes/sorcerer:level-1:spell-access:sorcerer_spellcasting"
       ],
-      "nextAction": "Level-1 class Spellcasting/access rows have owner-specific classifications; keep Surface-widening blockers separate from individual Spell Unit pressure.",
+      "nextAction": "Classify missing class Spellcasting/access rows by class-container ownership, Surface widening, authored content, or closure.",
       "acceptance": "Level-1 spell access rows have owner-specific next actions and are not mixed with individual Spell Unit pressure."
     },
     {
@@ -265,9 +269,11 @@
       "title": "Classify Installed Cantrip and Level-1 Spell Units",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Classify installed SRD cantrip and level-1 Spell Unit owner evidence separately from missing and catalog-only spell rows.",
-      "rowCount": 39,
+      "rowCount": 50,
       "rowIds": [
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_light",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_minor_illusion",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_charm_person",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_cure_wounds",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_detect_magic",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_healing_word",
@@ -277,6 +283,7 @@
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_cure_wounds",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_magic",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_healing_word",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_charm_person",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_cure_wounds",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_detect_magic",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_healing_word",
@@ -288,18 +295,26 @@
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_acid_splash",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_fire_bolt",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_light",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_minor_illusion",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_ray_of_frost",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_charm_person",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_detect_magic",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_mage_armor",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_magic_missile",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_shield",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_sleep",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_thunderwave",
+        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_eldritch_blast",
+        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_minor_illusion",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_charm_person",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_detect_magic",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hellish_rebuke",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_acid_splash",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_fire_bolt",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_light",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_minor_illusion",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_ray_of_frost",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_charm_person",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_detect_magic",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_mage_armor",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_magic_missile",
@@ -315,7 +330,7 @@
       "title": "Review Catalog-Only Cantrip and Level-1 Spell Units",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Keep catalog-only spell pressure explicit and counted without forcing unrelated class or nonspell rows into the same task.",
-      "rowCount": 151,
+      "rowCount": 144,
       "rowIds": [
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_dancing_lights",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_light",
@@ -329,7 +344,6 @@
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_vicious_mockery",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_animal_friendship",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_bane",
-        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_charm_person",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_color_spray",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_comprehend_languages",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_detect_magic",
@@ -367,7 +381,6 @@
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_resistance",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_starry_wisp",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_animal_friendship",
-        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_charm_person",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_create_or_destroy_water",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_detect_magic",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_entangle",
@@ -409,7 +422,6 @@
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_shocking_grasp",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_true_strike",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_burning_hands",
-        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_charm_person",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_chromatic_orb",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_color_spray",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_comprehend_languages",
@@ -421,17 +433,14 @@
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_ray_of_sickness",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_silent_image",
         "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_chill_touch",
-        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_eldritch_blast",
         "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_mage_hand",
         "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_minor_illusion",
         "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_poison_spray",
         "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_prestidigitation",
         "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_true_strike",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_bane",
-        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_charm_person",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_comprehend_languages",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_detect_magic",
-        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hellish_rebuke",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_illusory_script",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_protection_from_evil_and_good",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_speak_with_animals",
@@ -450,7 +459,6 @@
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_true_strike",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_alarm",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_burning_hands",
-        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_charm_person",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_chromatic_orb",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_color_spray",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_comprehend_languages",
@@ -477,27 +485,23 @@
       "title": "Review Catalog-Only and Surface-Widening Rows",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Preserve catalog-only/dead-for-now rows and name missing Surface constructs for nonspell and spell Surface-widening blockers.",
-      "rowCount": 62,
+      "rowCount": 52,
       "rowIds": [
         "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense",
         "srd521:classes/bard:level-1:class-container:bard_class_container",
         "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
-        "srd521:classes/bard:level-1:spell-access:bard_spellcasting",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_command",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_dissonant_whispers",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_feather_fall",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_hideous_laughter",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_thunderwave",
-        "srd521:classes/cleric:level-1:class-container:cleric_class_container",
         "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
-        "srd521:classes/cleric:level-1:spell-access:cleric_spellcasting",
         "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_spare_the_dying",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_command",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_sanctuary",
         "srd521:classes/druid:level-1:class-container:druid_class_container",
         "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
         "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order",
-        "srd521:classes/druid:level-1:spell-access:druid_spellcasting",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_shillelagh",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_spare_the_dying",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_fog_cloud",
@@ -506,21 +510,16 @@
         "srd521:classes/monk:level-1:class-container:monk_class_container",
         "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
         "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense",
-        "srd521:classes/paladin:level-1:class-container:paladin_class_container",
         "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands",
-        "srd521:classes/paladin:level-1:spell-access:paladin_spellcasting",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_command",
         "srd521:classes/ranger:level-1:class-container:ranger_class_container",
         "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy",
-        "srd521:classes/ranger:level-1:spell-access:ranger_spellcasting",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_fog_cloud",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_jump",
         "srd521:classes/rogue:level-1:class-container:rogue_class_container",
         "srd521:classes/rogue:level-1:class-feature-grant:rogue_expertise",
         "srd521:classes/rogue:level-1:class-feature-grant:rogue_thieves_cant",
-        "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container",
         "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
-        "srd521:classes/sorcerer:level-1:spell-access:sorcerer_spellcasting",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_fire_bolt",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_sorcerous_burst",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_expeditious_retreat",
@@ -529,7 +528,6 @@
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_jump",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_thunderwave",
         "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations",
-        "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_expeditious_retreat",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hex",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hideous_laughter",
@@ -731,28 +729,17 @@
     {
       "id": "SRDINV9",
       "title": "Widen Non-Wizard Spell Access Surface Facts",
-      "suggestedStatus": "ready-for-research",
+      "suggestedStatus": "done",
       "intent": "Widen non-Wizard spell-access facts and own the shared Warlock Pact Magic source shape.",
-      "rowCount": 10,
-      "rowIds": [
-        "srd521:classes/bard:level-1:spell-access:bard_spellcasting",
-        "srd521:classes/cleric:level-1:class-container:cleric_class_container",
-        "srd521:classes/cleric:level-1:spell-access:cleric_spellcasting",
-        "srd521:classes/druid:level-1:spell-access:druid_spellcasting",
-        "srd521:classes/paladin:level-1:class-container:paladin_class_container",
-        "srd521:classes/paladin:level-1:spell-access:paladin_spellcasting",
-        "srd521:classes/ranger:level-1:spell-access:ranger_spellcasting",
-        "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container",
-        "srd521:classes/sorcerer:level-1:spell-access:sorcerer_spellcasting",
-        "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic"
-      ],
+      "rowCount": 0,
+      "rowIds": [],
       "nextAction": "Cover non-Wizard list-prepared and prepared-half-caster Spell Access, Spell Slot projection, focus and replacement timing facts, plus Warlock Pact Magic and Pact Slot recovery source facts.",
       "acceptance": "Non-Wizard Spell Access blockers are expressible in Surface, and Pact Magic has one shared source shape for downstream class-feature projections."
     },
     {
       "id": "SRDINV10",
       "title": "Widen Level-1 Class Feature Surface Mechanics",
-      "suggestedStatus": "blocked-on-SRDINV9",
+      "suggestedStatus": "ready-for-research",
       "intent": "Widen level-1 class-feature Surface mechanics after SRDINV9 lands the Pact Magic source shape.",
       "rowCount": 10,
       "rowIds": [
@@ -775,33 +762,23 @@
       "title": "Recursive SRD Inventory Planning Review",
       "suggestedStatus": "blocked-on-SRDINV8-SRDINV10",
       "intent": "Review the SRDINV8-SRDINV10 widening results and append the next concrete batch.",
-      "rowCount": 25,
+      "rowCount": 15,
       "rowIds": [
         "srd521:classes/bard:level-1:class-container:bard_class_container",
         "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
-        "srd521:classes/bard:level-1:spell-access:bard_spellcasting",
-        "srd521:classes/cleric:level-1:class-container:cleric_class_container",
         "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
-        "srd521:classes/cleric:level-1:spell-access:cleric_spellcasting",
         "srd521:classes/druid:level-1:class-container:druid_class_container",
         "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
         "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order",
-        "srd521:classes/druid:level-1:spell-access:druid_spellcasting",
         "srd521:classes/monk:level-1:class-container:monk_class_container",
         "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
-        "srd521:classes/paladin:level-1:class-container:paladin_class_container",
-        "srd521:classes/paladin:level-1:spell-access:paladin_spellcasting",
         "srd521:classes/ranger:level-1:class-container:ranger_class_container",
         "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy",
-        "srd521:classes/ranger:level-1:spell-access:ranger_spellcasting",
         "srd521:classes/rogue:level-1:class-container:rogue_class_container",
         "srd521:classes/rogue:level-1:class-feature-grant:rogue_expertise",
         "srd521:classes/rogue:level-1:class-feature-grant:rogue_thieves_cant",
-        "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container",
         "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
-        "srd521:classes/sorcerer:level-1:spell-access:sorcerer_spellcasting",
-        "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations",
-        "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic"
+        "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations"
       ],
       "nextAction": "Refresh inventory metrics after the Surface-widening batch and select the next concrete batch, such as authoring, spell Surface blockers, or runtime/MBT planning.",
       "acceptance": "The next review either explicitly closes level-1 with final metrics or appends another concrete multi-task batch."
@@ -1771,8 +1748,7 @@
       "detail": "Level 1 class feature.",
       "candidateUnitId": "class_bard",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "ClassRecord spellcasting support for non-Wizard list-prepared casters: Bard cantrip choices, prepared Bard spells, Spell Slot projection, spellcasting ability, Musical Instrument focus, and level-up replacement timing"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -1781,9 +1757,9 @@
         "state": "not-installed",
         "unitId": "class_bard"
       },
-      "finalDisposition": "needs-surface-widening",
+      "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Widen Surface: ClassRecord spellcasting support for non-Wizard list-prepared casters: Bard cantrip choices, prepared Bard spells, Spell Slot projection, spellcasting ability, Musical Instrument focus, and level-up replacement timing."
+      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
     },
     {
       "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_dancing_lights",
@@ -1955,7 +1931,7 @@
       "detail": "Minor Illusion (Illusion; —)",
       "candidateUnitId": "minor_illusion",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -1963,11 +1939,22 @@
         "sourceRecordPath": "packages/surface/content/minor_illusion.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "minor_illusion"
       },
       "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit minor_illusion is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "catalog-only/dead-for-now",
+          "evidence": "Sound/image illusion creation, physical-interaction reveal, faint rendering after Study, and recast expiry are illusion/exploration state outside promoted runtime owners.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
       "nextAction": "Sound/image illusion creation, physical-interaction reveal, faint rendering after Study, and recast expiry are illusion/exploration state outside promoted runtime owners."
     },
     {
@@ -2171,12 +2158,23 @@
         "sourceRecordPath": "packages/surface/content/charm_person.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "charm_person"
       },
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit charm_person is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Unit matrix records unsupported-profile: Spell Definition is installed for class Spell Access validation; promoted charm/condition runtime evidence is not present yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Unit matrix records unsupported-profile: Spell Definition is installed for class Spell Access validation; promoted charm/condition runtime evidence is not present yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_color_spray",
@@ -2839,8 +2837,7 @@
       "detail": "SRD class identity, core traits, level-1 feature grants, and class progression entry.",
       "candidateUnitId": "class_cleric",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "ClassRecord spellcasting support for non-Wizard list-prepared casters: Cleric cantrip choices, prepared Cleric spells, Spell Slot projection, spellcasting ability, Holy Symbol focus, and Long Rest prepared-spell replacement"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -2849,9 +2846,9 @@
         "state": "not-installed",
         "unitId": "class_cleric"
       },
-      "finalDisposition": "needs-surface-widening",
+      "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Widen Surface: ClassRecord spellcasting support for non-Wizard list-prepared casters: Cleric cantrip choices, prepared Cleric spells, Spell Slot projection, spellcasting ability, Holy Symbol focus, and Long Rest prepared-spell replacement."
+      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
     },
     {
       "id": "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
@@ -2947,7 +2944,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard list-prepared casters: Cleric cantrip choices, prepared Cleric spells, Spell Slot projection, spellcasting ability, Holy Symbol focus, and Long Rest prepared-spell replacement."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/cleric:level-1:core-trait:cleric_hit_point_die",
@@ -2981,7 +2978,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard list-prepared casters: Cleric cantrip choices, prepared Cleric spells, Spell Slot projection, spellcasting ability, Holy Symbol focus, and Long Rest prepared-spell replacement."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/cleric:level-1:core-trait:cleric_primary_ability",
@@ -3015,7 +3012,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard list-prepared casters: Cleric cantrip choices, prepared Cleric spells, Spell Slot projection, spellcasting ability, Holy Symbol focus, and Long Rest prepared-spell replacement."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/cleric:level-1:core-trait:cleric_saving_throw_proficiencies",
@@ -3049,7 +3046,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard list-prepared casters: Cleric cantrip choices, prepared Cleric spells, Spell Slot projection, spellcasting ability, Holy Symbol focus, and Long Rest prepared-spell replacement."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/cleric:level-1:core-trait:cleric_skill_proficiencies",
@@ -3083,7 +3080,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard list-prepared casters: Cleric cantrip choices, prepared Cleric spells, Spell Slot projection, spellcasting ability, Holy Symbol focus, and Long Rest prepared-spell replacement."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/cleric:level-1:core-trait:cleric_weapon_proficiencies",
@@ -3117,7 +3114,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard list-prepared casters: Cleric cantrip choices, prepared Cleric spells, Spell Slot projection, spellcasting ability, Holy Symbol focus, and Long Rest prepared-spell replacement."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/cleric:level-1:equipment-pressure:cleric_starting_equipment",
@@ -3151,7 +3148,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard list-prepared casters: Cleric cantrip choices, prepared Cleric spells, Spell Slot projection, spellcasting ability, Holy Symbol focus, and Long Rest prepared-spell replacement."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/cleric:level-1:multiclass-entry:cleric_multiclass_entry_traits",
@@ -3185,7 +3182,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard list-prepared casters: Cleric cantrip choices, prepared Cleric spells, Spell Slot projection, spellcasting ability, Holy Symbol focus, and Long Rest prepared-spell replacement."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/cleric:level-1:spell-access:cleric_spellcasting",
@@ -3202,8 +3199,7 @@
       "detail": "Level 1 class feature.",
       "candidateUnitId": "class_cleric",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "ClassRecord spellcasting support for non-Wizard list-prepared casters: Cleric cantrip choices, prepared Cleric spells, Spell Slot projection, spellcasting ability, Holy Symbol focus, and Long Rest prepared-spell replacement"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -3212,9 +3208,9 @@
         "state": "not-installed",
         "unitId": "class_cleric"
       },
-      "finalDisposition": "needs-surface-widening",
+      "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Widen Surface: ClassRecord spellcasting support for non-Wizard list-prepared casters: Cleric cantrip choices, prepared Cleric spells, Spell Slot projection, spellcasting ability, Holy Symbol focus, and Long Rest prepared-spell replacement."
+      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
     },
     {
       "id": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_guidance",
@@ -4346,8 +4342,7 @@
       "detail": "Level 1 class feature.",
       "candidateUnitId": "class_druid",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "ClassRecord spellcasting support for non-Wizard list-prepared casters: Druid cantrip choices, prepared Druid spells, Spell Slot projection, spellcasting ability, Druidic Focus, and Long Rest prepared-spell replacement"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -4356,9 +4351,9 @@
         "state": "not-installed",
         "unitId": "class_druid"
       },
-      "finalDisposition": "needs-surface-widening",
+      "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Widen Surface: ClassRecord spellcasting support for non-Wizard list-prepared casters: Druid cantrip choices, prepared Druid spells, Spell Slot projection, spellcasting ability, Druidic Focus, and Long Rest prepared-spell replacement."
+      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
     },
     {
       "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_druidcraft",
@@ -4733,12 +4728,23 @@
         "sourceRecordPath": "packages/surface/content/charm_person.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "charm_person"
       },
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit charm_person is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Unit matrix records unsupported-profile: Spell Definition is installed for class Spell Access validation; promoted charm/condition runtime evidence is not present yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Unit matrix records unsupported-profile: Spell Definition is installed for class Spell Access validation; promoted charm/condition runtime evidence is not present yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_create_or_destroy_water",
@@ -6272,8 +6278,7 @@
       "detail": "SRD class identity, core traits, level-1 feature grants, and class progression entry.",
       "candidateUnitId": "class_paladin",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "ClassRecord spellcasting support for non-Wizard prepared casters without level-1 cantrips: Paladin prepared spells, Spell Slot projection, spellcasting ability, Holy Symbol focus, and Long Rest one-spell replacement"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -6282,9 +6287,9 @@
         "state": "not-installed",
         "unitId": "class_paladin"
       },
-      "finalDisposition": "needs-surface-widening",
+      "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Widen Surface: ClassRecord spellcasting support for non-Wizard prepared casters without level-1 cantrips: Paladin prepared spells, Spell Slot projection, spellcasting ability, Holy Symbol focus, and Long Rest one-spell replacement."
+      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
     },
     {
       "id": "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands",
@@ -6381,7 +6386,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard prepared casters without level-1 cantrips: Paladin prepared spells, Spell Slot projection, spellcasting ability, Holy Symbol focus, and Long Rest one-spell replacement."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/paladin:level-1:core-trait:paladin_hit_point_die",
@@ -6415,7 +6420,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard prepared casters without level-1 cantrips: Paladin prepared spells, Spell Slot projection, spellcasting ability, Holy Symbol focus, and Long Rest one-spell replacement."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/paladin:level-1:core-trait:paladin_primary_ability",
@@ -6449,7 +6454,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard prepared casters without level-1 cantrips: Paladin prepared spells, Spell Slot projection, spellcasting ability, Holy Symbol focus, and Long Rest one-spell replacement."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/paladin:level-1:core-trait:paladin_saving_throw_proficiencies",
@@ -6483,7 +6488,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard prepared casters without level-1 cantrips: Paladin prepared spells, Spell Slot projection, spellcasting ability, Holy Symbol focus, and Long Rest one-spell replacement."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/paladin:level-1:core-trait:paladin_skill_proficiencies",
@@ -6517,7 +6522,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard prepared casters without level-1 cantrips: Paladin prepared spells, Spell Slot projection, spellcasting ability, Holy Symbol focus, and Long Rest one-spell replacement."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/paladin:level-1:core-trait:paladin_weapon_proficiencies",
@@ -6551,7 +6556,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard prepared casters without level-1 cantrips: Paladin prepared spells, Spell Slot projection, spellcasting ability, Holy Symbol focus, and Long Rest one-spell replacement."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/paladin:level-1:equipment-pressure:paladin_starting_equipment",
@@ -6585,7 +6590,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard prepared casters without level-1 cantrips: Paladin prepared spells, Spell Slot projection, spellcasting ability, Holy Symbol focus, and Long Rest one-spell replacement."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/paladin:level-1:mastery-pressure:paladin_weapon_mastery",
@@ -6647,7 +6652,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard prepared casters without level-1 cantrips: Paladin prepared spells, Spell Slot projection, spellcasting ability, Holy Symbol focus, and Long Rest one-spell replacement."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/paladin:level-1:spell-access:paladin_spellcasting",
@@ -6664,8 +6669,7 @@
       "detail": "Level 1 class feature.",
       "candidateUnitId": "class_paladin",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "ClassRecord spellcasting support for non-Wizard prepared casters without level-1 cantrips: Paladin prepared spells, Spell Slot projection, spellcasting ability, Holy Symbol focus, and Long Rest one-spell replacement"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -6674,9 +6678,9 @@
         "state": "not-installed",
         "unitId": "class_paladin"
       },
-      "finalDisposition": "needs-surface-widening",
+      "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Widen Surface: ClassRecord spellcasting support for non-Wizard prepared casters without level-1 cantrips: Paladin prepared spells, Spell Slot projection, spellcasting ability, Holy Symbol focus, and Long Rest one-spell replacement."
+      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
     },
     {
       "id": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_bless",
@@ -7489,8 +7493,7 @@
       "detail": "Level 1 class feature.",
       "candidateUnitId": "class_ranger",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "ClassRecord spellcasting support for non-Wizard prepared casters without level-1 cantrips: Ranger prepared spells, Spell Slot projection, spellcasting ability, Druidic Focus, and Long Rest one-spell replacement"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -7499,9 +7502,9 @@
         "state": "not-installed",
         "unitId": "class_ranger"
       },
-      "finalDisposition": "needs-surface-widening",
+      "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Widen Surface: ClassRecord spellcasting support for non-Wizard prepared casters without level-1 cantrips: Ranger prepared spells, Spell Slot projection, spellcasting ability, Druidic Focus, and Long Rest one-spell replacement."
+      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
     },
     {
       "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_alarm",
@@ -8419,8 +8422,7 @@
       "detail": "SRD class identity, core traits, level-1 feature grants, and class progression entry.",
       "candidateUnitId": "class_sorcerer",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "ClassRecord spellcasting support for non-Wizard list-prepared casters with known cantrips: Sorcerer cantrip choices, prepared Sorcerer spells, Spell Slot projection, spellcasting ability, Arcane Focus, and level-up replacement timing"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -8429,9 +8431,9 @@
         "state": "not-installed",
         "unitId": "class_sorcerer"
       },
-      "finalDisposition": "needs-surface-widening",
+      "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Widen Surface: ClassRecord spellcasting support for non-Wizard list-prepared casters with known cantrips: Sorcerer cantrip choices, prepared Sorcerer spells, Spell Slot projection, spellcasting ability, Arcane Focus, and level-up replacement timing."
+      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
@@ -8527,7 +8529,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard list-prepared casters with known cantrips: Sorcerer cantrip choices, prepared Sorcerer spells, Spell Slot projection, spellcasting ability, Arcane Focus, and level-up replacement timing."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_hit_point_die",
@@ -8561,7 +8563,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard list-prepared casters with known cantrips: Sorcerer cantrip choices, prepared Sorcerer spells, Spell Slot projection, spellcasting ability, Arcane Focus, and level-up replacement timing."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_primary_ability",
@@ -8595,7 +8597,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard list-prepared casters with known cantrips: Sorcerer cantrip choices, prepared Sorcerer spells, Spell Slot projection, spellcasting ability, Arcane Focus, and level-up replacement timing."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_saving_throw_proficiencies",
@@ -8629,7 +8631,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard list-prepared casters with known cantrips: Sorcerer cantrip choices, prepared Sorcerer spells, Spell Slot projection, spellcasting ability, Arcane Focus, and level-up replacement timing."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_skill_proficiencies",
@@ -8663,7 +8665,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard list-prepared casters with known cantrips: Sorcerer cantrip choices, prepared Sorcerer spells, Spell Slot projection, spellcasting ability, Arcane Focus, and level-up replacement timing."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_weapon_proficiencies",
@@ -8697,7 +8699,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard list-prepared casters with known cantrips: Sorcerer cantrip choices, prepared Sorcerer spells, Spell Slot projection, spellcasting ability, Arcane Focus, and level-up replacement timing."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:equipment-pressure:sorcerer_starting_equipment",
@@ -8731,7 +8733,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard list-prepared casters with known cantrips: Sorcerer cantrip choices, prepared Sorcerer spells, Spell Slot projection, spellcasting ability, Arcane Focus, and level-up replacement timing."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:multiclass-entry:sorcerer_multiclass_entry_traits",
@@ -8765,7 +8767,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; unblock the SRD class container by widening Surface: ClassRecord spellcasting support for non-Wizard list-prepared casters with known cantrips: Sorcerer cantrip choices, prepared Sorcerer spells, Spell Slot projection, spellcasting ability, Arcane Focus, and level-up replacement timing."
+      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:spell-access:sorcerer_spellcasting",
@@ -8782,8 +8784,7 @@
       "detail": "Level 1 class feature.",
       "candidateUnitId": "class_sorcerer",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "ClassRecord spellcasting support for non-Wizard list-prepared casters with known cantrips: Sorcerer cantrip choices, prepared Sorcerer spells, Spell Slot projection, spellcasting ability, Arcane Focus, and level-up replacement timing"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -8792,9 +8793,9 @@
         "state": "not-installed",
         "unitId": "class_sorcerer"
       },
-      "finalDisposition": "needs-surface-widening",
+      "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Widen Surface: ClassRecord spellcasting support for non-Wizard list-prepared casters with known cantrips: Sorcerer cantrip choices, prepared Sorcerer spells, Spell Slot projection, spellcasting ability, Arcane Focus, and level-up replacement timing."
+      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_acid_splash",
@@ -9107,7 +9108,7 @@
       "detail": "Minor Illusion (Illusion; —)",
       "candidateUnitId": "minor_illusion",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -9115,11 +9116,22 @@
         "sourceRecordPath": "packages/surface/content/minor_illusion.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "minor_illusion"
       },
       "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit minor_illusion is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "catalog-only/dead-for-now",
+          "evidence": "Sound/image illusion creation, physical-interaction reveal, faint rendering after Study, and recast expiry are illusion/exploration state outside promoted runtime owners.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
       "nextAction": "Sound/image illusion creation, physical-interaction reveal, faint rendering after Study, and recast expiry are illusion/exploration state outside promoted runtime owners."
     },
     {
@@ -9363,12 +9375,23 @@
         "sourceRecordPath": "packages/surface/content/charm_person.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "charm_person"
       },
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit charm_person is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Unit matrix records unsupported-profile: Spell Definition is installed for class Spell Access validation; promoted charm/condition runtime evidence is not present yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Unit matrix records unsupported-profile: Spell Definition is installed for class Spell Access validation; promoted charm/condition runtime evidence is not present yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_chromatic_orb",
@@ -10084,21 +10107,33 @@
       "category": "class feature",
       "concept": "Warlock Pact Magic",
       "detail": "Level 1 class feature.",
-      "candidateUnitId": "warlock_pact_magic",
+      "candidateUnitId": "class_warlock",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "ClassFeature Pact Magic spell-access package: Warlock cantrip choices, prepared Warlock spells, Pact Slot projection, Short or Long Rest Pact Slot recovery, spellcasting ability, and Arcane Focus"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_warlock",
+        "sourceRecordPath": "packages/surface/content/class_warlock.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
-        "unitId": "warlock_pact_magic"
+        "state": "installed",
+        "unitId": "class_warlock"
       },
-      "finalDisposition": "needs-surface-widening",
-      "ownerEvidence": [],
-      "nextAction": "Widen Surface: ClassFeature Pact Magic spell-access package: Warlock cantrip choices, prepared Warlock spells, Pact Slot projection, Short or Long Rest Pact Slot recovery, spellcasting ability, and Arcane Focus."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_warlock is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/warlock:level-1:class-table-summary:warlock_level_1_feature_table_row",
@@ -10564,12 +10599,23 @@
         "sourceRecordPath": "packages/surface/content/eldritch_blast.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "eldritch_blast"
       },
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up batch spell-attack-and-save-damage-runtime: Admit these authored Spell Definitions and add battle-runtime spell invocation/projection for attack rolls, saving throws, damage, cantrip scaling, slot-scaled damage, object targeting where SRD permits it, and simple rider outcomes."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit eldritch_blast is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Unit matrix records unsupported-profile: Spell Definition is installed for Warlock Spell Access validation; promoted invocation/projectile runtime evidence is not present yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Unit matrix records unsupported-profile: Spell Definition is installed for Warlock Spell Access validation; promoted invocation/projectile runtime evidence is not present yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_mage_hand",
@@ -10614,7 +10660,7 @@
       "detail": "Minor Illusion (Illusion; —)",
       "candidateUnitId": "minor_illusion",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -10622,11 +10668,22 @@
         "sourceRecordPath": "packages/surface/content/minor_illusion.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "minor_illusion"
       },
       "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit minor_illusion is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "catalog-only/dead-for-now",
+          "evidence": "Sound/image illusion creation, physical-interaction reveal, faint rendering after Study, and recast expiry are illusion/exploration state outside promoted runtime owners.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
       "nextAction": "Sound/image illusion creation, physical-interaction reveal, faint rendering after Study, and recast expiry are illusion/exploration state outside promoted runtime owners."
     },
     {
@@ -10770,12 +10827,23 @@
         "sourceRecordPath": "packages/surface/content/charm_person.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "charm_person"
       },
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit charm_person is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Unit matrix records unsupported-profile: Spell Definition is installed for class Spell Access validation; promoted charm/condition runtime evidence is not present yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Unit matrix records unsupported-profile: Spell Definition is installed for class Spell Access validation; promoted charm/condition runtime evidence is not present yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_comprehend_languages",
@@ -10900,12 +10968,23 @@
         "sourceRecordPath": "packages/surface/content/hellish_rebuke.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "hellish_rebuke"
       },
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up batch spell-reaction-runtime: Admit these authored Spell Definitions after adding spell-specific Reaction casting windows, trigger facts, slot spend, save or damage resolution, and interaction with the one-spell-slot-per-turn boundary."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit hellish_rebuke is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Unit matrix records unsupported-profile: Spell Definition is installed for Warlock Spell Access validation; promoted Reaction casting-window runtime evidence is not present yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Unit matrix records unsupported-profile: Spell Definition is installed for Warlock Spell Access validation; promoted Reaction casting-window runtime evidence is not present yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hex",
@@ -11967,7 +12046,7 @@
       "detail": "Minor Illusion (Illusion; —)",
       "candidateUnitId": "minor_illusion",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -11975,11 +12054,22 @@
         "sourceRecordPath": "packages/surface/content/minor_illusion.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "minor_illusion"
       },
       "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit minor_illusion is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "catalog-only/dead-for-now",
+          "evidence": "Sound/image illusion creation, physical-interaction reveal, faint rendering after Study, and recast expiry are illusion/exploration state outside promoted runtime owners.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
       "nextAction": "Sound/image illusion creation, physical-interaction reveal, faint rendering after Study, and recast expiry are illusion/exploration state outside promoted runtime owners."
     },
     {
@@ -12224,12 +12314,23 @@
         "sourceRecordPath": "packages/surface/content/charm_person.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "charm_person"
       },
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit charm_person is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Unit matrix records unsupported-profile: Spell Definition is installed for class Spell Access validation; promoted charm/condition runtime evidence is not present yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Unit matrix records unsupported-profile: Spell Definition is installed for class Spell Access validation; promoted charm/condition runtime evidence is not present yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_chromatic_orb",

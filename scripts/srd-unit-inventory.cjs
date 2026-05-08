@@ -136,6 +136,7 @@ const catalogOnlyClosures = new Map([
 const installedSpellUnitCatalogOnlyClosures = new Set([
   "detect_magic",
   "light",
+  "minor_illusion",
 ]);
 
 const authoredSpellUnitCatalogOnlyClosures = new Map([
@@ -160,10 +161,6 @@ const authoredSpellUnitCatalogOnlyClosures = new Map([
     "Magic item property discovery, Attunement and charge knowledge, ongoing-spell identification, and object/creature investigation are exploration/item-inspection effects outside promoted runtime owners.",
   ],
   [
-    "minor_illusion",
-    "Sound/image illusion creation, physical-interaction reveal, faint rendering after Study, and recast expiry are illusion/exploration state outside promoted runtime owners.",
-  ],
-  [
     "silent_image",
     "Moveable visual illusion state, Magic action repositioning, physical-interaction reveal, and Study action adjudication are illusion/exploration state outside promoted runtime owners.",
   ],
@@ -182,7 +179,6 @@ const spellUnitExecutableFollowUpBatches = [
     unitIds: [
       "burning_hands",
       "chill_touch",
-      "eldritch_blast",
       "guiding_bolt",
       "inflict_wounds",
       "poison_spray",
@@ -215,7 +211,6 @@ const spellUnitExecutableFollowUpBatches = [
       "animal_friendship",
       "bane",
       "bless",
-      "charm_person",
       "faerie_fire",
       "false_life",
       "guidance",
@@ -247,13 +242,6 @@ const spellUnitExecutableFollowUpBatches = [
       "Admit Produce Flame after adding held-flame duration, Bright Light and Dim Light emission, recast expiry, later Magic action hurling, creature or object targeting within range, ranged spell attack resolution, Fire damage, and cantrip scaling.",
     unitIds: ["produce_flame"],
   },
-  {
-    id: "spell-reaction-runtime",
-    label: "Reaction spell runtime",
-    nextAction:
-      "Admit these authored Spell Definitions after adding spell-specific Reaction casting windows, trigger facts, slot spend, save or damage resolution, and interaction with the one-spell-slot-per-turn boundary.",
-    unitIds: ["hellish_rebuke"],
-  },
 ];
 
 const spellUnitExecutableFollowUps = new Map(
@@ -262,28 +250,10 @@ const spellUnitExecutableFollowUps = new Map(
   ),
 );
 
-const spellAccessSurfaceBlockersByClass = {
-  Bard: "ClassRecord spellcasting support for non-Wizard list-prepared casters: Bard cantrip choices, prepared Bard spells, Spell Slot projection, spellcasting ability, Musical Instrument focus, and level-up replacement timing",
-  Cleric:
-    "ClassRecord spellcasting support for non-Wizard list-prepared casters: Cleric cantrip choices, prepared Cleric spells, Spell Slot projection, spellcasting ability, Holy Symbol focus, and Long Rest prepared-spell replacement",
-  Druid:
-    "ClassRecord spellcasting support for non-Wizard list-prepared casters: Druid cantrip choices, prepared Druid spells, Spell Slot projection, spellcasting ability, Druidic Focus, and Long Rest prepared-spell replacement",
-  Paladin:
-    "ClassRecord spellcasting support for non-Wizard prepared casters without level-1 cantrips: Paladin prepared spells, Spell Slot projection, spellcasting ability, Holy Symbol focus, and Long Rest one-spell replacement",
-  Ranger:
-    "ClassRecord spellcasting support for non-Wizard prepared casters without level-1 cantrips: Ranger prepared spells, Spell Slot projection, spellcasting ability, Druidic Focus, and Long Rest one-spell replacement",
-  Sorcerer:
-    "ClassRecord spellcasting support for non-Wizard list-prepared casters with known cantrips: Sorcerer cantrip choices, prepared Sorcerer spells, Spell Slot projection, spellcasting ability, Arcane Focus, and level-up replacement timing",
-};
-
 const classContainerSurfaceBlockers = new Map([
   [
     "srd521:classes/bard:level-1:class-container:bard_class_container",
     "ClassRecord.toolProficiencies for Bard's Musical Instrument choice",
-  ],
-  [
-    "srd521:classes/cleric:level-1:class-container:cleric_class_container",
-    spellAccessSurfaceBlockersByClass.Cleric,
   ],
   [
     "srd521:classes/druid:level-1:class-container:druid_class_container",
@@ -294,20 +264,12 @@ const classContainerSurfaceBlockers = new Map([
     "ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Monk",
   ],
   [
-    "srd521:classes/paladin:level-1:class-container:paladin_class_container",
-    spellAccessSurfaceBlockersByClass.Paladin,
-  ],
-  [
     "srd521:classes/ranger:level-1:class-container:ranger_class_container",
     "ClassRecord.multiclassProficiencies cannot combine fixed grants with Ranger's skill choice",
   ],
   [
     "srd521:classes/rogue:level-1:class-container:rogue_class_container",
     "ClassRecord.toolProficiencies plus property-filtered Martial weapon proficiencies for Rogue",
-  ],
-  [
-    "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container",
-    spellAccessSurfaceBlockersByClass.Sorcerer,
   ],
 ]);
 
@@ -352,38 +314,9 @@ const classFeatureSurfaceBlockers = new Map([
     "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations",
     "ClassFeature invocation choice grants with prerequisites, uniqueness, replacement rules, and invocation-count level progression",
   ],
-  [
-    "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic",
-    "ClassFeature Pact Magic spell-access package: Warlock cantrip choices, prepared Warlock spells, Pact Slot projection, Short or Long Rest Pact Slot recovery, spellcasting ability, and Arcane Focus",
-  ],
 ]);
 
-const spellAccessSurfaceBlockers = new Map([
-  [
-    "srd521:classes/bard:level-1:spell-access:bard_spellcasting",
-    spellAccessSurfaceBlockersByClass.Bard,
-  ],
-  [
-    "srd521:classes/cleric:level-1:spell-access:cleric_spellcasting",
-    spellAccessSurfaceBlockersByClass.Cleric,
-  ],
-  [
-    "srd521:classes/druid:level-1:spell-access:druid_spellcasting",
-    spellAccessSurfaceBlockersByClass.Druid,
-  ],
-  [
-    "srd521:classes/paladin:level-1:spell-access:paladin_spellcasting",
-    spellAccessSurfaceBlockersByClass.Paladin,
-  ],
-  [
-    "srd521:classes/ranger:level-1:spell-access:ranger_spellcasting",
-    spellAccessSurfaceBlockersByClass.Ranger,
-  ],
-  [
-    "srd521:classes/sorcerer:level-1:spell-access:sorcerer_spellcasting",
-    spellAccessSurfaceBlockersByClass.Sorcerer,
-  ],
-]);
+const spellAccessSurfaceBlockers = new Map();
 
 const spellUnitMissingClassifications = new Map([
   [
@@ -914,7 +847,13 @@ function finalDisposition(row, authored, installedIds, ownerEvidenceSources) {
   return "catalog-installed-needs-owner-evidence";
 }
 
-function nextAction(row, disposition, gate, ownerEvidenceSources, installedIds) {
+function nextAction(
+  row,
+  disposition,
+  gate,
+  ownerEvidenceSources,
+  installedIds,
+) {
   const installedClassification = installedOwnerClassification(
     row,
     ownerEvidenceSources,
@@ -1016,7 +955,8 @@ function installedSpellUnitOwnerClassification(
   if (claim?.tag === "needs-surface-widening") {
     return {
       kind: "needs-surface-widening",
-      owner: "Surface Spell Definition plus battle-runtime spell invocation/projection",
+      owner:
+        "Surface Spell Definition plus battle-runtime spell invocation/projection",
       missingConstruct: claim.issue,
     };
   }
@@ -1201,7 +1141,9 @@ function classRows(root, className) {
     const candidateUnitId =
       feature.name === "Spellcasting"
         ? `class_${classSlug}`
-        : `${classSlug}_${slug(feature.name)}`;
+        : feature.name === "Pact Magic"
+          ? `class_${classSlug}`
+          : `${classSlug}_${slug(feature.name)}`;
     rows.push(
       makeRow({
         sourcePath,
@@ -1721,8 +1663,7 @@ function buildRecommendedBatches(rows) {
     (row) => row.finalDisposition === "catalog-only/dead-for-now",
   );
   const executableFollowUpSpellUnitPressureRows = spellPressure.filter(
-    (row) =>
-      row.finalDisposition === "catalog-authored-executable-follow-up",
+    (row) => row.finalDisposition === "catalog-authored-executable-follow-up",
   );
   const catalogOnlyRows = rows.filter(
     (row) =>
@@ -1897,7 +1838,7 @@ function buildRecommendedBatches(rows) {
     makeBatch({
       id: "SRDINV9",
       title: "Widen Non-Wizard Spell Access Surface Facts",
-      suggestedStatus: "ready-for-research",
+      suggestedStatus: "done",
       intent:
         "Widen non-Wizard spell-access facts and own the shared Warlock Pact Magic source shape.",
       rows: srdinv9Rows,
@@ -1909,7 +1850,7 @@ function buildRecommendedBatches(rows) {
     makeBatch({
       id: "SRDINV10",
       title: "Widen Level-1 Class Feature Surface Mechanics",
-      suggestedStatus: "blocked-on-SRDINV9",
+      suggestedStatus: "ready-for-research",
       intent:
         "Widen level-1 class-feature Surface mechanics after SRDINV9 lands the Pact Magic source shape.",
       rows: srdinv10Rows,
