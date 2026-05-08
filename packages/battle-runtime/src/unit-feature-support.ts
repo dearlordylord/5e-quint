@@ -8,6 +8,7 @@ import { zeroHitPointReplacementUnitProfile } from "@dnd/shared-algebras/zero-hi
 import {
   CONDITIONS as ALL_CONDITIONS,
   ClassLevel,
+  classLevel,
   movementDeltaFeet,
   movementFeet,
   type Condition,
@@ -492,25 +493,19 @@ export type ReactionRollOrDamageReductionProfile =
       readonly kind: "attackRollReduction";
       readonly rangeFeet: MovementFeet;
       readonly requiresVisibleCreature: true;
-      // TODO SRD mechanics projection: Bardic Inspiration die is allowed here
-      // as the current SRD mechanic term; project it as a generic resource die.
-      readonly reduction: { readonly kind: "bardicInspirationDie" };
+      readonly reduction: ReactionReductionResourceDie;
     }
   | {
       readonly kind: "abilityCheckReduction";
       readonly rangeFeet: MovementFeet;
       readonly requiresVisibleCreature: true;
-      // TODO SRD mechanics projection: Bardic Inspiration die is allowed here
-      // as the current SRD mechanic term; project it as a generic resource die.
-      readonly reduction: { readonly kind: "bardicInspirationDie" };
+      readonly reduction: ReactionReductionResourceDie;
     }
   | {
       readonly kind: "attackDamageRollReduction";
       readonly rangeFeet: MovementFeet;
       readonly requiresVisibleCreature: true;
-      // TODO SRD mechanics projection: Bardic Inspiration die is allowed here
-      // as the current SRD mechanic term; project it as a generic resource die.
-      readonly reduction: { readonly kind: "bardicInspirationDie" };
+      readonly reduction: ReactionReductionResourceDie;
     }
   | {
       readonly kind: "attackDamageReduction";
@@ -544,6 +539,19 @@ export type ReactionRollOrDamageReductionProfile =
         };
       };
     };
+
+export type ReactionReductionResourceSpend = {
+  readonly resourceUnitId: UnitRecord["id"];
+  readonly amount: 1;
+};
+
+export type ReactionReductionResourceDie = {
+  readonly kind: "resourceDie";
+  readonly dice: 1;
+  readonly dieSize: 6 | 8 | 10 | 12;
+  readonly flatModifier: 0;
+  readonly spends: ReactionReductionResourceSpend;
+};
 
 export type PassiveArmorClassBonusProfile = {
   readonly bonus: 1;
@@ -910,7 +918,10 @@ export function battleReactionRollOrDamageReductionSupportForUnit(
   ) {
     return null;
   }
-  const projection = reactionRollOrDamageReductionMechanicsProjection(unit);
+  const projection = reactionRollOrDamageReductionMechanicsProjection(
+    unit,
+    classLevel(unit.acquiredAtLevel),
+  );
   if (projection === null) return "unsupported";
   return projection.some(
     (modifier) =>
@@ -1561,6 +1572,7 @@ function fixedDiceDeltaValue(delta: {
 
 function reactionRollOrDamageReductionMechanicsProjection(
   unit: UnitRecord,
+  classLevel: ClassLevel,
 ): ReadonlyNonEmptyArray<ReactionRollOrDamageReductionProfile> | null {
   if (
     unit.kind !== "class_feature" ||
@@ -1568,6 +1580,10 @@ function reactionRollOrDamageReductionMechanicsProjection(
   ) {
     return null;
   }
+  const bardicInspirationReduction = bardicInspirationReactionReduction(
+    unit,
+    classLevel,
+  );
   const modifiers = unit.mechanics.modifiers.flatMap(
     (modifier): readonly ReactionRollOrDamageReductionProfile[] => {
       if (
@@ -1575,16 +1591,15 @@ function reactionRollOrDamageReductionMechanicsProjection(
         modifier.trigger.kind === "creature_succeeds_attack_roll" &&
         modifier.trigger.rangeFeet === CUTTING_WORDS_REACTION_RANGE_FEET &&
         modifier.trigger.requiresVisibleCreature === true &&
-        modifier.reduction.kind === "bardic_inspiration_die"
+        modifier.reduction.kind === "bardic_inspiration_die" &&
+        bardicInspirationReduction !== null
       ) {
-        // TODO SRD mechanics projection: keep the Bardic Inspiration die term
-        // only until Surface projects this as a generic resource die.
         return [
           {
             kind: "attackRollReduction",
             rangeFeet: movementFeet(modifier.trigger.rangeFeet),
             requiresVisibleCreature: true,
-            reduction: { kind: "bardicInspirationDie" },
+            reduction: bardicInspirationReduction,
           },
         ];
       }
@@ -1593,16 +1608,15 @@ function reactionRollOrDamageReductionMechanicsProjection(
         modifier.trigger.kind === "creature_succeeds_ability_check" &&
         modifier.trigger.rangeFeet === CUTTING_WORDS_REACTION_RANGE_FEET &&
         modifier.trigger.requiresVisibleCreature === true &&
-        modifier.reduction.kind === "bardic_inspiration_die"
+        modifier.reduction.kind === "bardic_inspiration_die" &&
+        bardicInspirationReduction !== null
       ) {
-        // TODO SRD mechanics projection: keep the Bardic Inspiration die term
-        // only until Surface projects this as a generic resource die.
         return [
           {
             kind: "abilityCheckReduction",
             rangeFeet: movementFeet(modifier.trigger.rangeFeet),
             requiresVisibleCreature: true,
-            reduction: { kind: "bardicInspirationDie" },
+            reduction: bardicInspirationReduction,
           },
         ];
       }
@@ -1611,16 +1625,15 @@ function reactionRollOrDamageReductionMechanicsProjection(
         modifier.trigger.kind === "creature_makes_damage_roll" &&
         modifier.trigger.rangeFeet === CUTTING_WORDS_REACTION_RANGE_FEET &&
         modifier.trigger.requiresVisibleCreature === true &&
-        modifier.reduction.kind === "bardic_inspiration_die"
+        modifier.reduction.kind === "bardic_inspiration_die" &&
+        bardicInspirationReduction !== null
       ) {
-        // TODO SRD mechanics projection: keep the Bardic Inspiration die term
-        // only until Surface projects this as a generic resource die.
         return [
           {
             kind: "attackDamageRollReduction",
             rangeFeet: movementFeet(modifier.trigger.rangeFeet),
             requiresVisibleCreature: true,
-            reduction: { kind: "bardicInspirationDie" },
+            reduction: bardicInspirationReduction,
           },
         ];
       }
@@ -1692,6 +1705,38 @@ function reactionRollOrDamageReductionMechanicsProjection(
     reactionRollOrDamageReductionKindsUnique(modifiers)
     ? [first, ...modifiers.slice(1)]
     : null;
+}
+
+function bardicInspirationReactionReduction(
+  unit: UnitRecord,
+  classLevel: ClassLevel,
+): ReactionReductionResourceDie | null {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.mechanics.family !== "reaction_roll_or_damage_reduction" ||
+    !("resource" in unit.mechanics) ||
+    unit.mechanics.resource?.kind !== "use_count" ||
+    unit.mechanics.resource.cap.kind !== "ability_modifier" ||
+    unit.mechanics.resource.cap.ability !== "cha" ||
+    !("resetCadence" in unit.mechanics) ||
+    unit.mechanics.resetCadence.kind !== "long_rest"
+  ) {
+    return null;
+  }
+  return {
+    kind: "resourceDie",
+    dice: 1,
+    dieSize: bardicInspirationDieSize(classLevel),
+    flatModifier: 0,
+    spends: { resourceUnitId: unit.id, amount: 1 },
+  };
+}
+
+function bardicInspirationDieSize(classLevel: ClassLevel): 6 | 8 | 10 | 12 {
+  if (classLevel >= 15) return 12;
+  if (classLevel >= 10) return 10;
+  if (classLevel >= 5) return 8;
+  return 6;
 }
 
 function reactionRollOrDamageReductionKindsUnique(
@@ -1971,12 +2016,18 @@ function parseReactionRollOrDamageReductionUnitFeatureProfile(
   SupportedUnitFeatureProfile,
   { readonly kind: "reactionRollOrDamageReduction" }
 > | null {
-  const modifiers = reactionRollOrDamageReductionMechanicsProjection(unit);
-  if (unit.kind !== "class_feature" || modifiers === null) {
+  if (unit.kind !== "class_feature") {
     return null;
   }
   const classLevel = findCharacterClassLevel(classLevels, unit.className);
   if (classLevel === undefined || classLevel < unit.acquiredAtLevel) {
+    return null;
+  }
+  const modifiers = reactionRollOrDamageReductionMechanicsProjection(
+    unit,
+    classLevel,
+  );
+  if (modifiers === null) {
     return null;
   }
   return {

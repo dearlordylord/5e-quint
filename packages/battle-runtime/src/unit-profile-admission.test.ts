@@ -303,9 +303,9 @@ describe("QMBT62 Tactical Mind deterministic Unit profile admission", () => {
         supportProfiles: [supportProfile],
       }),
     );
-    expect(
-      battleFailedAbilityCheckResourceBoostSupportForUnit(unit),
-    ).toEqual(supportProfile);
+    expect(battleFailedAbilityCheckResourceBoostSupportForUnit(unit)).toEqual(
+      supportProfile,
+    );
     expect(
       parseSupportedUnitFeatureProfile(unit, [
         { className: "fighter", level: classLevel(2) },
@@ -382,19 +382,37 @@ describe("QMBT65 Cutting Words deterministic Unit profile admission", () => {
             kind: "attackRollReduction",
             rangeFeet: movementFeet(60),
             requiresVisibleCreature: true,
-            reduction: { kind: "bardicInspirationDie" },
+            reduction: {
+              kind: "resourceDie",
+              dice: 1,
+              dieSize: 6,
+              flatModifier: 0,
+              spends: { resourceUnitId: bardCuttingWordsUnitId, amount: 1 },
+            },
           },
           {
             kind: "abilityCheckReduction",
             rangeFeet: movementFeet(60),
             requiresVisibleCreature: true,
-            reduction: { kind: "bardicInspirationDie" },
+            reduction: {
+              kind: "resourceDie",
+              dice: 1,
+              dieSize: 6,
+              flatModifier: 0,
+              spends: { resourceUnitId: bardCuttingWordsUnitId, amount: 1 },
+            },
           },
           {
             kind: "attackDamageRollReduction",
             rangeFeet: movementFeet(60),
             requiresVisibleCreature: true,
-            reduction: { kind: "bardicInspirationDie" },
+            reduction: {
+              kind: "resourceDie",
+              dice: 1,
+              dieSize: 6,
+              flatModifier: 0,
+              spends: { resourceUnitId: bardCuttingWordsUnitId, amount: 1 },
+            },
           },
         ],
       }),
@@ -471,6 +489,61 @@ describe("QMBT65 Cutting Words deterministic Unit profile admission", () => {
     expect(
       battleReactionRollOrDamageReductionSupportForUnit(malformedUnit),
     ).toBe("unsupported");
+  });
+
+  test("bard_cutting_words rejects malformed reduction resource projection facts", () => {
+    const unit = unitLibrary.requireUnit(bardCuttingWordsUnitId);
+    if (
+      unit.kind !== "class_feature" ||
+      unit.mechanics.family !== "reaction_roll_or_damage_reduction"
+    ) {
+      throw new Error("Expected Cutting Words reaction modifier mechanics.");
+    }
+    const malformedUnit = {
+      ...unit,
+      mechanics: {
+        ...unit.mechanics,
+        resource: {
+          kind: "use_count" as const,
+          cap: { kind: "ability_modifier" as const, ability: "wis" as const },
+        },
+      },
+      // Cast justification: this fixture intentionally violates the authored
+      // Bardic Inspiration Charisma-use projection invariant while preserving
+      // the rest of the real UnitRecord fixture.
+    } as unknown as UnitRecord;
+
+    expect(
+      battleReactionRollOrDamageReductionSupportForUnit(malformedUnit),
+    ).toBe("unsupported");
+  });
+
+  test("bard_cutting_words projects Bardic Inspiration die size by class level", () => {
+    const unit = unitLibrary.requireUnit(bardCuttingWordsUnitId);
+
+    expect(
+      parseSupportedUnitFeatureProfile(unit, [
+        { className: "bard", level: classLevel(5) },
+      ]),
+    ).toEqual(
+      expect.objectContaining({
+        kind: "reactionRollOrDamageReduction",
+        modifiers: expect.arrayContaining([
+          expect.objectContaining({
+            kind: "attackRollReduction",
+            reduction: expect.objectContaining({ dieSize: 8 }),
+          }),
+          expect.objectContaining({
+            kind: "abilityCheckReduction",
+            reduction: expect.objectContaining({ dieSize: 8 }),
+          }),
+          expect.objectContaining({
+            kind: "attackDamageRollReduction",
+            reduction: expect.objectContaining({ dieSize: 8 }),
+          }),
+        ]),
+      }),
+    );
   });
 });
 

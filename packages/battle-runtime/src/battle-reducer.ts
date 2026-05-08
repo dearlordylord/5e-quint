@@ -242,6 +242,8 @@ import {
   type OngoingFeatureExtensionTrigger,
   type OngoingFeatureLifecycleProfile,
   type OngoingFeatureRollModifier,
+  type ReactionReductionResourceDie,
+  type ReactionReductionResourceSpend,
   type ReactionRollOrDamageReductionProfile,
   type SupportedUnitFeatureProfile,
   type PassiveSpeedKindGrantKind,
@@ -474,11 +476,7 @@ type BattleReactionModifierChoice =
         | "damageRollReduction";
       readonly unitId: UnitRecord["id"];
       readonly label: string;
-      readonly reduction: {
-        readonly kind: "rolled";
-        readonly flatModifier: number;
-        readonly dieSize: 6 | 8 | 10 | 12;
-      };
+      readonly reduction: BattleReactionRolledResourceReduction;
     }
   | {
       readonly kind: "attackDamageReduction";
@@ -503,6 +501,12 @@ type BattleReactionModifierChoice =
         readonly originalDamageType: DamageType;
       };
     };
+type BattleReactionRolledResourceReduction = Omit<
+  ReactionReductionResourceDie,
+  "kind"
+> & {
+  readonly kind: "rolled";
+};
 type BattleAttackDamageEvent =
   | {
       readonly kind: "aggregateDamage";
@@ -3052,8 +3056,13 @@ const BattleReactionModifierChoiceSchema = Schema.Union(
     label: Schema.String,
     reduction: Schema.Struct({
       kind: Schema.Literal("rolled"),
+      dice: Schema.Literal(1),
       flatModifier: Schema.Number,
       dieSize: Schema.Literal(6, 8, 10, 12),
+      spends: Schema.Struct({
+        resourceUnitId: Schema.String,
+        amount: Schema.Literal(1),
+      }),
     }),
   }),
   Schema.Struct({
@@ -4704,13 +4713,21 @@ function spendReactionModifierResource(
       origin: {
         ...reactor.origin,
         resources: reactor.origin.resources.map((resource) =>
-          resource.unit.id === choice.unitId
+          resource.unit.id === reactionModifierResourceUnitId(choice)
             ? spendCharacterResourceUse(resource)
             : resource,
         ),
       },
     }),
   };
+}
+
+function reactionModifierResourceUnitId(
+  choice: BattleReactionModifierChoice,
+): UnitRecord["id"] {
+  return choice.reduction.kind === "rolled" && "spends" in choice.reduction
+    ? choice.reduction.spends.resourceUnitId
+    : choice.unitId;
 }
 
 function resolveReactionRollOrDamageReduction(input: {
@@ -4733,10 +4750,7 @@ function resolveReactionRollOrDamageReduction(input: {
   if (reductionRoll.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", reductionRoll.message);
   }
-  const reduction =
-    input.choice.choice.reduction.kind === "halfDamage"
-      ? 0
-      : reductionRoll.value + input.choice.choice.reduction.flatModifier;
+  const reduction = reductionRoll.value;
   if (
     input.choice.choice.kind === "attackDamageReduction" &&
     input.frame.trigger !== "attackHit"
@@ -4988,36 +5002,75 @@ function reactionModifierReductionRoll(
       message: "Reaction modifier reduction roll was filled twice.",
     };
   }
+  const expectedDieResults =
+    "dice" in choice.reduction ? choice.reduction.dice : 1;
+  const value = rolledDiceFillTotal(fill, {
+    dice: expectedDieResults,
+    dieSize: choice.reduction.dieSize,
+  });
+  if (value === null) {
+    return {
+      tag: "invalid",
+      message:
+        "Reaction modifier roll must provide one valid reduction die result.",
+    };
+  }
+  if ("dice" in choice.reduction) {
+    return reactionReductionResourceDieRollTotal({
+      reduction: choice.reduction,
+      rollTotal: value,
+    });
+  }
+  return {
+    tag: "ok",
+    value: reactionModifierReductionTotal(choice.reduction, value),
+  };
+}
+
+function reactionModifierReductionTotal(
+  reduction: Extract<
+    BattleReactionModifierChoice["reduction"],
+    { readonly kind: "rolled" }
+  >,
+  rollTotal: number,
+): number {
+  return rollTotal + reduction.flatModifier;
+}
+
+function reactionReductionResourceDieRollTotal(input: {
+  readonly reduction: Pick<
+    ReactionReductionResourceDie,
+    "dice" | "dieSize" | "flatModifier"
+  >;
+  readonly rollTotal: number;
+}):
+  | { readonly tag: "ok"; readonly value: number }
+  | { readonly tag: "invalid"; readonly message: string } {
+  const minimumRollTotal = input.reduction.dice;
+  const maximumRollTotal = input.reduction.dice * input.reduction.dieSize;
   if (
-    fill.value.length !== 1 ||
-    fill.value[0]?.results.length !== 1 ||
-    Number(fill.value[0].results[0]) > choice.reduction.dieSize
+    input.rollTotal < minimumRollTotal ||
+    input.rollTotal > maximumRollTotal ||
+    !Number.isInteger(input.rollTotal)
   ) {
     return {
       tag: "invalid",
-      message: reactionModifierRollValidationMessage(choice),
+      message: `reduction roll must be a ${reactionReductionResourceDieLabel(input.reduction)} result.`,
     };
   }
-  const value = fill.value.reduce(
-    (total, group) =>
-      total +
-      group.results.reduce(
-        (groupTotal, dieResult) => groupTotal + Number(dieResult),
-        0,
-      ),
-    0,
-  );
-  return { tag: "ok", value };
+  return {
+    tag: "ok",
+    value: input.rollTotal + input.reduction.flatModifier,
+  };
 }
 
-function reactionModifierRollValidationMessage(
-  choice: BattleReactionModifierChoice,
+function reactionReductionResourceDieLabel(
+  reduction: Pick<
+    ReactionReductionResourceDie,
+    "dice" | "dieSize" | "flatModifier"
+  >,
 ): string {
-  // TODO SRD mechanics projection: Bardic Inspiration die is an allowed SRD
-  // mechanic term until reaction reductions carry generic resource-die labels.
-  return choice.kind === "attackDamageReduction"
-    ? "Reaction modifier roll must provide one valid reduction die result."
-    : "Reaction modifier roll must provide one Bardic Inspiration die result.";
+  return `${reduction.dice}d${reduction.dieSize}${signedModifier(reduction.flatModifier)}`;
 }
 
 function isBattleRolledDiceFill(
@@ -5141,15 +5194,6 @@ function rolledDiceFillTotal(
     return null;
   }
   return rolledDiceTotal(fill.value);
-}
-
-function bardicInspirationDieSize(classLevel: ClassLevel): 6 | 8 | 10 | 12 {
-  // TODO SRD mechanics projection: Bardic Inspiration die scaling is allowed
-  // here as SRD execution logic; move it to authored/runtime projection.
-  if (classLevel >= 15) return 12;
-  if (classLevel >= 10) return 10;
-  if (classLevel >= 5) return 8;
-  return 6;
 }
 
 function reactionFrameAfterModifier(
@@ -6565,10 +6609,10 @@ function reactionRollOrDamageReductionChoiceForProfile(
           label: profile.unit.name,
           reduction: {
             kind: "rolled",
-            flatModifier: 0,
-            // TODO SRD mechanics projection: Bardic Inspiration die scaling is
-            // allowed here only until reaction reductions carry projected dice.
-            dieSize: bardicInspirationDieSize(profile.classLevel),
+            dice: modifier.reduction.dice,
+            flatModifier: modifier.reduction.flatModifier,
+            dieSize: modifier.reduction.dieSize,
+            spends: modifier.reduction.spends,
           },
         },
         initialHoles: [
@@ -6595,10 +6639,10 @@ function reactionRollOrDamageReductionChoiceForProfile(
           label: profile.unit.name,
           reduction: {
             kind: "rolled",
-            flatModifier: 0,
-            // TODO SRD mechanics projection: Bardic Inspiration die scaling is
-            // allowed here only until reaction reductions carry projected dice.
-            dieSize: bardicInspirationDieSize(profile.classLevel),
+            dice: modifier.reduction.dice,
+            flatModifier: modifier.reduction.flatModifier,
+            dieSize: modifier.reduction.dieSize,
+            spends: modifier.reduction.spends,
           },
         },
         initialHoles: [
@@ -6888,21 +6932,23 @@ function reactionModifierResourceAvailable(
   }
   const reactor = state.combatants.get(reactorId);
   if (reactor?.origin.kind !== "character") return false;
+  const resourceSpend = reactionModifierResourceSpend(modifier);
+  if (resourceSpend !== null) {
+    const resource = reactor.origin.resources.find(
+      (candidate) => candidate.unit.id === resourceSpend.resourceUnitId,
+    );
+    return resource !== undefined && resourceHasUsesRemaining(resource);
+  }
   const resource = reactor.origin.resources.find(
     (candidate) => candidate.unit.id === profile.unit.id,
   );
-  if (reactionModifierSpendsProfileResource(modifier)) {
-    return resource !== undefined && resourceHasUsesRemaining(resource);
-  }
   return resource === undefined || resourceHasUsesRemaining(resource);
 }
 
-function reactionModifierSpendsProfileResource(
+function reactionModifierResourceSpend(
   modifier: ReactionRollOrDamageReductionProfile,
-): boolean {
-  // TODO SRD mechanics projection: Bardic Inspiration die is allowed here as
-  // the SRD resource-spend signal; replace with projected resource cost facts.
-  return modifier.reduction.kind === "bardicInspirationDie";
+): ReactionReductionResourceSpend | null {
+  return "spends" in modifier.reduction ? modifier.reduction.spends : null;
 }
 
 function opportunityAttackReactionChoices(
@@ -12519,22 +12565,19 @@ export function resolveSuccessfulAbilityCheckReactionReduction(
     );
   }
 
-  // TODO SRD mechanics projection: Bardic Inspiration die scaling is allowed
-  // here only until ability-check reductions carry projected dice.
-  const dieSize = bardicInspirationDieSize(profile.classLevel);
-  if (
-    input.reductionRoll < 1 ||
-    input.reductionRoll > dieSize ||
-    !Number.isInteger(input.reductionRoll)
-  ) {
+  const reductionTotal = reactionReductionResourceDieRollTotal({
+    reduction: modifier.reduction,
+    rollTotal: input.reductionRoll,
+  });
+  if (reductionTotal.tag === "invalid") {
     return invalidResult(
       input.state,
       "invalidFill",
-      `${profile.unit.name} reduction roll must be a 1d${dieSize} result.`,
+      `${profile.unit.name} ${reductionTotal.message}`,
     );
   }
 
-  const reducedTotal = input.abilityCheck.originalTotal - input.reductionRoll;
+  const reducedTotal = input.abilityCheck.originalTotal - reductionTotal.value;
   const reducedSucceeded = reducedTotal >= input.abilityCheck.dc;
   const spentState = spendReactionModifierResource(
     spendReaction(input.state, input.reactorId),
@@ -12545,8 +12588,10 @@ export function resolveSuccessfulAbilityCheckReactionReduction(
       label: profile.unit.name,
       reduction: {
         kind: "rolled",
-        flatModifier: 0,
-        dieSize,
+        dice: modifier.reduction.dice,
+        flatModifier: modifier.reduction.flatModifier,
+        dieSize: modifier.reduction.dieSize,
+        spends: modifier.reduction.spends,
       },
     },
   );

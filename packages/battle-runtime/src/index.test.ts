@@ -8233,7 +8233,9 @@ describe("battle runtime", () => {
       },
     });
     if (stillFailed.tag !== "resolved") {
-      throw new Error(`Expected resolved Tactical Mind, got ${stillFailed.tag}.`);
+      throw new Error(
+        `Expected resolved Tactical Mind, got ${stillFailed.tag}.`,
+      );
     }
     expect(stillFailed.state.combatants.get(fighterId)?.origin).toMatchObject({
       resources: [
@@ -10683,7 +10685,7 @@ describe("battle runtime", () => {
       tag: "invalid",
       reason: "invalidFill",
       message:
-        "Reaction modifier roll must provide one Bardic Inspiration die result.",
+        "Reaction modifier roll must provide one valid reduction die result.",
     });
   });
 
@@ -10803,7 +10805,13 @@ describe("battle runtime", () => {
             kind: "damageRollReduction",
             unitId: "test_cutting_words",
             label: "Cutting Words",
-            reduction: { kind: "rolled", flatModifier: 0, dieSize: 6 },
+            reduction: {
+              kind: "rolled",
+              dice: 1,
+              flatModifier: 0,
+              dieSize: 6,
+              spends: { resourceUnitId: "test_cutting_words", amount: 1 },
+            },
           },
           initialHoles: [
             {
@@ -10919,7 +10927,13 @@ describe("battle runtime", () => {
             kind: "damageRollReduction",
             unitId: "test_cutting_words",
             label: "Cutting Words",
-            reduction: { kind: "rolled", flatModifier: 0, dieSize: 6 },
+            reduction: {
+              kind: "rolled",
+              dice: 1,
+              flatModifier: 0,
+              dieSize: 6,
+              spends: { resourceUnitId: "test_cutting_words", amount: 1 },
+            },
           },
           initialHoles: [],
         },
