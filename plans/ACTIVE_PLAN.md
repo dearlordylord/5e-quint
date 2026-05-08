@@ -76,14 +76,56 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 163,
       "id": "QMBT68",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Project Monk Deflect Attacks Redirect Facts"
     },
     {
       "number": 164,
       "id": "QMBT69",
-      "status": "blocked",
+      "status": "deferred",
       "title": "Recursive Unit Profile Planning Review"
+    },
+    {
+      "number": 165,
+      "id": "SRDINV1",
+      "status": "ready-for-research",
+      "title": "Classify Installed Level-1 Owner Evidence"
+    },
+    {
+      "number": 166,
+      "id": "SRDINV2",
+      "status": "blocked",
+      "title": "Author Missing Level-1 Class Containers"
+    },
+    {
+      "number": 167,
+      "id": "SRDINV3",
+      "status": "blocked",
+      "title": "Classify Missing Level-1 Class Feature Rows"
+    },
+    {
+      "number": 168,
+      "id": "SRDINV4",
+      "status": "blocked",
+      "title": "Classify Level-1 Character Creation Rows"
+    },
+    {
+      "number": 169,
+      "id": "SRDINV5",
+      "status": "blocked",
+      "title": "Classify Level-1 Spell Access and Spell List Pressure"
+    },
+    {
+      "number": 170,
+      "id": "SRDINV6",
+      "status": "blocked",
+      "title": "Review Catalog-Only and Surface-Widening Rows"
+    },
+    {
+      "number": 171,
+      "id": "SRDINV7",
+      "status": "blocked",
+      "title": "Recursive SRD Inventory Planning Review"
     }
   ]
 }
@@ -125,8 +167,15 @@ Keep it synchronized with the DAG table and task details.
 | 160   | QMBT65 - Promote Cutting Words Ability Check Reaction Reduction | done | none | QMBT66 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [SRD Bard](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Bard.md), [SRD Playing the Game](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [SRD Rules Glossary](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed `bard_cutting_words` Ability Check reduction as part of `unit-feature.reaction-roll-or-damage-reduction`, with authored mechanics admission, caller-supplied already-successful Ability Check facts, Reaction and Bardic Inspiration spend, QNT proof coverage, focused runtime parity, deterministic admission evidence, and refreshed matrix artifacts. |
 | 161   | QMBT66 - Recursive Unit Profile Planning Review | done | QMBT65 | QMBT67 | [QMBT66 review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT66_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed recursive planning review, kept the matrix lane open, refreshed PRD status, and appended the QMBT67-QMBT69 projection-cleanup batch. |
 | 162   | QMBT67 - Project Bardic Inspiration Reaction Reduction Facts | done | QMBT66 | QMBT68 | [QMBT66 review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT66_RECURSIVE_PLANNING_REVIEW.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [battle reducer](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [unit feature support](/workspace/typescript/dnd/packages/battle-runtime/src/unit-feature-support.ts), [SRD Bard](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Bard.md), [SRD Playing the Game](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [SRD Rules Glossary](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Move Bardic Inspiration reaction-reduction resource cost and die expression facts into supported profile projection data so generic reaction reducers no longer derive Bard class die thresholds for Cutting Words attack-roll, Ability Check, or damage-roll reduction. |
-| 163   | QMBT68 - Project Monk Deflect Attacks Redirect Facts | ready-for-research | QMBT67 | QMBT69 | [QMBT66 review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT66_RECURSIVE_PLANNING_REVIEW.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [battle reducer](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [unit feature support](/workspace/typescript/dnd/packages/battle-runtime/src/unit-feature-support.ts), [SRD Monk](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Monk.md), [SRD Playing the Game](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [SRD Rules Glossary](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Move Deflect Attacks redirect resource cost, save DC, redirect damage dice, damage ability modifier, and inherited damage-type facts into supported profile projection data so generic reducers no longer derive Focus Point, Martial Arts die, or Monk Focus save formulas. |
-| 164   | QMBT69 - Recursive Unit Profile Planning Review | blocked | QMBT68 | none | [QMBT66 review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT66_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT67-QMBT68 findings, update PRD and plan docs, and append the next coherent widening or cleanup batch unless the Unit profile matrix lane is explicitly complete. |
+| 163   | QMBT68 - Project Monk Deflect Attacks Redirect Facts | deferred | QMBT67 | QMBT69 | [QMBT66 review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT66_RECURSIVE_PLANNING_REVIEW.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [battle reducer](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [unit feature support](/workspace/typescript/dnd/packages/battle-runtime/src/unit-feature-support.ts), [SRD Monk](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Monk.md), [SRD Playing the Game](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [SRD Rules Glossary](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Parked while the SRD inventory frontier runs; resume after SRDINV establishes the next class/content backlog shape. |
+| 164   | QMBT69 - Recursive Unit Profile Planning Review | deferred | QMBT68 | none | [QMBT66 review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT66_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Parked with QMBT68 so Ralph does not continue the older QMBT queue before the SRD inventory frontier. |
+| 165   | SRDINV1 - Classify Installed Level-1 Owner Evidence | ready-for-research | none | SRDINV2-SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Stop treating installed level-1 rows as done by catalog load alone; assign operational owner expectations or explicit catalog-only closure. |
+| 166   | SRDINV2 - Author Missing Level-1 Class Containers | blocked | SRDINV1 | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Create or explicitly close the ten missing SRD level-1 class container records. |
+| 167   | SRDINV3 - Classify Missing Level-1 Class Feature Rows | blocked | SRDINV1 | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Decide which missing level-1 class feature rows need authored content, Surface widening, non-runtime closure, or later runtime work. |
+| 168   | SRDINV4 - Classify Level-1 Character Creation Rows | blocked | SRDINV1 | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Separate class-container-owned creation/progression facts from rows that require standalone authored records. |
+| 169   | SRDINV5 - Classify Level-1 Spell Access and Spell List Pressure | blocked | SRDINV1 | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Keep spell access/list pressure separate from spell Unit runtime support and spell identity MBT. |
+| 170   | SRDINV6 - Review Catalog-Only and Surface-Widening Rows | blocked | SRDINV1 | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Preserve catalog-only/dead-for-now rows and name missing Surface constructs for any widening blockers. |
+| 171   | SRDINV7 - Recursive SRD Inventory Planning Review | blocked | SRDINV2-SRDINV6 | none | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review SRDINV1-SRDINV6 findings and append a concrete multi-task next batch, or explicitly close level-1 with final metrics. |
 
 ## Task Details
 
@@ -309,7 +358,7 @@ minimum two rounds.
 
 ### Task 163 - QMBT68 - Project Monk Deflect Attacks Redirect Facts
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Depends on: QMBT67
 
@@ -325,7 +374,9 @@ Research / plan:
 [Rules-Glossary.md](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
 [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
 
-Scope: move Deflect Attacks redirect executable facts out of generic reducer
+Scope: deferred while the SRD inventory frontier runs, so Ralph does not
+continue the older QMBT queue before the class/content inventory denominator
+is shaped. When resumed, move Deflect Attacks redirect executable facts out of generic reducer
 derivation and into supported profile projection data. The runtime should
 parse/project redirect resource cost, redirect save DC, redirect damage dice
 expression, damage ability modifier, attack-kind target gate facts, and
@@ -355,7 +406,7 @@ behavior changes; `pnpm quality` if the task changes production behavior;
 
 ### Task 164 - QMBT69 - Recursive Unit Profile Planning Review
 
-Status: `blocked`
+Status: `deferred`
 
 Depends on: QMBT68
 
@@ -366,7 +417,8 @@ Research / plan:
 [UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md),
 [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
 
-Scope: review QMBT67-QMBT68 findings, update the PRD and plan docs, and append
+Scope: deferred with QMBT68 while the SRD inventory frontier runs. When
+resumed, review QMBT67-QMBT68 findings, update the PRD and plan docs, and append
 the next coherent widening or cleanup batch unless the Unit profile matrix lane
 is explicitly complete. AC/base-formula work is a strong candidate because
 Barbarian and Monk Unarmored Defense have repeatedly been deferred for
@@ -380,3 +432,181 @@ rule slices; active-plan consistency check across Ralph index, DAG table, and
 task details; `pnpm unit-profile-coverage:check` if matrix docs or generated
 artifacts change; `/simplify` convergence, minimum two rounds unless the final
 changeset is trivial.
+
+### Task 165 - SRDINV1 - Classify Installed Level-1 Owner Evidence
+
+Status: `ready-for-research`
+
+Depends on: none
+
+Blocks: SRDINV2-SRDINV7
+
+Research / plan:
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[SRDINV_RALPH_BATCH_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md),
+[Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: review the generated `SRDINV1` batch. For each installed level-1 SRD
+inventory row currently marked `catalog-installed-needs-owner-evidence`,
+classify the operational owner and evidence requirement, or explicitly close
+the row as catalog-only/dead-for-now. Do not implement runtime behavior in this
+task unless it is needed to make the owner/evidence classification executable.
+
+Out of scope: PHB/XPHB pressure, QMBT expansion, battle-runtime behavior
+changes, authoring missing class containers, and one task per Unit.
+
+Verification: read relevant local SRD class files and check
+`UBIQUITOUS_LANGUAGE.md`; active-plan consistency; regenerated SRD inventory
+if semantics change; `pnpm unit-profile-coverage:check`; `/simplify`
+convergence, minimum two rounds unless the final changeset is trivial. MBT is
+not required for inventory planning.
+
+### Task 166 - SRDINV2 - Author Missing Level-1 Class Containers
+
+Status: `blocked`
+
+Depends on: SRDINV1
+
+Blocks: SRDINV7
+
+Research / plan:
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[SRDINV_RALPH_BATCH_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md)
+
+Scope: create or explicitly close the ten missing SRD level-1 class container
+records from the generated inventory. Use SRD provenance only. If Surface is
+insufficient for a class container fact, record the named Surface blocker
+instead of adding runtime-only workaround data.
+
+Out of scope: PHB/XPHB content, battle behavior, spell Unit support, feature
+runtime implementation, and broad character builder UI work.
+
+Verification: SRD class source review for every container touched;
+`UBIQUITOUS_LANGUAGE.md`; catalog load/reference tests if records are authored;
+regenerate inventory; `pnpm unit-profile-coverage:check`; `/simplify`
+convergence.
+
+### Task 167 - SRDINV3 - Classify Missing Level-1 Class Feature Rows
+
+Status: `blocked`
+
+Depends on: SRDINV1
+
+Blocks: SRDINV7
+
+Research / plan:
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[SRDINV_RALPH_BATCH_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md)
+
+Scope: review generated missing level-1 class feature rows and replace generic
+author-or-close next actions with sharper outcomes: authored content, named
+Surface widening, non-runtime closure, catalog-only closure, or later
+owner-specific runtime work.
+
+Out of scope: implementing feature runtime behavior, QNT/QMBT parity, PHB/XPHB
+pressure, and one task per Unit.
+
+Verification: SRD source review for classified features; `UBIQUITOUS_LANGUAGE.md`;
+regenerate inventory; `pnpm unit-profile-coverage:check`; `/simplify`
+convergence.
+
+### Task 168 - SRDINV4 - Classify Level-1 Character Creation Rows
+
+Status: `blocked`
+
+Depends on: SRDINV1
+
+Blocks: SRDINV7
+
+Research / plan:
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[SRDINV_RALPH_BATCH_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md)
+
+Scope: group level-1 hit dice, proficiencies, equipment, multiclass, and table
+summary rows by whether the class container should own evidence or whether a
+standalone authored record/closure is needed. This task may refine generated
+row categories and next actions.
+
+Out of scope: PHB/XPHB content, battle runtime, QMBT, and implementing a full
+character-creation runtime feature.
+
+Verification: SRD source review; `UBIQUITOUS_LANGUAGE.md`; update
+character-creation docs if architecture/vocabulary changes; regenerate
+inventory; `pnpm unit-profile-coverage:check`; `/simplify` convergence.
+
+### Task 169 - SRDINV5 - Classify Level-1 Spell Access and Spell List Pressure
+
+Status: `blocked`
+
+Depends on: SRDINV1
+
+Blocks: SRDINV7
+
+Research / plan:
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[SRDINV_RALPH_BATCH_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md)
+
+Scope: split class Spellcasting/access owner evidence from individual cantrip
+and level-1 Spell Unit admission/support pressure. Keep spell access/list
+classification separate from spell identity MBT and battle spell runtime
+support.
+
+Out of scope: admitting every spell Unit, spell runtime behavior, QMBT spell
+expansion, PHB/XPHB content, and private spell-list pressure.
+
+Verification: SRD class spellcasting and spell-list source review;
+`UBIQUITOUS_LANGUAGE.md`; regenerate inventory; `pnpm
+unit-profile-coverage:check`; `/simplify` convergence.
+
+### Task 170 - SRDINV6 - Review Catalog-Only and Surface-Widening Rows
+
+Status: `blocked`
+
+Depends on: SRDINV1
+
+Blocks: SRDINV7
+
+Research / plan:
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[SRDINV_RALPH_BATCH_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md)
+
+Scope: review rows marked catalog-only/dead-for-now and
+needs-surface-widening. Keep dead/catalog-only rows when appropriate, but make
+that closure explicit and counted. For Surface blockers, ensure the missing
+Surface construct is named.
+
+Out of scope: requiring all catalog rows to have production consumers,
+implementing runtime behavior, PHB/XPHB content, and broad Surface redesign
+not backed by a named blocker.
+
+Verification: SRD source review for rows changed; regenerate inventory; `pnpm
+unit-profile-coverage:check`; `/simplify` convergence.
+
+### Task 171 - SRDINV7 - Recursive SRD Inventory Planning Review
+
+Status: `blocked`
+
+Depends on: SRDINV2-SRDINV6
+
+Blocks: none
+
+Research / plan:
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[SRDINV_RALPH_BATCH_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md),
+[ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
+
+Scope: review SRDINV1-SRDINV6 findings, update the SRD inventory report and
+plan docs, and append a concrete multi-task next batch unless SRD level-1
+inventory is explicitly complete. This task must not append only one recursive
+continuation task. If level-1 remains open, it should add at least three
+specific follow-up tasks grouped by mechanics family, owner boundary, or
+Surface-widening blocker.
+
+Out of scope: implementation work not captured by the newly appended batch.
+
+Verification: active-plan consistency across Ralph index, DAG table, and task
+details; regenerated inventory; `pnpm unit-profile-coverage:check`; confirm
+the appended result is either explicit level-1 completion with final metrics or
+a concrete multi-task batch, not a recursive-only placeholder; `/simplify`
+convergence, minimum two rounds unless the final changeset is trivial.

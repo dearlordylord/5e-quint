@@ -200,11 +200,11 @@ function finalDisposition(row, authored, installedIds) {
   if (!row.candidateUnitId) return "needs-surface-widening";
   if (!authored.has(row.candidateUnitId)) return "missing-authored-record";
   if (!installedIds.has(row.candidateUnitId)) return "catalog-only/dead-for-now";
-  return "supported";
+  return "catalog-installed-needs-owner-evidence";
 }
 
 function nextAction(row, disposition, gate) {
-  if (disposition === "supported") return "Keep row in generated denominator and preserve owner evidence.";
+  if (disposition === "catalog-installed-needs-owner-evidence") return "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only.";
   if (disposition === "non-runtime") return "No runtime work; keep classification as explicit closure.";
   if (disposition === "catalog-only/dead-for-now") return "Decide whether to admit/support, or keep catalog-only closure counted.";
   if (disposition === "missing-authored-record") return "Author an SRD-provenance Surface record or explicitly close the row.";
@@ -362,11 +362,12 @@ function withState(rows, authored, installedIds) {
         : { state: "not-applicable" },
       finalDisposition: disposition,
       ownerEvidence:
-        disposition === "supported"
+        disposition === "catalog-installed-needs-owner-evidence"
           ? [
               {
                 owner: "Unit catalog/admission",
                 evidence: `candidate Unit ${row.candidateUnitId} is installed in srdUnitCollection`,
+                status: "catalog-only evidence; operational owner evidence still required",
               },
             ]
           : [],
@@ -381,6 +382,157 @@ function countBy(rows, key) {
     counts[value] = (counts[value] ?? 0) + 1;
     return counts;
   }, {});
+}
+
+function rowRefs(rows) {
+  return rows.map((row) => row.id).sort();
+}
+
+function makeBatch({
+  id,
+  title,
+  intent,
+  rows,
+  nextAction,
+  acceptance,
+  suggestedStatus = "ready-for-research",
+}) {
+  return {
+    id,
+    title,
+    suggestedStatus,
+    intent,
+    rowCount: rows.length,
+    rowIds: rowRefs(rows),
+    nextAction,
+    acceptance,
+  };
+}
+
+function buildRecommendedBatches(rows) {
+  const levelOne = rows.filter((row) => row.levelBand === "level-1");
+  const spellPressure = rows.filter(
+    (row) =>
+      row.levelBand === "spell-level-0" || row.levelBand === "spell-level-1",
+  );
+  const missingClassContainers = levelOne.filter(
+    (row) =>
+      row.rowKind === "class-container" &&
+      row.finalDisposition === "missing-authored-record",
+  );
+  const installedNeedsOwnerEvidence = levelOne.filter(
+    (row) => row.finalDisposition === "catalog-installed-needs-owner-evidence",
+  );
+  const missingClassFeatureRows = levelOne.filter(
+    (row) =>
+      row.rowKind === "class-feature-grant" &&
+      row.finalDisposition === "missing-authored-record",
+  );
+  const missingCharacterCreationRows = levelOne.filter(
+    (row) =>
+      row.category === "character-creation or progression mechanic" &&
+      row.finalDisposition === "missing-authored-record",
+  );
+  const missingSpellAccessRows = levelOne.filter(
+    (row) =>
+      row.rowKind === "spell-access" &&
+      row.finalDisposition === "missing-authored-record",
+  );
+  const spellPressureRows = spellPressure.filter(
+    (row) => row.finalDisposition !== "non-runtime",
+  );
+  const catalogOnlyRows = rows.filter(
+    (row) => row.finalDisposition === "catalog-only/dead-for-now",
+  );
+  const surfaceWideningRows = rows.filter(
+    (row) => row.finalDisposition === "needs-surface-widening",
+  );
+
+  return [
+    makeBatch({
+      id: "SRDINV1",
+      title: "Classify Installed Level-1 Owner Evidence",
+      intent:
+        "Stop treating installed level-1 rows as done by catalog load alone; assign operational owner expectations or explicit catalog-only closure.",
+      rows: installedNeedsOwnerEvidence,
+      nextAction:
+        "For each installed level-1 row, classify the operational owner and evidence requirement, then update generated state names if needed.",
+      acceptance:
+        "Installed level-1 rows no longer imply support from catalog admission alone; report distinguishes catalog evidence from operational owner evidence.",
+    }),
+    makeBatch({
+      id: "SRDINV2",
+      title: "Author Missing Level-1 Class Containers",
+      suggestedStatus: "blocked-on-SRDINV1",
+      intent:
+        "Create or explicitly close the ten missing SRD level-1 class container records.",
+      rows: missingClassContainers,
+      nextAction:
+        "Add SRD-provenance class container records where Surface already expresses the facts, or record explicit closure for any deferred container.",
+      acceptance:
+        "Missing class container count reaches zero or each remaining row has explicit closure; no PHB/private content enters this pass.",
+    }),
+    makeBatch({
+      id: "SRDINV3",
+      title: "Classify Missing Level-1 Class Feature Rows",
+      suggestedStatus: "blocked-on-SRDINV1",
+      intent:
+        "Decide which missing level-1 class feature rows need authored content, Surface widening, non-runtime closure, or later runtime work.",
+      rows: missingClassFeatureRows,
+      nextAction:
+        "Review feature rows by mechanics family and produce the next small authoring or Surface-widening batch.",
+      acceptance:
+        "Every missing level-1 class feature row has a sharper next action than generic author-or-close wording.",
+    }),
+    makeBatch({
+      id: "SRDINV4",
+      title: "Classify Level-1 Character Creation Rows",
+      suggestedStatus: "blocked-on-SRDINV1",
+      intent:
+        "Separate class-container-owned creation/progression facts from rows that require standalone authored records.",
+      rows: missingCharacterCreationRows,
+      nextAction:
+        "Group hit dice, proficiencies, equipment, multiclass, and table-summary rows by whether the class container should own the evidence.",
+      acceptance:
+        "Character-creation rows distinguish class-container ownership from missing standalone records.",
+    }),
+    makeBatch({
+      id: "SRDINV5",
+      title: "Classify Level-1 Spell Access and Spell List Pressure",
+      suggestedStatus: "blocked-on-SRDINV1",
+      intent:
+        "Keep spell access/list pressure separate from spell Unit runtime support and spell identity MBT.",
+      rows: [...missingSpellAccessRows, ...spellPressureRows],
+      nextAction:
+        "Split spell access owner evidence from individual spell Unit admission/support pressure.",
+      acceptance:
+        "Level-1 spell access rows and cantrip/level-1 spell pressure rows have separate metrics and next actions.",
+    }),
+    makeBatch({
+      id: "SRDINV6",
+      title: "Review Catalog-Only and Surface-Widening Rows",
+      suggestedStatus: "blocked-on-SRDINV1",
+      intent:
+        "Preserve catalog-only/dead-for-now rows and name missing Surface constructs for any widening blockers.",
+      rows: [...catalogOnlyRows, ...surfaceWideningRows],
+      nextAction:
+        "Either keep rows explicitly catalog-only/dead-for-now or promote a named Surface widening task.",
+      acceptance:
+        "Catalog-only rows are counted deliberately, and every Surface-widening row names the missing construct.",
+    }),
+    makeBatch({
+      id: "SRDINV7",
+      title: "Recursive SRD Inventory Planning Review",
+      suggestedStatus: "blocked-on-SRDINV2-SRDINV6",
+      intent:
+        "Review SRDINV1-SRDINV6 findings and append the next concrete generated batch set.",
+      rows: levelOne,
+      nextAction:
+        "Refresh metrics, decide whether level-1 can advance to authoring/support batches, and append at least three concrete next tasks unless level-1 is explicitly complete.",
+      acceptance:
+        "The SRD inventory lane remains measurable and has a concrete multi-task next batch, or level-1 is explicitly closed with final metrics; do not append a recursive-only continuation.",
+    }),
+  ];
 }
 
 function buildSrdUnitInventory({ root, inventory }) {
@@ -424,6 +576,7 @@ function buildSrdUnitInventory({ root, inventory }) {
           row.catalogAdmission.state !== "installed",
       ).length,
     },
+    recommendedBatches: buildRecommendedBatches(rows),
     rows,
   };
 }
@@ -442,9 +595,18 @@ function validateSrdUnitInventory(report) {
     ) {
       issues.push(`${row.id} needs Surface widening but lacks missingConstruct.`);
     }
-    if (row.finalDisposition === "supported" && row.ownerEvidence.length === 0) {
-      issues.push(`${row.id} is supported but lacks owner evidence.`);
+    if (
+      row.finalDisposition === "catalog-installed-needs-owner-evidence" &&
+      row.ownerEvidence.length === 0
+    ) {
+      issues.push(`${row.id} is installed but lacks catalog evidence.`);
     }
+  }
+  for (const batch of report.recommendedBatches) {
+    if (!batch.id) issues.push("Recommended SRD inventory batch lacks id.");
+    if (!batch.title) issues.push(`${batch.id} lacks title.`);
+    if (!batch.nextAction) issues.push(`${batch.id} lacks nextAction.`);
+    if (!batch.acceptance) issues.push(`${batch.id} lacks acceptance.`);
   }
   return issues;
 }
@@ -489,6 +651,27 @@ function renderSrdUnitInventory(report) {
     ...Object.entries(report.metrics.spellPressureRowsByDisposition)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, count]) => `- ${key}: ${count}`),
+    "",
+    "## Recommended Ralph Batches",
+    "",
+    "These batches are generated planning recommendations for a separate SRD inventory Ralph run. They are not QMBT tasks unless a later batch explicitly promotes battle-runtime behavior.",
+    "",
+    "| Batch | Status | Rows | Intent | Next action | Acceptance |",
+    "|---|---|---:|---|---|---|",
+    ...report.recommendedBatches.map((batch) =>
+      [
+        batch.id,
+        batch.suggestedStatus,
+        batch.rowCount,
+        batch.intent,
+        batch.nextAction,
+        batch.acceptance,
+      ]
+        .map((cell) => String(cell).replace(/\|/g, "\\|"))
+        .join("|")
+        .replace(/^/, "|")
+        .replace(/$/, "|"),
+    ),
     "",
     "## Level-1 Backlog Rows",
     "",

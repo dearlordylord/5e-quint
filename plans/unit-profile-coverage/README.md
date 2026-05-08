@@ -206,6 +206,11 @@ exists, whether current Surface can author it, whether authored Surface content
 exists, whether it is installed in the SRD Unit catalog, and what explicit
 disposition closes the row for planning.
 
+The generated report also emits `Recommended Ralph Batches`. These are mirrored
+in `plans/ACTIVE_PLAN.md` as the `SRDINV*` queue when the SRD inventory frontier
+is active. This lane is not QMBT unless a later batch deliberately promotes
+battle-runtime behavior.
+
 The first generated scope inventories all SRD class files under
 `.references/srd-5.2.1/Classes/`, with level-1 class rows prioritized first and
 cantrip/level-1 spell-list entries tracked as Spell Unit pressure. Regenerate
