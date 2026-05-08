@@ -138,6 +138,53 @@ const classContainerSurfaceBlockers = new Map([
   ],
 ]);
 
+const classFeatureSurfaceBlockers = new Map([
+  [
+    "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
+    "ClassFeature transferable timed Bardic Inspiration die with holder uniqueness, Charisma-modifier use-count floor, Bardic die tiers, and later failed D20 Test boost",
+  ],
+  [
+    "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
+    "ClassFeature choice branches that grant alternate proficiencies, extra spell access, and ability-modifier-derived Ability Check bonuses with a minimum +1 floor",
+  ],
+  [
+    "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
+    "ClassFeature language knowledge grants plus always-prepared spell access and noncombat hidden-message capability",
+  ],
+  [
+    "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order",
+    "ClassFeature choice branches that grant alternate proficiencies, extra spell access, and ability-modifier-derived Ability Check bonuses with a minimum +1 floor",
+  ],
+  [
+    "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
+    "ClassFeature Martial Arts combat package: Monk weapon predicate, Bonus Action Unarmed Strike, Martial Arts die replacement, Dexterity attack/damage substitution, and Unarmed Strike DC substitution",
+  ],
+  [
+    "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy",
+    "ClassFeature spell access that grants Hunter's Mark as always prepared plus a level-scaling Long Rest casting pool without expending a Spell Slot",
+  ],
+  [
+    "srd521:classes/rogue:level-1:class-feature-grant:rogue_expertise",
+    "ClassFeature Expertise choice grants over already-proficient skills, including later additional Expertise choices",
+  ],
+  [
+    "srd521:classes/rogue:level-1:class-feature-grant:rogue_thieves_cant",
+    "ClassFeature character-sheet language ownership grants for fixed Thieves' Cant plus one player-chosen language from Character Creation language tables",
+  ],
+  [
+    "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
+    "ClassFeature timed self buff that scopes Spell Save DC increase and spell Attack Roll Advantage to Sorcerer spell invocations",
+  ],
+  [
+    "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations",
+    "ClassFeature invocation choice grants with prerequisites, uniqueness, replacement rules, and invocation-count level progression",
+  ],
+  [
+    "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic",
+    "ClassFeature Pact Magic spell-access package: Warlock cantrip choices, prepared Warlock spells, Pact Slot projection, Short or Long Rest Pact Slot recovery, spellcasting ability, and Arcane Focus",
+  ],
+]);
+
 function slug(text) {
   return text
     .toLowerCase()
@@ -287,6 +334,13 @@ function surfaceGate(row) {
       missingConstruct: classContainerBlocker,
     };
   }
+  const classFeatureBlocker = classFeatureSurfaceBlockers.get(row.id);
+  if (classFeatureBlocker !== undefined) {
+    return {
+      state: "current-surface-cannot-express-mechanics-yet",
+      missingConstruct: classFeatureBlocker,
+    };
+  }
   if (nonRuntimeKinds.has(row.rowKind)) {
     return {
       state: "outside-surface-runtime-mechanics",
@@ -313,7 +367,11 @@ function surfaceGate(row) {
 
 function finalDisposition(row, authored, installedIds, ownerEvidenceSources) {
   if (nonRuntimeKinds.has(row.rowKind)) return "non-runtime";
-  if (classContainerSurfaceBlockers.has(row.id)) return "needs-surface-widening";
+  if (
+    classContainerSurfaceBlockers.has(row.id) ||
+    classFeatureSurfaceBlockers.has(row.id)
+  )
+    return "needs-surface-widening";
   if (!row.candidateUnitId) return "needs-surface-widening";
   if (!authored.has(row.candidateUnitId)) return "missing-authored-record";
   if (!installedIds.has(row.candidateUnitId))
@@ -1217,6 +1275,20 @@ function validateSrdUnitInventory(report) {
           `Character-creation owner evidence references unknown SRD inventory row id ${rowId}.`,
         );
       }
+    }
+  }
+  for (const rowId of classFeatureSurfaceBlockers.keys()) {
+    const row = report.rows.find((candidate) => candidate.id === rowId);
+    if (row === undefined) {
+      issues.push(
+        `Class feature Surface blocker references unknown row ${rowId}.`,
+      );
+      continue;
+    }
+    if (row.finalDisposition !== "needs-surface-widening") {
+      issues.push(
+        `Class feature Surface blocker ${rowId} must classify as needs-surface-widening.`,
+      );
     }
   }
   for (const batch of report.recommendedBatches) {

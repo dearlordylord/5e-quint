@@ -36,16 +36,16 @@
       "catalog-installed-owner-evidence-present": 19,
       "catalog-only/dead-for-now": 4,
       "non-runtime": 12,
-      "missing-authored-record": 89,
-      "needs-surface-widening": 8
+      "missing-authored-record": 78,
+      "needs-surface-widening": 19
     },
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-required": 24,
       "catalog-installed-owner-evidence-present": 19,
       "catalog-only/dead-for-now": 104,
       "non-runtime": 12,
-      "missing-authored-record": 161,
-      "needs-surface-widening": 8,
+      "missing-authored-record": 150,
+      "needs-surface-widening": 19,
       "catalog-installed-needs-owner-evidence": 39
     },
     "spellPressureRowsByDisposition": {
@@ -134,20 +134,8 @@
       "title": "Classify Missing Level-1 Class Feature Rows",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Decide which missing level-1 class feature rows need authored content, Surface widening, non-runtime closure, or later runtime work.",
-      "rowCount": 11,
-      "rowIds": [
-        "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
-        "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
-        "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
-        "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order",
-        "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
-        "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy",
-        "srd521:classes/rogue:level-1:class-feature-grant:rogue_expertise",
-        "srd521:classes/rogue:level-1:class-feature-grant:rogue_thieves_cant",
-        "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
-        "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations",
-        "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic"
-      ],
+      "rowCount": 0,
+      "rowIds": [],
       "nextAction": "Review feature rows by mechanics family and produce the next small authoring or Surface-widening batch.",
       "acceptance": "Every missing level-1 class feature row has a sharper next action than generic author-or-close wording."
     },
@@ -488,19 +476,30 @@
       "title": "Review Catalog-Only and Surface-Widening Rows",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Preserve nonspell catalog-only/dead-for-now rows and name missing Surface constructs for any widening blockers.",
-      "rowCount": 12,
+      "rowCount": 23,
       "rowIds": [
         "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense",
         "srd521:classes/bard:level-1:class-container:bard_class_container",
+        "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
         "srd521:classes/cleric:level-1:class-container:cleric_class_container",
+        "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
         "srd521:classes/druid:level-1:class-container:druid_class_container",
+        "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
+        "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order",
         "srd521:classes/monk:level-1:class-container:monk_class_container",
+        "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
         "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense",
         "srd521:classes/paladin:level-1:class-container:paladin_class_container",
         "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands",
         "srd521:classes/ranger:level-1:class-container:ranger_class_container",
+        "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy",
         "srd521:classes/rogue:level-1:class-container:rogue_class_container",
+        "srd521:classes/rogue:level-1:class-feature-grant:rogue_expertise",
+        "srd521:classes/rogue:level-1:class-feature-grant:rogue_thieves_cant",
         "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container",
+        "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
+        "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations",
+        "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic",
         "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery"
       ],
       "nextAction": "Either keep nonspell rows explicitly catalog-only/dead-for-now or promote a named Surface widening task.",
@@ -1217,7 +1216,8 @@
       "detail": "Level 1 class feature.",
       "candidateUnitId": "bard_bardic_inspiration",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "ClassFeature transferable timed Bardic Inspiration die with holder uniqueness, Charisma-modifier use-count floor, Bardic die tiers, and later failed D20 Test boost"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -1226,9 +1226,9 @@
         "state": "not-installed",
         "unitId": "bard_bardic_inspiration"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: ClassFeature transferable timed Bardic Inspiration die with holder uniqueness, Charisma-modifier use-count floor, Bardic die tiers, and later failed D20 Test boost."
     },
     {
       "id": "srd521:classes/bard:level-1:class-table-summary:bard_level_1_feature_table_row",
@@ -2586,7 +2586,8 @@
       "detail": "Level 1 class feature.",
       "candidateUnitId": "cleric_divine_order",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "ClassFeature choice branches that grant alternate proficiencies, extra spell access, and ability-modifier-derived Ability Check bonuses with a minimum +1 floor"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -2595,9 +2596,9 @@
         "state": "not-installed",
         "unitId": "cleric_divine_order"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: ClassFeature choice branches that grant alternate proficiencies, extra spell access, and ability-modifier-derived Ability Check bonuses with a minimum +1 floor."
     },
     {
       "id": "srd521:classes/cleric:level-1:class-table-summary:cleric_level_1_feature_table_row",
@@ -3589,7 +3590,8 @@
       "detail": "Level 1 class feature.",
       "candidateUnitId": "druid_druidic",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "ClassFeature language knowledge grants plus always-prepared spell access and noncombat hidden-message capability"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -3598,9 +3600,9 @@
         "state": "not-installed",
         "unitId": "druid_druidic"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: ClassFeature language knowledge grants plus always-prepared spell access and noncombat hidden-message capability."
     },
     {
       "id": "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order",
@@ -3617,7 +3619,8 @@
       "detail": "Level 1 class feature.",
       "candidateUnitId": "druid_primal_order",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "ClassFeature choice branches that grant alternate proficiencies, extra spell access, and ability-modifier-derived Ability Check bonuses with a minimum +1 floor"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -3626,9 +3629,9 @@
         "state": "not-installed",
         "unitId": "druid_primal_order"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: ClassFeature choice branches that grant alternate proficiencies, extra spell access, and ability-modifier-derived Ability Check bonuses with a minimum +1 floor."
     },
     {
       "id": "srd521:classes/druid:level-1:class-table-summary:druid_level_1_feature_table_row",
@@ -5374,7 +5377,8 @@
       "detail": "Level 1 class feature.",
       "candidateUnitId": "monk_martial_arts",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "ClassFeature Martial Arts combat package: Monk weapon predicate, Bonus Action Unarmed Strike, Martial Arts die replacement, Dexterity attack/damage substitution, and Unarmed Strike DC substitution"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -5383,9 +5387,9 @@
         "state": "not-installed",
         "unitId": "monk_martial_arts"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: ClassFeature Martial Arts combat package: Monk weapon predicate, Bonus Action Unarmed Strike, Martial Arts die replacement, Dexterity attack/damage substitution, and Unarmed Strike DC substitution."
     },
     {
       "id": "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense",
@@ -6502,7 +6506,8 @@
       "detail": "Level 1 class feature.",
       "candidateUnitId": "ranger_favored_enemy",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "ClassFeature spell access that grants Hunter's Mark as always prepared plus a level-scaling Long Rest casting pool without expending a Spell Slot"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -6511,9 +6516,9 @@
         "state": "not-installed",
         "unitId": "ranger_favored_enemy"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: ClassFeature spell access that grants Hunter's Mark as always prepared plus a level-scaling Long Rest casting pool without expending a Spell Slot."
     },
     {
       "id": "srd521:classes/ranger:level-1:class-table-summary:ranger_level_1_feature_table_row",
@@ -7261,7 +7266,8 @@
       "detail": "Level 1 class feature.",
       "candidateUnitId": "rogue_expertise",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "ClassFeature Expertise choice grants over already-proficient skills, including later additional Expertise choices"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -7270,9 +7276,9 @@
         "state": "not-installed",
         "unitId": "rogue_expertise"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: ClassFeature Expertise choice grants over already-proficient skills, including later additional Expertise choices."
     },
     {
       "id": "srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack",
@@ -7330,7 +7336,8 @@
       "detail": "Level 1 class feature.",
       "candidateUnitId": "rogue_thieves_cant",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "ClassFeature character-sheet language ownership grants for fixed Thieves' Cant plus one player-chosen language from Character Creation language tables"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -7339,9 +7346,9 @@
         "state": "not-installed",
         "unitId": "rogue_thieves_cant"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: ClassFeature character-sheet language ownership grants for fixed Thieves' Cant plus one player-chosen language from Character Creation language tables."
     },
     {
       "id": "srd521:classes/rogue:level-1:class-table-summary:rogue_level_1_feature_table_row",
@@ -7695,7 +7702,8 @@
       "detail": "Level 1 class feature.",
       "candidateUnitId": "sorcerer_innate_sorcery",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "ClassFeature timed self buff that scopes Spell Save DC increase and spell Attack Roll Advantage to Sorcerer spell invocations"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -7704,9 +7712,9 @@
         "state": "not-installed",
         "unitId": "sorcerer_innate_sorcery"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: ClassFeature timed self buff that scopes Spell Save DC increase and spell Attack Roll Advantage to Sorcerer spell invocations."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:class-table-summary:sorcerer_level_1_feature_table_row",
@@ -9192,7 +9200,8 @@
       "detail": "Level 1 class feature.",
       "candidateUnitId": "warlock_eldritch_invocations",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "ClassFeature invocation choice grants with prerequisites, uniqueness, replacement rules, and invocation-count level progression"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -9201,9 +9210,9 @@
         "state": "not-installed",
         "unitId": "warlock_eldritch_invocations"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: ClassFeature invocation choice grants with prerequisites, uniqueness, replacement rules, and invocation-count level progression."
     },
     {
       "id": "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic",
@@ -9220,7 +9229,8 @@
       "detail": "Level 1 class feature.",
       "candidateUnitId": "warlock_pact_magic",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "ClassFeature Pact Magic spell-access package: Warlock cantrip choices, prepared Warlock spells, Pact Slot projection, Short or Long Rest Pact Slot recovery, spellcasting ability, and Arcane Focus"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -9229,9 +9239,9 @@
         "state": "not-installed",
         "unitId": "warlock_pact_magic"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: ClassFeature Pact Magic spell-access package: Warlock cantrip choices, prepared Warlock spells, Pact Slot projection, Short or Long Rest Pact Slot recovery, spellcasting ability, and Arcane Focus."
     },
     {
       "id": "srd521:classes/warlock:level-1:class-table-summary:warlock_level_1_feature_table_row",
