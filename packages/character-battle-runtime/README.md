@@ -10,6 +10,9 @@ Owned boundary functions:
 
 - `characterSheetBattleInit` projects an existing Character Sheet plus caller
   battle facts into battle-runtime creature initialization.
+- `battleCreatureInitFromCharacterBuild` accepts an `armorClassBaseChoice` when
+  the build has multiple available class-feature AC formulas; the choice is
+  forwarded to Character Sheet AC projection before battle state is created.
 - `applyBattleHandoffToCharacterSheet` settles battle-owned HP, Knock Out,
   zero-HP lifecycle, and Spell Slot expenditure state back onto the same
   Character Sheet identity after confirming the battle combatant's max HP still

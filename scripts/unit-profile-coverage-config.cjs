@@ -14,6 +14,7 @@ const catalogAdmissionDispositionCategories = new Set(
 );
 const profileKinds = new Set([
   "character-creation",
+  "character-sheet",
   "passive",
   "action",
   "bonus-action",
@@ -141,6 +142,10 @@ function coveragePaths(root) {
     characterCreationOwnerEvidence: path.join(
       coverageDir,
       "character-creation-owner-evidence.json",
+    ),
+    characterSheetOwnerEvidence: path.join(
+      coverageDir,
+      "character-sheet-owner-evidence.json",
     ),
     sharedAlgebraOwnerEvidence: path.join(
       coverageDir,

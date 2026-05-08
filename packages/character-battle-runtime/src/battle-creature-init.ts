@@ -23,6 +23,7 @@ import {
   progressionClassLevels,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
+import type { CharacterSheetArmorClassBaseChoice } from "@dnd/character-sheet-runtime";
 import { Hp, movementFeet, type Condition } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either } from "effect";
@@ -57,6 +58,7 @@ export type CharacterBuildCreatureInput = {
   readonly positiveHpUnconscious?: CharacterBattleCreatureInit["positiveHpUnconscious"];
   readonly zeroHpLifecycle?: CharacterZeroHpLifecycleInit;
   readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
+  readonly armorClassBaseChoice?: CharacterSheetArmorClassBaseChoice;
 };
 
 export function startBattleFromCharacterBuildAndStatBlock(input: {
@@ -120,7 +122,13 @@ export function battleCreatureInitFromCharacterBuild(
     );
   }
 
-  const armorClass = characterArmorClassState(input.build, input.unitLibrary);
+  const armorClass = characterArmorClassState({
+    build: input.build,
+    unitLibrary: input.unitLibrary,
+    ...(input.armorClassBaseChoice === undefined
+      ? {}
+      : { baseChoice: input.armorClassBaseChoice }),
+  });
   if (Either.isLeft(armorClass)) {
     return battleCreatureInitIssue(armorClass.left.message);
   }

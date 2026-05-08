@@ -17,6 +17,7 @@
     "@dnd/character-creation-runtime": "workspace:*",
     "@dnd/shared": "workspace:*",
     "@dnd/shared-algebras": "workspace:*",
+    "@dnd/surface": "workspace:*",
     "effect": "^3.21.0"
   },
   "devDependencies": {

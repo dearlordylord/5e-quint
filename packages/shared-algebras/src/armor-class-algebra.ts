@@ -9,6 +9,7 @@ import type {
   ArmorCategory,
   ArmorAcFormula,
   ArmorTrainingCategory,
+  UnitRecord,
 } from "@dnd/surface/surface/types";
 
 export type ArmorClass = Integer & Brand.Brand<"ArmorClass">;
@@ -49,11 +50,17 @@ export type ArmorClassBaseSource =
       readonly kind: "ability_sum";
       readonly base: ArmorClass;
       readonly abilityModifiers: ReadonlyNonEmptyArray<Ability>;
+      readonly source: "default_unarmored";
+    }
+  | {
+      readonly kind: "ability_sum";
+      readonly base: ArmorClass;
+      readonly abilityModifiers: ReadonlyNonEmptyArray<Ability>;
       readonly source:
-        | "default_unarmored"
         | "barbarian_unarmored_defense"
         | "monk_unarmored_defense"
         | "spell_base_plus_ability";
+      readonly sourceUnitId: UnitRecord["id"];
     }
   | {
       readonly kind: "armor";

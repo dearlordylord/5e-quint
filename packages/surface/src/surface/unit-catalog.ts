@@ -9,6 +9,7 @@ import bardCuttingWordsInput from "../../content/bard_cutting_words.json";
 import barbarianRageInput from "../../content/barbarian_rage.json";
 import barbarianFastMovementInput from "../../content/barbarian_fast_movement.json";
 import barbarianRecklessAttackInput from "../../content/barbarian_reckless_attack.json";
+import barbarianUnarmoredDefenseInput from "../../content/barbarian_unarmored_defense.json";
 import barbarianWeaponMasteryInput from "../../content/barbarian_weapon_mastery.json";
 import classBardInput from "../../content/class_bard.json";
 import classBarbarianInput from "../../content/class_barbarian.json";
@@ -54,6 +55,7 @@ import masterySapInput from "../../content/mastery_sap.json";
 import minorIllusionInput from "../../content/minor_illusion.json";
 import monkDeflectAttacksInput from "../../content/monk_deflect_attacks.json";
 import monkMartialArtsInput from "../../content/monk_martial_arts.json";
+import monkUnarmoredDefenseInput from "../../content/monk_unarmored_defense.json";
 import orcAdrenalineRushInput from "../../content/orc_adrenaline_rush.json";
 import orcDarkvisionInput from "../../content/species_orc_darkvision.json";
 import orcRelentlessEnduranceInput from "../../content/orc_relentless_endurance.json";
@@ -216,6 +218,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     fighterTacticalMindInput,
     fighterImprovedCriticalInput,
     barbarianRageInput,
+    barbarianUnarmoredDefenseInput,
     barbarianRecklessAttackInput,
     barbarianFastMovementInput,
     barbarianWeaponMasteryInput,
@@ -225,6 +228,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     druidDruidicInput,
     druidPrimalOrderInput,
     monkMartialArtsInput,
+    monkUnarmoredDefenseInput,
     monkDeflectAttacksInput,
     rangerFavoredEnemyInput,
     rogueCunningActionInput,

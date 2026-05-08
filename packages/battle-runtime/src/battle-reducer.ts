@@ -7389,6 +7389,7 @@ function activeEffectArmorClass(
             base: armorClass(mageArmor.base),
             abilityModifiers: [mageArmor.ability] as const,
             source: "spell_base_plus_ability" as const,
+            sourceUnitId: mageArmor.sourceSpellId,
           },
         };
   const spellArmorClassBonuses = combatant.activeEffects.flatMap((effect) =>

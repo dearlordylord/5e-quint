@@ -21,6 +21,12 @@ Current executable state:
   state. Current HP cannot exceed `maximumHp`.
 - `spellSlotExpenditures` is present only for spellcasting builds and stores
   spent Spell Slots against build-derived capacity.
+- `characterSheetArmorClassState` projects build ability scores, current
+  loadout armor and Shield facts, and installed class-feature AC formulas into
+  a single current Armor Class calculation. Barbarian and Monk Unarmored
+  Defense are read from Surface class-feature mechanics; a multiclass build
+  with multiple available class-feature base formulas must provide one
+  `baseChoice`.
 - `parseCharacterSheet` is the boundary parser for serialized sheets before app
   or MCP code consumes them.
 

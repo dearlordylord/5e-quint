@@ -1,5 +1,10 @@
 import type { BattleCreatureState } from "@dnd/battle-runtime";
-import { characterId } from "@dnd/battle-runtime";
+import {
+  battleCombatantSide,
+  characterId,
+  combatantId,
+  initiativeScore,
+} from "@dnd/battle-runtime";
 import {
   abilityScoreAssignment,
   characterEquipmentItemId,
@@ -24,6 +29,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   applyBattleHandoffToCharacterSheet,
+  battleCreatureInitFromCharacterBuild,
   characterArmorClassState,
 } from "./index.ts";
 
@@ -169,10 +175,10 @@ describe("Character Sheet battle handoff", () => {
 describe("Character Build battle projection", () => {
   test("applies Defense Armor Class bonus while wearing eligible armor", () => {
     const armorClass = expectRight(
-      characterArmorClassState(
-        defenseBuild({ wearingArmor: true }),
+      characterArmorClassState({
+        build: defenseBuild({ wearingArmor: true }),
         unitLibrary,
-      ),
+      }),
     );
 
     expect(currentArmorClass(armorClass)).toBe(17);
@@ -186,10 +192,10 @@ describe("Character Build battle projection", () => {
 
   test("does not apply Defense Armor Class bonus when no eligible armor is worn", () => {
     const armorClass = expectRight(
-      characterArmorClassState(
-        defenseBuild({ wearingArmor: false }),
+      characterArmorClassState({
+        build: defenseBuild({ wearingArmor: false }),
         unitLibrary,
-      ),
+      }),
     );
 
     expect(currentArmorClass(armorClass)).toBe(12);
@@ -200,7 +206,67 @@ describe("Character Build battle projection", () => {
       sourceUnitId: "defense",
     });
   });
+
+  test("threads selected Armor Class base choice through battle initialization", () => {
+    const init = expectRight(
+      battleCreatureInitFromCharacterBuild({
+        combatantId: combatantId("barbarian-monk"),
+        characterId: characterId("character:barbarian-monk"),
+        displayName: "Barbarian Monk",
+        build: multiclassUnarmoredDefenseBuild(),
+        initiative: initiativeScore(10),
+        side: battleCombatantSide("party"),
+        unitLibrary,
+        armorClassBaseChoice: {
+          kind: "class_feature",
+          unitId: "monk_unarmored_defense",
+        },
+      }),
+    );
+
+    expect(init.creatureInit.kind).toBe("character");
+    if (init.creatureInit.kind !== "character") return;
+    expect(init.creatureInit.armorClass.base).toMatchObject({
+      source: "monk_unarmored_defense",
+      sourceUnitId: "monk_unarmored_defense",
+    });
+    expect(currentArmorClass(init.creatureInit.armorClass)).toBe(15);
+  });
 });
+
+function multiclassUnarmoredDefenseBuild(): CharacterBuild {
+  return {
+    progression: {
+      startingClass: classUnitId("class_barbarian"),
+      advancements: [
+        {
+          classUnitId: classUnitId("class_monk"),
+          hitPointRule: { tag: "fixedHigherLevelGain" },
+        },
+      ],
+    },
+    background: "background_soldier",
+    species: "species_orc",
+    originLanguages: ["Common", "Dwarvish", "Goblin"],
+    alignment: { order: "lawful", morality: "good" },
+    abilityScores: expectRight(
+      abilityScoreAssignment({
+        str: 13,
+        dex: 14,
+        con: 13,
+        int: 8,
+        wis: 16,
+        cha: 10,
+      }),
+    ),
+    proficiencyChoices: [],
+    features: [],
+    equipment: {
+      owned: [],
+      loadout: {},
+    },
+  };
+}
 
 function defenseBuild(input: {
   readonly wearingArmor: boolean;

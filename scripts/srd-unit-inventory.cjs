@@ -48,6 +48,8 @@ const deterministicAdmissionProjectionEvidenceTag =
   "deterministic-admission-projection";
 const characterCreationOwnerEvidenceSchema =
   "dnd.srd-character-creation-owner-evidence.v1";
+const characterSheetOwnerEvidenceSchema =
+  "dnd.srd-character-sheet-owner-evidence.v1";
 const sharedAlgebraOwnerEvidenceSchema =
   "dnd.srd-shared-algebra-owner-evidence.v1";
 const sharedMulticlassPrimaryAbilityOwner =
@@ -58,6 +60,7 @@ const characterCreationOwnerEvidenceKinds = [
   "finalization",
   "buildProjection",
 ];
+const characterSheetOwnerEvidenceKinds = ["runtimeProjection", "tests"];
 
 const ownerEvidenceRequired = new Map([
   [
@@ -975,6 +978,16 @@ function installedLevelOneOwnerClassification(row, ownerEvidenceSources) {
       evidence: characterCreationEvidence,
     };
   }
+  const characterSheetEvidence = ownerEvidenceSources.characterSheet.get(
+    row.id,
+  );
+  if (characterSheetEvidence) {
+    return {
+      kind: "evidence-present",
+      owner: "character-sheet-runtime",
+      evidence: characterSheetEvidence,
+    };
+  }
   if (isPrimaryAbilityRow(row)) {
     const evidence = ownerEvidenceSources.sharedMulticlassPrimaryAbility;
     if (evidence !== undefined) {
@@ -1172,6 +1185,7 @@ function buildOwnerEvidenceSources({
   unitClaims,
   unitEvidence,
   characterCreationOwnerEvidence,
+  characterSheetOwnerEvidence,
   sharedAlgebraOwnerEvidence,
 }) {
   const supportedSrdUnitIds = new Set(
@@ -1210,6 +1224,10 @@ function buildOwnerEvidenceSources({
       root,
       characterCreationOwnerEvidence,
     ),
+    characterSheet: buildCharacterSheetEvidenceSources(
+      root,
+      characterSheetOwnerEvidence,
+    ),
     sharedMulticlassPrimaryAbility: buildSharedAlgebraEvidenceSource(
       root,
       sharedAlgebraOwnerEvidence,
@@ -1242,6 +1260,38 @@ function buildCharacterCreationEvidenceSources(root, manifest) {
         rowId,
         [
           "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence",
+          `${evidence.taskId} ${evidence.profile}`,
+          evidence.summary,
+        ].join("; "),
+      ]),
+  );
+}
+
+function buildCharacterSheetEvidenceSources(root, manifest) {
+  if (
+    manifest == null ||
+    manifest.schema !== characterSheetOwnerEvidenceSchema
+  ) {
+    return new Map();
+  }
+  const rows = manifest.rows ?? {};
+  if (!isRecord(rows)) {
+    return new Map();
+  }
+  return new Map(
+    Object.entries(rows)
+      .filter(([, evidence]) =>
+        hasCompleteCharacterSheetOwnerEvidence(evidence),
+      )
+      .filter(
+        ([rowId, evidence]) =>
+          characterSheetOwnerEvidenceReferenceIssues(root, rowId, evidence)
+            .length === 0,
+      )
+      .map(([rowId, evidence]) => [
+        rowId,
+        [
+          "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence",
           `${evidence.taskId} ${evidence.profile}`,
           evidence.summary,
         ].join("; "),
@@ -1342,12 +1392,83 @@ function hasCompleteCharacterCreationOwnerEvidence(evidence) {
   );
 }
 
+function hasCompleteCharacterSheetOwnerEvidence(evidence) {
+  return (
+    isRecord(evidence) &&
+    characterSheetOwnerEvidenceKinds.every((kind) =>
+      hasNonEmptyEvidenceList(evidence, kind),
+    )
+  );
+}
+
 function hasNonEmptyEvidenceList(evidence, kind) {
   return (
     isRecord(evidence) &&
     Array.isArray(evidence[kind]) &&
     evidence[kind].length > 0
   );
+}
+
+function summarizeCharacterSheetOwnerEvidence(root, manifest) {
+  if (manifest == null) {
+    return {
+      schema: characterSheetOwnerEvidenceSchema,
+      rowIds: [],
+      issues: ["Character-sheet owner evidence manifest is missing."],
+    };
+  }
+  const issues = [];
+  if (manifest.schema !== characterSheetOwnerEvidenceSchema) {
+    issues.push(
+      `Character-sheet owner evidence manifest schema must be ${characterSheetOwnerEvidenceSchema}.`,
+    );
+  }
+  if (manifest.owner !== "character-sheet-runtime") {
+    issues.push(
+      "Character-sheet owner evidence manifest owner must be character-sheet-runtime.",
+    );
+  }
+  const rows = manifest.rows ?? {};
+  if (!isRecord(rows)) {
+    issues.push(
+      "Character-sheet owner evidence manifest rows must be an object keyed by SRD inventory row id.",
+    );
+    return {
+      schema: manifest.schema,
+      rowIds: [],
+      issues,
+    };
+  }
+  for (const [rowId, evidence] of Object.entries(rows)) {
+    if (!isRecord(evidence)) {
+      issues.push(
+        ...characterSheetOwnerEvidenceReferenceIssues(root, rowId, evidence),
+      );
+      continue;
+    }
+    if (!evidence.taskId) {
+      issues.push(`${rowId} lacks taskId.`);
+    }
+    if (!evidence.profile) {
+      issues.push(`${rowId} lacks profile.`);
+    }
+    if (!evidence.summary) {
+      issues.push(`${rowId} lacks summary.`);
+    }
+    for (const kind of characterSheetOwnerEvidenceKinds) {
+      if (!hasNonEmptyEvidenceList(evidence, kind)) {
+        issues.push(`${rowId} lacks ${kind} evidence.`);
+      }
+    }
+    issues.push(
+      ...characterSheetOwnerEvidenceReferenceIssues(root, rowId, evidence),
+    );
+  }
+  return {
+    schema: manifest.schema,
+    rowIds: Object.keys(rows).sort(),
+    issues,
+  };
 }
 
 function summarizeCharacterCreationOwnerEvidence(root, manifest) {
@@ -1432,6 +1553,75 @@ function characterCreationOwnerEvidenceReferenceIssues(root, rowId, evidence) {
     }
   }
   return issues;
+}
+
+function characterSheetOwnerEvidenceReferenceIssues(root, rowId, evidence) {
+  const issues = [];
+  if (!isRecord(evidence)) {
+    return [`${rowId} manifest evidence must be an object.`];
+  }
+  for (const kind of characterSheetOwnerEvidenceKinds) {
+    const references = evidence[kind];
+    if (!Array.isArray(references)) continue;
+    for (const reference of references) {
+      issues.push(
+        ...characterSheetOwnerEvidenceReferenceIssue(
+          root,
+          rowId,
+          kind,
+          reference,
+        ),
+      );
+    }
+  }
+  return issues;
+}
+
+function characterSheetOwnerEvidenceReferenceIssue(
+  root,
+  rowId,
+  kind,
+  reference,
+) {
+  if (typeof reference !== "string" || reference.length === 0) {
+    return [`${rowId} has non-string ${kind} evidence reference.`];
+  }
+  const separator = reference.lastIndexOf(":");
+  if (separator === -1) {
+    return [
+      `${rowId} ${kind} evidence reference must be path:symbol: ${reference}`,
+    ];
+  }
+  const relativePath = reference.slice(0, separator);
+  const symbolName = reference.slice(separator + 1);
+  if (
+    !relativePath.startsWith("packages/character-sheet-runtime/src/") ||
+    !relativePath.endsWith(".ts")
+  ) {
+    return [
+      `${rowId} ${kind} evidence reference must point under packages/character-sheet-runtime/src: ${reference}`,
+    ];
+  }
+  if (!/^[A-Za-z_$][\w$]*$/.test(symbolName)) {
+    return [
+      `${rowId} ${kind} evidence reference has invalid symbol path: ${reference}`,
+    ];
+  }
+  const absolutePath = path.join(root, relativePath);
+  if (!fs.existsSync(absolutePath)) {
+    return [
+      `${rowId} ${kind} evidence reference points to missing file: ${reference}`,
+    ];
+  }
+  const content = fs.readFileSync(absolutePath, "utf8");
+  const symbolPattern = new RegExp(
+    `(?:^|\\n)\\s*(?:export\\s+)?(?:const|let|var|function|class|type|interface|enum)\\s+${escapeRegExp(symbolName)}\\b`,
+  );
+  return symbolPattern.test(content)
+    ? []
+    : [
+        `${rowId} ${kind} evidence reference points to missing symbol ${symbolName}: ${reference}`,
+      ];
 }
 
 function characterCreationOwnerEvidenceReferenceIssue(
@@ -2290,6 +2480,7 @@ function buildSrdUnitInventory({
   unitClaims = [],
   unitEvidence = [],
   characterCreationOwnerEvidence,
+  characterSheetOwnerEvidence,
   sharedAlgebraOwnerEvidence,
 }) {
   const authored = findAuthored(root);
@@ -2303,6 +2494,7 @@ function buildSrdUnitInventory({
     unitClaims,
     unitEvidence,
     characterCreationOwnerEvidence,
+    characterSheetOwnerEvidence,
     sharedAlgebraOwnerEvidence,
   });
   const rows = withState(
@@ -2325,6 +2517,10 @@ function buildSrdUnitInventory({
       characterCreationOwnerEvidence: summarizeCharacterCreationOwnerEvidence(
         root,
         characterCreationOwnerEvidence,
+      ),
+      characterSheetOwnerEvidence: summarizeCharacterSheetOwnerEvidence(
+        root,
+        characterSheetOwnerEvidence,
       ),
       sharedAlgebraOwnerEvidence: summarizeSharedAlgebraOwnerEvidence(
         root,

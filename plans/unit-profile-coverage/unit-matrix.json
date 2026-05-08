@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 348,
-      "numerator": 62,
-      "percent": "17.8%"
+      "numerator": 64,
+      "percent": "18.4%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 415,
-      "numerator": 86,
-      "percent": "20.7%"
+      "numerator": 88,
+      "percent": "21.2%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 87
+      "value": 89
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 33,
+      "denominator": 35,
       "numerator": 33,
-      "percent": "100%"
+      "percent": "94.3%"
     },
     "profileClassificationCoverage": {
-      "denominator": 87,
-      "numerator": 87,
+      "denominator": 89,
+      "numerator": 89,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 33,
+      "denominator": 35,
       "numerator": 10,
-      "percent": "30.3%"
+      "percent": "28.6%"
     },
     "supportedProfileCoverage": {
-      "denominator": 63,
-      "numerator": 33,
-      "percent": "52.4%"
+      "denominator": 65,
+      "numerator": 35,
+      "percent": "53.8%"
     }
   },
   "metricSemantics": [
@@ -877,6 +877,25 @@
           "ownerPath": "packages/battle-runtime/src/rule-core-stat-block-controls.mbt.test.ts"
         }
       ]
+    },
+    {
+      "id": "character-sheet.armor-class-base-formula",
+      "profileKind": "character-sheet",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "CharacterBuild plus Character Sheet loadout projection",
+      "taskRefs": [
+        "SRDINV23"
+      ],
+      "title": "Character Sheet projects exactly one active Armor Class base formula from build, equipment, and class features",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+        }
+      ]
     }
   ],
   "taskClaims": [
@@ -1132,6 +1151,14 @@
         "unit-feature.reaction-roll-or-damage-reduction"
       ],
       "taskId": "QMBT65"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Sheet Armor Class base formula runtime tests for default unarmored, Barbarian and Monk Unarmored Defense, Shield gating, armor precedence, and multiclass formula choice.",
+      "profileIds": [
+        "character-sheet.armor-class-base-formula"
+      ],
+      "taskId": "SRDINV23"
     }
   ],
   "units": [
@@ -1822,6 +1849,47 @@
       },
       "claim": {
         "profileIds": [
+          "character-sheet.armor-class-base-formula"
+        ],
+        "rawRequirementIds": [],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "character-sheet.armor-class-base-formula",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "CharacterBuild plus Character Sheet loadout projection",
+          "taskRefs": [
+            "SRDINV23"
+          ],
+          "title": "Character Sheet projects exactly one active Armor Class base formula from build, equipment, and class features",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/barbarian_unarmored_defense.json",
+      "unitId": "barbarian_unarmored_defense"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
           "unit-feature.first-attack-roll-reckless-advantage"
         ],
         "rawRequirementIds": [
@@ -2109,6 +2177,47 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/monk_martial_arts.json",
       "unitId": "monk_martial_arts"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "character-sheet.armor-class-base-formula"
+        ],
+        "rawRequirementIds": [],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "character-sheet.armor-class-base-formula",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "CharacterBuild plus Character Sheet loadout projection",
+          "taskRefs": [
+            "SRDINV23"
+          ],
+          "title": "Character Sheet projects exactly one active Armor Class base formula from build, equipment, and class features",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/monk_unarmored_defense.json",
+      "unitId": "monk_unarmored_defense"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -4720,24 +4829,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/barbarian_primal_champion.json",
       "unitId": "barbarian_primal_champion"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/barbarian_unarmored_defense.json",
-      "unitId": "barbarian_unarmored_defense"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -8086,24 +8177,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/monk_epic_boon.json",
       "unitId": "monk_epic_boon"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/monk_unarmored_defense.json",
-      "unitId": "monk_unarmored_defense"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

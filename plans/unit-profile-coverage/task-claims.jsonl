@@ -26,3 +26,4 @@
 {"taskId":"QMBT62","claimKind":"completed-runtime-parity","profileIds":["unit-feature.failed-ability-check-resource-boost"],"note":"Focused Tactical Mind failed ability-check resource boost runtime parity."}
 {"taskId":"QMBT65","claimKind":"qnt-proof","profileIds":["unit-feature.reaction-roll-or-damage-reduction"],"note":"Cutting Words successful ability-check Reaction reduction branch proof."}
 {"taskId":"QMBT65","claimKind":"completed-runtime-parity","profileIds":["unit-feature.reaction-roll-or-damage-reduction"],"note":"Focused Cutting Words ability-check Reaction reduction runtime parity."}
+{"taskId":"SRDINV23","claimKind":"completed-runtime-parity","profileIds":["character-sheet.armor-class-base-formula"],"note":"Focused Character Sheet Armor Class base formula runtime tests for default unarmored, Barbarian and Monk Unarmored Defense, Shield gating, armor precedence, and multiclass formula choice."}

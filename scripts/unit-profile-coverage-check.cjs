@@ -44,6 +44,9 @@ function main() {
   const characterCreationOwnerEvidence = readJson(
     paths.characterCreationOwnerEvidence,
   );
+  const characterSheetOwnerEvidence = readJson(
+    paths.characterSheetOwnerEvidence,
+  );
   const sharedAlgebraOwnerEvidence = readJson(paths.sharedAlgebraOwnerEvidence);
   const inventory = discoverInventory(root, collections.collections);
   const authoredSurfaceUnits = discoverAuthoredSurfaceUnits(root);
@@ -53,6 +56,7 @@ function main() {
     unitClaims,
     unitEvidence,
     characterCreationOwnerEvidence,
+    characterSheetOwnerEvidence,
     sharedAlgebraOwnerEvidence,
   });
   const scannedClaims = scanClaimFiles(root);

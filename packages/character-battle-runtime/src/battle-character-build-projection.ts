@@ -18,10 +18,11 @@ import {
   type NonEmptyReadonlyArray,
 } from "@dnd/character-creation-runtime";
 import {
-  abilityModifier,
+  characterSheetArmorClassState,
+  type CharacterSheetArmorClassBaseChoice,
+} from "@dnd/character-sheet-runtime";
+import {
   armorClassDelta,
-  defaultArmorClassState,
-  zeroAbilityModifiers,
   type ArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import {
@@ -46,85 +47,22 @@ export function battleCreatureInitIssue(
   return Either.left({ tag: "battleCreatureInitIssue", message });
 }
 
-export function characterArmorClassState(
-  build: CharacterBuild,
-  unitLibrary: UnitCatalog,
-): Either.Either<ArmorClassState, BattleCreatureInitIssue> {
-  const loadout = build.equipment.loadout;
-  const defaultState = defaultArmorClassState();
-  const armorTraining = characterBuildArmorTraining(build, unitLibrary);
-  if (Either.isLeft(armorTraining)) {
-    return battleCreatureInitIssue(
-      armorTraining.left.map((issue) => issue.message).join("; "),
-    );
-  }
-  const armor =
-    loadout.armor == null
-      ? undefined
-      : getRequiredUnit(
-          unitLibrary,
-          characterEquipmentItemSourceFromId(loadout.armor).unitId,
-        );
-  if (armor !== undefined && Either.isLeft(armor)) {
-    return battleCreatureInitIssue(armor.left.message);
-  }
-  const shield =
-    loadout.shield == null
-      ? undefined
-      : getRequiredUnit(
-          unitLibrary,
-          characterEquipmentItemSourceFromId(loadout.shield).unitId,
-        );
-  if (shield !== undefined && Either.isLeft(shield)) {
-    return battleCreatureInitIssue(shield.left.message);
-  }
-  const bonuses: ArmorClassState["bonuses"][number][] = [];
-  if (shield?.right.kind === "shield") {
-    bonuses.push({
-      kind: "shield",
-      bonus: armorClassDelta(shield.right.armorClassProjection.bonus),
-      handUse: shield.right.armorClassProjection.handUse,
-      trainingRequired: shield.right.armorClassProjection.trainingRequired,
-      sourceUnitId: shield.right.id,
-    });
-  }
-  for (const ref of characterBuildUnitRefs(build, unitLibrary)) {
-    const unit = getRequiredUnit(unitLibrary, ref.unitId);
+export function characterArmorClassState(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly baseChoice?: CharacterSheetArmorClassBaseChoice;
+}): Either.Either<ArmorClassState, BattleCreatureInitIssue> {
+  const state = characterSheetArmorClassState(input);
+  if (Either.isLeft(state)) return battleCreatureInitIssue(state.left.message);
+  const bonuses = [...state.right.bonuses];
+  for (const ref of characterBuildUnitRefs(input.build, input.unitLibrary)) {
+    const unit = getRequiredUnit(input.unitLibrary, ref.unitId);
     if (Either.isLeft(unit)) {
       return battleCreatureInitIssue(unit.left.message);
     }
     bonuses.push(...armorDefenseBonus(unit.right));
   }
-
-  return Either.right({
-    ...defaultState,
-    abilityModifiers: {
-      ...zeroAbilityModifiers(),
-      str: abilityModifier(scoreModifier(build.abilityScores.str)),
-      dex: abilityModifier(scoreModifier(build.abilityScores.dex)),
-      con: abilityModifier(scoreModifier(build.abilityScores.con)),
-      int: abilityModifier(scoreModifier(build.abilityScores.int)),
-      wis: abilityModifier(scoreModifier(build.abilityScores.wis)),
-      cha: abilityModifier(scoreModifier(build.abilityScores.cha)),
-    },
-    base:
-      armor?.right.kind === "armor"
-        ? {
-            kind: "armor",
-            formula: armor.right.acFormula,
-            category: armor.right.category,
-          }
-        : defaultState.base,
-    bonuses,
-    armorTraining: new Set(armorTraining.right),
-    leftHandUse:
-      shield?.right.kind === "shield"
-        ? "shield"
-        : loadout.offHandWeapon == null
-          ? "free"
-          : "offWeapon",
-    rightHandUse: loadout.weapon == null ? "free" : "mainWeapon",
-  });
+  return Either.right({ ...state.right, bonuses });
 }
 
 function armorDefenseBonus(

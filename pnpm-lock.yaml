@@ -324,6 +324,9 @@ importers:
       '@dnd/shared-algebras':
         specifier: workspace:*
         version: link:../shared-algebras
+      '@dnd/surface':
+        specifier: workspace:*
+        version: link:../surface
       effect:
         specifier: ^3.21.0
         version: 3.21.0

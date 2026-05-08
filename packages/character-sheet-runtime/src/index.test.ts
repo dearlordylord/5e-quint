@@ -1,10 +1,22 @@
 import type { CharacterBuild } from "@dnd/character-creation-runtime";
+import {
+  abilityScoreAssignment,
+  characterEquipmentItemId,
+  characterEquipmentItemUnitId,
+  classUnitId,
+} from "@dnd/character-creation-runtime";
+import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { elapsedTimeTicks, timeSpanDuration } from "@dnd/shared/elapsed-time";
 import { DieRollResult, Hp } from "@dnd/shared/types";
+import {
+  buildUnitCatalog,
+  srdUnitCollection,
+} from "@dnd/surface/surface/unit-catalog";
 import { Either } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
+  characterSheetArmorClassState,
   characterSheetId,
   characterSheetTempHp,
   createFreshCharacterSheet,
@@ -13,9 +25,19 @@ import {
   type CharacterSheet,
 } from "./index.ts";
 
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.armor-class-base-formula
+
 // These tests exercise Character Sheet HP invariants; the fixture only needs
 // the non-spellcasting discriminator read by createFreshCharacterSheet.
 const build = { spellcasting: undefined } as unknown as CharacterBuild;
+
+const unitCatalogResult = buildUnitCatalog({
+  collections: [srdUnitCollection],
+});
+if (unitCatalogResult.tag !== "ok") {
+  throw new Error("Character Sheet runtime test Unit catalog must build.");
+}
+const unitLibrary = unitCatalogResult.catalog;
 
 describe("Character Sheet runtime", () => {
   test("creates a fresh non-spellcasting Character Sheet at current HP", () => {
@@ -252,6 +274,146 @@ describe("Character Sheet runtime", () => {
       sheet: { hitPoints: { tag: "positive", currentHp: 1, tempHp: 0 } },
     });
   });
+
+  test("derives default unarmored Armor Class from Dexterity", () => {
+    const state = requireRight(
+      characterSheetArmorClassState({
+        build: armorClassBuild({ startingClass: "class_fighter" }),
+        unitLibrary,
+      }),
+    );
+
+    expect(state.base).toMatchObject({
+      kind: "ability_sum",
+      source: "default_unarmored",
+    });
+    expect(currentArmorClass(state)).toBe(12);
+  });
+
+  test("derives Barbarian Unarmored Defense and still allows Shield bonus", () => {
+    const state = requireRight(
+      characterSheetArmorClassState({
+        build: armorClassBuild({
+          startingClass: "class_barbarian",
+          shield: true,
+        }),
+        unitLibrary,
+      }),
+    );
+
+    expect(state.base).toMatchObject({
+      kind: "ability_sum",
+      source: "barbarian_unarmored_defense",
+      sourceUnitId: "barbarian_unarmored_defense",
+    });
+    expect(currentArmorClass(state)).toBe(15);
+  });
+
+  test("suppresses Monk Unarmored Defense while wielding a Shield", () => {
+    const state = requireRight(
+      characterSheetArmorClassState({
+        build: armorClassBuild({ startingClass: "class_monk", shield: true }),
+        unitLibrary,
+      }),
+    );
+
+    expect(state.base).toMatchObject({
+      kind: "ability_sum",
+      source: "default_unarmored",
+    });
+    expect(currentArmorClass(state)).toBe(12);
+  });
+
+  test("requires an Armor Class base choice when multiple class formulas apply", () => {
+    const result = characterSheetArmorClassState({
+      build: armorClassBuild({
+        startingClass: "class_barbarian",
+        advancements: ["class_monk"],
+      }),
+      unitLibrary,
+    });
+
+    expect(Either.isLeft(result)).toBe(true);
+  });
+
+  test("rejects missing class-feature Units while deriving Armor Class base formulas", () => {
+    const result = characterSheetArmorClassState({
+      build: {
+        ...armorClassBuild({ startingClass: "class_fighter" }),
+        features: [
+          {
+            kind: "selectedClassChoice",
+            selectedFromUnitId: "class_fighter",
+            unitId: "missing_unarmored_defense",
+          },
+        ],
+      },
+      unitLibrary,
+    });
+
+    expect(result).toMatchObject({
+      _tag: "Left",
+      left: { message: "Unknown Unit id: missing_unarmored_defense" },
+    });
+  });
+
+  test("uses the selected Armor Class base formula for multiclass characters", () => {
+    const monkState = requireRight(
+      characterSheetArmorClassState({
+        build: armorClassBuild({
+          startingClass: "class_barbarian",
+          advancements: ["class_monk"],
+        }),
+        unitLibrary,
+        baseChoice: {
+          kind: "class_feature",
+          unitId: "monk_unarmored_defense",
+        },
+      }),
+    );
+    const barbarianState = requireRight(
+      characterSheetArmorClassState({
+        build: armorClassBuild({
+          startingClass: "class_barbarian",
+          advancements: ["class_monk"],
+        }),
+        unitLibrary,
+        baseChoice: {
+          kind: "class_feature",
+          unitId: "barbarian_unarmored_defense",
+        },
+      }),
+    );
+
+    expect(monkState.base).toMatchObject({
+      source: "monk_unarmored_defense",
+      sourceUnitId: "monk_unarmored_defense",
+    });
+    expect(currentArmorClass(monkState)).toBe(15);
+    expect(barbarianState.base).toMatchObject({
+      source: "barbarian_unarmored_defense",
+      sourceUnitId: "barbarian_unarmored_defense",
+    });
+    expect(currentArmorClass(barbarianState)).toBe(13);
+  });
+
+  test("uses worn armor instead of unarmored base formulas", () => {
+    const state = requireRight(
+      characterSheetArmorClassState({
+        build: armorClassBuild({
+          startingClass: "class_barbarian",
+          armor: "armor_chain_mail",
+        }),
+        unitLibrary,
+      }),
+    );
+
+    expect(state.base).toMatchObject({
+      kind: "armor",
+      category: "heavy",
+    });
+    expect(currentArmorClass(state)).toBe(16);
+  });
 });
 
 function stableSheet(characterIdText: string): CharacterSheet {
@@ -276,4 +438,70 @@ function stableSheet(characterIdText: string): CharacterSheet {
 function requireRight<A, E>(either: Either.Either<A, E>): A {
   if (Either.isRight(either)) return either.right;
   throw new Error("Expected Either.right.");
+}
+
+function armorClassBuild(input: {
+  readonly startingClass: string;
+  readonly advancements?: readonly string[];
+  readonly armor?: string;
+  readonly shield?: boolean;
+}): CharacterBuild {
+  const armorItemId =
+    input.armor === undefined
+      ? undefined
+      : characterEquipmentItemId({
+          slot: "armor",
+          unitId: expectRight(characterEquipmentItemUnitId(input.armor)),
+        });
+  const shieldItemId =
+    input.shield === true
+      ? characterEquipmentItemId({
+          slot: "shield",
+          unitId: expectRight(characterEquipmentItemUnitId("equipment_shield")),
+        })
+      : undefined;
+  return {
+    progression: {
+      startingClass: classUnitId(input.startingClass),
+      advancements: (input.advancements ?? []).map((classId) => ({
+        classUnitId: classUnitId(classId),
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+      })),
+    },
+    background: "background_soldier",
+    species: "species_orc",
+    originLanguages: ["Common", "Dwarvish", "Goblin"],
+    alignment: { order: "lawful", morality: "good" },
+    abilityScores: expectRight(
+      abilityScoreAssignment({
+        str: 13,
+        dex: 14,
+        con: 13,
+        int: 8,
+        wis: 16,
+        cha: 10,
+      }),
+    ),
+    proficiencyChoices: [],
+    features: [],
+    equipment: {
+      owned: [
+        ...(armorItemId === undefined || input.armor === undefined
+          ? []
+          : [{ itemId: armorItemId, unitId: input.armor }]),
+        ...(shieldItemId === undefined
+          ? []
+          : [{ itemId: shieldItemId, unitId: "equipment_shield" }]),
+      ],
+      loadout: {
+        ...(armorItemId === undefined ? {} : { armor: armorItemId }),
+        ...(shieldItemId === undefined ? {} : { shield: shieldItemId }),
+      },
+    },
+  };
+}
+
+function expectRight<A, E>(either: Either.Either<A, E>): A {
+  if (Either.isRight(either)) return either.right;
+  throw new Error(`Expected Either.right, got ${JSON.stringify(either.left)}.`);
 }

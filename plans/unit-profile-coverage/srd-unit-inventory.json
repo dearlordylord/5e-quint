@@ -133,6 +133,14 @@
       ],
       "issues": []
     },
+    "characterSheetOwnerEvidence": {
+      "schema": "dnd.srd-character-sheet-owner-evidence.v1",
+      "rowIds": [
+        "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense",
+        "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense"
+      ],
+      "issues": []
+    },
     "sharedAlgebraOwnerEvidence": {
       "schema": "dnd.srd-shared-algebra-owner-evidence.v1",
       "owner": "shared-algebras/multiclass-prerequisite-algebra",
@@ -145,15 +153,15 @@
     "spellPressureRows": 211,
     "levelOneClassContainers": 12,
     "levelOneRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 139,
-      "catalog-only/dead-for-now": 4,
+      "catalog-installed-owner-evidence-present": 141,
       "non-runtime": 12,
+      "catalog-only/dead-for-now": 2,
       "catalog-installed-owner-evidence-required": 1
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 157,
-      "catalog-only/dead-for-now": 78,
+      "catalog-installed-owner-evidence-present": 159,
       "non-runtime": 12,
+      "catalog-only/dead-for-now": 76,
       "catalog-authored-executable-follow-up": 70,
       "catalog-installed-owner-evidence-required": 11,
       "needs-surface-widening": 33,
@@ -187,10 +195,11 @@
       "title": "Classify Installed Level-1 Owner Evidence",
       "suggestedStatus": "done",
       "intent": "Stop treating installed level-1 rows as done by catalog load alone; assign operational owner expectations or explicit catalog-only closure.",
-      "rowCount": 141,
+      "rowCount": 143,
       "rowIds": [
         "srd521:classes/barbarian:level-1:class-container:barbarian_class_container",
         "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
+        "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense",
         "srd521:classes/barbarian:level-1:core-trait:barbarian_armor_training",
         "srd521:classes/barbarian:level-1:core-trait:barbarian_hit_point_die",
         "srd521:classes/barbarian:level-1:core-trait:barbarian_primary_ability",
@@ -250,6 +259,7 @@
         "srd521:classes/fighter:level-1:multiclass-entry:fighter_multiclass_entry_traits",
         "srd521:classes/monk:level-1:class-container:monk_class_container",
         "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
+        "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense",
         "srd521:classes/monk:level-1:core-trait:monk_armor_training",
         "srd521:classes/monk:level-1:core-trait:monk_hit_point_die",
         "srd521:classes/monk:level-1:core-trait:monk_primary_ability",
@@ -733,9 +743,8 @@
       "title": "Review Catalog-Only and Surface-Widening Rows",
       "suggestedStatus": "done",
       "intent": "Preserve catalog-only/dead-for-now rows and name missing Surface constructs for nonspell and spell Surface-widening blockers.",
-      "rowCount": 37,
+      "rowCount": 35,
       "rowIds": [
-        "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_command",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_dissonant_whispers",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_feather_fall",
@@ -749,7 +758,6 @@
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_fog_cloud",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_jump",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_thunderwave",
-        "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense",
         "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_command",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_fog_cloud",
@@ -1586,11 +1594,8 @@
       "title": "Promote Character-Sheet Armor Class Formula Runtime",
       "suggestedStatus": "ready-for-research",
       "intent": "Promote the character-sheet Armor Class derivation owner for base AC and class-derived Unarmored Defense formulas.",
-      "rowCount": 2,
-      "rowIds": [
-        "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense",
-        "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense"
-      ],
+      "rowCount": 0,
+      "rowIds": [],
       "nextAction": "Model the character-sheet AC formula selection boundary before runtime support, then close Barbarian and Monk Unarmored Defense as executable character-sheet evidence.",
       "acceptance": "Barbarian and Monk Unarmored Defense rows no longer close as catalog-only/dead-for-now; they have promoted character-sheet runtime evidence for mutually exclusive AC formula derivation."
     },
@@ -1904,12 +1909,23 @@
         "sourceRecordPath": "packages/surface/content/barbarian_unarmored_defense.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "barbarian_unarmored_defense"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Barbarian Unarmored Defense is a character-sheet AC formula, and no promoted character-sheet AC derivation runtime owns class-derived Armor Class formulas yet."
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit barbarian_unarmored_defense is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; SRDINV23 Character Sheet Armor Class base formula runtime; Barbarian Unarmored Defense is read from the installed Surface class-feature record and projected into a Character Sheet Armor Class base formula when the build is not wearing armor. The projection keeps Shield handling separate and supports explicit base-formula selection when multiple class-feature formulas are available.",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/barbarian:level-1:class-table-summary:barbarian_level_1_feature_table_row",
@@ -7436,12 +7452,23 @@
         "sourceRecordPath": "packages/surface/content/monk_unarmored_defense.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "monk_unarmored_defense"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Monk Unarmored Defense is a character-sheet AC formula, and no promoted character-sheet AC derivation runtime owns class-derived Armor Class formulas yet."
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit monk_unarmored_defense is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; SRDINV23 Character Sheet Armor Class base formula runtime; Monk Unarmored Defense is read from the installed Surface class-feature record and projected into a Character Sheet Armor Class base formula only while the build is not wearing armor and not wielding a Shield. The projection supports explicit base-formula selection when multiple class-feature formulas are available.",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/monk:level-1:class-table-summary:monk_level_1_feature_table_row",

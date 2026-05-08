@@ -1,0 +1,35 @@
+{
+  "schema": "dnd.srd-character-sheet-owner-evidence.v1",
+  "owner": "character-sheet-runtime",
+  "notes": "Row-level owner evidence for SRD inventory rows whose installed Surface class-feature records are exercised by the character-sheet runtime. This manifest records executable Character Sheet projection evidence; it is not authored provenance.",
+  "rows": {
+    "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense": {
+      "taskId": "SRDINV23",
+      "profile": "Character Sheet Armor Class base formula runtime",
+      "summary": "Barbarian Unarmored Defense is read from the installed Surface class-feature record and projected into a Character Sheet Armor Class base formula when the build is not wearing armor. The projection keeps Shield handling separate and supports explicit base-formula selection when multiple class-feature formulas are available.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/index.ts:characterSheetArmorClassState",
+        "packages/character-sheet-runtime/src/index.ts:selectedUnarmoredBaseSource",
+        "packages/character-sheet-runtime/src/index.ts:armorClassBaseSourceForFormula"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/index.test.ts:armorClassBuild",
+        "packages/character-sheet-runtime/src/index.test.ts:expectRight"
+      ]
+    },
+    "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense": {
+      "taskId": "SRDINV23",
+      "profile": "Character Sheet Armor Class base formula runtime",
+      "summary": "Monk Unarmored Defense is read from the installed Surface class-feature record and projected into a Character Sheet Armor Class base formula only while the build is not wearing armor and not wielding a Shield. The projection supports explicit base-formula selection when multiple class-feature formulas are available.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/index.ts:characterSheetArmorClassState",
+        "packages/character-sheet-runtime/src/index.ts:equipmentPredicateMatches",
+        "packages/character-sheet-runtime/src/index.ts:armorClassBaseSourceForFormula"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/index.test.ts:armorClassBuild",
+        "packages/character-sheet-runtime/src/index.test.ts:expectRight"
+      ]
+    }
+  }
+}
