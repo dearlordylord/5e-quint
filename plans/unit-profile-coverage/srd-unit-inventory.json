@@ -9,15 +9,18 @@
     "levelOneClassContainers": 12,
     "levelOneRowsByDisposition": {
       "missing-authored-record": 115,
-      "catalog-installed-needs-owner-evidence": 26,
-      "catalog-only/dead-for-now": 3,
-      "non-runtime": 12
+      "catalog-installed-owner-evidence-present": 20,
+      "catalog-only/dead-for-now": 4,
+      "non-runtime": 12,
+      "catalog-installed-owner-evidence-required": 5
     },
     "allRowsByDisposition": {
       "missing-authored-record": 187,
-      "catalog-installed-needs-owner-evidence": 65,
-      "catalog-only/dead-for-now": 103,
-      "non-runtime": 12
+      "catalog-installed-owner-evidence-present": 20,
+      "catalog-only/dead-for-now": 104,
+      "non-runtime": 12,
+      "catalog-installed-needs-owner-evidence": 39,
+      "catalog-installed-owner-evidence-required": 5
     },
     "spellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 100,
@@ -69,7 +72,7 @@
         "srd521:classes/wizard:level-1:multiclass-entry:wizard_multiclass_entry_traits",
         "srd521:classes/wizard:level-1:spell-access:wizard_spellcasting"
       ],
-      "nextAction": "For each installed level-1 row, classify the operational owner and evidence requirement, then update generated state names if needed.",
+      "nextAction": "Installed level-1 rows have owner-specific classifications; keep evidence-required and catalog-only closures visible in later planning.",
       "acceptance": "Installed level-1 rows no longer imply support from catalog admission alone; report distinguishes catalog evidence from operational owner evidence."
     },
     {
@@ -466,11 +469,12 @@
       "title": "Review Catalog-Only and Surface-Widening Rows",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Preserve nonspell catalog-only/dead-for-now rows and name missing Surface constructs for any widening blockers.",
-      "rowCount": 3,
+      "rowCount": 4,
       "rowIds": [
         "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense",
         "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense",
-        "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands"
+        "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands",
+        "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery"
       ],
       "nextAction": "Either keep nonspell rows explicitly catalog-only/dead-for-now or promote a named Surface widening task.",
       "acceptance": "Nonspell catalog-only rows are counted deliberately, and every Surface-widening row names the missing construct."
@@ -698,15 +702,20 @@
         "state": "installed",
         "unitId": "barbarian_rage"
       },
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit barbarian_rage is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "deterministic admission/projection and selected-identity MBT evidence are recorded in plans/unit-profile-coverage/unit-evidence.jsonl",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense",
@@ -4676,15 +4685,20 @@
         "state": "installed",
         "unitId": "class_fighter"
       },
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit class_fighter is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "Surface class container plus character-creation-runtime",
+          "evidence": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, equipment, mastery, and multiclass rows as the executable evidence boundary.",
+          "status": "owner evidence required"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
+      "nextAction": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, equipment, mastery, and multiclass rows as the executable evidence boundary."
     },
     {
       "id": "srd521:classes/fighter:level-1:class-feature-grant:fighter_fighting_style",
@@ -4712,15 +4726,20 @@
         "state": "installed",
         "unitId": "fighter_fighting_style"
       },
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit fighter_fighting_style is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "character-creation discovery, fill, finalization, and build projection coverage in packages/character-creation-runtime/src/index.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/fighter:level-1:class-feature-grant:fighter_second_wind",
@@ -4748,15 +4767,20 @@
         "state": "installed",
         "unitId": "fighter_second_wind"
       },
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit fighter_second_wind is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "deterministic admission/projection and selected-identity MBT evidence are recorded in plans/unit-profile-coverage/unit-evidence.jsonl",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/fighter:level-1:class-table-summary:fighter_level_1_feature_table_row",
@@ -4814,15 +4838,20 @@
         "state": "installed",
         "unitId": "class_fighter"
       },
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit class_fighter is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "character-creation discovery, fill, finalization, and build projection coverage in packages/character-creation-runtime/src/index.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/fighter:level-1:core-trait:fighter_hit_point_die",
@@ -4850,15 +4879,20 @@
         "state": "installed",
         "unitId": "class_fighter"
       },
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit class_fighter is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "character-creation discovery, fill, finalization, and build projection coverage in packages/character-creation-runtime/src/index.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/fighter:level-1:core-trait:fighter_primary_ability",
@@ -4886,15 +4920,20 @@
         "state": "installed",
         "unitId": "class_fighter"
       },
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit class_fighter is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "shared-algebras/multiclass-prerequisite-algebra",
+          "evidence": "Primary Ability is needed for multiclass prerequisite checks, but installed class records do not currently carry this source fact.",
+          "status": "owner evidence required"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
+      "nextAction": "Primary Ability is needed for multiclass prerequisite checks, but installed class records do not currently carry this source fact."
     },
     {
       "id": "srd521:classes/fighter:level-1:core-trait:fighter_saving_throw_proficiencies",
@@ -4922,15 +4961,20 @@
         "state": "installed",
         "unitId": "class_fighter"
       },
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit class_fighter is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "character-creation discovery, fill, finalization, and build projection coverage in packages/character-creation-runtime/src/index.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/fighter:level-1:core-trait:fighter_skill_proficiencies",
@@ -4958,15 +5002,20 @@
         "state": "installed",
         "unitId": "class_fighter"
       },
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit class_fighter is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "character-creation discovery, fill, finalization, and build projection coverage in packages/character-creation-runtime/src/index.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/fighter:level-1:core-trait:fighter_weapon_proficiencies",
@@ -4994,15 +5043,20 @@
         "state": "installed",
         "unitId": "class_fighter"
       },
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit class_fighter is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "character-creation discovery, fill, finalization, and build projection coverage in packages/character-creation-runtime/src/index.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/fighter:level-1:equipment-pressure:fighter_starting_equipment",
@@ -5030,15 +5084,20 @@
         "state": "installed",
         "unitId": "class_fighter"
       },
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit class_fighter is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "character-creation discovery, fill, finalization, and build projection coverage in packages/character-creation-runtime/src/index.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/fighter:level-1:mastery-pressure:fighter_weapon_mastery",
@@ -5066,15 +5125,20 @@
         "state": "installed",
         "unitId": "fighter_weapon_mastery"
       },
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit fighter_weapon_mastery is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "character-creation discovery, fill, finalization, and build projection coverage in packages/character-creation-runtime/src/index.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/fighter:level-1:multiclass-entry:fighter_multiclass_entry_traits",
@@ -5102,15 +5166,20 @@
         "state": "installed",
         "unitId": "class_fighter"
       },
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit class_fighter is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "character-creation discovery, fill, finalization, and build projection coverage in packages/character-creation-runtime/src/index.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/monk:level-1:class-container:monk_class_container",
@@ -7078,15 +7147,20 @@
         "state": "installed",
         "unitId": "rogue_sneak_attack"
       },
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit rogue_sneak_attack is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "deterministic admission/projection and selected-identity MBT evidence are recorded in plans/unit-profile-coverage/unit-evidence.jsonl",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/rogue:level-1:class-feature-grant:rogue_thieves_cant",
@@ -9832,15 +9906,20 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit class_wizard is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "Surface class container plus character-creation-runtime",
+          "evidence": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, and multiclass rows as the executable evidence boundary.",
+          "status": "owner evidence required"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
+      "nextAction": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, and multiclass rows as the executable evidence boundary."
     },
     {
       "id": "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery",
@@ -9868,15 +9947,20 @@
         "state": "installed",
         "unitId": "wizard_arcane_recovery"
       },
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit wizard_arcane_recovery is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "catalog-only/dead-for-now",
+          "evidence": "Spell Slot recovery after a Short Rest belongs to a future character-sheet/rest runtime, not the current character-creation or battle-runtime boundary.",
+          "status": "catalog-only/dead-for-now closure"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
+      "nextAction": "Spell Slot recovery after a Short Rest belongs to a future character-sheet/rest runtime, not the current character-creation or battle-runtime boundary."
     },
     {
       "id": "srd521:classes/wizard:level-1:class-feature-grant:wizard_ritual_adept",
@@ -9904,15 +9988,20 @@
         "state": "installed",
         "unitId": "wizard_ritual_adept"
       },
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit wizard_ritual_adept is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "future spell-access/invocation runtime",
+          "evidence": "Character creation retains the feature Unit reference, but ritual casting execution is not a promoted runtime owner yet.",
+          "status": "owner evidence required"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
+      "nextAction": "Character creation retains the feature Unit reference, but ritual casting execution is not a promoted runtime owner yet."
     },
     {
       "id": "srd521:classes/wizard:level-1:class-table-summary:wizard_level_1_feature_table_row",
@@ -9970,15 +10059,20 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit class_wizard is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "character-creation discovery, fill, finalization, and build projection coverage in packages/character-creation-runtime/src/index.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/wizard:level-1:core-trait:wizard_hit_point_die",
@@ -10006,15 +10100,20 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit class_wizard is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "character-creation discovery, fill, finalization, and build projection coverage in packages/character-creation-runtime/src/index.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/wizard:level-1:core-trait:wizard_primary_ability",
@@ -10042,15 +10141,20 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit class_wizard is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "shared-algebras/multiclass-prerequisite-algebra",
+          "evidence": "Primary Ability is needed for multiclass prerequisite checks, but installed class records do not currently carry this source fact.",
+          "status": "owner evidence required"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
+      "nextAction": "Primary Ability is needed for multiclass prerequisite checks, but installed class records do not currently carry this source fact."
     },
     {
       "id": "srd521:classes/wizard:level-1:core-trait:wizard_saving_throw_proficiencies",
@@ -10078,15 +10182,20 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit class_wizard is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "character-creation discovery, fill, finalization, and build projection coverage in packages/character-creation-runtime/src/index.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/wizard:level-1:core-trait:wizard_skill_proficiencies",
@@ -10114,15 +10223,20 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit class_wizard is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "character-creation discovery, fill, finalization, and build projection coverage in packages/character-creation-runtime/src/index.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/wizard:level-1:core-trait:wizard_weapon_proficiencies",
@@ -10150,15 +10264,20 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit class_wizard is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "character-creation discovery, fill, finalization, and build projection coverage in packages/character-creation-runtime/src/index.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/wizard:level-1:equipment-pressure:wizard_starting_equipment",
@@ -10186,15 +10305,20 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit class_wizard is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "character-creation discovery, fill, finalization, and build projection coverage in packages/character-creation-runtime/src/index.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/wizard:level-1:multiclass-entry:wizard_multiclass_entry_traits",
@@ -10222,15 +10346,20 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit class_wizard is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "character-creation discovery, fill, finalization, and build projection coverage in packages/character-creation-runtime/src/index.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/wizard:level-1:spell-access:wizard_spellcasting",
@@ -10258,15 +10387,20 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit class_wizard is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "character-creation discovery, fill, finalization, and build projection coverage in packages/character-creation-runtime/src/index.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_acid_splash",

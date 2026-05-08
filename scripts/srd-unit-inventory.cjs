@@ -32,6 +32,86 @@ const exactSurfaceKinds = new Set([
   "equipment-pressure",
 ]);
 
+const battleRuntimeEvidencePresentUnitIds = new Set([
+  "barbarian_rage",
+  "fighter_second_wind",
+  "rogue_sneak_attack",
+]);
+
+const characterCreationEvidencePresentRowIds = new Set([
+  "srd521:classes/fighter:level-1:class-feature-grant:fighter_fighting_style",
+  "srd521:classes/fighter:level-1:core-trait:fighter_armor_training",
+  "srd521:classes/fighter:level-1:core-trait:fighter_hit_point_die",
+  "srd521:classes/fighter:level-1:core-trait:fighter_saving_throw_proficiencies",
+  "srd521:classes/fighter:level-1:core-trait:fighter_skill_proficiencies",
+  "srd521:classes/fighter:level-1:core-trait:fighter_weapon_proficiencies",
+  "srd521:classes/fighter:level-1:equipment-pressure:fighter_starting_equipment",
+  "srd521:classes/fighter:level-1:mastery-pressure:fighter_weapon_mastery",
+  "srd521:classes/fighter:level-1:multiclass-entry:fighter_multiclass_entry_traits",
+  "srd521:classes/wizard:level-1:core-trait:wizard_armor_training",
+  "srd521:classes/wizard:level-1:core-trait:wizard_hit_point_die",
+  "srd521:classes/wizard:level-1:core-trait:wizard_saving_throw_proficiencies",
+  "srd521:classes/wizard:level-1:core-trait:wizard_skill_proficiencies",
+  "srd521:classes/wizard:level-1:core-trait:wizard_weapon_proficiencies",
+  "srd521:classes/wizard:level-1:equipment-pressure:wizard_starting_equipment",
+  "srd521:classes/wizard:level-1:multiclass-entry:wizard_multiclass_entry_traits",
+  "srd521:classes/wizard:level-1:spell-access:wizard_spellcasting",
+]);
+
+const ownerEvidenceRequired = new Map([
+  [
+    "srd521:classes/fighter:level-1:class-container:fighter_class_container",
+    {
+      owner: "Surface class container plus character-creation-runtime",
+      requirement:
+        "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, equipment, mastery, and multiclass rows as the executable evidence boundary.",
+    },
+  ],
+  [
+    "srd521:classes/fighter:level-1:core-trait:fighter_primary_ability",
+    {
+      owner: "shared-algebras/multiclass-prerequisite-algebra",
+      requirement:
+        "Primary Ability is needed for multiclass prerequisite checks, but installed class records do not currently carry this source fact.",
+    },
+  ],
+  [
+    "srd521:classes/wizard:level-1:class-container:wizard_class_container",
+    {
+      owner: "Surface class container plus character-creation-runtime",
+      requirement:
+        "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, and multiclass rows as the executable evidence boundary.",
+    },
+  ],
+  [
+    "srd521:classes/wizard:level-1:core-trait:wizard_primary_ability",
+    {
+      owner: "shared-algebras/multiclass-prerequisite-algebra",
+      requirement:
+        "Primary Ability is needed for multiclass prerequisite checks, but installed class records do not currently carry this source fact.",
+    },
+  ],
+  [
+    "srd521:classes/wizard:level-1:class-feature-grant:wizard_ritual_adept",
+    {
+      owner: "future spell-access/invocation runtime",
+      requirement:
+        "Character creation retains the feature Unit reference, but ritual casting execution is not a promoted runtime owner yet.",
+    },
+  ],
+]);
+
+const catalogOnlyClosures = new Map([
+  [
+    "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery",
+    {
+      owner: "catalog-only/dead-for-now",
+      reason:
+        "Spell Slot recovery after a Short Rest belongs to a future character-sheet/rest runtime, not the current character-creation or battle-runtime boundary.",
+    },
+  ],
+]);
+
 function slug(text) {
   return text
     .toLowerCase()
@@ -200,16 +280,83 @@ function finalDisposition(row, authored, installedIds) {
   if (!row.candidateUnitId) return "needs-surface-widening";
   if (!authored.has(row.candidateUnitId)) return "missing-authored-record";
   if (!installedIds.has(row.candidateUnitId)) return "catalog-only/dead-for-now";
+  const installedLevelOneClassification =
+    installedLevelOneOwnerClassification(row);
+  if (installedLevelOneClassification?.kind === "evidence-present") {
+    return "catalog-installed-owner-evidence-present";
+  }
+  if (installedLevelOneClassification?.kind === "evidence-required") {
+    return "catalog-installed-owner-evidence-required";
+  }
+  if (installedLevelOneClassification?.kind === "catalog-only-closure") {
+    return "catalog-only/dead-for-now";
+  }
   return "catalog-installed-needs-owner-evidence";
 }
 
 function nextAction(row, disposition, gate) {
-  if (disposition === "catalog-installed-needs-owner-evidence") return "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only.";
+  const installedLevelOneClassification =
+    installedLevelOneOwnerClassification(row);
+  if (disposition === "catalog-installed-owner-evidence-present") {
+    return "Owner-specific operational evidence is classified and present.";
+  }
+  if (disposition === "catalog-installed-owner-evidence-required") {
+    return installedLevelOneClassification.requirement;
+  }
+  if (disposition === "catalog-installed-needs-owner-evidence") {
+    return "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only.";
+  }
+  if (
+    disposition === "catalog-only/dead-for-now" &&
+    installedLevelOneClassification?.kind === "catalog-only-closure"
+  ) return installedLevelOneClassification.reason;
   if (disposition === "non-runtime") return "No runtime work; keep classification as explicit closure.";
-  if (disposition === "catalog-only/dead-for-now") return "Decide whether to admit/support, or keep catalog-only closure counted.";
-  if (disposition === "missing-authored-record") return "Author an SRD-provenance Surface record or explicitly close the row.";
+  if (disposition === "catalog-only/dead-for-now") {
+    return "Decide whether to admit/support, or keep catalog-only closure counted.";
+  }
+  if (disposition === "missing-authored-record") {
+    return "Author an SRD-provenance Surface record or explicitly close the row.";
+  }
   if (disposition === "needs-surface-widening") return `Widen Surface: ${gate.missingConstruct}.`;
   return "Classify owner-specific evidence before implementation.";
+}
+
+function installedLevelOneOwnerClassification(row) {
+  if (row.levelBand !== "level-1") return undefined;
+  if (
+    row.candidateUnitId &&
+    battleRuntimeEvidencePresentUnitIds.has(row.candidateUnitId)
+  ) {
+    return {
+      kind: "evidence-present",
+      owner: "battle-runtime",
+      evidence:
+        "deterministic admission/projection and selected-identity MBT evidence are recorded in plans/unit-profile-coverage/unit-evidence.jsonl",
+    };
+  }
+  if (characterCreationEvidencePresentRowIds.has(row.id)) {
+    return {
+      kind: "evidence-present",
+      owner: "character-creation-runtime",
+      evidence:
+        "character-creation discovery, fill, finalization, and build projection coverage in packages/character-creation-runtime/src/index.test.ts",
+    };
+  }
+  const required = ownerEvidenceRequired.get(row.id);
+  if (required) {
+    return {
+      kind: "evidence-required",
+      ...required,
+    };
+  }
+  const closure = catalogOnlyClosures.get(row.id);
+  if (closure) {
+    return {
+      kind: "catalog-only-closure",
+      ...closure,
+    };
+  }
+  return undefined;
 }
 
 function makeRow(input) {
@@ -345,6 +492,13 @@ function withState(rows, authored, installedIds) {
       : undefined;
     const gate = surfaceGate(row);
     const disposition = finalDisposition(row, authored, installedIds);
+    const catalogAdmission = row.candidateUnitId
+      ? installedIds.has(row.candidateUnitId)
+        ? { state: "installed", unitId: row.candidateUnitId }
+        : { state: "not-installed", unitId: row.candidateUnitId }
+      : { state: "not-applicable" };
+    const installedLevelOneClassification =
+      installedLevelOneOwnerClassification(row);
     return {
       ...row,
       surface: gate,
@@ -355,25 +509,51 @@ function withState(rows, authored, installedIds) {
             sourceRecordPath: authoredUnit.sourceRecordPath,
           }
         : { state: "missing-authored-record" },
-      catalogAdmission: row.candidateUnitId
-        ? installedIds.has(row.candidateUnitId)
-          ? { state: "installed", unitId: row.candidateUnitId }
-          : { state: "not-installed", unitId: row.candidateUnitId }
-        : { state: "not-applicable" },
+      catalogAdmission,
       finalDisposition: disposition,
       ownerEvidence:
-        disposition === "catalog-installed-needs-owner-evidence"
+        catalogAdmission.state === "installed" &&
+        (disposition === "catalog-installed-needs-owner-evidence" ||
+          installedLevelOneClassification !== undefined)
           ? [
               {
                 owner: "Unit catalog/admission",
                 evidence: `candidate Unit ${row.candidateUnitId} is installed in srdUnitCollection`,
-                status: "catalog-only evidence; operational owner evidence still required",
+                status:
+                  installedLevelOneClassification === undefined
+                    ? "catalog-only evidence; operational owner evidence still required"
+                    : "catalog evidence",
               },
+              ...(installedLevelOneClassification === undefined
+                ? []
+                : [ownerEvidenceEntry(installedLevelOneClassification)]),
             ]
           : [],
       nextAction: nextAction(row, disposition, gate),
     };
   });
+}
+
+function ownerEvidenceEntry(classification) {
+  if (classification.kind === "evidence-present") {
+    return {
+      owner: classification.owner,
+      evidence: classification.evidence,
+      status: "owner evidence present",
+    };
+  }
+  if (classification.kind === "evidence-required") {
+    return {
+      owner: classification.owner,
+      evidence: classification.requirement,
+      status: "owner evidence required",
+    };
+  }
+  return {
+    owner: classification.owner,
+    evidence: classification.reason,
+    status: "catalog-only/dead-for-now closure",
+  };
 }
 
 function countBy(rows, key) {
@@ -423,6 +603,13 @@ function buildRecommendedBatches(rows) {
   const installedNeedsOwnerEvidence = levelOne.filter(
     (row) => row.finalDisposition === "catalog-installed-needs-owner-evidence",
   );
+  const classifiedInstalledRows = levelOne.filter(
+    (row) =>
+      row.finalDisposition === "catalog-installed-owner-evidence-present" ||
+      row.finalDisposition === "catalog-installed-owner-evidence-required" ||
+      (row.finalDisposition === "catalog-only/dead-for-now" &&
+        row.catalogAdmission.state === "installed"),
+  );
   const missingClassFeatureRows = levelOne.filter(
     (row) =>
       row.rowKind === "class-feature-grant" &&
@@ -463,9 +650,13 @@ function buildRecommendedBatches(rows) {
       title: "Classify Installed Level-1 Owner Evidence",
       intent:
         "Stop treating installed level-1 rows as done by catalog load alone; assign operational owner expectations or explicit catalog-only closure.",
-      rows: installedNeedsOwnerEvidence,
+      rows: installedNeedsOwnerEvidence.length === 0
+        ? classifiedInstalledRows
+        : installedNeedsOwnerEvidence,
       nextAction:
-        "For each installed level-1 row, classify the operational owner and evidence requirement, then update generated state names if needed.",
+        installedNeedsOwnerEvidence.length === 0
+          ? "Installed level-1 rows have owner-specific classifications; keep evidence-required and catalog-only closures visible in later planning."
+          : "For each installed level-1 row, classify the operational owner and evidence requirement, then update generated state names if needed.",
       acceptance:
         "Installed level-1 rows no longer imply support from catalog admission alone; report distinguishes catalog evidence from operational owner evidence.",
     }),
@@ -646,6 +837,34 @@ function validateSrdUnitInventory(report) {
     ) {
       issues.push(`${row.id} is installed but lacks catalog evidence.`);
     }
+    if (
+      row.finalDisposition === "catalog-installed-owner-evidence-present" &&
+      !row.ownerEvidence.some(
+        (evidence) => evidence.status === "owner evidence present",
+      )
+    ) {
+      issues.push(
+        `${row.id} is classified as owner-evidence-present but lacks owner evidence.`,
+      );
+    }
+    if (
+      row.finalDisposition === "catalog-installed-owner-evidence-required" &&
+      !row.ownerEvidence.some(
+        (evidence) => evidence.status === "owner evidence required",
+      )
+    ) {
+      issues.push(
+        `${row.id} is classified as owner-evidence-required but lacks owner requirement.`,
+      );
+    }
+    if (
+      row.levelBand === "level-1" &&
+      row.finalDisposition === "catalog-installed-needs-owner-evidence"
+    ) {
+      issues.push(
+        `${row.id} is an installed level-1 row with generic owner evidence.`,
+      );
+    }
   }
   for (const batch of report.recommendedBatches) {
     if (!batch.id) issues.push("Recommended SRD inventory batch lacks id.");
@@ -720,8 +939,8 @@ function renderSrdUnitInventory(report) {
     "",
     "## Level-1 Backlog Rows",
     "",
-    "| Row | Category | Surface | Authored | Catalog | Disposition | Next action | Source |",
-    "|---|---|---|---|---|---|---|---|",
+    "| Row | Category | Surface | Authored | Catalog | Disposition | Owner evidence | Next action | Source |",
+    "|---|---|---|---|---|---|---|---|---|",
     ...levelOne.map((row) =>
       [
         row.concept,
@@ -730,6 +949,9 @@ function renderSrdUnitInventory(report) {
         row.authoredContent.state,
         row.catalogAdmission.state,
         row.finalDisposition,
+        row.ownerEvidence
+          .map((evidence) => `${evidence.owner}: ${evidence.status}`)
+          .join("; "),
         row.nextAction,
         `${row.source.path}:${row.source.lineStart}`,
       ]
