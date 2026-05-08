@@ -2055,6 +2055,15 @@ and projection tests for selected spells; `pnpm unit-profile-coverage:check`;
 `pnpm quality`; battle-runtime MBT only if promoted battle-runtime behavior
 changes; `/simplify` convergence, minimum two rounds.
 
+Retry Guidance: model simple spell riders with SRD-specific expiration anchors
+rather than one shared caster-start boundary. Add tests that exercise each
+distinct rider timing: end of the caster's next turn, start of the target's
+next turn, and the target's next attack before the end of its next turn. For
+Starry Wisp, either make object targeting executable at the spell target fill
+boundary or keep the spell out of supported runtime evidence until object
+targets are representable; do not project object target support as metadata
+without an executable fill path.
+
 ### Task 199 - SRDINV29 - Promote Area, Chain, and Typed-Damage Spell Runtime
 
 Status: `blocked`
