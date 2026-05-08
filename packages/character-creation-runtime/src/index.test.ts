@@ -11,8 +11,11 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
+import { readClassCreationFacts } from "@dnd/surface/surface/character-creation-readers";
 import type {
+  ProficiencyGrant,
   ProficiencyGrantSubject,
+  ToolProficiencyGrant,
   UnitRecord,
 } from "@dnd/surface/surface/types";
 import type { AbilityScoreAssignment as RawAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
@@ -28,6 +31,7 @@ import {
   characterBuildResources,
   exactChoiceCardinality,
   boundedChoiceCardinality,
+  choiceCardinalityBounds,
   characterBuildUnitRefs,
   computeTotalLevel,
   CHARACTER_EQUIPMENT_ITEM_SLOTS,
@@ -57,6 +61,7 @@ import {
   unitChoiceSourceUnitId,
   type CharacterDraft,
   type CharacterChoiceSelection,
+  type CharacterBuildProficiencies,
   type ChoiceCardinality,
   type CreationFill,
   type CreationChoiceOptionId,
@@ -82,11 +87,13 @@ import {
 import { qntLoadoutSlot } from "./qnt-loadout-bridge.test-support.ts";
 import {
   CHARACTER_CREATION_SUPPORT_PROFILE,
+  supportedHoleOptionIds,
   type SupportedLoadoutChoice,
 } from "./support-gates.ts";
 import {
   abilityScoreIncreaseChoiceOptions,
   progressionOptionId,
+  SRD_LEVEL_ONE_CLASS_UNIT_IDS,
 } from "./phase1-manifest.ts";
 import {
   decodeAbilityScoreIncreaseOptionId,
@@ -117,12 +124,12 @@ if (unitCatalogResult.tag !== "ok") {
 const unitLibrary = unitCatalogResult.catalog;
 
 function expectRight<T, E>(result: Either.Either<T, E>): T {
-  expect(Either.isRight(result)).toBe(true);
   if (Either.isLeft(result)) {
     throw new Error(
       `Expected Either.right, received ${JSON.stringify(result.left)}`,
     );
   }
+  expect(Either.isRight(result)).toBe(true);
 
   return result.right;
 }
@@ -447,6 +454,17 @@ describe("character creation hole discovery", () => {
           "11:class_druid:level_1:maximum_hit_die",
           "13:class_fighter:level_1:maximum_hit_die",
           "13:class_fighter|13:class_fighter:level_2:fixed_hp_gain",
+          "13:class_fighter|15:class_barbarian:level_2:fixed_hp_gain",
+          "13:class_fighter|10:class_bard:level_2:fixed_hp_gain",
+          "13:class_fighter|12:class_cleric:level_2:fixed_hp_gain",
+          "13:class_fighter|11:class_druid:level_2:fixed_hp_gain",
+          "13:class_fighter|10:class_monk:level_2:fixed_hp_gain",
+          "13:class_fighter|13:class_paladin:level_2:fixed_hp_gain",
+          "13:class_fighter|12:class_ranger:level_2:fixed_hp_gain",
+          "13:class_fighter|11:class_rogue:level_2:fixed_hp_gain",
+          "13:class_fighter|14:class_sorcerer:level_2:fixed_hp_gain",
+          "13:class_fighter|13:class_warlock:level_2:fixed_hp_gain",
+          "13:class_fighter|12:class_wizard:level_2:fixed_hp_gain",
           "10:class_monk:level_1:maximum_hit_die",
           "13:class_paladin:level_1:maximum_hit_die",
           "12:class_ranger:level_1:maximum_hit_die",
@@ -659,10 +677,7 @@ describe("character creation hole discovery", () => {
       "paladin_weapon_mastery",
       "ranger_weapon_mastery",
     ] as const) {
-      const masteryHole = classFeatureGrantChoiceHoles(
-        unitId,
-        unitLibrary,
-      )[0];
+      const masteryHole = classFeatureGrantChoiceHoles(unitId, unitLibrary)[0];
       expect(masteryHole).toMatchObject({
         kind: "choice",
         cardinality: { tag: "exactly", count: 2 },
@@ -1903,6 +1918,7 @@ describe("character creation finalization", () => {
       savingThrows: ["str", "con"],
       skills: ["athletics", "intimidation", "perception", "survival"],
       weapon: ["simple", "martial"],
+      weaponPropertyFilters: [],
       tools: ["tool_dice_set"],
     });
     expect(
@@ -1962,6 +1978,120 @@ describe("character creation finalization", () => {
       "weapon_longsword",
       "equipment_shield",
     ]);
+  });
+
+  test("finalizes supported Monk 1 class-container source facts from Surface class records", () => {
+    const draft = completeMonkDraft();
+    const result = finalizeCharacterDraft({ draft, unitLibrary });
+
+    expect(result.tag).toBe("ready");
+    if (result.tag !== "ready") return;
+
+    expect(result.build.progression).toEqual({
+      startingClass: "class_monk",
+      advancements: [],
+    });
+    expect(
+      expectRight(characterBuildHitPoints(result.build, unitLibrary)),
+    ).toEqual({
+      maximum: 10,
+      hitDice: [{ classUnitId: "class_monk", dieSize: 8, total: 1 }],
+    });
+    expect(
+      expectRight(characterBuildProficiencies(result.build, unitLibrary)),
+    ).toMatchObject({
+      savingThrows: ["str", "dex"],
+      skills: expect.arrayContaining(["acrobatics", "athletics"]),
+      weapon: ["simple"],
+    });
+    expect(
+      expectRight(characterBuildArmorTraining(result.build, unitLibrary)),
+    ).toEqual([]);
+    expect(characterBuildFeatureUnitIds(result.build, unitLibrary)).toEqual([
+      "monk_martial_arts",
+      "monk_unarmored_defense",
+    ]);
+    expect(
+      expectRight(characterBuildProficiencies(result.build, unitLibrary)).tools,
+    ).toEqual(expect.arrayContaining(["tool_dice_set", "tool_lute"]));
+    expect(result.build.equipment.owned.map((item) => item.unitId)).toEqual([
+      "weapon_longsword",
+      "weapon_dagger",
+      "equipment_shield",
+    ]);
+  });
+
+  test("finalizes each supported level-1 SRD class-container source facts from Surface class records", () => {
+    for (const classUnitId of SRD_LEVEL_ONE_CLASS_UNIT_IDS) {
+      const draft = completeSupportedProgressionDraft({
+        draftId: `draft:srd-level-1-${classUnitId}`,
+        progression: testProgression(classUnitId, 1),
+      });
+      const classFacts = readableClassFacts(classUnitId);
+      const result = finalizeCharacterDraft({ draft, unitLibrary });
+
+      expect(result.tag, classUnitId).toBe("ready");
+      if (result.tag !== "ready") continue;
+
+      expect(result.build.progression).toEqual({
+        startingClass: classUnitId,
+        advancements: [],
+      });
+      expect(characterBuildUnitRefs(result.build)).toContainEqual({
+        unitId: classUnitId,
+      });
+      expect(
+        expectRight(characterBuildHitPoints(result.build, unitLibrary)).hitDice,
+      ).toEqual([
+        {
+          classUnitId,
+          dieSize: classFacts.hitPointDie,
+          total: 1,
+        },
+      ]);
+      const proficiencies = expectRight(
+        characterBuildProficiencies(result.build, unitLibrary),
+      );
+      expect(proficiencies.savingThrows).toEqual(
+        classFacts.savingThrowProficiencies,
+      );
+      expect(proficiencies.weapon).toEqual(
+        classFacts.weaponProficiencies.flatMap((proficiency) =>
+          proficiency.kind === "weapon_category" ? [proficiency.category] : [],
+        ),
+      );
+      expect(proficiencies.weaponPropertyFilters).toEqual(
+        classFacts.weaponProficiencies.flatMap((proficiency) =>
+          proficiency.kind === "weapon_category_with_properties"
+            ? [proficiency]
+            : [],
+        ),
+      );
+      expect(proficiencies.skills).toEqual(
+        expect.arrayContaining([
+          ...selectedChoiceOptionIds(
+            draft,
+            classUnitId,
+            "class_skill_proficiency_choice",
+          ),
+        ]),
+      );
+      assertClassToolProficienciesProjected({
+        classUnitId,
+        toolProficiencies: classFacts.toolProficiencies,
+        proficiencies,
+        draft,
+      });
+      expect(
+        expectRight(characterBuildArmorTraining(result.build, unitLibrary)),
+      ).toEqual(classFacts.armorTraining);
+      expect(
+        selectedChoiceOptionIds(draft, classUnitId, "class_equipment_choice"),
+      ).toHaveLength(1);
+      expect(result.build.equipment.owned.map((item) => item.unitId)).toEqual(
+        draft.selections.equipment?.selectedUnitIds,
+      );
+    }
   });
 
   test("rejects over-cap parsed ability scores without throwing during finalization", () => {
@@ -2452,6 +2582,51 @@ describe("character creation finalization", () => {
         "fighter_weapon_mastery",
       ]),
     );
+  });
+
+  test("finalizes each supported SRD multiclass-entry source facts from Surface class records", () => {
+    for (const classUnitId of SRD_LEVEL_ONE_CLASS_UNIT_IDS) {
+      const progression = supportedMulticlassProgressionForClass(classUnitId);
+      const draft = completeSupportedProgressionDraft({
+        draftId: `draft:srd-multiclass-entry-${classUnitId}`,
+        progression,
+      });
+      const classFacts = readableClassFacts(classUnitId);
+      const result = finalizeCharacterDraft({ draft, unitLibrary });
+
+      expect(result.tag, classUnitId).toBe("ready");
+      if (result.tag !== "ready") continue;
+
+      expect(
+        expectRight(characterBuildHitPoints(result.build, unitLibrary)).hitDice,
+      ).toEqual(
+        expect.arrayContaining([
+          {
+            classUnitId,
+            dieSize: classFacts.hitPointDie,
+            total: 1,
+          },
+        ]),
+      );
+      expect(characterBuildFeatureUnitIds(result.build, unitLibrary)).toEqual(
+        expect.arrayContaining(
+          classFacts.featureGrants
+            .filter((grant) => grant.level <= 1)
+            .map((grant) => grant.unitId),
+        ),
+      );
+      assertMulticlassProficienciesProjected({
+        classUnitId,
+        multiclassProficiencies: classFacts.multiclassProficiencies,
+        proficiencies: expectRight(
+          characterBuildProficiencies(result.build, unitLibrary),
+        ),
+        armorTraining: expectRight(
+          characterBuildArmorTraining(result.build, unitLibrary),
+        ),
+        draft,
+      });
+    }
   });
 
   test("collects all missing class Unit issues while projecting a build", () => {
@@ -3377,7 +3552,7 @@ describe("character creation finalization", () => {
       profile.unitOptionIdsByChoiceKey.class_feature_proficiency_choice;
     profile.unitOptionIdsByChoiceKey.class_feature_proficiency_choice = [
       ...(originalProficiencyOptions ?? []),
-      creationChoiceOptionId("tool:tool_thieves_tools"),
+      creationChoiceOptionId("tool:thieves_tools"),
     ];
     try {
       const fighter = unitLibrary.requireUnit("class_fighter");
@@ -3398,7 +3573,7 @@ describe("character creation finalization", () => {
                   { kind: "skill", skill: "medicine" },
                   { kind: "weapon_category", category: "martial" },
                   { kind: "armor_category", category: "light" },
-                  { kind: "tool", toolId: "tool_thieves_tools" },
+                  { kind: "tool", toolId: "thieves_tools" },
                 ],
               },
             },
@@ -3429,7 +3604,7 @@ describe("character creation finalization", () => {
               "medicine",
               "weapon_category:martial",
               "armor_category:light",
-              "tool:tool_thieves_tools",
+              "tool:thieves_tools",
             ),
           ],
         },
@@ -3455,7 +3630,7 @@ describe("character creation finalization", () => {
       );
       expect(proficiencies.weapon).toEqual(expect.arrayContaining(["martial"]));
       expect(proficiencies.tools).toEqual(
-        expect.arrayContaining(["tool_thieves_tools"]),
+        expect.arrayContaining(["thieves_tools"]),
       );
     } finally {
       profile.unitOptionIdsByChoiceKey.class_feature_proficiency_choice =
@@ -3468,7 +3643,7 @@ describe("character creation finalization", () => {
       { kind: "skill", skill: "medicine" },
       { kind: "weapon_category", category: "martial" },
       { kind: "armor_category", category: "light" },
-      { kind: "tool", toolId: "tool_thieves_tools" },
+      { kind: "tool", toolId: "thieves_tools" },
     ];
 
     for (const subject of subjects) {
@@ -3570,6 +3745,281 @@ function createTestDraft(draftId: string): CharacterDraft {
     unitLibrary,
     draftId: characterDraftId(draftId),
   });
+}
+
+function completeSupportedProgressionDraft(input: {
+  readonly draftId: string;
+  readonly progression: CharacterProgression;
+}): CharacterDraft {
+  let draft = createTestDraft(input.draftId);
+  draft = requireAcceptedBatch(
+    fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: initialManifestFills(progressionOptionId(input.progression)),
+    }),
+  );
+
+  for (let pass = 0; pass < 8; pass += 1) {
+    const holes = discoverCreationHoles({ draft, unitLibrary });
+    if (holes.length === 0) {
+      return draft;
+    }
+
+    draft = requireAcceptedBatch(
+      fillCreationHoles({
+        draft,
+        unitLibrary,
+        expectedRevision: draft.revision,
+        fills: holes.map(supportedFillForHole),
+      }),
+    );
+  }
+
+  throw new Error(
+    `Supported progression fixture still has holes after iterative fills: ${JSON.stringify(
+      holeSummary(discoverCreationHoles({ draft, unitLibrary })),
+    )}`,
+  );
+}
+
+function supportedFillForHole(hole: CreationHole): CreationFill {
+  if (hole.kind === "abilityScores") {
+    return {
+      kind: "abilityScores",
+      holeId: hole.holeId,
+      method: "standardArray",
+      value: testAbilityScoreAssignment({
+        str: 15,
+        dex: 14,
+        con: 13,
+        int: 8,
+        wis: 10,
+        cha: 12,
+      }),
+    };
+  }
+
+  const supportedOptionIds = supportedHoleOptionIds(hole);
+  if (supportedOptionIds === undefined) {
+    throw new Error(
+      `No support-profile options for discovered test hole: ${hole.holeId}`,
+    );
+  }
+  const supportedOptionIdSet = new Set(supportedOptionIds);
+  const selectedOptionIds = hole.options
+    .map((option) => option.optionId)
+    .filter((optionId) => supportedOptionIdSet.has(optionId))
+    .slice(0, choiceCardinalityBounds(hole.cardinality).max);
+  if (
+    selectedOptionIds.length < choiceCardinalityBounds(hole.cardinality).max
+  ) {
+    throw new Error(
+      `Not enough supported options for discovered test hole: ${hole.holeId}`,
+    );
+  }
+
+  return {
+    kind: "choice",
+    holeId: hole.holeId,
+    optionIds: selectedOptionIds,
+  };
+}
+
+function readableClassFacts(classUnitId: UnitRecord["id"]) {
+  const facts = readClassCreationFacts(unitLibrary.requireUnit(classUnitId));
+  if (facts.tag !== "readable") {
+    throw new Error(`Expected readable class facts for ${classUnitId}.`);
+  }
+
+  return facts.value;
+}
+
+function supportedMulticlassProgressionForClass(
+  classUnitId: UnitRecord["id"],
+): CharacterProgression {
+  const progression =
+    CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions.find(
+      (candidate) =>
+        startingClassUnitId(candidate) !== classUnitId &&
+        candidate.advancements.some(
+          (entry) => entry.classUnitId === classUnitId,
+        ),
+    );
+  if (progression == null) {
+    throw new Error(`No supported multiclass progression for ${classUnitId}.`);
+  }
+
+  return progression;
+}
+
+function selectedChoiceOptionIds(
+  draft: CharacterDraft,
+  unitId: UnitRecord["id"],
+  choiceKey: string,
+): readonly CreationChoiceOptionId[] {
+  return draft.selections.choices.flatMap((selection) =>
+    selection.kind === "unitChoice" &&
+    selection.source.unitId === unitId &&
+    selection.source.choiceKey === choiceKey
+      ? selection.options.map((option) => option.optionId)
+      : [],
+  );
+}
+
+function assertMulticlassProficienciesProjected(input: {
+  readonly classUnitId: UnitRecord["id"];
+  readonly multiclassProficiencies: ProficiencyGrant;
+  readonly proficiencies: CharacterBuildProficiencies;
+  readonly armorTraining: readonly string[];
+  readonly draft: CharacterDraft;
+}): void {
+  const fixedSubjects = fixedMulticlassSubjects(input.multiclassProficiencies);
+  for (const subject of fixedSubjects) {
+    assertProficiencySubjectProjected({
+      classUnitId: input.classUnitId,
+      subject,
+      proficiencies: input.proficiencies,
+      armorTraining: input.armorTraining,
+    });
+  }
+
+  for (const choice of multiclassProficiencyChoices(
+    input.multiclassProficiencies,
+  )) {
+    const selectedSubjects = selectedChoiceOptionIds(
+      input.draft,
+      input.classUnitId,
+      choice.choiceKey,
+    );
+    expect(selectedSubjects, input.classUnitId).toHaveLength(choice.count);
+    for (const optionId of selectedSubjects) {
+      const decoded = decodeProficiencyGrantSubjectOptionId(optionId);
+      expect(Either.isRight(decoded), input.classUnitId).toBe(true);
+      if (Either.isRight(decoded)) {
+        assertProficiencySubjectProjected({
+          classUnitId: input.classUnitId,
+          subject: decoded.right,
+          proficiencies: input.proficiencies,
+          armorTraining: input.armorTraining,
+        });
+      }
+    }
+  }
+}
+
+function assertClassToolProficienciesProjected(input: {
+  readonly classUnitId: UnitRecord["id"];
+  readonly toolProficiencies: ToolProficiencyGrant;
+  readonly proficiencies: CharacterBuildProficiencies;
+  readonly draft: CharacterDraft;
+}): void {
+  if (input.toolProficiencies.kind === "none") {
+    return;
+  }
+  if (input.toolProficiencies.kind === "fixed") {
+    for (const subject of input.toolProficiencies.proficiencies) {
+      assertProficiencySubjectProjected({
+        classUnitId: input.classUnitId,
+        subject,
+        proficiencies: input.proficiencies,
+        armorTraining: [],
+      });
+    }
+    return;
+  }
+
+  const selectedSubjects = selectedChoiceOptionIds(
+    input.draft,
+    input.classUnitId,
+    "class_tool_proficiency_choice",
+  );
+  expect(selectedSubjects, input.classUnitId).toHaveLength(
+    input.toolProficiencies.count,
+  );
+  for (const optionId of selectedSubjects) {
+    const decoded = decodeProficiencyGrantSubjectOptionId(optionId);
+    expect(Either.isRight(decoded), input.classUnitId).toBe(true);
+    if (Either.isRight(decoded)) {
+      assertProficiencySubjectProjected({
+        classUnitId: input.classUnitId,
+        subject: decoded.right,
+        proficiencies: input.proficiencies,
+        armorTraining: [],
+      });
+    }
+  }
+}
+
+function multiclassProficiencyChoices(
+  proficiency: ProficiencyGrant,
+): readonly { readonly choiceKey: string; readonly count: number }[] {
+  if (proficiency.kind === "choice") {
+    return [
+      {
+        choiceKey: "class_feature_proficiency_choice",
+        count: proficiency.count,
+      },
+    ];
+  }
+  if (proficiency.kind === "mixed") {
+    return [
+      {
+        choiceKey: proficiency.choice.choiceKey,
+        count: proficiency.choice.count,
+      },
+    ];
+  }
+  if (proficiency.kind === "mixed_choices") {
+    return proficiency.choices.map((choice) => ({
+      choiceKey: choice.choiceKey,
+      count: choice.count,
+    }));
+  }
+
+  return [];
+}
+
+function fixedMulticlassSubjects(
+  proficiency: ProficiencyGrant,
+): readonly ProficiencyGrantSubject[] {
+  if (proficiency.kind === "fixed") {
+    return proficiency.proficiencies;
+  }
+  if (proficiency.kind === "mixed" || proficiency.kind === "mixed_choices") {
+    return proficiency.fixed;
+  }
+
+  return [];
+}
+
+function assertProficiencySubjectProjected(input: {
+  readonly classUnitId: UnitRecord["id"];
+  readonly subject: ProficiencyGrantSubject;
+  readonly proficiencies: CharacterBuildProficiencies;
+  readonly armorTraining: readonly string[];
+}): void {
+  if (input.subject.kind === "skill") {
+    expect(input.proficiencies.skills, input.classUnitId).toContain(
+      input.subject.skill,
+    );
+  }
+  if (input.subject.kind === "weapon_category") {
+    expect(input.proficiencies.weapon, input.classUnitId).toContain(
+      input.subject.category,
+    );
+  }
+  if (input.subject.kind === "armor_category") {
+    expect(input.armorTraining, input.classUnitId).toContain(
+      input.subject.category,
+    );
+  }
+  if (input.subject.kind === "tool") {
+    expect(input.proficiencies.tools, input.classUnitId).toContain(
+      input.subject.toolId,
+    );
+  }
 }
 
 function unitLibraryWithUnrelatedUnits(count: number): UnitCatalog {
@@ -3892,6 +4342,107 @@ function completeWizardDraft(): CharacterDraft {
   );
 }
 
+function completeMonkDraft(): CharacterDraft {
+  const draft = createTestDraft("draft:complete-monk");
+  const afterInitial = requireAcceptedBatch(
+    fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [
+        choiceFill(
+          "cc:draft:draft.progression.initial",
+          "10:class_monk:level_1:maximum_hit_die",
+        ),
+        choiceFill("cc:draft:draft.background", "background_soldier"),
+        choiceFill("cc:draft:draft.species", "species_orc"),
+        {
+          kind: "abilityScores",
+          holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
+          method: "standardArray",
+          value: testAbilityScoreAssignment({
+            str: 12,
+            dex: 15,
+            con: 14,
+            int: 8,
+            wis: 13,
+            cha: 10,
+          }),
+        },
+        choiceFill("cc:draft:draft.languages", "Dwarvish", "Goblin"),
+        choiceFill("cc:draft:draft.alignment", "lawful_good"),
+      ],
+    }),
+  );
+  const afterChoices = requireAcceptedBatch(
+    fillCreationHoles({
+      draft: afterInitial,
+      unitLibrary,
+      expectedRevision: afterInitial.revision,
+      fills: [
+        choiceFill(
+          testUnitHoleId("class_monk", "class_skill_proficiency_choice"),
+          "acrobatics",
+          "athletics",
+        ),
+        choiceFill(
+          testUnitHoleId("class_monk", "class_tool_proficiency_choice"),
+          "tool:tool_lute",
+        ),
+        choiceFill(
+          testUnitHoleId(
+            "background_soldier",
+            "background_ability_score_increase",
+          ),
+          "two_and_one:str:con",
+        ),
+        choiceFill(
+          testUnitHoleId("background_soldier", "background_tool_choice"),
+          "tool_dice_set",
+        ),
+        choiceFill(
+          testUnitHoleId("class_monk", "class_equipment_choice"),
+          "option_b",
+        ),
+        choiceFill(
+          testUnitHoleId("background_soldier", "background_equipment_choice"),
+          "option_b",
+        ),
+      ],
+    }),
+  );
+  const afterPurchase = requireAcceptedBatch(
+    fillCreationHoles({
+      draft: afterChoices,
+      unitLibrary,
+      expectedRevision: afterChoices.revision,
+      fills: [
+        choiceFill(
+          testUnitHoleId("class_monk", "equipment_purchase"),
+          "weapon_longsword",
+          "weapon_dagger",
+          "equipment_shield",
+        ),
+      ],
+    }),
+  );
+
+  return requireAcceptedBatch(
+    fillCreationHoles({
+      draft: afterPurchase,
+      unitLibrary,
+      expectedRevision: afterPurchase.revision,
+      fills: [
+        choiceFill(testLoadoutHoleId("equipment_shield", "shield"), "wielded"),
+        choiceFill(
+          testLoadoutHoleId("weapon_longsword", "weapon"),
+          "wielded_one_handed",
+        ),
+      ],
+    }),
+  );
+}
+
 function completeWizardThenFighterDraft(): CharacterDraft {
   const draft = createTestDraft("draft:complete-wizard-fighter");
   const afterInitial = requireAcceptedBatch(
@@ -3997,8 +4548,8 @@ function completeWizardThenFighterDraft(): CharacterDraft {
       fills: [
         choiceFill(
           testUnitHoleId("class_wizard", "equipment_purchase"),
-          "armor_chain_mail",
           "weapon_longsword",
+          "weapon_dagger",
           "equipment_shield",
         ),
       ],
@@ -4011,7 +4562,6 @@ function completeWizardThenFighterDraft(): CharacterDraft {
       unitLibrary,
       expectedRevision: afterPurchase.revision,
       fills: [
-        choiceFill(testLoadoutHoleId("armor_chain_mail", "armor"), "worn"),
         choiceFill(testLoadoutHoleId("equipment_shield", "shield"), "wielded"),
         choiceFill(
           testLoadoutHoleId("weapon_longsword", "weapon"),

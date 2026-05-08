@@ -43,7 +43,7 @@ import {
   decodeAbilityScoreIncreaseOptionId,
   decodeProficiencyGrantSubjectOptionId,
   parseToolProficiencyId,
-  proficiencyGrantSubjectOption,
+  proficiencyGrantSubjectOptions,
   type AbilityScoreIncreaseDeltaWithCap,
   type ChoiceOptionCodecIssue,
   type ParsedProficiencyGrantSubject,
@@ -63,7 +63,9 @@ import {
   CLASS_SUBCLASS_CHOICE_KEY,
   CLASS_EQUIPMENT_CHOICE_KEY,
   CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
+  CLASS_TOOL_PROFICIENCY_CHOICE_KEY,
   EXACTLY_ONE_CHOICE,
+  MULTICLASS_PROFICIENCY_CHOICE_KEYS,
   WIZARD_CANTRIP_CHOICE_KEY,
   WIZARD_PREPARED_SPELL_CHOICE_KEY,
   WIZARD_SPELLBOOK_CHOICE_KEY,
@@ -73,6 +75,7 @@ import {
   isSupportedProgression,
   supportedLoadoutChoiceForSource,
   supportedLoadoutChoices,
+  supportedPurchasableEquipmentUnitIdsForClass,
   unitRefsForSupportedClassChoice,
 } from "./support-gates.ts";
 import {
@@ -87,6 +90,7 @@ import {
   nonEmptyReadonlyArray,
   loadoutSourceKey,
   isCharacterBuildToolProficiencyId,
+  unitChoiceKey,
   unitChoiceSourceKey,
   type AbilityScoreAssignment,
   type BackgroundAbilityScoreIncreaseSelection,
@@ -115,6 +119,7 @@ import {
   type LoadoutSourceKey,
   type UnitChoiceSourceKey,
   type UnitChoiceSource,
+  type UnitChoiceKey,
   type UnitRef,
 } from "./types.ts";
 
@@ -537,6 +542,9 @@ function fixedProficiencySubjects(
   if (proficiency.kind === "mixed") {
     return proficiency.fixed;
   }
+  if (proficiency.kind === "mixed_choices") {
+    return proficiency.fixed;
+  }
   return [];
 }
 
@@ -768,6 +776,12 @@ export function characterBuildProficiencies(
   const multiclassTools =
     finalizedBuildSurfaceToolProficiencyIds(multiclassSubjects);
   if (Either.isLeft(multiclassTools)) return Either.left(multiclassTools.left);
+  const startingClassTools = finalizedBuildSurfaceToolProficiencyIds(
+    fixedToolProficiencySubjects(startingClassFacts.toolProficiencies),
+  );
+  if (Either.isLeft(startingClassTools)) {
+    return Either.left(startingClassTools.left);
+  }
 
   return Either.right({
     savingThrows: startingClassFacts.savingThrowProficiencies,
@@ -788,7 +802,15 @@ export function characterBuildProficiencies(
         subject.kind === "weapon_category" ? [subject.category] : [],
       ),
     ]),
+    weaponPropertyFilters: uniqueValues(
+      startingClassFacts.weaponProficiencies.flatMap((proficiency) =>
+        proficiency.kind === "weapon_category_with_properties"
+          ? [proficiency]
+          : [],
+      ),
+    ),
     tools: uniqueValues([
+      ...startingClassTools.right,
       ...multiclassTools.right,
       ...build.proficiencyChoices.flatMap((subject) =>
         subject.kind === "tool" ? [subject.toolId] : [],
@@ -1149,6 +1171,26 @@ function supportedFinalizationChoiceHoles(input: {
         ? []
         : multiclassProficiencyChoiceHoles(classUnitId, facts),
   );
+  const classToolProficiencyHoles =
+    input.classFacts.toolProficiencies.kind === "choice"
+      ? compact([
+          requireUnitChoiceCreationHole(
+            choiceHole({
+              source: unitSource(
+                startingClassUnitId(input.selections.progression),
+                CLASS_TOOL_PROFICIENCY_CHOICE_KEY,
+              ),
+              cardinality: exactChoiceCardinality(
+                input.classFacts.toolProficiencies.count,
+              ),
+              options:
+                input.classFacts.toolProficiencies.options.flatMap(
+                  proficiencyGrantSubjectOptions,
+                ),
+            }),
+          ),
+        ])
+      : [];
   const selectedFeatAbilityScoreHoles = selectedFeatAbilityScoreChoiceHoles(
     input.selections,
     input.unitLibrary,
@@ -1167,6 +1209,7 @@ function supportedFinalizationChoiceHoles(input: {
 
   return [
     classSkillHole,
+    ...classToolProficiencyHoles,
     ...classFeatureHoles,
     ...subclassHoles,
     ...multiclassProficiencyHoles,
@@ -1259,16 +1302,53 @@ function multiclassProficiencyChoiceHoles(
   classFacts: ClassCreationFacts,
 ): readonly UnitChoiceCreationHole[] {
   const proficiency = classFacts.multiclassProficiencies;
-  if (proficiency.kind !== "choice") {
-    return [];
+  if (proficiency.kind === "choice") {
+    return multiclassProficiencyChoiceHole(
+      classUnitId,
+      CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
+      proficiency.count,
+      proficiency.options,
+    );
+  }
+  if (proficiency.kind === "mixed") {
+    return multiclassProficiencyChoiceHole(
+      classUnitId,
+      proficiency.choice.choiceKey,
+      proficiency.choice.count,
+      proficiency.choice.options,
+    );
+  }
+  if (proficiency.kind === "mixed_choices") {
+    return proficiency.choices.flatMap((choice) =>
+      multiclassProficiencyChoiceHole(
+        classUnitId,
+        choice.choiceKey,
+        choice.count,
+        choice.options,
+      ),
+    );
   }
 
+  return [];
+}
+
+function multiclassProficiencyChoiceHole(
+  classUnitId: UnitRecord["id"],
+  choiceKeyText: string,
+  count: number,
+  subjects: readonly ProficiencyGrantSubject[],
+): readonly UnitChoiceCreationHole[] {
+  const choiceKey = unitChoiceKey(choiceKeyText);
+  if (Either.isLeft(choiceKey)) {
+    return [];
+  }
+  const options = subjects.flatMap(proficiencyGrantSubjectOptions);
   return compact([
     requireUnitChoiceCreationHole(
       choiceHole({
-        source: unitSource(classUnitId, CLASS_FEATURE_PROFICIENCY_CHOICE_KEY),
-        cardinality: exactChoiceCardinality(proficiency.count),
-        options: proficiency.options.map(proficiencyGrantSubjectOption),
+        source: unitSource(classUnitId, choiceKey.right),
+        cardinality: exactChoiceCardinality(count),
+        options,
       }),
     ),
   ]);
@@ -1395,10 +1475,11 @@ function supportedStartingEquipmentCoinGrantChoice(
 export function isSupportedEquipmentSelection(
   selections: FinalizedCharacterSelections,
 ): boolean {
+  const supportedUnitIds = supportedPurchasableEquipmentUnitIdsForClass(
+    startingClassUnitId(selections.progression),
+  );
   return selections.equipment.selectedUnitIds.every((unitId) =>
-    (
-      CHARACTER_CREATION_SUPPORT_PROFILE.purchasableEquipmentUnitIds as readonly string[]
-    ).includes(unitId),
+    (supportedUnitIds as readonly string[]).includes(unitId),
   );
 }
 
@@ -1921,8 +2002,37 @@ function selectedBuildProficiencyChoiceSubjects(
       kind: "tool" as const,
       toolId,
     })),
+    ...decodedClassToolProficiencySubjects(selections),
     ...classFeatureSubjects.right,
   ]);
+}
+
+function decodedClassToolProficiencySubjects(
+  selections: FinalizedCharacterSelections,
+): readonly ParsedProficiencyGrantSubject[] {
+  return selections.choices.flatMap((selection) =>
+    selection.kind === "unitChoice" &&
+    sameCreationHoleSource(
+      selection.source,
+      unitSource(
+        startingClassUnitId(selections.progression),
+        CLASS_TOOL_PROFICIENCY_CHOICE_KEY,
+      ),
+    )
+      ? choiceSelectionOptionIds(selection).flatMap((optionId) => {
+          const subject = decodeProficiencyGrantSubjectOptionId(optionId);
+          return Either.isRight(subject) && subject.right.kind === "tool"
+            ? [subject.right]
+            : [];
+        })
+      : [],
+  );
+}
+
+function fixedToolProficiencySubjects(
+  proficiency: ClassCreationFacts["toolProficiencies"],
+): readonly ProficiencyGrantSubject[] {
+  return proficiency.kind === "fixed" ? proficiency.proficiencies : [];
 }
 
 function finalizedBuildToolProficiencies(
@@ -2003,7 +2113,7 @@ function decodedClassFeatureProficiencySubjects(
   for (const selection of selections.choices) {
     if (
       selection.kind !== "unitChoice" ||
-      selection.source.choiceKey !== CLASS_FEATURE_PROFICIENCY_CHOICE_KEY
+      !isClassFeatureProficiencyChoiceKey(selection.source.choiceKey)
     ) {
       continue;
     }
@@ -2022,6 +2132,15 @@ function decodedClassFeatureProficiencySubjects(
   return collectedIssues == null
     ? Either.right(subjects)
     : Either.left(collectedIssues);
+}
+
+function isClassFeatureProficiencyChoiceKey(choiceKey: UnitChoiceKey): boolean {
+  return (
+    choiceKey === CLASS_FEATURE_PROFICIENCY_CHOICE_KEY ||
+    MULTICLASS_PROFICIENCY_CHOICE_KEYS.some(
+      (multiclassChoiceKey) => multiclassChoiceKey === choiceKey,
+    )
+  );
 }
 
 export function resourceForFeature(

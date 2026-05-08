@@ -42,6 +42,20 @@ export const INITIAL_CHARACTER_DRAFT_PATHS = [
 // facts while keeping Orc/Soldier origin facts manifest-owned.
 export const PHASE1_CLASS_FIGHTER_UNIT_ID = "class_fighter";
 export const WIDTH_CLASS_WIZARD_UNIT_ID = "class_wizard";
+export const SRD_LEVEL_ONE_CLASS_UNIT_IDS = [
+  "class_barbarian",
+  "class_bard",
+  "class_cleric",
+  "class_druid",
+  PHASE1_CLASS_FIGHTER_UNIT_ID,
+  "class_monk",
+  "class_paladin",
+  "class_ranger",
+  "class_rogue",
+  "class_sorcerer",
+  "class_warlock",
+  WIDTH_CLASS_WIZARD_UNIT_ID,
+] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 export const PHASE1_BACKGROUND_SOLDIER_UNIT_ID = "background_soldier";
 export const PHASE1_SPECIES_ORC_UNIT_ID = "species_orc";
 export const PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID = "armor_chain_mail";
@@ -49,6 +63,7 @@ export const PHASE1_WEAPON_LONGSWORD_UNIT_ID = "weapon_longsword";
 export const PHASE1_WEAPON_DAGGER_UNIT_ID = "weapon_dagger";
 export const PHASE1_WEAPON_SPEAR_UNIT_ID = "weapon_spear";
 export const PHASE1_WEAPON_FLAIL_UNIT_ID = "weapon_flail";
+export const PHASE1_WEAPON_SHORTSWORD_UNIT_ID = "weapon_shortsword";
 export const PHASE1_SHIELD_UNIT_ID = "equipment_shield";
 export const PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID = "defense";
 
@@ -61,6 +76,12 @@ export const SUPPORTED_PURCHASE_UNIT_IDS = [
   PHASE1_WEAPON_DAGGER_UNIT_ID,
   PHASE1_WEAPON_FLAIL_UNIT_ID,
   PHASE1_SHIELD_UNIT_ID,
+] as const satisfies ReadonlyArray<UnitRecord["id"]>;
+export const SUPPORTED_COIN_GRANT_PURCHASE_UNIT_IDS = [
+  PHASE1_WEAPON_LONGSWORD_UNIT_ID,
+  PHASE1_WEAPON_DAGGER_UNIT_ID,
+  PHASE1_SHIELD_UNIT_ID,
+  PHASE1_WEAPON_FLAIL_UNIT_ID,
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 export function progressionOptionId(
   progression: CharacterProgression,
@@ -102,6 +123,8 @@ export const SUPPORTED_FIGHTING_STYLE_OPTION_IDS = [
 ] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
 export const PHASE1_WEAPON_MASTERY_UNIT_IDS = [
   PHASE1_WEAPON_LONGSWORD_UNIT_ID,
+  PHASE1_WEAPON_DAGGER_UNIT_ID,
+  PHASE1_WEAPON_SHORTSWORD_UNIT_ID,
   PHASE1_WEAPON_SPEAR_UNIT_ID,
   PHASE1_WEAPON_FLAIL_UNIT_ID,
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
@@ -147,6 +170,8 @@ export const EQUIPMENT_PURCHASE_CHOICE_KEY =
   "equipment_purchase" satisfies UnitChoiceKey;
 export const CLASS_SKILL_PROFICIENCY_CHOICE_KEY =
   "class_skill_proficiency_choice" satisfies UnitChoiceKey;
+export const CLASS_TOOL_PROFICIENCY_CHOICE_KEY =
+  "class_tool_proficiency_choice" satisfies UnitChoiceKey;
 export const CLASS_SUBCLASS_CHOICE_KEY =
   "class_subclass_choice" satisfies UnitChoiceKey;
 export const CLASS_FEATURE_FEAT_CHOICE_KEY =
@@ -155,6 +180,20 @@ export const CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY =
   "class_feature_ability_score_increase_choice" satisfies UnitChoiceKey;
 export const CLASS_FEATURE_PROFICIENCY_CHOICE_KEY =
   "class_feature_proficiency_choice" satisfies UnitChoiceKey;
+export const BARD_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY =
+  "bard_multiclass_skill_proficiency" satisfies UnitChoiceKey;
+export const BARD_MULTICLASS_MUSICAL_INSTRUMENT_PROFICIENCY_CHOICE_KEY =
+  "bard_multiclass_musical_instrument_proficiency" satisfies UnitChoiceKey;
+export const RANGER_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY =
+  "ranger_multiclass_skill_proficiency" satisfies UnitChoiceKey;
+export const ROGUE_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY =
+  "rogue_multiclass_skill_proficiency" satisfies UnitChoiceKey;
+export const MULTICLASS_PROFICIENCY_CHOICE_KEYS = [
+  BARD_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY,
+  BARD_MULTICLASS_MUSICAL_INSTRUMENT_PROFICIENCY_CHOICE_KEY,
+  RANGER_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY,
+  ROGUE_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY,
+] as const satisfies ReadonlyArray<UnitChoiceKey>;
 export const WEAPON_MASTERY_OPTIONS_CHOICE_KEY =
   "weapon_mastery_options" satisfies UnitChoiceKey;
 export const WIZARD_CANTRIP_CHOICE_KEY =

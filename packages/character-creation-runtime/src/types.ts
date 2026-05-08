@@ -35,6 +35,7 @@ import type {
   ArmorTrainingCategory,
   Skill,
   UnitRecord,
+  WeaponProficiency,
   WeaponProficiencyCategory,
   WizardSpellcastingCreation,
 } from "@dnd/surface/surface/types";
@@ -102,10 +103,15 @@ export const UNIT_CHOICE_KEYS = [
   "background_equipment_choice",
   "equipment_purchase",
   "class_skill_proficiency_choice",
+  "class_tool_proficiency_choice",
   "class_subclass_choice",
   "class_feature_feat_choice",
   "class_feature_ability_score_increase_choice",
   "class_feature_proficiency_choice",
+  "bard_multiclass_skill_proficiency",
+  "bard_multiclass_musical_instrument_proficiency",
+  "ranger_multiclass_skill_proficiency",
+  "rogue_multiclass_skill_proficiency",
   "weapon_mastery_options",
   "wizard_cantrip_choices",
   "wizard_spellbook_choices",
@@ -596,9 +602,23 @@ export function characterEquipmentItemUnitIdFromLoadoutEquipmentUnitId(
 
 export type ToolProficiencyId = string & Brand.Brand<"ToolProficiencyId">;
 const ToolProficiencyId = Brand.nominal<ToolProficiencyId>();
+export const MUSICAL_INSTRUMENT_TOOL_PROFICIENCY_IDS = [
+  "tool_bagpipes",
+  "tool_drum",
+  "tool_dulcimer",
+  "tool_flute",
+  "tool_horn",
+  "tool_lute",
+  "tool_lyre",
+  "tool_pan_flute",
+  "tool_shawm",
+  "tool_viol",
+] as const;
 export const CHARACTER_BUILD_TOOL_PROFICIENCY_IDS = [
   "tool_dice_set",
-  "tool_thieves_tools",
+  "herbalism_kit",
+  "thieves_tools",
+  ...MUSICAL_INSTRUMENT_TOOL_PROFICIENCY_IDS,
 ] as const;
 export type ToolProficiencyIdText =
   (typeof CHARACTER_BUILD_TOOL_PROFICIENCY_IDS)[number];
@@ -939,6 +959,10 @@ export type CharacterBuildProficiencies = {
   readonly savingThrows: readonly Ability[];
   readonly skills: readonly Skill[];
   readonly weapon: readonly WeaponProficiencyCategory[];
+  readonly weaponPropertyFilters: readonly Extract<
+    WeaponProficiency,
+    { readonly kind: "weapon_category_with_properties" }
+  >[];
   readonly tools: readonly ToolProficiencyId[];
 };
 

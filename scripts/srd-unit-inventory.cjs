@@ -65,27 +65,11 @@ const ownerEvidenceRequired = new Map([
     },
   ],
   [
-    "srd521:classes/fighter:level-1:core-trait:fighter_primary_ability",
-    {
-      owner: "shared-algebras/multiclass-prerequisite-algebra",
-      requirement:
-        "Primary Ability is needed for multiclass prerequisite checks, but installed class records do not currently carry this source fact.",
-    },
-  ],
-  [
     "srd521:classes/wizard:level-1:class-container:wizard_class_container",
     {
       owner: "Surface class container plus character-creation-runtime",
       requirement:
         "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, and multiclass rows as the executable evidence boundary.",
-    },
-  ],
-  [
-    "srd521:classes/wizard:level-1:core-trait:wizard_primary_ability",
-    {
-      owner: "shared-algebras/multiclass-prerequisite-algebra",
-      requirement:
-        "Primary Ability is needed for multiclass prerequisite checks, but installed class records do not currently carry this source fact.",
     },
   ],
   [
@@ -978,6 +962,14 @@ function installedLevelOneOwnerClassification(row, ownerEvidenceSources) {
       evidence: characterCreationEvidence,
     };
   }
+  if (isPrimaryAbilityRow(row)) {
+    return {
+      kind: "evidence-required",
+      owner: "shared-algebras/multiclass-prerequisite-algebra",
+      requirement:
+        "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection.",
+    };
+  }
   const required = ownerEvidenceRequired.get(row.id);
   if (required) {
     return {
@@ -1009,6 +1001,10 @@ function installedLevelOneOwnerClassification(row, ownerEvidenceSources) {
     };
   }
   return undefined;
+}
+
+function isPrimaryAbilityRow(row) {
+  return row.rowKind === "core-trait" && row.id.endsWith("_primary_ability");
 }
 
 function makeRow(input) {

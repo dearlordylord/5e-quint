@@ -14,6 +14,7 @@ import { skillOption } from "./hole-factories.ts";
 import {
   creationChoiceOptionId,
   isCharacterBuildToolProficiencyId,
+  MUSICAL_INSTRUMENT_TOOL_PROFICIENCY_IDS,
   toolProficiencyId,
   type CreationChoiceOption,
   type CreationChoiceOptionId,
@@ -178,6 +179,21 @@ export function proficiencyGrantSubjectOption(
     })),
     Match.exhaustive,
   );
+}
+
+export function proficiencyGrantSubjectOptions(
+  subject: ProficiencyGrantSubject,
+): readonly CreationChoiceOption[] {
+  if (
+    subject.kind === "tool_category" &&
+    subject.category === "musical_instrument"
+  ) {
+    return MUSICAL_INSTRUMENT_TOOL_PROFICIENCY_IDS.map((toolId) =>
+      proficiencyGrantSubjectOption({ kind: "tool", toolId }),
+    );
+  }
+
+  return [proficiencyGrantSubjectOption(subject)];
 }
 
 export function proficiencyGrantSubjectOptionId(

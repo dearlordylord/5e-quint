@@ -6,6 +6,41 @@
     "characterCreationOwnerEvidence": {
       "schema": "dnd.srd-character-creation-owner-evidence.v1",
       "rowIds": [
+        "srd521:classes/barbarian:level-1:class-container:barbarian_class_container",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_armor_training",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_hit_point_die",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_saving_throw_proficiencies",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_skill_proficiencies",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_weapon_proficiencies",
+        "srd521:classes/barbarian:level-1:equipment-pressure:barbarian_starting_equipment",
+        "srd521:classes/barbarian:level-1:multiclass-entry:barbarian_multiclass_entry_traits",
+        "srd521:classes/bard:level-1:class-container:bard_class_container",
+        "srd521:classes/bard:level-1:core-trait:bard_armor_training",
+        "srd521:classes/bard:level-1:core-trait:bard_hit_point_die",
+        "srd521:classes/bard:level-1:core-trait:bard_saving_throw_proficiencies",
+        "srd521:classes/bard:level-1:core-trait:bard_skill_proficiencies",
+        "srd521:classes/bard:level-1:core-trait:bard_tool_proficiencies",
+        "srd521:classes/bard:level-1:core-trait:bard_weapon_proficiencies",
+        "srd521:classes/bard:level-1:equipment-pressure:bard_starting_equipment",
+        "srd521:classes/bard:level-1:multiclass-entry:bard_multiclass_entry_traits",
+        "srd521:classes/cleric:level-1:class-container:cleric_class_container",
+        "srd521:classes/cleric:level-1:core-trait:cleric_armor_training",
+        "srd521:classes/cleric:level-1:core-trait:cleric_hit_point_die",
+        "srd521:classes/cleric:level-1:core-trait:cleric_saving_throw_proficiencies",
+        "srd521:classes/cleric:level-1:core-trait:cleric_skill_proficiencies",
+        "srd521:classes/cleric:level-1:core-trait:cleric_weapon_proficiencies",
+        "srd521:classes/cleric:level-1:equipment-pressure:cleric_starting_equipment",
+        "srd521:classes/cleric:level-1:multiclass-entry:cleric_multiclass_entry_traits",
+        "srd521:classes/druid:level-1:class-container:druid_class_container",
+        "srd521:classes/druid:level-1:core-trait:druid_armor_training",
+        "srd521:classes/druid:level-1:core-trait:druid_hit_point_die",
+        "srd521:classes/druid:level-1:core-trait:druid_saving_throw_proficiencies",
+        "srd521:classes/druid:level-1:core-trait:druid_skill_proficiencies",
+        "srd521:classes/druid:level-1:core-trait:druid_tool_proficiencies",
+        "srd521:classes/druid:level-1:core-trait:druid_weapon_proficiencies",
+        "srd521:classes/druid:level-1:equipment-pressure:druid_starting_equipment",
+        "srd521:classes/druid:level-1:multiclass-entry:druid_multiclass_entry_traits",
+        "srd521:classes/fighter:level-1:class-container:fighter_class_container",
         "srd521:classes/fighter:level-1:class-feature-grant:fighter_fighting_style",
         "srd521:classes/fighter:level-1:core-trait:fighter_armor_training",
         "srd521:classes/fighter:level-1:core-trait:fighter_hit_point_die",
@@ -15,12 +50,64 @@
         "srd521:classes/fighter:level-1:equipment-pressure:fighter_starting_equipment",
         "srd521:classes/fighter:level-1:mastery-pressure:fighter_weapon_mastery",
         "srd521:classes/fighter:level-1:multiclass-entry:fighter_multiclass_entry_traits",
+        "srd521:classes/monk:level-1:class-container:monk_class_container",
+        "srd521:classes/monk:level-1:core-trait:monk_armor_training",
+        "srd521:classes/monk:level-1:core-trait:monk_hit_point_die",
+        "srd521:classes/monk:level-1:core-trait:monk_saving_throw_proficiencies",
+        "srd521:classes/monk:level-1:core-trait:monk_skill_proficiencies",
+        "srd521:classes/monk:level-1:core-trait:monk_tool_proficiencies",
+        "srd521:classes/monk:level-1:core-trait:monk_weapon_proficiencies",
+        "srd521:classes/monk:level-1:equipment-pressure:monk_starting_equipment",
+        "srd521:classes/monk:level-1:multiclass-entry:monk_multiclass_entry_traits",
+        "srd521:classes/paladin:level-1:class-container:paladin_class_container",
+        "srd521:classes/paladin:level-1:core-trait:paladin_armor_training",
+        "srd521:classes/paladin:level-1:core-trait:paladin_hit_point_die",
+        "srd521:classes/paladin:level-1:core-trait:paladin_saving_throw_proficiencies",
+        "srd521:classes/paladin:level-1:core-trait:paladin_skill_proficiencies",
+        "srd521:classes/paladin:level-1:core-trait:paladin_weapon_proficiencies",
+        "srd521:classes/paladin:level-1:equipment-pressure:paladin_starting_equipment",
+        "srd521:classes/paladin:level-1:multiclass-entry:paladin_multiclass_entry_traits",
+        "srd521:classes/ranger:level-1:class-container:ranger_class_container",
+        "srd521:classes/ranger:level-1:core-trait:ranger_armor_training",
+        "srd521:classes/ranger:level-1:core-trait:ranger_hit_point_die",
+        "srd521:classes/ranger:level-1:core-trait:ranger_saving_throw_proficiencies",
+        "srd521:classes/ranger:level-1:core-trait:ranger_skill_proficiencies",
+        "srd521:classes/ranger:level-1:core-trait:ranger_weapon_proficiencies",
+        "srd521:classes/ranger:level-1:equipment-pressure:ranger_starting_equipment",
+        "srd521:classes/ranger:level-1:multiclass-entry:ranger_multiclass_entry_traits",
+        "srd521:classes/rogue:level-1:class-container:rogue_class_container",
+        "srd521:classes/rogue:level-1:core-trait:rogue_armor_training",
+        "srd521:classes/rogue:level-1:core-trait:rogue_hit_point_die",
+        "srd521:classes/rogue:level-1:core-trait:rogue_saving_throw_proficiencies",
+        "srd521:classes/rogue:level-1:core-trait:rogue_skill_proficiencies",
+        "srd521:classes/rogue:level-1:core-trait:rogue_tool_proficiencies",
+        "srd521:classes/rogue:level-1:core-trait:rogue_weapon_proficiencies",
+        "srd521:classes/rogue:level-1:equipment-pressure:rogue_starting_equipment",
+        "srd521:classes/rogue:level-1:multiclass-entry:rogue_multiclass_entry_traits",
+        "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container",
+        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_armor_training",
+        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_hit_point_die",
+        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_saving_throw_proficiencies",
+        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_skill_proficiencies",
+        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_weapon_proficiencies",
+        "srd521:classes/sorcerer:level-1:equipment-pressure:sorcerer_starting_equipment",
+        "srd521:classes/sorcerer:level-1:multiclass-entry:sorcerer_multiclass_entry_traits",
+        "srd521:classes/warlock:level-1:class-container:warlock_class_container",
+        "srd521:classes/warlock:level-1:core-trait:warlock_armor_training",
+        "srd521:classes/warlock:level-1:core-trait:warlock_hit_point_die",
+        "srd521:classes/warlock:level-1:core-trait:warlock_saving_throw_proficiencies",
+        "srd521:classes/warlock:level-1:core-trait:warlock_skill_proficiencies",
+        "srd521:classes/warlock:level-1:core-trait:warlock_weapon_proficiencies",
+        "srd521:classes/warlock:level-1:equipment-pressure:warlock_starting_equipment",
+        "srd521:classes/warlock:level-1:multiclass-entry:warlock_multiclass_entry_traits",
+        "srd521:classes/wizard:level-1:class-container:wizard_class_container",
         "srd521:classes/wizard:level-1:core-trait:wizard_armor_training",
         "srd521:classes/wizard:level-1:core-trait:wizard_hit_point_die",
         "srd521:classes/wizard:level-1:core-trait:wizard_saving_throw_proficiencies",
         "srd521:classes/wizard:level-1:core-trait:wizard_skill_proficiencies",
         "srd521:classes/wizard:level-1:core-trait:wizard_weapon_proficiencies",
         "srd521:classes/wizard:level-1:equipment-pressure:wizard_starting_equipment",
+        "srd521:classes/wizard:level-1:multiclass-entry:wizard_multiclass_entry_traits",
         "srd521:classes/wizard:level-1:spell-access:wizard_spellcasting"
       ],
       "issues": []
@@ -32,16 +119,16 @@
     "spellPressureRows": 211,
     "levelOneClassContainers": 12,
     "levelOneRowsByDisposition": {
-      "catalog-installed-owner-evidence-required": 121,
-      "catalog-installed-owner-evidence-present": 19,
+      "catalog-installed-owner-evidence-present": 106,
       "catalog-only/dead-for-now": 4,
-      "non-runtime": 12
+      "non-runtime": 12,
+      "catalog-installed-owner-evidence-required": 34
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-required": 131,
-      "catalog-installed-owner-evidence-present": 37,
+      "catalog-installed-owner-evidence-present": 124,
       "catalog-only/dead-for-now": 78,
       "non-runtime": 12,
+      "catalog-installed-owner-evidence-required": 44,
       "catalog-authored-executable-follow-up": 70,
       "needs-surface-widening": 33,
       "missing-authored-record": 6
@@ -1256,106 +1343,8 @@
       "title": "Close Character-Creation Class Container Evidence",
       "suggestedStatus": "ready-for-research",
       "intent": "Close character-creation owner evidence for authored class containers and class-owned level-1 creation facts.",
-      "rowCount": 97,
-      "rowIds": [
-        "srd521:classes/barbarian:level-1:class-container:barbarian_class_container",
-        "srd521:classes/barbarian:level-1:core-trait:barbarian_armor_training",
-        "srd521:classes/barbarian:level-1:core-trait:barbarian_hit_point_die",
-        "srd521:classes/barbarian:level-1:core-trait:barbarian_primary_ability",
-        "srd521:classes/barbarian:level-1:core-trait:barbarian_saving_throw_proficiencies",
-        "srd521:classes/barbarian:level-1:core-trait:barbarian_skill_proficiencies",
-        "srd521:classes/barbarian:level-1:core-trait:barbarian_weapon_proficiencies",
-        "srd521:classes/barbarian:level-1:equipment-pressure:barbarian_starting_equipment",
-        "srd521:classes/barbarian:level-1:multiclass-entry:barbarian_multiclass_entry_traits",
-        "srd521:classes/bard:level-1:class-container:bard_class_container",
-        "srd521:classes/bard:level-1:core-trait:bard_armor_training",
-        "srd521:classes/bard:level-1:core-trait:bard_hit_point_die",
-        "srd521:classes/bard:level-1:core-trait:bard_primary_ability",
-        "srd521:classes/bard:level-1:core-trait:bard_saving_throw_proficiencies",
-        "srd521:classes/bard:level-1:core-trait:bard_skill_proficiencies",
-        "srd521:classes/bard:level-1:core-trait:bard_tool_proficiencies",
-        "srd521:classes/bard:level-1:core-trait:bard_weapon_proficiencies",
-        "srd521:classes/bard:level-1:equipment-pressure:bard_starting_equipment",
-        "srd521:classes/bard:level-1:multiclass-entry:bard_multiclass_entry_traits",
-        "srd521:classes/cleric:level-1:class-container:cleric_class_container",
-        "srd521:classes/cleric:level-1:core-trait:cleric_armor_training",
-        "srd521:classes/cleric:level-1:core-trait:cleric_hit_point_die",
-        "srd521:classes/cleric:level-1:core-trait:cleric_primary_ability",
-        "srd521:classes/cleric:level-1:core-trait:cleric_saving_throw_proficiencies",
-        "srd521:classes/cleric:level-1:core-trait:cleric_skill_proficiencies",
-        "srd521:classes/cleric:level-1:core-trait:cleric_weapon_proficiencies",
-        "srd521:classes/cleric:level-1:equipment-pressure:cleric_starting_equipment",
-        "srd521:classes/cleric:level-1:multiclass-entry:cleric_multiclass_entry_traits",
-        "srd521:classes/druid:level-1:class-container:druid_class_container",
-        "srd521:classes/druid:level-1:core-trait:druid_armor_training",
-        "srd521:classes/druid:level-1:core-trait:druid_hit_point_die",
-        "srd521:classes/druid:level-1:core-trait:druid_primary_ability",
-        "srd521:classes/druid:level-1:core-trait:druid_saving_throw_proficiencies",
-        "srd521:classes/druid:level-1:core-trait:druid_skill_proficiencies",
-        "srd521:classes/druid:level-1:core-trait:druid_tool_proficiencies",
-        "srd521:classes/druid:level-1:core-trait:druid_weapon_proficiencies",
-        "srd521:classes/druid:level-1:equipment-pressure:druid_starting_equipment",
-        "srd521:classes/druid:level-1:multiclass-entry:druid_multiclass_entry_traits",
-        "srd521:classes/fighter:level-1:class-container:fighter_class_container",
-        "srd521:classes/monk:level-1:class-container:monk_class_container",
-        "srd521:classes/monk:level-1:core-trait:monk_armor_training",
-        "srd521:classes/monk:level-1:core-trait:monk_hit_point_die",
-        "srd521:classes/monk:level-1:core-trait:monk_primary_ability",
-        "srd521:classes/monk:level-1:core-trait:monk_saving_throw_proficiencies",
-        "srd521:classes/monk:level-1:core-trait:monk_skill_proficiencies",
-        "srd521:classes/monk:level-1:core-trait:monk_tool_proficiencies",
-        "srd521:classes/monk:level-1:core-trait:monk_weapon_proficiencies",
-        "srd521:classes/monk:level-1:equipment-pressure:monk_starting_equipment",
-        "srd521:classes/monk:level-1:multiclass-entry:monk_multiclass_entry_traits",
-        "srd521:classes/paladin:level-1:class-container:paladin_class_container",
-        "srd521:classes/paladin:level-1:core-trait:paladin_armor_training",
-        "srd521:classes/paladin:level-1:core-trait:paladin_hit_point_die",
-        "srd521:classes/paladin:level-1:core-trait:paladin_primary_ability",
-        "srd521:classes/paladin:level-1:core-trait:paladin_saving_throw_proficiencies",
-        "srd521:classes/paladin:level-1:core-trait:paladin_skill_proficiencies",
-        "srd521:classes/paladin:level-1:core-trait:paladin_weapon_proficiencies",
-        "srd521:classes/paladin:level-1:equipment-pressure:paladin_starting_equipment",
-        "srd521:classes/paladin:level-1:multiclass-entry:paladin_multiclass_entry_traits",
-        "srd521:classes/ranger:level-1:class-container:ranger_class_container",
-        "srd521:classes/ranger:level-1:core-trait:ranger_armor_training",
-        "srd521:classes/ranger:level-1:core-trait:ranger_hit_point_die",
-        "srd521:classes/ranger:level-1:core-trait:ranger_primary_ability",
-        "srd521:classes/ranger:level-1:core-trait:ranger_saving_throw_proficiencies",
-        "srd521:classes/ranger:level-1:core-trait:ranger_skill_proficiencies",
-        "srd521:classes/ranger:level-1:core-trait:ranger_weapon_proficiencies",
-        "srd521:classes/ranger:level-1:equipment-pressure:ranger_starting_equipment",
-        "srd521:classes/ranger:level-1:multiclass-entry:ranger_multiclass_entry_traits",
-        "srd521:classes/rogue:level-1:class-container:rogue_class_container",
-        "srd521:classes/rogue:level-1:core-trait:rogue_armor_training",
-        "srd521:classes/rogue:level-1:core-trait:rogue_hit_point_die",
-        "srd521:classes/rogue:level-1:core-trait:rogue_primary_ability",
-        "srd521:classes/rogue:level-1:core-trait:rogue_saving_throw_proficiencies",
-        "srd521:classes/rogue:level-1:core-trait:rogue_skill_proficiencies",
-        "srd521:classes/rogue:level-1:core-trait:rogue_tool_proficiencies",
-        "srd521:classes/rogue:level-1:core-trait:rogue_weapon_proficiencies",
-        "srd521:classes/rogue:level-1:equipment-pressure:rogue_starting_equipment",
-        "srd521:classes/rogue:level-1:multiclass-entry:rogue_multiclass_entry_traits",
-        "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container",
-        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_armor_training",
-        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_hit_point_die",
-        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_primary_ability",
-        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_saving_throw_proficiencies",
-        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_skill_proficiencies",
-        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_weapon_proficiencies",
-        "srd521:classes/sorcerer:level-1:equipment-pressure:sorcerer_starting_equipment",
-        "srd521:classes/sorcerer:level-1:multiclass-entry:sorcerer_multiclass_entry_traits",
-        "srd521:classes/warlock:level-1:class-container:warlock_class_container",
-        "srd521:classes/warlock:level-1:core-trait:warlock_armor_training",
-        "srd521:classes/warlock:level-1:core-trait:warlock_hit_point_die",
-        "srd521:classes/warlock:level-1:core-trait:warlock_primary_ability",
-        "srd521:classes/warlock:level-1:core-trait:warlock_saving_throw_proficiencies",
-        "srd521:classes/warlock:level-1:core-trait:warlock_skill_proficiencies",
-        "srd521:classes/warlock:level-1:core-trait:warlock_weapon_proficiencies",
-        "srd521:classes/warlock:level-1:equipment-pressure:warlock_starting_equipment",
-        "srd521:classes/warlock:level-1:multiclass-entry:warlock_multiclass_entry_traits",
-        "srd521:classes/wizard:level-1:class-container:wizard_class_container",
-        "srd521:classes/wizard:level-1:multiclass-entry:wizard_multiclass_entry_traits"
-      ],
+      "rowCount": 0,
+      "rowIds": [],
       "nextAction": "Widen character-creation support profiles and the checker-readable owner-evidence manifest for class containers, core traits, starting equipment, and multiclass-entry facts without creating standalone duplicate records.",
       "acceptance": "Class container, core trait, equipment, and multiclass-entry rows derive owner evidence from durable discovery, fill, finalization, and build-projection artifacts."
     },
@@ -1608,7 +1597,7 @@
         "state": "installed",
         "unitId": "class_barbarian"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -1616,12 +1605,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "Surface class container plus character-creation-runtime",
-          "evidence": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries.",
-          "status": "owner evidence required"
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Barbarian class-container support profile; Barbarian is admitted as a supported Character Progression class option; finalization retains the class Unit ref and derives class-owned build facts from the Surface class record.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
@@ -1761,7 +1750,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/barbarian:level-1:class-container:barbarian_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -1770,11 +1759,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Barbarian class-container support profile; Barbarian armor training facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/barbarian:level-1:core-trait:barbarian_hit_point_die",
@@ -1808,7 +1797,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/barbarian:level-1:class-container:barbarian_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -1817,11 +1806,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Barbarian class-container support profile; Barbarian hit point die facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/barbarian:level-1:core-trait:barbarian_primary_ability",
@@ -1863,12 +1852,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "owner": "shared-algebras/multiclass-prerequisite-algebra",
+          "evidence": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection.",
           "status": "owner evidence required"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection."
     },
     {
       "id": "srd521:classes/barbarian:level-1:core-trait:barbarian_saving_throw_proficiencies",
@@ -1902,7 +1891,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/barbarian:level-1:class-container:barbarian_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -1911,11 +1900,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Barbarian class-container support profile; Barbarian saving throw proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/barbarian:level-1:core-trait:barbarian_skill_proficiencies",
@@ -1949,7 +1938,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/barbarian:level-1:class-container:barbarian_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -1958,11 +1947,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Barbarian class-container support profile; Barbarian skill proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/barbarian:level-1:core-trait:barbarian_weapon_proficiencies",
@@ -1996,7 +1985,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/barbarian:level-1:class-container:barbarian_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -2005,11 +1994,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Barbarian class-container support profile; Barbarian weapon proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/barbarian:level-1:equipment-pressure:barbarian_starting_equipment",
@@ -2043,7 +2032,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/barbarian:level-1:class-container:barbarian_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -2052,11 +2041,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Barbarian class-container support profile; Barbarian starting-equipment coin-grant choices are discovered from the Surface class record, admitted by source-scoped support profile entries, finalized as owned equipment, and projected into build equipment/loadout facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery",
@@ -2131,7 +2120,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/barbarian:level-1:class-container:barbarian_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -2140,11 +2129,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-2 multiclass-entry support profile including Barbarian; Barbarian post-start class entries are admitted as Character Progression advancements; multiclass Hit Dice, proficiencies, armor training, and level-gated feature refs are derived from the Surface class record.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/bard:level-1:class-container:bard_class_container",
@@ -2172,7 +2161,7 @@
         "state": "installed",
         "unitId": "class_bard"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -2180,12 +2169,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "Surface class container plus character-creation-runtime",
-          "evidence": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries.",
-          "status": "owner evidence required"
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Bard class-container support profile; Bard is admitted as a supported Character Progression class option; finalization retains the class Unit ref and derives class-owned build facts from the Surface class record.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
@@ -2295,7 +2284,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -2304,11 +2293,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Bard class-container support profile; Bard armor training facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/bard:level-1:core-trait:bard_hit_point_die",
@@ -2342,7 +2331,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -2351,11 +2340,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Bard class-container support profile; Bard hit point die facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/bard:level-1:core-trait:bard_primary_ability",
@@ -2397,12 +2386,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "owner": "shared-algebras/multiclass-prerequisite-algebra",
+          "evidence": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection.",
           "status": "owner evidence required"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection."
     },
     {
       "id": "srd521:classes/bard:level-1:core-trait:bard_saving_throw_proficiencies",
@@ -2436,7 +2425,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -2445,11 +2434,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Bard class-container support profile; Bard saving throw proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/bard:level-1:core-trait:bard_skill_proficiencies",
@@ -2483,7 +2472,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -2492,11 +2481,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Bard class-container support profile; Bard skill proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/bard:level-1:core-trait:bard_tool_proficiencies",
@@ -2530,7 +2519,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -2539,11 +2528,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Bard class-container support profile; Bard tool proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/bard:level-1:core-trait:bard_weapon_proficiencies",
@@ -2577,7 +2566,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -2586,11 +2575,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Bard class-container support profile; Bard weapon proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/bard:level-1:equipment-pressure:bard_starting_equipment",
@@ -2624,7 +2613,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -2633,11 +2622,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Bard class-container support profile; Bard starting-equipment coin-grant choices are discovered from the Surface class record, admitted by source-scoped support profile entries, finalized as owned equipment, and projected into build equipment/loadout facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/bard:level-1:multiclass-entry:bard_multiclass_entry_traits",
@@ -2671,7 +2660,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -2680,11 +2669,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-2 multiclass-entry support profile including Bard; Bard post-start class entries are admitted as Character Progression advancements; multiclass Hit Dice, proficiencies, armor training, and level-gated feature refs are derived from the Surface class record.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/bard:level-1:spell-access:bard_spellcasting",
@@ -3814,7 +3803,7 @@
         "state": "installed",
         "unitId": "class_cleric"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -3822,12 +3811,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "Surface class container plus character-creation-runtime",
-          "evidence": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries.",
-          "status": "owner evidence required"
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Cleric class-container support profile; Cleric is admitted as a supported Character Progression class option; finalization retains the class Unit ref and derives class-owned build facts from the Surface class record.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
@@ -3937,7 +3926,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/cleric:level-1:class-container:cleric_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -3946,11 +3935,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Cleric class-container support profile; Cleric armor training facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/cleric:level-1:core-trait:cleric_hit_point_die",
@@ -3984,7 +3973,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/cleric:level-1:class-container:cleric_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -3993,11 +3982,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Cleric class-container support profile; Cleric hit point die facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/cleric:level-1:core-trait:cleric_primary_ability",
@@ -4039,12 +4028,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "owner": "shared-algebras/multiclass-prerequisite-algebra",
+          "evidence": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection.",
           "status": "owner evidence required"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection."
     },
     {
       "id": "srd521:classes/cleric:level-1:core-trait:cleric_saving_throw_proficiencies",
@@ -4078,7 +4067,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/cleric:level-1:class-container:cleric_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -4087,11 +4076,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Cleric class-container support profile; Cleric saving throw proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/cleric:level-1:core-trait:cleric_skill_proficiencies",
@@ -4125,7 +4114,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/cleric:level-1:class-container:cleric_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -4134,11 +4123,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Cleric class-container support profile; Cleric skill proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/cleric:level-1:core-trait:cleric_weapon_proficiencies",
@@ -4172,7 +4161,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/cleric:level-1:class-container:cleric_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -4181,11 +4170,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Cleric class-container support profile; Cleric weapon proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/cleric:level-1:equipment-pressure:cleric_starting_equipment",
@@ -4219,7 +4208,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/cleric:level-1:class-container:cleric_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -4228,11 +4217,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Cleric class-container support profile; Cleric starting-equipment coin-grant choices are discovered from the Surface class record, admitted by source-scoped support profile entries, finalized as owned equipment, and projected into build equipment/loadout facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/cleric:level-1:multiclass-entry:cleric_multiclass_entry_traits",
@@ -4266,7 +4255,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/cleric:level-1:class-container:cleric_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -4275,11 +4264,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-2 multiclass-entry support profile including Cleric; Cleric post-start class entries are admitted as Character Progression advancements; multiclass Hit Dice, proficiencies, armor training, and level-gated feature refs are derived from the Surface class record.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/cleric:level-1:spell-access:cleric_spellcasting",
@@ -5037,7 +5026,7 @@
         "state": "installed",
         "unitId": "class_druid"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -5045,12 +5034,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "Surface class container plus character-creation-runtime",
-          "evidence": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries.",
-          "status": "owner evidence required"
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Druid class-container support profile; Druid is admitted as a supported Character Progression class option; finalization retains the class Unit ref and derives class-owned build facts from the Surface class record.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
@@ -5201,7 +5190,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -5210,11 +5199,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Druid class-container support profile; Druid armor training facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/druid:level-1:core-trait:druid_hit_point_die",
@@ -5248,7 +5237,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -5257,11 +5246,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Druid class-container support profile; Druid hit point die facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/druid:level-1:core-trait:druid_primary_ability",
@@ -5303,12 +5292,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "owner": "shared-algebras/multiclass-prerequisite-algebra",
+          "evidence": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection.",
           "status": "owner evidence required"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection."
     },
     {
       "id": "srd521:classes/druid:level-1:core-trait:druid_saving_throw_proficiencies",
@@ -5342,7 +5331,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -5351,11 +5340,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Druid class-container support profile; Druid saving throw proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/druid:level-1:core-trait:druid_skill_proficiencies",
@@ -5389,7 +5378,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -5398,11 +5387,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Druid class-container support profile; Druid skill proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/druid:level-1:core-trait:druid_tool_proficiencies",
@@ -5436,7 +5425,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -5445,11 +5434,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Druid class-container support profile; Druid fixed tool proficiency facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/druid:level-1:core-trait:druid_weapon_proficiencies",
@@ -5483,7 +5472,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -5492,11 +5481,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Druid class-container support profile; Druid weapon proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/druid:level-1:equipment-pressure:druid_starting_equipment",
@@ -5530,7 +5519,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -5539,11 +5528,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Druid class-container support profile; Druid starting-equipment coin-grant choices are discovered from the Surface class record, admitted by source-scoped support profile entries, finalized as owned equipment, and projected into build equipment/loadout facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/druid:level-1:multiclass-entry:druid_multiclass_entry_traits",
@@ -5577,7 +5566,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -5586,11 +5575,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-2 multiclass-entry support profile including Druid; Druid post-start class entries are admitted as Character Progression advancements; multiclass Hit Dice, proficiencies, armor training, and level-gated feature refs are derived from the Surface class record.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/druid:level-1:spell-access:druid_spellcasting",
@@ -6565,7 +6554,7 @@
         "state": "installed",
         "unitId": "class_fighter"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -6573,12 +6562,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "Surface class container plus character-creation-runtime",
-          "evidence": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, equipment, mastery, and multiclass rows as the executable evidence boundary.",
-          "status": "owner evidence required"
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Fighter class-container support profile; Fighter is admitted as a supported Character Progression class option; finalization retains the class Unit ref and derives class-owned build facts from the Surface class record.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, equipment, mastery, and multiclass rows as the executable evidence boundary."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/fighter:level-1:class-feature-grant:fighter_fighting_style",
@@ -6832,11 +6821,11 @@
         },
         {
           "owner": "shared-algebras/multiclass-prerequisite-algebra",
-          "evidence": "Primary Ability is needed for multiclass prerequisite checks, but installed class records do not currently carry this source fact.",
+          "evidence": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection.",
           "status": "owner evidence required"
         }
       ],
-      "nextAction": "Primary Ability is needed for multiclass prerequisite checks, but installed class records do not currently carry this source fact."
+      "nextAction": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection."
     },
     {
       "id": "srd521:classes/fighter:level-1:core-trait:fighter_saving_throw_proficiencies",
@@ -7140,7 +7129,7 @@
         "state": "installed",
         "unitId": "class_monk"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -7148,12 +7137,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "Surface class container plus character-creation-runtime",
-          "evidence": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries.",
-          "status": "owner evidence required"
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Monk class-container support profile; Monk is admitted as a supported Character Progression class option; finalization retains the class Unit ref and derives class-owned build facts from the Surface class record.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
@@ -7293,7 +7282,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -7302,11 +7291,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Monk class-container support profile; Monk armor training facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/monk:level-1:core-trait:monk_hit_point_die",
@@ -7340,7 +7329,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -7349,11 +7338,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Monk class-container support profile; Monk hit point die facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/monk:level-1:core-trait:monk_primary_ability",
@@ -7395,12 +7384,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "owner": "shared-algebras/multiclass-prerequisite-algebra",
+          "evidence": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection.",
           "status": "owner evidence required"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection."
     },
     {
       "id": "srd521:classes/monk:level-1:core-trait:monk_saving_throw_proficiencies",
@@ -7434,7 +7423,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -7443,11 +7432,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Monk class-container support profile; Monk saving throw proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/monk:level-1:core-trait:monk_skill_proficiencies",
@@ -7481,7 +7470,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -7490,11 +7479,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Monk class-container support profile; Monk skill proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/monk:level-1:core-trait:monk_tool_proficiencies",
@@ -7528,7 +7517,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -7537,11 +7526,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Monk class-container support profile; Monk tool proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/monk:level-1:core-trait:monk_weapon_proficiencies",
@@ -7575,7 +7564,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -7584,11 +7573,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Monk class-container support profile; Monk weapon proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/monk:level-1:equipment-pressure:monk_starting_equipment",
@@ -7622,7 +7611,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -7631,11 +7620,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Monk class-container support profile; Monk starting-equipment coin-grant choices are discovered from the Surface class record, admitted by source-scoped support profile entries, finalized as owned equipment, and projected into build equipment/loadout facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/monk:level-1:multiclass-entry:monk_multiclass_entry_traits",
@@ -7669,7 +7658,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -7678,11 +7667,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-2 multiclass-entry support profile including Monk; Monk post-start class entries are admitted as Character Progression advancements; multiclass Hit Dice, proficiencies, armor training, and level-gated feature refs are derived from the Surface class record.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/paladin:level-1:class-container:paladin_class_container",
@@ -7710,7 +7699,7 @@
         "state": "installed",
         "unitId": "class_paladin"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -7718,12 +7707,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "Surface class container plus character-creation-runtime",
-          "evidence": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries.",
-          "status": "owner evidence required"
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Paladin class-container support profile; Paladin is admitted as a supported Character Progression class option; finalization retains the class Unit ref and derives class-owned build facts from the Surface class record.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands",
@@ -7822,7 +7811,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/paladin:level-1:class-container:paladin_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -7831,11 +7820,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Paladin class-container support profile; Paladin armor training facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/paladin:level-1:core-trait:paladin_hit_point_die",
@@ -7869,7 +7858,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/paladin:level-1:class-container:paladin_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -7878,11 +7867,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Paladin class-container support profile; Paladin hit point die facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/paladin:level-1:core-trait:paladin_primary_ability",
@@ -7924,12 +7913,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "owner": "shared-algebras/multiclass-prerequisite-algebra",
+          "evidence": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection.",
           "status": "owner evidence required"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection."
     },
     {
       "id": "srd521:classes/paladin:level-1:core-trait:paladin_saving_throw_proficiencies",
@@ -7963,7 +7952,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/paladin:level-1:class-container:paladin_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -7972,11 +7961,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Paladin class-container support profile; Paladin saving throw proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/paladin:level-1:core-trait:paladin_skill_proficiencies",
@@ -8010,7 +7999,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/paladin:level-1:class-container:paladin_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -8019,11 +8008,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Paladin class-container support profile; Paladin skill proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/paladin:level-1:core-trait:paladin_weapon_proficiencies",
@@ -8057,7 +8046,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/paladin:level-1:class-container:paladin_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -8066,11 +8055,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Paladin class-container support profile; Paladin weapon proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/paladin:level-1:equipment-pressure:paladin_starting_equipment",
@@ -8104,7 +8093,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/paladin:level-1:class-container:paladin_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -8113,11 +8102,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Paladin class-container support profile; Paladin starting-equipment coin-grant choices are discovered from the Surface class record, admitted by source-scoped support profile entries, finalized as owned equipment, and projected into build equipment/loadout facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/paladin:level-1:mastery-pressure:paladin_weapon_mastery",
@@ -8192,7 +8181,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/paladin:level-1:class-container:paladin_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -8201,11 +8190,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-2 multiclass-entry support profile including Paladin; Paladin post-start class entries are admitted as Character Progression advancements; multiclass Hit Dice, proficiencies, armor training, and level-gated feature refs are derived from the Surface class record.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/paladin:level-1:spell-access:paladin_spellcasting",
@@ -8679,7 +8668,7 @@
         "state": "installed",
         "unitId": "class_ranger"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -8687,12 +8676,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "Surface class container plus character-creation-runtime",
-          "evidence": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries.",
-          "status": "owner evidence required"
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Ranger class-container support profile; Ranger is admitted as a supported Character Progression class option; finalization retains the class Unit ref and derives class-owned build facts from the Surface class record.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy",
@@ -8802,7 +8791,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/ranger:level-1:class-container:ranger_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -8811,11 +8800,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Ranger class-container support profile; Ranger armor training facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/ranger:level-1:core-trait:ranger_hit_point_die",
@@ -8849,7 +8838,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/ranger:level-1:class-container:ranger_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -8858,11 +8847,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Ranger class-container support profile; Ranger hit point die facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/ranger:level-1:core-trait:ranger_primary_ability",
@@ -8904,12 +8893,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "owner": "shared-algebras/multiclass-prerequisite-algebra",
+          "evidence": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection.",
           "status": "owner evidence required"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection."
     },
     {
       "id": "srd521:classes/ranger:level-1:core-trait:ranger_saving_throw_proficiencies",
@@ -8943,7 +8932,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/ranger:level-1:class-container:ranger_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -8952,11 +8941,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Ranger class-container support profile; Ranger saving throw proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/ranger:level-1:core-trait:ranger_skill_proficiencies",
@@ -8990,7 +8979,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/ranger:level-1:class-container:ranger_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -8999,11 +8988,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Ranger class-container support profile; Ranger skill proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/ranger:level-1:core-trait:ranger_weapon_proficiencies",
@@ -9037,7 +9026,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/ranger:level-1:class-container:ranger_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -9046,11 +9035,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Ranger class-container support profile; Ranger weapon proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/ranger:level-1:equipment-pressure:ranger_starting_equipment",
@@ -9084,7 +9073,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/ranger:level-1:class-container:ranger_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -9093,11 +9082,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Ranger class-container support profile; Ranger starting-equipment coin-grant choices are discovered from the Surface class record, admitted by source-scoped support profile entries, finalized as owned equipment, and projected into build equipment/loadout facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/ranger:level-1:mastery-pressure:ranger_weapon_mastery",
@@ -9172,7 +9161,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/ranger:level-1:class-container:ranger_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -9181,11 +9170,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-2 multiclass-entry support profile including Ranger; Ranger post-start class entries are admitted as Character Progression advancements; multiclass Hit Dice, proficiencies, armor training, and level-gated feature refs are derived from the Surface class record.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/ranger:level-1:spell-access:ranger_spellcasting",
@@ -9660,7 +9649,7 @@
         "state": "installed",
         "unitId": "class_rogue"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -9668,12 +9657,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "Surface class container plus character-creation-runtime",
-          "evidence": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries.",
-          "status": "owner evidence required"
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Rogue class-container support profile; Rogue is admitted as a supported Character Progression class option; finalization retains the class Unit ref and derives class-owned build facts from the Surface class record.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/rogue:level-1:class-feature-grant:rogue_expertise",
@@ -9865,7 +9854,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -9874,11 +9863,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Rogue class-container support profile; Rogue armor training facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/rogue:level-1:core-trait:rogue_hit_point_die",
@@ -9912,7 +9901,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -9921,11 +9910,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Rogue class-container support profile; Rogue hit point die facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/rogue:level-1:core-trait:rogue_primary_ability",
@@ -9967,12 +9956,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "owner": "shared-algebras/multiclass-prerequisite-algebra",
+          "evidence": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection.",
           "status": "owner evidence required"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection."
     },
     {
       "id": "srd521:classes/rogue:level-1:core-trait:rogue_saving_throw_proficiencies",
@@ -10006,7 +9995,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -10015,11 +10004,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Rogue class-container support profile; Rogue saving throw proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/rogue:level-1:core-trait:rogue_skill_proficiencies",
@@ -10053,7 +10042,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -10062,11 +10051,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Rogue class-container support profile; Rogue skill proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/rogue:level-1:core-trait:rogue_tool_proficiencies",
@@ -10100,7 +10089,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -10109,11 +10098,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Rogue class-container support profile; Rogue fixed tool proficiency facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/rogue:level-1:core-trait:rogue_weapon_proficiencies",
@@ -10147,7 +10136,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -10156,11 +10145,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Rogue class-container support profile; Rogue weapon proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/rogue:level-1:equipment-pressure:rogue_starting_equipment",
@@ -10194,7 +10183,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -10203,11 +10192,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Rogue class-container support profile; Rogue starting-equipment coin-grant choices are discovered from the Surface class record, admitted by source-scoped support profile entries, finalized as owned equipment, and projected into build equipment/loadout facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/rogue:level-1:mastery-pressure:rogue_weapon_mastery",
@@ -10282,7 +10271,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -10291,11 +10280,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-2 multiclass-entry support profile including Rogue; Rogue post-start class entries are admitted as Character Progression advancements; multiclass Hit Dice, proficiencies, armor training, and level-gated feature refs are derived from the Surface class record.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container",
@@ -10323,7 +10312,7 @@
         "state": "installed",
         "unitId": "class_sorcerer"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -10331,12 +10320,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "Surface class container plus character-creation-runtime",
-          "evidence": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries.",
-          "status": "owner evidence required"
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Sorcerer class-container support profile; Sorcerer is admitted as a supported Character Progression class option; finalization retains the class Unit ref and derives class-owned build facts from the Surface class record.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
@@ -10446,7 +10435,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -10455,11 +10444,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Sorcerer class-container support profile; Sorcerer armor training facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_hit_point_die",
@@ -10493,7 +10482,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -10502,11 +10491,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Sorcerer class-container support profile; Sorcerer hit point die facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_primary_ability",
@@ -10548,12 +10537,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "owner": "shared-algebras/multiclass-prerequisite-algebra",
+          "evidence": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection.",
           "status": "owner evidence required"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_saving_throw_proficiencies",
@@ -10587,7 +10576,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -10596,11 +10585,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Sorcerer class-container support profile; Sorcerer saving throw proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_skill_proficiencies",
@@ -10634,7 +10623,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -10643,11 +10632,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Sorcerer class-container support profile; Sorcerer skill proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_weapon_proficiencies",
@@ -10681,7 +10670,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -10690,11 +10679,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Sorcerer class-container support profile; Sorcerer weapon proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:equipment-pressure:sorcerer_starting_equipment",
@@ -10728,7 +10717,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -10737,11 +10726,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Sorcerer class-container support profile; Sorcerer starting-equipment coin-grant choices are discovered from the Surface class record, admitted by source-scoped support profile entries, finalized as owned equipment, and projected into build equipment/loadout facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:multiclass-entry:sorcerer_multiclass_entry_traits",
@@ -10775,7 +10764,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -10784,11 +10773,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-2 multiclass-entry support profile including Sorcerer; Sorcerer post-start class entries are admitted as Character Progression advancements; multiclass Hit Dice, proficiencies, armor training, and level-gated feature refs are derived from the Surface class record.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:spell-access:sorcerer_spellcasting",
@@ -12084,7 +12073,7 @@
         "state": "installed",
         "unitId": "class_warlock"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -12092,12 +12081,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "Surface class container plus character-creation-runtime",
-          "evidence": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries.",
-          "status": "owner evidence required"
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Warlock class-container support profile; Warlock is admitted as a supported Character Progression class option; finalization retains the class Unit ref and derives class-owned build facts from the Surface class record.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations",
@@ -12248,7 +12237,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/warlock:level-1:class-container:warlock_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -12257,11 +12246,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Warlock class-container support profile; Warlock armor training facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/warlock:level-1:core-trait:warlock_hit_point_die",
@@ -12295,7 +12284,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/warlock:level-1:class-container:warlock_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -12304,11 +12293,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Warlock class-container support profile; Warlock hit point die facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/warlock:level-1:core-trait:warlock_primary_ability",
@@ -12350,12 +12339,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "owner": "shared-algebras/multiclass-prerequisite-algebra",
+          "evidence": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection.",
           "status": "owner evidence required"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection."
     },
     {
       "id": "srd521:classes/warlock:level-1:core-trait:warlock_saving_throw_proficiencies",
@@ -12389,7 +12378,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/warlock:level-1:class-container:warlock_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -12398,11 +12387,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Warlock class-container support profile; Warlock saving throw proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/warlock:level-1:core-trait:warlock_skill_proficiencies",
@@ -12436,7 +12425,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/warlock:level-1:class-container:warlock_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -12445,11 +12434,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Warlock class-container support profile; Warlock skill proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/warlock:level-1:core-trait:warlock_weapon_proficiencies",
@@ -12483,7 +12472,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/warlock:level-1:class-container:warlock_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -12492,11 +12481,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Warlock class-container support profile; Warlock weapon proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/warlock:level-1:equipment-pressure:warlock_starting_equipment",
@@ -12530,7 +12519,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/warlock:level-1:class-container:warlock_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -12539,11 +12528,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Warlock class-container support profile; Warlock starting-equipment coin-grant choices are discovered from the Surface class record, admitted by source-scoped support profile entries, finalized as owned equipment, and projected into build equipment/loadout facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/warlock:level-1:multiclass-entry:warlock_multiclass_entry_traits",
@@ -12577,7 +12566,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/warlock:level-1:class-container:warlock_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -12586,11 +12575,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-2 multiclass-entry support profile including Warlock; Warlock post-start class entries are admitted as Character Progression advancements; multiclass Hit Dice, proficiencies, armor training, and level-gated feature refs are derived from the Surface class record.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_chill_touch",
@@ -13232,7 +13221,7 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -13240,12 +13229,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "Surface class container plus character-creation-runtime",
-          "evidence": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, and multiclass rows as the executable evidence boundary.",
-          "status": "owner evidence required"
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-1 Wizard class-container support profile; Wizard is admitted as a supported Character Progression class option; finalization retains the class Unit ref and derives class-owned build facts from the Surface class record.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, and multiclass rows as the executable evidence boundary."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery",
@@ -13499,11 +13488,11 @@
         },
         {
           "owner": "shared-algebras/multiclass-prerequisite-algebra",
-          "evidence": "Primary Ability is needed for multiclass prerequisite checks, but installed class records do not currently carry this source fact.",
+          "evidence": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection.",
           "status": "owner evidence required"
         }
       ],
-      "nextAction": "Primary Ability is needed for multiclass prerequisite checks, but installed class records do not currently carry this source fact."
+      "nextAction": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection."
     },
     {
       "id": "srd521:classes/wizard:level-1:core-trait:wizard_saving_throw_proficiencies",
@@ -13725,7 +13714,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/wizard:level-1:class-container:wizard_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -13734,11 +13723,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV17 level-2 multiclass-entry support profile including Wizard; Wizard post-start class entries are admitted as Character Progression advancements; multiclass Hit Dice, proficiencies, armor training, and level-gated feature refs are derived from the Surface class record.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/wizard:level-1:spell-access:wizard_spellcasting",

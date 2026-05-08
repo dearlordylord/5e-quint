@@ -3,6 +3,8 @@ import {
   BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY,
   BACKGROUND_EQUIPMENT_CHOICE_KEY,
   BACKGROUND_TOOL_CHOICE_KEY,
+  BARD_MULTICLASS_MUSICAL_INSTRUMENT_PROFICIENCY_CHOICE_KEY,
+  BARD_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY,
   CLASS_FEATURE_FEAT_CHOICE_KEY,
   CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
   CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
@@ -26,6 +28,7 @@ import {
   PHASE1_BACKGROUND_TOOL_OPTION_ID,
   PHASE1_CLASS_EQUIPMENT_OPTION_ID,
   PHASE1_CLASS_FIGHTER_UNIT_ID,
+  CLASS_TOOL_PROFICIENCY_CHOICE_KEY,
   PHASE1_LOADOUT_ARMOR_OPTION_ID,
   PHASE1_LOADOUT_SHIELD_OPTION_ID,
   PHASE1_LOADOUT_WEAPON_OPTION_ID,
@@ -33,6 +36,9 @@ import {
   PHASE1_SPECIES_ORC_UNIT_ID,
   PHASE1_WEAPON_FLAIL_UNIT_ID,
   PHASE1_WEAPON_LONGSWORD_UNIT_ID,
+  RANGER_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY,
+  ROGUE_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY,
+  SRD_LEVEL_ONE_CLASS_UNIT_IDS,
   progressionOptionId,
   SUPPORTED_BACKGROUND_OPTION_IDS,
   SUPPORTED_BACKGROUND_UNIT_IDS,
@@ -41,6 +47,7 @@ import {
   SUPPORTED_LANGUAGE_OPTION_IDS,
   SUPPORTED_PURCHASE_OPTION_IDS,
   SUPPORTED_PURCHASE_UNIT_IDS,
+  SUPPORTED_COIN_GRANT_PURCHASE_UNIT_IDS,
   SUPPORTED_SPECIES_OPTION_IDS,
   SUPPORTED_WEAPON_MASTERY_OPTION_IDS,
   WIDTH_CLASS_WIZARD_UNIT_ID,
@@ -62,6 +69,7 @@ import type {
 } from "./types.ts";
 import {
   CHARACTER_BUILD_TOOL_PROFICIENCY_IDS,
+  MUSICAL_INSTRUMENT_TOOL_PROFICIENCY_IDS,
   creationChoiceOptionId,
 } from "./types.ts";
 import {
@@ -144,9 +152,16 @@ const SUPPORTED_DRAFT_CHOICE_PATHS = [
 type SupportedDraftChoicePath = (typeof SUPPORTED_DRAFT_CHOICE_PATHS)[number];
 
 const SUPPORTED_PROGRESSIONS = [
-  supportedLevelOneProgression(PHASE1_CLASS_FIGHTER_UNIT_ID),
+  ...SRD_LEVEL_ONE_CLASS_UNIT_IDS.map(supportedLevelOneProgression),
   supportedSameClassSecondLevelProgression(PHASE1_CLASS_FIGHTER_UNIT_ID),
-  supportedLevelOneProgression(WIDTH_CLASS_WIZARD_UNIT_ID),
+  ...SRD_LEVEL_ONE_CLASS_UNIT_IDS.filter(
+    (classUnitId) => classUnitId !== PHASE1_CLASS_FIGHTER_UNIT_ID,
+  ).map((classUnitId) =>
+    supportedTwoClassSecondLevelProgression(
+      PHASE1_CLASS_FIGHTER_UNIT_ID,
+      classUnitId,
+    ),
+  ),
   supportedTwoClassSecondLevelProgression(
     WIDTH_CLASS_WIZARD_UNIT_ID,
     PHASE1_CLASS_FIGHTER_UNIT_ID,
@@ -218,6 +233,10 @@ const SUPPORTED_PROFICIENCY_GRANT_OPTION_IDS = [
     proficiencyGrantSubjectOptionId({ kind: "tool", toolId }),
   ),
 ] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
+const SUPPORTED_MUSICAL_INSTRUMENT_PROFICIENCY_OPTION_IDS =
+  MUSICAL_INSTRUMENT_TOOL_PROFICIENCY_IDS.map((toolId) =>
+    proficiencyGrantSubjectOptionId({ kind: "tool", toolId }),
+  );
 const SUPPORTED_ABILITY_SCORE_INCREASE_OPTION_IDS =
   supportedAbilityScoreIncreaseOptionIds();
 
@@ -237,6 +256,16 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
       SUPPORTED_ABILITY_SCORE_INCREASE_OPTION_IDS,
     [CLASS_FEATURE_PROFICIENCY_CHOICE_KEY]:
       SUPPORTED_PROFICIENCY_GRANT_OPTION_IDS,
+    [CLASS_TOOL_PROFICIENCY_CHOICE_KEY]:
+      SUPPORTED_PROFICIENCY_GRANT_OPTION_IDS,
+    [BARD_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY]:
+      SUPPORTED_SKILL_PROFICIENCY_OPTION_IDS,
+    [BARD_MULTICLASS_MUSICAL_INSTRUMENT_PROFICIENCY_CHOICE_KEY]:
+      SUPPORTED_MUSICAL_INSTRUMENT_PROFICIENCY_OPTION_IDS,
+    [RANGER_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY]:
+      SUPPORTED_SKILL_PROFICIENCY_OPTION_IDS,
+    [ROGUE_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY]:
+      SUPPORTED_SKILL_PROFICIENCY_OPTION_IDS,
     [WEAPON_MASTERY_OPTIONS_CHOICE_KEY]: SUPPORTED_WEAPON_MASTERY_OPTION_IDS,
     [WIZARD_CANTRIP_CHOICE_KEY]: [
       creationChoiceOptionId("light"),
@@ -267,8 +296,13 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
   purchasableEquipmentUnitIds: SUPPORTED_PURCHASE_UNIT_IDS,
   equipmentPurchaseChoiceCount: 3,
   coinEquipmentChoiceOptionIdsByUnitId: {
+    ...Object.fromEntries(
+      SRD_LEVEL_ONE_CLASS_UNIT_IDS.map((classUnitId) => [
+        classUnitId,
+        [creationChoiceOptionId("option_b")],
+      ]),
+    ),
     [PHASE1_CLASS_FIGHTER_UNIT_ID]: [PHASE1_CLASS_EQUIPMENT_OPTION_ID],
-    [WIDTH_CLASS_WIZARD_UNIT_ID]: [creationChoiceOptionId("option_b")],
     [PHASE1_BACKGROUND_SOLDIER_UNIT_ID]: [
       PHASE1_BACKGROUND_EQUIPMENT_OPTION_ID,
     ],
@@ -394,14 +428,7 @@ export function supportedUnitOptionIdsForSource(
       return SUPPORTED_FIGHTER_SKILL_OPTION_IDS;
     }
 
-    if (source.unitId === WIDTH_CLASS_WIZARD_UNIT_ID) {
-      return [
-        creationChoiceOptionId("arcana"),
-        creationChoiceOptionId("history"),
-      ];
-    }
-
-    return [];
+    return SUPPORTED_SKILL_PROFICIENCY_OPTION_IDS;
   }
 
   return supportedUnitOptionIds(source.choiceKey);
@@ -428,6 +455,14 @@ export function supportedBackgroundUnitIds(): readonly UnitRecord["id"][] {
 
 export function supportedPurchasableEquipmentUnitIds(): readonly UnitRecord["id"][] {
   return CHARACTER_CREATION_SUPPORT_PROFILE.purchasableEquipmentUnitIds;
+}
+
+export function supportedPurchasableEquipmentUnitIdsForClass(
+  classUnitId: UnitRecord["id"],
+): readonly UnitRecord["id"][] {
+  return classUnitId === PHASE1_CLASS_FIGHTER_UNIT_ID
+    ? CHARACTER_CREATION_SUPPORT_PROFILE.purchasableEquipmentUnitIds
+    : SUPPORTED_COIN_GRANT_PURCHASE_UNIT_IDS;
 }
 
 export function supportedEquipmentPurchaseChoiceCount(): number {

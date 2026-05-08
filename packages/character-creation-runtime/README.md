@@ -97,7 +97,9 @@ Key boundary terms:
 
 This package supports these character-creation profiles:
 
-- level-1 Fighter and level-2 Fighter progression;
+- SRD level-1 class-container source facts for starting class progression;
+- level-2 Fighter progression and supported level-2 multiclass-entry
+  progression facts;
 - level-1 Wizard spellcasting creation facts;
 - Orc species;
 - Soldier background;
