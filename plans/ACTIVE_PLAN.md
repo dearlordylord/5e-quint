@@ -136,7 +136,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 173,
       "id": "SRDINV5C",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify Installed Cantrip and Level-1 Spell Units"
     },
     {
