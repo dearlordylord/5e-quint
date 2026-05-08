@@ -1,7 +1,7 @@
 set -e
 
 echo "Running lint-staged..."
-pnpm --dir packages/app exec lint-staged
+pnpm exec lint-staged --cwd packages/app --config packages/app/package.json
 
 echo "Running gitleaks to check for secrets..."
 gitleaks protect --verbose --staged
