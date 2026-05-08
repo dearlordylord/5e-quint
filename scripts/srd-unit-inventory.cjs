@@ -100,6 +100,30 @@ const ownerEvidenceRequired = new Map([
 
 const catalogOnlyClosures = new Map([
   [
+    "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense",
+    {
+      owner: "catalog-only/dead-for-now",
+      reason:
+        "Barbarian Unarmored Defense is a character-sheet AC formula, and no promoted character-sheet AC derivation runtime owns class-derived Armor Class formulas yet.",
+    },
+  ],
+  [
+    "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense",
+    {
+      owner: "catalog-only/dead-for-now",
+      reason:
+        "Monk Unarmored Defense is a character-sheet AC formula, and no promoted character-sheet AC derivation runtime owns class-derived Armor Class formulas yet.",
+    },
+  ],
+  [
+    "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands",
+    {
+      owner: "catalog-only/dead-for-now",
+      reason:
+        "Lay On Hands is a character-sheet healing pool and Bonus Action healing/Poisoned-condition removal feature outside current character-creation and battle-runtime owners.",
+    },
+  ],
+  [
     "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery",
     {
       owner: "catalog-only/dead-for-now",
@@ -917,6 +941,8 @@ function nextAction(row, disposition, gate, ownerEvidenceSources, installedIds) 
   if (disposition === "non-runtime")
     return "No runtime work; keep classification as explicit closure.";
   if (disposition === "catalog-only/dead-for-now") {
+    const catalogOnlyClosure = catalogOnlyClosures.get(row.id);
+    if (catalogOnlyClosure !== undefined) return catalogOnlyClosure.reason;
     const spellUnitClassification = spellUnitMissingClassifications.get(
       row.candidateUnitId,
     );
@@ -2105,6 +2131,16 @@ function validateSrdUnitInventory(report) {
     ) {
       issues.push(
         `${row.id} is an installed Spell Unit row with generic owner evidence.`,
+      );
+    }
+    if (
+      row.finalDisposition === "catalog-only/dead-for-now" &&
+      row.rowKind !== "spell-unit-pressure" &&
+      row.catalogAdmission.state !== "installed" &&
+      !catalogOnlyClosures.has(row.id)
+    ) {
+      issues.push(
+        `${row.id} is a nonspell catalog-only closure without an explicit SRDINV6 reason.`,
       );
     }
   }

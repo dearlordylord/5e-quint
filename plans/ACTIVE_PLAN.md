@@ -148,13 +148,13 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 175,
       "id": "SRDINV6",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Review Catalog-Only and Surface-Widening Rows"
     },
     {
       "number": 176,
       "id": "SRDINV7",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Recursive SRD Inventory Planning Review"
     },
     {
@@ -227,8 +227,8 @@ Keep it synchronized with the DAG table and task details.
 | 172   | SRDINV5B - Classify Missing Cantrip and Level-1 Spell Units | done | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Completed missing cantrip and level-1 Spell Unit classification: missing Spell Definition Unit ids now have explicit authoring-ready, Surface-widening, or catalog-only/dead-for-now outcomes; remaining authoring-ready detect rows stay visible in generated inventory for later authoring work. |
 | 173   | SRDINV5C - Classify Installed Cantrip and Level-1 Spell Units | done | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Completed installed cantrip and level-1 Spell Unit classification: supported installed spell rows derive owner evidence from Unit matrix claims plus deterministic admission/projection evidence; unsupported Sleep rows remain evidence-required; Fire Bolt and Thunderwave rows carry Surface/runtime blockers; Detect Magic and Light close as catalog-only/dead-for-now. |
 | 174   | SRDINV5D - Review Catalog-Only Cantrip and Level-1 Spell Units | done | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Completed catalog-only spell-pressure review: the 151-row denominator now splits into 74 explicit catalog-only/dead-for-now closures and 77 authored executable follow-up rows across six named spell runtime batches. |
-| 175   | SRDINV6 - Review Catalog-Only and Surface-Widening Rows | ready-for-research | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Preserve catalog-only/dead-for-now rows and review the 62 generated catalog-only plus Surface-widening rows, including class-feature blockers from SRDINV3, spell-access blockers from SRDINV5A, spell-unit blockers from SRDINV5B, and installed spell blockers from SRDINV5C. |
-| 176   | SRDINV7 - Recursive SRD Inventory Planning Review | blocked | SRDINV2-SRDINV5D, SRDINV6 | SRDINV8 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review SRDINV1A-SRDINV6 findings and append a concrete multi-task next batch, or explicitly close level-1 with final metrics. |
+| 175   | SRDINV6 - Review Catalog-Only and Surface-Widening Rows | done | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Completed catalog-only and Surface-widening review: the SRDINV6 denominator remains 62 rows, with 4 explicit nonspell catalog-only/dead-for-now closures and 58 rows that name concrete Surface-widening blockers for SRDINV7/SRDINV8. |
+| 176   | SRDINV7 - Recursive SRD Inventory Planning Review | ready-for-research | SRDINV2-SRDINV5D, SRDINV6 | SRDINV8 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review SRDINV1A-SRDINV6 findings and append a concrete multi-task next batch, or explicitly close level-1 with final metrics. |
 | 177   | SRDINV8 - Surface Widening Gate for SRD Level-1 Frontier | blocked | SRDINV7 | SRDINV9-SRDINV10 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | If Surface cannot express important frontier rows, append atomic Surface-widening tasks and then append this gate again; otherwise mark Surface ready for authoring. |
 | 178   | SRDINV9 - Author Expressible SRD Level-1 Surface Records | blocked | SRDINV8 | SRDINV10 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes) | Author SRD-provenance Surface records for the expressible frontier, then run the Surface gate again if authoring exposes missing Surface constructs. |
 | 179   | SRDINV10 - Plan SRD Level-1 Runtime and MBT Support | blocked | SRDINV9 | none | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [battle-runtime README](/workspace/typescript/dnd/packages/battle-runtime/README.md), [rule-core README](/workspace/typescript/dnd/packages/shared-algebras/proofs/rule-core/README.md) | Append behavior-support tasks for authored executable rows: QNT/MBT procedure parity where needed, runtime implementation, deterministic admission/projection evidence, and selected identity MBT only for high-risk Units. |
@@ -877,7 +877,7 @@ regenerated; `pnpm unit-profile-coverage:check` passed; `pnpm quality` passed;
 
 ### Task 175 - SRDINV6 - Review Catalog-Only and Surface-Widening Rows
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV1A
 
@@ -902,9 +902,14 @@ not backed by a named blocker.
 Verification: SRD source review for rows changed; regenerate inventory; `pnpm
 unit-profile-coverage:check`; `/simplify` convergence.
 
+Completed scope: reviewed the 62-row SRDINV6 denominator, kept 4 nonspell
+catalog-only/dead-for-now rows as explicit SRD-traced closures, and preserved
+58 Surface-widening rows with named missing constructs for SRDINV7/SRDINV8
+planning.
+
 ### Task 176 - SRDINV7 - Recursive SRD Inventory Planning Review
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: SRDINV2-SRDINV5D, SRDINV6
 

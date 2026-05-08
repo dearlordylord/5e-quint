@@ -824,7 +824,7 @@
       },
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Barbarian Unarmored Defense is a character-sheet AC formula, and no promoted character-sheet AC derivation runtime owns class-derived Armor Class formulas yet."
     },
     {
       "id": "srd521:classes/barbarian:level-1:class-table-summary:barbarian_level_1_feature_table_row",
@@ -5822,7 +5822,7 @@
       },
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Monk Unarmored Defense is a character-sheet AC formula, and no promoted character-sheet AC derivation runtime owns class-derived Armor Class formulas yet."
     },
     {
       "id": "srd521:classes/monk:level-1:class-table-summary:monk_level_1_feature_table_row",
@@ -6220,7 +6220,7 @@
       },
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Lay On Hands is a character-sheet healing pool and Bonus Action healing/Poisoned-condition removal feature outside current character-creation and battle-runtime owners."
     },
     {
       "id": "srd521:classes/paladin:level-1:class-table-summary:paladin_level_1_feature_table_row",

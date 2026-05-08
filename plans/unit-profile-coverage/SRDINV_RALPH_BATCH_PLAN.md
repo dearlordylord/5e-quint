@@ -289,3 +289,45 @@ follow-up.
 - Round 2: added validation for the review table and kept the follow-up batches
   at mechanics-family granularity rather than per-class or per-row tasks; no
   further important changes found.
+
+## SRDINV6 Closeout Notes
+
+SRDINV6 reviewed the generated catalog-only/dead-for-now and
+needs-Surface-widening rows left after SRDINV3 and SRDINV5A-SRDINV5D. It does
+not author records, widen Surface, or implement runtime behavior. The local SRD
+source review for changed rows used the SRD 5.2.1 Barbarian, Monk, Paladin, and
+Wizard class files for Unarmored Defense, Lay On Hands, and Arcane Recovery.
+
+`UBIQUITOUS_LANGUAGE.md` was checked for Armor Class, Unarmored Defense, Hit
+Points, Pool, Character Sheet, Class, Class Feature, Spell Slot, and the
+Character Sheet versus Stat Block ownership distinction. The generated SRDINV6
+denominator remains 62 rows: 4 explicit nonspell catalog-only/dead-for-now
+closures and 58 needs-Surface-widening rows. The Surface-widening rows all name
+their missing construct, split across 8 class containers, 11 class features, 6
+spell-access rows, and 33 Spell Unit pressure rows. The 58 widening rows should
+feed SRDINV7/SRDINV8 as concrete Surface-gate input rather than being collapsed
+into a generic redesign task.
+
+The four nonspell catalog-only closures are now explicit:
+
+- Barbarian Unarmored Defense and Monk Unarmored Defense stay catalog-only
+  because they are character-sheet Armor Class formulas and no promoted
+  character-sheet AC derivation runtime owns class-derived AC formulas yet.
+- Paladin Lay On Hands stays catalog-only because it is a character-sheet
+  healing pool and Bonus Action healing/Poisoned-condition removal feature
+  outside current character-creation and battle-runtime owners.
+- Wizard Arcane Recovery stays catalog-only because Short Rest Spell Slot
+  recovery belongs to a future character-sheet/rest runtime.
+
+The generator now validates that any future nonspell catalog-only/dead-for-now
+row that is not an installed owner-evidence closure must have an explicit
+SRDINV6 reason.
+
+`/simplify` convergence:
+
+- Round 1: kept the closure reasons in the generator rather than editing only
+  generated Markdown/JSON, so regenerated inventory cannot lose them.
+- Round 2: added validation for nonspell catalog-only closures and kept Surface
+  widening rows as named blocker facts for SRDINV7/SRDINV8 instead of promoting
+  broad runtime or Surface implementation in this review task; no further
+  important changes found.
