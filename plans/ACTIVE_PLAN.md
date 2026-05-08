@@ -118,7 +118,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 170,
       "id": "SRDINV4",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify Level-1 Character Creation Rows"
     },
     {
