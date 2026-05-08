@@ -61,6 +61,13 @@ Current sequence:
 - `SRDINV25`: promote character-sheet healing resource action runtime evidence.
 - `SRDINV26`: close Wizard Ritual Adept spell-invocation owner evidence.
 - `SRDINV27`: recursive review after the promoted-runtime batch.
+- `SRDINV28`: promote spell attack and save-damage runtime evidence.
+- `SRDINV29`: promote area, chain, and typed-damage spell runtime evidence.
+- `SRDINV30`: promote spell buff, debuff, and protection runtime evidence.
+- `SRDINV31`: promote attack-rider and smite spell runtime evidence.
+- `SRDINV32`: promote Produce Flame held-light and hurled attack runtime
+  evidence.
+- `SRDINV33`: recursive review after the spell-runtime batch.
 
 The spell-pressure rows are split into `SRDINV5A` through `SRDINV5D` because
 class spell access, missing Spell Unit records, installed Spell Unit evidence,
@@ -194,6 +201,36 @@ followed by a recursive review:
 Spell Unit Surface blockers and authored executable spell-runtime follow-ups
 remain counted, but they are not the immediate SRDINV22-SRDINV26 frontier while
 level-1 rows remain open.
+
+## Post-SRDINV27 Frontier Loop
+
+SRDINV27 found that SRDINV22-SRDINV26 closed the promoted-runtime level-1
+frontier and that the generated level-1 inventory is complete. The remaining
+frontier is spell Unit pressure outside level 1. The immediate batch is the
+runtime-ready authored executable spell rows, leaving Surface blockers,
+installed unsupported spell rows, missing Detect spell records, and explicit
+catalog-only/dead-for-now rows counted for the next recursive review.
+
+The next batch is therefore five concrete spell-runtime families followed by a
+recursive review:
+
+1. `SRDINV28` promotes Spell Definitions that resolve through spell attacks or
+   saving throws with direct damage outcomes.
+2. `SRDINV29` promotes area, chained-target, and typed-damage spell execution.
+3. `SRDINV30` promotes timed buffs, debuffs, protection effects, and D20
+   modifier spell execution.
+4. `SRDINV31` promotes spell-hosted weapon attack riders, smites, and
+   retargetable marks.
+5. `SRDINV32` promotes Produce Flame as held illumination plus later hurled
+   spell attack execution.
+6. `SRDINV33` reviews the spell-runtime batch, refreshes inventory metrics, and
+   appends the next concrete spell frontier.
+
+SRDINV27 also fixed a stale Wizard Arcane Recovery evidence reference in
+`character-sheet-owner-evidence.json`; the generated checker now sees
+character-sheet runtime evidence for that row. The refreshed level-1 metrics
+are 156 rows total: 144 `catalog-installed-owner-evidence-present` rows and 12
+`non-runtime` rows.
 
 ## Acceptance Model
 
