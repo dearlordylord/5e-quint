@@ -285,36 +285,60 @@ Keep it synchronized with the DAG table and task details.
     },
     {
       "number": 198,
-      "id": "SRDINV28",
+      "id": "SRDINV28A",
       "status": "ready-for-research",
-      "title": "Promote Spell Attack and Save-Damage Runtime"
+      "title": "Generalize Spell Damage Invocation Runtime"
     },
     {
       "number": 199,
+      "id": "SRDINV28B",
+      "status": "blocked",
+      "title": "Promote Pure Spell Damage Runtime"
+    },
+    {
+      "number": 200,
+      "id": "SRDINV28C",
+      "status": "blocked",
+      "title": "Promote Spell Attack Damage Runtime"
+    },
+    {
+      "number": 201,
+      "id": "SRDINV28D",
+      "status": "blocked",
+      "title": "Promote Spell Rider Timing Runtime"
+    },
+    {
+      "number": 202,
+      "id": "SRDINV28E",
+      "status": "blocked",
+      "title": "Decide Starry Wisp Object Targeting"
+    },
+    {
+      "number": 203,
       "id": "SRDINV29",
       "status": "blocked",
       "title": "Promote Area, Chain, and Typed-Damage Spell Runtime"
     },
     {
-      "number": 200,
+      "number": 204,
       "id": "SRDINV30",
       "status": "blocked",
       "title": "Promote Spell Buff, Debuff, and Protection Runtime"
     },
     {
-      "number": 201,
+      "number": 205,
       "id": "SRDINV31",
       "status": "blocked",
       "title": "Promote Attack-Rider and Smite Spell Runtime"
     },
     {
-      "number": 202,
+      "number": 206,
       "id": "SRDINV32",
       "status": "blocked",
       "title": "Promote Held Light and Hurled Attack Spell Runtime"
     },
     {
-      "number": 203,
+      "number": 207,
       "id": "SRDINV33",
       "status": "blocked",
       "title": "Recursive SRD Inventory Planning Review"
@@ -393,13 +417,17 @@ Keep it synchronized with the DAG table and task details.
 | 194   | SRDINV24 - Promote Character-Sheet Rest and Spell Slot Recovery | done | SRDINV22 | SRDINV25-SRDINV27 | [SRDINV21 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV21_RECURSIVE_PLANNING_REVIEW.md), [character-sheet runtime README](/workspace/typescript/dnd/packages/character-sheet-runtime/README.md), [character-sheet runtime](/workspace/typescript/dnd/packages/character-sheet-runtime/src/index.ts), [SRD Rules Glossary](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [SRD Character Creation](/workspace/typescript/dnd/.references/srd-5.2.1/Character-Creation.md), [SRD Wizard](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Wizard.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed character-sheet rest recovery for Short Rest Hit Dice spending, Long Rest HP/Hit Dice/Spell Slot restoration, Pact Slot recovery, and Wizard Arcane Recovery while keeping Spell Slot, Pact Slot, Hit Die, HP restoration, feature recharge, and Arcane Recovery slot refund facts distinct. |
 | 195   | SRDINV25 - Promote Character-Sheet Healing Resource Actions | done | SRDINV22 | SRDINV26-SRDINV27 | [SRDINV21 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV21_RECURSIVE_PLANNING_REVIEW.md), [character-sheet runtime README](/workspace/typescript/dnd/packages/character-sheet-runtime/README.md), [character-sheet runtime](/workspace/typescript/dnd/packages/character-sheet-runtime/src/index.ts), [SRD Paladin](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Paladin.md), [SRD Rules Glossary](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Lay On Hands as a character-sheet healing resource action with one pool for HP restoration and Poisoned-condition removal. |
 | 196   | SRDINV26 - Close Wizard Ritual Adept Invocation Ownership | done | SRDINV22 | SRDINV27 | [SRDINV21 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV21_RECURSIVE_PLANNING_REVIEW.md), [Spell ownership surface](/workspace/typescript/dnd/plans/SPELL1_SPELL_OWNERSHIP_SURFACE.md), [character-sheet runtime README](/workspace/typescript/dnd/packages/character-sheet-runtime/README.md), [SRD Wizard](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Wizard.md), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed Wizard Ritual Adept owner evidence through a character-sheet spellbook ritual invocation boundary over spellbook Spell Access, ritual-tagged Spell Definitions, and the installed spellbook Ritual Access feature. |
-| 197   | SRDINV27 - Recursive SRD Inventory Planning Review | done | SRDINV22-SRDINV26 | SRDINV28-SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed recursive planning review: level-1 inventory is complete with 144 owner-evidence-present rows and 12 non-runtime rows, so the next batch is runtime-ready authored spell execution plus SRDINV33 review. |
-| 198   | SRDINV28 - Promote Spell Attack and Save-Damage Runtime | ready-for-research | SRDINV27 | SRDINV29-SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [SRD Rules Glossary](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [SRD Playing the Game](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote runtime evidence for spell attacks and save-damage Spell Definitions: Burning Hands, Chill Touch, Guiding Bolt, Inflict Wounds, Poison Spray, Ray of Sickness, Sacred Flame, Shocking Grasp, Starry Wisp, and Vicious Mockery. |
-| 199   | SRDINV29 - Promote Area, Chain, and Typed-Damage Spell Runtime | blocked | SRDINV28 | SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote runtime evidence for Chromatic Orb, Color Spray, Entangle, Grease, and Ice Knife after SRDINV28 establishes the shared spell invocation damage path. |
-| 200   | SRDINV30 - Promote Spell Buff, Debuff, and Protection Runtime | blocked | SRDINV28 | SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote runtime evidence for Animal Friendship, Bane, Bless, Faerie Fire, False Life, Guidance, Heroism, Longstrider, Protection from Evil and Good, Resistance, and Shield of Faith. |
-| 201   | SRDINV31 - Promote Attack-Rider and Smite Spell Runtime | blocked | SRDINV28 | SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote runtime evidence for Divine Favor, Divine Smite, Ensnaring Strike, Hunter's Mark, Searing Smite, and True Strike. |
-| 202   | SRDINV32 - Promote Held Light and Hurled Attack Spell Runtime | blocked | SRDINV28 | SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD Produce Flame](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-M-P.md), [SRD Rules Glossary](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Produce Flame as held illumination plus later hurled ranged spell attack runtime. |
-| 203   | SRDINV33 - Recursive SRD Inventory Planning Review | blocked | SRDINV28-SRDINV32 | none | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review SRDINV28-SRDINV32 spell-runtime closure, refresh spell Unit metrics, and append the next concrete frontier. |
+| 197   | SRDINV27 - Recursive SRD Inventory Planning Review | done | SRDINV22-SRDINV26 | SRDINV28A-SRDINV28E, SRDINV29-SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed recursive planning review: level-1 inventory is complete with 144 owner-evidence-present rows and 12 non-runtime rows, so the next batch is runtime-ready authored spell execution plus SRDINV33 review. |
+| 198   | SRDINV28A - Generalize Spell Damage Invocation Runtime | ready-for-research | SRDINV27 | SRDINV28B-SRDINV28E, SRDINV29-SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [battle-runtime spell subjects](/workspace/typescript/dnd/packages/battle-runtime/src/battle-subjects.ts), [battle-runtime reducer](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Generalize the promoted spell-damage invocation model so attack-roll and save-gated damage can be cantrip or spell-slot-backed without Ray-of-Frost-only speed-rider assumptions or Acid-Splash-only point-sphere assumptions. |
+| 199   | SRDINV28B - Promote Pure Spell Damage Runtime | blocked | SRDINV28A | SRDINV28C-SRDINV28E, SRDINV29-SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote the no-rider direct damage subset first: Poison Spray, Sacred Flame, Inflict Wounds, and Burning Hands if cone target-list support is included in this slice; otherwise leave Burning Hands blocked for area targeting. |
+| 200   | SRDINV28C - Promote Spell Attack Damage Runtime | blocked | SRDINV28A | SRDINV28D-SRDINV28E, SRDINV29-SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [battle-runtime reducer](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote spell attack damage without mandatory speed reduction, covering melee and ranged spell attacks plus cantrip/slot scaling for damage-only or rider-deferred spells. |
+| 201   | SRDINV28D - Promote Spell Rider Timing Runtime | blocked | SRDINV28B-SRDINV28C | SRDINV29-SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [battle-runtime active effects](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Add typed runtime support for the simple riders from the failed SRDINV28 attempts: Poisoned, Opportunity Attack denial, next-attack advantage/disadvantage, healing suppression, and source-owned condition expiration where in scope. |
+| 202   | SRDINV28E - Decide Starry Wisp Object Targeting | blocked | SRDINV28A-SRDINV28C | SRDINV29-SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [battle-runtime target facts](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [SRD Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Decide whether Starry Wisp gets executable object target support now or remains unsupported; do not claim object targeting through metadata without an executable object-target fill/fact boundary. |
+| 203   | SRDINV29 - Promote Area, Chain, and Typed-Damage Spell Runtime | blocked | SRDINV28A-SRDINV28E | SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote runtime evidence for Chromatic Orb, Color Spray, Entangle, Grease, and Ice Knife after the SRDINV28A-E spell damage foundation is explicit. |
+| 204   | SRDINV30 - Promote Spell Buff, Debuff, and Protection Runtime | blocked | SRDINV28A-SRDINV28E | SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote runtime evidence for Animal Friendship, Bane, Bless, Faerie Fire, False Life, Guidance, Heroism, Longstrider, Protection from Evil and Good, Resistance, and Shield of Faith. |
+| 205   | SRDINV31 - Promote Attack-Rider and Smite Spell Runtime | blocked | SRDINV28A-SRDINV28E | SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote runtime evidence for Divine Favor, Divine Smite, Ensnaring Strike, Hunter's Mark, Searing Smite, and True Strike. |
+| 206   | SRDINV32 - Promote Held Light and Hurled Attack Spell Runtime | blocked | SRDINV28A-SRDINV28E | SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD Produce Flame](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-M-P.md), [SRD Rules Glossary](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Produce Flame as held illumination plus later hurled ranged spell attack runtime. |
+| 207   | SRDINV33 - Recursive SRD Inventory Planning Review | blocked | SRDINV28A-SRDINV28E, SRDINV29-SRDINV32 | none | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review the SRDINV28A-E and SRDINV29-SRDINV32 spell-runtime closure, refresh spell Unit metrics, and append the next concrete frontier. |
 
 ## Task Details
 
@@ -1962,7 +1990,7 @@ Status: `done`
 
 Depends on: SRDINV22-SRDINV26
 
-Blocks: SRDINV28-SRDINV33
+Blocks: SRDINV28A-SRDINV28E, SRDINV29-SRDINV33
 
 Research / plan:
 [SRDINV27_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md),
@@ -1993,11 +2021,14 @@ reference in the character-sheet manifest; the manifest now points at an
 existing rest-recovery projection helper, so Wizard Arcane Recovery closes
 through SRDINV24 character-sheet owner evidence.
 
-The appended batch is not a recursive-only continuation: `SRDINV28` spell
-attack/save-damage runtime, `SRDINV29` area/chain/typed-damage runtime,
-`SRDINV30` buff/debuff/protection runtime, `SRDINV31` attack-rider/smite
-runtime, `SRDINV32` Produce Flame held-light/hurled-attack runtime, and
-`SRDINV33` recursive review.
+The appended batch is not a recursive-only continuation. The original
+`SRDINV28` spell attack/save-damage runtime frontier has been split into
+`SRDINV28A` generalized spell-damage invocation, `SRDINV28B` pure damage,
+`SRDINV28C` spell attack damage, `SRDINV28D` rider timing, and `SRDINV28E`
+Starry Wisp object-targeting decision, followed by `SRDINV29` area/chain/
+typed-damage runtime, `SRDINV30` buff/debuff/protection runtime, `SRDINV31`
+attack-rider/smite runtime, `SRDINV32` Produce Flame held-light/hurled-attack
+runtime, and `SRDINV33` recursive review.
 
 Verification completed: local SRD source review checked the selected cantrip
 and level-1 spell descriptions under `.references/srd-5.2.1/Spells`, plus
@@ -2017,64 +2048,272 @@ counted for SRDINV33.
 `/simplify` round 3: split the spell-runtime batch by execution invariant
 rather than by class list or individual spell row; no important changes found.
 
-### Task 198 - SRDINV28 - Promote Spell Attack and Save-Damage Runtime
+### Task 198 - SRDINV28A - Generalize Spell Damage Invocation Runtime
 
 Status: `ready-for-research`
 
 Depends on: SRDINV27
+
+Blocks: SRDINV28B-SRDINV28E, SRDINV29-SRDINV33
+
+Research / plan:
+[SRDINV27_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md),
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[battle-subjects.ts](/workspace/typescript/dnd/packages/battle-runtime/src/battle-subjects.ts),
+[battle-reducer.ts](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts),
+[rule-core-spells.mbt.test.ts](/workspace/typescript/dnd/packages/battle-runtime/src/rule-core-spells.mbt.test.ts),
+[Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells),
+[Rules-Glossary.md](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Context for a fresh implementer: old `SRDINV28` tried to promote Burning
+Hands, Chill Touch, Guiding Bolt, Inflict Wounds, Poison Spray, Ray of
+Sickness, Sacred Flame, Shocking Grasp, Starry Wisp, and Vicious Mockery in
+one task. That was too broad because the existing runtime shape is narrower
+than the Surface records:
+
+- `spellAttackDamage` is currently a cantrip invocation and its support profile
+  assumes the Ray of Frost shape: ranged spell attack, damage, and a mandatory
+  `speedReduction` rider.
+- `saveGatedDamage` is currently a cantrip invocation and assumes the Acid
+  Splash shape: point-origin Sphere targets, cantrip damage, and optional half
+  damage.
+- `SpellInvocationRef` only allows `spellAttackDamage` and `saveGatedDamage`
+  under the `cantrip` tag; spell-slot procedures do not include those damage
+  shapes.
+- `supportedSpellActs` discovers prepared spell-slot damage separately from
+  cantrip attack/save damage, so adding individual spells without first
+  generalizing the invocation model will either duplicate logic or encode
+  false assumptions.
+
+Scope: generalize the promoted battle-runtime spell-damage invocation model so
+attack-roll and save-gated damage can be represented for both class cantrips
+and prepared spell-slot invocations. Keep this slice about procedure shape and
+resource/spend/subject plumbing, not about admitting every selected spell.
+Make the model express:
+
+- cantrip and spell-slot backed spell attack damage;
+- cantrip and spell-slot backed save-gated damage;
+- optional, typed post-damage riders instead of a mandatory speed rider;
+- target shape metadata narrow enough to reject unsupported area/object forms;
+- slot scaling and cantrip scaling as source-derived damage expressions.
+
+Out of scope: concrete rider behavior, object targets, Chromatic Orb/Color
+Spray/Entangle/Grease/Ice Knife, buffs/debuffs/protection spells, Produce
+Flame held-light state, PHB/XPHB pressure, and catalog admission as behavior
+support.
+
+Verification: RAW/source review for Spell, Magic action, Spell Slot, Spell
+Attack, Saving Throw, damage, cantrip scaling, and using a higher-level Spell
+Slot; `UBIQUITOUS_LANGUAGE.md` check for Spell Definition, Spell Invocation,
+Spell Effect, Spell Attack, Attack Roll, Saving Throw, Base Spell Level, and
+Using a Higher-Level Spell Slot; focused unit tests proving old Ray of Frost,
+Acid Splash, Magic Missile, healing, Mage Armor, Shield, and Ready Spell lanes
+still discover/resolve; focused tests for the new generalized invocation refs;
+`pnpm unit-profile-coverage:check`; `pnpm quality`; promoted battle-runtime MBT
+only if the final implementation changes promoted battle-runtime behavior;
+`/simplify` convergence, minimum two rounds.
+
+### Task 199 - SRDINV28B - Promote Pure Spell Damage Runtime
+
+Status: `blocked`
+
+Depends on: SRDINV28A
+
+Blocks: SRDINV28C-SRDINV28E, SRDINV29-SRDINV33
+
+Research / plan:
+[SRDINV27_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md),
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[battle-reducer.ts](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts),
+[Poison Spray](/workspace/typescript/dnd/packages/surface/content/poison_spray.dhall),
+[Sacred Flame](/workspace/typescript/dnd/packages/surface/content/sacred_flame.dhall),
+[Inflict Wounds](/workspace/typescript/dnd/packages/surface/content/inflict_wounds.dhall),
+[Burning Hands](/workspace/typescript/dnd/packages/surface/content/burning_hands.dhall),
+[Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: admit the simplest damage-only rows after `SRDINV28A` establishes the
+shared invocation model. Start with spells whose executable behavior is damage
+plus existing target/fill machinery, with no post-hit or post-fail rider:
+
+- Poison Spray: cantrip ranged spell attack, one creature target, Poison damage
+  with character-level cantrip scaling.
+- Sacred Flame: cantrip one-creature Dexterity save, Radiant damage on fail,
+  no damage on success; cover denial remains table/spatial agenda unless the
+  runtime already has an executable cover model.
+- Inflict Wounds: level-1 prepared spell, touch target, Constitution save,
+  Necrotic damage on fail and half damage on success, slot scaling.
+- Burning Hands only if the slice includes an executable self-origin Cone
+  target-list/fact boundary; otherwise keep it blocked for the area-targeting
+  task instead of weakening the model.
+
+Out of scope: riders, condition application, Opportunity Attack denial,
+healing suppression, object targets, next-attack advantage/disadvantage,
+generic area geometry beyond the minimum chosen for Burning Hands, and
+catalog-only support claims.
+
+Verification: focused tests for discovery, target/fill validation, damage
+roll validation, HP damage, save success/failure damage, cantrip scaling,
+slot scaling, action/spell-slot spend, concentration damage follow-up where
+already supported, `unit-evidence.jsonl`/claim updates for admitted rows,
+`pnpm unit-profile-coverage:check`; `pnpm quality`; MBT only after runtime
+behavior is complete and one promoted integrated run is justified.
+
+### Task 200 - SRDINV28C - Promote Spell Attack Damage Runtime
+
+Status: `blocked`
+
+Depends on: SRDINV28A
+
+Blocks: SRDINV28D-SRDINV28E, SRDINV29-SRDINV33
+
+Research / plan:
+[SRDINV27_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md),
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[battle-reducer.ts](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts),
+[Chill Touch](/workspace/typescript/dnd/packages/surface/content/chill_touch.dhall),
+[Shocking Grasp](/workspace/typescript/dnd/packages/surface/content/shocking_grasp.dhall),
+[Guiding Bolt](/workspace/typescript/dnd/packages/surface/content/guiding_bolt.dhall),
+[Ray of Sickness](/workspace/typescript/dnd/packages/surface/content/ray_of_sickness.dhall),
+[Starry Wisp](/workspace/typescript/dnd/packages/surface/content/starry_wisp.dhall),
+[Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote spell attack damage independent of Ray of Frost's speed rider.
+The runtime must support:
+
+- melee spell attacks and ranged spell attacks as distinct authored attack
+  kinds;
+- cantrip damage scaling and level-1 slot damage scaling;
+- spell attack roll holes, hit/miss resolution, critical damage dice, Shield
+  reaction windows, miss-to-hit replacement integration, damage resistance/
+  immunity/vulnerability, concentration damage follow-up, and zero-HP damage
+  disposition as already supported for spell damage;
+- damage-only admission for spells whose riders are intentionally deferred.
+
+Recommended first admitted set: Poison Spray if not already covered by
+`SRDINV28B`, Chill Touch as damage-only with the healing-suppression rider kept
+unsupported until `SRDINV28D`, and any damage-only spell attack that does not
+require object targets. Guiding Bolt, Shocking Grasp, Ray of Sickness, and
+Starry Wisp may be partially exercised for damage shape, but must not receive
+full supported evidence until their riders/object targeting are executable or
+explicitly excluded.
+
+Out of scope: rider effects, object targets, area/chain damage, smites/weapon
+attack riders, and claiming full support for spells whose SRD text includes
+unimplemented rider behavior unless the row is explicitly documented as a
+partial/damage-only admission with checker-visible limits.
+
+Verification: focused runtime tests for ranged and melee spell attack damage,
+critical hit damage, miss no-damage behavior, Shield reaction interaction,
+damage type adjustment, scaling, and action/spell-slot spend; matrix/evidence
+updates must distinguish full support from rider-deferred support; `pnpm
+unit-profile-coverage:check`; `pnpm quality`; MBT only after completed runtime
+behavior changes.
+
+### Task 201 - SRDINV28D - Promote Spell Rider Timing Runtime
+
+Status: `blocked`
+
+Depends on: SRDINV28B-SRDINV28C
 
 Blocks: SRDINV29-SRDINV33
 
 Research / plan:
 [SRDINV27_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md),
 [SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[battle-reducer.ts](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts),
+[Shocking Grasp](/workspace/typescript/dnd/packages/surface/content/shocking_grasp.dhall),
+[Guiding Bolt](/workspace/typescript/dnd/packages/surface/content/guiding_bolt.dhall),
+[Ray of Sickness](/workspace/typescript/dnd/packages/surface/content/ray_of_sickness.dhall),
+[Vicious Mockery](/workspace/typescript/dnd/packages/surface/content/vicious_mockery.dhall),
+[Chill Touch](/workspace/typescript/dnd/packages/surface/content/chill_touch.dhall),
 [Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells),
-[Rules-Glossary.md](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
-[Playing-the-Game.md](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md),
 [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
 
-Scope: promote the runtime-ready Spell Definitions that resolve through spell
-attacks or saving throws with direct damage outcomes: Burning Hands, Chill
-Touch, Guiding Bolt, Inflict Wounds, Poison Spray, Ray of Sickness, Sacred
-Flame, Shocking Grasp, Starry Wisp, and Vicious Mockery. Add spell
-invocation/projection for attack rolls, saving throws, damage, cantrip scaling,
-slot-scaled damage, object targeting where SRD permits it, and simple rider
-outcomes.
+Scope: model the simple riders that made old `SRDINV28` fail as a separate
+typed runtime slice. Use SRD-specific expiration anchors rather than one shared
+caster-start boundary. Cover only riders that can be encoded without broad
+buff/debuff infrastructure:
 
-Out of scope: Spell Surface blockers, installed unsupported Charm Person/Sleep/
-Eldritch Blast/Hellish Rebuke rows, missing Detect spell authoring, area/chain
-runtime, buff/debuff runtime, attack-rider/smite runtime, Produce Flame
-held-light state, PHB/XPHB pressure, and catalog admission as behavior support.
+- Ray of Sickness: apply Poisoned until the end of the caster's next turn.
+- Shocking Grasp: deny Opportunity Attacks until the start of the target's next
+  turn.
+- Guiding Bolt: the next attack roll against the target before the end of the
+  caster's next turn has Advantage.
+- Vicious Mockery: on failed Wisdom save, Psychic damage plus Disadvantage on
+  the target's next attack roll before the end of its next turn.
+- Chill Touch only if healing suppression has a precise active-effect model;
+  otherwise keep it damage-only or unsupported with explicit evidence.
 
-Verification: RAW/source review for each selected spell and shared Spell,
-Spell Attack, Attack Roll, Saving Throw, damage, object-target, and using a
-higher-level Spell Slot rules; `UBIQUITOUS_LANGUAGE.md` check for Spell
-Definition, Spell Invocation, Spell Effect, Spell Attack, Attack Roll, Saving
-Throw, Base Spell Level, and Using a Higher-Level Spell Slot; focused runtime
-and projection tests for selected spells; `pnpm unit-profile-coverage:check`;
-`pnpm quality`; battle-runtime MBT only if promoted battle-runtime behavior
-changes; `/simplify` convergence, minimum two rounds.
+Condition riders must preserve unrelated pre-existing conditions when the
+spell effect expires. Represent condition application ownership/source in the
+active-effect model or an equivalent typed composition so one expiring spell
+cannot remove another source's condition. Vicious Mockery support gates must
+prove the authored modifier is specifically the target's next attack roll
+before the end of its next turn; do not infer attack-roll behavior from
+`disadvantage` mode and `count` alone.
 
-Retry Guidance: model simple spell riders with SRD-specific expiration anchors
-rather than one shared caster-start boundary. Add tests that exercise each
-distinct rider timing: end of the caster's next turn, start of the target's
-next turn, and the target's next attack before the end of its next turn. For
-Starry Wisp, either make object targeting executable at the spell target fill
-boundary or keep the spell out of supported runtime evidence until object
-targets are representable; do not project object target support as metadata
-without an executable fill path. Condition riders must preserve unrelated
-pre-existing conditions when the spell effect expires; represent condition
-application ownership/source in the active-effect model or an equivalent typed
-composition so one expiring spell cannot remove another source's condition.
-Vicious Mockery support gates must prove the authored modifier is specifically
-the target's next attack roll before the end of its next turn; do not infer
-attack-roll behavior from disadvantage mode and count alone.
+Out of scope: generic buff/debuff framework, Bless/Bane/Faerie Fire/Shield of
+Faith, Produce Flame light state, object targets, and area/chain spell support.
 
-### Task 199 - SRDINV29 - Promote Area, Chain, and Typed-Damage Spell Runtime
+Verification: tests for each distinct expiration anchor: end of caster's next
+turn, start of target's next turn, target's next attack before end of target's
+next turn, and next attack against target before end of caster's next turn.
+Include overlapping-condition/source tests so an expiring spell-owned Poisoned
+condition cannot erase another source's Poisoned condition. Add focused tests
+for Vicious Mockery's attack-roll-only disadvantage. Update claims/evidence
+only for spells whose complete selected behavior is executable; `pnpm
+unit-profile-coverage:check`; `pnpm quality`; MBT only after complete runtime
+behavior changes.
+
+### Task 202 - SRDINV28E - Decide Starry Wisp Object Targeting
 
 Status: `blocked`
 
-Depends on: SRDINV28
+Depends on: SRDINV28A-SRDINV28C
+
+Blocks: SRDINV29-SRDINV33
+
+Research / plan:
+[SRDINV27_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md),
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[battle-reducer.ts](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts),
+[Starry Wisp](/workspace/typescript/dnd/packages/surface/content/starry_wisp.dhall),
+[SRD Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: make the Starry Wisp object-target decision executable and
+checker-visible. Current battle-runtime target facts are combatant-oriented;
+do not claim Starry Wisp object targeting as metadata if the fill path cannot
+select or validate an object target. Choose one of these outcomes and encode it
+in plan/evidence:
+
+- implement object target fill/fact support sufficient for Starry Wisp's
+  "one creature or object within range" targeting, with object identity,
+  range/spatial fact validation, attack roll, damage disposition, and clear
+  statement of what object HP/illumination/invisibility semantics are
+  executable now; or
+- keep Starry Wisp out of supported runtime evidence and record the exact
+  object-target and rider blockers in the matrix/claims.
+
+Out of scope: broad object simulation, general illumination simulation,
+Produce Flame held-light state, Fire Bolt object ignition, and inventory-wide
+object support.
+
+Verification: if object targets are implemented, add focused tests for object
+target discovery/fill validation, attack hit/miss, damage, and rejection of
+unsupported object semantics. If deferred, add checker-visible claims/evidence
+showing Starry Wisp remains unsupported for object targeting and no support row
+is accidentally admitted. In either branch run `pnpm unit-profile-coverage:check`
+and `pnpm quality`; MBT only if promoted battle-runtime behavior changes.
+
+### Task 203 - SRDINV29 - Promote Area, Chain, and Typed-Damage Spell Runtime
+
+Status: `blocked`
+
+Depends on: SRDINV28A-SRDINV28E
 
 Blocks: SRDINV33
 
@@ -2085,7 +2324,7 @@ Research / plan:
 [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
 
 Scope: promote Chromatic Orb, Color Spray, Entangle, Grease, and Ice Knife
-after SRDINV28 establishes the shared spell invocation damage path. Cover
+after SRDINV28A-E establishes the shared spell damage foundation. Cover
 spell-chosen damage types, chained target selection, mixed attack-plus-area
 resolution, area condition application, and terrain/ground effects.
 
@@ -2099,11 +2338,11 @@ projection tests; `pnpm unit-profile-coverage:check`; `pnpm quality`; MBT only
 if promoted battle-runtime behavior changes; `/simplify` convergence, minimum
 two rounds.
 
-### Task 200 - SRDINV30 - Promote Spell Buff, Debuff, and Protection Runtime
+### Task 204 - SRDINV30 - Promote Spell Buff, Debuff, and Protection Runtime
 
 Status: `blocked`
 
-Depends on: SRDINV28
+Depends on: SRDINV28A-SRDINV28E
 
 Blocks: SRDINV33
 
@@ -2129,11 +2368,11 @@ and D20 roll terms; focused runtime and projection tests; `pnpm
 unit-profile-coverage:check`; `pnpm quality`; MBT only if promoted
 battle-runtime behavior changes; `/simplify` convergence, minimum two rounds.
 
-### Task 201 - SRDINV31 - Promote Attack-Rider and Smite Spell Runtime
+### Task 205 - SRDINV31 - Promote Attack-Rider and Smite Spell Runtime
 
 Status: `blocked`
 
-Depends on: SRDINV28
+Depends on: SRDINV28A-SRDINV28E
 
 Blocks: SRDINV33
 
@@ -2158,11 +2397,11 @@ spend; focused runtime and projection tests; `pnpm unit-profile-coverage:check`;
 `pnpm quality`; MBT only if promoted battle-runtime behavior changes;
 `/simplify` convergence, minimum two rounds.
 
-### Task 202 - SRDINV32 - Promote Held Light and Hurled Attack Spell Runtime
+### Task 206 - SRDINV32 - Promote Held Light and Hurled Attack Spell Runtime
 
 Status: `blocked`
 
-Depends on: SRDINV28
+Depends on: SRDINV28A-SRDINV28E
 
 Blocks: SRDINV33
 
@@ -2189,11 +2428,11 @@ focused runtime and projection tests; `pnpm unit-profile-coverage:check`;
 `pnpm quality`; MBT only if promoted battle-runtime behavior changes;
 `/simplify` convergence, minimum two rounds.
 
-### Task 203 - SRDINV33 - Recursive SRD Inventory Planning Review
+### Task 207 - SRDINV33 - Recursive SRD Inventory Planning Review
 
 Status: `blocked`
 
-Depends on: SRDINV28-SRDINV32
+Depends on: SRDINV28A-SRDINV28E, SRDINV29-SRDINV32
 
 Blocks: none
 
@@ -2203,10 +2442,10 @@ Research / plan:
 [SRDINV_RALPH_BATCH_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md),
 [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
 
-Scope: review SRDINV28-SRDINV32 spell-runtime closure, refresh generated
-inventory metrics, and append the next concrete spell frontier. Likely
-frontiers are installed unsupported spell owner evidence, missing Detect spell
-authoring, and remaining Spell Surface blockers.
+Scope: review SRDINV28A-SRDINV28E and SRDINV29-SRDINV32 spell-runtime closure,
+refresh generated inventory metrics, and append the next concrete spell
+frontier. Likely frontiers are installed unsupported spell owner evidence,
+missing Detect spell authoring, and remaining Spell Surface blockers.
 
 Out of scope: implementation work not captured by the newly appended batch,
 PHB/XPHB pressure, broad runtime rewrites, and treating catalog admission alone

@@ -2096,6 +2096,32 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
     spellPressure,
     "spell-attack-and-save-damage-runtime",
   );
+  const spellRowsByUnitIds = (unitIds) =>
+    srdinv28SpellAttackAndSaveDamageRows.filter((row) =>
+      unitIds.includes(row.candidateUnitId),
+    );
+  const srdinv28PureDamageRows = spellRowsByUnitIds([
+    "burning_hands",
+    "inflict_wounds",
+    "poison_spray",
+    "sacred_flame",
+  ]);
+  const srdinv28SpellAttackDamageRows = spellRowsByUnitIds([
+    "chill_touch",
+    "guiding_bolt",
+    "poison_spray",
+    "ray_of_sickness",
+    "shocking_grasp",
+    "starry_wisp",
+  ]);
+  const srdinv28RiderTimingRows = spellRowsByUnitIds([
+    "chill_touch",
+    "guiding_bolt",
+    "ray_of_sickness",
+    "shocking_grasp",
+    "vicious_mockery",
+  ]);
+  const srdinv28StarryWispRows = spellRowsByUnitIds(["starry_wisp"]);
   const srdinv29SpellAreaChainAndTypedDamageRows = spellExecutableFollowUpRows(
     spellPressure,
     "spell-area-chain-and-typed-damage-runtime",
@@ -2489,25 +2515,73 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
         "Reviewed SRDINV22-SRDINV26 promoted-runtime closure, recorded level-1 inventory completion, and appended the next concrete spell-runtime batch.",
       rows: levelOne,
       nextAction:
-        "Level-1 is complete; run SRDINV28-SRDINV32 before the next recursive SRDINV33 review.",
+        "Level-1 is complete; run SRDINV28A-SRDINV28E and SRDINV29-SRDINV32 before the next recursive SRDINV33 review.",
       acceptance:
         "SRDINV27 closed with final level-1 metrics and a concrete multi-task spell-runtime batch, not a recursive-only continuation.",
     }),
     makeBatch({
-      id: "SRDINV28",
-      title: "Promote Spell Attack and Save-Damage Runtime",
+      id: "SRDINV28A",
+      title: "Generalize Spell Damage Invocation Runtime",
       intent:
-        "Promote the runtime-ready Spell Definitions that resolve through spell attacks or saving throws with direct damage outcomes.",
+        "Generalize the spell attack/save-damage invocation model before admitting more concrete Spell Definitions.",
       rows: srdinv28SpellAttackAndSaveDamageRows,
       nextAction:
-        "Admit Burning Hands, Chill Touch, Guiding Bolt, Inflict Wounds, Poison Spray, Ray of Sickness, Sacred Flame, Shocking Grasp, Starry Wisp, and Vicious Mockery by adding spell invocation/projection for attack rolls, saving throws, damage, cantrip scaling, slot-scaled damage, object targeting where SRD permits it, and simple rider outcomes.",
+        "Make attack-roll and save-gated spell damage representable for cantrips and prepared spell-slot invocations without Ray-of-Frost-only speed-rider assumptions or Acid-Splash-only area assumptions.",
       acceptance:
-        "The selected Spell Unit rows have deterministic admission/projection and promoted runtime evidence without treating catalog admission alone as support.",
+        "The shared spell-damage procedure shape is explicit enough for later selected Spell Unit rows to add deterministic admission/projection and promoted runtime evidence.",
+    }),
+    makeBatch({
+      id: "SRDINV28B",
+      title: "Promote Pure Spell Damage Runtime",
+      suggestedStatus: "blocked-on-SRDINV28A",
+      intent:
+        "Promote the simplest pure damage Spell Definitions after the shared invocation shape exists.",
+      rows: srdinv28PureDamageRows,
+      nextAction:
+        "Admit Poison Spray, Sacred Flame, Inflict Wounds, and Burning Hands if the slice also adds executable cone target-list support; otherwise leave Burning Hands for area targeting.",
+      acceptance:
+        "Pure damage Spell Unit rows have deterministic admission/projection without smuggling rider, object, or area semantics into metadata.",
+    }),
+    makeBatch({
+      id: "SRDINV28C",
+      title: "Promote Spell Attack Damage Runtime",
+      suggestedStatus: "blocked-on-SRDINV28A",
+      intent:
+        "Promote spell attack damage without mandatory Ray-of-Frost speed-rider coupling.",
+      rows: srdinv28SpellAttackDamageRows,
+      nextAction:
+        "Admit melee/ranged spell attack damage and scaling for damage-only or rider-deferred spell attacks such as Chill Touch, Shocking Grasp, Guiding Bolt, Ray of Sickness, and Starry Wisp only within the supported damage subset.",
+      acceptance:
+        "Spell attack damage has promoted runtime evidence while rider-deferred rows remain explicitly limited.",
+    }),
+    makeBatch({
+      id: "SRDINV28D",
+      title: "Promote Spell Rider Timing Runtime",
+      suggestedStatus: "blocked-on-SRDINV28B-SRDINV28C",
+      intent:
+        "Promote simple spell rider timing with source-owned expiration.",
+      rows: srdinv28RiderTimingRows,
+      nextAction:
+        "Add executable support for Poisoned, Opportunity Attack denial, next-attack advantage/disadvantage, healing suppression where modeled, and condition/source ownership without removing unrelated pre-existing conditions.",
+      acceptance:
+        "Rider-bearing Spell Unit rows have promoted runtime evidence only when each SRD expiration anchor is tested.",
+    }),
+    makeBatch({
+      id: "SRDINV28E",
+      title: "Decide Starry Wisp Object Targeting",
+      suggestedStatus: "blocked-on-SRDINV28A-SRDINV28C",
+      intent:
+        "Decide Starry Wisp object targeting before claiming full runtime support.",
+      rows: srdinv28StarryWispRows,
+      nextAction:
+        "Either add executable object target fill/fact support for Starry Wisp or keep it unsupported with explicit matrix evidence; do not claim object targeting as metadata only.",
+      acceptance:
+        "Starry Wisp has either real object-target support or a checker-visible unsupported blocker.",
     }),
     makeBatch({
       id: "SRDINV29",
       title: "Promote Area, Chain, and Typed-Damage Spell Runtime",
-      suggestedStatus: "blocked-on-SRDINV28",
+      suggestedStatus: "blocked-on-SRDINV28A-SRDINV28E",
       intent:
         "Promote authored Spell Definitions whose execution needs area resolution, chained targeting, or caster-chosen damage types.",
       rows: srdinv29SpellAreaChainAndTypedDamageRows,
@@ -2519,7 +2593,7 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
     makeBatch({
       id: "SRDINV30",
       title: "Promote Spell Buff, Debuff, and Protection Runtime",
-      suggestedStatus: "blocked-on-SRDINV28",
+      suggestedStatus: "blocked-on-SRDINV28A-SRDINV28E",
       intent:
         "Promote authored Spell Definitions that create timed buffs, debuffs, protection effects, or D20 modifiers.",
       rows: srdinv30SpellBuffDebuffAndProtectionRows,
@@ -2531,7 +2605,7 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
     makeBatch({
       id: "SRDINV31",
       title: "Promote Attack-Rider and Smite Spell Runtime",
-      suggestedStatus: "blocked-on-SRDINV28",
+      suggestedStatus: "blocked-on-SRDINV28A-SRDINV28E",
       intent:
         "Promote authored Spell Definitions that attach spell effects to weapon attacks, hit triggers, or retargetable marks.",
       rows: srdinv31SpellAttackRiderAndSmiteRows,
@@ -2543,7 +2617,7 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
     makeBatch({
       id: "SRDINV32",
       title: "Promote Held Light and Hurled Attack Spell Runtime",
-      suggestedStatus: "blocked-on-SRDINV28",
+      suggestedStatus: "blocked-on-SRDINV28A-SRDINV28E",
       intent:
         "Promote Produce Flame through the held-light plus later hurled spell attack boundary.",
       rows: srdinv32SpellHeldLightRows,
@@ -2555,9 +2629,9 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
     makeBatch({
       id: "SRDINV33",
       title: "Recursive SRD Inventory Planning Review",
-      suggestedStatus: "blocked-on-SRDINV28",
+      suggestedStatus: "blocked-on-SRDINV28A-SRDINV28E-SRDINV29-SRDINV32",
       intent:
-        "Review SRDINV28-SRDINV32 spell-runtime closure and append the next concrete spell frontier.",
+        "Review SRDINV28A-SRDINV28E and SRDINV29-SRDINV32 spell-runtime closure and append the next concrete spell frontier.",
       rows: spellPressure,
       nextAction:
         "Refresh spell Unit inventory metrics after the runtime-ready spell batch, then choose the next concrete frontier among installed unsupported spell evidence, missing Detect spell authoring, and remaining Spell Surface blockers.",

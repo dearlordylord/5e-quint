@@ -1797,14 +1797,14 @@
         "srd521:classes/wizard:level-1:multiclass-entry:wizard_multiclass_entry_traits",
         "srd521:classes/wizard:level-1:spell-access:wizard_spellcasting"
       ],
-      "nextAction": "Level-1 is complete; run SRDINV28-SRDINV32 before the next recursive SRDINV33 review.",
+      "nextAction": "Level-1 is complete; run SRDINV28A-SRDINV28E and SRDINV29-SRDINV32 before the next recursive SRDINV33 review.",
       "acceptance": "SRDINV27 closed with final level-1 metrics and a concrete multi-task spell-runtime batch, not a recursive-only continuation."
     },
     {
-      "id": "SRDINV28",
-      "title": "Promote Spell Attack and Save-Damage Runtime",
+      "id": "SRDINV28A",
+      "title": "Generalize Spell Damage Invocation Runtime",
       "suggestedStatus": "ready-for-research",
-      "intent": "Promote the runtime-ready Spell Definitions that resolve through spell attacks or saving throws with direct damage outcomes.",
+      "intent": "Generalize the spell attack/save-damage invocation model before admitting more concrete Spell Definitions.",
       "rowCount": 19,
       "rowIds": [
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_starry_wisp",
@@ -1827,8 +1827,85 @@
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_burning_hands",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_ray_of_sickness"
       ],
-      "nextAction": "Admit Burning Hands, Chill Touch, Guiding Bolt, Inflict Wounds, Poison Spray, Ray of Sickness, Sacred Flame, Shocking Grasp, Starry Wisp, and Vicious Mockery by adding spell invocation/projection for attack rolls, saving throws, damage, cantrip scaling, slot-scaled damage, object targeting where SRD permits it, and simple rider outcomes.",
-      "acceptance": "The selected Spell Unit rows have deterministic admission/projection and promoted runtime evidence without treating catalog admission alone as support."
+      "nextAction": "Make attack-roll and save-gated spell damage representable for cantrips and prepared spell-slot invocations without Ray-of-Frost-only speed-rider assumptions or Acid-Splash-only area assumptions.",
+      "acceptance": "The shared spell-damage procedure shape is explicit enough for later selected Spell Unit rows to add deterministic admission/projection and promoted runtime evidence."
+    },
+    {
+      "id": "SRDINV28B",
+      "title": "Promote Pure Spell Damage Runtime",
+      "suggestedStatus": "blocked",
+      "intent": "Promote the simplest pure damage Spell Definitions after the shared invocation shape exists.",
+      "rowCount": 8,
+      "rowIds": [
+        "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_sacred_flame",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_inflict_wounds",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_poison_spray",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_poison_spray",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_burning_hands",
+        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_poison_spray",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_poison_spray",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_burning_hands"
+      ],
+      "nextAction": "Admit Poison Spray, Sacred Flame, Inflict Wounds, and Burning Hands if the slice also adds executable cone target-list support; otherwise leave Burning Hands for area targeting.",
+      "acceptance": "Pure damage Spell Unit rows have deterministic admission/projection without smuggling rider, object, or area semantics into metadata."
+    },
+    {
+      "id": "SRDINV28C",
+      "title": "Promote Spell Attack Damage Runtime",
+      "suggestedStatus": "blocked",
+      "intent": "Promote spell attack damage without mandatory Ray-of-Frost speed-rider coupling.",
+      "rowCount": 14,
+      "rowIds": [
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_starry_wisp",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_guiding_bolt",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_poison_spray",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_starry_wisp",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_chill_touch",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_poison_spray",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_shocking_grasp",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_ray_of_sickness",
+        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_chill_touch",
+        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_poison_spray",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_chill_touch",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_poison_spray",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_shocking_grasp",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_ray_of_sickness"
+      ],
+      "nextAction": "Admit melee/ranged spell attack damage and scaling for damage-only or rider-deferred spell attacks such as Chill Touch, Shocking Grasp, Guiding Bolt, Ray of Sickness, and Starry Wisp only within the supported damage subset.",
+      "acceptance": "Spell attack damage has promoted runtime evidence while rider-deferred rows remain explicitly limited."
+    },
+    {
+      "id": "SRDINV28D",
+      "title": "Promote Spell Rider Timing Runtime",
+      "suggestedStatus": "blocked",
+      "intent": "Promote simple spell rider timing with source-owned expiration.",
+      "rowCount": 9,
+      "rowIds": [
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_vicious_mockery",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_guiding_bolt",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_chill_touch",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_shocking_grasp",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_ray_of_sickness",
+        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_chill_touch",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_chill_touch",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_shocking_grasp",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_ray_of_sickness"
+      ],
+      "nextAction": "Add executable support for Poisoned, Opportunity Attack denial, next-attack advantage/disadvantage, healing suppression where modeled, and condition/source ownership without removing unrelated pre-existing conditions.",
+      "acceptance": "Rider-bearing Spell Unit rows have promoted runtime evidence only when each SRD expiration anchor is tested."
+    },
+    {
+      "id": "SRDINV28E",
+      "title": "Decide Starry Wisp Object Targeting",
+      "suggestedStatus": "blocked",
+      "intent": "Decide Starry Wisp object targeting before claiming full runtime support.",
+      "rowCount": 2,
+      "rowIds": [
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_starry_wisp",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_starry_wisp"
+      ],
+      "nextAction": "Either add executable object target fill/fact support for Starry Wisp or keep it unsupported with explicit matrix evidence; do not claim object targeting as metadata only.",
+      "acceptance": "Starry Wisp has either real object-target support or a checker-visible unsupported blocker."
     },
     {
       "id": "SRDINV29",
@@ -1929,7 +2006,7 @@
       "id": "SRDINV33",
       "title": "Recursive SRD Inventory Planning Review",
       "suggestedStatus": "blocked",
-      "intent": "Review SRDINV28-SRDINV32 spell-runtime closure and append the next concrete spell frontier.",
+      "intent": "Review SRDINV28A-SRDINV28E and SRDINV29-SRDINV32 spell-runtime closure and append the next concrete spell frontier.",
       "rowCount": 211,
       "rowIds": [
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_dancing_lights",

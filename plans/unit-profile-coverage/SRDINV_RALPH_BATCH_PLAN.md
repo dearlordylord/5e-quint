@@ -61,7 +61,11 @@ Current sequence:
 - `SRDINV25`: promote character-sheet healing resource action runtime evidence.
 - `SRDINV26`: close Wizard Ritual Adept spell-invocation owner evidence.
 - `SRDINV27`: recursive review after the promoted-runtime batch.
-- `SRDINV28`: promote spell attack and save-damage runtime evidence.
+- `SRDINV28A`: generalize spell damage invocation runtime evidence.
+- `SRDINV28B`: promote pure spell damage runtime evidence.
+- `SRDINV28C`: promote spell attack damage runtime evidence.
+- `SRDINV28D`: promote simple spell rider timing runtime evidence.
+- `SRDINV28E`: decide Starry Wisp object targeting support.
 - `SRDINV29`: promote area, chain, and typed-damage spell runtime evidence.
 - `SRDINV30`: promote spell buff, debuff, and protection runtime evidence.
 - `SRDINV31`: promote attack-rider and smite spell runtime evidence.
@@ -211,20 +215,26 @@ runtime-ready authored executable spell rows, leaving Surface blockers,
 installed unsupported spell rows, missing Detect spell records, and explicit
 catalog-only/dead-for-now rows counted for the next recursive review.
 
-The next batch is therefore five concrete spell-runtime families followed by a
-recursive review:
+The next batch is therefore a split spell-damage foundation, four concrete
+spell-runtime families, and a recursive review:
 
-1. `SRDINV28` promotes Spell Definitions that resolve through spell attacks or
-   saving throws with direct damage outcomes.
-2. `SRDINV29` promotes area, chained-target, and typed-damage spell execution.
-3. `SRDINV30` promotes timed buffs, debuffs, protection effects, and D20
+1. `SRDINV28A` generalizes spell attack/save-damage invocation so cantrips and
+   prepared spell-slot damage can share one executable runtime shape.
+2. `SRDINV28B` promotes the simplest pure damage spells after that foundation.
+3. `SRDINV28C` promotes spell attack damage without Ray-of-Frost-only rider
+   assumptions.
+4. `SRDINV28D` promotes simple spell rider timing and source-owned expiration.
+5. `SRDINV28E` decides whether Starry Wisp gets executable object targeting now
+   or remains unsupported with explicit evidence.
+6. `SRDINV29` promotes area, chained-target, and typed-damage spell execution.
+7. `SRDINV30` promotes timed buffs, debuffs, protection effects, and D20
    modifier spell execution.
-4. `SRDINV31` promotes spell-hosted weapon attack riders, smites, and
+8. `SRDINV31` promotes spell-hosted weapon attack riders, smites, and
    retargetable marks.
-5. `SRDINV32` promotes Produce Flame as held illumination plus later hurled
+9. `SRDINV32` promotes Produce Flame as held illumination plus later hurled
    spell attack execution.
-6. `SRDINV33` reviews the spell-runtime batch, refreshes inventory metrics, and
-   appends the next concrete spell frontier.
+10. `SRDINV33` reviews the spell-runtime batch, refreshes inventory metrics,
+    and appends the next concrete spell frontier.
 
 SRDINV27 also fixed a stale Wizard Arcane Recovery evidence reference in
 `character-sheet-owner-evidence.json`; the generated checker now sees
