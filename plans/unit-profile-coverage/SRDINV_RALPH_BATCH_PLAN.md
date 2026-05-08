@@ -34,17 +34,14 @@ Current sequence:
 - `SRDINV7`: recursive review and append the next concrete multi-task batch,
   or explicitly close level-1 with final metrics.
 
-## Context Budget Guardrail
+The spell-pressure rows are split into `SRDINV5A` through `SRDINV5D` because
+class spell access, missing Spell Unit records, installed Spell Unit evidence,
+and catalog-only Spell Unit closure are different decisions with different
+acceptance criteria.
 
-Ralph tasks should fit comfortably inside a 250k-token model window after
-including the plan, prompts, source snippets, generated reports, diffs, logs,
-and reviewer feedback. A generated inventory task should stay under roughly
-100 rows unless the rows are trivial closures that do not require broad SRD
-source reading.
-
-The original spell-pressure batch had 217 rows and could make an agent load
-class spell lists plus a large share of spell descriptions in one task. It is
-therefore split into `SRDINV5A` through `SRDINV5D`.
+Each generated task should have one coherent decision shape. Do not combine
+unrelated authoring, admission, runtime-support, and closure decisions just
+because they all mention spells.
 
 `SRDINV1` is intentionally first because installed/catalog-loaded rows should
 not imply full support. It must decide which installed rows need operational
