@@ -144,6 +144,24 @@ Keep it synchronized with the DAG table and task details.
       "id": "SRDINV7",
       "status": "blocked",
       "title": "Recursive SRD Inventory Planning Review"
+    },
+    {
+      "number": 175,
+      "id": "SRDINV8",
+      "status": "blocked",
+      "title": "Surface Widening Gate for SRD Level-1 Frontier"
+    },
+    {
+      "number": 176,
+      "id": "SRDINV9",
+      "status": "blocked",
+      "title": "Author Expressible SRD Level-1 Surface Records"
+    },
+    {
+      "number": 177,
+      "id": "SRDINV10",
+      "status": "blocked",
+      "title": "Plan SRD Level-1 Runtime and MBT Support"
     }
   ]
 }
@@ -196,7 +214,10 @@ Keep it synchronized with the DAG table and task details.
 | 171   | SRDINV5C - Classify Installed Cantrip and Level-1 Spell Units | blocked | SRDINV1 | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Distinguish catalog evidence from operational owner evidence for installed cantrip and level-1 Spell Unit rows. |
 | 172   | SRDINV5D - Review Catalog-Only Cantrip and Level-1 Spell Units | blocked | SRDINV1 | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Keep catalog-only spell pressure explicit and counted, or promote concrete follow-up batches. |
 | 173   | SRDINV6 - Review Catalog-Only and Surface-Widening Rows | blocked | SRDINV1 | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Preserve nonspell catalog-only/dead-for-now rows and name missing Surface constructs for any widening blockers. |
-| 174   | SRDINV7 - Recursive SRD Inventory Planning Review | blocked | SRDINV2-SRDINV5D, SRDINV6 | none | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review SRDINV1-SRDINV6 findings and append a concrete multi-task next batch, or explicitly close level-1 with final metrics. |
+| 174   | SRDINV7 - Recursive SRD Inventory Planning Review | blocked | SRDINV2-SRDINV5D, SRDINV6 | SRDINV8 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review SRDINV1-SRDINV6 findings and append a concrete multi-task next batch, or explicitly close level-1 with final metrics. |
+| 175   | SRDINV8 - Surface Widening Gate for SRD Level-1 Frontier | blocked | SRDINV7 | SRDINV9-SRDINV10 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | If Surface cannot express important frontier rows, append atomic Surface-widening tasks and then append this gate again; otherwise mark Surface ready for authoring. |
+| 176   | SRDINV9 - Author Expressible SRD Level-1 Surface Records | blocked | SRDINV8 | SRDINV10 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes) | Author SRD-provenance Surface records for the expressible frontier, then run the Surface gate again if authoring exposes missing Surface constructs. |
+| 177   | SRDINV10 - Plan SRD Level-1 Runtime and MBT Support | blocked | SRDINV9 | none | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [battle-runtime README](/workspace/typescript/dnd/packages/battle-runtime/README.md), [rule-core README](/workspace/typescript/dnd/packages/shared-algebras/proofs/rule-core/README.md) | Append behavior-support tasks for authored executable rows: QNT/MBT procedure parity where needed, runtime implementation, deterministic admission/projection evidence, and selected identity MBT only for high-risk Units. |
 
 ## Task Details
 
@@ -699,7 +720,7 @@ Status: `blocked`
 
 Depends on: SRDINV2-SRDINV5D, SRDINV6
 
-Blocks: none
+Blocks: SRDINV8
 
 Research / plan:
 [SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
@@ -720,3 +741,97 @@ details; regenerated inventory; `pnpm unit-profile-coverage:check`; confirm
 the appended result is either explicit level-1 completion with final metrics or
 a concrete multi-task batch, not a recursive-only placeholder; `/simplify`
 convergence, minimum two rounds unless the final changeset is trivial.
+
+### Task 175 - SRDINV8 - Surface Widening Gate for SRD Level-1 Frontier
+
+Status: `blocked`
+
+Depends on: SRDINV7
+
+Blocks: SRDINV9-SRDINV10
+
+Research / plan:
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[SRDINV_RALPH_BATCH_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md),
+[Surface README](/workspace/typescript/dnd/packages/surface/README.md),
+[ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
+
+Scope: inspect the classified SRD level-1 frontier and decide whether Surface
+can express every important row selected for the next authoring batch. If not,
+append atomic Surface-widening tasks to the end of `ACTIVE_PLAN.md`, followed
+by a fresh copy of this gate task so the frontier is checked again after those
+widening tasks land. If Surface can express the selected frontier, mark this
+gate done and unblock authoring.
+
+Out of scope: authoring SRD records, implementing runtime behavior, adding
+parallel runtime-only data to work around Surface, PHB/XPHB content, and
+closing important rows without a named reason.
+
+Verification: every important `needs-surface-widening` or insufficient-Surface
+row has either an appended atomic Surface-widening task or an explicit
+deferred/closure rationale; active-plan consistency across Ralph index, DAG
+table, and task details; `pnpm unit-profile-coverage:check`; `/simplify`
+convergence.
+
+### Task 176 - SRDINV9 - Author Expressible SRD Level-1 Surface Records
+
+Status: `blocked`
+
+Depends on: SRDINV8
+
+Blocks: SRDINV10
+
+Research / plan:
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[Surface README](/workspace/typescript/dnd/packages/surface/README.md),
+[Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: author SRD-provenance Surface records for the expressible SRD level-1
+frontier selected by SRDINV8. Preserve SRD provenance and make invalid
+source/provenance states unrepresentable at the collection boundary. If
+authoring exposes additional Surface expressivity gaps, stop broad authoring,
+append this task's discovered rows back through SRDINV8, and keep the loop
+measurable.
+
+Out of scope: PHB/XPHB content, private-source identity, runtime support,
+QNT/QMBT work, selected identity MBT, and authoring rows that SRDINV8 has not
+declared expressible.
+
+Verification: read local SRD source for every authored record; check
+`UBIQUITOUS_LANGUAGE.md`; catalog/admission checks for authored records;
+regenerate SRD inventory; `pnpm unit-profile-coverage:check`; run the
+smallest relevant package tests for touched Surface code; `/simplify`
+convergence.
+
+### Task 177 - SRDINV10 - Plan SRD Level-1 Runtime and MBT Support
+
+Status: `blocked`
+
+Depends on: SRDINV9
+
+Blocks: none
+
+Research / plan:
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md),
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[battle-runtime README](/workspace/typescript/dnd/packages/battle-runtime/README.md),
+[rule-core README](/workspace/typescript/dnd/packages/shared-algebras/proofs/rule-core/README.md),
+[ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
+
+Scope: inspect authored SRD level-1 rows that imply executable behavior and
+append the next behavior-support task batch. For behavior shapes not already
+covered, plan QNT/MBT procedure parity first, then runtime implementation
+against that model. For concrete authored Unit ids, plan deterministic
+admission/projection evidence. Add selected identity MBT only for
+representative or high-risk Units; do not enumerate all Units in QNT.
+
+Out of scope: implementing the appended behavior tasks in this planning task,
+PHB/XPHB pressure, broad runtime rewrites, and treating catalog admission alone
+as behavior support.
+
+Verification: active-plan consistency across Ralph index, DAG table, and task
+details; appended tasks are atomic enough to execute independently; every
+runtime-support task names its QNT/MBT/procedure-parity expectation or explains
+why an existing profile already covers it; `pnpm unit-profile-coverage:check`;
+`/simplify` convergence.

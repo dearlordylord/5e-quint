@@ -33,6 +33,9 @@ Current sequence:
   rows.
 - `SRDINV7`: recursive review and append the next concrete multi-task batch,
   or explicitly close level-1 with final metrics.
+- `SRDINV8`: Surface Widening Gate for the classified SRD level-1 frontier.
+- `SRDINV9`: author expressible SRD level-1 Surface records.
+- `SRDINV10`: plan runtime and MBT support for authored executable rows.
 
 The spell-pressure rows are split into `SRDINV5A` through `SRDINV5D` because
 class spell access, missing Spell Unit records, installed Spell Unit evidence,
@@ -50,6 +53,27 @@ owner evidence and which can be explicitly closed as catalog-only/dead-for-now.
 QMBT68/QMBT69 are deliberately deferred while this lane is active. The next
 Ralph-ready task should be `SRDINV1`, not the older QMBT projection-cleanup
 queue.
+
+## Post-Inventory Frontier Loop
+
+After SRDINV classification is complete, the lane advances the frontier in this
+order:
+
+1. `SRDINV8` checks whether Surface can express the selected important SRD
+   level-1 rows. If not, it appends atomic Surface-widening tasks and then
+   appends another copy of the same gate after them. If Surface is sufficient,
+   it marks the gate done and unblocks authoring.
+2. `SRDINV9` authors SRD-provenance Surface records for rows the gate declared
+   expressible. If authoring exposes more Surface gaps, it sends those rows
+   back through the gate instead of adding workaround data.
+3. `SRDINV10` appends behavior-support tasks for authored executable rows:
+   QNT/MBT procedure parity first when the behavior shape needs it, runtime
+   implementation against that model, deterministic admission/projection
+   evidence for concrete Unit ids, and selected identity MBT only for
+   representative or high-risk Units.
+
+The loop may recurse, but recursion must append concrete atomic work before it
+re-adds the gate. A recursive-only continuation is not an acceptable closeout.
 
 ## Acceptance Model
 
