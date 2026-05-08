@@ -109,6 +109,20 @@ const catalogOnlyClosures = new Map([
   ],
 ]);
 
+const spellAccessSurfaceBlockersByClass = {
+  Bard: "ClassRecord spellcasting support for non-Wizard list-prepared casters: Bard cantrip choices, prepared Bard spells, Spell Slot projection, spellcasting ability, Musical Instrument focus, and level-up replacement timing",
+  Cleric:
+    "ClassRecord spellcasting support for non-Wizard list-prepared casters: Cleric cantrip choices, prepared Cleric spells, Spell Slot projection, spellcasting ability, Holy Symbol focus, and Long Rest prepared-spell replacement",
+  Druid:
+    "ClassRecord spellcasting support for non-Wizard list-prepared casters: Druid cantrip choices, prepared Druid spells, Spell Slot projection, spellcasting ability, Druidic Focus, and Long Rest prepared-spell replacement",
+  Paladin:
+    "ClassRecord spellcasting support for non-Wizard prepared casters without level-1 cantrips: Paladin prepared spells, Spell Slot projection, spellcasting ability, Holy Symbol focus, and Long Rest one-spell replacement",
+  Ranger:
+    "ClassRecord spellcasting support for non-Wizard prepared casters without level-1 cantrips: Ranger prepared spells, Spell Slot projection, spellcasting ability, Druidic Focus, and Long Rest one-spell replacement",
+  Sorcerer:
+    "ClassRecord spellcasting support for non-Wizard list-prepared casters with known cantrips: Sorcerer cantrip choices, prepared Sorcerer spells, Spell Slot projection, spellcasting ability, Arcane Focus, and level-up replacement timing",
+};
+
 const classContainerSurfaceBlockers = new Map([
   [
     "srd521:classes/bard:level-1:class-container:bard_class_container",
@@ -116,7 +130,7 @@ const classContainerSurfaceBlockers = new Map([
   ],
   [
     "srd521:classes/cleric:level-1:class-container:cleric_class_container",
-    "ClassRecord spellcasting support for non-Wizard prepared casters: Cleric cantrip choices, prepared Cleric spells, Spell Slot projection, spellcasting ability, and Holy Symbol focus",
+    spellAccessSurfaceBlockersByClass.Cleric,
   ],
   [
     "srd521:classes/druid:level-1:class-container:druid_class_container",
@@ -128,7 +142,7 @@ const classContainerSurfaceBlockers = new Map([
   ],
   [
     "srd521:classes/paladin:level-1:class-container:paladin_class_container",
-    "ClassRecord spellcasting support for non-Wizard prepared casters: Paladin prepared spells, Spell Slot projection, spellcasting ability, and Holy Symbol focus",
+    spellAccessSurfaceBlockersByClass.Paladin,
   ],
   [
     "srd521:classes/ranger:level-1:class-container:ranger_class_container",
@@ -140,7 +154,7 @@ const classContainerSurfaceBlockers = new Map([
   ],
   [
     "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container",
-    "ClassRecord spellcasting support for non-Wizard known casters: Sorcerer cantrip choices, prepared Sorcerer spells, Spell Slot projection, spellcasting ability, and Arcane Focus",
+    spellAccessSurfaceBlockersByClass.Sorcerer,
   ],
 ]);
 
@@ -190,6 +204,41 @@ const classFeatureSurfaceBlockers = new Map([
     "ClassFeature Pact Magic spell-access package: Warlock cantrip choices, prepared Warlock spells, Pact Slot projection, Short or Long Rest Pact Slot recovery, spellcasting ability, and Arcane Focus",
   ],
 ]);
+
+const spellAccessSurfaceBlockers = new Map([
+  [
+    "srd521:classes/bard:level-1:spell-access:bard_spellcasting",
+    spellAccessSurfaceBlockersByClass.Bard,
+  ],
+  [
+    "srd521:classes/cleric:level-1:spell-access:cleric_spellcasting",
+    spellAccessSurfaceBlockersByClass.Cleric,
+  ],
+  [
+    "srd521:classes/druid:level-1:spell-access:druid_spellcasting",
+    spellAccessSurfaceBlockersByClass.Druid,
+  ],
+  [
+    "srd521:classes/paladin:level-1:spell-access:paladin_spellcasting",
+    spellAccessSurfaceBlockersByClass.Paladin,
+  ],
+  [
+    "srd521:classes/ranger:level-1:spell-access:ranger_spellcasting",
+    spellAccessSurfaceBlockersByClass.Ranger,
+  ],
+  [
+    "srd521:classes/sorcerer:level-1:spell-access:sorcerer_spellcasting",
+    spellAccessSurfaceBlockersByClass.Sorcerer,
+  ],
+]);
+
+function rowNeedsSurfaceWidening(row) {
+  return (
+    classContainerSurfaceBlockers.has(row.id) ||
+    classFeatureSurfaceBlockers.has(row.id) ||
+    spellAccessSurfaceBlockers.has(row.id)
+  );
+}
 
 function slug(text) {
   return text
@@ -372,6 +421,13 @@ function surfaceGate(row) {
       missingConstruct: classFeatureBlocker,
     };
   }
+  const spellAccessBlocker = spellAccessSurfaceBlockers.get(row.id);
+  if (spellAccessBlocker !== undefined) {
+    return {
+      state: "current-surface-cannot-express-mechanics-yet",
+      missingConstruct: spellAccessBlocker,
+    };
+  }
   if (nonRuntimeKinds.has(row.rowKind)) {
     return {
       state: "outside-surface-runtime-mechanics",
@@ -399,8 +455,7 @@ function surfaceGate(row) {
 function finalDisposition(row, authored, installedIds, ownerEvidenceSources) {
   if (nonRuntimeKinds.has(row.rowKind)) return "non-runtime";
   if (
-    classContainerSurfaceBlockers.has(row.id) ||
-    classFeatureSurfaceBlockers.has(row.id)
+    rowNeedsSurfaceWidening(row)
   )
     return "needs-surface-widening";
   if (!row.candidateUnitId) return "needs-surface-widening";
@@ -1055,6 +1110,9 @@ function buildRecommendedBatches(rows) {
       row.rowKind === "spell-access" &&
       row.finalDisposition === "missing-authored-record",
   );
+  const classifiedSpellAccessRows = levelOne.filter(
+    (row) => row.rowKind === "spell-access",
+  );
   const missingSpellUnitPressureRows = spellPressure.filter(
     (row) => row.finalDisposition === "missing-authored-record",
   );
@@ -1138,9 +1196,14 @@ function buildRecommendedBatches(rows) {
       suggestedStatus: "blocked-on-SRDINV1",
       intent:
         "Keep class spell access/list facts separate from individual Spell Unit support.",
-      rows: missingSpellAccessRows,
+      rows:
+        missingSpellAccessRows.length === 0
+          ? classifiedSpellAccessRows
+          : missingSpellAccessRows,
       nextAction:
-        "Classify missing class Spellcasting/access rows by class-container ownership, Surface widening, authored content, or closure.",
+        missingSpellAccessRows.length === 0
+          ? "Level-1 class Spellcasting/access rows have owner-specific classifications; keep Surface-widening blockers separate from individual Spell Unit pressure."
+          : "Classify missing class Spellcasting/access rows by class-container ownership, Surface widening, authored content, or closure.",
       acceptance:
         "Level-1 spell access rows have owner-specific next actions and are not mixed with individual Spell Unit pressure.",
     }),
@@ -1339,17 +1402,20 @@ function validateSrdUnitInventory(report) {
       }
     }
   }
-  for (const rowId of classFeatureSurfaceBlockers.keys()) {
+  for (const rowId of [
+    ...classFeatureSurfaceBlockers.keys(),
+    ...spellAccessSurfaceBlockers.keys(),
+  ]) {
     const row = report.rows.find((candidate) => candidate.id === rowId);
     if (row === undefined) {
       issues.push(
-        `Class feature Surface blocker references unknown row ${rowId}.`,
+        `Surface blocker references unknown row ${rowId}.`,
       );
       continue;
     }
     if (row.finalDisposition !== "needs-surface-widening") {
       issues.push(
-        `Class feature Surface blocker ${rowId} must classify as needs-surface-widening.`,
+        `Surface blocker ${rowId} must classify as needs-surface-widening.`,
       );
     }
   }

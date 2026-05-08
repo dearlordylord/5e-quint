@@ -144,3 +144,35 @@ The inventory now records `class-container-owned-source-fact` for level-1
 - Round 2: no important changes found; spell-access rows remain reserved for
   SRDINV5A, individual spell pressure remains reserved for SRDINV5B-SRDINV5D,
   and Surface widening/runtime work remains deferred to later SRDINV tasks.
+
+## SRDINV5A Closeout Notes
+
+SRDINV5A classifies level-1 class Spellcasting/access rows; it does not admit
+individual cantrip or level-1 Spell Units. The local SRD source review used the
+level-1 Spellcasting sections in the SRD 5.2.1 Bard, Cleric, Druid, Paladin,
+Ranger, Sorcerer, and Wizard class files, plus the level-1 Warlock Pact Magic
+section as a class-feature spell-access package. Those passages distinguish
+class-owned Spell Access facts from individual Spell Definition rows: cantrip
+choices where present, prepared spells, Spell Slot or Pact Slot projection,
+spellcasting ability, focus permissions, and replacement timing are owned by the
+class container or feature before any individual spell runtime behavior is
+considered.
+
+`UBIQUITOUS_LANGUAGE.md` was checked for Spell Definition, Spell Access, Spell
+Invocation, Spell Effect, Spell Slot, Pact Slot, Cantrip, and Spellcasting
+Focus terminology. The inventory now records the six non-Wizard level-1
+Spellcasting rows as `needs-surface-widening` because current Surface
+`ClassRecord` spellcasting creation facts are Wizard-specific. Wizard
+Spellcasting remains `catalog-installed-owner-evidence-present` from the
+character-creation owner evidence manifest. Warlock Pact Magic remains a
+class-feature Surface-widening row because the SRD names it as the class feature
+that owns Warlock spell access and Pact Slot recovery.
+
+`/simplify` convergence:
+
+- Round 1: kept Spell Access rows separate from individual Spell Unit pressure
+  and added named Surface blockers instead of generic missing authored-record
+  wording.
+- Round 2: localized shared non-Wizard spellcasting blocker wording so class
+  container and spell-access classifications cannot drift for the same missing
+  construct; no further important changes found.

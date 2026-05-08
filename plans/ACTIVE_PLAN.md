@@ -124,7 +124,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 171,
       "id": "SRDINV5A",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify Level-1 Spell Access Rows"
     },
     {
@@ -223,11 +223,11 @@ Keep it synchronized with the DAG table and task details.
 | 168   | SRDINV2 - Author Missing Level-1 Class Containers | done | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Completed missing class-container closure: Barbarian and Warlock are authored and installed; Fighter/Wizard now carry primary ability source facts; the other eight class containers are explicit named Surface-widening closures in the generated inventory. |
 | 169   | SRDINV3 - Classify Missing Level-1 Class Feature Rows | done | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Completed missing level-1 class-feature classification: all 11 rows now carry named Surface-widening blockers in the generated inventory, reducing SRDINV3 generated row count to zero and moving those rows into SRDINV6. |
 | 170   | SRDINV4 - Classify Level-1 Character Creation Rows | done | SRDINV1A, SRDINV1B | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [character-creation owner evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/character-creation-owner-evidence.json) | Completed level-1 character-creation classification: generated inventory now marks class-container-owned source facts and non-runtime table summaries, and SRDINV4 rows steer class-owned facts toward class-container work rather than standalone records. |
-| 171   | SRDINV5A - Classify Level-1 Spell Access Rows | ready-for-research | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Classify class Spellcasting/access rows separately from individual Spell Unit pressure. |
+| 171   | SRDINV5A - Classify Level-1 Spell Access Rows | done | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Completed level-1 spell-access classification: six non-Wizard Spellcasting rows now carry named Surface-widening blockers, Wizard Spellcasting remains covered by character-creation owner evidence, and individual Spell Unit pressure stays in SRDINV5B-SRDINV5D. |
 | 172   | SRDINV5B - Classify Missing Cantrip and Level-1 Spell Units | ready-for-research | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Group missing cantrip and level-1 Spell Unit rows by authoring readiness, Surface blockers, and runtime-support pressure. |
 | 173   | SRDINV5C - Classify Installed Cantrip and Level-1 Spell Units | ready-for-research | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Distinguish catalog evidence from operational owner evidence for installed cantrip and level-1 Spell Unit rows. |
 | 174   | SRDINV5D - Review Catalog-Only Cantrip and Level-1 Spell Units | ready-for-research | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Keep catalog-only spell pressure explicit and counted, or promote concrete follow-up batches. |
-| 175   | SRDINV6 - Review Catalog-Only and Surface-Widening Rows | ready-for-research | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Preserve nonspell catalog-only/dead-for-now rows and review the 23 generated Surface-widening rows, including the 11 class-feature blockers classified by SRDINV3. |
+| 175   | SRDINV6 - Review Catalog-Only and Surface-Widening Rows | ready-for-research | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Preserve nonspell catalog-only/dead-for-now rows and review the 29 generated Surface-widening rows, including the class-feature blockers classified by SRDINV3 and the spell-access blockers classified by SRDINV5A. |
 | 176   | SRDINV7 - Recursive SRD Inventory Planning Review | blocked | SRDINV2-SRDINV5D, SRDINV6 | SRDINV8 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review SRDINV1A-SRDINV6 findings and append a concrete multi-task next batch, or explicitly close level-1 with final metrics. |
 | 177   | SRDINV8 - Surface Widening Gate for SRD Level-1 Frontier | blocked | SRDINV7 | SRDINV9-SRDINV10 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | If Surface cannot express important frontier rows, append atomic Surface-widening tasks and then append this gate again; otherwise mark Surface ready for authoring. |
 | 178   | SRDINV9 - Author Expressible SRD Level-1 Surface Records | blocked | SRDINV8 | SRDINV10 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes) | Author SRD-provenance Surface records for the expressible frontier, then run the Surface gate again if authoring exposes missing Surface constructs. |
@@ -739,7 +739,7 @@ of standalone authored records.
 
 ### Task 171 - SRDINV5A - Classify Level-1 Spell Access Rows
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV1A
 
@@ -760,6 +760,14 @@ expansion, PHB/XPHB content, and private spell-list pressure.
 Verification: SRD class Spellcasting/access source review;
 `UBIQUITOUS_LANGUAGE.md`; regenerate inventory; `pnpm
 unit-profile-coverage:check`; `/simplify` convergence.
+
+Closeout: generated inventory now classifies Bard, Cleric, Druid, Paladin,
+Ranger, and Sorcerer level-1 Spellcasting rows as named
+`needs-surface-widening` blockers for non-Wizard ClassRecord spellcasting
+support. Wizard Spellcasting remains installed with character-creation owner
+evidence present. Warlock Pact Magic remains a class-feature Surface-widening
+row, and cantrip/level-1 Spell Unit pressure remains reserved for
+SRDINV5B-SRDINV5D.
 
 ### Task 172 - SRDINV5B - Classify Missing Cantrip and Level-1 Spell Units
 
@@ -846,11 +854,12 @@ Research / plan:
 [SRDINV_RALPH_BATCH_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md)
 
 Scope: review nonspell rows marked catalog-only/dead-for-now and
-needs-surface-widening, including the 11 level-1 class-feature blockers moved
-from SRDINV3 into the generated SRDINV6 batch. Keep dead/catalog-only rows when
-appropriate, but make that closure explicit and counted. For Surface blockers,
-ensure the missing Surface construct is named and promote concrete widening
-tasks where the blocker should become executable.
+needs-surface-widening, including the level-1 class-feature blockers moved from
+SRDINV3 and the level-1 spell-access blockers moved from SRDINV5A into the
+generated SRDINV6 batch. Keep dead/catalog-only rows when appropriate, but make
+that closure explicit and counted. For Surface blockers, ensure the missing
+Surface construct is named and promote concrete widening tasks where the
+blocker should become executable.
 
 Out of scope: requiring all catalog rows to have production consumers,
 implementing runtime behavior, PHB/XPHB content, and broad Surface redesign
