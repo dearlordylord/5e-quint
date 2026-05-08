@@ -8,9 +8,21 @@ SRD does not prescribe, that choice belongs in `ASSUMPTIONS.md`.
 ## Content Scope And Licensing
 
 **Content boundary: SRD 5.2.1 only.** The shipped public content path is SRD
-5.2.1. PHB-only or private licensed content can use the same architecture later,
-but it must enter through separately owned content collections with explicit
-provenance and distribution policy.
+5.2.1. Non-SRD official or private licensed content can use the same
+architecture later, but it must enter through separately owned content
+collections with explicit provenance and distribution policy.
+
+Published non-SRD mechanics fixtures, when present, are synthetic records with
+original public identity. They are not official-content records and must not
+carry non-SRD source citations, page references, copied prose, canonical names,
+lore, examples, artwork references, or presentation. Their purpose is to
+exercise reusable engine shapes through structured mechanics facts such as
+timing, action economy, resources, dice, numeric values, durations, target
+shape, and execution relationships.
+
+If a public record cites an official source, that source must be redistributable
+under the license declared on the record. Otherwise the record must use
+synthetic identity and mechanics-only structured fields.
 
 Licenses:
 
@@ -80,9 +92,10 @@ records, support-profile readers, and typed procedure facts.
 
 Tests may name concrete SRD authored records when they are verifying catalog,
 reader, support-gate, or end-user workflow behavior. Non-SRD or private licensed
-examples must not copy source names or text into this repository; tests should
-use renamed synthetic records that are visibly fake and exercise the Surface
-shape rather than the protected expression.
+examples must not copy source names, source references, prose, or identity
+taxonomy into publishable repository paths; tests should use renamed synthetic
+records that are visibly fake and exercise the Surface shape rather than the
+protected expression.
 
 ## Runtime Boundaries
 

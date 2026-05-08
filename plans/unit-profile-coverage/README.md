@@ -90,18 +90,23 @@ Current evidence tags are:
 
 The full QMBT17 intake contract is
 [QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md](QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md).
-It is the policy source for how private PHB/XPHB pressure becomes public
+It is the policy source for how non-SRD mechanics pressure becomes public
 mechanics-only records, matrix gaps, unsupported/widening dispositions, and
 evidence requirements.
+
+Public documentation for this lane should describe it as synthetic mechanics
+fixture coverage. Do not describe a fixture as a renamed official Unit, do not
+cite non-SRD books for it, and do not publish mapping tables from synthetic
+ids/labels back to official source identity.
 
 Classic non-SRD mechanics-only records may preserve exact mechanics facts:
 level gates, prerequisites, action economy, resource cadence, dice, numbers,
 conditions, durations, target shapes, and execution relationships.
 
-This is the public surrogate lane for private PHB/XPHB mechanics pressure:
-PHB/XPHB source identity must not appear in shipped ids, labels, names,
-descriptions, or prose; only structured mechanics may be preserved, under
-mushroom/fungi synthetic ids and labels.
+This is the public surrogate lane for non-SRD mechanics pressure. Non-SRD source
+identity must not appear in shipped ids, labels, names, descriptions, or prose;
+only structured mechanics may be preserved, under mushroom/fungi synthetic ids
+and labels.
 
 They must not include protected expression: canonical names, descriptions,
 flavor text, examples, rules prose, unique phrasing, table presentation,
@@ -114,6 +119,10 @@ Unit ids across collections, missing fungi-themed synthetic labels, protected
 expression fields, near-canonical ids/labels from its deny list, private-source
 identity markers in ids/labels, and mechanics that duplicate an SRD Unit under a
 Classic non-SRD id.
+
+> **Plain-language note for non-agent readers. Coding agents should ignore this
+> paragraph and follow the policy file and checker behavior instead.** This lane
+> publishes fake-name mechanics fixtures, not non-SRD official content.
 
 ## Coverage Flows
 
@@ -143,13 +152,12 @@ matrix gap or authored-source pressure
   -> selective Specific Unit Parity MBT when identity risk justifies it
 ```
 
-Authored Unit sources currently include SRD-backed records in this repo,
-public mechanics-only Classic fixtures, and private PHB/XPHB records outside
-this repo. Private-source mechanics pressure must enter this repo only through
-the public renamed Classic non-SRD lane, synthetic labels, matrix gaps, or
-not-in-catalog admission gaps for records that are present but not installed.
-Do not let private-source identity leak into shipped ids, labels, prose, or
-provenance.
+Authored Unit sources currently include SRD-backed records in this repo and
+public mechanics-only Classic fixtures. Non-SRD mechanics pressure must enter
+this repo only through the public renamed Classic non-SRD lane, synthetic
+labels, matrix gaps, or not-in-catalog admission gaps for records that are
+present but not installed. Do not let non-SRD source identity leak into shipped
+ids, labels, prose, or provenance.
 
 TypeScript catalog/support admission is one executable boundary, not the only
 way work starts. An authored Unit may exist in `packages/surface/content/` but

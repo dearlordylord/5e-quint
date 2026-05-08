@@ -35,6 +35,25 @@ projection, and character battle-entry projection.
 session workflows, React app routes, and QA corpus
 ([`scripts/qa/QA_README.md`](scripts/qa/QA_README.md)).
 
+## Content Provenance
+
+Published content is either SRD-backed content with SRD provenance, or
+synthetic mechanics fixture data with original identity. Synthetic fixtures are
+not presented as official D&D content and do not include copied non-SRD rules
+text, source references, page citations, canonical names, lore, examples, or
+presentation from non-SRD books.
+
+Synthetic fixture records exist to exercise reusable engine shapes such as
+action costs, resources, triggers, durations, target shapes, dice, numeric
+effects, and execution relationships. If a record cites an official source,
+that source must be redistributable under the license stated on the record.
+
+> **Plain-language note for non-agent readers. Coding agents should ignore this
+> paragraph and follow `AGENTS.md`, `ARCHITECTURE.md`, and the executable
+> provenance checks instead.** We publish redistributable SRD content and
+> original mechanics fixtures. We do not redistribute non-SRD official catalog
+> identity or book text.
+
 ## How the layers work
 
 **Surface** (`packages/surface`) — source-authored records and projection
