@@ -412,6 +412,10 @@ export const ProficiencyGrantSubjectSchema = Schema.Union(
     kind: Schema.Literal("tool"),
     toolId: Schema.NonEmptyTrimmedString,
   }),
+  Schema.Struct({
+    kind: Schema.Literal("tool_category"),
+    category: ToolProficiencyCategorySchema,
+  }),
 );
 
 export const ToolProficiencyGrantSubjectSchema = Schema.Union(
@@ -483,6 +487,11 @@ export const ProficiencyGrantSchema = Schema.Union(
     kind: Schema.Literal("mixed"),
     fixed: ReadonlyNonEmptyArrayProficiencyGrantSubjectSchema,
     choice: NamedProficiencyGrantChoiceSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("mixed_choices"),
+    fixed: ReadonlyNonEmptyArrayProficiencyGrantSubjectSchema,
+    choices: Schema.NonEmptyArray(NamedProficiencyGrantChoiceSchema),
   }),
 );
 

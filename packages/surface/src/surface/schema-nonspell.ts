@@ -79,6 +79,11 @@ const NON_FIGHTER_NON_WIZARD_NON_WARLOCK_CLASS_NAMES = CLASS_NAMES.filter(
   ...Array<Exclude<ClassName, "fighter" | "wizard" | "warlock">>,
 ];
 
+const CLASS_CONTAINER_WITHOUT_SPELL_ACCESS_CLASS_NAMES = [
+  ...LIST_PREPARED_SPELLCASTING_CLASS_NAMES,
+  ...NON_SPELLCASTING_CLASS_NAMES,
+] as const;
+
 const numberTierSchema = Schema.Struct({
   atLevel: Schema.Number,
   value: Schema.Number,
@@ -1780,10 +1785,18 @@ export const NonSpellcastingClassRecordSchema = Schema.Struct({
   spellcasting: exactOptional(Schema.Never),
 });
 
+export const ClassContainerOnlyRecordSchema = Schema.Struct({
+  ...ClassRecordBaseFields,
+  className: Schema.Literal(
+    ...CLASS_CONTAINER_WITHOUT_SPELL_ACCESS_CLASS_NAMES,
+  ),
+  spellcasting: exactOptional(Schema.Never),
+});
+
 export const NonWizardClassRecordSchema = Schema.Union(
   ListPreparedSpellcastingClassRecordSchema,
   PactMagicClassRecordSchema,
-  NonSpellcastingClassRecordSchema,
+  ClassContainerOnlyRecordSchema,
 );
 
 export const ClassRecordSchema = Schema.Union(

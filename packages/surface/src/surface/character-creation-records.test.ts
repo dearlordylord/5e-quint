@@ -2,7 +2,15 @@ import { Either, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import backgroundSoldierInput from "../../content/background_soldier.json";
+import classBardInput from "../../content/class_bard.json";
+import classClericInput from "../../content/class_cleric.json";
+import classDruidInput from "../../content/class_druid.json";
 import classFighterInput from "../../content/class_fighter.json";
+import classMonkInput from "../../content/class_monk.json";
+import classPaladinInput from "../../content/class_paladin.json";
+import classRangerInput from "../../content/class_ranger.json";
+import classRogueInput from "../../content/class_rogue.json";
+import classSorcererInput from "../../content/class_sorcerer.json";
 import classWarlockInput from "../../content/class_warlock.json";
 import classWizardInput from "../../content/class_wizard.json";
 import fighterTacticalMindInput from "../../content/fighter_tactical_mind.json";
@@ -244,6 +252,34 @@ describe("character-creation Surface records", () => {
         },
       },
     });
+  });
+
+  test("decodes and reads authored SRDINV12 class container records without closing Spell Access rows", () => {
+    const cases = [
+      { input: classBardInput, className: "bard", hitPointDie: 8 },
+      { input: classClericInput, className: "cleric", hitPointDie: 8 },
+      { input: classDruidInput, className: "druid", hitPointDie: 8 },
+      { input: classMonkInput, className: "monk", hitPointDie: 8 },
+      { input: classPaladinInput, className: "paladin", hitPointDie: 10 },
+      { input: classRangerInput, className: "ranger", hitPointDie: 10 },
+      { input: classRogueInput, className: "rogue", hitPointDie: 8 },
+      { input: classSorcererInput, className: "sorcerer", hitPointDie: 6 },
+    ] as const;
+
+    for (const entry of cases) {
+      const classRecord = decodeClassRecordSync(entry.input);
+      const result = readClassCreationFacts(decodeUnitRecordSync(entry.input));
+
+      expect("spellcasting" in classRecord).toBe(false);
+      expect(classRecord.className).toBe(entry.className);
+      expect(result).toMatchObject({
+        tag: "readable",
+        value: {
+          className: entry.className,
+          hitPointDie: entry.hitPointDie,
+        },
+      });
+    }
   });
 
   test("decodes class-container tool, filtered weapon, and mixed multiclass proficiency source facts", () => {

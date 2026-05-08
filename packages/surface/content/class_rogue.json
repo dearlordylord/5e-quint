@@ -1,0 +1,192 @@
+{
+  "armorTraining": {
+    "categories": [
+      "light"
+    ],
+    "kind": "trained"
+  },
+  "className": "rogue",
+  "description": "SRD Rogue class creation facts for a level-1 character.",
+  "featureGrants": [
+    {
+      "level": 1,
+      "unitId": "rogue_expertise"
+    },
+    {
+      "level": 1,
+      "unitId": "rogue_sneak_attack"
+    },
+    {
+      "level": 1,
+      "unitId": "rogue_thieves_cant"
+    },
+    {
+      "level": 1,
+      "unitId": "rogue_weapon_mastery"
+    }
+  ],
+  "hitPointDie": 8,
+  "id": "class_rogue",
+  "kind": "class",
+  "multiclassProficiencies": {
+    "choice": {
+      "choiceKey": "rogue_multiclass_skill_proficiency",
+      "count": 1,
+      "options": [
+        {
+          "kind": "skill",
+          "skill": "acrobatics"
+        },
+        {
+          "kind": "skill",
+          "skill": "athletics"
+        },
+        {
+          "kind": "skill",
+          "skill": "deception"
+        },
+        {
+          "kind": "skill",
+          "skill": "insight"
+        },
+        {
+          "kind": "skill",
+          "skill": "intimidation"
+        },
+        {
+          "kind": "skill",
+          "skill": "investigation"
+        },
+        {
+          "kind": "skill",
+          "skill": "perception"
+        },
+        {
+          "kind": "skill",
+          "skill": "persuasion"
+        },
+        {
+          "kind": "skill",
+          "skill": "sleight_of_hand"
+        },
+        {
+          "kind": "skill",
+          "skill": "stealth"
+        }
+      ]
+    },
+    "fixed": [
+      {
+        "kind": "tool",
+        "toolId": "thieves_tools"
+      },
+      {
+        "category": "light",
+        "kind": "armor_category"
+      }
+    ],
+    "kind": "mixed"
+  },
+  "name": "Rogue",
+  "primaryAbilities": {
+    "abilities": [
+      "dex"
+    ],
+    "kind": "all_of"
+  },
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Rogue.md:3-25,33-36"
+  },
+  "savingThrowProficiencies": [
+    "dex",
+    "int"
+  ],
+  "skillProficiencyChoice": {
+    "choose": 4,
+    "options": [
+      "acrobatics",
+      "athletics",
+      "deception",
+      "insight",
+      "intimidation",
+      "investigation",
+      "perception",
+      "persuasion",
+      "sleight_of_hand",
+      "stealth"
+    ]
+  },
+  "startingEquipment": [
+    {
+      "coinsGp": 8,
+      "id": "option_a",
+      "items": [
+        {
+          "itemName": "Leather Armor",
+          "kind": "draft_owned_item"
+        },
+        {
+          "itemName": "Dagger",
+          "kind": "draft_owned_item",
+          "quantity": 2
+        },
+        {
+          "itemName": "Shortsword",
+          "kind": "draft_owned_item"
+        },
+        {
+          "itemName": "Shortbow",
+          "kind": "draft_owned_item"
+        },
+        {
+          "itemName": "Arrows",
+          "kind": "draft_owned_item",
+          "quantity": 20
+        },
+        {
+          "itemName": "Quiver",
+          "kind": "draft_owned_item"
+        },
+        {
+          "itemName": "Thieves' Tools",
+          "kind": "draft_owned_item"
+        },
+        {
+          "itemName": "Burglar's Pack",
+          "kind": "draft_owned_item"
+        }
+      ],
+      "kind": "item_bundle"
+    },
+    {
+      "coinsGp": 100,
+      "id": "option_b",
+      "kind": "coin_grant"
+    }
+  ],
+  "subclassChoices": [],
+  "toolProficiencies": {
+    "kind": "fixed",
+    "proficiencies": [
+      {
+        "kind": "tool",
+        "toolId": "thieves_tools"
+      }
+    ]
+  },
+  "weaponProficiencies": [
+    {
+      "category": "simple",
+      "kind": "weapon_category"
+    },
+    {
+      "anyOfProperties": [
+        "finesse",
+        "light"
+      ],
+      "category": "martial",
+      "kind": "weapon_category_with_properties"
+    }
+  ]
+}

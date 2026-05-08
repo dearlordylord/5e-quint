@@ -6926,6 +6926,16 @@ function describeProficiencyGrant(grant: ProficiencyGrant): string {
           .map(describeProficiencyGrantSubject)
           .join(", ")}`,
       ].join("; ");
+    case "mixed_choices":
+      return [
+        grant.fixed.map(describeProficiencyGrantSubject).join(", "),
+        ...grant.choices.map(
+          (choice) =>
+            `choose ${choice.count} (${choice.choiceKey}): ${choice.options
+              .map(describeProficiencyGrantSubject)
+              .join(", ")}`,
+        ),
+      ].join("; ");
     default: {
       const _exhaustive: never = grant;
       return _exhaustive;
@@ -6981,6 +6991,8 @@ function describeProficiencyGrantSubject(
       return `${subject.category} armor`;
     case "tool":
       return `${subject.toolId} tool`;
+    case "tool_category":
+      return `${subject.category} tools`;
     default: {
       const _exhaustive: never = subject;
       return _exhaustive;

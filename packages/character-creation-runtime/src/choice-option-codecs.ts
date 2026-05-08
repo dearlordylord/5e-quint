@@ -169,6 +169,13 @@ export function proficiencyGrantSubjectOption(
       optionId: proficiencyGrantSubjectOptionId({ kind: "tool", toolId }),
       label: toolId,
     })),
+    Match.when({ kind: "tool_category" }, ({ category }) => ({
+      optionId: proficiencyGrantSubjectOptionId({
+        kind: "tool_category",
+        category,
+      }),
+      label: `Tool category: ${category}`,
+    })),
     Match.exhaustive,
   );
 }
@@ -186,6 +193,9 @@ export function proficiencyGrantSubjectOptionId(
     ),
     Match.when({ kind: "tool" }, ({ toolId }) =>
       creationChoiceOptionId(`tool:${toolId}`),
+    ),
+    Match.when({ kind: "tool_category" }, ({ category }) =>
+      creationChoiceOptionId(`tool_category:${category}`),
     ),
     Match.exhaustive,
   );

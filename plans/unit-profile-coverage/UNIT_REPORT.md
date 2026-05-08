@@ -8,15 +8,15 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Metric | Value |
 | --- | ---: |
-| Installed collection inventory count | 65 Units |
+| Installed collection inventory count | 73 Units |
 
 ## Coverage Metrics
 
 | Metric | Covered | Percent |
 | --- | ---: | ---: |
-| Authored Surface Unit catalog admission | 64/393 | 16.3% |
+| Authored Surface Unit catalog admission | 72/401 | 18% |
 | Authored Surface executable catalog admission | 48/334 | 14.4% |
-| Installed Unit profile classification coverage | 65/65 | 100% |
+| Installed Unit profile classification coverage | 73/73 | 100% |
 | Supported executable Unit coverage | 33/49 | 67.3% |
 | QNT profile modeling coverage | 25/25 | 100% |
 | QNT proof coverage | 25/25 | 100% |
@@ -833,7 +833,15 @@ This raw inventory lists authored Surface records that are absent from the insta
 | Unit | Disposition | Detail |
 | --- | --- | --- |
 | `class_barbarian` | unsupported-profile | Class container record; battle/runtime executable mechanics live on granted feature Units. |
+| `class_bard` | unsupported-profile | Class container record; Spell Access and executable mechanics live on narrower spell-access and granted feature Units. |
+| `class_cleric` | unsupported-profile | Class container record; Spell Access and executable mechanics live on narrower spell-access and granted feature Units. |
+| `class_druid` | unsupported-profile | Class container record; Spell Access and executable mechanics live on narrower spell-access and granted feature Units. |
 | `class_fighter` | unsupported-profile | Class container record; battle/runtime executable mechanics live on granted feature Units. |
+| `class_monk` | unsupported-profile | Class container record; battle/runtime executable mechanics live on granted feature Units. |
+| `class_paladin` | unsupported-profile | Class container record; Spell Access, Weapon Mastery, and executable mechanics live on narrower spell-access, mastery, and granted feature Units. |
+| `class_ranger` | unsupported-profile | Class container record; Spell Access, Weapon Mastery, and executable mechanics live on narrower spell-access, mastery, and granted feature Units. |
+| `class_rogue` | unsupported-profile | Class container record; Weapon Mastery and executable mechanics live on narrower mastery and granted feature Units. |
+| `class_sorcerer` | unsupported-profile | Class container record; Spell Access and executable mechanics live on narrower spell-access and granted feature Units. |
 | `class_warlock` | unsupported-profile | Class container record; battle/runtime executable mechanics live on granted feature Units. |
 | `class_wizard` | unsupported-profile | Class container and spell access record; executable pressure is carried by spell Units and class features. |
 | `background_soldier` | unsupported-profile | Character-creation authored data only; no promoted execution profile yet. |
@@ -869,7 +877,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
-| srd-5.2.1 | unassigned | unsupported-profile | 30 | `class_barbarian`, `class_fighter`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `wizard_ritual_adept`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `mastery_sap`, `orc_darkvision`, `light`, `detect_magic`, `sleep`, `eldritch_blast`, `minor_illusion`, `charm_person`, `hellish_rebuke`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
+| srd-5.2.1 | unassigned | unsupported-profile | 38 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `wizard_ritual_adept`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `mastery_sap`, `orc_darkvision`, `light`, `detect_magic`, `sleep`, `eldritch_blast`, `minor_illusion`, `charm_person`, `hellish_rebuke`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
 | srd-5.2.1 | QCORE10 | needs-surface-widening | 1 | `fire_bolt` |
 | srd-5.2.1 | unassigned | needs-surface-widening | 1 | `thunderwave` |
 

@@ -48,9 +48,9 @@
       "percent": "14.4%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 393,
-      "numerator": 64,
-      "percent": "16.3%"
+      "denominator": 401,
+      "numerator": 72,
+      "percent": "18%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 65
+      "value": 73
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 33,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 65,
-      "numerator": 65,
+      "denominator": 73,
+      "numerator": 73,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -1160,6 +1160,60 @@
         "status": "installed"
       },
       "claim": {
+        "reason": "Class container record; Spell Access and executable mechanics live on narrower spell-access and granted feature Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "class",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/class_bard.json",
+      "unitId": "class_bard"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Class container record; Spell Access and executable mechanics live on narrower spell-access and granted feature Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "class",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/class_cleric.json",
+      "unitId": "class_cleric"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Class container record; Spell Access and executable mechanics live on narrower spell-access and granted feature Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "class",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/class_druid.json",
+      "unitId": "class_druid"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "reason": "Class container record; battle/runtime executable mechanics live on granted feature Units.",
         "tag": "unsupported-profile"
       },
@@ -1170,6 +1224,96 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/class_fighter.json",
       "unitId": "class_fighter"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Class container record; battle/runtime executable mechanics live on granted feature Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "class",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/class_monk.json",
+      "unitId": "class_monk"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Class container record; Spell Access, Weapon Mastery, and executable mechanics live on narrower spell-access, mastery, and granted feature Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "class",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/class_paladin.json",
+      "unitId": "class_paladin"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Class container record; Spell Access, Weapon Mastery, and executable mechanics live on narrower spell-access, mastery, and granted feature Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "class",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/class_ranger.json",
+      "unitId": "class_ranger"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Class container record; Weapon Mastery and executable mechanics live on narrower mastery and granted feature Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "class",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/class_rogue.json",
+      "unitId": "class_rogue"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Class container record; Spell Access and executable mechanics live on narrower spell-access and granted feature Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "class",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/class_sorcerer.json",
+      "unitId": "class_sorcerer"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

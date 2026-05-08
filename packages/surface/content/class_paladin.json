@@ -1,0 +1,131 @@
+{
+  "armorTraining": {
+    "categories": [
+      "light",
+      "medium",
+      "heavy",
+      "shield"
+    ],
+    "kind": "trained"
+  },
+  "className": "paladin",
+  "description": "SRD Paladin class creation facts for a level-1 character.",
+  "featureGrants": [
+    {
+      "level": 1,
+      "unitId": "paladin_lay_on_hands"
+    },
+    {
+      "level": 1,
+      "unitId": "paladin_spellcasting"
+    },
+    {
+      "level": 1,
+      "unitId": "paladin_weapon_mastery"
+    }
+  ],
+  "hitPointDie": 10,
+  "id": "class_paladin",
+  "kind": "class",
+  "multiclassProficiencies": {
+    "kind": "fixed",
+    "proficiencies": [
+      {
+        "category": "martial",
+        "kind": "weapon_category"
+      },
+      {
+        "category": "light",
+        "kind": "armor_category"
+      },
+      {
+        "category": "medium",
+        "kind": "armor_category"
+      },
+      {
+        "category": "shield",
+        "kind": "armor_category"
+      }
+    ]
+  },
+  "name": "Paladin",
+  "primaryAbilities": {
+    "abilities": [
+      "str",
+      "cha"
+    ],
+    "kind": "all_of"
+  },
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Paladin.md:3-24,33-35"
+  },
+  "savingThrowProficiencies": [
+    "wis",
+    "cha"
+  ],
+  "skillProficiencyChoice": {
+    "choose": 2,
+    "options": [
+      "athletics",
+      "insight",
+      "intimidation",
+      "medicine",
+      "persuasion",
+      "religion"
+    ]
+  },
+  "startingEquipment": [
+    {
+      "coinsGp": 9,
+      "id": "option_a",
+      "items": [
+        {
+          "itemName": "Chain Mail",
+          "kind": "draft_owned_item"
+        },
+        {
+          "itemName": "Shield",
+          "kind": "draft_owned_item"
+        },
+        {
+          "itemName": "Longsword",
+          "kind": "draft_owned_item"
+        },
+        {
+          "itemName": "Javelin",
+          "kind": "draft_owned_item",
+          "quantity": 6
+        },
+        {
+          "itemName": "Holy Symbol",
+          "kind": "draft_owned_item"
+        },
+        {
+          "itemName": "Priest's Pack",
+          "kind": "draft_owned_item"
+        }
+      ],
+      "kind": "item_bundle"
+    },
+    {
+      "coinsGp": 150,
+      "id": "option_b",
+      "kind": "coin_grant"
+    }
+  ],
+  "subclassChoices": [],
+  "toolProficiencies": {
+    "kind": "none"
+  },
+  "weaponProficiencies": [
+    {
+      "category": "simple",
+      "kind": "weapon_category"
+    },
+    {
+      "category": "martial",
+      "kind": "weapon_category"
+    }
+  ]
+}

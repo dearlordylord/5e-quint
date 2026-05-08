@@ -1,5 +1,13 @@
 {"unitId":"class_fighter","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Class container record; battle/runtime executable mechanics live on granted feature Units."}}
 {"unitId":"class_barbarian","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Class container record; battle/runtime executable mechanics live on granted feature Units."}}
+{"unitId":"class_bard","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Class container record; Spell Access and executable mechanics live on narrower spell-access and granted feature Units."}}
+{"unitId":"class_cleric","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Class container record; Spell Access and executable mechanics live on narrower spell-access and granted feature Units."}}
+{"unitId":"class_druid","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Class container record; Spell Access and executable mechanics live on narrower spell-access and granted feature Units."}}
+{"unitId":"class_monk","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Class container record; battle/runtime executable mechanics live on granted feature Units."}}
+{"unitId":"class_paladin","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Class container record; Spell Access, Weapon Mastery, and executable mechanics live on narrower spell-access, mastery, and granted feature Units."}}
+{"unitId":"class_ranger","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Class container record; Spell Access, Weapon Mastery, and executable mechanics live on narrower spell-access, mastery, and granted feature Units."}}
+{"unitId":"class_rogue","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Class container record; Weapon Mastery and executable mechanics live on narrower mastery and granted feature Units."}}
+{"unitId":"class_sorcerer","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Class container record; Spell Access and executable mechanics live on narrower spell-access and granted feature Units."}}
 {"unitId":"class_warlock","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Class container record; battle/runtime executable mechanics live on granted feature Units."}}
 {"unitId":"class_wizard","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Class container and spell access record; executable pressure is carried by spell Units and class features."}}
 {"unitId":"background_soldier","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Character-creation authored data only; no promoted execution profile yet."}}

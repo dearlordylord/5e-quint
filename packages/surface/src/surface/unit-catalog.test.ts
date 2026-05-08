@@ -18,7 +18,15 @@ import type { WeaponRecord } from "./types.ts";
 
 const requiredFirstVerticalUnitIds = [
   "class_barbarian",
+  "class_bard",
+  "class_cleric",
+  "class_druid",
   "class_fighter",
+  "class_monk",
+  "class_paladin",
+  "class_ranger",
+  "class_rogue",
+  "class_sorcerer",
   "class_warlock",
   "class_wizard",
   "background_soldier",
@@ -107,7 +115,15 @@ describe("SRD Unit catalog boundary", () => {
       expect(
         [
           "class_barbarian",
+          "class_bard",
+          "class_cleric",
+          "class_druid",
           "class_fighter",
+          "class_monk",
+          "class_paladin",
+          "class_ranger",
+          "class_rogue",
+          "class_sorcerer",
           "class_warlock",
           "class_wizard",
         ].map((unitId) => result.catalog.requireUnit(unitId)),
@@ -118,9 +134,49 @@ describe("SRD Unit catalog boundary", () => {
           primaryAbilities: { abilities: ["str"], kind: "all_of" },
         }),
         expect.objectContaining({
+          className: "bard",
+          hitPointDie: 8,
+          primaryAbilities: { abilities: ["cha"], kind: "all_of" },
+        }),
+        expect.objectContaining({
+          className: "cleric",
+          hitPointDie: 8,
+          primaryAbilities: { abilities: ["wis"], kind: "all_of" },
+        }),
+        expect.objectContaining({
+          className: "druid",
+          hitPointDie: 8,
+          primaryAbilities: { abilities: ["wis"], kind: "all_of" },
+        }),
+        expect.objectContaining({
           className: "fighter",
           hitPointDie: 10,
           primaryAbilities: { abilities: ["str", "dex"], kind: "any_of" },
+        }),
+        expect.objectContaining({
+          className: "monk",
+          hitPointDie: 8,
+          primaryAbilities: { abilities: ["dex", "wis"], kind: "all_of" },
+        }),
+        expect.objectContaining({
+          className: "paladin",
+          hitPointDie: 10,
+          primaryAbilities: { abilities: ["str", "cha"], kind: "all_of" },
+        }),
+        expect.objectContaining({
+          className: "ranger",
+          hitPointDie: 10,
+          primaryAbilities: { abilities: ["dex", "wis"], kind: "all_of" },
+        }),
+        expect.objectContaining({
+          className: "rogue",
+          hitPointDie: 8,
+          primaryAbilities: { abilities: ["dex"], kind: "all_of" },
+        }),
+        expect.objectContaining({
+          className: "sorcerer",
+          hitPointDie: 6,
+          primaryAbilities: { abilities: ["cha"], kind: "all_of" },
         }),
         expect.objectContaining({
           className: "warlock",

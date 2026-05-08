@@ -608,10 +608,37 @@ function findAuthored(root) {
             sourceRecordPath: relativePath,
             provenance: record.provenance,
             executableMechanics: Boolean(record.mechanics),
+            rawRecord: record,
           },
         ];
       }),
   );
+}
+
+function authoredUnitForRow(row, authored) {
+  if (!row.candidateUnitId) return undefined;
+  const authoredUnit = authored.get(row.candidateUnitId);
+  if (authoredUnit === undefined) return undefined;
+  if (
+    row.rowKind === "spell-access" &&
+    authoredUnit.rawRecord?.spellcasting === undefined
+  ) {
+    return undefined;
+  }
+  return authoredUnit;
+}
+
+function catalogAdmissionForRow(row, authored, installedIds) {
+  if (!row.candidateUnitId) return { state: "not-applicable" };
+  if (
+    row.rowKind === "spell-access" &&
+    authoredUnitForRow(row, authored) === undefined
+  ) {
+    return { state: "not-installed", unitId: row.candidateUnitId };
+  }
+  return installedIds.has(row.candidateUnitId)
+    ? { state: "installed", unitId: row.candidateUnitId }
+    : { state: "not-installed", unitId: row.candidateUnitId };
 }
 
 function sourceReference(sourcePath, startLine, endLine = startLine) {
@@ -761,8 +788,12 @@ function finalDisposition(row, authored, installedIds, ownerEvidenceSources) {
     return "catalog-only/dead-for-now";
   }
   if (!row.candidateUnitId) return "needs-surface-widening";
-  if (!authored.has(row.candidateUnitId)) return "missing-authored-record";
-  if (!installedIds.has(row.candidateUnitId)) {
+  if (authoredUnitForRow(row, authored) === undefined) {
+    return "missing-authored-record";
+  }
+  if (
+    catalogAdmissionForRow(row, authored, installedIds).state !== "installed"
+  ) {
     if (spellUnitExecutableFollowUps.has(row.candidateUnitId)) {
       return "catalog-authored-executable-follow-up";
     }
@@ -1366,9 +1397,7 @@ function isRecord(value) {
 
 function withState(rows, authored, installedIds, ownerEvidenceSources) {
   return rows.map((row) => {
-    const authoredUnit = row.candidateUnitId
-      ? authored.get(row.candidateUnitId)
-      : undefined;
+    const authoredUnit = authoredUnitForRow(row, authored);
     const gate = surfaceGate(row, ownerEvidenceSources, installedIds);
     const disposition = finalDisposition(
       row,
@@ -1376,11 +1405,11 @@ function withState(rows, authored, installedIds, ownerEvidenceSources) {
       installedIds,
       ownerEvidenceSources,
     );
-    const catalogAdmission = row.candidateUnitId
-      ? installedIds.has(row.candidateUnitId)
-        ? { state: "installed", unitId: row.candidateUnitId }
-        : { state: "not-installed", unitId: row.candidateUnitId }
-      : { state: "not-applicable" };
+    const catalogAdmission = catalogAdmissionForRow(
+      row,
+      authored,
+      installedIds,
+    );
     const installedClassification = installedOwnerClassification(
       row,
       ownerEvidenceSources,

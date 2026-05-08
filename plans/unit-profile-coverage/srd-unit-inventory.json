@@ -32,18 +32,18 @@
     "spellPressureRows": 211,
     "levelOneClassContainers": 12,
     "levelOneRowsByDisposition": {
-      "catalog-installed-owner-evidence-required": 25,
+      "catalog-installed-owner-evidence-required": 101,
       "catalog-installed-owner-evidence-present": 19,
       "catalog-only/dead-for-now": 4,
       "non-runtime": 12,
-      "missing-authored-record": 96
+      "missing-authored-record": 20
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-required": 35,
+      "catalog-installed-owner-evidence-required": 111,
       "catalog-installed-owner-evidence-present": 37,
       "catalog-only/dead-for-now": 78,
       "non-runtime": 12,
-      "missing-authored-record": 102,
+      "missing-authored-record": 26,
       "catalog-authored-executable-follow-up": 70,
       "needs-surface-widening": 33
     },
@@ -67,7 +67,7 @@
       "non-runtime-table-summary": 12,
       "class-container-owned-source-fact": 100
     },
-    "missingClassContainers": 8
+    "missingClassContainers": 0
   },
   "recommendedBatches": [
     {
@@ -75,7 +75,7 @@
       "title": "Classify Installed Level-1 Owner Evidence",
       "suggestedStatus": "ready-for-research",
       "intent": "Stop treating installed level-1 rows as done by catalog load alone; assign operational owner expectations or explicit catalog-only closure.",
-      "rowCount": 45,
+      "rowCount": 121,
       "rowIds": [
         "srd521:classes/barbarian:level-1:class-container:barbarian_class_container",
         "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
@@ -87,6 +87,35 @@
         "srd521:classes/barbarian:level-1:core-trait:barbarian_weapon_proficiencies",
         "srd521:classes/barbarian:level-1:equipment-pressure:barbarian_starting_equipment",
         "srd521:classes/barbarian:level-1:multiclass-entry:barbarian_multiclass_entry_traits",
+        "srd521:classes/bard:level-1:class-container:bard_class_container",
+        "srd521:classes/bard:level-1:core-trait:bard_armor_training",
+        "srd521:classes/bard:level-1:core-trait:bard_hit_point_die",
+        "srd521:classes/bard:level-1:core-trait:bard_primary_ability",
+        "srd521:classes/bard:level-1:core-trait:bard_saving_throw_proficiencies",
+        "srd521:classes/bard:level-1:core-trait:bard_skill_proficiencies",
+        "srd521:classes/bard:level-1:core-trait:bard_tool_proficiencies",
+        "srd521:classes/bard:level-1:core-trait:bard_weapon_proficiencies",
+        "srd521:classes/bard:level-1:equipment-pressure:bard_starting_equipment",
+        "srd521:classes/bard:level-1:multiclass-entry:bard_multiclass_entry_traits",
+        "srd521:classes/cleric:level-1:class-container:cleric_class_container",
+        "srd521:classes/cleric:level-1:core-trait:cleric_armor_training",
+        "srd521:classes/cleric:level-1:core-trait:cleric_hit_point_die",
+        "srd521:classes/cleric:level-1:core-trait:cleric_primary_ability",
+        "srd521:classes/cleric:level-1:core-trait:cleric_saving_throw_proficiencies",
+        "srd521:classes/cleric:level-1:core-trait:cleric_skill_proficiencies",
+        "srd521:classes/cleric:level-1:core-trait:cleric_weapon_proficiencies",
+        "srd521:classes/cleric:level-1:equipment-pressure:cleric_starting_equipment",
+        "srd521:classes/cleric:level-1:multiclass-entry:cleric_multiclass_entry_traits",
+        "srd521:classes/druid:level-1:class-container:druid_class_container",
+        "srd521:classes/druid:level-1:core-trait:druid_armor_training",
+        "srd521:classes/druid:level-1:core-trait:druid_hit_point_die",
+        "srd521:classes/druid:level-1:core-trait:druid_primary_ability",
+        "srd521:classes/druid:level-1:core-trait:druid_saving_throw_proficiencies",
+        "srd521:classes/druid:level-1:core-trait:druid_skill_proficiencies",
+        "srd521:classes/druid:level-1:core-trait:druid_tool_proficiencies",
+        "srd521:classes/druid:level-1:core-trait:druid_weapon_proficiencies",
+        "srd521:classes/druid:level-1:equipment-pressure:druid_starting_equipment",
+        "srd521:classes/druid:level-1:multiclass-entry:druid_multiclass_entry_traits",
         "srd521:classes/fighter:level-1:class-container:fighter_class_container",
         "srd521:classes/fighter:level-1:class-feature-grant:fighter_fighting_style",
         "srd521:classes/fighter:level-1:class-feature-grant:fighter_second_wind",
@@ -99,7 +128,54 @@
         "srd521:classes/fighter:level-1:equipment-pressure:fighter_starting_equipment",
         "srd521:classes/fighter:level-1:mastery-pressure:fighter_weapon_mastery",
         "srd521:classes/fighter:level-1:multiclass-entry:fighter_multiclass_entry_traits",
+        "srd521:classes/monk:level-1:class-container:monk_class_container",
+        "srd521:classes/monk:level-1:core-trait:monk_armor_training",
+        "srd521:classes/monk:level-1:core-trait:monk_hit_point_die",
+        "srd521:classes/monk:level-1:core-trait:monk_primary_ability",
+        "srd521:classes/monk:level-1:core-trait:monk_saving_throw_proficiencies",
+        "srd521:classes/monk:level-1:core-trait:monk_skill_proficiencies",
+        "srd521:classes/monk:level-1:core-trait:monk_tool_proficiencies",
+        "srd521:classes/monk:level-1:core-trait:monk_weapon_proficiencies",
+        "srd521:classes/monk:level-1:equipment-pressure:monk_starting_equipment",
+        "srd521:classes/monk:level-1:multiclass-entry:monk_multiclass_entry_traits",
+        "srd521:classes/paladin:level-1:class-container:paladin_class_container",
+        "srd521:classes/paladin:level-1:core-trait:paladin_armor_training",
+        "srd521:classes/paladin:level-1:core-trait:paladin_hit_point_die",
+        "srd521:classes/paladin:level-1:core-trait:paladin_primary_ability",
+        "srd521:classes/paladin:level-1:core-trait:paladin_saving_throw_proficiencies",
+        "srd521:classes/paladin:level-1:core-trait:paladin_skill_proficiencies",
+        "srd521:classes/paladin:level-1:core-trait:paladin_weapon_proficiencies",
+        "srd521:classes/paladin:level-1:equipment-pressure:paladin_starting_equipment",
+        "srd521:classes/paladin:level-1:multiclass-entry:paladin_multiclass_entry_traits",
+        "srd521:classes/ranger:level-1:class-container:ranger_class_container",
+        "srd521:classes/ranger:level-1:core-trait:ranger_armor_training",
+        "srd521:classes/ranger:level-1:core-trait:ranger_hit_point_die",
+        "srd521:classes/ranger:level-1:core-trait:ranger_primary_ability",
+        "srd521:classes/ranger:level-1:core-trait:ranger_saving_throw_proficiencies",
+        "srd521:classes/ranger:level-1:core-trait:ranger_skill_proficiencies",
+        "srd521:classes/ranger:level-1:core-trait:ranger_weapon_proficiencies",
+        "srd521:classes/ranger:level-1:equipment-pressure:ranger_starting_equipment",
+        "srd521:classes/ranger:level-1:multiclass-entry:ranger_multiclass_entry_traits",
+        "srd521:classes/rogue:level-1:class-container:rogue_class_container",
         "srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack",
+        "srd521:classes/rogue:level-1:core-trait:rogue_armor_training",
+        "srd521:classes/rogue:level-1:core-trait:rogue_hit_point_die",
+        "srd521:classes/rogue:level-1:core-trait:rogue_primary_ability",
+        "srd521:classes/rogue:level-1:core-trait:rogue_saving_throw_proficiencies",
+        "srd521:classes/rogue:level-1:core-trait:rogue_skill_proficiencies",
+        "srd521:classes/rogue:level-1:core-trait:rogue_tool_proficiencies",
+        "srd521:classes/rogue:level-1:core-trait:rogue_weapon_proficiencies",
+        "srd521:classes/rogue:level-1:equipment-pressure:rogue_starting_equipment",
+        "srd521:classes/rogue:level-1:multiclass-entry:rogue_multiclass_entry_traits",
+        "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container",
+        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_armor_training",
+        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_hit_point_die",
+        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_primary_ability",
+        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_saving_throw_proficiencies",
+        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_skill_proficiencies",
+        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_weapon_proficiencies",
+        "srd521:classes/sorcerer:level-1:equipment-pressure:sorcerer_starting_equipment",
+        "srd521:classes/sorcerer:level-1:multiclass-entry:sorcerer_multiclass_entry_traits",
         "srd521:classes/warlock:level-1:class-container:warlock_class_container",
         "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic",
         "srd521:classes/warlock:level-1:core-trait:warlock_armor_training",
@@ -131,17 +207,8 @@
       "title": "Author Missing Level-1 Class Containers",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Create or explicitly close missing SRD level-1 class container records.",
-      "rowCount": 8,
-      "rowIds": [
-        "srd521:classes/bard:level-1:class-container:bard_class_container",
-        "srd521:classes/cleric:level-1:class-container:cleric_class_container",
-        "srd521:classes/druid:level-1:class-container:druid_class_container",
-        "srd521:classes/monk:level-1:class-container:monk_class_container",
-        "srd521:classes/paladin:level-1:class-container:paladin_class_container",
-        "srd521:classes/ranger:level-1:class-container:ranger_class_container",
-        "srd521:classes/rogue:level-1:class-container:rogue_class_container",
-        "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
-      ],
+      "rowCount": 0,
+      "rowIds": [],
       "nextAction": "Add SRD-provenance class container records where Surface already expresses the facts, or record explicit closure for any deferred container.",
       "acceptance": "Missing class container count reaches zero or each remaining row has explicit closure; no PHB/private content enters this pass."
     },
@@ -171,8 +238,18 @@
       "title": "Classify Level-1 Character Creation Rows",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Separate class-container-owned creation/progression facts from rows that require standalone authored records.",
-      "rowCount": 68,
+      "rowCount": 112,
       "rowIds": [
+        "srd521:classes/barbarian:level-1:class-table-summary:barbarian_level_1_feature_table_row",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_armor_training",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_hit_point_die",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_primary_ability",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_saving_throw_proficiencies",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_skill_proficiencies",
+        "srd521:classes/barbarian:level-1:core-trait:barbarian_weapon_proficiencies",
+        "srd521:classes/barbarian:level-1:equipment-pressure:barbarian_starting_equipment",
+        "srd521:classes/barbarian:level-1:multiclass-entry:barbarian_multiclass_entry_traits",
+        "srd521:classes/bard:level-1:class-table-summary:bard_level_1_feature_table_row",
         "srd521:classes/bard:level-1:core-trait:bard_armor_training",
         "srd521:classes/bard:level-1:core-trait:bard_hit_point_die",
         "srd521:classes/bard:level-1:core-trait:bard_primary_ability",
@@ -182,6 +259,7 @@
         "srd521:classes/bard:level-1:core-trait:bard_weapon_proficiencies",
         "srd521:classes/bard:level-1:equipment-pressure:bard_starting_equipment",
         "srd521:classes/bard:level-1:multiclass-entry:bard_multiclass_entry_traits",
+        "srd521:classes/cleric:level-1:class-table-summary:cleric_level_1_feature_table_row",
         "srd521:classes/cleric:level-1:core-trait:cleric_armor_training",
         "srd521:classes/cleric:level-1:core-trait:cleric_hit_point_die",
         "srd521:classes/cleric:level-1:core-trait:cleric_primary_ability",
@@ -190,6 +268,7 @@
         "srd521:classes/cleric:level-1:core-trait:cleric_weapon_proficiencies",
         "srd521:classes/cleric:level-1:equipment-pressure:cleric_starting_equipment",
         "srd521:classes/cleric:level-1:multiclass-entry:cleric_multiclass_entry_traits",
+        "srd521:classes/druid:level-1:class-table-summary:druid_level_1_feature_table_row",
         "srd521:classes/druid:level-1:core-trait:druid_armor_training",
         "srd521:classes/druid:level-1:core-trait:druid_hit_point_die",
         "srd521:classes/druid:level-1:core-trait:druid_primary_ability",
@@ -199,6 +278,16 @@
         "srd521:classes/druid:level-1:core-trait:druid_weapon_proficiencies",
         "srd521:classes/druid:level-1:equipment-pressure:druid_starting_equipment",
         "srd521:classes/druid:level-1:multiclass-entry:druid_multiclass_entry_traits",
+        "srd521:classes/fighter:level-1:class-table-summary:fighter_level_1_feature_table_row",
+        "srd521:classes/fighter:level-1:core-trait:fighter_armor_training",
+        "srd521:classes/fighter:level-1:core-trait:fighter_hit_point_die",
+        "srd521:classes/fighter:level-1:core-trait:fighter_primary_ability",
+        "srd521:classes/fighter:level-1:core-trait:fighter_saving_throw_proficiencies",
+        "srd521:classes/fighter:level-1:core-trait:fighter_skill_proficiencies",
+        "srd521:classes/fighter:level-1:core-trait:fighter_weapon_proficiencies",
+        "srd521:classes/fighter:level-1:equipment-pressure:fighter_starting_equipment",
+        "srd521:classes/fighter:level-1:multiclass-entry:fighter_multiclass_entry_traits",
+        "srd521:classes/monk:level-1:class-table-summary:monk_level_1_feature_table_row",
         "srd521:classes/monk:level-1:core-trait:monk_armor_training",
         "srd521:classes/monk:level-1:core-trait:monk_hit_point_die",
         "srd521:classes/monk:level-1:core-trait:monk_primary_ability",
@@ -208,6 +297,7 @@
         "srd521:classes/monk:level-1:core-trait:monk_weapon_proficiencies",
         "srd521:classes/monk:level-1:equipment-pressure:monk_starting_equipment",
         "srd521:classes/monk:level-1:multiclass-entry:monk_multiclass_entry_traits",
+        "srd521:classes/paladin:level-1:class-table-summary:paladin_level_1_feature_table_row",
         "srd521:classes/paladin:level-1:core-trait:paladin_armor_training",
         "srd521:classes/paladin:level-1:core-trait:paladin_hit_point_die",
         "srd521:classes/paladin:level-1:core-trait:paladin_primary_ability",
@@ -216,6 +306,7 @@
         "srd521:classes/paladin:level-1:core-trait:paladin_weapon_proficiencies",
         "srd521:classes/paladin:level-1:equipment-pressure:paladin_starting_equipment",
         "srd521:classes/paladin:level-1:multiclass-entry:paladin_multiclass_entry_traits",
+        "srd521:classes/ranger:level-1:class-table-summary:ranger_level_1_feature_table_row",
         "srd521:classes/ranger:level-1:core-trait:ranger_armor_training",
         "srd521:classes/ranger:level-1:core-trait:ranger_hit_point_die",
         "srd521:classes/ranger:level-1:core-trait:ranger_primary_ability",
@@ -224,6 +315,7 @@
         "srd521:classes/ranger:level-1:core-trait:ranger_weapon_proficiencies",
         "srd521:classes/ranger:level-1:equipment-pressure:ranger_starting_equipment",
         "srd521:classes/ranger:level-1:multiclass-entry:ranger_multiclass_entry_traits",
+        "srd521:classes/rogue:level-1:class-table-summary:rogue_level_1_feature_table_row",
         "srd521:classes/rogue:level-1:core-trait:rogue_armor_training",
         "srd521:classes/rogue:level-1:core-trait:rogue_hit_point_die",
         "srd521:classes/rogue:level-1:core-trait:rogue_primary_ability",
@@ -233,6 +325,7 @@
         "srd521:classes/rogue:level-1:core-trait:rogue_weapon_proficiencies",
         "srd521:classes/rogue:level-1:equipment-pressure:rogue_starting_equipment",
         "srd521:classes/rogue:level-1:multiclass-entry:rogue_multiclass_entry_traits",
+        "srd521:classes/sorcerer:level-1:class-table-summary:sorcerer_level_1_feature_table_row",
         "srd521:classes/sorcerer:level-1:core-trait:sorcerer_armor_training",
         "srd521:classes/sorcerer:level-1:core-trait:sorcerer_hit_point_die",
         "srd521:classes/sorcerer:level-1:core-trait:sorcerer_primary_ability",
@@ -240,9 +333,27 @@
         "srd521:classes/sorcerer:level-1:core-trait:sorcerer_skill_proficiencies",
         "srd521:classes/sorcerer:level-1:core-trait:sorcerer_weapon_proficiencies",
         "srd521:classes/sorcerer:level-1:equipment-pressure:sorcerer_starting_equipment",
-        "srd521:classes/sorcerer:level-1:multiclass-entry:sorcerer_multiclass_entry_traits"
+        "srd521:classes/sorcerer:level-1:multiclass-entry:sorcerer_multiclass_entry_traits",
+        "srd521:classes/warlock:level-1:class-table-summary:warlock_level_1_feature_table_row",
+        "srd521:classes/warlock:level-1:core-trait:warlock_armor_training",
+        "srd521:classes/warlock:level-1:core-trait:warlock_hit_point_die",
+        "srd521:classes/warlock:level-1:core-trait:warlock_primary_ability",
+        "srd521:classes/warlock:level-1:core-trait:warlock_saving_throw_proficiencies",
+        "srd521:classes/warlock:level-1:core-trait:warlock_skill_proficiencies",
+        "srd521:classes/warlock:level-1:core-trait:warlock_weapon_proficiencies",
+        "srd521:classes/warlock:level-1:equipment-pressure:warlock_starting_equipment",
+        "srd521:classes/warlock:level-1:multiclass-entry:warlock_multiclass_entry_traits",
+        "srd521:classes/wizard:level-1:class-table-summary:wizard_level_1_feature_table_row",
+        "srd521:classes/wizard:level-1:core-trait:wizard_armor_training",
+        "srd521:classes/wizard:level-1:core-trait:wizard_hit_point_die",
+        "srd521:classes/wizard:level-1:core-trait:wizard_primary_ability",
+        "srd521:classes/wizard:level-1:core-trait:wizard_saving_throw_proficiencies",
+        "srd521:classes/wizard:level-1:core-trait:wizard_skill_proficiencies",
+        "srd521:classes/wizard:level-1:core-trait:wizard_weapon_proficiencies",
+        "srd521:classes/wizard:level-1:equipment-pressure:wizard_starting_equipment",
+        "srd521:classes/wizard:level-1:multiclass-entry:wizard_multiclass_entry_traits"
       ],
-      "nextAction": "For each missing class-container-owned creation row, unblock or author the SRD class container instead of creating standalone records.",
+      "nextAction": "Level-1 hit dice, proficiencies, equipment, multiclass, and table-summary rows have class-container ownership or non-runtime closure classifications.",
       "acceptance": "Character-creation rows distinguish class-container ownership from missing standalone records."
     },
     {
@@ -929,17 +1040,8 @@
       "title": "Author Expressible Level-1 Class Containers",
       "suggestedStatus": "ready-for-research",
       "intent": "Author missing SRD-provenance class container records now that class-container source facts are expressible.",
-      "rowCount": 8,
-      "rowIds": [
-        "srd521:classes/bard:level-1:class-container:bard_class_container",
-        "srd521:classes/cleric:level-1:class-container:cleric_class_container",
-        "srd521:classes/druid:level-1:class-container:druid_class_container",
-        "srd521:classes/monk:level-1:class-container:monk_class_container",
-        "srd521:classes/paladin:level-1:class-container:paladin_class_container",
-        "srd521:classes/ranger:level-1:class-container:ranger_class_container",
-        "srd521:classes/rogue:level-1:class-container:rogue_class_container",
-        "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
-      ],
+      "rowCount": 0,
+      "rowIds": [],
       "nextAction": "Author Bard, Cleric, Druid, Monk, Paladin, Ranger, Rogue, and Sorcerer class container records from SRD source facts; do not create standalone records for class-owned creation rows.",
       "acceptance": "Missing level-1 class container count reaches zero, and class-owned creation rows continue to derive from the class container boundary."
     },
@@ -1001,33 +1103,25 @@
       "title": "Recursive SRD Inventory Planning Review",
       "suggestedStatus": "blocked-on-SRDINV12-SRDINV15",
       "intent": "Review SRDINV12-SRDINV15 authoring results and append the next concrete batch unless level-1 inventory is complete.",
-      "rowCount": 28,
+      "rowCount": 20,
       "rowIds": [
         "srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery",
-        "srd521:classes/bard:level-1:class-container:bard_class_container",
         "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
         "srd521:classes/bard:level-1:spell-access:bard_spellcasting",
-        "srd521:classes/cleric:level-1:class-container:cleric_class_container",
         "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
         "srd521:classes/cleric:level-1:spell-access:cleric_spellcasting",
-        "srd521:classes/druid:level-1:class-container:druid_class_container",
         "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
         "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order",
         "srd521:classes/druid:level-1:spell-access:druid_spellcasting",
-        "srd521:classes/monk:level-1:class-container:monk_class_container",
         "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
-        "srd521:classes/paladin:level-1:class-container:paladin_class_container",
         "srd521:classes/paladin:level-1:mastery-pressure:paladin_weapon_mastery",
         "srd521:classes/paladin:level-1:spell-access:paladin_spellcasting",
-        "srd521:classes/ranger:level-1:class-container:ranger_class_container",
         "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy",
         "srd521:classes/ranger:level-1:mastery-pressure:ranger_weapon_mastery",
         "srd521:classes/ranger:level-1:spell-access:ranger_spellcasting",
-        "srd521:classes/rogue:level-1:class-container:rogue_class_container",
         "srd521:classes/rogue:level-1:class-feature-grant:rogue_expertise",
         "srd521:classes/rogue:level-1:class-feature-grant:rogue_thieves_cant",
         "srd521:classes/rogue:level-1:mastery-pressure:rogue_weapon_mastery",
-        "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container",
         "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
         "srd521:classes/sorcerer:level-1:spell-access:sorcerer_spellcasting",
         "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations"
@@ -1606,15 +1700,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_bard",
+        "sourceRecordPath": "packages/surface/content/class_bard.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_bard"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_bard is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "Surface class container plus character-creation-runtime",
+          "evidence": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries."
     },
     {
       "id": "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
@@ -1662,10 +1769,12 @@
         "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_bard",
+        "sourceRecordPath": "packages/surface/content/class_bard.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_bard"
       },
       "characterCreationOwnership": {
@@ -1695,10 +1804,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_bard",
+        "sourceRecordPath": "packages/surface/content/class_bard.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_bard"
       },
       "characterCreationOwnership": {
@@ -1707,9 +1818,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_bard is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/bard:level-1:core-trait:bard_hit_point_die",
@@ -1729,10 +1851,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_bard",
+        "sourceRecordPath": "packages/surface/content/class_bard.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_bard"
       },
       "characterCreationOwnership": {
@@ -1741,9 +1865,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_bard is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/bard:level-1:core-trait:bard_primary_ability",
@@ -1763,10 +1898,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_bard",
+        "sourceRecordPath": "packages/surface/content/class_bard.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_bard"
       },
       "characterCreationOwnership": {
@@ -1775,9 +1912,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_bard is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/bard:level-1:core-trait:bard_saving_throw_proficiencies",
@@ -1797,10 +1945,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_bard",
+        "sourceRecordPath": "packages/surface/content/class_bard.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_bard"
       },
       "characterCreationOwnership": {
@@ -1809,9 +1959,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_bard is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/bard:level-1:core-trait:bard_skill_proficiencies",
@@ -1831,10 +1992,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_bard",
+        "sourceRecordPath": "packages/surface/content/class_bard.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_bard"
       },
       "characterCreationOwnership": {
@@ -1843,9 +2006,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_bard is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/bard:level-1:core-trait:bard_tool_proficiencies",
@@ -1865,10 +2039,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_bard",
+        "sourceRecordPath": "packages/surface/content/class_bard.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_bard"
       },
       "characterCreationOwnership": {
@@ -1877,9 +2053,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_bard is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/bard:level-1:core-trait:bard_weapon_proficiencies",
@@ -1899,10 +2086,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_bard",
+        "sourceRecordPath": "packages/surface/content/class_bard.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_bard"
       },
       "characterCreationOwnership": {
@@ -1911,9 +2100,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_bard is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/bard:level-1:equipment-pressure:bard_starting_equipment",
@@ -1933,10 +2133,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_bard",
+        "sourceRecordPath": "packages/surface/content/class_bard.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_bard"
       },
       "characterCreationOwnership": {
@@ -1945,9 +2147,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_bard is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/bard:level-1:multiclass-entry:bard_multiclass_entry_traits",
@@ -1967,10 +2180,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_bard",
+        "sourceRecordPath": "packages/surface/content/class_bard.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_bard"
       },
       "characterCreationOwnership": {
@@ -1979,9 +2194,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_bard is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/bard:level-1:spell-access:bard_spellcasting",
@@ -3090,15 +3316,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_cleric",
+        "sourceRecordPath": "packages/surface/content/class_cleric.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_cleric"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_cleric is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "Surface class container plus character-creation-runtime",
+          "evidence": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries."
     },
     {
       "id": "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
@@ -3146,10 +3385,12 @@
         "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_cleric",
+        "sourceRecordPath": "packages/surface/content/class_cleric.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_cleric"
       },
       "characterCreationOwnership": {
@@ -3179,10 +3420,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_cleric",
+        "sourceRecordPath": "packages/surface/content/class_cleric.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_cleric"
       },
       "characterCreationOwnership": {
@@ -3191,9 +3434,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/cleric:level-1:class-container:cleric_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_cleric is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/cleric:level-1:core-trait:cleric_hit_point_die",
@@ -3213,10 +3467,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_cleric",
+        "sourceRecordPath": "packages/surface/content/class_cleric.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_cleric"
       },
       "characterCreationOwnership": {
@@ -3225,9 +3481,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/cleric:level-1:class-container:cleric_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_cleric is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/cleric:level-1:core-trait:cleric_primary_ability",
@@ -3247,10 +3514,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_cleric",
+        "sourceRecordPath": "packages/surface/content/class_cleric.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_cleric"
       },
       "characterCreationOwnership": {
@@ -3259,9 +3528,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/cleric:level-1:class-container:cleric_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_cleric is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/cleric:level-1:core-trait:cleric_saving_throw_proficiencies",
@@ -3281,10 +3561,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_cleric",
+        "sourceRecordPath": "packages/surface/content/class_cleric.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_cleric"
       },
       "characterCreationOwnership": {
@@ -3293,9 +3575,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/cleric:level-1:class-container:cleric_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_cleric is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/cleric:level-1:core-trait:cleric_skill_proficiencies",
@@ -3315,10 +3608,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_cleric",
+        "sourceRecordPath": "packages/surface/content/class_cleric.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_cleric"
       },
       "characterCreationOwnership": {
@@ -3327,9 +3622,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/cleric:level-1:class-container:cleric_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_cleric is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/cleric:level-1:core-trait:cleric_weapon_proficiencies",
@@ -3349,10 +3655,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_cleric",
+        "sourceRecordPath": "packages/surface/content/class_cleric.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_cleric"
       },
       "characterCreationOwnership": {
@@ -3361,9 +3669,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/cleric:level-1:class-container:cleric_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_cleric is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/cleric:level-1:equipment-pressure:cleric_starting_equipment",
@@ -3383,10 +3702,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_cleric",
+        "sourceRecordPath": "packages/surface/content/class_cleric.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_cleric"
       },
       "characterCreationOwnership": {
@@ -3395,9 +3716,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/cleric:level-1:class-container:cleric_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_cleric is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/cleric:level-1:multiclass-entry:cleric_multiclass_entry_traits",
@@ -3417,10 +3749,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_cleric",
+        "sourceRecordPath": "packages/surface/content/class_cleric.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_cleric"
       },
       "characterCreationOwnership": {
@@ -3429,9 +3763,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/cleric:level-1:class-container:cleric_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_cleric is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/cleric:level-1:spell-access:cleric_spellcasting",
@@ -4168,15 +4513,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_druid",
+        "sourceRecordPath": "packages/surface/content/class_druid.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_druid"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_druid is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "Surface class container plus character-creation-runtime",
+          "evidence": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries."
     },
     {
       "id": "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
@@ -4252,10 +4610,12 @@
         "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_druid",
+        "sourceRecordPath": "packages/surface/content/class_druid.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_druid"
       },
       "characterCreationOwnership": {
@@ -4285,10 +4645,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_druid",
+        "sourceRecordPath": "packages/surface/content/class_druid.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_druid"
       },
       "characterCreationOwnership": {
@@ -4297,9 +4659,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_druid is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/druid:level-1:core-trait:druid_hit_point_die",
@@ -4319,10 +4692,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_druid",
+        "sourceRecordPath": "packages/surface/content/class_druid.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_druid"
       },
       "characterCreationOwnership": {
@@ -4331,9 +4706,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_druid is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/druid:level-1:core-trait:druid_primary_ability",
@@ -4353,10 +4739,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_druid",
+        "sourceRecordPath": "packages/surface/content/class_druid.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_druid"
       },
       "characterCreationOwnership": {
@@ -4365,9 +4753,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_druid is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/druid:level-1:core-trait:druid_saving_throw_proficiencies",
@@ -4387,10 +4786,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_druid",
+        "sourceRecordPath": "packages/surface/content/class_druid.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_druid"
       },
       "characterCreationOwnership": {
@@ -4399,9 +4800,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_druid is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/druid:level-1:core-trait:druid_skill_proficiencies",
@@ -4421,10 +4833,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_druid",
+        "sourceRecordPath": "packages/surface/content/class_druid.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_druid"
       },
       "characterCreationOwnership": {
@@ -4433,9 +4847,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_druid is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/druid:level-1:core-trait:druid_tool_proficiencies",
@@ -4455,10 +4880,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_druid",
+        "sourceRecordPath": "packages/surface/content/class_druid.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_druid"
       },
       "characterCreationOwnership": {
@@ -4467,9 +4894,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_druid is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/druid:level-1:core-trait:druid_weapon_proficiencies",
@@ -4489,10 +4927,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_druid",
+        "sourceRecordPath": "packages/surface/content/class_druid.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_druid"
       },
       "characterCreationOwnership": {
@@ -4501,9 +4941,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_druid is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/druid:level-1:equipment-pressure:druid_starting_equipment",
@@ -4523,10 +4974,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_druid",
+        "sourceRecordPath": "packages/surface/content/class_druid.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_druid"
       },
       "characterCreationOwnership": {
@@ -4535,9 +4988,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_druid is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/druid:level-1:multiclass-entry:druid_multiclass_entry_traits",
@@ -4557,10 +5021,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_druid",
+        "sourceRecordPath": "packages/surface/content/class_druid.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_druid"
       },
       "characterCreationOwnership": {
@@ -4569,9 +5035,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_druid is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/druid:level-1:spell-access:druid_spellcasting",
@@ -6100,15 +6577,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_monk",
+        "sourceRecordPath": "packages/surface/content/class_monk.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_monk"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_monk is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "Surface class container plus character-creation-runtime",
+          "evidence": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries."
     },
     {
       "id": "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
@@ -6186,10 +6676,12 @@
         "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_monk",
+        "sourceRecordPath": "packages/surface/content/class_monk.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_monk"
       },
       "characterCreationOwnership": {
@@ -6219,10 +6711,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_monk",
+        "sourceRecordPath": "packages/surface/content/class_monk.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_monk"
       },
       "characterCreationOwnership": {
@@ -6231,9 +6725,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_monk is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/monk:level-1:core-trait:monk_hit_point_die",
@@ -6253,10 +6758,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_monk",
+        "sourceRecordPath": "packages/surface/content/class_monk.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_monk"
       },
       "characterCreationOwnership": {
@@ -6265,9 +6772,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_monk is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/monk:level-1:core-trait:monk_primary_ability",
@@ -6287,10 +6805,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_monk",
+        "sourceRecordPath": "packages/surface/content/class_monk.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_monk"
       },
       "characterCreationOwnership": {
@@ -6299,9 +6819,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_monk is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/monk:level-1:core-trait:monk_saving_throw_proficiencies",
@@ -6321,10 +6852,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_monk",
+        "sourceRecordPath": "packages/surface/content/class_monk.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_monk"
       },
       "characterCreationOwnership": {
@@ -6333,9 +6866,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_monk is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/monk:level-1:core-trait:monk_skill_proficiencies",
@@ -6355,10 +6899,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_monk",
+        "sourceRecordPath": "packages/surface/content/class_monk.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_monk"
       },
       "characterCreationOwnership": {
@@ -6367,9 +6913,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_monk is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/monk:level-1:core-trait:monk_tool_proficiencies",
@@ -6389,10 +6946,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_monk",
+        "sourceRecordPath": "packages/surface/content/class_monk.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_monk"
       },
       "characterCreationOwnership": {
@@ -6401,9 +6960,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_monk is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/monk:level-1:core-trait:monk_weapon_proficiencies",
@@ -6423,10 +6993,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_monk",
+        "sourceRecordPath": "packages/surface/content/class_monk.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_monk"
       },
       "characterCreationOwnership": {
@@ -6435,9 +7007,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_monk is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/monk:level-1:equipment-pressure:monk_starting_equipment",
@@ -6457,10 +7040,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_monk",
+        "sourceRecordPath": "packages/surface/content/class_monk.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_monk"
       },
       "characterCreationOwnership": {
@@ -6469,9 +7054,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_monk is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/monk:level-1:multiclass-entry:monk_multiclass_entry_traits",
@@ -6491,10 +7087,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_monk",
+        "sourceRecordPath": "packages/surface/content/class_monk.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_monk"
       },
       "characterCreationOwnership": {
@@ -6503,9 +7101,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_monk is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/paladin:level-1:class-container:paladin_class_container",
@@ -6525,15 +7134,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_paladin",
+        "sourceRecordPath": "packages/surface/content/class_paladin.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_paladin"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_paladin is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "Surface class container plus character-creation-runtime",
+          "evidence": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries."
     },
     {
       "id": "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands",
@@ -6583,10 +7205,12 @@
         "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_paladin",
+        "sourceRecordPath": "packages/surface/content/class_paladin.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_paladin"
       },
       "characterCreationOwnership": {
@@ -6616,10 +7240,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_paladin",
+        "sourceRecordPath": "packages/surface/content/class_paladin.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_paladin"
       },
       "characterCreationOwnership": {
@@ -6628,9 +7254,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/paladin:level-1:class-container:paladin_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_paladin is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/paladin:level-1:core-trait:paladin_hit_point_die",
@@ -6650,10 +7287,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_paladin",
+        "sourceRecordPath": "packages/surface/content/class_paladin.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_paladin"
       },
       "characterCreationOwnership": {
@@ -6662,9 +7301,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/paladin:level-1:class-container:paladin_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_paladin is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/paladin:level-1:core-trait:paladin_primary_ability",
@@ -6684,10 +7334,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_paladin",
+        "sourceRecordPath": "packages/surface/content/class_paladin.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_paladin"
       },
       "characterCreationOwnership": {
@@ -6696,9 +7348,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/paladin:level-1:class-container:paladin_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_paladin is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/paladin:level-1:core-trait:paladin_saving_throw_proficiencies",
@@ -6718,10 +7381,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_paladin",
+        "sourceRecordPath": "packages/surface/content/class_paladin.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_paladin"
       },
       "characterCreationOwnership": {
@@ -6730,9 +7395,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/paladin:level-1:class-container:paladin_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_paladin is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/paladin:level-1:core-trait:paladin_skill_proficiencies",
@@ -6752,10 +7428,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_paladin",
+        "sourceRecordPath": "packages/surface/content/class_paladin.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_paladin"
       },
       "characterCreationOwnership": {
@@ -6764,9 +7442,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/paladin:level-1:class-container:paladin_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_paladin is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/paladin:level-1:core-trait:paladin_weapon_proficiencies",
@@ -6786,10 +7475,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_paladin",
+        "sourceRecordPath": "packages/surface/content/class_paladin.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_paladin"
       },
       "characterCreationOwnership": {
@@ -6798,9 +7489,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/paladin:level-1:class-container:paladin_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_paladin is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/paladin:level-1:equipment-pressure:paladin_starting_equipment",
@@ -6820,10 +7522,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_paladin",
+        "sourceRecordPath": "packages/surface/content/class_paladin.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_paladin"
       },
       "characterCreationOwnership": {
@@ -6832,9 +7536,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/paladin:level-1:class-container:paladin_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_paladin is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/paladin:level-1:mastery-pressure:paladin_weapon_mastery",
@@ -6882,10 +7597,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_paladin",
+        "sourceRecordPath": "packages/surface/content/class_paladin.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_paladin"
       },
       "characterCreationOwnership": {
@@ -6894,9 +7611,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/paladin:level-1:class-container:paladin_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_paladin is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/paladin:level-1:spell-access:paladin_spellcasting",
@@ -7349,15 +8077,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_ranger",
+        "sourceRecordPath": "packages/surface/content/class_ranger.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_ranger"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_ranger is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "Surface class container plus character-creation-runtime",
+          "evidence": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries."
     },
     {
       "id": "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy",
@@ -7405,10 +8146,12 @@
         "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_ranger",
+        "sourceRecordPath": "packages/surface/content/class_ranger.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_ranger"
       },
       "characterCreationOwnership": {
@@ -7438,10 +8181,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_ranger",
+        "sourceRecordPath": "packages/surface/content/class_ranger.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_ranger"
       },
       "characterCreationOwnership": {
@@ -7450,9 +8195,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/ranger:level-1:class-container:ranger_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_ranger is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/ranger:level-1:core-trait:ranger_hit_point_die",
@@ -7472,10 +8228,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_ranger",
+        "sourceRecordPath": "packages/surface/content/class_ranger.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_ranger"
       },
       "characterCreationOwnership": {
@@ -7484,9 +8242,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/ranger:level-1:class-container:ranger_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_ranger is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/ranger:level-1:core-trait:ranger_primary_ability",
@@ -7506,10 +8275,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_ranger",
+        "sourceRecordPath": "packages/surface/content/class_ranger.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_ranger"
       },
       "characterCreationOwnership": {
@@ -7518,9 +8289,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/ranger:level-1:class-container:ranger_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_ranger is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/ranger:level-1:core-trait:ranger_saving_throw_proficiencies",
@@ -7540,10 +8322,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_ranger",
+        "sourceRecordPath": "packages/surface/content/class_ranger.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_ranger"
       },
       "characterCreationOwnership": {
@@ -7552,9 +8336,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/ranger:level-1:class-container:ranger_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_ranger is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/ranger:level-1:core-trait:ranger_skill_proficiencies",
@@ -7574,10 +8369,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_ranger",
+        "sourceRecordPath": "packages/surface/content/class_ranger.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_ranger"
       },
       "characterCreationOwnership": {
@@ -7586,9 +8383,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/ranger:level-1:class-container:ranger_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_ranger is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/ranger:level-1:core-trait:ranger_weapon_proficiencies",
@@ -7608,10 +8416,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_ranger",
+        "sourceRecordPath": "packages/surface/content/class_ranger.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_ranger"
       },
       "characterCreationOwnership": {
@@ -7620,9 +8430,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/ranger:level-1:class-container:ranger_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_ranger is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/ranger:level-1:equipment-pressure:ranger_starting_equipment",
@@ -7642,10 +8463,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_ranger",
+        "sourceRecordPath": "packages/surface/content/class_ranger.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_ranger"
       },
       "characterCreationOwnership": {
@@ -7654,9 +8477,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/ranger:level-1:class-container:ranger_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_ranger is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/ranger:level-1:mastery-pressure:ranger_weapon_mastery",
@@ -7704,10 +8538,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_ranger",
+        "sourceRecordPath": "packages/surface/content/class_ranger.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_ranger"
       },
       "characterCreationOwnership": {
@@ -7716,9 +8552,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/ranger:level-1:class-container:ranger_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_ranger is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/ranger:level-1:spell-access:ranger_spellcasting",
@@ -8172,15 +9019,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_rogue",
+        "sourceRecordPath": "packages/surface/content/class_rogue.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_rogue"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_rogue is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "Surface class container plus character-creation-runtime",
+          "evidence": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries."
     },
     {
       "id": "srd521:classes/rogue:level-1:class-feature-grant:rogue_expertise",
@@ -8297,10 +9157,12 @@
         "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_rogue",
+        "sourceRecordPath": "packages/surface/content/class_rogue.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_rogue"
       },
       "characterCreationOwnership": {
@@ -8330,10 +9192,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_rogue",
+        "sourceRecordPath": "packages/surface/content/class_rogue.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_rogue"
       },
       "characterCreationOwnership": {
@@ -8342,9 +9206,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_rogue is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/rogue:level-1:core-trait:rogue_hit_point_die",
@@ -8364,10 +9239,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_rogue",
+        "sourceRecordPath": "packages/surface/content/class_rogue.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_rogue"
       },
       "characterCreationOwnership": {
@@ -8376,9 +9253,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_rogue is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/rogue:level-1:core-trait:rogue_primary_ability",
@@ -8398,10 +9286,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_rogue",
+        "sourceRecordPath": "packages/surface/content/class_rogue.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_rogue"
       },
       "characterCreationOwnership": {
@@ -8410,9 +9300,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_rogue is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/rogue:level-1:core-trait:rogue_saving_throw_proficiencies",
@@ -8432,10 +9333,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_rogue",
+        "sourceRecordPath": "packages/surface/content/class_rogue.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_rogue"
       },
       "characterCreationOwnership": {
@@ -8444,9 +9347,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_rogue is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/rogue:level-1:core-trait:rogue_skill_proficiencies",
@@ -8466,10 +9380,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_rogue",
+        "sourceRecordPath": "packages/surface/content/class_rogue.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_rogue"
       },
       "characterCreationOwnership": {
@@ -8478,9 +9394,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_rogue is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/rogue:level-1:core-trait:rogue_tool_proficiencies",
@@ -8500,10 +9427,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_rogue",
+        "sourceRecordPath": "packages/surface/content/class_rogue.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_rogue"
       },
       "characterCreationOwnership": {
@@ -8512,9 +9441,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_rogue is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/rogue:level-1:core-trait:rogue_weapon_proficiencies",
@@ -8534,10 +9474,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_rogue",
+        "sourceRecordPath": "packages/surface/content/class_rogue.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_rogue"
       },
       "characterCreationOwnership": {
@@ -8546,9 +9488,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_rogue is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/rogue:level-1:equipment-pressure:rogue_starting_equipment",
@@ -8568,10 +9521,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_rogue",
+        "sourceRecordPath": "packages/surface/content/class_rogue.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_rogue"
       },
       "characterCreationOwnership": {
@@ -8580,9 +9535,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_rogue is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/rogue:level-1:mastery-pressure:rogue_weapon_mastery",
@@ -8630,10 +9596,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_rogue",
+        "sourceRecordPath": "packages/surface/content/class_rogue.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_rogue"
       },
       "characterCreationOwnership": {
@@ -8642,9 +9610,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_rogue is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container",
@@ -8664,15 +9643,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_sorcerer",
+        "sourceRecordPath": "packages/surface/content/class_sorcerer.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_sorcerer"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_sorcerer is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "Surface class container plus character-creation-runtime",
+          "evidence": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Class-container admission must not stand in for every class fact; keep using narrower trait, feature, spell-access, equipment, mastery, and multiclass rows where applicable as executable evidence boundaries."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
@@ -8720,10 +9712,12 @@
         "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_sorcerer",
+        "sourceRecordPath": "packages/surface/content/class_sorcerer.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_sorcerer"
       },
       "characterCreationOwnership": {
@@ -8753,10 +9747,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_sorcerer",
+        "sourceRecordPath": "packages/surface/content/class_sorcerer.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_sorcerer"
       },
       "characterCreationOwnership": {
@@ -8765,9 +9761,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_sorcerer is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_hit_point_die",
@@ -8787,10 +9794,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_sorcerer",
+        "sourceRecordPath": "packages/surface/content/class_sorcerer.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_sorcerer"
       },
       "characterCreationOwnership": {
@@ -8799,9 +9808,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_sorcerer is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_primary_ability",
@@ -8821,10 +9841,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_sorcerer",
+        "sourceRecordPath": "packages/surface/content/class_sorcerer.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_sorcerer"
       },
       "characterCreationOwnership": {
@@ -8833,9 +9855,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_sorcerer is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_saving_throw_proficiencies",
@@ -8855,10 +9888,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_sorcerer",
+        "sourceRecordPath": "packages/surface/content/class_sorcerer.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_sorcerer"
       },
       "characterCreationOwnership": {
@@ -8867,9 +9902,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_sorcerer is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_skill_proficiencies",
@@ -8889,10 +9935,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_sorcerer",
+        "sourceRecordPath": "packages/surface/content/class_sorcerer.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_sorcerer"
       },
       "characterCreationOwnership": {
@@ -8901,9 +9949,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_sorcerer is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_weapon_proficiencies",
@@ -8923,10 +9982,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_sorcerer",
+        "sourceRecordPath": "packages/surface/content/class_sorcerer.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_sorcerer"
       },
       "characterCreationOwnership": {
@@ -8935,9 +9996,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_sorcerer is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:equipment-pressure:sorcerer_starting_equipment",
@@ -8957,10 +10029,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_sorcerer",
+        "sourceRecordPath": "packages/surface/content/class_sorcerer.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_sorcerer"
       },
       "characterCreationOwnership": {
@@ -8969,9 +10043,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_sorcerer is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:multiclass-entry:sorcerer_multiclass_entry_traits",
@@ -8991,10 +10076,12 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "class_sorcerer",
+        "sourceRecordPath": "packages/surface/content/class_sorcerer.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "class_sorcerer"
       },
       "characterCreationOwnership": {
@@ -9003,9 +10090,20 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Do not author a standalone record for this character-creation fact; author the SRD class container record and let row-level character-creation evidence come from runtime support-profile coverage."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_sorcerer is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:spell-access:sorcerer_spellcasting",
