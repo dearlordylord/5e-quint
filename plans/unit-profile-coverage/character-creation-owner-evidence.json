@@ -2111,6 +2111,208 @@
       "tests": [
         "packages/character-creation-runtime/src/index.test.ts:finalizes Wizard 1 spellcasting build facts from selected spell access"
       ]
+    },
+    "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration": {
+      "taskId": "SRDINV18",
+      "profile": "level-1 Bard class-feature support profile",
+      "summary": "Bardic Inspiration is retained through the finalized CharacterBuild feature Unit refs for supported Bard progressions; executable feature behavior remains owned by downstream feature/runtime projections.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
+      ]
+    },
+    "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order": {
+      "taskId": "SRDINV18",
+      "profile": "level-1 Cleric class-feature support profile",
+      "summary": "Divine Order is discovered as a class-feature acquisition choice, support-gated to Protector in the current profile, finalized from the selected option, and projected into CharacterBuild weapon and armor-training facts.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:classFeatureGrantChoiceHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:supportedFinalizationChoiceHoles"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildProficiencies",
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildArmorTraining"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:finalizes supported level-1 class-feature acquisition choices"
+      ]
+    },
+    "srd521:classes/druid:level-1:class-feature-grant:druid_druidic": {
+      "taskId": "SRDINV18",
+      "profile": "level-1 Druid class-feature support profile",
+      "summary": "Druidic is retained through the finalized CharacterBuild feature Unit refs for supported Druid progressions; executable feature behavior remains owned by downstream feature/runtime projections.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
+      ]
+    },
+    "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order": {
+      "taskId": "SRDINV18",
+      "profile": "level-1 Druid class-feature support profile",
+      "summary": "Primal Order is discovered as a class-feature acquisition choice, support-gated to Warden in the current profile, finalized from the selected option, and projected into CharacterBuild weapon and armor-training facts.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:classFeatureGrantChoiceHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:supportedFinalizationChoiceHoles"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildProficiencies",
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildArmorTraining"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:finalizes supported level-1 class-feature acquisition choices"
+      ]
+    },
+    "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts": {
+      "taskId": "SRDINV18",
+      "profile": "level-1 Monk class-feature support profile",
+      "summary": "Martial Arts is retained through the finalized CharacterBuild feature Unit refs for supported Monk progressions; executable feature behavior remains owned by downstream feature/runtime projections.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
+      ]
+    },
+    "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy": {
+      "taskId": "SRDINV18",
+      "profile": "level-1 Ranger class-feature support profile",
+      "summary": "Favored Enemy is retained through the finalized CharacterBuild feature Unit refs for supported Ranger progressions; executable feature behavior remains owned by downstream feature/runtime projections.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
+      ]
+    },
+    "srd521:classes/rogue:level-1:class-feature-grant:rogue_expertise": {
+      "taskId": "SRDINV18",
+      "profile": "level-1 Rogue class-feature support profile",
+      "summary": "Rogue Expertise is discovered from the grant-expertise acquisition choice over owned skill proficiencies, finalized from selected skills, and projected into CharacterBuild Expertise evidence.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:classFeatureGrantChoiceHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:supportedFinalizationChoiceHoles"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildProficiencies"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:finalizes supported level-1 class-feature acquisition choices"
+      ]
+    },
+    "srd521:classes/rogue:level-1:class-feature-grant:rogue_thieves_cant": {
+      "taskId": "SRDINV18",
+      "profile": "level-1 Rogue class-feature support profile",
+      "summary": "Thieves' Cant is retained through the finalized CharacterBuild feature Unit refs for supported Rogue progressions; executable feature behavior remains owned by downstream feature/runtime projections.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
+      ]
+    },
+    "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery": {
+      "taskId": "SRDINV18",
+      "profile": "level-1 Sorcerer class-feature support profile",
+      "summary": "Innate Sorcery is retained through the finalized CharacterBuild feature Unit refs for supported Sorcerer progressions; executable feature behavior remains owned by downstream feature/runtime projections.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
+      ]
+    },
+    "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic": {
+      "taskId": "SRDINV18",
+      "profile": "level-1 Warlock class-feature support profile",
+      "summary": "Pact Magic is retained through the finalized CharacterBuild feature Unit refs for supported Warlock progressions; executable feature behavior remains owned by downstream feature/runtime projections.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
+      ]
     }
   }
 }

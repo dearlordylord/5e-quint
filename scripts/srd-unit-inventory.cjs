@@ -73,6 +73,15 @@ const ownerEvidenceRequired = new Map([
     },
   ],
   [
+    "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations",
+    {
+      owner:
+        "character-creation-runtime plus future Eldritch Invocation option catalog",
+      requirement:
+        "Character creation retains the Eldritch Invocations feature Unit reference, but feature-choice owner evidence still requires discoverable invocation option Units before fill, finalization, and build projection can be completed without treating a retained ref as choice evidence.",
+    },
+  ],
+  [
     "srd521:classes/wizard:level-1:class-feature-grant:wizard_ritual_adept",
     {
       owner: "future spell-access/invocation runtime",

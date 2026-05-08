@@ -1917,6 +1917,7 @@ describe("character creation finalization", () => {
     ).toEqual({
       savingThrows: ["str", "con"],
       skills: ["athletics", "intimidation", "perception", "survival"],
+      expertise: [],
       weapon: ["simple", "martial"],
       weaponPropertyFilters: [],
       tools: ["tool_dice_set"],
@@ -2056,8 +2057,12 @@ describe("character creation finalization", () => {
         classFacts.savingThrowProficiencies,
       );
       expect(proficiencies.weapon).toEqual(
-        classFacts.weaponProficiencies.flatMap((proficiency) =>
-          proficiency.kind === "weapon_category" ? [proficiency.category] : [],
+        expect.arrayContaining(
+          classFacts.weaponProficiencies.flatMap((proficiency) =>
+            proficiency.kind === "weapon_category"
+              ? [proficiency.category]
+              : [],
+          ),
         ),
       );
       expect(proficiencies.weaponPropertyFilters).toEqual(
@@ -2084,7 +2089,14 @@ describe("character creation finalization", () => {
       });
       expect(
         expectRight(characterBuildArmorTraining(result.build, unitLibrary)),
-      ).toEqual(classFacts.armorTraining);
+      ).toEqual(expect.arrayContaining([...classFacts.armorTraining]));
+      expect(characterBuildFeatureUnitIds(result.build, unitLibrary)).toEqual(
+        expect.arrayContaining(
+          classFacts.featureGrants
+            .filter((grant) => grant.level <= 1)
+            .map((grant) => grant.unitId),
+        ),
+      );
       expect(
         selectedChoiceOptionIds(draft, classUnitId, "class_equipment_choice"),
       ).toHaveLength(1);
@@ -2092,6 +2104,74 @@ describe("character creation finalization", () => {
         draft.selections.equipment?.selectedUnitIds,
       );
     }
+  });
+
+  test("finalizes supported level-1 class-feature acquisition choices", () => {
+    const cleric = completeSupportedProgressionDraft({
+      draftId: "draft:srd-level-1-cleric-feature-choices",
+      progression: testProgression("class_cleric", 1),
+    });
+    const druid = completeSupportedProgressionDraft({
+      draftId: "draft:srd-level-1-druid-feature-choices",
+      progression: testProgression("class_druid", 1),
+    });
+    const rogue = completeSupportedProgressionDraft({
+      draftId: "draft:srd-level-1-rogue-feature-choices",
+      progression: testProgression("class_rogue", 1),
+    });
+
+    expect(
+      selectedChoiceOptionIds(cleric, "cleric_divine_order", "divine_order"),
+    ).toEqual(["protector"]);
+    expect(
+      selectedChoiceOptionIds(druid, "druid_primal_order", "primal_order"),
+    ).toEqual(["warden"]);
+    expect(
+      selectedChoiceOptionIds(
+        rogue,
+        "rogue_expertise",
+        "class_feature_proficiency_choice",
+      ),
+    ).toHaveLength(2);
+
+    const clericBuild = finalizeCharacterDraft({ draft: cleric, unitLibrary });
+    const druidBuild = finalizeCharacterDraft({ draft: druid, unitLibrary });
+    const rogueBuild = finalizeCharacterDraft({ draft: rogue, unitLibrary });
+    expect(clericBuild.tag).toBe("ready");
+    expect(druidBuild.tag).toBe("ready");
+    expect(rogueBuild.tag).toBe("ready");
+    if (
+      clericBuild.tag !== "ready" ||
+      druidBuild.tag !== "ready" ||
+      rogueBuild.tag !== "ready"
+    ) {
+      return;
+    }
+
+    expect(
+      expectRight(characterBuildProficiencies(clericBuild.build, unitLibrary))
+        .weapon,
+    ).toContain("martial");
+    expect(
+      expectRight(characterBuildArmorTraining(clericBuild.build, unitLibrary)),
+    ).toContain("heavy");
+    expect(
+      expectRight(characterBuildProficiencies(druidBuild.build, unitLibrary))
+        .weapon,
+    ).toContain("martial");
+    expect(
+      expectRight(characterBuildArmorTraining(druidBuild.build, unitLibrary)),
+    ).toContain("medium");
+    expect(
+      expectRight(characterBuildProficiencies(rogueBuild.build, unitLibrary))
+        .expertise,
+    ).toEqual(
+      selectedChoiceOptionIds(
+        rogue,
+        "rogue_expertise",
+        "class_feature_proficiency_choice",
+      ),
+    );
   });
 
   test("rejects over-cap parsed ability scores without throwing during finalization", () => {

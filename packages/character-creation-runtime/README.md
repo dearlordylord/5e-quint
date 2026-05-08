@@ -101,6 +101,8 @@ This package supports these character-creation profiles:
 - level-2 Fighter progression and supported level-2 multiclass-entry
   progression facts;
 - level-1 Wizard spellcasting creation facts;
+- retained SRD level-1 class-feature Unit refs, plus supported acquisition
+  choices for Divine Order, Primal Order, and Rogue Expertise;
 - Orc species;
 - Soldier background;
 - Standard Array ability assignment;
@@ -151,7 +153,8 @@ more legal Units and options.
 
 The finalized `CharacterBuild` carries Character Progression, origin identity,
 final ability scores, selected proficiency evidence, selected class-choice Unit
-refs, source-scoped spellcasting choices, owned equipment, and initial loadout.
+refs, selected Expertise evidence, source-scoped spellcasting choices, owned
+equipment, and initial loadout.
 It deliberately does not store class feature grant lists, background origin
 feat, species traits, Hit Point maximum, Hit Dice totals, total proficiencies,
 armor training, activation resources, or global spell slot capacity when those

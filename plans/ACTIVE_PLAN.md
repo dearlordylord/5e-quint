@@ -220,7 +220,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 187,
       "id": "SRDINV18",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Character-Creation Class Feature Evidence"
     },
     {
@@ -240,6 +240,12 @@ Keep it synchronized with the DAG table and task details.
       "id": "SRDINV21",
       "status": "blocked",
       "title": "Recursive SRD Inventory Planning Review"
+    },
+    {
+      "number": 191,
+      "id": "SRDINV18A",
+      "status": "ready-for-research",
+      "title": "Close Eldritch Invocation Choice Evidence"
     }
   ]
 }
@@ -305,10 +311,11 @@ Keep it synchronized with the DAG table and task details.
 | 184   | SRDINV15 - Author Level-1 Weapon Mastery Records | done | SRDINV12 | SRDINV16 | [SRDINV11 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV11_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [SRD Classes](/workspace/typescript/dnd/.references/srd-5.2.1/Classes), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed Barbarian, Paladin, Ranger, and Rogue Weapon Mastery records as character-sheet choice facts; mastery property runtime behavior remains separate. |
 | 185   | SRDINV16 - Recursive SRD Inventory Planning Review | done | SRDINV12-SRDINV15 | SRDINV17-SRDINV21 | [SRDINV16 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed recursive planning review: level-1 remains open with 121 owner-evidence-required rows, so the next batch is character-creation owner-evidence closure plus SRDINV21 review. |
 | 186   | SRDINV17 - Close Character-Creation Class Container Evidence | done | SRDINV16 | SRDINV18-SRDINV21 | [SRDINV16 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [character-creation owner evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/character-creation-owner-evidence.json), [character-creation runtime README](/workspace/typescript/dnd/packages/character-creation-runtime/README.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed character-creation owner evidence for authored class containers, core traits, starting equipment, and multiclass-entry facts without creating standalone duplicate records. |
-| 187   | SRDINV18 - Close Character-Creation Class Feature Evidence | ready-for-research | SRDINV17 | SRDINV21 | [SRDINV16 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [character-creation owner evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/character-creation-owner-evidence.json), [character-creation runtime README](/workspace/typescript/dnd/packages/character-creation-runtime/README.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Close character-creation owner evidence for authored level-1 class feature records that are retained on CharacterBuilds or discovered as choices. |
+| 187   | SRDINV18 - Close Character-Creation Class Feature Evidence | done | SRDINV17 | SRDINV18A, SRDINV21 | [SRDINV16 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [character-creation owner evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/character-creation-owner-evidence.json), [character-creation runtime README](/workspace/typescript/dnd/packages/character-creation-runtime/README.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed character-creation owner evidence for retained level-1 class-feature refs and implemented supported acquisition choices for Divine Order, Primal Order, and Rogue Expertise. Eldritch Invocation feature-choice evidence remains split into SRDINV18A because retained feature refs cannot prove invocation option discovery/fill/finalization. |
 | 188   | SRDINV19 - Close Character-Creation Spell Access Evidence | ready-for-research | SRDINV17 | SRDINV21 | [SRDINV16 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [character-creation owner evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/character-creation-owner-evidence.json), [character-creation runtime README](/workspace/typescript/dnd/packages/character-creation-runtime/README.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Close character-creation owner evidence for non-Wizard level-1 Spell Access records without admitting individual Spell Definitions as runtime-supported. |
 | 189   | SRDINV20 - Close Character-Creation Weapon Mastery Evidence | ready-for-research | SRDINV17 | SRDINV21 | [SRDINV16 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [character-creation owner evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/character-creation-owner-evidence.json), [character-creation runtime README](/workspace/typescript/dnd/packages/character-creation-runtime/README.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Close character-creation owner evidence for Barbarian, Paladin, Ranger, and Rogue Weapon Mastery choices while leaving mastery property execution separate. |
-| 190   | SRDINV21 - Recursive SRD Inventory Planning Review | blocked | SRDINV17-SRDINV20 | none | [SRDINV16 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review SRDINV17-SRDINV20 owner-evidence closure, refresh inventory metrics, and append the next concrete batch unless level-1 inventory is explicitly complete. |
+| 190   | SRDINV21 - Recursive SRD Inventory Planning Review | blocked | SRDINV17-SRDINV20, SRDINV18A | none | [SRDINV16 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review SRDINV17-SRDINV20 plus SRDINV18A owner-evidence closure, refresh inventory metrics, and append the next concrete batch unless level-1 inventory is explicitly complete. |
+| 191   | SRDINV18A - Close Eldritch Invocation Choice Evidence | ready-for-research | SRDINV18 | SRDINV21 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [character-creation owner evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/character-creation-owner-evidence.json), [Warlock SRD](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [character-creation runtime README](/workspace/typescript/dnd/packages/character-creation-runtime/README.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Close Warlock Eldritch Invocations as actual feature-choice evidence by adding a durable invocation option catalog/discovery path and character-creation fill, finalization, build projection, manifest, and inventory evidence without treating the retained feature Unit ref as sufficient. |
 
 ## Task Details
 
@@ -1434,11 +1441,11 @@ production code changes; `/simplify` convergence.
 
 ### Task 187 - SRDINV18 - Close Character-Creation Class Feature Evidence
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV17
 
-Blocks: SRDINV21
+Blocks: SRDINV18A, SRDINV21
 
 Research / plan:
 [SRDINV16_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV16_RECURSIVE_PLANNING_REVIEW.md),
@@ -1468,13 +1475,33 @@ projection; update the owner evidence manifest; regenerate inventory; `pnpm
 unit-profile-coverage:check`; package-local typecheck/tests for touched runtime
 code; `pnpm quality` if production code changes; `/simplify` convergence.
 
-Retry Guidance: do not mark choice-bearing class-feature rows as owner-evidence
-present from retained `CharacterBuild` Unit refs alone. Either implement and
-test real discovery, fill, finalization, and build projection for their
-acquisition choices (`suborder_choice`, `grant_expertise`, and
-`feature_choice`), or split retained-ref evidence from still-open choice
-evidence with concrete follow-up task coverage before updating the manifest and
-inventory.
+Completed scope: closed character-creation owner evidence for retained
+level-1 class-feature Unit refs and implemented supported acquisition-choice
+evidence for Divine Order, Primal Order, and Rogue Expertise. Bardic
+Inspiration, Druidic, Martial Arts, Favored Enemy, Thieves' Cant, Innate
+Sorcery, and Pact Magic are retained through finalized `CharacterBuild`
+feature Unit refs for supported progressions; executable feature behavior
+remains downstream runtime work.
+
+Narrowed scope: Warlock Eldritch Invocations remains open for feature-choice
+evidence because the current character-creation boundary has no durable
+invocation option catalog to discover, fill, finalize, and project. SRDINV18A
+keeps that work runnable and dependency-ordered.
+
+Verification completed: local SRD class-feature passages and
+`UBIQUITOUS_LANGUAGE.md` were checked; focused character-creation tests cover
+discovery, fill, finalization, and build projection for the supported class
+feature choices; the owner evidence manifest and generated inventory were
+updated; package-local typecheck/tests, `pnpm unit-profile-coverage:check`,
+`pnpm quality`, and two `/simplify` rounds passed.
+
+`/simplify` round 1: retained the candidate split that does not count
+Eldritch Invocations choice evidence from a retained feature Unit ref, and
+added SRDINV18A as the explicit executable follow-up.
+
+`/simplify` round 2: no further task-scope changes found; the remaining
+choice-bearing class-feature work is isolated to the invocation option catalog
+rather than mixed into Spell Access, Weapon Mastery, or combat execution.
 
 ### Task 188 - SRDINV19 - Close Character-Creation Spell Access Evidence
 
@@ -1549,7 +1576,7 @@ code; `pnpm quality` if production code changes; `/simplify` convergence.
 
 Status: `blocked`
 
-Depends on: SRDINV17-SRDINV20
+Depends on: SRDINV17-SRDINV20, SRDINV18A
 
 Blocks: none
 
@@ -1559,7 +1586,7 @@ Research / plan:
 [SRDINV_RALPH_BATCH_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md),
 [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
 
-Scope: review SRDINV17-SRDINV20 owner-evidence closure, refresh generated
+Scope: review SRDINV17-SRDINV20 plus SRDINV18A owner-evidence closure, refresh generated
 inventory metrics, and append the next concrete multi-task batch unless SRD
 level-1 inventory is explicitly complete. Remaining candidates include shared
 multiclass prerequisite owner evidence, Wizard Ritual Adept spell-invocation
@@ -1576,3 +1603,40 @@ details; regenerated inventory; `pnpm unit-profile-coverage:check`; confirm
 the appended result is either explicit level-1 completion with final metrics or
 a concrete multi-task batch, not a recursive-only placeholder; `/simplify`
 convergence, minimum two rounds unless the final changeset is trivial.
+
+### Task 191 - SRDINV18A - Close Eldritch Invocation Choice Evidence
+
+Status: `ready-for-research`
+
+Depends on: SRDINV18
+
+Blocks: SRDINV21
+
+Research / plan:
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[character-creation-owner-evidence.json](/workspace/typescript/dnd/plans/unit-profile-coverage/character-creation-owner-evidence.json),
+[Warlock.md](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md),
+[character-creation-runtime README](/workspace/typescript/dnd/packages/character-creation-runtime/README.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: close Warlock Eldritch Invocations as actual character-creation
+feature-choice evidence by adding a durable invocation option catalog/discovery
+path and character-creation fill, finalization, build projection, manifest,
+and inventory evidence. The implementation must keep retained feature Unit refs
+separate from invocation option ownership so `warlock_eldritch_invocations`
+cannot be marked owner-evidence-present from catalog admission or retained
+feature refs alone.
+
+Out of scope: Wizard Ritual Adept invocation runtime, battle-runtime behavior,
+spell runtime, Spell Access evidence from SRDINV19, Weapon Mastery evidence
+from SRDINV20, QNT/MBT work, PHB/XPHB content, and treating invocation option
+execution as character-creation evidence.
+
+Verification: read Warlock Eldritch Invocations and the relevant local SRD
+invocation option passages; check `UBIQUITOUS_LANGUAGE.md` for Class Feature,
+Character Sheet, Spell Access, and any invocation terms touched; focused
+character-creation tests for invocation option discovery, fill, finalization,
+and build projection; update the owner evidence manifest; regenerate inventory;
+`pnpm unit-profile-coverage:check`; package-local typecheck/tests for touched
+runtime code; `pnpm quality` if production code changes; `/simplify`
+convergence.

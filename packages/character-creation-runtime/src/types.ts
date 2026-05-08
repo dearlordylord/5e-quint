@@ -108,6 +108,8 @@ export const UNIT_CHOICE_KEYS = [
   "class_feature_feat_choice",
   "class_feature_ability_score_increase_choice",
   "class_feature_proficiency_choice",
+  "divine_order",
+  "primal_order",
   "bard_multiclass_skill_proficiency",
   "bard_multiclass_musical_instrument_proficiency",
   "ranger_multiclass_skill_proficiency",
@@ -958,6 +960,7 @@ export type CharacterBuildHitDiePool = {
 export type CharacterBuildProficiencies = {
   readonly savingThrows: readonly Ability[];
   readonly skills: readonly Skill[];
+  readonly expertise: readonly Skill[];
   readonly weapon: readonly WeaponProficiencyCategory[];
   readonly weaponPropertyFilters: readonly Extract<
     WeaponProficiency,
@@ -968,6 +971,7 @@ export type CharacterBuildProficiencies = {
 
 export type CharacterBuildProficiencyChoiceSubject =
   | { readonly kind: "skill"; readonly skill: Skill }
+  | { readonly kind: "skill_expertise"; readonly skill: Skill }
   | {
       readonly kind: "weapon_category";
       readonly category: WeaponProficiencyCategory;

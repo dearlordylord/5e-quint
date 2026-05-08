@@ -15,6 +15,7 @@
         "srd521:classes/barbarian:level-1:equipment-pressure:barbarian_starting_equipment",
         "srd521:classes/barbarian:level-1:multiclass-entry:barbarian_multiclass_entry_traits",
         "srd521:classes/bard:level-1:class-container:bard_class_container",
+        "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
         "srd521:classes/bard:level-1:core-trait:bard_armor_training",
         "srd521:classes/bard:level-1:core-trait:bard_hit_point_die",
         "srd521:classes/bard:level-1:core-trait:bard_saving_throw_proficiencies",
@@ -24,6 +25,7 @@
         "srd521:classes/bard:level-1:equipment-pressure:bard_starting_equipment",
         "srd521:classes/bard:level-1:multiclass-entry:bard_multiclass_entry_traits",
         "srd521:classes/cleric:level-1:class-container:cleric_class_container",
+        "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
         "srd521:classes/cleric:level-1:core-trait:cleric_armor_training",
         "srd521:classes/cleric:level-1:core-trait:cleric_hit_point_die",
         "srd521:classes/cleric:level-1:core-trait:cleric_saving_throw_proficiencies",
@@ -32,6 +34,8 @@
         "srd521:classes/cleric:level-1:equipment-pressure:cleric_starting_equipment",
         "srd521:classes/cleric:level-1:multiclass-entry:cleric_multiclass_entry_traits",
         "srd521:classes/druid:level-1:class-container:druid_class_container",
+        "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
+        "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order",
         "srd521:classes/druid:level-1:core-trait:druid_armor_training",
         "srd521:classes/druid:level-1:core-trait:druid_hit_point_die",
         "srd521:classes/druid:level-1:core-trait:druid_saving_throw_proficiencies",
@@ -51,6 +55,7 @@
         "srd521:classes/fighter:level-1:mastery-pressure:fighter_weapon_mastery",
         "srd521:classes/fighter:level-1:multiclass-entry:fighter_multiclass_entry_traits",
         "srd521:classes/monk:level-1:class-container:monk_class_container",
+        "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
         "srd521:classes/monk:level-1:core-trait:monk_armor_training",
         "srd521:classes/monk:level-1:core-trait:monk_hit_point_die",
         "srd521:classes/monk:level-1:core-trait:monk_saving_throw_proficiencies",
@@ -68,6 +73,7 @@
         "srd521:classes/paladin:level-1:equipment-pressure:paladin_starting_equipment",
         "srd521:classes/paladin:level-1:multiclass-entry:paladin_multiclass_entry_traits",
         "srd521:classes/ranger:level-1:class-container:ranger_class_container",
+        "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy",
         "srd521:classes/ranger:level-1:core-trait:ranger_armor_training",
         "srd521:classes/ranger:level-1:core-trait:ranger_hit_point_die",
         "srd521:classes/ranger:level-1:core-trait:ranger_saving_throw_proficiencies",
@@ -76,6 +82,8 @@
         "srd521:classes/ranger:level-1:equipment-pressure:ranger_starting_equipment",
         "srd521:classes/ranger:level-1:multiclass-entry:ranger_multiclass_entry_traits",
         "srd521:classes/rogue:level-1:class-container:rogue_class_container",
+        "srd521:classes/rogue:level-1:class-feature-grant:rogue_expertise",
+        "srd521:classes/rogue:level-1:class-feature-grant:rogue_thieves_cant",
         "srd521:classes/rogue:level-1:core-trait:rogue_armor_training",
         "srd521:classes/rogue:level-1:core-trait:rogue_hit_point_die",
         "srd521:classes/rogue:level-1:core-trait:rogue_saving_throw_proficiencies",
@@ -85,6 +93,7 @@
         "srd521:classes/rogue:level-1:equipment-pressure:rogue_starting_equipment",
         "srd521:classes/rogue:level-1:multiclass-entry:rogue_multiclass_entry_traits",
         "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container",
+        "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
         "srd521:classes/sorcerer:level-1:core-trait:sorcerer_armor_training",
         "srd521:classes/sorcerer:level-1:core-trait:sorcerer_hit_point_die",
         "srd521:classes/sorcerer:level-1:core-trait:sorcerer_saving_throw_proficiencies",
@@ -93,6 +102,7 @@
         "srd521:classes/sorcerer:level-1:equipment-pressure:sorcerer_starting_equipment",
         "srd521:classes/sorcerer:level-1:multiclass-entry:sorcerer_multiclass_entry_traits",
         "srd521:classes/warlock:level-1:class-container:warlock_class_container",
+        "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic",
         "srd521:classes/warlock:level-1:core-trait:warlock_armor_training",
         "srd521:classes/warlock:level-1:core-trait:warlock_hit_point_die",
         "srd521:classes/warlock:level-1:core-trait:warlock_saving_throw_proficiencies",
@@ -119,16 +129,16 @@
     "spellPressureRows": 211,
     "levelOneClassContainers": 12,
     "levelOneRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 106,
+      "catalog-installed-owner-evidence-present": 116,
       "catalog-only/dead-for-now": 4,
       "non-runtime": 12,
-      "catalog-installed-owner-evidence-required": 34
+      "catalog-installed-owner-evidence-required": 24
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 124,
+      "catalog-installed-owner-evidence-present": 134,
       "catalog-only/dead-for-now": 78,
       "non-runtime": 12,
-      "catalog-installed-owner-evidence-required": 44,
+      "catalog-installed-owner-evidence-required": 34,
       "catalog-authored-executable-follow-up": 70,
       "needs-surface-widening": 33,
       "missing-authored-record": 6
@@ -1351,22 +1361,10 @@
     {
       "id": "SRDINV18",
       "title": "Close Character-Creation Class Feature Evidence",
-      "suggestedStatus": "ready-for-research",
+      "suggestedStatus": "done",
       "intent": "Close character-creation owner evidence for authored level-1 class feature records that are retained on CharacterBuilds or discovered as choices.",
-      "rowCount": 11,
-      "rowIds": [
-        "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
-        "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
-        "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
-        "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order",
-        "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
-        "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy",
-        "srd521:classes/rogue:level-1:class-feature-grant:rogue_expertise",
-        "srd521:classes/rogue:level-1:class-feature-grant:rogue_thieves_cant",
-        "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
-        "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations",
-        "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic"
-      ],
+      "rowCount": 0,
+      "rowIds": [],
       "nextAction": "Add durable character-creation evidence for Bardic Inspiration, Divine Order, Druidic, Primal Order, Martial Arts, Favored Enemy, Expertise, Thieves' Cant, Innate Sorcery, Eldritch Invocations, and Pact Magic where the current character-creation boundary owns the fact.",
       "acceptance": "Each task-owned feature row either has manifest-backed character-creation owner evidence or a narrower typed closure if the row belongs to a future runtime owner."
     },
@@ -2202,7 +2200,7 @@
         "state": "installed",
         "unitId": "bard_bardic_inspiration"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -2211,11 +2209,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV18 level-1 Bard class-feature support profile; Bardic Inspiration is retained through the finalized CharacterBuild feature Unit refs for supported Bard progressions; executable feature behavior remains owned by downstream feature/runtime projections.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/bard:level-1:class-table-summary:bard_level_1_feature_table_row",
@@ -3844,7 +3842,7 @@
         "state": "installed",
         "unitId": "cleric_divine_order"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -3853,11 +3851,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV18 level-1 Cleric class-feature support profile; Divine Order is discovered as a class-feature acquisition choice, support-gated to Protector in the current profile, finalized from the selected option, and projected into CharacterBuild weapon and armor-training facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/cleric:level-1:class-table-summary:cleric_level_1_feature_table_row",
@@ -5067,7 +5065,7 @@
         "state": "installed",
         "unitId": "druid_druidic"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -5076,11 +5074,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV18 level-1 Druid class-feature support profile; Druidic is retained through the finalized CharacterBuild feature Unit refs for supported Druid progressions; executable feature behavior remains owned by downstream feature/runtime projections.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order",
@@ -5108,7 +5106,7 @@
         "state": "installed",
         "unitId": "druid_primal_order"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -5117,11 +5115,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV18 level-1 Druid class-feature support profile; Primal Order is discovered as a class-feature acquisition choice, support-gated to Warden in the current profile, finalized from the selected option, and projected into CharacterBuild weapon and armor-training facts.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/druid:level-1:class-table-summary:druid_level_1_feature_table_row",
@@ -7170,7 +7168,7 @@
         "state": "installed",
         "unitId": "monk_martial_arts"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -7179,11 +7177,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV18 level-1 Monk class-feature support profile; Martial Arts is retained through the finalized CharacterBuild feature Unit refs for supported Monk progressions; executable feature behavior remains owned by downstream feature/runtime projections.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense",
@@ -8709,7 +8707,7 @@
         "state": "installed",
         "unitId": "ranger_favored_enemy"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -8718,11 +8716,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV18 level-1 Ranger class-feature support profile; Favored Enemy is retained through the finalized CharacterBuild feature Unit refs for supported Ranger progressions; executable feature behavior remains owned by downstream feature/runtime projections.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/ranger:level-1:class-table-summary:ranger_level_1_feature_table_row",
@@ -9690,7 +9688,7 @@
         "state": "installed",
         "unitId": "rogue_expertise"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -9699,11 +9697,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV18 level-1 Rogue class-feature support profile; Rogue Expertise is discovered from the grant-expertise acquisition choice over owned skill proficiencies, finalized from selected skills, and projected into CharacterBuild Expertise evidence.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack",
@@ -9772,7 +9770,7 @@
         "state": "installed",
         "unitId": "rogue_thieves_cant"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -9781,11 +9779,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV18 level-1 Rogue class-feature support profile; Thieves' Cant is retained through the finalized CharacterBuild feature Unit refs for supported Rogue progressions; executable feature behavior remains owned by downstream feature/runtime projections.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/rogue:level-1:class-table-summary:rogue_level_1_feature_table_row",
@@ -10353,7 +10351,7 @@
         "state": "installed",
         "unitId": "sorcerer_innate_sorcery"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -10362,11 +10360,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV18 level-1 Sorcerer class-feature support profile; Innate Sorcery is retained through the finalized CharacterBuild feature Unit refs for supported Sorcerer progressions; executable feature behavior remains owned by downstream feature/runtime projections.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:class-table-summary:sorcerer_level_1_feature_table_row",
@@ -12122,12 +12120,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
+          "owner": "character-creation-runtime plus future Eldritch Invocation option catalog",
+          "evidence": "Character creation retains the Eldritch Invocations feature Unit reference, but feature-choice owner evidence still requires discoverable invocation option Units before fill, finalization, and build projection can be completed without treating a retained ref as choice evidence.",
           "status": "owner evidence required"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Character creation retains the Eldritch Invocations feature Unit reference, but feature-choice owner evidence still requires discoverable invocation option Units before fill, finalization, and build projection can be completed without treating a retained ref as choice evidence."
     },
     {
       "id": "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic",
@@ -12155,7 +12153,7 @@
         "state": "installed",
         "unitId": "class_warlock"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -12164,11 +12162,11 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV18 level-1 Warlock class-feature support profile; Pact Magic is retained through the finalized CharacterBuild feature Unit refs for supported Warlock progressions; executable feature behavior remains owned by downstream feature/runtime projections.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a checker-readable character-creation owner-evidence artifact that maps this SRD inventory row to discovery, fill, finalization, and build projection coverage; until then, tests alone are not durable row-level evidence."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/warlock:level-1:class-table-summary:warlock_level_1_feature_table_row",
