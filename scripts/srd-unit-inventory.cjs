@@ -109,6 +109,11 @@ const catalogOnlyClosures = new Map([
   ],
 ]);
 
+const installedSpellUnitCatalogOnlyClosures = new Set([
+  "detect_magic",
+  "light",
+]);
+
 const spellAccessSurfaceBlockersByClass = {
   Bard: "ClassRecord spellcasting support for non-Wizard list-prepared casters: Bard cantrip choices, prepared Bard spells, Spell Slot projection, spellcasting ability, Musical Instrument focus, and level-up replacement timing",
   Cleric:
@@ -459,11 +464,17 @@ const spellUnitMissingClassifications = new Map([
   ],
 ]);
 
-function rowNeedsSurfaceWidening(row) {
+function rowNeedsSurfaceWidening(row, ownerEvidenceSources, installedIds) {
+  const installedClassification = installedOwnerClassification(
+    row,
+    ownerEvidenceSources,
+    installedIds,
+  );
   return (
     classContainerSurfaceBlockers.has(row.id) ||
     classFeatureSurfaceBlockers.has(row.id) ||
     spellAccessSurfaceBlockers.has(row.id) ||
+    installedClassification?.kind === "needs-surface-widening" ||
     spellUnitMissingClassifications.get(row.candidateUnitId)?.kind ===
       "needs-surface-widening"
   );
@@ -475,6 +486,10 @@ function slug(text) {
     .replace(/['’]/g, "")
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "");
+}
+
+function withoutTrailingPeriod(text) {
+  return text.replace(/\.+$/, "");
 }
 
 function readLines(root, relativePath) {
@@ -635,7 +650,27 @@ function characterCreationOwnership(row) {
   return undefined;
 }
 
-function surfaceGate(row) {
+function surfaceGate(row, ownerEvidenceSources, installedIds) {
+  const installedClassification = installedOwnerClassification(
+    row,
+    ownerEvidenceSources,
+    installedIds,
+  );
+  if (installedClassification?.kind === "needs-surface-widening") {
+    return {
+      state: "current-surface-cannot-express-mechanics-yet",
+      missingConstruct: installedClassification.missingConstruct,
+    };
+  }
+  if (
+    row.rowKind === "spell-unit-pressure" &&
+    installedClassification?.kind === "catalog-only-closure"
+  ) {
+    return {
+      state: "outside-surface-runtime-mechanics",
+      missingConstruct: undefined,
+    };
+  }
   const spellUnitClassification = spellUnitMissingClassifications.get(
     row.candidateUnitId,
   );
@@ -698,7 +733,8 @@ function surfaceGate(row) {
 
 function finalDisposition(row, authored, installedIds, ownerEvidenceSources) {
   if (nonRuntimeKinds.has(row.rowKind)) return "non-runtime";
-  if (rowNeedsSurfaceWidening(row)) return "needs-surface-widening";
+  if (rowNeedsSurfaceWidening(row, ownerEvidenceSources, installedIds))
+    return "needs-surface-widening";
   const spellUnitClassification = spellUnitMissingClassifications.get(
     row.candidateUnitId,
   );
@@ -709,41 +745,43 @@ function finalDisposition(row, authored, installedIds, ownerEvidenceSources) {
   if (!authored.has(row.candidateUnitId)) return "missing-authored-record";
   if (!installedIds.has(row.candidateUnitId))
     return "catalog-only/dead-for-now";
-  const installedLevelOneClassification = installedLevelOneOwnerClassification(
+  const installedClassification = installedOwnerClassification(
     row,
     ownerEvidenceSources,
+    installedIds,
   );
-  if (installedLevelOneClassification?.kind === "evidence-present") {
+  if (installedClassification?.kind === "evidence-present") {
     return "catalog-installed-owner-evidence-present";
   }
-  if (installedLevelOneClassification?.kind === "evidence-required") {
+  if (installedClassification?.kind === "evidence-required") {
     return "catalog-installed-owner-evidence-required";
   }
-  if (installedLevelOneClassification?.kind === "catalog-only-closure") {
+  if (installedClassification?.kind === "catalog-only-closure") {
     return "catalog-only/dead-for-now";
   }
   return "catalog-installed-needs-owner-evidence";
 }
 
-function nextAction(row, disposition, gate, ownerEvidenceSources) {
-  const installedLevelOneClassification = installedLevelOneOwnerClassification(
+function nextAction(row, disposition, gate, ownerEvidenceSources, installedIds) {
+  const installedClassification = installedOwnerClassification(
     row,
     ownerEvidenceSources,
+    installedIds,
   );
   if (disposition === "catalog-installed-owner-evidence-present") {
     return "Owner-specific operational evidence is classified and present.";
   }
   if (disposition === "catalog-installed-owner-evidence-required") {
-    return installedLevelOneClassification.requirement;
+    return installedClassification.requirement;
   }
   if (disposition === "catalog-installed-needs-owner-evidence") {
     return "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only.";
   }
   if (
     disposition === "catalog-only/dead-for-now" &&
-    installedLevelOneClassification?.kind === "catalog-only-closure"
+    installedClassification?.kind === "catalog-only-closure"
   )
-    return installedLevelOneClassification.reason;
+    return installedClassification.reason;
   if (disposition === "non-runtime")
     return "No runtime work; keep classification as explicit closure.";
   if (disposition === "catalog-only/dead-for-now") {
@@ -775,8 +813,76 @@ function nextAction(row, disposition, gate, ownerEvidenceSources) {
     return "Author an SRD-provenance Surface record or explicitly close the row.";
   }
   if (disposition === "needs-surface-widening")
-    return `Widen Surface: ${gate.missingConstruct}.`;
+    return `Widen Surface: ${withoutTrailingPeriod(gate.missingConstruct)}.`;
   return "Classify owner-specific evidence before implementation.";
+}
+
+function installedOwnerClassification(row, ownerEvidenceSources, installedIds) {
+  const spellUnitClassification = installedSpellUnitOwnerClassification(
+    row,
+    ownerEvidenceSources,
+    installedIds,
+  );
+  if (spellUnitClassification !== undefined) return spellUnitClassification;
+  return installedLevelOneOwnerClassification(row, ownerEvidenceSources);
+}
+
+function installedSpellUnitOwnerClassification(
+  row,
+  ownerEvidenceSources,
+  installedIds,
+) {
+  if (
+    row.rowKind !== "spell-unit-pressure" ||
+    (row.levelBand !== "spell-level-0" && row.levelBand !== "spell-level-1") ||
+    !row.candidateUnitId ||
+    !installedIds?.has(row.candidateUnitId)
+  ) {
+    return undefined;
+  }
+  const battleRuntimeEvidence = ownerEvidenceSources.battleRuntime.get(
+    row.candidateUnitId,
+  );
+  if (battleRuntimeEvidence) {
+    return {
+      kind: "evidence-present",
+      owner: "battle-runtime spell invocation/projection",
+      evidence: battleRuntimeEvidence,
+    };
+  }
+  const claim = ownerEvidenceSources.unitClaims.get(row.candidateUnitId)?.claim;
+  if (claim?.tag === "needs-surface-widening") {
+    return {
+      kind: "needs-surface-widening",
+      owner: "Surface Spell Definition plus battle-runtime spell invocation/projection",
+      missingConstruct: claim.issue,
+    };
+  }
+  if (
+    claim?.tag === "unsupported-profile" &&
+    installedSpellUnitCatalogOnlyClosures.has(row.candidateUnitId)
+  ) {
+    return {
+      kind: "catalog-only-closure",
+      owner: "catalog-only/dead-for-now",
+      reason: claim.reason,
+    };
+  }
+  if (claim?.tag === "unsupported-profile") {
+    return {
+      kind: "evidence-required",
+      owner: "battle-runtime spell invocation/projection",
+      requirement: `Unit matrix records unsupported-profile: ${withoutTrailingPeriod(
+        claim.reason,
+      )}. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.`,
+    };
+  }
+  return {
+    kind: "evidence-required",
+    owner: "battle-runtime spell invocation/projection",
+    requirement:
+      "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+  };
 }
 
 function installedLevelOneOwnerClassification(row, ownerEvidenceSources) {
@@ -986,6 +1092,11 @@ function buildOwnerEvidenceSources({
       )
       .map((row) => row.unitId),
   );
+  const unitClaimsByUnitId = new Map(
+    unitClaims
+      .filter((row) => row.collectionId === "srd-5.2.1")
+      .map((row) => [row.unitId, row]),
+  );
   const deterministicEvidenceByUnitId = new Map();
   for (const row of unitEvidence) {
     if (row.evidence?.tag !== deterministicAdmissionProjectionEvidenceTag) {
@@ -1003,6 +1114,7 @@ function buildOwnerEvidenceSources({
   }
   return {
     battleRuntime: deterministicEvidenceByUnitId,
+    unitClaims: unitClaimsByUnitId,
     characterCreation: buildCharacterCreationEvidenceSources(
       root,
       characterCreationOwnerEvidence,
@@ -1215,7 +1327,7 @@ function withState(rows, authored, installedIds, ownerEvidenceSources) {
     const authoredUnit = row.candidateUnitId
       ? authored.get(row.candidateUnitId)
       : undefined;
-    const gate = surfaceGate(row);
+    const gate = surfaceGate(row, ownerEvidenceSources, installedIds);
     const disposition = finalDisposition(
       row,
       authored,
@@ -1227,8 +1339,11 @@ function withState(rows, authored, installedIds, ownerEvidenceSources) {
         ? { state: "installed", unitId: row.candidateUnitId }
         : { state: "not-installed", unitId: row.candidateUnitId }
       : { state: "not-applicable" };
-    const installedLevelOneClassification =
-      installedLevelOneOwnerClassification(row, ownerEvidenceSources);
+    const installedClassification = installedOwnerClassification(
+      row,
+      ownerEvidenceSources,
+      installedIds,
+    );
     return {
       ...row,
       surface: gate,
@@ -1245,22 +1360,28 @@ function withState(rows, authored, installedIds, ownerEvidenceSources) {
       ownerEvidence:
         catalogAdmission.state === "installed" &&
         (disposition === "catalog-installed-needs-owner-evidence" ||
-          installedLevelOneClassification !== undefined)
+          installedClassification !== undefined)
           ? [
               {
                 owner: "Unit catalog/admission",
                 evidence: `candidate Unit ${row.candidateUnitId} is installed in srdUnitCollection`,
                 status:
-                  installedLevelOneClassification === undefined
+                  installedClassification === undefined
                     ? "catalog-only evidence; operational owner evidence still required"
                     : "catalog evidence",
               },
-              ...(installedLevelOneClassification === undefined
+              ...(installedClassification === undefined
                 ? []
-                : [ownerEvidenceEntry(installedLevelOneClassification)]),
+                : [ownerEvidenceEntry(installedClassification)]),
             ]
           : [],
-      nextAction: nextAction(row, disposition, gate, ownerEvidenceSources),
+      nextAction: nextAction(
+        row,
+        disposition,
+        gate,
+        ownerEvidenceSources,
+        installedIds,
+      ),
     };
   });
 }
@@ -1278,6 +1399,13 @@ function ownerEvidenceEntry(classification) {
       owner: classification.owner,
       evidence: classification.requirement,
       status: "owner evidence required",
+    };
+  }
+  if (classification.kind === "needs-surface-widening") {
+    return {
+      owner: classification.owner,
+      evidence: classification.missingConstruct,
+      status: "Surface widening required before owner evidence can be present",
     };
   }
   return {
@@ -1375,8 +1503,13 @@ function buildRecommendedBatches(rows) {
   const missingSpellUnitPressureRows = spellPressure.filter(
     (row) => row.finalDisposition === "missing-authored-record",
   );
-  const installedSpellUnitPressureRows = spellPressure.filter(
+  const unclassifiedInstalledSpellUnitPressureRows = spellPressure.filter(
     (row) => row.finalDisposition === "catalog-installed-needs-owner-evidence",
+  );
+  const classifiedInstalledSpellUnitPressureRows = spellPressure.filter(
+    (row) =>
+      row.catalogAdmission.state === "installed" &&
+      row.authoredContent.state === "authored-record-present",
   );
   const catalogOnlySpellUnitPressureRows = spellPressure.filter(
     (row) => row.finalDisposition === "catalog-only/dead-for-now",
@@ -1484,9 +1617,14 @@ function buildRecommendedBatches(rows) {
       suggestedStatus: "blocked-on-SRDINV1",
       intent:
         "Classify installed SRD cantrip and level-1 Spell Unit owner evidence separately from missing and catalog-only spell rows.",
-      rows: installedSpellUnitPressureRows,
+      rows:
+        unclassifiedInstalledSpellUnitPressureRows.length === 0
+          ? classifiedInstalledSpellUnitPressureRows
+          : unclassifiedInstalledSpellUnitPressureRows,
       nextAction:
-        "For each installed Spell Unit pressure row, classify whether catalog/access/invocation/projection evidence is required or whether the row closes as catalog-only.",
+        unclassifiedInstalledSpellUnitPressureRows.length === 0
+          ? "Installed Spell Unit pressure rows are classified by catalog admission, spell access, invocation/projection evidence, runtime-support requirements, Surface blockers, or catalog-only closure."
+          : "For each installed Spell Unit pressure row, classify whether catalog/access/invocation/projection evidence is required or whether the row closes as catalog-only.",
       acceptance:
         "Installed cantrip and level-1 Spell Unit rows distinguish catalog evidence from operational owner evidence.",
     }),
@@ -1681,6 +1819,24 @@ function validateSrdUnitInventory(report) {
       .filter((row) => row.rowKind === "spell-unit-pressure")
       .map((row) => [row.candidateUnitId, row]),
   );
+  for (const unitId of installedSpellUnitCatalogOnlyClosures) {
+    const row = spellUnitRowsByUnitId.get(unitId);
+    if (row === undefined) {
+      issues.push(
+        `Installed Spell Unit catalog-only closure references unknown row ${unitId}.`,
+      );
+      continue;
+    }
+    if (
+      row.authoredContent.state !== "authored-record-present" ||
+      row.catalogAdmission.state !== "installed" ||
+      row.finalDisposition !== "catalog-only/dead-for-now"
+    ) {
+      issues.push(
+        `Installed Spell Unit catalog-only closure ${unitId} must reference an authored, installed Spell Unit row classified catalog-only/dead-for-now.`,
+      );
+    }
+  }
   for (const unitId of spellUnitMissingClassifications.keys()) {
     const row = spellUnitRowsByUnitId.get(unitId);
     if (row === undefined) {
@@ -1706,6 +1862,16 @@ function validateSrdUnitInventory(report) {
     ) {
       issues.push(
         `${row.id} is a missing Spell Unit row without SRDINV5B classification.`,
+      );
+    }
+    if (
+      row.rowKind === "spell-unit-pressure" &&
+      row.authoredContent.state === "authored-record-present" &&
+      row.catalogAdmission.state === "installed" &&
+      row.finalDisposition === "catalog-installed-needs-owner-evidence"
+    ) {
+      issues.push(
+        `${row.id} is an installed Spell Unit row with generic owner evidence.`,
       );
     }
   }

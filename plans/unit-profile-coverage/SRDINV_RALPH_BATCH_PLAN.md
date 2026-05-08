@@ -205,3 +205,36 @@ left for future exploration support.
 - Round 2: kept noncombat utility closures separate from named Surface blockers
   and added generator validation so future missing Spell Unit rows cannot
   silently fall back to generic author-or-close wording.
+
+## SRDINV5C Closeout Notes
+
+SRDINV5C classifies installed SRD cantrip and level-1 Spell Unit rows; it does
+not author spell records or implement spell runtime behavior. The local SRD
+source review used the cantrip and level-1 spell-list tables in the SRD 5.2.1
+Bard, Cleric, Druid, Paladin, Ranger, Sorcerer, Warlock, and Wizard class
+files, plus the corresponding spell descriptions for the 12 unique installed
+Spell Definitions: Acid Splash, Cure Wounds, Detect Magic, Fire Bolt, Healing
+Word, Light, Mage Armor, Magic Missile, Ray of Frost, Shield, Sleep, and
+Thunderwave.
+
+`UBIQUITOUS_LANGUAGE.md` was checked for Spell Definition, Spell Access, Spell
+Invocation, Spell Effect, Spell Slot, Pact Slot, Cantrip, and Magic Action. The
+inventory generator now derives installed Spell Unit owner evidence from the
+durable Unit matrix artifacts: `supported-profile` plus
+`deterministic-admission-projection` evidence marks 18 repeated class-list rows
+as battle-runtime owner-evidence-present; unsupported Sleep rows remain
+battle-runtime spell invocation/projection evidence-required; Fire Bolt and
+Thunderwave rows keep named Surface/runtime projection blockers; Detect Magic
+and Light rows are explicit catalog-only/dead-for-now closures. Installed Spell
+Unit rows no longer fall back to `catalog-installed-needs-owner-evidence`.
+
+`/simplify` convergence:
+
+- Round 1: kept support facts derived from `unit-claims.jsonl` and
+  `unit-evidence.jsonl` instead of adding a parallel installed-spell support
+  table; the only explicit installed-spell decision table is the small
+  catalog-only closure set for unsupported utility spells.
+- Round 2: localized the installed Spell Unit classification in the inventory
+  generator and added validation so authored, installed cantrip/level-1 Spell
+  Unit rows cannot silently re-enter generic owner-evidence-required wording; no
+  further important changes found.
