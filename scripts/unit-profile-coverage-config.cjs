@@ -142,6 +142,10 @@ function coveragePaths(root) {
       coverageDir,
       "character-creation-owner-evidence.json",
     ),
+    sharedAlgebraOwnerEvidence: path.join(
+      coverageDir,
+      "shared-algebra-owner-evidence.json",
+    ),
     matrix: path.join(coverageDir, "unit-matrix.json"),
     report: path.join(coverageDir, "UNIT_REPORT.md"),
     srdUnitInventory: path.join(coverageDir, "srd-unit-inventory.json"),

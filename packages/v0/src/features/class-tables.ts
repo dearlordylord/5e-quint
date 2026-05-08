@@ -73,9 +73,10 @@ export function meetsMulticlassPrereq(
   className: ClassName,
 ): boolean {
   const parsedScores = multiclassAbilityScores(scores);
-  return Either.isRight(parsedScores)
-    ? sharedMeetsPrereq(parsedScores.right, className)
-    : false;
+  if (Either.isLeft(parsedScores)) return false;
+
+  const prerequisiteResult = sharedMeetsPrereq(parsedScores.right, className);
+  return Either.isRight(prerequisiteResult) ? prerequisiteResult.right : false;
 }
 
 /** @deprecated use `canMulticlass` from shared-algebras */
@@ -90,9 +91,13 @@ export function canMulticlass(
     newClass,
   });
 
-  return Either.isRight(parsedScores) && Either.isRight(classChange)
-    ? sharedCanMulticlass(parsedScores.right, classChange.right)
-    : false;
+  if (Either.isLeft(parsedScores) || Either.isLeft(classChange)) return false;
+
+  const prerequisiteResult = sharedCanMulticlass(
+    parsedScores.right,
+    classChange.right,
+  );
+  return Either.isRight(prerequisiteResult) ? prerequisiteResult.right : false;
 }
 
 // --- Multiclass Proficiency Gains (SRD 5.2.1) ---

@@ -132,6 +132,11 @@
         "srd521:classes/wizard:level-1:spell-access:wizard_spellcasting"
       ],
       "issues": []
+    },
+    "sharedAlgebraOwnerEvidence": {
+      "schema": "dnd.srd-shared-algebra-owner-evidence.v1",
+      "owner": "shared-algebras/multiclass-prerequisite-algebra",
+      "issues": []
     }
   },
   "metrics": {
@@ -140,17 +145,17 @@
     "spellPressureRows": 211,
     "levelOneClassContainers": 12,
     "levelOneRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 127,
+      "catalog-installed-owner-evidence-present": 139,
       "catalog-only/dead-for-now": 4,
       "non-runtime": 12,
-      "catalog-installed-owner-evidence-required": 13
+      "catalog-installed-owner-evidence-required": 1
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 145,
+      "catalog-installed-owner-evidence-present": 157,
       "catalog-only/dead-for-now": 78,
       "non-runtime": 12,
-      "catalog-installed-owner-evidence-required": 23,
       "catalog-authored-executable-follow-up": 70,
+      "catalog-installed-owner-evidence-required": 11,
       "needs-surface-widening": 33,
       "missing-authored-record": 6
     },
@@ -1569,23 +1574,10 @@
     {
       "id": "SRDINV22",
       "title": "Close Shared Multiclass Primary Ability Evidence",
-      "suggestedStatus": "ready-for-research",
+      "suggestedStatus": "done",
       "intent": "Close owner evidence for all level-1 Primary Ability rows through the shared multiclass prerequisite algebra.",
-      "rowCount": 12,
-      "rowIds": [
-        "srd521:classes/barbarian:level-1:core-trait:barbarian_primary_ability",
-        "srd521:classes/bard:level-1:core-trait:bard_primary_ability",
-        "srd521:classes/cleric:level-1:core-trait:cleric_primary_ability",
-        "srd521:classes/druid:level-1:core-trait:druid_primary_ability",
-        "srd521:classes/fighter:level-1:core-trait:fighter_primary_ability",
-        "srd521:classes/monk:level-1:core-trait:monk_primary_ability",
-        "srd521:classes/paladin:level-1:core-trait:paladin_primary_ability",
-        "srd521:classes/ranger:level-1:core-trait:ranger_primary_ability",
-        "srd521:classes/rogue:level-1:core-trait:rogue_primary_ability",
-        "srd521:classes/sorcerer:level-1:core-trait:sorcerer_primary_ability",
-        "srd521:classes/warlock:level-1:core-trait:warlock_primary_ability",
-        "srd521:classes/wizard:level-1:core-trait:wizard_primary_ability"
-      ],
+      "rowCount": 0,
+      "rowIds": [],
       "nextAction": "Connect SRD class Primary Ability source facts to shared-algebra prerequisite checks, QNT coverage, runtime tests, and inventory evidence without duplicating character-creation source state.",
       "acceptance": "All level-1 Primary Ability rows derive owner evidence from shared-algebras/multiclass-prerequisite-algebra rather than character-creation build projection."
     },
@@ -2080,7 +2072,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/barbarian:level-1:class-container:barbarian_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -2089,11 +2081,11 @@
         },
         {
           "owner": "shared-algebras/multiclass-prerequisite-algebra",
-          "evidence": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/shared-algebra-owner-evidence.json records shared-algebra owner evidence; SRDINV22 SRD 5.2.1 multiclass Primary Ability prerequisite algebra; Primary Ability source facts are read from SRD class containers and projected into shared multiclass prerequisite checks with deterministic TypeScript coverage and package-local Quint examples.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/barbarian:level-1:core-trait:barbarian_saving_throw_proficiencies",
@@ -2614,7 +2606,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -2623,11 +2615,11 @@
         },
         {
           "owner": "shared-algebras/multiclass-prerequisite-algebra",
-          "evidence": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/shared-algebra-owner-evidence.json records shared-algebra owner evidence; SRDINV22 SRD 5.2.1 multiclass Primary Ability prerequisite algebra; Primary Ability source facts are read from SRD class containers and projected into shared multiclass prerequisite checks with deterministic TypeScript coverage and package-local Quint examples.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/bard:level-1:core-trait:bard_saving_throw_proficiencies",
@@ -4256,7 +4248,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/cleric:level-1:class-container:cleric_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -4265,11 +4257,11 @@
         },
         {
           "owner": "shared-algebras/multiclass-prerequisite-algebra",
-          "evidence": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/shared-algebra-owner-evidence.json records shared-algebra owner evidence; SRDINV22 SRD 5.2.1 multiclass Primary Ability prerequisite algebra; Primary Ability source facts are read from SRD class containers and projected into shared multiclass prerequisite checks with deterministic TypeScript coverage and package-local Quint examples.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/cleric:level-1:core-trait:cleric_saving_throw_proficiencies",
@@ -5520,7 +5512,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -5529,11 +5521,11 @@
         },
         {
           "owner": "shared-algebras/multiclass-prerequisite-algebra",
-          "evidence": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/shared-algebra-owner-evidence.json records shared-algebra owner evidence; SRDINV22 SRD 5.2.1 multiclass Primary Ability prerequisite algebra; Primary Ability source facts are read from SRD class containers and projected into shared multiclass prerequisite checks with deterministic TypeScript coverage and package-local Quint examples.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/druid:level-1:core-trait:druid_saving_throw_proficiencies",
@@ -7048,7 +7040,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/fighter:level-1:class-container:fighter_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -7057,11 +7049,11 @@
         },
         {
           "owner": "shared-algebras/multiclass-prerequisite-algebra",
-          "evidence": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/shared-algebra-owner-evidence.json records shared-algebra owner evidence; SRDINV22 SRD 5.2.1 multiclass Primary Ability prerequisite algebra; Primary Ability source facts are read from SRD class containers and projected into shared multiclass prerequisite checks with deterministic TypeScript coverage and package-local Quint examples.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/fighter:level-1:core-trait:fighter_saving_throw_proficiencies",
@@ -7612,7 +7604,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -7621,11 +7613,11 @@
         },
         {
           "owner": "shared-algebras/multiclass-prerequisite-algebra",
-          "evidence": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/shared-algebra-owner-evidence.json records shared-algebra owner evidence; SRDINV22 SRD 5.2.1 multiclass Primary Ability prerequisite algebra; Primary Ability source facts are read from SRD class containers and projected into shared multiclass prerequisite checks with deterministic TypeScript coverage and package-local Quint examples.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/monk:level-1:core-trait:monk_saving_throw_proficiencies",
@@ -8141,7 +8133,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/paladin:level-1:class-container:paladin_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -8150,11 +8142,11 @@
         },
         {
           "owner": "shared-algebras/multiclass-prerequisite-algebra",
-          "evidence": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/shared-algebra-owner-evidence.json records shared-algebra owner evidence; SRDINV22 SRD 5.2.1 multiclass Primary Ability prerequisite algebra; Primary Ability source facts are read from SRD class containers and projected into shared multiclass prerequisite checks with deterministic TypeScript coverage and package-local Quint examples.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/paladin:level-1:core-trait:paladin_saving_throw_proficiencies",
@@ -9121,7 +9113,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/ranger:level-1:class-container:ranger_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -9130,11 +9122,11 @@
         },
         {
           "owner": "shared-algebras/multiclass-prerequisite-algebra",
-          "evidence": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/shared-algebra-owner-evidence.json records shared-algebra owner evidence; SRDINV22 SRD 5.2.1 multiclass Primary Ability prerequisite algebra; Primary Ability source facts are read from SRD class containers and projected into shared multiclass prerequisite checks with deterministic TypeScript coverage and package-local Quint examples.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/ranger:level-1:core-trait:ranger_saving_throw_proficiencies",
@@ -10184,7 +10176,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -10193,11 +10185,11 @@
         },
         {
           "owner": "shared-algebras/multiclass-prerequisite-algebra",
-          "evidence": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/shared-algebra-owner-evidence.json records shared-algebra owner evidence; SRDINV22 SRD 5.2.1 multiclass Primary Ability prerequisite algebra; Primary Ability source facts are read from SRD class containers and projected into shared multiclass prerequisite checks with deterministic TypeScript coverage and package-local Quint examples.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/rogue:level-1:core-trait:rogue_saving_throw_proficiencies",
@@ -10765,7 +10757,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -10774,11 +10766,11 @@
         },
         {
           "owner": "shared-algebras/multiclass-prerequisite-algebra",
-          "evidence": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/shared-algebra-owner-evidence.json records shared-algebra owner evidence; SRDINV22 SRD 5.2.1 multiclass Primary Ability prerequisite algebra; Primary Ability source facts are read from SRD class containers and projected into shared multiclass prerequisite checks with deterministic TypeScript coverage and package-local Quint examples.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_saving_throw_proficiencies",
@@ -12567,7 +12559,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/warlock:level-1:class-container:warlock_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -12576,11 +12568,11 @@
         },
         {
           "owner": "shared-algebras/multiclass-prerequisite-algebra",
-          "evidence": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/shared-algebra-owner-evidence.json records shared-algebra owner evidence; SRDINV22 SRD 5.2.1 multiclass Primary Ability prerequisite algebra; Primary Ability source facts are read from SRD class containers and projected into shared multiclass prerequisite checks with deterministic TypeScript coverage and package-local Quint examples.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/warlock:level-1:core-trait:warlock_saving_throw_proficiencies",
@@ -13715,7 +13707,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/wizard:level-1:class-container:wizard_class_container"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -13724,11 +13716,11 @@
         },
         {
           "owner": "shared-algebras/multiclass-prerequisite-algebra",
-          "evidence": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/shared-algebra-owner-evidence.json records shared-algebra owner evidence; SRDINV22 SRD 5.2.1 multiclass Primary Ability prerequisite algebra; Primary Ability source facts are read from SRD class containers and projected into shared multiclass prerequisite checks with deterministic TypeScript coverage and package-local Quint examples.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/wizard:level-1:core-trait:wizard_saving_throw_proficiencies",

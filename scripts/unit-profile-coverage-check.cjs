@@ -44,6 +44,7 @@ function main() {
   const characterCreationOwnerEvidence = readJson(
     paths.characterCreationOwnerEvidence,
   );
+  const sharedAlgebraOwnerEvidence = readJson(paths.sharedAlgebraOwnerEvidence);
   const inventory = discoverInventory(root, collections.collections);
   const authoredSurfaceUnits = discoverAuthoredSurfaceUnits(root);
   const srdUnitInventory = buildSrdUnitInventory({
@@ -52,6 +53,7 @@ function main() {
     unitClaims,
     unitEvidence,
     characterCreationOwnerEvidence,
+    sharedAlgebraOwnerEvidence,
   });
   const scannedClaims = scanClaimFiles(root);
   const issues = validateCoverageInputs({

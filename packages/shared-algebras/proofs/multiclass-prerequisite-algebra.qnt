@@ -1,4 +1,5 @@
-// multiclass prerequisite algebra (SRD 5.2.1 Ch18.4)
+// multiclass prerequisite algebra (SRD 5.2.1 Character Creation > Multiclassing)
+// TypeScript derives these prerequisites from Surface class-container Primary Ability facts.
 //
 // Run: quint test --match "mc_" packages/shared-algebras/proofs/multiclass-prerequisite-algebra.qnt
 

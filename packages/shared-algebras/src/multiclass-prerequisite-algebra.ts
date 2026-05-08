@@ -3,7 +3,16 @@
 import { Brand, Either, Match } from "effect";
 
 import { type Ability, type ReadonlyNonEmptyArray } from "@dnd/shared/types";
-import type { ClassName } from "@dnd/shared/game-facts";
+import { CLASS_NAMES, type ClassName } from "@dnd/shared/game-facts";
+import {
+  readClassCreationFacts,
+  type SurfaceReadIssue,
+} from "@dnd/surface/surface/character-creation-readers";
+import { srdUnitCollection } from "@dnd/surface/surface/unit-catalog";
+import type {
+  PrimaryAbilityExpression,
+  UnitRecord,
+} from "@dnd/surface/surface/types";
 import {
   abilityScoreAssignment,
   type AbilityScoreAssignmentIssue,
@@ -49,12 +58,17 @@ export function multiclassClassChange(input: {
   readonly currentClasses: readonly ClassName[];
   readonly newClass: ClassName;
 }): Either.Either<MulticlassClassChange, MulticlassClassChangeIssue> {
-  if (input.currentClasses.length === 0) {
+  const [firstClass, ...restClasses] = input.currentClasses;
+  if (firstClass === undefined) {
     return Either.left({ tag: "missingCurrentClass" });
   }
+  const nonEmptyCurrentClasses = [
+    firstClass,
+    ...restClasses,
+  ] satisfies ReadonlyNonEmptyArray<ClassName>;
 
   const currentClasses = new Set<ClassName>();
-  for (const className of input.currentClasses) {
+  for (const className of nonEmptyCurrentClasses) {
     if (currentClasses.has(className)) {
       return Either.left({ tag: "duplicateCurrentClass", className });
     }
@@ -70,7 +84,7 @@ export function multiclassClassChange(input: {
 
   return Either.right(
     MulticlassClassChange({
-      currentClasses: input.currentClasses as ReadonlyNonEmptyArray<ClassName>,
+      currentClasses: nonEmptyCurrentClasses,
       newClass: input.newClass,
     }),
   );
@@ -129,68 +143,118 @@ export type MulticlassPrerequisite =
 export type NonEmptyMulticlassPrerequisites =
   ReadonlyNonEmptyArray<MulticlassPrerequisite>;
 
-export const MULTICLASS_PREREQUISITES: Readonly<
-  Record<ClassName, MulticlassPrerequisite>
-> = {
-  barbarian: {
-    tag: "scoreAtLeast",
-    ability: "str",
-    minimum: MULTICLASS_THRESHOLD,
-  },
-  bard: { tag: "scoreAtLeast", ability: "cha", minimum: MULTICLASS_THRESHOLD },
-  cleric: {
-    tag: "scoreAtLeast",
-    ability: "wis",
-    minimum: MULTICLASS_THRESHOLD,
-  },
-  druid: { tag: "scoreAtLeast", ability: "wis", minimum: MULTICLASS_THRESHOLD },
-  fighter: {
-    tag: "anyOf",
-    prerequisites: [
-      { tag: "scoreAtLeast", ability: "str", minimum: MULTICLASS_THRESHOLD },
-      { tag: "scoreAtLeast", ability: "dex", minimum: MULTICLASS_THRESHOLD },
-    ],
-  },
-  monk: {
-    tag: "allOf",
-    prerequisites: [
-      { tag: "scoreAtLeast", ability: "dex", minimum: MULTICLASS_THRESHOLD },
-      { tag: "scoreAtLeast", ability: "wis", minimum: MULTICLASS_THRESHOLD },
-    ],
-  },
-  paladin: {
-    tag: "allOf",
-    prerequisites: [
-      { tag: "scoreAtLeast", ability: "str", minimum: MULTICLASS_THRESHOLD },
-      { tag: "scoreAtLeast", ability: "cha", minimum: MULTICLASS_THRESHOLD },
-    ],
-  },
-  ranger: {
-    tag: "allOf",
-    prerequisites: [
-      { tag: "scoreAtLeast", ability: "dex", minimum: MULTICLASS_THRESHOLD },
-      { tag: "scoreAtLeast", ability: "wis", minimum: MULTICLASS_THRESHOLD },
-    ],
-  },
-  rogue: { tag: "scoreAtLeast", ability: "dex", minimum: MULTICLASS_THRESHOLD },
-  sorcerer: {
-    tag: "scoreAtLeast",
-    ability: "cha",
-    minimum: MULTICLASS_THRESHOLD,
-  },
-  warlock: {
-    tag: "scoreAtLeast",
-    ability: "cha",
-    minimum: MULTICLASS_THRESHOLD,
-  },
-  wizard: {
-    tag: "scoreAtLeast",
-    ability: "int",
-    minimum: MULTICLASS_THRESHOLD,
-  },
-} as const satisfies Record<ClassName, MulticlassPrerequisite>;
+export type MulticlassPrerequisiteTable = ReadonlyMap<
+  ClassName,
+  MulticlassPrerequisite
+>;
+
+export type MulticlassPrerequisiteTableIssue =
+  | {
+      readonly tag: "unreadableSrdClassContainer";
+      readonly unitId: UnitRecord["id"];
+      readonly issues: readonly SurfaceReadIssue[];
+    }
+  | {
+      readonly tag: "duplicateSrdClassContainer";
+      readonly className: ClassName;
+    }
+  | {
+      readonly tag: "missingSrdClassContainer";
+      readonly className: ClassName;
+    };
+
+export type MulticlassPrerequisiteLookupIssue =
+  | MulticlassPrerequisiteTableIssue
+  | {
+      readonly tag: "missingMulticlassPrerequisite";
+      readonly className: ClassName;
+    };
 
 const byTag = Match.discriminator("tag");
+const byKind = Match.discriminator("kind");
+
+export function multiclassPrerequisiteFromPrimaryAbilities(
+  primaryAbilities: PrimaryAbilityExpression,
+): MulticlassPrerequisite {
+  const [firstAbility, ...restAbilities] = primaryAbilities.abilities;
+  const prerequisites = [
+    multiclassScorePrerequisite(firstAbility),
+    ...restAbilities.map(multiclassScorePrerequisite),
+  ] satisfies NonEmptyMulticlassPrerequisites;
+
+  return Match.value(primaryAbilities).pipe(
+    byKind("all_of", () =>
+      prerequisites.length === 1
+        ? prerequisites[0]
+        : { tag: "allOf" as const, prerequisites },
+    ),
+    byKind("any_of", () => ({ tag: "anyOf" as const, prerequisites })),
+    Match.exhaustive,
+  );
+}
+
+function multiclassScorePrerequisite(ability: Ability): MulticlassPrerequisite {
+  return {
+    tag: "scoreAtLeast",
+    ability,
+    minimum: MULTICLASS_THRESHOLD,
+  };
+}
+
+export function multiclassPrerequisitesFromSrdClassContainers(
+  units: readonly UnitRecord[] = srdUnitCollection.units,
+): Either.Either<
+  MulticlassPrerequisiteTable,
+  ReadonlyNonEmptyArray<MulticlassPrerequisiteTableIssue>
+> {
+  const prerequisites = new Map<ClassName, MulticlassPrerequisite>();
+  const issues: MulticlassPrerequisiteTableIssue[] = [];
+
+  for (const unit of units) {
+    if (unit.kind !== "class") continue;
+
+    const result = readClassCreationFacts(unit);
+    if (result.tag === "unreadable") {
+      issues.push({
+        tag: "unreadableSrdClassContainer",
+        unitId: unit.id,
+        issues: result.issues,
+      });
+      continue;
+    }
+
+    if (prerequisites.has(result.value.className)) {
+      issues.push({
+        tag: "duplicateSrdClassContainer",
+        className: result.value.className,
+      });
+      continue;
+    }
+
+    prerequisites.set(
+      result.value.className,
+      multiclassPrerequisiteFromPrimaryAbilities(result.value.primaryAbilities),
+    );
+  }
+
+  for (const className of CLASS_NAMES) {
+    if (!prerequisites.has(className)) {
+      issues.push({ tag: "missingSrdClassContainer", className });
+    }
+  }
+
+  const [firstIssue, ...restIssues] = issues;
+  if (firstIssue !== undefined) {
+    return Either.left([firstIssue, ...restIssues]);
+  }
+
+  return Either.right(prerequisites);
+}
+
+export const MULTICLASS_PREREQUISITES: Either.Either<
+  MulticlassPrerequisiteTable,
+  ReadonlyNonEmptyArray<MulticlassPrerequisiteTableIssue>
+> = multiclassPrerequisitesFromSrdClassContainers();
 
 /**
  * Check if a single class multiclass prerequisite is met.
@@ -198,8 +262,16 @@ const byTag = Match.discriminator("tag");
 export function meetsMulticlassPrerequisite(
   scores: MulticlassAbilityScores,
   className: ClassName,
-): boolean {
-  return evalPrereq(MULTICLASS_PREREQUISITES[className], scores);
+): Either.Either<
+  boolean,
+  ReadonlyNonEmptyArray<MulticlassPrerequisiteLookupIssue>
+> {
+  return Either.flatMap(MULTICLASS_PREREQUISITES, (prerequisites) => {
+    const prerequisite = prerequisites.get(className);
+    return prerequisite === undefined
+      ? Either.left([{ tag: "missingMulticlassPrerequisite", className }])
+      : Either.right(evalPrereq(prerequisite, scores));
+  });
 }
 
 function evalPrereq(
@@ -228,8 +300,26 @@ function evalPrereq(
 export function canMulticlass(
   scores: MulticlassAbilityScores,
   classChange: MulticlassClassChange,
-): boolean {
-  return [...classChange.currentClasses, classChange.newClass].every(
-    (className) => meetsMulticlassPrerequisite(scores, className),
-  );
+): Either.Either<
+  boolean,
+  ReadonlyNonEmptyArray<MulticlassPrerequisiteLookupIssue>
+> {
+  return Either.flatMap(MULTICLASS_PREREQUISITES, (prerequisites) => {
+    for (const className of [
+      ...classChange.currentClasses,
+      classChange.newClass,
+    ]) {
+      const prerequisite = prerequisites.get(className);
+      if (prerequisite === undefined) {
+        return Either.left([
+          { tag: "missingMulticlassPrerequisite", className },
+        ]);
+      }
+      if (!evalPrereq(prerequisite, scores)) {
+        return Either.right(false);
+      }
+    }
+
+    return Either.right(true);
+  });
 }

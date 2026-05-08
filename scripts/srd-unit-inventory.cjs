@@ -48,6 +48,10 @@ const deterministicAdmissionProjectionEvidenceTag =
   "deterministic-admission-projection";
 const characterCreationOwnerEvidenceSchema =
   "dnd.srd-character-creation-owner-evidence.v1";
+const sharedAlgebraOwnerEvidenceSchema =
+  "dnd.srd-shared-algebra-owner-evidence.v1";
+const sharedMulticlassPrimaryAbilityOwner =
+  "shared-algebras/multiclass-prerequisite-algebra";
 const characterCreationOwnerEvidenceKinds = [
   "discovery",
   "fill",
@@ -972,9 +976,17 @@ function installedLevelOneOwnerClassification(row, ownerEvidenceSources) {
     };
   }
   if (isPrimaryAbilityRow(row)) {
+    const evidence = ownerEvidenceSources.sharedMulticlassPrimaryAbility;
+    if (evidence !== undefined) {
+      return {
+        kind: "evidence-present",
+        owner: sharedMulticlassPrimaryAbilityOwner,
+        evidence,
+      };
+    }
     return {
       kind: "evidence-required",
-      owner: "shared-algebras/multiclass-prerequisite-algebra",
+      owner: sharedMulticlassPrimaryAbilityOwner,
       requirement:
         "Primary Ability source facts feed multiclass prerequisite checks; close this through the shared algebra rather than character-creation build projection.",
     };
@@ -1160,6 +1172,7 @@ function buildOwnerEvidenceSources({
   unitClaims,
   unitEvidence,
   characterCreationOwnerEvidence,
+  sharedAlgebraOwnerEvidence,
 }) {
   const supportedSrdUnitIds = new Set(
     unitClaims
@@ -1197,6 +1210,10 @@ function buildOwnerEvidenceSources({
       root,
       characterCreationOwnerEvidence,
     ),
+    sharedMulticlassPrimaryAbility: buildSharedAlgebraEvidenceSource(
+      root,
+      sharedAlgebraOwnerEvidence,
+    ),
   };
 }
 
@@ -1230,6 +1247,90 @@ function buildCharacterCreationEvidenceSources(root, manifest) {
         ].join("; "),
       ]),
   );
+}
+
+function buildSharedAlgebraEvidenceSource(root, manifest) {
+  const issues = sharedAlgebraOwnerEvidenceIssues(root, manifest);
+  if (issues.length > 0) {
+    return undefined;
+  }
+  return [
+    "plans/unit-profile-coverage/shared-algebra-owner-evidence.json records shared-algebra owner evidence",
+    `${manifest.taskId} ${manifest.profile}`,
+    manifest.summary,
+  ].join("; ");
+}
+
+function sharedAlgebraOwnerEvidenceIssues(root, manifest) {
+  const issues = [];
+  if (manifest == null) {
+    return ["Shared-algebra owner evidence manifest is missing."];
+  }
+  if (manifest.schema !== sharedAlgebraOwnerEvidenceSchema) {
+    issues.push(
+      `Shared-algebra owner evidence manifest schema must be ${sharedAlgebraOwnerEvidenceSchema}.`,
+    );
+  }
+  if (manifest.owner !== sharedMulticlassPrimaryAbilityOwner) {
+    issues.push(
+      `Shared-algebra owner evidence manifest owner must be ${sharedMulticlassPrimaryAbilityOwner}.`,
+    );
+  }
+  if (manifest.appliesTo?.rowKind !== "core-trait") {
+    issues.push(
+      "Shared-algebra owner evidence manifest appliesTo.rowKind must be core-trait.",
+    );
+  }
+  if (manifest.appliesTo?.rowIdSuffix !== "_primary_ability") {
+    issues.push(
+      "Shared-algebra owner evidence manifest appliesTo.rowIdSuffix must be _primary_ability.",
+    );
+  }
+  if (!manifest.taskId) {
+    issues.push("Shared-algebra owner evidence manifest lacks taskId.");
+  }
+  if (!manifest.profile) {
+    issues.push("Shared-algebra owner evidence manifest lacks profile.");
+  }
+  if (!manifest.summary) {
+    issues.push("Shared-algebra owner evidence manifest lacks summary.");
+  }
+  if (!isRecord(manifest.evidence)) {
+    issues.push(
+      "Shared-algebra owner evidence manifest evidence must be an object.",
+    );
+    return issues;
+  }
+  for (const kind of [
+    "sourceProjection",
+    "surfaceSource",
+    "runtimeTests",
+    "qntProof",
+  ]) {
+    if (!Array.isArray(manifest.evidence[kind])) {
+      issues.push(
+        `Shared-algebra owner evidence manifest lacks ${kind} evidence.`,
+      );
+      continue;
+    }
+    if (manifest.evidence[kind].length === 0) {
+      issues.push(
+        `Shared-algebra owner evidence manifest ${kind} evidence is empty.`,
+      );
+    }
+    for (const reference of manifest.evidence[kind]) {
+      issues.push(...evidenceReferenceIssues(root, reference, kind));
+    }
+  }
+  return issues;
+}
+
+function summarizeSharedAlgebraOwnerEvidence(root, manifest) {
+  return {
+    schema: manifest?.schema ?? sharedAlgebraOwnerEvidenceSchema,
+    owner: manifest?.owner,
+    issues: sharedAlgebraOwnerEvidenceIssues(root, manifest),
+  };
 }
 
 function hasCompleteCharacterCreationOwnerEvidence(evidence) {
@@ -1388,6 +1489,41 @@ function characterCreationOwnerEvidenceReferenceIssue(
         `${rowId} ${kind} evidence reference points to missing property ${propertyName}: ${reference}`,
       ];
     }
+  }
+  return [];
+}
+
+function evidenceReferenceIssues(root, reference, kind) {
+  if (typeof reference !== "string" || reference.length === 0) {
+    return [`Shared-algebra ${kind} evidence reference must be a string.`];
+  }
+  const separator = reference.lastIndexOf(":");
+  if (separator === -1) {
+    return [
+      `Shared-algebra ${kind} evidence reference must be path:searchText: ${reference}`,
+    ];
+  }
+  const relativePath = reference.slice(0, separator);
+  const searchText = reference.slice(separator + 1);
+  if (
+    !relativePath.startsWith("packages/shared-algebras/") &&
+    !relativePath.startsWith("packages/surface/")
+  ) {
+    return [
+      `Shared-algebra ${kind} evidence reference must point under packages/shared-algebras or packages/surface: ${reference}`,
+    ];
+  }
+  const absolutePath = path.join(root, relativePath);
+  if (!fs.existsSync(absolutePath)) {
+    return [
+      `Shared-algebra ${kind} evidence reference points to missing file: ${reference}`,
+    ];
+  }
+  const content = fs.readFileSync(absolutePath, "utf8");
+  if (!content.includes(searchText)) {
+    return [
+      `Shared-algebra ${kind} evidence reference points to missing text ${searchText}: ${reference}`,
+    ];
   }
   return [];
 }
@@ -2080,6 +2216,7 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
     makeBatch({
       id: "SRDINV22",
       title: "Close Shared Multiclass Primary Ability Evidence",
+      suggestedStatus: "done",
       intent:
         "Close owner evidence for all level-1 Primary Ability rows through the shared multiclass prerequisite algebra.",
       rows: srdinv22SharedMulticlassPrimaryAbilityRows,
@@ -2153,6 +2290,7 @@ function buildSrdUnitInventory({
   unitClaims = [],
   unitEvidence = [],
   characterCreationOwnerEvidence,
+  sharedAlgebraOwnerEvidence,
 }) {
   const authored = findAuthored(root);
   const installedIds = new Set(
@@ -2165,6 +2303,7 @@ function buildSrdUnitInventory({
     unitClaims,
     unitEvidence,
     characterCreationOwnerEvidence,
+    sharedAlgebraOwnerEvidence,
   });
   const rows = withState(
     classOrder.flatMap((className) => classRows(root, className)),
@@ -2186,6 +2325,10 @@ function buildSrdUnitInventory({
       characterCreationOwnerEvidence: summarizeCharacterCreationOwnerEvidence(
         root,
         characterCreationOwnerEvidence,
+      ),
+      sharedAlgebraOwnerEvidence: summarizeSharedAlgebraOwnerEvidence(
+        root,
+        sharedAlgebraOwnerEvidence,
       ),
     },
     metrics: {
@@ -2369,6 +2512,11 @@ function validateSrdUnitInventory(report) {
         );
       }
     }
+  }
+  const sharedAlgebraArtifact =
+    report.evidenceArtifacts?.sharedAlgebraOwnerEvidence;
+  if (sharedAlgebraArtifact) {
+    issues.push(...sharedAlgebraArtifact.issues);
   }
   for (const rowId of [
     ...classFeatureSurfaceBlockers.keys(),
