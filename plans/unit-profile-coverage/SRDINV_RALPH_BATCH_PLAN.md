@@ -238,3 +238,54 @@ Unit rows no longer fall back to `catalog-installed-needs-owner-evidence`.
   generator and added validation so authored, installed cantrip/level-1 Spell
   Unit rows cannot silently re-enter generic owner-evidence-required wording; no
   further important changes found.
+
+## SRDINV5D Closeout Notes
+
+SRDINV5D reviewed the generated catalog-only/dead-for-now cantrip and level-1
+Spell Unit pressure rows; it does not admit spells, author spell records, or
+implement runtime behavior. The local SRD source review used the cantrip and
+level-1 spell-list tables in the SRD 5.2.1 Bard, Cleric, Druid, Paladin,
+Ranger, Sorcerer, Warlock, and Wizard class files, plus the spell descriptions
+under `.references/srd-5.2.1/Spells/Descriptions-*.md` for the authored
+not-installed Spell Definitions and the previously classified missing or
+installed catalog-only closures.
+
+`UBIQUITOUS_LANGUAGE.md` was checked for Spell Definition, Spell Access, Spell
+Invocation, Spell Effect, Cantrip, Spell Slot, Pact Slot, Magic Action,
+Reaction, Concentration, Area of Effect, Illumination, Charmed, Frightened,
+Blinded, Restrained, Prone, Poisoned, Temporary Hit Points, Speed, and D20 roll
+terms. The generated inventory now keeps the 151-row SRDINV5D review
+denominator, but splits it into 74 explicit `catalog-only/dead-for-now` rows
+and 77 `catalog-authored-executable-follow-up` rows. Catalog-only rows carry
+specific closure reasons for exploration, social, illumination, object,
+illusion, item-inspection, companion, communication, and inventory effects
+outside the current promoted owners. Authored executable rows no longer stay
+dead-for-now; they are promoted into named follow-up batches:
+
+- `spell-attack-and-save-damage-runtime`
+- `spell-area-chain-and-typed-damage-runtime`
+- `spell-buff-debuff-and-protection-runtime`
+- `spell-attack-rider-and-smite-runtime`
+- `spell-held-light-and-hurled-attack-runtime`
+- `spell-reaction-runtime`
+
+Reviewer round 2 split Produce Flame out of the attack-rider/smite batch after
+checking `.references/srd-5.2.1/Spells/Descriptions-M-P.md`: the spell creates
+a 10-minute held flame that sheds Bright Light and Dim Light, then permits a
+later Magic action ranged spell attack against a creature or object with Fire
+damage and cantrip scaling.
+
+The generator validates that every authored, not-installed cantrip or level-1
+Spell Unit pressure row is classified by the SRDINV5D review table, and that a
+Spell Definition cannot be both a catalog-only closure and an executable
+follow-up.
+
+`/simplify` convergence:
+
+- Round 1: split executable authored Spell Definitions out of
+  `catalog-only/dead-for-now` instead of preserving a misleading dead-for-now
+  disposition; kept the repeated class-list rows derived from one Unit-id review
+  table so class spell-list copies cannot drift.
+- Round 2: added validation for the review table and kept the follow-up batches
+  at mechanics-family granularity rather than per-class or per-row tasks; no
+  further important changes found.

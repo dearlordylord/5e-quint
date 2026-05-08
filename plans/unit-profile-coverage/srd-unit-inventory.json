@@ -42,13 +42,15 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-required": 27,
       "catalog-installed-owner-evidence-present": 37,
-      "catalog-only/dead-for-now": 155,
+      "catalog-only/dead-for-now": 78,
       "non-runtime": 12,
       "missing-authored-record": 78,
-      "needs-surface-widening": 58
+      "needs-surface-widening": 58,
+      "catalog-authored-executable-follow-up": 77
     },
     "spellPressureRowsByDisposition": {
-      "catalog-only/dead-for-now": 151,
+      "catalog-only/dead-for-now": 74,
+      "catalog-authored-executable-follow-up": 77,
       "needs-surface-widening": 33,
       "catalog-installed-owner-evidence-present": 18,
       "catalog-installed-owner-evidence-required": 3,
@@ -467,7 +469,7 @@
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_silent_image",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_unseen_servant"
       ],
-      "nextAction": "Confirm catalog-only/dead-for-now closure or promote named follow-up batches for any spell rows that should become executable.",
+      "nextAction": "Catalog-only/dead-for-now closures are explicit; authored executable spell rows are promoted into named follow-up batches.",
       "acceptance": "Catalog-only cantrip and level-1 Spell Unit rows remain counted deliberately, or become explicit follow-up work."
     },
     {
@@ -1717,7 +1719,7 @@
       },
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Multiple movable Dim Light sources, linked spacing, humanoid light forms, and range-based expiry are illumination/exploration state outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_light",
@@ -1872,7 +1874,7 @@
       },
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Sound/image illusion creation, physical-interaction reveal, faint rendering after Study, and recast expiry are illusion/exploration state outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_prestidigitation",
@@ -1928,9 +1930,9 @@
         "state": "not-installed",
         "unitId": "starry_wisp"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-attack-and-save-damage-runtime: Admit these authored Spell Definitions and add battle-runtime spell invocation/projection for attack rolls, saving throws, damage, cantrip scaling, slot-scaled damage, object targeting where SRD permits it, and simple rider outcomes."
     },
     {
       "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_true_strike",
@@ -1958,9 +1960,9 @@
         "state": "not-installed",
         "unitId": "true_strike"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-attack-rider-and-smite-runtime: Admit these authored Spell Definitions after adding spell-hosted weapon attack riders, immediate hit-trigger Bonus Action casts, retargetable marks, ongoing start-turn damage, and spellcasting-ability weapon substitution."
     },
     {
       "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_vicious_mockery",
@@ -1988,9 +1990,9 @@
         "state": "not-installed",
         "unitId": "vicious_mockery"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-attack-and-save-damage-runtime: Admit these authored Spell Definitions and add battle-runtime spell invocation/projection for attack rolls, saving throws, damage, cantrip scaling, slot-scaled damage, object targeting where SRD permits it, and simple rider outcomes."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_animal_friendship",
@@ -2018,9 +2020,9 @@
         "state": "not-installed",
         "unitId": "animal_friendship"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_bane",
@@ -2048,9 +2050,9 @@
         "state": "not-installed",
         "unitId": "bane"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_charm_person",
@@ -2078,9 +2080,9 @@
         "state": "not-installed",
         "unitId": "charm_person"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_color_spray",
@@ -2108,9 +2110,9 @@
         "state": "not-installed",
         "unitId": "color_spray"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-area-chain-and-typed-damage-runtime: Admit these authored Spell Definitions after adding runtime support for spell-chosen damage types, chained target selection, mixed attack-plus-area resolution, area condition application, and terrain/ground effects."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_command",
@@ -2169,7 +2171,7 @@
       },
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Language comprehension, signed-language understanding, page-reading time, and secret-message exclusion are exploration/communication effects outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_cure_wounds",
@@ -2336,9 +2338,9 @@
         "state": "not-installed",
         "unitId": "faerie_fire"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_feather_fall",
@@ -2436,9 +2438,9 @@
         "state": "not-installed",
         "unitId": "heroism"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_hideous_laughter",
@@ -2497,7 +2499,7 @@
       },
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Magic item property discovery, Attunement and charge knowledge, ongoing-spell identification, and object/creature investigation are exploration/item-inspection effects outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_illusory_script",
@@ -2553,9 +2555,9 @@
         "state": "not-installed",
         "unitId": "longstrider"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_silent_image",
@@ -2585,7 +2587,7 @@
       },
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Moveable visual illusion state, Magic action repositioning, physical-interaction reveal, and Study action adjudication are illusion/exploration state outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_sleep",
@@ -2656,7 +2658,7 @@
       },
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Beast communication, Influence action options, and local-information discovery are exploration/social effects outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_thunderwave",
@@ -3146,9 +3148,9 @@
         "state": "not-installed",
         "unitId": "guidance"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_light",
@@ -3245,9 +3247,9 @@
         "state": "not-installed",
         "unitId": "resistance"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_sacred_flame",
@@ -3275,9 +3277,9 @@
         "state": "not-installed",
         "unitId": "sacred_flame"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-attack-and-save-damage-runtime: Admit these authored Spell Definitions and add battle-runtime spell invocation/projection for attack rolls, saving throws, damage, cantrip scaling, slot-scaled damage, object targeting where SRD permits it, and simple rider outcomes."
     },
     {
       "id": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_spare_the_dying",
@@ -3362,9 +3364,9 @@
         "state": "not-installed",
         "unitId": "bane"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bless",
@@ -3392,9 +3394,9 @@
         "state": "not-installed",
         "unitId": "bless"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_command",
@@ -3617,9 +3619,9 @@
         "state": "not-installed",
         "unitId": "guiding_bolt"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-attack-and-save-damage-runtime: Admit these authored Spell Definitions and add battle-runtime spell invocation/projection for attack rolls, saving throws, damage, cantrip scaling, slot-scaled damage, object targeting where SRD permits it, and simple rider outcomes."
     },
     {
       "id": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_healing_word",
@@ -3688,9 +3690,9 @@
         "state": "not-installed",
         "unitId": "inflict_wounds"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-attack-and-save-damage-runtime: Admit these authored Spell Definitions and add battle-runtime spell invocation/projection for attack rolls, saving throws, damage, cantrip scaling, slot-scaled damage, object targeting where SRD permits it, and simple rider outcomes."
     },
     {
       "id": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_protection_from_evil_and_good",
@@ -3718,9 +3720,9 @@
         "state": "not-installed",
         "unitId": "protection_from_evil_and_good"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_purify_food_and_drink",
@@ -3805,9 +3807,9 @@
         "state": "not-installed",
         "unitId": "shield_of_faith"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/druid:level-1:class-container:druid_class_container",
@@ -4346,9 +4348,9 @@
         "state": "not-installed",
         "unitId": "guidance"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_mending",
@@ -4432,9 +4434,9 @@
         "state": "not-installed",
         "unitId": "poison_spray"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-attack-and-save-damage-runtime: Admit these authored Spell Definitions and add battle-runtime spell invocation/projection for attack rolls, saving throws, damage, cantrip scaling, slot-scaled damage, object targeting where SRD permits it, and simple rider outcomes."
     },
     {
       "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_produce_flame",
@@ -4462,9 +4464,9 @@
         "state": "not-installed",
         "unitId": "produce_flame"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-held-light-and-hurled-attack-runtime: Admit Produce Flame after adding held-flame duration, Bright Light and Dim Light emission, recast expiry, later Magic action hurling, creature or object targeting within range, ranged spell attack resolution, Fire damage, and cantrip scaling."
     },
     {
       "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_resistance",
@@ -4492,9 +4494,9 @@
         "state": "not-installed",
         "unitId": "resistance"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_shillelagh",
@@ -4580,9 +4582,9 @@
         "state": "not-installed",
         "unitId": "starry_wisp"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-attack-and-save-damage-runtime: Admit these authored Spell Definitions and add battle-runtime spell invocation/projection for attack rolls, saving throws, damage, cantrip scaling, slot-scaled damage, object targeting where SRD permits it, and simple rider outcomes."
     },
     {
       "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_animal_friendship",
@@ -4610,9 +4612,9 @@
         "state": "not-installed",
         "unitId": "animal_friendship"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_charm_person",
@@ -4640,9 +4642,9 @@
         "state": "not-installed",
         "unitId": "charm_person"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_create_or_destroy_water",
@@ -4808,9 +4810,9 @@
         "state": "not-installed",
         "unitId": "entangle"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-area-chain-and-typed-damage-runtime: Admit these authored Spell Definitions after adding runtime support for spell-chosen damage types, chained target selection, mixed attack-plus-area resolution, area condition application, and terrain/ground effects."
     },
     {
       "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_faerie_fire",
@@ -4838,9 +4840,9 @@
         "state": "not-installed",
         "unitId": "faerie_fire"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_fog_cloud",
@@ -4966,9 +4968,9 @@
         "state": "not-installed",
         "unitId": "ice_knife"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-area-chain-and-typed-damage-runtime: Admit these authored Spell Definitions after adding runtime support for spell-chosen damage types, chained target selection, mixed attack-plus-area resolution, area condition application, and terrain/ground effects."
     },
     {
       "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_jump",
@@ -5025,9 +5027,9 @@
         "state": "not-installed",
         "unitId": "longstrider"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_protection_from_evil_and_good",
@@ -5055,9 +5057,9 @@
         "state": "not-installed",
         "unitId": "protection_from_evil_and_good"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_purify_food_and_drink",
@@ -5115,7 +5117,7 @@
       },
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Beast communication, Influence action options, and local-information discovery are exploration/social effects outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_thunderwave",
@@ -6608,9 +6610,9 @@
         "state": "not-installed",
         "unitId": "bless"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_command",
@@ -6805,9 +6807,9 @@
         "state": "not-installed",
         "unitId": "divine_favor"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-attack-rider-and-smite-runtime: Admit these authored Spell Definitions after adding spell-hosted weapon attack riders, immediate hit-trigger Bonus Action casts, retargetable marks, ongoing start-turn damage, and spellcasting-ability weapon substitution."
     },
     {
       "id": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_divine_smite",
@@ -6835,9 +6837,9 @@
         "state": "not-installed",
         "unitId": "divine_smite"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-attack-rider-and-smite-runtime: Admit these authored Spell Definitions after adding spell-hosted weapon attack riders, immediate hit-trigger Bonus Action casts, retargetable marks, ongoing start-turn damage, and spellcasting-ability weapon substitution."
     },
     {
       "id": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_heroism",
@@ -6865,9 +6867,9 @@
         "state": "not-installed",
         "unitId": "heroism"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_protection_from_evil_and_good",
@@ -6895,9 +6897,9 @@
         "state": "not-installed",
         "unitId": "protection_from_evil_and_good"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_purify_food_and_drink",
@@ -6953,9 +6955,9 @@
         "state": "not-installed",
         "unitId": "searing_smite"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-attack-rider-and-smite-runtime: Admit these authored Spell Definitions after adding spell-hosted weapon attack riders, immediate hit-trigger Bonus Action casts, retargetable marks, ongoing start-turn damage, and spellcasting-ability weapon substitution."
     },
     {
       "id": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_shield_of_faith",
@@ -6983,9 +6985,9 @@
         "state": "not-installed",
         "unitId": "shield_of_faith"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/ranger:level-1:class-container:ranger_class_container",
@@ -7435,7 +7437,7 @@
       },
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Intrusion wards, designated exceptions, audible or mental alerts, and sleep wake-up effects are exploration/security state outside the current promoted runtime owners."
     },
     {
       "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_animal_friendship",
@@ -7463,9 +7465,9 @@
         "state": "not-installed",
         "unitId": "animal_friendship"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_cure_wounds",
@@ -7603,9 +7605,9 @@
         "state": "not-installed",
         "unitId": "ensnaring_strike"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-attack-rider-and-smite-runtime: Admit these authored Spell Definitions after adding spell-hosted weapon attack riders, immediate hit-trigger Bonus Action casts, retargetable marks, ongoing start-turn damage, and spellcasting-ability weapon substitution."
     },
     {
       "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_entangle",
@@ -7633,9 +7635,9 @@
         "state": "not-installed",
         "unitId": "entangle"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-area-chain-and-typed-damage-runtime: Admit these authored Spell Definitions after adding runtime support for spell-chosen damage types, chained target selection, mixed attack-plus-area resolution, area condition application, and terrain/ground effects."
     },
     {
       "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_fog_cloud",
@@ -7720,9 +7722,9 @@
         "state": "not-installed",
         "unitId": "hunters_mark"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-attack-rider-and-smite-runtime: Admit these authored Spell Definitions after adding spell-hosted weapon attack riders, immediate hit-trigger Bonus Action casts, retargetable marks, ongoing start-turn damage, and spellcasting-ability weapon substitution."
     },
     {
       "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_jump",
@@ -7779,9 +7781,9 @@
         "state": "not-installed",
         "unitId": "longstrider"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_speak_with_animals",
@@ -7811,7 +7813,7 @@
       },
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Beast communication, Influence action options, and local-information discovery are exploration/social effects outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/rogue:level-1:class-container:rogue_class_container",
@@ -8767,9 +8769,9 @@
         "state": "not-installed",
         "unitId": "chill_touch"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-attack-and-save-damage-runtime: Admit these authored Spell Definitions and add battle-runtime spell invocation/projection for attack rolls, saving throws, damage, cantrip scaling, slot-scaled damage, object targeting where SRD permits it, and simple rider outcomes."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_dancing_lights",
@@ -8799,7 +8801,7 @@
       },
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Multiple movable Dim Light sources, linked spacing, humanoid light forms, and range-based expiry are illumination/exploration state outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_elementalism",
@@ -9024,7 +9026,7 @@
       },
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Sound/image illusion creation, physical-interaction reveal, faint rendering after Study, and recast expiry are illusion/exploration state outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_poison_spray",
@@ -9052,9 +9054,9 @@
         "state": "not-installed",
         "unitId": "poison_spray"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-attack-and-save-damage-runtime: Admit these authored Spell Definitions and add battle-runtime spell invocation/projection for attack rolls, saving throws, damage, cantrip scaling, slot-scaled damage, object targeting where SRD permits it, and simple rider outcomes."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_prestidigitation",
@@ -9151,9 +9153,9 @@
         "state": "not-installed",
         "unitId": "shocking_grasp"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-attack-and-save-damage-runtime: Admit these authored Spell Definitions and add battle-runtime spell invocation/projection for attack rolls, saving throws, damage, cantrip scaling, slot-scaled damage, object targeting where SRD permits it, and simple rider outcomes."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_sorcerous_burst",
@@ -9210,9 +9212,9 @@
         "state": "not-installed",
         "unitId": "true_strike"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-attack-rider-and-smite-runtime: Admit these authored Spell Definitions after adding spell-hosted weapon attack riders, immediate hit-trigger Bonus Action casts, retargetable marks, ongoing start-turn damage, and spellcasting-ability weapon substitution."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_burning_hands",
@@ -9240,9 +9242,9 @@
         "state": "not-installed",
         "unitId": "burning_hands"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-attack-and-save-damage-runtime: Admit these authored Spell Definitions and add battle-runtime spell invocation/projection for attack rolls, saving throws, damage, cantrip scaling, slot-scaled damage, object targeting where SRD permits it, and simple rider outcomes."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_charm_person",
@@ -9270,9 +9272,9 @@
         "state": "not-installed",
         "unitId": "charm_person"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_chromatic_orb",
@@ -9300,9 +9302,9 @@
         "state": "not-installed",
         "unitId": "chromatic_orb"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-area-chain-and-typed-damage-runtime: Admit these authored Spell Definitions after adding runtime support for spell-chosen damage types, chained target selection, mixed attack-plus-area resolution, area condition application, and terrain/ground effects."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_color_spray",
@@ -9330,9 +9332,9 @@
         "state": "not-installed",
         "unitId": "color_spray"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-area-chain-and-typed-damage-runtime: Admit these authored Spell Definitions after adding runtime support for spell-chosen damage types, chained target selection, mixed attack-plus-area resolution, area condition application, and terrain/ground effects."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_comprehend_languages",
@@ -9362,7 +9364,7 @@
       },
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Language comprehension, signed-language understanding, page-reading time, and secret-message exclusion are exploration/communication effects outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_detect_magic",
@@ -9488,9 +9490,9 @@
         "state": "not-installed",
         "unitId": "false_life"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_feather_fall",
@@ -9576,9 +9578,9 @@
         "state": "not-installed",
         "unitId": "grease"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-area-chain-and-typed-damage-runtime: Admit these authored Spell Definitions after adding runtime support for spell-chosen damage types, chained target selection, mixed attack-plus-area resolution, area condition application, and terrain/ground effects."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_ice_knife",
@@ -9606,9 +9608,9 @@
         "state": "not-installed",
         "unitId": "ice_knife"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-area-chain-and-typed-damage-runtime: Admit these authored Spell Definitions after adding runtime support for spell-chosen damage types, chained target selection, mixed attack-plus-area resolution, area condition application, and terrain/ground effects."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_jump",
@@ -9747,9 +9749,9 @@
         "state": "not-installed",
         "unitId": "ray_of_sickness"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-attack-and-save-damage-runtime: Admit these authored Spell Definitions and add battle-runtime spell invocation/projection for attack rolls, saving throws, damage, cantrip scaling, slot-scaled damage, object targeting where SRD permits it, and simple rider outcomes."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_shield",
@@ -9820,7 +9822,7 @@
       },
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Moveable visual illusion state, Magic action repositioning, physical-interaction reveal, and Study action adjudication are illusion/exploration state outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_sleep",
@@ -10441,9 +10443,9 @@
         "state": "not-installed",
         "unitId": "chill_touch"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-attack-and-save-damage-runtime: Admit these authored Spell Definitions and add battle-runtime spell invocation/projection for attack rolls, saving throws, damage, cantrip scaling, slot-scaled damage, object targeting where SRD permits it, and simple rider outcomes."
     },
     {
       "id": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_eldritch_blast",
@@ -10471,9 +10473,9 @@
         "state": "not-installed",
         "unitId": "eldritch_blast"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-attack-and-save-damage-runtime: Admit these authored Spell Definitions and add battle-runtime spell invocation/projection for attack rolls, saving throws, damage, cantrip scaling, slot-scaled damage, object targeting where SRD permits it, and simple rider outcomes."
     },
     {
       "id": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_mage_hand",
@@ -10531,7 +10533,7 @@
       },
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Sound/image illusion creation, physical-interaction reveal, faint rendering after Study, and recast expiry are illusion/exploration state outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_poison_spray",
@@ -10559,9 +10561,9 @@
         "state": "not-installed",
         "unitId": "poison_spray"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-attack-and-save-damage-runtime: Admit these authored Spell Definitions and add battle-runtime spell invocation/projection for attack rolls, saving throws, damage, cantrip scaling, slot-scaled damage, object targeting where SRD permits it, and simple rider outcomes."
     },
     {
       "id": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_prestidigitation",
@@ -10617,9 +10619,9 @@
         "state": "not-installed",
         "unitId": "true_strike"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-attack-rider-and-smite-runtime: Admit these authored Spell Definitions after adding spell-hosted weapon attack riders, immediate hit-trigger Bonus Action casts, retargetable marks, ongoing start-turn damage, and spellcasting-ability weapon substitution."
     },
     {
       "id": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_bane",
@@ -10647,9 +10649,9 @@
         "state": "not-installed",
         "unitId": "bane"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_charm_person",
@@ -10677,9 +10679,9 @@
         "state": "not-installed",
         "unitId": "charm_person"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_comprehend_languages",
@@ -10709,7 +10711,7 @@
       },
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Language comprehension, signed-language understanding, page-reading time, and secret-message exclusion are exploration/communication effects outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_detect_magic",
@@ -10807,9 +10809,9 @@
         "state": "not-installed",
         "unitId": "hellish_rebuke"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-reaction-runtime: Admit these authored Spell Definitions after adding spell-specific Reaction casting windows, trigger facts, slot spend, save or damage resolution, and interaction with the one-spell-slot-per-turn boundary."
     },
     {
       "id": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hex",
@@ -10923,9 +10925,9 @@
         "state": "not-installed",
         "unitId": "protection_from_evil_and_good"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_speak_with_animals",
@@ -10955,7 +10957,7 @@
       },
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Beast communication, Influence action options, and local-information discovery are exploration/social effects outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_unseen_servant",
@@ -11627,9 +11629,9 @@
         "state": "not-installed",
         "unitId": "chill_touch"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-attack-and-save-damage-runtime: Admit these authored Spell Definitions and add battle-runtime spell invocation/projection for attack rolls, saving throws, damage, cantrip scaling, slot-scaled damage, object targeting where SRD permits it, and simple rider outcomes."
     },
     {
       "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_dancing_lights",
@@ -11659,7 +11661,7 @@
       },
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Multiple movable Dim Light sources, linked spacing, humanoid light forms, and range-based expiry are illumination/exploration state outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_elementalism",
@@ -11884,7 +11886,7 @@
       },
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Sound/image illusion creation, physical-interaction reveal, faint rendering after Study, and recast expiry are illusion/exploration state outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_poison_spray",
@@ -11912,9 +11914,9 @@
         "state": "not-installed",
         "unitId": "poison_spray"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-attack-and-save-damage-runtime: Admit these authored Spell Definitions and add battle-runtime spell invocation/projection for attack rolls, saving throws, damage, cantrip scaling, slot-scaled damage, object targeting where SRD permits it, and simple rider outcomes."
     },
     {
       "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_prestidigitation",
@@ -12011,9 +12013,9 @@
         "state": "not-installed",
         "unitId": "shocking_grasp"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-attack-and-save-damage-runtime: Admit these authored Spell Definitions and add battle-runtime spell invocation/projection for attack rolls, saving throws, damage, cantrip scaling, slot-scaled damage, object targeting where SRD permits it, and simple rider outcomes."
     },
     {
       "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_true_strike",
@@ -12041,9 +12043,9 @@
         "state": "not-installed",
         "unitId": "true_strike"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-attack-rider-and-smite-runtime: Admit these authored Spell Definitions after adding spell-hosted weapon attack riders, immediate hit-trigger Bonus Action casts, retargetable marks, ongoing start-turn damage, and spellcasting-ability weapon substitution."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_alarm",
@@ -12073,7 +12075,7 @@
       },
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Intrusion wards, designated exceptions, audible or mental alerts, and sleep wake-up effects are exploration/security state outside the current promoted runtime owners."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_burning_hands",
@@ -12101,9 +12103,9 @@
         "state": "not-installed",
         "unitId": "burning_hands"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-attack-and-save-damage-runtime: Admit these authored Spell Definitions and add battle-runtime spell invocation/projection for attack rolls, saving throws, damage, cantrip scaling, slot-scaled damage, object targeting where SRD permits it, and simple rider outcomes."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_charm_person",
@@ -12131,9 +12133,9 @@
         "state": "not-installed",
         "unitId": "charm_person"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_chromatic_orb",
@@ -12161,9 +12163,9 @@
         "state": "not-installed",
         "unitId": "chromatic_orb"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-area-chain-and-typed-damage-runtime: Admit these authored Spell Definitions after adding runtime support for spell-chosen damage types, chained target selection, mixed attack-plus-area resolution, area condition application, and terrain/ground effects."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_color_spray",
@@ -12191,9 +12193,9 @@
         "state": "not-installed",
         "unitId": "color_spray"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-area-chain-and-typed-damage-runtime: Admit these authored Spell Definitions after adding runtime support for spell-chosen damage types, chained target selection, mixed attack-plus-area resolution, area condition application, and terrain/ground effects."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_comprehend_languages",
@@ -12223,7 +12225,7 @@
       },
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Language comprehension, signed-language understanding, page-reading time, and secret-message exclusion are exploration/communication effects outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_detect_magic",
@@ -12349,9 +12351,9 @@
         "state": "not-installed",
         "unitId": "false_life"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_feather_fall",
@@ -12410,7 +12412,7 @@
       },
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Familiar selection, summoned companion lifecycle, independent Initiative, telepathy, touch-spell delivery, dismissal, and carried-item cleanup need a summoned-companion/character-sheet owner before battle-runtime promotion."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_floating_disk",
@@ -12495,9 +12497,9 @@
         "state": "not-installed",
         "unitId": "grease"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-area-chain-and-typed-damage-runtime: Admit these authored Spell Definitions after adding runtime support for spell-chosen damage types, chained target selection, mixed attack-plus-area resolution, area condition application, and terrain/ground effects."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_hideous_laughter",
@@ -12554,9 +12556,9 @@
         "state": "not-installed",
         "unitId": "ice_knife"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-area-chain-and-typed-damage-runtime: Admit these authored Spell Definitions after adding runtime support for spell-chosen damage types, chained target selection, mixed attack-plus-area resolution, area condition application, and terrain/ground effects."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_identify",
@@ -12586,7 +12588,7 @@
       },
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Magic item property discovery, Attunement and charge knowledge, ongoing-spell identification, and object/creature investigation are exploration/item-inspection effects outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_illusory_script",
@@ -12671,9 +12673,9 @@
         "state": "not-installed",
         "unitId": "longstrider"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_mage_armor",
@@ -12783,9 +12785,9 @@
         "state": "not-installed",
         "unitId": "protection_from_evil_and_good"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_ray_of_sickness",
@@ -12813,9 +12815,9 @@
         "state": "not-installed",
         "unitId": "ray_of_sickness"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Promote follow-up batch spell-attack-and-save-damage-runtime: Admit these authored Spell Definitions and add battle-runtime spell invocation/projection for attack rolls, saving throws, damage, cantrip scaling, slot-scaled damage, object targeting where SRD permits it, and simple rider outcomes."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_shield",
@@ -12886,7 +12888,7 @@
       },
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted."
+      "nextAction": "Moveable visual illusion state, Magic action repositioning, physical-interaction reveal, and Study action adjudication are illusion/exploration state outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_sleep",

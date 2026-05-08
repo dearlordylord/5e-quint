@@ -114,6 +114,130 @@ const installedSpellUnitCatalogOnlyClosures = new Set([
   "light",
 ]);
 
+const authoredSpellUnitCatalogOnlyClosures = new Map([
+  [
+    "alarm",
+    "Intrusion wards, designated exceptions, audible or mental alerts, and sleep wake-up effects are exploration/security state outside the current promoted runtime owners.",
+  ],
+  [
+    "comprehend_languages",
+    "Language comprehension, signed-language understanding, page-reading time, and secret-message exclusion are exploration/communication effects outside promoted runtime owners.",
+  ],
+  [
+    "dancing_lights",
+    "Multiple movable Dim Light sources, linked spacing, humanoid light forms, and range-based expiry are illumination/exploration state outside promoted runtime owners.",
+  ],
+  [
+    "find_familiar",
+    "Familiar selection, summoned companion lifecycle, independent Initiative, telepathy, touch-spell delivery, dismissal, and carried-item cleanup need a summoned-companion/character-sheet owner before battle-runtime promotion.",
+  ],
+  [
+    "identify",
+    "Magic item property discovery, Attunement and charge knowledge, ongoing-spell identification, and object/creature investigation are exploration/item-inspection effects outside promoted runtime owners.",
+  ],
+  [
+    "minor_illusion",
+    "Sound/image illusion creation, physical-interaction reveal, faint rendering after Study, and recast expiry are illusion/exploration state outside promoted runtime owners.",
+  ],
+  [
+    "silent_image",
+    "Moveable visual illusion state, Magic action repositioning, physical-interaction reveal, and Study action adjudication are illusion/exploration state outside promoted runtime owners.",
+  ],
+  [
+    "speak_with_animals",
+    "Beast communication, Influence action options, and local-information discovery are exploration/social effects outside promoted runtime owners.",
+  ],
+]);
+
+const spellUnitExecutableFollowUpBatches = [
+  {
+    id: "spell-attack-and-save-damage-runtime",
+    label: "Spell attack and save-damage runtime",
+    nextAction:
+      "Admit these authored Spell Definitions and add battle-runtime spell invocation/projection for attack rolls, saving throws, damage, cantrip scaling, slot-scaled damage, object targeting where SRD permits it, and simple rider outcomes.",
+    unitIds: [
+      "burning_hands",
+      "chill_touch",
+      "eldritch_blast",
+      "guiding_bolt",
+      "inflict_wounds",
+      "poison_spray",
+      "ray_of_sickness",
+      "sacred_flame",
+      "shocking_grasp",
+      "starry_wisp",
+      "vicious_mockery",
+    ],
+  },
+  {
+    id: "spell-area-chain-and-typed-damage-runtime",
+    label: "Area, chain, and typed-damage spell runtime",
+    nextAction:
+      "Admit these authored Spell Definitions after adding runtime support for spell-chosen damage types, chained target selection, mixed attack-plus-area resolution, area condition application, and terrain/ground effects.",
+    unitIds: [
+      "chromatic_orb",
+      "color_spray",
+      "entangle",
+      "grease",
+      "ice_knife",
+    ],
+  },
+  {
+    id: "spell-buff-debuff-and-protection-runtime",
+    label: "Buff, debuff, and protection spell runtime",
+    nextAction:
+      "Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction.",
+    unitIds: [
+      "animal_friendship",
+      "bane",
+      "bless",
+      "charm_person",
+      "faerie_fire",
+      "false_life",
+      "guidance",
+      "heroism",
+      "longstrider",
+      "protection_from_evil_and_good",
+      "resistance",
+      "shield_of_faith",
+    ],
+  },
+  {
+    id: "spell-attack-rider-and-smite-runtime",
+    label: "Attack-rider and smite spell runtime",
+    nextAction:
+      "Admit these authored Spell Definitions after adding spell-hosted weapon attack riders, immediate hit-trigger Bonus Action casts, retargetable marks, ongoing start-turn damage, and spellcasting-ability weapon substitution.",
+    unitIds: [
+      "divine_favor",
+      "divine_smite",
+      "ensnaring_strike",
+      "hunters_mark",
+      "searing_smite",
+      "true_strike",
+    ],
+  },
+  {
+    id: "spell-held-light-and-hurled-attack-runtime",
+    label: "Held light and hurled spell attack runtime",
+    nextAction:
+      "Admit Produce Flame after adding held-flame duration, Bright Light and Dim Light emission, recast expiry, later Magic action hurling, creature or object targeting within range, ranged spell attack resolution, Fire damage, and cantrip scaling.",
+    unitIds: ["produce_flame"],
+  },
+  {
+    id: "spell-reaction-runtime",
+    label: "Reaction spell runtime",
+    nextAction:
+      "Admit these authored Spell Definitions after adding spell-specific Reaction casting windows, trigger facts, slot spend, save or damage resolution, and interaction with the one-spell-slot-per-turn boundary.",
+    unitIds: ["hellish_rebuke"],
+  },
+];
+
+const spellUnitExecutableFollowUps = new Map(
+  spellUnitExecutableFollowUpBatches.flatMap((batch) =>
+    batch.unitIds.map((unitId) => [unitId, batch]),
+  ),
+);
+
 const spellAccessSurfaceBlockersByClass = {
   Bard: "ClassRecord spellcasting support for non-Wizard list-prepared casters: Bard cantrip choices, prepared Bard spells, Spell Slot projection, spellcasting ability, Musical Instrument focus, and level-up replacement timing",
   Cleric:
@@ -743,8 +867,12 @@ function finalDisposition(row, authored, installedIds, ownerEvidenceSources) {
   }
   if (!row.candidateUnitId) return "needs-surface-widening";
   if (!authored.has(row.candidateUnitId)) return "missing-authored-record";
-  if (!installedIds.has(row.candidateUnitId))
+  if (!installedIds.has(row.candidateUnitId)) {
+    if (spellUnitExecutableFollowUps.has(row.candidateUnitId)) {
+      return "catalog-authored-executable-follow-up";
+    }
     return "catalog-only/dead-for-now";
+  }
   const installedClassification = installedOwnerClassification(
     row,
     ownerEvidenceSources,
@@ -777,6 +905,10 @@ function nextAction(row, disposition, gate, ownerEvidenceSources, installedIds) 
   if (disposition === "catalog-installed-needs-owner-evidence") {
     return "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only.";
   }
+  if (disposition === "catalog-authored-executable-follow-up") {
+    const followUp = spellUnitExecutableFollowUps.get(row.candidateUnitId);
+    return `Promote follow-up batch ${followUp.id}: ${followUp.nextAction}`;
+  }
   if (
     disposition === "catalog-only/dead-for-now" &&
     installedClassification?.kind === "catalog-only-closure"
@@ -791,6 +923,10 @@ function nextAction(row, disposition, gate, ownerEvidenceSources, installedIds) 
     if (spellUnitClassification?.kind === "catalog-only-closure") {
       return spellUnitClassification.reason;
     }
+    const authoredClosure = authoredSpellUnitCatalogOnlyClosures.get(
+      row.candidateUnitId,
+    );
+    if (authoredClosure !== undefined) return authoredClosure;
     return "Decide whether to admit/support, or keep catalog-only closure counted.";
   }
   if (disposition === "missing-authored-record") {
@@ -1514,6 +1650,10 @@ function buildRecommendedBatches(rows) {
   const catalogOnlySpellUnitPressureRows = spellPressure.filter(
     (row) => row.finalDisposition === "catalog-only/dead-for-now",
   );
+  const executableFollowUpSpellUnitPressureRows = spellPressure.filter(
+    (row) =>
+      row.finalDisposition === "catalog-authored-executable-follow-up",
+  );
   const catalogOnlyRows = rows.filter(
     (row) =>
       row.finalDisposition === "catalog-only/dead-for-now" &&
@@ -1634,9 +1774,14 @@ function buildRecommendedBatches(rows) {
       suggestedStatus: "blocked-on-SRDINV1",
       intent:
         "Keep catalog-only spell pressure explicit and counted without forcing unrelated class or nonspell rows into the same task.",
-      rows: catalogOnlySpellUnitPressureRows,
+      rows: [
+        ...catalogOnlySpellUnitPressureRows,
+        ...executableFollowUpSpellUnitPressureRows,
+      ],
       nextAction:
-        "Confirm catalog-only/dead-for-now closure or promote named follow-up batches for any spell rows that should become executable.",
+        executableFollowUpSpellUnitPressureRows.length === 0
+          ? "Confirm catalog-only/dead-for-now closure or promote named follow-up batches for any spell rows that should become executable."
+          : "Catalog-only/dead-for-now closures are explicit; authored executable spell rows are promoted into named follow-up batches.",
       acceptance:
         "Catalog-only cantrip and level-1 Spell Unit rows remain counted deliberately, or become explicit follow-up work.",
     }),
@@ -1785,6 +1930,94 @@ function validateSrdUnitInventory(report) {
       issues.push(
         `${row.id} is an installed level-1 row with generic owner evidence.`,
       );
+    }
+    if (
+      row.rowKind === "spell-unit-pressure" &&
+      (row.levelBand === "spell-level-0" ||
+        row.levelBand === "spell-level-1") &&
+      row.authoredContent.state === "authored-record-present" &&
+      row.catalogAdmission.state === "not-installed"
+    ) {
+      const reviewed =
+        authoredSpellUnitCatalogOnlyClosures.has(row.candidateUnitId) ||
+        spellUnitExecutableFollowUps.has(row.candidateUnitId);
+      if (!reviewed) {
+        issues.push(
+          `${row.id} is an authored, not-installed Spell Unit row without SRDINV5D review classification.`,
+        );
+      }
+      if (
+        authoredSpellUnitCatalogOnlyClosures.has(row.candidateUnitId) &&
+        row.finalDisposition !== "catalog-only/dead-for-now"
+      ) {
+        issues.push(
+          `${row.id} is an authored Spell Unit catalog-only closure but is not classified catalog-only/dead-for-now.`,
+        );
+      }
+      if (
+        spellUnitExecutableFollowUps.has(row.candidateUnitId) &&
+        row.finalDisposition !== "catalog-authored-executable-follow-up"
+      ) {
+        issues.push(
+          `${row.id} is an authored Spell Unit executable follow-up but is not classified catalog-authored-executable-follow-up.`,
+        );
+      }
+    }
+  }
+  for (const unitId of authoredSpellUnitCatalogOnlyClosures.keys()) {
+    const row = report.rows.find(
+      (candidate) =>
+        candidate.rowKind === "spell-unit-pressure" &&
+        candidate.candidateUnitId === unitId,
+    );
+    if (row === undefined) {
+      issues.push(
+        `Authored Spell Unit catalog-only closure references unknown row ${unitId}.`,
+      );
+      continue;
+    }
+    if (
+      row.authoredContent.state !== "authored-record-present" ||
+      row.catalogAdmission.state !== "not-installed"
+    ) {
+      issues.push(
+        `Authored Spell Unit catalog-only closure ${unitId} must reference an authored, not-installed Spell Unit row.`,
+      );
+    }
+  }
+  for (const batch of spellUnitExecutableFollowUpBatches) {
+    const seenUnitIds = new Set();
+    for (const unitId of batch.unitIds) {
+      if (seenUnitIds.has(unitId)) {
+        issues.push(
+          `Spell Unit executable follow-up batch ${batch.id} repeats ${unitId}.`,
+        );
+      }
+      seenUnitIds.add(unitId);
+      const row = report.rows.find(
+        (candidate) =>
+          candidate.rowKind === "spell-unit-pressure" &&
+          candidate.candidateUnitId === unitId,
+      );
+      if (row === undefined) {
+        issues.push(
+          `Spell Unit executable follow-up batch ${batch.id} references unknown row ${unitId}.`,
+        );
+        continue;
+      }
+      if (authoredSpellUnitCatalogOnlyClosures.has(unitId)) {
+        issues.push(
+          `Spell Unit executable follow-up batch ${batch.id} also marks ${unitId} as catalog-only closure.`,
+        );
+      }
+      if (
+        row.authoredContent.state !== "authored-record-present" ||
+        row.catalogAdmission.state !== "not-installed"
+      ) {
+        issues.push(
+          `Spell Unit executable follow-up ${unitId} must reference an authored, not-installed Spell Unit row.`,
+        );
+      }
     }
   }
   const characterCreationArtifact =

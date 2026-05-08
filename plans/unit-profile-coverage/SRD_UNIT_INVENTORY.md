@@ -36,9 +36,10 @@ This is a Unit/catalog backlog denominator, not RAW span coverage and not an MBT
 
 ### Spell Unit Pressure by Disposition
 
+- catalog-authored-executable-follow-up: 77
 - catalog-installed-owner-evidence-present: 18
 - catalog-installed-owner-evidence-required: 3
-- catalog-only/dead-for-now: 151
+- catalog-only/dead-for-now: 74
 - missing-authored-record: 6
 - needs-surface-widening: 33
 
@@ -55,7 +56,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |SRDINV5A|blocked-on-SRDINV1|7|Keep class spell access/list facts separate from individual Spell Unit support.|Level-1 class Spellcasting/access rows have owner-specific classifications; keep Surface-widening blockers separate from individual Spell Unit pressure.|Level-1 spell access rows have owner-specific next actions and are not mixed with individual Spell Unit pressure.|
 |SRDINV5B|blocked-on-SRDINV1|6|Classify missing SRD cantrip and level-1 Spell Unit records without loading the whole spell-pressure backlog into one task.|Group missing Spell Unit rows by authoring readiness, Surface blockers, and runtime-support pressure.|Missing cantrip and level-1 Spell Unit pressure rows have sharper next actions than generic author-or-close wording.|
 |SRDINV5C|blocked-on-SRDINV1|39|Classify installed SRD cantrip and level-1 Spell Unit owner evidence separately from missing and catalog-only spell rows.|Installed Spell Unit pressure rows are classified by catalog admission, spell access, invocation/projection evidence, runtime-support requirements, Surface blockers, or catalog-only closure.|Installed cantrip and level-1 Spell Unit rows distinguish catalog evidence from operational owner evidence.|
-|SRDINV5D|blocked-on-SRDINV1|151|Keep catalog-only spell pressure explicit and counted without forcing unrelated class or nonspell rows into the same task.|Confirm catalog-only/dead-for-now closure or promote named follow-up batches for any spell rows that should become executable.|Catalog-only cantrip and level-1 Spell Unit rows remain counted deliberately, or become explicit follow-up work.|
+|SRDINV5D|blocked-on-SRDINV1|151|Keep catalog-only spell pressure explicit and counted without forcing unrelated class or nonspell rows into the same task.|Catalog-only/dead-for-now closures are explicit; authored executable spell rows are promoted into named follow-up batches.|Catalog-only cantrip and level-1 Spell Unit rows remain counted deliberately, or become explicit follow-up work.|
 |SRDINV6|blocked-on-SRDINV1|62|Preserve catalog-only/dead-for-now rows and name missing Surface constructs for nonspell and spell Surface-widening blockers.|Either keep catalog-only rows explicitly catalog-only/dead-for-now or promote a named Surface-widening task for each blocker, including spell Surface pressure.|Catalog-only rows are counted deliberately, and every nonspell or spell Surface-widening row names the missing construct.|
 |SRDINV7|blocked-on-SRDINV2-SRDINV5D-and-SRDINV6|156|Review SRDINV1-SRDINV6 findings and append the next concrete generated batch set.|Refresh metrics, decide whether level-1 can advance to authoring/support batches, and append at least three concrete next tasks unless level-1 is explicitly complete.|The SRD inventory lane remains measurable and has a concrete multi-task next batch, or level-1 is explicitly closed with final metrics; do not append a recursive-only continuation.|
 

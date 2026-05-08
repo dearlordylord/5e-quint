@@ -142,7 +142,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 174,
       "id": "SRDINV5D",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Review Catalog-Only Cantrip and Level-1 Spell Units"
     },
     {
@@ -226,7 +226,7 @@ Keep it synchronized with the DAG table and task details.
 | 171   | SRDINV5A - Classify Level-1 Spell Access Rows | done | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Completed level-1 spell-access classification: six non-Wizard Spellcasting rows now carry named Surface-widening blockers, Wizard Spellcasting remains covered by character-creation owner evidence, and individual Spell Unit pressure stays in SRDINV5B-SRDINV5D. |
 | 172   | SRDINV5B - Classify Missing Cantrip and Level-1 Spell Units | done | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Completed missing cantrip and level-1 Spell Unit classification: missing Spell Definition Unit ids now have explicit authoring-ready, Surface-widening, or catalog-only/dead-for-now outcomes; remaining authoring-ready detect rows stay visible in generated inventory for later authoring work. |
 | 173   | SRDINV5C - Classify Installed Cantrip and Level-1 Spell Units | done | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Completed installed cantrip and level-1 Spell Unit classification: supported installed spell rows derive owner evidence from Unit matrix claims plus deterministic admission/projection evidence; unsupported Sleep rows remain evidence-required; Fire Bolt and Thunderwave rows carry Surface/runtime blockers; Detect Magic and Light close as catalog-only/dead-for-now. |
-| 174   | SRDINV5D - Review Catalog-Only Cantrip and Level-1 Spell Units | ready-for-research | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Review the 151 generated catalog-only spell-pressure rows and keep catalog-only closure explicit, or promote concrete follow-up batches. |
+| 174   | SRDINV5D - Review Catalog-Only Cantrip and Level-1 Spell Units | done | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Completed catalog-only spell-pressure review: the 151-row denominator now splits into 74 explicit catalog-only/dead-for-now closures and 77 authored executable follow-up rows across six named spell runtime batches. |
 | 175   | SRDINV6 - Review Catalog-Only and Surface-Widening Rows | ready-for-research | SRDINV1A | SRDINV7 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md) | Preserve catalog-only/dead-for-now rows and review the 62 generated catalog-only plus Surface-widening rows, including class-feature blockers from SRDINV3, spell-access blockers from SRDINV5A, spell-unit blockers from SRDINV5B, and installed spell blockers from SRDINV5C. |
 | 176   | SRDINV7 - Recursive SRD Inventory Planning Review | blocked | SRDINV2-SRDINV5D, SRDINV6 | SRDINV8 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review SRDINV1A-SRDINV6 findings and append a concrete multi-task next batch, or explicitly close level-1 with final metrics. |
 | 177   | SRDINV8 - Surface Widening Gate for SRD Level-1 Frontier | blocked | SRDINV7 | SRDINV9-SRDINV10 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | If Surface cannot express important frontier rows, append atomic Surface-widening tasks and then append this gate again; otherwise mark Surface ready for authoring. |
@@ -836,7 +836,7 @@ SRDINV5D-SRDINV10.
 
 ### Task 174 - SRDINV5D - Review Catalog-Only Cantrip and Level-1 Spell Units
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV1A
 
@@ -857,6 +857,23 @@ MBT expansion.
 
 Verification: SRD spell source review for rows changed; regenerate inventory;
 `pnpm unit-profile-coverage:check`; `/simplify` convergence.
+
+Completed scope: reviewed catalog-only/dead-for-now cantrip and level-1 Spell
+Unit pressure rows. The generated inventory keeps the 151-row SRDINV5D
+denominator, splits it into 74 explicit catalog-only/dead-for-now closures and
+77 authored executable follow-up rows, and promotes those executable rows into
+six named spell runtime follow-up batches recorded in
+`SRDINV_RALPH_BATCH_PLAN.md`.
+
+Out of scope honored: no Spell Definition records were admitted, no spell
+runtime behavior was implemented, no PHB/XPHB content was added, and selected
+identity MBT expansion was not touched.
+
+Verification completed: local SRD 5.2.1 class spell lists and spell
+descriptions were reviewed for the changed classifications;
+`UBIQUITOUS_LANGUAGE.md` terminology was checked; inventory artifacts were
+regenerated; `pnpm unit-profile-coverage:check` passed; `pnpm quality` passed;
+`/simplify` convergence is recorded in the SRDINV5D closeout notes.
 
 ### Task 175 - SRDINV6 - Review Catalog-Only and Surface-Widening Rows
 
