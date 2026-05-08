@@ -42,16 +42,17 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-required": 24,
       "catalog-installed-owner-evidence-present": 19,
-      "catalog-only/dead-for-now": 104,
+      "catalog-only/dead-for-now": 143,
       "non-runtime": 12,
-      "missing-authored-record": 144,
-      "needs-surface-widening": 25,
+      "missing-authored-record": 78,
+      "needs-surface-widening": 52,
       "catalog-installed-needs-owner-evidence": 39
     },
     "spellPressureRowsByDisposition": {
-      "catalog-only/dead-for-now": 100,
+      "catalog-only/dead-for-now": 139,
       "catalog-installed-needs-owner-evidence": 39,
-      "missing-authored-record": 72
+      "needs-surface-widening": 27,
+      "missing-authored-record": 6
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -245,80 +246,14 @@
       "title": "Classify Missing Cantrip and Level-1 Spell Units",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Classify missing SRD cantrip and level-1 Spell Unit records without loading the whole spell-pressure backlog into one task.",
-      "rowCount": 72,
+      "rowCount": 6,
       "rowIds": [
-        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mage_hand",
-        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mending",
-        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_message",
-        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_prestidigitation",
-        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_command",
-        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_disguise_self",
-        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_dissonant_whispers",
-        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_feather_fall",
-        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_hideous_laughter",
-        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_illusory_script",
-        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_unseen_servant",
-        "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_mending",
-        "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_spare_the_dying",
-        "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_thaumaturgy",
-        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_command",
-        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_create_or_destroy_water",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_evil_and_good",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_poison_and_disease",
-        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_purify_food_and_drink",
-        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_sanctuary",
-        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_druidcraft",
-        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_elementalism",
-        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_mending",
-        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_message",
-        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_shillelagh",
-        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_spare_the_dying",
-        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_create_or_destroy_water",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_detect_poison_and_disease",
-        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_fog_cloud",
-        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_goodberry",
-        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_jump",
-        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_purify_food_and_drink",
-        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_command",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_detect_evil_and_good",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_detect_poison_and_disease",
-        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_purify_food_and_drink",
-        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_detect_poison_and_disease",
-        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_fog_cloud",
-        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_goodberry",
-        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_jump",
-        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_elementalism",
-        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_mage_hand",
-        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_mending",
-        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_message",
-        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_prestidigitation",
-        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_sorcerous_burst",
-        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_disguise_self",
-        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_expeditious_retreat",
-        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_feather_fall",
-        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_fog_cloud",
-        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_jump",
-        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_mage_hand",
-        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_prestidigitation",
-        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_expeditious_retreat",
-        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hex",
-        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hideous_laughter",
-        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_illusory_script",
-        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_unseen_servant",
-        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_elementalism",
-        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_mage_hand",
-        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_mending",
-        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_message",
-        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_prestidigitation",
-        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_disguise_self",
-        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_expeditious_retreat",
-        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_feather_fall",
-        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_floating_disk",
-        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_fog_cloud",
-        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_hideous_laughter",
-        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_illusory_script",
-        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_jump",
-        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_unseen_servant"
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_detect_poison_and_disease"
       ],
       "nextAction": "Group missing Spell Unit rows by authoring readiness, Surface blockers, and runtime-support pressure.",
       "acceptance": "Missing cantrip and level-1 Spell Unit pressure rows have sharper next actions than generic author-or-close wording."
@@ -378,10 +313,14 @@
       "title": "Review Catalog-Only Cantrip and Level-1 Spell Units",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Keep catalog-only spell pressure explicit and counted without forcing unrelated class or nonspell rows into the same task.",
-      "rowCount": 100,
+      "rowCount": 139,
       "rowIds": [
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_dancing_lights",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mage_hand",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mending",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_message",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_minor_illusion",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_prestidigitation",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_starry_wisp",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_true_strike",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_vicious_mockery",
@@ -390,52 +329,73 @@
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_charm_person",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_color_spray",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_comprehend_languages",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_disguise_self",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_faerie_fire",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_heroism",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_identify",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_illusory_script",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_longstrider",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_silent_image",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_speak_with_animals",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_unseen_servant",
         "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_guidance",
+        "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_mending",
         "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_resistance",
         "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_sacred_flame",
+        "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_thaumaturgy",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bane",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bless",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_create_or_destroy_water",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_guiding_bolt",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_inflict_wounds",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_protection_from_evil_and_good",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_purify_food_and_drink",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_shield_of_faith",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_druidcraft",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_elementalism",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_guidance",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_mending",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_message",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_poison_spray",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_produce_flame",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_resistance",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_starry_wisp",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_animal_friendship",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_charm_person",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_create_or_destroy_water",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_entangle",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_faerie_fire",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_goodberry",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_ice_knife",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_longstrider",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_protection_from_evil_and_good",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_purify_food_and_drink",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_speak_with_animals",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_bless",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_divine_favor",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_divine_smite",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_heroism",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_protection_from_evil_and_good",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_purify_food_and_drink",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_searing_smite",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_shield_of_faith",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_alarm",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_animal_friendship",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_ensnaring_strike",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_entangle",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_goodberry",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_hunters_mark",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_longstrider",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_speak_with_animals",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_chill_touch",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_dancing_lights",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_elementalism",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_mage_hand",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_mending",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_message",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_minor_illusion",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_poison_spray",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_prestidigitation",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_shocking_grasp",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_true_strike",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_burning_hands",
@@ -443,6 +403,7 @@
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_chromatic_orb",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_color_spray",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_comprehend_languages",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_disguise_self",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_false_life",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_grease",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_ice_knife",
@@ -450,19 +411,28 @@
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_silent_image",
         "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_chill_touch",
         "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_eldritch_blast",
+        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_mage_hand",
         "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_minor_illusion",
         "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_poison_spray",
+        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_prestidigitation",
         "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_true_strike",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_bane",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_charm_person",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_comprehend_languages",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hellish_rebuke",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_illusory_script",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_protection_from_evil_and_good",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_speak_with_animals",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_unseen_servant",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_chill_touch",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_dancing_lights",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_elementalism",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_mage_hand",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_mending",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_message",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_minor_illusion",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_poison_spray",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_prestidigitation",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_shocking_grasp",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_true_strike",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_alarm",
@@ -471,15 +441,19 @@
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_chromatic_orb",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_color_spray",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_comprehend_languages",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_disguise_self",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_false_life",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_find_familiar",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_floating_disk",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_grease",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_ice_knife",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_identify",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_illusory_script",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_longstrider",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_protection_from_evil_and_good",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_ray_of_sickness",
-        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_silent_image"
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_silent_image",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_unseen_servant"
       ],
       "nextAction": "Confirm catalog-only/dead-for-now closure or promote named follow-up batches for any spell rows that should become executable.",
       "acceptance": "Catalog-only cantrip and level-1 Spell Unit rows remain counted deliberately, or become explicit follow-up work."
@@ -488,41 +462,68 @@
       "id": "SRDINV6",
       "title": "Review Catalog-Only and Surface-Widening Rows",
       "suggestedStatus": "blocked-on-SRDINV1",
-      "intent": "Preserve nonspell catalog-only/dead-for-now rows and name missing Surface constructs for any widening blockers.",
-      "rowCount": 29,
+      "intent": "Preserve catalog-only/dead-for-now rows and name missing Surface constructs for nonspell and spell Surface-widening blockers.",
+      "rowCount": 56,
       "rowIds": [
         "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense",
         "srd521:classes/bard:level-1:class-container:bard_class_container",
         "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
         "srd521:classes/bard:level-1:spell-access:bard_spellcasting",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_command",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_dissonant_whispers",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_feather_fall",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_hideous_laughter",
         "srd521:classes/cleric:level-1:class-container:cleric_class_container",
         "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
         "srd521:classes/cleric:level-1:spell-access:cleric_spellcasting",
+        "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_spare_the_dying",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_command",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_sanctuary",
         "srd521:classes/druid:level-1:class-container:druid_class_container",
         "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
         "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order",
         "srd521:classes/druid:level-1:spell-access:druid_spellcasting",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_shillelagh",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_spare_the_dying",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_fog_cloud",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_jump",
         "srd521:classes/monk:level-1:class-container:monk_class_container",
         "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
         "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense",
         "srd521:classes/paladin:level-1:class-container:paladin_class_container",
         "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands",
         "srd521:classes/paladin:level-1:spell-access:paladin_spellcasting",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_command",
         "srd521:classes/ranger:level-1:class-container:ranger_class_container",
         "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy",
         "srd521:classes/ranger:level-1:spell-access:ranger_spellcasting",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_fog_cloud",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_jump",
         "srd521:classes/rogue:level-1:class-container:rogue_class_container",
         "srd521:classes/rogue:level-1:class-feature-grant:rogue_expertise",
         "srd521:classes/rogue:level-1:class-feature-grant:rogue_thieves_cant",
         "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container",
         "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
         "srd521:classes/sorcerer:level-1:spell-access:sorcerer_spellcasting",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_sorcerous_burst",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_expeditious_retreat",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_feather_fall",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_fog_cloud",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_jump",
         "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations",
         "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic",
-        "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery"
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_expeditious_retreat",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hex",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hideous_laughter",
+        "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_expeditious_retreat",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_feather_fall",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_fog_cloud",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_hideous_laughter",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_jump"
       ],
-      "nextAction": "Either keep nonspell rows explicitly catalog-only/dead-for-now or promote a named Surface widening task.",
-      "acceptance": "Nonspell catalog-only rows are counted deliberately, and every Surface-widening row names the missing construct."
+      "nextAction": "Either keep catalog-only rows explicitly catalog-only/dead-for-now or promote a named Surface-widening task for each blocker, including spell Surface pressure.",
+      "acceptance": "Catalog-only rows are counted deliberately, and every nonspell or spell Surface-widening row names the missing construct."
     },
     {
       "id": "SRDINV7",
@@ -1751,7 +1752,7 @@
       "detail": "Mage Hand (Conjuration; —)",
       "candidateUnitId": "mage_hand",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -1760,9 +1761,9 @@
         "state": "not-installed",
         "unitId": "mage_hand"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Remote hand creation, object manipulation, carry limit, repeated Magic action control, and distance/recast expiry are exploration object-control effects outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mending",
@@ -1779,7 +1780,7 @@
       "detail": "Mending (Transmutation; —)",
       "candidateUnitId": "mending",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -1788,9 +1789,9 @@
         "state": "not-installed",
         "unitId": "mending"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_message",
@@ -1807,7 +1808,7 @@
       "detail": "Message (Transmutation; —)",
       "candidateUnitId": "message",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -1816,9 +1817,9 @@
         "state": "not-installed",
         "unitId": "message"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Private communication and barrier/silence blocking are exploration communication effects outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_minor_illusion",
@@ -1865,7 +1866,7 @@
       "detail": "Prestidigitation (Transmutation; —)",
       "candidateUnitId": "prestidigitation",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -1874,9 +1875,9 @@
         "state": "not-installed",
         "unitId": "prestidigitation"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_starry_wisp",
@@ -2103,7 +2104,8 @@
       "detail": "Command (Enchantment; —)",
       "candidateUnitId": "command",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition command-option save outcomes: target-turn movement commands, forced item drop, Prone plus turn-ending, and slot-scaled additional targets"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -2112,9 +2114,9 @@
         "state": "not-installed",
         "unitId": "command"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: Spell Definition command-option save outcomes: target-turn movement commands, forced item drop, Prone plus turn-ending, and slot-scaled additional targets."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_comprehend_languages",
@@ -2233,7 +2235,7 @@
       "detail": "Disguise Self (Illusion; —)",
       "candidateUnitId": "disguise_self",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -2242,9 +2244,9 @@
         "state": "not-installed",
         "unitId": "disguise_self"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Self-disguise appearance, physical-inspection failure, and Study action adjudication are social/exploration pressure outside the current promoted runtime owners."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_dissonant_whispers",
@@ -2261,7 +2263,8 @@
       "detail": "Dissonant Whispers (Enchantment; —)",
       "candidateUnitId": "dissonant_whispers",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition failed-save forced Reaction movement using the safest route, including no-reaction fallback and half-damage success outcome"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -2270,9 +2273,9 @@
         "state": "not-installed",
         "unitId": "dissonant_whispers"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: Spell Definition failed-save forced Reaction movement using the safest route, including no-reaction fallback and half-damage success outcome."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_faerie_fire",
@@ -2319,7 +2322,8 @@
       "detail": "Feather Fall (Transmutation; —)",
       "candidateUnitId": "feather_fall",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition falling Reaction trigger, up-to-five falling creature targets, fall-rate cap, fall-damage prevention, and per-target early end on landing"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -2328,9 +2332,9 @@
         "state": "not-installed",
         "unitId": "feather_fall"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: Spell Definition falling Reaction trigger, up-to-five falling creature targets, fall-rate cap, fall-damage prevention, and per-target early end on landing."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_healing_word",
@@ -2413,7 +2417,8 @@
       "detail": "Hideous Laughter (Enchantment; C)",
       "candidateUnitId": "hideous_laughter",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition multi-trigger repeat saves with damage-triggered Advantage, Prone self-end suppression, and slot-scaled additional targets"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -2422,9 +2427,9 @@
         "state": "not-installed",
         "unitId": "hideous_laughter"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: Spell Definition multi-trigger repeat saves with damage-triggered Advantage, Prone self-end suppression, and slot-scaled additional targets."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_identify",
@@ -2471,7 +2476,7 @@
       "detail": "Illusory Script (Illusion; R, M)",
       "candidateUnitId": "illusory_script",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -2480,9 +2485,9 @@
         "state": "not-installed",
         "unitId": "illusory_script"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Authored writing illusion, designated readers, Truesight reading, and dispelled-script cleanup are document/exploration effects outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_longstrider",
@@ -2661,7 +2666,7 @@
       "detail": "Unseen Servant (Conjuration; R)",
       "candidateUnitId": "unseen_servant",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -2670,9 +2675,9 @@
         "state": "not-installed",
         "unitId": "unseen_servant"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Created servant stat block, object-interaction commands, Bonus Action control, HP, and distance-based expiry are summoned helper/exploration state outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/cleric:level-1:class-container:cleric_class_container",
@@ -3147,7 +3152,7 @@
       "detail": "Mending (Transmutation; —)",
       "candidateUnitId": "mending",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -3156,9 +3161,9 @@
         "state": "not-installed",
         "unitId": "mending"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_resistance",
@@ -3235,7 +3240,8 @@
       "detail": "Spare the Dying (Necromancy; —)",
       "candidateUnitId": "spare_the_dying",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition Stable zero-HP lifecycle application plus character-level range scaling"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -3244,9 +3250,9 @@
         "state": "not-installed",
         "unitId": "spare_the_dying"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: Spell Definition Stable zero-HP lifecycle application plus character-level range scaling."
     },
     {
       "id": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_thaumaturgy",
@@ -3263,7 +3269,7 @@
       "detail": "Thaumaturgy (Transmutation; —)",
       "candidateUnitId": "thaumaturgy",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -3272,9 +3278,9 @@
         "state": "not-installed",
         "unitId": "thaumaturgy"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Minor wonders, voice-volume Advantage on Intimidation checks, unlocked-door/window movement, harmless tremors, and cosmetic effects are noncombat utility effects outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bane",
@@ -3351,7 +3357,8 @@
       "detail": "Command (Enchantment; —)",
       "candidateUnitId": "command",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition command-option save outcomes: target-turn movement commands, forced item drop, Prone plus turn-ending, and slot-scaled additional targets"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -3360,9 +3367,9 @@
         "state": "not-installed",
         "unitId": "command"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: Spell Definition command-option save outcomes: target-turn movement commands, forced item drop, Prone plus turn-ending, and slot-scaled additional targets."
     },
     {
       "id": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_create_or_destroy_water",
@@ -3379,7 +3386,7 @@
       "detail": "Create or Destroy Water (Transmutation; —)",
       "candidateUnitId": "create_or_destroy_water",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -3388,9 +3395,9 @@
         "state": "not-installed",
         "unitId": "create_or_destroy_water"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Creation/destruction of water, rain extinguishing exposed flames, and fog removal are exploration/environment effects outside the current promoted character-creation and battle-runtime owners."
     },
     {
       "id": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_cure_wounds",
@@ -3454,7 +3461,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Author an SRD-provenance Spell Definition record with existing Surface detect support for evil_and_good sensing; keep promoted runtime ownership for detection/occlusion as future exploration support."
     },
     {
       "id": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_magic",
@@ -3518,7 +3525,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Author an SRD-provenance Spell Definition record with existing Surface detect support for poison_and_disease sensing; keep promoted runtime ownership for detection/occlusion as future exploration support."
     },
     {
       "id": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_guiding_bolt",
@@ -3661,7 +3668,7 @@
       "detail": "Purify Food and Drink (Transmutation; R)",
       "candidateUnitId": "purify_food_and_drink",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -3670,9 +3677,9 @@
         "state": "not-installed",
         "unitId": "purify_food_and_drink"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Removing poison and rot from nonmagical food and drink is exploration/inventory state outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_sanctuary",
@@ -3689,7 +3696,8 @@
       "detail": "Sanctuary (Abjuration; —)",
       "candidateUnitId": "sanctuary",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition targeting interdiction for attack rolls and damaging spells, choose-new-target-or-lose outcome, area exclusion, and early end on warded attack/spell/damage"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -3698,9 +3706,9 @@
         "state": "not-installed",
         "unitId": "sanctuary"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: Spell Definition targeting interdiction for attack rolls and damaging spells, choose-new-target-or-lose outcome, area exclusion, and early end on warded attack/spell/damage."
     },
     {
       "id": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_shield_of_faith",
@@ -4202,7 +4210,7 @@
       "detail": "Druidcraft (Transmutation; —)",
       "candidateUnitId": "druidcraft",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -4211,9 +4219,9 @@
         "state": "not-installed",
         "unitId": "druidcraft"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Weather signs, harmless sensory effects, plant blossoming, and candle/torch/campfire narration are noncombat environmental effects outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_elementalism",
@@ -4230,7 +4238,7 @@
       "detail": "Elementalism (Transmutation; —)",
       "candidateUnitId": "elementalism",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -4239,9 +4247,9 @@
         "state": "not-installed",
         "unitId": "elementalism"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Harmless elemental sensory changes, small water creation, surface marks, and crude shaping are noncombat environmental effects outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_guidance",
@@ -4288,7 +4296,7 @@
       "detail": "Mending (Transmutation; —)",
       "candidateUnitId": "mending",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -4297,9 +4305,9 @@
         "state": "not-installed",
         "unitId": "mending"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_message",
@@ -4316,7 +4324,7 @@
       "detail": "Message (Transmutation; —)",
       "candidateUnitId": "message",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -4325,9 +4333,9 @@
         "state": "not-installed",
         "unitId": "message"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Private communication and barrier/silence blocking are exploration communication effects outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_poison_spray",
@@ -4434,7 +4442,8 @@
       "detail": "Shillelagh (Transmutation; —)",
       "candidateUnitId": "shillelagh",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition held Club or Quarterstaff weapon override: spellcasting ability for attacks and damage, character-level damage die upgrade, Force-or-normal damage choice, and early end on recast or let-go"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -4443,9 +4452,9 @@
         "state": "not-installed",
         "unitId": "shillelagh"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: Spell Definition held Club or Quarterstaff weapon override: spellcasting ability for attacks and damage, character-level damage die upgrade, Force-or-normal damage choice, and early end on recast or let-go."
     },
     {
       "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_spare_the_dying",
@@ -4462,7 +4471,8 @@
       "detail": "Spare the Dying (Necromancy; —)",
       "candidateUnitId": "spare_the_dying",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition Stable zero-HP lifecycle application plus character-level range scaling"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -4471,9 +4481,9 @@
         "state": "not-installed",
         "unitId": "spare_the_dying"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: Spell Definition Stable zero-HP lifecycle application plus character-level range scaling."
     },
     {
       "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_starry_wisp",
@@ -4580,7 +4590,7 @@
       "detail": "Create or Destroy Water (Transmutation; —)",
       "candidateUnitId": "create_or_destroy_water",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -4589,9 +4599,9 @@
         "state": "not-installed",
         "unitId": "create_or_destroy_water"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Creation/destruction of water, rain extinguishing exposed flames, and fog removal are exploration/environment effects outside the current promoted character-creation and battle-runtime owners."
     },
     {
       "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_cure_wounds",
@@ -4691,7 +4701,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Author an SRD-provenance Spell Definition record with existing Surface detect support for poison_and_disease sensing; keep promoted runtime ownership for detection/occlusion as future exploration support."
     },
     {
       "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_entangle",
@@ -4768,7 +4778,8 @@
       "detail": "Fog Cloud (Conjuration; C)",
       "candidateUnitId": "fog_cloud",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition slot-scaled area dimensions and strong-wind dispersal for a Heavily Obscured fog Sphere"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -4777,9 +4788,9 @@
         "state": "not-installed",
         "unitId": "fog_cloud"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: Spell Definition slot-scaled area dimensions and strong-wind dispersal for a Heavily Obscured fog Sphere."
     },
     {
       "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_goodberry",
@@ -4796,7 +4807,7 @@
       "detail": "Goodberry (Conjuration; —)",
       "candidateUnitId": "goodberry",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -4805,9 +4816,9 @@
         "state": "not-installed",
         "unitId": "goodberry"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Created consumable berries, nourishment, inventory persistence, and later Bonus Action consumption are item/character-sheet pressure outside current promoted runtime owners."
     },
     {
       "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_healing_word",
@@ -4890,7 +4901,8 @@
       "detail": "Jump (Transmutation; —)",
       "candidateUnitId": "jump",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition once-per-turn jump movement replacement, movement-spend requirement, and slot-scaled additional willing targets"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -4899,9 +4911,9 @@
         "state": "not-installed",
         "unitId": "jump"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: Spell Definition once-per-turn jump movement replacement, movement-spend requirement, and slot-scaled additional willing targets."
     },
     {
       "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_longstrider",
@@ -4978,7 +4990,7 @@
       "detail": "Purify Food and Drink (Transmutation; R)",
       "candidateUnitId": "purify_food_and_drink",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -4987,9 +4999,9 @@
         "state": "not-installed",
         "unitId": "purify_food_and_drink"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Removing poison and rot from nonmagical food and drink is exploration/inventory state outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_speak_with_animals",
@@ -6525,7 +6537,8 @@
       "detail": "Command (Enchantment; —)",
       "candidateUnitId": "command",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition command-option save outcomes: target-turn movement commands, forced item drop, Prone plus turn-ending, and slot-scaled additional targets"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -6534,9 +6547,9 @@
         "state": "not-installed",
         "unitId": "command"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: Spell Definition command-option save outcomes: target-turn movement commands, forced item drop, Prone plus turn-ending, and slot-scaled additional targets."
     },
     {
       "id": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_cure_wounds",
@@ -6600,7 +6613,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Author an SRD-provenance Spell Definition record with existing Surface detect support for evil_and_good sensing; keep promoted runtime ownership for detection/occlusion as future exploration support."
     },
     {
       "id": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_detect_magic",
@@ -6664,7 +6677,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Author an SRD-provenance Spell Definition record with existing Surface detect support for poison_and_disease sensing; keep promoted runtime ownership for detection/occlusion as future exploration support."
     },
     {
       "id": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_divine_favor",
@@ -6801,7 +6814,7 @@
       "detail": "Purify Food and Drink (Transmutation; R)",
       "candidateUnitId": "purify_food_and_drink",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -6810,9 +6823,9 @@
         "state": "not-installed",
         "unitId": "purify_food_and_drink"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Removing poison and rot from nonmagical food and drink is exploration/inventory state outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_searing_smite",
@@ -7452,7 +7465,7 @@
       },
       "finalDisposition": "missing-authored-record",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Author an SRD-provenance Spell Definition record with existing Surface detect support for poison_and_disease sensing; keep promoted runtime ownership for detection/occlusion as future exploration support."
     },
     {
       "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_ensnaring_strike",
@@ -7529,7 +7542,8 @@
       "detail": "Fog Cloud (Conjuration; C)",
       "candidateUnitId": "fog_cloud",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition slot-scaled area dimensions and strong-wind dispersal for a Heavily Obscured fog Sphere"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -7538,9 +7552,9 @@
         "state": "not-installed",
         "unitId": "fog_cloud"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: Spell Definition slot-scaled area dimensions and strong-wind dispersal for a Heavily Obscured fog Sphere."
     },
     {
       "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_goodberry",
@@ -7557,7 +7571,7 @@
       "detail": "Goodberry (Conjuration; —)",
       "candidateUnitId": "goodberry",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -7566,9 +7580,9 @@
         "state": "not-installed",
         "unitId": "goodberry"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Created consumable berries, nourishment, inventory persistence, and later Bonus Action consumption are item/character-sheet pressure outside current promoted runtime owners."
     },
     {
       "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_hunters_mark",
@@ -7615,7 +7629,8 @@
       "detail": "Jump (Transmutation; —)",
       "candidateUnitId": "jump",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition once-per-turn jump movement replacement, movement-spend requirement, and slot-scaled additional willing targets"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -7624,9 +7639,9 @@
         "state": "not-installed",
         "unitId": "jump"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: Spell Definition once-per-turn jump movement replacement, movement-spend requirement, and slot-scaled additional willing targets."
     },
     {
       "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_longstrider",
@@ -8686,7 +8701,7 @@
       "detail": "Elementalism (Transmutation; —)",
       "candidateUnitId": "elementalism",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -8695,9 +8710,9 @@
         "state": "not-installed",
         "unitId": "elementalism"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Harmless elemental sensory changes, small water creation, surface marks, and crude shaping are noncombat environmental effects outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_fire_bolt",
@@ -8786,7 +8801,7 @@
       "detail": "Mage Hand (Conjuration; —)",
       "candidateUnitId": "mage_hand",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -8795,9 +8810,9 @@
         "state": "not-installed",
         "unitId": "mage_hand"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Remote hand creation, object manipulation, carry limit, repeated Magic action control, and distance/recast expiry are exploration object-control effects outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_mending",
@@ -8814,7 +8829,7 @@
       "detail": "Mending (Transmutation; —)",
       "candidateUnitId": "mending",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -8823,9 +8838,9 @@
         "state": "not-installed",
         "unitId": "mending"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_message",
@@ -8842,7 +8857,7 @@
       "detail": "Message (Transmutation; —)",
       "candidateUnitId": "message",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -8851,9 +8866,9 @@
         "state": "not-installed",
         "unitId": "message"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Private communication and barrier/silence blocking are exploration communication effects outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_minor_illusion",
@@ -8930,7 +8945,7 @@
       "detail": "Prestidigitation (Transmutation; —)",
       "candidateUnitId": "prestidigitation",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -8939,9 +8954,9 @@
         "state": "not-installed",
         "unitId": "prestidigitation"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_ray_of_frost",
@@ -9024,7 +9039,8 @@
       "detail": "Sorcerous Burst (Evocation; —)",
       "candidateUnitId": "sorcerous_burst",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition exploding d8 damage loop capped by spellcasting ability modifier, cast-time damage type choice, object target branch, and cantrip damage scaling"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -9033,9 +9049,9 @@
         "state": "not-installed",
         "unitId": "sorcerous_burst"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: Spell Definition exploding d8 damage loop capped by spellcasting ability modifier, cast-time damage type choice, object target branch, and cantrip damage scaling."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_true_strike",
@@ -9268,7 +9284,7 @@
       "detail": "Disguise Self (Illusion; —)",
       "candidateUnitId": "disguise_self",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -9277,9 +9293,9 @@
         "state": "not-installed",
         "unitId": "disguise_self"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Self-disguise appearance, physical-inspection failure, and Study action adjudication are social/exploration pressure outside the current promoted runtime owners."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_expeditious_retreat",
@@ -9296,7 +9312,8 @@
       "detail": "Expeditious Retreat (Transmutation; C)",
       "candidateUnitId": "expeditious_retreat",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition Dash grant: immediate Dash on Bonus Action casting plus ongoing Bonus Action Dash while Concentration lasts"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -9305,9 +9322,9 @@
         "state": "not-installed",
         "unitId": "expeditious_retreat"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: Spell Definition Dash grant: immediate Dash on Bonus Action casting plus ongoing Bonus Action Dash while Concentration lasts."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_false_life",
@@ -9354,7 +9371,8 @@
       "detail": "Feather Fall (Transmutation; —)",
       "candidateUnitId": "feather_fall",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition falling Reaction trigger, up-to-five falling creature targets, fall-rate cap, fall-damage prevention, and per-target early end on landing"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -9363,9 +9381,9 @@
         "state": "not-installed",
         "unitId": "feather_fall"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: Spell Definition falling Reaction trigger, up-to-five falling creature targets, fall-rate cap, fall-damage prevention, and per-target early end on landing."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_fog_cloud",
@@ -9382,7 +9400,8 @@
       "detail": "Fog Cloud (Conjuration; C)",
       "candidateUnitId": "fog_cloud",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition slot-scaled area dimensions and strong-wind dispersal for a Heavily Obscured fog Sphere"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -9391,9 +9410,9 @@
         "state": "not-installed",
         "unitId": "fog_cloud"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: Spell Definition slot-scaled area dimensions and strong-wind dispersal for a Heavily Obscured fog Sphere."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_grease",
@@ -9470,7 +9489,8 @@
       "detail": "Jump (Transmutation; —)",
       "candidateUnitId": "jump",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition once-per-turn jump movement replacement, movement-spend requirement, and slot-scaled additional willing targets"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -9479,9 +9499,9 @@
         "state": "not-installed",
         "unitId": "jump"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: Spell Definition once-per-turn jump movement replacement, movement-spend requirement, and slot-scaled additional willing targets."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_mage_armor",
@@ -10308,7 +10328,7 @@
       "detail": "Mage Hand (Conjuration; —)",
       "candidateUnitId": "mage_hand",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -10317,9 +10337,9 @@
         "state": "not-installed",
         "unitId": "mage_hand"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Remote hand creation, object manipulation, carry limit, repeated Magic action control, and distance/recast expiry are exploration object-control effects outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_minor_illusion",
@@ -10396,7 +10416,7 @@
       "detail": "Prestidigitation (Transmutation; —)",
       "candidateUnitId": "prestidigitation",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -10405,9 +10425,9 @@
         "state": "not-installed",
         "unitId": "prestidigitation"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_true_strike",
@@ -10580,7 +10600,8 @@
       "detail": "Expeditious Retreat (Transmutation; C)",
       "candidateUnitId": "expeditious_retreat",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition Dash grant: immediate Dash on Bonus Action casting plus ongoing Bonus Action Dash while Concentration lasts"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -10589,9 +10610,9 @@
         "state": "not-installed",
         "unitId": "expeditious_retreat"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: Spell Definition Dash grant: immediate Dash on Bonus Action casting plus ongoing Bonus Action Dash while Concentration lasts."
     },
     {
       "id": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hellish_rebuke",
@@ -10638,7 +10659,8 @@
       "detail": "Hex (Enchantment; C)",
       "candidateUnitId": "hex",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition curse retargeting after the target drops to 0 Hit Points, ability-choice Ability Check Disadvantage, attack-hit bonus damage, and slot-scaled Concentration duration"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -10647,9 +10669,9 @@
         "state": "not-installed",
         "unitId": "hex"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: Spell Definition curse retargeting after the target drops to 0 Hit Points, ability-choice Ability Check Disadvantage, attack-hit bonus damage, and slot-scaled Concentration duration."
     },
     {
       "id": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hideous_laughter",
@@ -10666,7 +10688,8 @@
       "detail": "Hideous Laughter (Enchantment; C)",
       "candidateUnitId": "hideous_laughter",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition multi-trigger repeat saves with damage-triggered Advantage, Prone self-end suppression, and slot-scaled additional targets"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -10675,9 +10698,9 @@
         "state": "not-installed",
         "unitId": "hideous_laughter"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: Spell Definition multi-trigger repeat saves with damage-triggered Advantage, Prone self-end suppression, and slot-scaled additional targets."
     },
     {
       "id": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_illusory_script",
@@ -10694,7 +10717,7 @@
       "detail": "Illusory Script (Illusion; R, M)",
       "candidateUnitId": "illusory_script",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -10703,9 +10726,9 @@
         "state": "not-installed",
         "unitId": "illusory_script"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Authored writing illusion, designated readers, Truesight reading, and dispelled-script cleanup are document/exploration effects outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_protection_from_evil_and_good",
@@ -10782,7 +10805,7 @@
       "detail": "Unseen Servant (Conjuration; R)",
       "candidateUnitId": "unseen_servant",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -10791,9 +10814,9 @@
         "state": "not-installed",
         "unitId": "unseen_servant"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Created servant stat block, object-interaction commands, Bonus Action control, HP, and distance-based expiry are summoned helper/exploration state outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/wizard:level-1:class-container:wizard_class_container",
@@ -11481,7 +11504,7 @@
       "detail": "Elementalism (Transmutation; —)",
       "candidateUnitId": "elementalism",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -11490,9 +11513,9 @@
         "state": "not-installed",
         "unitId": "elementalism"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Harmless elemental sensory changes, small water creation, surface marks, and crude shaping are noncombat environmental effects outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_fire_bolt",
@@ -11581,7 +11604,7 @@
       "detail": "Mage Hand (Conjuration; —)",
       "candidateUnitId": "mage_hand",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -11590,9 +11613,9 @@
         "state": "not-installed",
         "unitId": "mage_hand"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Remote hand creation, object manipulation, carry limit, repeated Magic action control, and distance/recast expiry are exploration object-control effects outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_mending",
@@ -11609,7 +11632,7 @@
       "detail": "Mending (Transmutation; —)",
       "candidateUnitId": "mending",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -11618,9 +11641,9 @@
         "state": "not-installed",
         "unitId": "mending"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_message",
@@ -11637,7 +11660,7 @@
       "detail": "Message (Transmutation; —)",
       "candidateUnitId": "message",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -11646,9 +11669,9 @@
         "state": "not-installed",
         "unitId": "message"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Private communication and barrier/silence blocking are exploration communication effects outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_minor_illusion",
@@ -11725,7 +11748,7 @@
       "detail": "Prestidigitation (Transmutation; —)",
       "candidateUnitId": "prestidigitation",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -11734,9 +11757,9 @@
         "state": "not-installed",
         "unitId": "prestidigitation"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_ray_of_frost",
@@ -12065,7 +12088,7 @@
       "detail": "Disguise Self (Illusion; —)",
       "candidateUnitId": "disguise_self",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -12074,9 +12097,9 @@
         "state": "not-installed",
         "unitId": "disguise_self"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Self-disguise appearance, physical-inspection failure, and Study action adjudication are social/exploration pressure outside the current promoted runtime owners."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_expeditious_retreat",
@@ -12093,7 +12116,8 @@
       "detail": "Expeditious Retreat (Transmutation; C)",
       "candidateUnitId": "expeditious_retreat",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition Dash grant: immediate Dash on Bonus Action casting plus ongoing Bonus Action Dash while Concentration lasts"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -12102,9 +12126,9 @@
         "state": "not-installed",
         "unitId": "expeditious_retreat"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: Spell Definition Dash grant: immediate Dash on Bonus Action casting plus ongoing Bonus Action Dash while Concentration lasts."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_false_life",
@@ -12151,7 +12175,8 @@
       "detail": "Feather Fall (Transmutation; —)",
       "candidateUnitId": "feather_fall",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition falling Reaction trigger, up-to-five falling creature targets, fall-rate cap, fall-damage prevention, and per-target early end on landing"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -12160,9 +12185,9 @@
         "state": "not-installed",
         "unitId": "feather_fall"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: Spell Definition falling Reaction trigger, up-to-five falling creature targets, fall-rate cap, fall-damage prevention, and per-target early end on landing."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_find_familiar",
@@ -12209,7 +12234,7 @@
       "detail": "Floating Disk (Conjuration; R)",
       "candidateUnitId": "floating_disk",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -12218,9 +12243,9 @@
         "state": "not-installed",
         "unitId": "floating_disk"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Created carrying disk, load capacity, terrain-following, and distance-based end behavior are object/exploration state outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_fog_cloud",
@@ -12237,7 +12262,8 @@
       "detail": "Fog Cloud (Conjuration; C)",
       "candidateUnitId": "fog_cloud",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition slot-scaled area dimensions and strong-wind dispersal for a Heavily Obscured fog Sphere"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -12246,9 +12272,9 @@
         "state": "not-installed",
         "unitId": "fog_cloud"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: Spell Definition slot-scaled area dimensions and strong-wind dispersal for a Heavily Obscured fog Sphere."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_grease",
@@ -12295,7 +12321,8 @@
       "detail": "Hideous Laughter (Enchantment; C)",
       "candidateUnitId": "hideous_laughter",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition multi-trigger repeat saves with damage-triggered Advantage, Prone self-end suppression, and slot-scaled additional targets"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -12304,9 +12331,9 @@
         "state": "not-installed",
         "unitId": "hideous_laughter"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: Spell Definition multi-trigger repeat saves with damage-triggered Advantage, Prone self-end suppression, and slot-scaled additional targets."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_ice_knife",
@@ -12383,7 +12410,7 @@
       "detail": "Illusory Script (Illusion; R, M)",
       "candidateUnitId": "illusory_script",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -12392,9 +12419,9 @@
         "state": "not-installed",
         "unitId": "illusory_script"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Authored writing illusion, designated readers, Truesight reading, and dispelled-script cleanup are document/exploration effects outside promoted runtime owners."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_jump",
@@ -12411,7 +12438,8 @@
       "detail": "Jump (Transmutation; —)",
       "candidateUnitId": "jump",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition once-per-turn jump movement replacement, movement-spend requirement, and slot-scaled additional willing targets"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -12420,9 +12448,9 @@
         "state": "not-installed",
         "unitId": "jump"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Widen Surface: Spell Definition once-per-turn jump movement replacement, movement-spend requirement, and slot-scaled additional willing targets."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_longstrider",
@@ -12739,7 +12767,7 @@
       "detail": "Unseen Servant (Conjuration; R)",
       "candidateUnitId": "unseen_servant",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -12748,9 +12776,9 @@
         "state": "not-installed",
         "unitId": "unseen_servant"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row."
+      "nextAction": "Created servant stat block, object-interaction commands, Bonus Action control, HP, and distance-based expiry are summoned helper/exploration state outside promoted runtime owners."
     }
   ]
 }

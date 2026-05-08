@@ -176,3 +176,32 @@ that owns Warlock spell access and Pact Slot recovery.
 - Round 2: localized shared non-Wizard spellcasting blocker wording so class
   container and spell-access classifications cannot drift for the same missing
   construct; no further important changes found.
+
+## SRDINV5B Closeout Notes
+
+SRDINV5B classifies missing SRD cantrip and level-1 Spell Unit rows; it does
+not author Spell Definition records or promote spell runtime behavior. The
+local SRD source review used the cantrip and level-1 spell-list tables in the
+SRD 5.2.1 Bard, Cleric, Druid, Paladin, Ranger, Sorcerer, Warlock, and Wizard
+class files, plus the corresponding spell descriptions under
+`.references/srd-5.2.1/Spells/Descriptions-*.md` for the 28 unique missing
+Spell Definitions.
+
+`UBIQUITOUS_LANGUAGE.md` was checked for Spell Definition, Spell Access, Spell
+Invocation, Spell Effect, Cantrip, Spell Slot, Pact Slot, Magic Action, Stable,
+and the D20 roll terms used by the classified spells. The inventory generator
+now records one classification per missing Spell Definition Unit id so repeated
+class-list rows cannot drift. Missing Spell Unit pressure is split into 6
+authoring-ready detect rows, 27 named Surface-widening rows, and 39 explicit
+catalog-only/dead-for-now rows. The remaining authoring-ready rows are
+`detect_evil_and_good` and `detect_poison_and_disease`; both can use existing
+Surface detection atoms, with promoted detection/occlusion runtime ownership
+left for future exploration support.
+
+`/simplify` convergence:
+
+- Round 1: kept the classification table keyed by Spell Definition Unit id
+  rather than duplicating decisions across class spell-list rows.
+- Round 2: kept noncombat utility closures separate from named Surface blockers
+  and added generator validation so future missing Spell Unit rows cannot
+  silently fall back to generic author-or-close wording.

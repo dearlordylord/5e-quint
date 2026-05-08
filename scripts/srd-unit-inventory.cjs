@@ -232,11 +232,240 @@ const spellAccessSurfaceBlockers = new Map([
   ],
 ]);
 
+const spellUnitMissingClassifications = new Map([
+  [
+    "command",
+    {
+      kind: "needs-surface-widening",
+      missingConstruct:
+        "Spell Definition command-option save outcomes: target-turn movement commands, forced item drop, Prone plus turn-ending, and slot-scaled additional targets",
+    },
+  ],
+  [
+    "create_or_destroy_water",
+    {
+      kind: "catalog-only-closure",
+      reason:
+        "Creation/destruction of water, rain extinguishing exposed flames, and fog removal are exploration/environment effects outside the current promoted character-creation and battle-runtime owners.",
+    },
+  ],
+  [
+    "detect_evil_and_good",
+    {
+      kind: "authoring-ready",
+      nextAction:
+        "Author an SRD-provenance Spell Definition record with existing Surface detect support for evil_and_good sensing; keep promoted runtime ownership for detection/occlusion as future exploration support.",
+    },
+  ],
+  [
+    "detect_poison_and_disease",
+    {
+      kind: "authoring-ready",
+      nextAction:
+        "Author an SRD-provenance Spell Definition record with existing Surface detect support for poison_and_disease sensing; keep promoted runtime ownership for detection/occlusion as future exploration support.",
+    },
+  ],
+  [
+    "disguise_self",
+    {
+      kind: "catalog-only-closure",
+      reason:
+        "Self-disguise appearance, physical-inspection failure, and Study action adjudication are social/exploration pressure outside the current promoted runtime owners.",
+    },
+  ],
+  [
+    "dissonant_whispers",
+    {
+      kind: "needs-surface-widening",
+      missingConstruct:
+        "Spell Definition failed-save forced Reaction movement using the safest route, including no-reaction fallback and half-damage success outcome",
+    },
+  ],
+  [
+    "druidcraft",
+    {
+      kind: "catalog-only-closure",
+      reason:
+        "Weather signs, harmless sensory effects, plant blossoming, and candle/torch/campfire narration are noncombat environmental effects outside promoted runtime owners.",
+    },
+  ],
+  [
+    "elementalism",
+    {
+      kind: "catalog-only-closure",
+      reason:
+        "Harmless elemental sensory changes, small water creation, surface marks, and crude shaping are noncombat environmental effects outside promoted runtime owners.",
+    },
+  ],
+  [
+    "expeditious_retreat",
+    {
+      kind: "needs-surface-widening",
+      missingConstruct:
+        "Spell Definition Dash grant: immediate Dash on Bonus Action casting plus ongoing Bonus Action Dash while Concentration lasts",
+    },
+  ],
+  [
+    "feather_fall",
+    {
+      kind: "needs-surface-widening",
+      missingConstruct:
+        "Spell Definition falling Reaction trigger, up-to-five falling creature targets, fall-rate cap, fall-damage prevention, and per-target early end on landing",
+    },
+  ],
+  [
+    "floating_disk",
+    {
+      kind: "catalog-only-closure",
+      reason:
+        "Created carrying disk, load capacity, terrain-following, and distance-based end behavior are object/exploration state outside promoted runtime owners.",
+    },
+  ],
+  [
+    "fog_cloud",
+    {
+      kind: "needs-surface-widening",
+      missingConstruct:
+        "Spell Definition slot-scaled area dimensions and strong-wind dispersal for a Heavily Obscured fog Sphere",
+    },
+  ],
+  [
+    "goodberry",
+    {
+      kind: "catalog-only-closure",
+      reason:
+        "Created consumable berries, nourishment, inventory persistence, and later Bonus Action consumption are item/character-sheet pressure outside current promoted runtime owners.",
+    },
+  ],
+  [
+    "hex",
+    {
+      kind: "needs-surface-widening",
+      missingConstruct:
+        "Spell Definition curse retargeting after the target drops to 0 Hit Points, ability-choice Ability Check Disadvantage, attack-hit bonus damage, and slot-scaled Concentration duration",
+    },
+  ],
+  [
+    "hideous_laughter",
+    {
+      kind: "needs-surface-widening",
+      missingConstruct:
+        "Spell Definition multi-trigger repeat saves with damage-triggered Advantage, Prone self-end suppression, and slot-scaled additional targets",
+    },
+  ],
+  [
+    "illusory_script",
+    {
+      kind: "catalog-only-closure",
+      reason:
+        "Authored writing illusion, designated readers, Truesight reading, and dispelled-script cleanup are document/exploration effects outside promoted runtime owners.",
+    },
+  ],
+  [
+    "jump",
+    {
+      kind: "needs-surface-widening",
+      missingConstruct:
+        "Spell Definition once-per-turn jump movement replacement, movement-spend requirement, and slot-scaled additional willing targets",
+    },
+  ],
+  [
+    "mage_hand",
+    {
+      kind: "catalog-only-closure",
+      reason:
+        "Remote hand creation, object manipulation, carry limit, repeated Magic action control, and distance/recast expiry are exploration object-control effects outside promoted runtime owners.",
+    },
+  ],
+  [
+    "mending",
+    {
+      kind: "catalog-only-closure",
+      reason:
+        "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners.",
+    },
+  ],
+  [
+    "message",
+    {
+      kind: "catalog-only-closure",
+      reason:
+        "Private communication and barrier/silence blocking are exploration communication effects outside promoted runtime owners.",
+    },
+  ],
+  [
+    "prestidigitation",
+    {
+      kind: "catalog-only-closure",
+      reason:
+        "Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners.",
+    },
+  ],
+  [
+    "purify_food_and_drink",
+    {
+      kind: "catalog-only-closure",
+      reason:
+        "Removing poison and rot from nonmagical food and drink is exploration/inventory state outside promoted runtime owners.",
+    },
+  ],
+  [
+    "sanctuary",
+    {
+      kind: "needs-surface-widening",
+      missingConstruct:
+        "Spell Definition targeting interdiction for attack rolls and damaging spells, choose-new-target-or-lose outcome, area exclusion, and early end on warded attack/spell/damage",
+    },
+  ],
+  [
+    "shillelagh",
+    {
+      kind: "needs-surface-widening",
+      missingConstruct:
+        "Spell Definition held Club or Quarterstaff weapon override: spellcasting ability for attacks and damage, character-level damage die upgrade, Force-or-normal damage choice, and early end on recast or let-go",
+    },
+  ],
+  [
+    "sorcerous_burst",
+    {
+      kind: "needs-surface-widening",
+      missingConstruct:
+        "Spell Definition exploding d8 damage loop capped by spellcasting ability modifier, cast-time damage type choice, object target branch, and cantrip damage scaling",
+    },
+  ],
+  [
+    "spare_the_dying",
+    {
+      kind: "needs-surface-widening",
+      missingConstruct:
+        "Spell Definition Stable zero-HP lifecycle application plus character-level range scaling",
+    },
+  ],
+  [
+    "thaumaturgy",
+    {
+      kind: "catalog-only-closure",
+      reason:
+        "Minor wonders, voice-volume Advantage on Intimidation checks, unlocked-door/window movement, harmless tremors, and cosmetic effects are noncombat utility effects outside promoted runtime owners.",
+    },
+  ],
+  [
+    "unseen_servant",
+    {
+      kind: "catalog-only-closure",
+      reason:
+        "Created servant stat block, object-interaction commands, Bonus Action control, HP, and distance-based expiry are summoned helper/exploration state outside promoted runtime owners.",
+    },
+  ],
+]);
+
 function rowNeedsSurfaceWidening(row) {
   return (
     classContainerSurfaceBlockers.has(row.id) ||
     classFeatureSurfaceBlockers.has(row.id) ||
-    spellAccessSurfaceBlockers.has(row.id)
+    spellAccessSurfaceBlockers.has(row.id) ||
+    spellUnitMissingClassifications.get(row.candidateUnitId)?.kind ===
+      "needs-surface-widening"
   );
 }
 
@@ -407,6 +636,21 @@ function characterCreationOwnership(row) {
 }
 
 function surfaceGate(row) {
+  const spellUnitClassification = spellUnitMissingClassifications.get(
+    row.candidateUnitId,
+  );
+  if (spellUnitClassification?.kind === "needs-surface-widening") {
+    return {
+      state: "current-surface-cannot-express-mechanics-yet",
+      missingConstruct: spellUnitClassification.missingConstruct,
+    };
+  }
+  if (spellUnitClassification?.kind === "catalog-only-closure") {
+    return {
+      state: "outside-surface-runtime-mechanics",
+      missingConstruct: undefined,
+    };
+  }
   const classContainerBlocker = classContainerSurfaceBlockers.get(row.id);
   if (classContainerBlocker !== undefined) {
     return {
@@ -454,10 +698,13 @@ function surfaceGate(row) {
 
 function finalDisposition(row, authored, installedIds, ownerEvidenceSources) {
   if (nonRuntimeKinds.has(row.rowKind)) return "non-runtime";
-  if (
-    rowNeedsSurfaceWidening(row)
-  )
-    return "needs-surface-widening";
+  if (rowNeedsSurfaceWidening(row)) return "needs-surface-widening";
+  const spellUnitClassification = spellUnitMissingClassifications.get(
+    row.candidateUnitId,
+  );
+  if (spellUnitClassification?.kind === "catalog-only-closure") {
+    return "catalog-only/dead-for-now";
+  }
   if (!row.candidateUnitId) return "needs-surface-widening";
   if (!authored.has(row.candidateUnitId)) return "missing-authored-record";
   if (!installedIds.has(row.candidateUnitId))
@@ -500,9 +747,21 @@ function nextAction(row, disposition, gate, ownerEvidenceSources) {
   if (disposition === "non-runtime")
     return "No runtime work; keep classification as explicit closure.";
   if (disposition === "catalog-only/dead-for-now") {
+    const spellUnitClassification = spellUnitMissingClassifications.get(
+      row.candidateUnitId,
+    );
+    if (spellUnitClassification?.kind === "catalog-only-closure") {
+      return spellUnitClassification.reason;
+    }
     return "Decide whether to admit/support, or keep catalog-only closure counted.";
   }
   if (disposition === "missing-authored-record") {
+    const spellUnitClassification = spellUnitMissingClassifications.get(
+      row.candidateUnitId,
+    );
+    if (spellUnitClassification?.kind === "authoring-ready") {
+      return spellUnitClassification.nextAction;
+    }
     const ownership = characterCreationOwnership(row);
     if (ownership?.state === "class-container-owned-source-fact") {
       const classContainerBlocker = classContainerSurfaceBlockers.get(
@@ -1248,12 +1507,12 @@ function buildRecommendedBatches(rows) {
       title: "Review Catalog-Only and Surface-Widening Rows",
       suggestedStatus: "blocked-on-SRDINV1",
       intent:
-        "Preserve nonspell catalog-only/dead-for-now rows and name missing Surface constructs for any widening blockers.",
+        "Preserve catalog-only/dead-for-now rows and name missing Surface constructs for nonspell and spell Surface-widening blockers.",
       rows: [...catalogOnlyRows, ...surfaceWideningRows],
       nextAction:
-        "Either keep nonspell rows explicitly catalog-only/dead-for-now or promote a named Surface widening task.",
+        "Either keep catalog-only rows explicitly catalog-only/dead-for-now or promote a named Surface-widening task for each blocker, including spell Surface pressure.",
       acceptance:
-        "Nonspell catalog-only rows are counted deliberately, and every Surface-widening row names the missing construct.",
+        "Catalog-only rows are counted deliberately, and every nonspell or spell Surface-widening row names the missing construct.",
     }),
     makeBatch({
       id: "SRDINV7",
@@ -1408,14 +1667,45 @@ function validateSrdUnitInventory(report) {
   ]) {
     const row = report.rows.find((candidate) => candidate.id === rowId);
     if (row === undefined) {
-      issues.push(
-        `Surface blocker references unknown row ${rowId}.`,
-      );
+      issues.push(`Surface blocker references unknown row ${rowId}.`);
       continue;
     }
     if (row.finalDisposition !== "needs-surface-widening") {
       issues.push(
         `Surface blocker ${rowId} must classify as needs-surface-widening.`,
+      );
+    }
+  }
+  const spellUnitRowsByUnitId = new Map(
+    report.rows
+      .filter((row) => row.rowKind === "spell-unit-pressure")
+      .map((row) => [row.candidateUnitId, row]),
+  );
+  for (const unitId of spellUnitMissingClassifications.keys()) {
+    const row = spellUnitRowsByUnitId.get(unitId);
+    if (row === undefined) {
+      issues.push(
+        `Spell Unit classification references unknown row ${unitId}.`,
+      );
+      continue;
+    }
+    if (
+      row.authoredContent.state !== "missing-authored-record" ||
+      row.catalogAdmission.state !== "not-installed"
+    ) {
+      issues.push(
+        `Spell Unit missing classification ${unitId} must reference a missing, not-installed Spell Unit row.`,
+      );
+    }
+  }
+  for (const row of report.rows) {
+    if (
+      row.rowKind === "spell-unit-pressure" &&
+      row.authoredContent.state === "missing-authored-record" &&
+      !spellUnitMissingClassifications.has(row.candidateUnitId)
+    ) {
+      issues.push(
+        `${row.id} is a missing Spell Unit row without SRDINV5B classification.`,
       );
     }
   }
