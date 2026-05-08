@@ -319,7 +319,7 @@ describe("Character Sheet runtime", () => {
 
     expect(state.base).toMatchObject({
       kind: "ability_sum",
-      source: "barbarian_unarmored_defense",
+      source: "unarmored_defense",
       sourceUnitId: "barbarian_unarmored_defense",
     });
     expect(currentArmorClass(state)).toBe(15);
@@ -402,12 +402,12 @@ describe("Character Sheet runtime", () => {
     );
 
     expect(monkState.base).toMatchObject({
-      source: "monk_unarmored_defense",
+      source: "unarmored_defense",
       sourceUnitId: "monk_unarmored_defense",
     });
     expect(currentArmorClass(monkState)).toBe(15);
     expect(barbarianState.base).toMatchObject({
-      source: "barbarian_unarmored_defense",
+      source: "unarmored_defense",
       sourceUnitId: "barbarian_unarmored_defense",
     });
     expect(currentArmorClass(barbarianState)).toBe(13);

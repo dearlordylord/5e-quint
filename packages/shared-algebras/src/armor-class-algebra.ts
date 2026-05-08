@@ -56,10 +56,7 @@ export type ArmorClassBaseSource =
       readonly kind: "ability_sum";
       readonly base: ArmorClass;
       readonly abilityModifiers: ReadonlyNonEmptyArray<Ability>;
-      readonly source:
-        | "barbarian_unarmored_defense"
-        | "monk_unarmored_defense"
-        | "spell_base_plus_ability";
+      readonly source: "unarmored_defense" | "spell_base_plus_ability";
       readonly sourceUnitId: UnitRecord["id"];
     }
   | {

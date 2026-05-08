@@ -304,7 +304,7 @@ describe("Character Build battle projection", () => {
     expect(init.creatureInit.kind).toBe("character");
     if (init.creatureInit.kind !== "character") return;
     expect(init.creatureInit.armorClass.base).toMatchObject({
-      source: "monk_unarmored_defense",
+      source: "unarmored_defense",
       sourceUnitId: "monk_unarmored_defense",
     });
     expect(currentArmorClass(init.creatureInit.armorClass)).toBe(15);

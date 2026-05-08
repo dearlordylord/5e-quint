@@ -7376,20 +7376,21 @@ function characterResourceSnapshot(
 function activeEffectArmorClass(
   combatant: BattleCreatureState,
 ): ArmorClassState {
-  const mageArmor = combatant.activeEffects.find(
+  const baseArmorClassEffect = combatant.activeEffects.find(
     (effect) => effect.kind === "spellBaseArmorClass",
   );
   const withBase =
-    mageArmor === undefined || combatant.armorClass.base.kind === "armor"
+    baseArmorClassEffect === undefined ||
+    combatant.armorClass.base.kind === "armor"
       ? combatant.armorClass
       : {
           ...combatant.armorClass,
           base: {
             kind: "ability_sum" as const,
-            base: armorClass(mageArmor.base),
-            abilityModifiers: [mageArmor.ability] as const,
+            base: armorClass(baseArmorClassEffect.base),
+            abilityModifiers: [baseArmorClassEffect.ability] as const,
             source: "spell_base_plus_ability" as const,
-            sourceUnitId: mageArmor.sourceSpellId,
+            sourceUnitId: baseArmorClassEffect.sourceSpellId,
           },
         };
   const spellArmorClassBonuses = combatant.activeEffects.flatMap((effect) =>
@@ -16633,14 +16634,14 @@ function supportedPreparedPersistentSpellProfile(
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
     spell.mechanics.duration.value,
   );
-  const mageArmorDurationTicks = elapsedTimeTicksFromHours(8);
+  const requiredDurationTicks = elapsedTimeTicksFromHours(8);
   if (
     spell.mechanics.level !== 1 ||
     spell.mechanics.castingTime.kind !== "action" ||
     spell.mechanics.range.kind !== "touch" ||
     Either.isLeft(durationTicks) ||
-    Either.isLeft(mageArmorDurationTicks) ||
-    Number(durationTicks.right) !== Number(mageArmorDurationTicks.right) ||
+    Either.isLeft(requiredDurationTicks) ||
+    Number(durationTicks.right) !== Number(requiredDurationTicks.right) ||
     spell.mechanics.operations.length !== 1 ||
     operation?.trigger.kind !== "passive" ||
     operation.effect.kind !== "modify_ac_set_base" ||

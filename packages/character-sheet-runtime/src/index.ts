@@ -11,6 +11,7 @@ import {
   CHARACTER_CLASS_LEVELS,
   characterEquipmentItemSourceFromId,
   parseCharacterEquipmentItemId,
+  progressionClassUnitIds,
   STANDARD_LANGUAGES,
   type CharacterBuild,
   type CharacterBuildEquipment,
@@ -88,7 +89,6 @@ const ARMOR_TRAINING_CATEGORY_VALUES = [
   "heavy",
   "shield",
 ] as const;
-const WIZARD_ARCANE_RECOVERY_UNIT_ID = "wizard_arcane_recovery" as const;
 
 export type CharacterSheetId = string & Brand.Brand<"CharacterId">;
 const CharacterSheetId = Brand.nominal<CharacterSheetId>();
@@ -727,6 +727,14 @@ type RestSpellSlotRecoveryMechanics = Extract<
   CharacterSheetClassFeatureRecord["mechanics"],
   { readonly family: "rest_spell_slot_recovery" }
 >;
+type CharacterSheetRestSpellSlotRecoveryFeature =
+  CharacterSheetClassFeatureRecord & {
+    readonly mechanics: RestSpellSlotRecoveryMechanics;
+  };
+type CharacterSheetRestSpellSlotRecoveryProfile = {
+  readonly feature: CharacterSheetRestSpellSlotRecoveryFeature;
+  readonly classUnitId: UnitRecord["id"];
+};
 
 function selectedUnarmoredBaseSource(
   input: CharacterSheetArmorClassStateInput,
@@ -877,7 +885,7 @@ function armorClassBaseSourceForFormula(
       kind: "ability_sum",
       base: armorClass(formula.base),
       abilityModifiers: ["dex", "con"],
-      source: "barbarian_unarmored_defense",
+      source: "unarmored_defense",
       sourceUnitId,
     };
   }
@@ -886,7 +894,7 @@ function armorClassBaseSourceForFormula(
       kind: "ability_sum",
       base: armorClass(formula.base),
       abilityModifiers: ["dex", "wis"],
-      source: "monk_unarmored_defense",
+      source: "unarmored_defense",
       sourceUnitId,
     };
   }
@@ -1103,7 +1111,11 @@ function restFeatureUsesFromInput(
     if (usedFeatureTags.has(use.tag)) {
       return characterSheetIssue("Rest feature use state must not duplicate.");
     }
-    if (!characterBuildHasArcaneRecovery(input.build, input.unitLibrary)) {
+    if (
+      Either.isLeft(
+        restSpellSlotRecoveryProfileForBuild(input.build, input.unitLibrary),
+      )
+    ) {
       return characterSheetIssue(
         "Arcane Recovery rest feature use requires the Wizard Arcane Recovery feature.",
       );
@@ -1236,13 +1248,11 @@ function applyArcaneRecovery(input: {
       "Arcane Recovery requires ordinary Spell Slot state.",
     );
   }
-  if (!characterHasArcaneRecovery(input.sheet, input.unitLibrary)) {
-    return characterSheetIssue(
-      "Arcane Recovery requires the Wizard Arcane Recovery feature.",
-    );
-  }
-  const mechanics = arcaneRecoveryMechanics(input.unitLibrary);
-  if (Either.isLeft(mechanics)) return Either.left(mechanics.left);
+  const profile = restSpellSlotRecoveryProfileForBuild(
+    input.sheet.build,
+    input.unitLibrary,
+  );
+  if (Either.isLeft(profile)) return Either.left(profile.left);
   if (input.sheet.restFeatureUses.some((use) => use.tag === "arcaneRecovery")) {
     return characterSheetIssue(
       "Arcane Recovery cannot be used again until a Long Rest.",
@@ -1251,7 +1261,7 @@ function applyArcaneRecovery(input: {
   const sheet = input.sheet;
   const refund = arcaneRecoverySpellSlotRefund({
     sheet,
-    mechanics: mechanics.right,
+    profile: profile.right,
     refundSpellSlots: input.refundSpellSlots,
   });
   if (Either.isLeft(refund)) return Either.left(refund.left);
@@ -1270,7 +1280,7 @@ function applyArcaneRecovery(input: {
 
 function arcaneRecoverySpellSlotRefund(input: {
   readonly sheet: CharacterSheetWithSpellSlots;
-  readonly mechanics: RestSpellSlotRecoveryMechanics;
+  readonly profile: CharacterSheetRestSpellSlotRecoveryProfile;
   readonly refundSpellSlots: readonly CharacterSheetArcaneRecoverySlotRefund[];
 }): Either.Either<
   readonly CharacterSpellSlotExpenditure[],
@@ -1279,13 +1289,14 @@ function arcaneRecoverySpellSlotRefund(input: {
   if (input.refundSpellSlots.length === 0) {
     return characterSheetIssue("Arcane Recovery must recover expended slots.");
   }
-  const wizardLevel = classLevelForUnit(
+  const classLevel = classLevelForUnit(
     input.sheet.build.progression,
-    "class_wizard",
+    input.profile.classUnitId,
   );
-  const maximumCombinedSlotLevels = Math.ceil(wizardLevel / 2);
+  const maximumCombinedSlotLevels = Math.ceil(classLevel / 2);
   const maximumSlotLevelExclusive =
-    input.mechanics.recoveredSlotLevelCap.maximumSlotLevelExclusive;
+    input.profile.feature.mechanics.recoveredSlotLevelCap
+      .maximumSlotLevelExclusive;
   let combinedSlotLevels = 0;
   const refundByLevel = new Map<SpellSlotLevel, ResourceCount>();
   for (const refund of input.refundSpellSlots) {
@@ -1338,24 +1349,71 @@ function arcaneRecoverySpellSlotRefund(input: {
   return Either.right(updated);
 }
 
-function arcaneRecoveryMechanics(
+function restSpellSlotRecoveryProfileForBuild(
+  build: CharacterBuild,
   unitLibrary: UnitCatalog,
-): Either.Either<RestSpellSlotRecoveryMechanics, CharacterSheetIssue> {
-  const unit = getRequiredUnit(unitLibrary, WIZARD_ARCANE_RECOVERY_UNIT_ID);
-  if (Either.isLeft(unit)) return Either.left(unit.left);
-  if (
-    unit.right.kind !== "class_feature" ||
-    unit.right.mechanics.family !== "rest_spell_slot_recovery" ||
-    unit.right.mechanics.recoveryTrigger !== "short_rest" ||
-    unit.right.mechanics.resetCadence.kind !== "long_rest" ||
-    unit.right.mechanics.recoveredSlotLevelCap.kind !==
-      "half_class_level_rounded_up"
-  ) {
+): Either.Either<
+  CharacterSheetRestSpellSlotRecoveryProfile,
+  CharacterSheetIssue
+> {
+  const features: CharacterSheetRestSpellSlotRecoveryFeature[] = [];
+  for (const unitId of characterBuildFeatureUnitIds(build, unitLibrary)) {
+    const unit = getRequiredUnit(unitLibrary, unitId);
+    if (Either.isLeft(unit)) return Either.left(unit.left);
+    if (!isRestSpellSlotRecoveryFeature(unit.right)) {
+      continue;
+    }
+    features.push(unit.right);
+  }
+  if (features.length === 0) {
     return characterSheetIssue(
-      "Wizard Arcane Recovery Unit must define Short Rest Spell Slot recovery mechanics.",
+      "Arcane Recovery requires a Short Rest Spell Slot recovery feature.",
     );
   }
-  return Either.right(unit.right.mechanics);
+  if (features.length > 1) {
+    return characterSheetIssue(
+      "Character Sheet supports only one Short Rest Spell Slot recovery feature.",
+    );
+  }
+  const feature = features[0];
+  if (feature === undefined) {
+    return characterSheetIssue(
+      "Arcane Recovery requires a Short Rest Spell Slot recovery feature.",
+    );
+  }
+  return restSpellSlotRecoveryProfileForFeature({
+    build,
+    unitLibrary,
+    feature,
+  });
+}
+
+function restSpellSlotRecoveryProfileForFeature(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly feature: CharacterSheetRestSpellSlotRecoveryFeature;
+}): Either.Either<
+  CharacterSheetRestSpellSlotRecoveryProfile,
+  CharacterSheetIssue
+> {
+  for (const progressionClassUnitId of progressionClassUnitIds(
+    input.build.progression,
+  )) {
+    const unit = getRequiredUnit(input.unitLibrary, progressionClassUnitId);
+    if (Either.isLeft(unit)) return Either.left(unit.left);
+    if (
+      unit.right.kind === "class" &&
+      unit.right.className === input.feature.className
+    ) {
+      return Either.right({
+        feature: input.feature,
+        classUnitId: progressionClassUnitId,
+      });
+    }
+  }
+  return characterSheetIssue(
+    "Short Rest Spell Slot recovery feature must belong to a class in the build progression.",
+  );
 }
 
 function isCharacterSheetWithSpellSlots(
@@ -1364,19 +1422,15 @@ function isCharacterSheetWithSpellSlots(
   return "spellSlotExpenditures" in sheet;
 }
 
-function characterHasArcaneRecovery(
-  sheet: CharacterSheet,
-  unitLibrary: UnitCatalog,
-): boolean {
-  return characterBuildHasArcaneRecovery(sheet.build, unitLibrary);
-}
-
-function characterBuildHasArcaneRecovery(
-  build: CharacterBuild,
-  unitLibrary: UnitCatalog,
-): boolean {
-  return characterBuildFeatureUnitIds(build, unitLibrary).includes(
-    WIZARD_ARCANE_RECOVERY_UNIT_ID,
+function isRestSpellSlotRecoveryFeature(
+  unit: UnitRecord,
+): unit is CharacterSheetRestSpellSlotRecoveryFeature {
+  return (
+    unit.kind === "class_feature" &&
+    unit.mechanics.family === "rest_spell_slot_recovery" &&
+    unit.mechanics.recoveryTrigger === "short_rest" &&
+    unit.mechanics.resetCadence.kind === "long_rest" &&
+    unit.mechanics.recoveredSlotLevelCap.kind === "half_class_level_rounded_up"
   );
 }
 
