@@ -492,18 +492,24 @@ export type ReactionRollOrDamageReductionProfile =
       readonly kind: "attackRollReduction";
       readonly rangeFeet: MovementFeet;
       readonly requiresVisibleCreature: true;
+      // TODO SRD mechanics projection: Bardic Inspiration die is allowed here
+      // as the current SRD mechanic term; project it as a generic resource die.
       readonly reduction: { readonly kind: "bardicInspirationDie" };
     }
   | {
       readonly kind: "abilityCheckReduction";
       readonly rangeFeet: MovementFeet;
       readonly requiresVisibleCreature: true;
+      // TODO SRD mechanics projection: Bardic Inspiration die is allowed here
+      // as the current SRD mechanic term; project it as a generic resource die.
       readonly reduction: { readonly kind: "bardicInspirationDie" };
     }
   | {
       readonly kind: "attackDamageRollReduction";
       readonly rangeFeet: MovementFeet;
       readonly requiresVisibleCreature: true;
+      // TODO SRD mechanics projection: Bardic Inspiration die is allowed here
+      // as the current SRD mechanic term; project it as a generic resource die.
       readonly reduction: { readonly kind: "bardicInspirationDie" };
     }
   | {
@@ -518,8 +524,12 @@ export type ReactionRollOrDamageReductionProfile =
             readonly ability: "dex";
           };
       readonly zeroDamageRedirect?: {
+        // TODO SRD mechanics projection: Focus Point is allowed here as the
+        // SRD resource cost; project it as a generic resource-spend fact.
         readonly focusPointCost: 1;
         readonly saveAbility: "dex";
+        // TODO SRD mechanics projection: the Monk Focus save DC formula is
+        // allowed here as SRD logic; project it as a generic save DC formula.
         readonly saveDc: {
           readonly base: 8;
           readonly ability: "wis";
@@ -527,6 +537,8 @@ export type ReactionRollOrDamageReductionProfile =
         };
         readonly damage: {
           readonly dice: 2;
+          // TODO SRD mechanics projection: Martial Arts die is allowed here as
+          // the SRD damage die; project it as a generic damage-die expression.
           readonly dieSize: "martialArts";
           readonly ability: "dex";
         };
@@ -1565,6 +1577,8 @@ function reactionRollOrDamageReductionMechanicsProjection(
         modifier.trigger.requiresVisibleCreature === true &&
         modifier.reduction.kind === "bardic_inspiration_die"
       ) {
+        // TODO SRD mechanics projection: keep the Bardic Inspiration die term
+        // only until Surface projects this as a generic resource die.
         return [
           {
             kind: "attackRollReduction",
@@ -1581,6 +1595,8 @@ function reactionRollOrDamageReductionMechanicsProjection(
         modifier.trigger.requiresVisibleCreature === true &&
         modifier.reduction.kind === "bardic_inspiration_die"
       ) {
+        // TODO SRD mechanics projection: keep the Bardic Inspiration die term
+        // only until Surface projects this as a generic resource die.
         return [
           {
             kind: "abilityCheckReduction",
@@ -1597,6 +1613,8 @@ function reactionRollOrDamageReductionMechanicsProjection(
         modifier.trigger.requiresVisibleCreature === true &&
         modifier.reduction.kind === "bardic_inspiration_die"
       ) {
+        // TODO SRD mechanics projection: keep the Bardic Inspiration die term
+        // only until Surface projects this as a generic resource die.
         return [
           {
             kind: "attackDamageRollReduction",
@@ -1633,6 +1651,8 @@ function reactionRollOrDamageReductionMechanicsProjection(
         "zeroDamageRedirect" in modifier &&
         modifier.zeroDamageRedirect === true
       ) {
+        // TODO SRD mechanics projection: Focus Point and Martial Arts die are
+        // SRD terms allowed here only until projection emits generic cost/dice.
         return [
           {
             kind: "attackDamageReduction",
@@ -1647,6 +1667,8 @@ function reactionRollOrDamageReductionMechanicsProjection(
             zeroDamageRedirect: {
               focusPointCost: 1,
               saveAbility: "dex",
+              // TODO SRD mechanics projection: keep this Monk Focus save DC
+              // formula only until projection emits a generic save DC formula.
               saveDc: {
                 base: 8,
                 ability: "wis",

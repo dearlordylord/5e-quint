@@ -213,6 +213,15 @@ do not copy the protected name into this repository; use the established
 mushroom/fungi synthetic name policy and comment that the masked reference is
 required by the source rule.
 
+SRD mechanic terms may appear as-is when the code is executing that SRD mechanic
+and the term is not being used as reusable taxonomy. Examples include Focus
+Point, Martial Arts die, Bardic Inspiration die, and a Monk Focus save DC. These
+names are allowed only because they are SRD terms that the current promoted
+profile must compute. Each such runtime use must carry a nearby TODO pointing at
+the longer-term projection cleanup: authored Surface/projection should eventually
+provide generic executable facts, while runtime reducers execute those facts
+without hard-coding class-specific formulas.
+
 ## Relationship to the sub-agent survey corpus
 
 `scripts/content-surface-survey/results-srd/<slug>/` contains

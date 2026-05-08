@@ -105,7 +105,8 @@ Keep it synchronized with the DAG table and task details.
 | Order | Task                                                      | Status             | Depends on | Blocks | Research / plan | Next action |
 | ----- | --------------------------------------------------------- | ------------------ | ---------- | ------ | --------------- | ----------- |
 | 160   | QMBT65 - Promote Cutting Words Ability Check Reaction Reduction | done | none | QMBT66 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [SRD Bard](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Bard.md), [SRD Playing the Game](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [SRD Rules Glossary](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed `bard_cutting_words` Ability Check reduction as part of `unit-feature.reaction-roll-or-damage-reduction`, with authored mechanics admission, caller-supplied already-successful Ability Check facts, Reaction and Bardic Inspiration spend, QNT proof coverage, focused runtime parity, deterministic admission evidence, and refreshed matrix artifacts. |
-| 161   | QMBT66 - Recursive Unit Profile Planning Review | ready-for-research | QMBT65 | none | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT65 findings, update PRD and plan docs, and append the largest coherent next batch whose tasks are similar enough to run without re-planning between each item unless the Unit profile matrix lane is explicitly complete. |
+| 161   | QMBT66 - Recursive Unit Profile Planning Review | ready-for-research | QMBT65 | QMBT67 | [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review QMBT65 findings, update PRD and plan docs, and append the largest coherent next batch whose tasks are similar enough to run without re-planning between each item unless the Unit profile matrix lane is explicitly complete. |
+| 162   | QMBT67 - Project SRD-Specific Mechanic Formulas Out of Runtime Reducers | blocked | QMBT66 | none | [Surface README](/workspace/typescript/dnd/packages/surface/README.md), [battle reducer](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [unit feature support](/workspace/typescript/dnd/packages/battle-runtime/src/unit-feature-support.ts) | Move necessary SRD-specific mechanics such as Focus Point cost, Martial Arts die scaling, Bardic Inspiration die scaling, and Monk Focus save DC into authored/runtime projection data so generic reducers execute projected facts rather than class-specific formulas. |
 
 ## Task Details
 
@@ -218,3 +219,34 @@ slices; active-plan consistency check across Ralph index, DAG table, and task
 details; `pnpm unit-profile-coverage:check` if matrix docs or generated
 artifacts change; `/simplify` convergence, minimum two rounds unless the final
 changeset is trivial.
+
+### Task 162 - QMBT67 - Project SRD-Specific Mechanic Formulas Out of Runtime Reducers
+
+Status: `blocked`
+
+Depends on: QMBT66
+
+Blocks: none
+
+Research / plan:
+[Surface README](/workspace/typescript/dnd/packages/surface/README.md),
+[battle-reducer.ts](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts),
+[unit-feature-support.ts](/workspace/typescript/dnd/packages/battle-runtime/src/unit-feature-support.ts)
+
+Scope: remove the remaining necessary SRD-specific mechanic formulas from
+generic runtime reducers by projecting executable facts before reducer entry.
+The first targets are Focus Point cost, Martial Arts die scaling, Bardic
+Inspiration die scaling, and Monk Focus save DC. Keep SRD authored ids and
+mechanic terms in authored content/provenance, comments, and explicit
+projection data where required; generic reducers should consume neutral facts
+such as resource cost, die expression, save DC, and ability modifier.
+
+Out of scope: changing RAW behavior, widening unrelated Unit profiles, changing
+authored Unit ids, or masking SRD names in authored SRD content.
+
+Verification: RAW/source review for Monk's Focus, Martial Arts, Bardic
+Inspiration, and every affected feature; `UBIQUITOUS_LANGUAGE.md` check for
+Pool, Spend, Damage Roll, Saving Throw, and Difficulty Class; focused runtime
+tests for all affected profiles; package-local typecheck; `pnpm
+unit-profile-coverage:check` if profile artifacts change; battle-runtime MBT
+only if promoted battle behavior changes.
