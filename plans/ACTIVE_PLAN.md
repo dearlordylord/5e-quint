@@ -376,7 +376,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 213,
       "id": "SRDINV30E",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Faerie Fire Area Reveal Runtime"
     },
     {
@@ -553,7 +553,7 @@ Keep it synchronized with the DAG table and task details.
 | 210   | SRDINV30B - Promote Roll Modifier Spell Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Bane](/workspace/typescript/dnd/packages/surface/content/bane.dhall), [Bless](/workspace/typescript/dnd/packages/surface/content/bless.dhall), [Guidance](/workspace/typescript/dnd/packages/surface/content/guidance.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote Bane, Bless, and Guidance as D20 roll modifier active effects. |
 | 211   | SRDINV30C - Promote Protection and Charm Spell Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Animal Friendship](/workspace/typescript/dnd/packages/surface/content/animal_friendship.dhall), [Protection from Evil and Good](/workspace/typescript/dnd/packages/surface/content/protection_from_evil_and_good.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promoted Animal Friendship Beast-target Charmed application and Protection from Evil and Good attacker-creature-type attack Disadvantage, with omitted damage-break, possession, condition-immunity, and save-Advantage clauses retained as checker-visible SRDINV33 blockers. |
 | 212   | SRDINV30D - Promote Heroism Turn-Start Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Heroism](/workspace/typescript/dnd/packages/surface/content/heroism.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promoted Heroism as separate Concentration Frightened immunity and target-turn-start Temporary Hit Points effects, with known-willing touch targeting, slot-level target scaling, and non-stacking Temporary Hit Points application. |
-| 213   | SRDINV30E - Promote Faerie Fire Area Reveal Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Faerie Fire](/workspace/typescript/dnd/packages/surface/content/faerie_fire.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote Faerie Fire area save-gated attack Advantage and any executable reveal/invisibility subset. |
+| 213   | SRDINV30E - Promote Faerie Fire Area Reveal Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Faerie Fire](/workspace/typescript/dnd/packages/surface/content/faerie_fire.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote Faerie Fire area save-gated attack Advantage and any executable reveal/invisibility subset. |
 | 214   | SRDINV30F - Promote Resistance Damage Reduction Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Resistance](/workspace/typescript/dnd/packages/surface/content/resistance.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote Resistance chosen damage type reduction with once-per-turn semantics. |
 | 215   | SRDINV31A - Promote Divine Favor Weapon Rider Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Divine Favor](/workspace/typescript/dnd/packages/surface/content/divine_favor.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promoted Divine Favor as a self-hosted timed Radiant damage rider on caster weapon hits. |
 | 216   | SRDINV31B - Promote Hunter's Mark Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Hunter's Mark](/workspace/typescript/dnd/packages/surface/content/hunters_mark.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [Unit profile coverage](/workspace/typescript/dnd/plans/unit-profile-coverage/README.md) | Promoted the combat subset: marked-target damage, Concentration cleanup, and zero-HP Bonus Action retargeting; SRD finding Advantage and upcast duration maxima remain checker-visible SRDINV33 follow-ups. |
@@ -2631,7 +2631,7 @@ non-stacking Temporary Hit Points tests.
 
 ### Task 213 - SRDINV30E - Promote Faerie Fire Area Reveal Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV28A-SRDINV28E
 
