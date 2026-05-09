@@ -128,6 +128,12 @@ module battleRuntime {
   //   Rules-Glossary.md lines 361-365, 420-428, 528-535, 802-806, and
   //   818-826: Dash, Disengage, Dodge, Help, Ready, and standing from Prone
   //   are battle-owned turn/action or movement procedures.
+  // - Spells/Descriptions-A-D.md lines 722-737, Playing-the-Game.md lines
+  //   145-181 and 582-703, Rules-Glossary.md, and UBIQUITOUS_LANGUAGE.md:
+  //   Chromatic Orb is a chained Spell Invocation with one cast-local
+  //   damage-type choice, ordered target/Attack Roll/Damage Roll steps,
+  //   duplicate d8 face detection, unique targets across the casting,
+  //   previous-target 30-foot leap facts, and a leap cap equal to Cast Level.
   // - Spells/Descriptions-M-P.md lines 643-654, Descriptions-S-Z.md lines
   //   7-18, Descriptions-E-L.md lines 1417-1428, and
   //   Descriptions-A-D.md lines 707-720: Poison Spray, Sacred Flame, Inflict
@@ -153,10 +159,13 @@ module battleRuntime {
   type CombatantSide = PartySide | OppositionSide
 
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
-  type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire
+  type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
 
   type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack
+  type ChainedSpellAttackDamageInvocation =
+    | ChromaticOrbChainedSpellAttack
+  type ChromaticOrbDamageTypeChoice = ChromaticOrbAcid | ChromaticOrbCold | ChromaticOrbFire | ChromaticOrbLightning | ChromaticOrbPoison | ChromaticOrbThunder
   type SaveGatedDamageInvocation = AcidSplashSaveGate | SacredFlameSaveGate | InflictWoundsSaveGate | BurningHandsSaveGate | ViciousMockerySaveGate
   type AttackBurstSaveDamageInvocation =
     | IceKnifeAttackBurstSaveDamage
@@ -171,6 +180,52 @@ module battleRuntime {
 
   type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
+
+  type ChainedSpellAttackDamageHole =
+    | ChainedSpellDamageTypeChoice
+    | ChainedStepTargetChoice({ stepIndex: int })
+    | ChainedStepAttackRoll({ stepIndex: int })
+    | ChainedStepDamageRoll({ stepIndex: int })
+
+  type D8FaceCounts = {
+    face1: int,
+    face2: int,
+    face3: int,
+    face4: int,
+    face5: int,
+    face6: int,
+    face7: int,
+    face8: int,
+  }
+
+  type ChainedSpellAttackDamageReplay =
+    | ChainedNeedsDamageType
+    | ChainedNeedsInitialTarget({ slotLevel: int, selectedDamageType: ChromaticOrbDamageTypeChoice })
+    | ChainedNeedsLeapTarget({
+        slotLevel: int,
+        selectedDamageType: ChromaticOrbDamageTypeChoice,
+        previousTarget: Actor,
+        targeted: Set[Actor],
+        leapsUsed: int,
+      })
+    | ChainedNeedsAttackRoll({
+        slotLevel: int,
+        selectedDamageType: ChromaticOrbDamageTypeChoice,
+        stepIndex: int,
+        target: Actor,
+        targeted: Set[Actor],
+        leapsUsed: int,
+      })
+    | ChainedNeedsDamageRoll({
+        slotLevel: int,
+        selectedDamageType: ChromaticOrbDamageTypeChoice,
+        stepIndex: int,
+        target: Actor,
+        targeted: Set[Actor],
+        leapsUsed: int,
+        criticalHit: bool,
+      })
+    | ChainedComplete
 
   type CreatureSize = Tiny | Small | Medium | Large | Huge | Gargantuan
 
@@ -1946,6 +2001,235 @@ module battleRuntime {
       | RayOfSicknessSpellAttack => Set(RayOfSicknessPoisoned)
     }
 
+  pure def chromaticOrbDamageTypeChoice(choice: ChromaticOrbDamageTypeChoice): DamageType =
+    match choice {
+      | ChromaticOrbAcid => Acid
+      | ChromaticOrbCold => Cold
+      | ChromaticOrbFire => Fire
+      | ChromaticOrbLightning => Lightning
+      | ChromaticOrbPoison => Poison
+      | ChromaticOrbThunder => Thunder
+    }
+
+  pure def chainedSpellAttackDamageChoices(invocation: ChainedSpellAttackDamageInvocation): Set[ChromaticOrbDamageTypeChoice] =
+    match invocation {
+      | ChromaticOrbChainedSpellAttack => Set(ChromaticOrbAcid, ChromaticOrbCold, ChromaticOrbFire, ChromaticOrbLightning, ChromaticOrbPoison, ChromaticOrbThunder)
+    }
+
+  pure def chainedSpellAttackDamageBaseSpellLevel(invocation: ChainedSpellAttackDamageInvocation): int =
+    match invocation {
+      | ChromaticOrbChainedSpellAttack => 1
+    }
+
+  pure def chainedSpellAttackDamageDieSize(invocation: ChainedSpellAttackDamageInvocation): int =
+    match invocation {
+      | ChromaticOrbChainedSpellAttack => 8
+    }
+
+  pure def chainedSpellAttackDamageSlotLevelIsLegal(invocation: ChainedSpellAttackDamageInvocation, slotLevel: int): bool =
+    slotLevel >= chainedSpellAttackDamageBaseSpellLevel(invocation)
+
+  pure def chainedSpellAttackDamageLeapCountIsLegal(
+    invocation: ChainedSpellAttackDamageInvocation,
+    slotLevel: int,
+    leapsUsed: int,
+  ): bool =
+    chainedSpellAttackDamageSlotLevelIsLegal(invocation, slotLevel) and
+    leapsUsed >= 0 and
+    leapsUsed <= slotLevel
+
+  pure def chainedSpellAttackDamageDice(invocation: ChainedSpellAttackDamageInvocation, slotLevel: int): int =
+    match invocation {
+      | ChromaticOrbChainedSpellAttack => 3 + (slotLevel - chainedSpellAttackDamageBaseSpellLevel(invocation))
+    }
+
+  pure def chainedSpellAttackDamageRolledD8Count(
+    invocation: ChainedSpellAttackDamageInvocation,
+    slotLevel: int,
+    criticalHit: bool,
+  ): int = {
+    val ordinaryDice = chainedSpellAttackDamageDice(invocation, slotLevel)
+
+    if (criticalHit) ordinaryDice * 2 else ordinaryDice
+  }
+
+  pure def d8FaceCountTotal(counts: D8FaceCounts): int =
+    counts.face1 +
+    counts.face2 +
+    counts.face3 +
+    counts.face4 +
+    counts.face5 +
+    counts.face6 +
+    counts.face7 +
+    counts.face8
+
+  pure def d8FaceCountsAreNonNegative(counts: D8FaceCounts): bool =
+    counts.face1 >= 0 and
+    counts.face2 >= 0 and
+    counts.face3 >= 0 and
+    counts.face4 >= 0 and
+    counts.face5 >= 0 and
+    counts.face6 >= 0 and
+    counts.face7 >= 0 and
+    counts.face8 >= 0
+
+  pure def d8FaceCountsMatchRolledDice(
+    invocation: ChainedSpellAttackDamageInvocation,
+    slotLevel: int,
+    criticalHit: bool,
+    counts: D8FaceCounts,
+  ): bool =
+    chainedSpellAttackDamageSlotLevelIsLegal(invocation, slotLevel) and
+    d8FaceCountsAreNonNegative(counts) and
+    d8FaceCountTotal(counts) == chainedSpellAttackDamageRolledD8Count(invocation, slotLevel, criticalHit)
+
+  pure def damageRollHasDuplicateD8Face(counts: D8FaceCounts): bool =
+    counts.face1 >= 2 or
+    counts.face2 >= 2 or
+    counts.face3 >= 2 or
+    counts.face4 >= 2 or
+    counts.face5 >= 2 or
+    counts.face6 >= 2 or
+    counts.face7 >= 2 or
+    counts.face8 >= 2
+
+  pure def chainedSpellAttackDamageCanLeap(
+    invocation: ChainedSpellAttackDamageInvocation,
+    slotLevel: int,
+    leapsUsed: int,
+    criticalHit: bool,
+    counts: D8FaceCounts,
+  ): bool =
+    match invocation {
+      | ChromaticOrbChainedSpellAttack =>
+          d8FaceCountsMatchRolledDice(invocation, slotLevel, criticalHit, counts) and
+          damageRollHasDuplicateD8Face(counts) and
+          leapsUsed >= 0 and
+          leapsUsed < slotLevel
+    }
+
+  pure def chainedSpellAttackDamageStepDamageType(
+    invocation: ChainedSpellAttackDamageInvocation,
+    selectedDamageType: ChromaticOrbDamageTypeChoice,
+    stepIndex: int,
+  ): DamageType =
+    match invocation {
+      | ChromaticOrbChainedSpellAttack => chromaticOrbDamageTypeChoice(selectedDamageType)
+    }
+
+  pure def chainedSpellAttackDamageTargetedHistoryIsCoherent(
+    invocation: ChainedSpellAttackDamageInvocation,
+    slotLevel: int,
+    targeted: Set[Actor],
+    leapsUsed: int,
+  ): bool =
+    chainedSpellAttackDamageLeapCountIsLegal(invocation, slotLevel, leapsUsed) and
+    targeted.size() == leapsUsed + 1
+
+  pure def chainedSpellAttackDamageLeapTargetHistoryIsCoherent(
+    invocation: ChainedSpellAttackDamageInvocation,
+    slotLevel: int,
+    previousTarget: Actor,
+    targeted: Set[Actor],
+    leapsUsed: int,
+  ): bool =
+    chainedSpellAttackDamageTargetedHistoryIsCoherent(invocation, slotLevel, targeted, leapsUsed) and
+    leapsUsed < slotLevel and
+    targeted.contains(previousTarget)
+
+  pure def chainedSpellAttackDamageStepHistoryIsCoherent(
+    invocation: ChainedSpellAttackDamageInvocation,
+    slotLevel: int,
+    stepIndex: int,
+    target: Actor,
+    targeted: Set[Actor],
+    leapsUsed: int,
+  ): bool =
+    chainedSpellAttackDamageTargetedHistoryIsCoherent(invocation, slotLevel, targeted, leapsUsed) and
+    stepIndex == leapsUsed and
+    targeted.contains(target)
+
+  pure def chainedSpellAttackDamageReplayHoles(
+    invocation: ChainedSpellAttackDamageInvocation,
+    canCastSpells: bool,
+    replay: ChainedSpellAttackDamageReplay,
+  ): Set[ChainedSpellAttackDamageHole] =
+    if (not(canCastSpells))
+      Set()
+    else match replay {
+      | ChainedNeedsDamageType => Set(ChainedSpellDamageTypeChoice)
+      | ChainedNeedsInitialTarget(fill) =>
+          if (
+            chainedSpellAttackDamageSlotLevelIsLegal(invocation, fill.slotLevel)
+          )
+            Set(ChainedStepTargetChoice({ stepIndex: 0 }))
+          else
+            Set()
+      | ChainedNeedsLeapTarget(fill) =>
+          if (
+            chainedSpellAttackDamageLeapTargetHistoryIsCoherent(
+              invocation,
+              fill.slotLevel,
+              fill.previousTarget,
+              fill.targeted,
+              fill.leapsUsed,
+            )
+          )
+            Set(ChainedStepTargetChoice({ stepIndex: fill.leapsUsed + 1 }))
+          else
+            Set()
+      | ChainedNeedsAttackRoll(fill) =>
+          if (
+            chainedSpellAttackDamageStepHistoryIsCoherent(
+              invocation,
+              fill.slotLevel,
+              fill.stepIndex,
+              fill.target,
+              fill.targeted,
+              fill.leapsUsed,
+            )
+          )
+            Set(ChainedStepAttackRoll({ stepIndex: fill.stepIndex }))
+          else
+            Set()
+      | ChainedNeedsDamageRoll(fill) =>
+          if (
+            chainedSpellAttackDamageStepHistoryIsCoherent(
+              invocation,
+              fill.slotLevel,
+              fill.stepIndex,
+              fill.target,
+              fill.targeted,
+              fill.leapsUsed,
+            )
+          )
+            Set(ChainedStepDamageRoll({ stepIndex: fill.stepIndex }))
+          else
+            Set()
+      | ChainedComplete => Set()
+    }
+
+  pure def chainedSpellAttackDamageTargetAllowed(
+    invocation: ChainedSpellAttackDamageInvocation,
+    replay: ChainedSpellAttackDamageReplay,
+    candidate: Actor,
+    candidateWithinPreviousTarget30Feet: bool,
+  ): bool =
+    match replay {
+      | ChainedNeedsInitialTarget(fill) => chainedSpellAttackDamageSlotLevelIsLegal(invocation, fill.slotLevel)
+      | ChainedNeedsLeapTarget(fill) =>
+          candidateWithinPreviousTarget30Feet and
+          not(fill.targeted.contains(candidate)) and
+          chainedSpellAttackDamageLeapTargetHistoryIsCoherent(
+            invocation,
+            fill.slotLevel,
+            fill.previousTarget,
+            fill.targeted,
+            fill.leapsUsed,
+          )
+      | _ => false
+    }
+
   pure def saveGatedDamageFailedSaveActiveEffects(invocation: SaveGatedDamageInvocation): Set[ActiveEffect] =
     match invocation {
       | AcidSplashSaveGate => Set()
@@ -3002,6 +3286,11 @@ module battleRuntime {
       assert(spellAttackDamageActiveEffects(RayOfSicknessSpellAttack) == Set(RayOfSicknessPoisoned)),
       assert(spellAttackDamageActiveEffects(ShockingGraspSpellAttack) == Set(ShockingGraspOpportunityAttackDenied)),
       assert(spellAttackDamageActiveEffects(GuidingBoltSpellAttack) == Set(GuidingBoltNextAttackAdvantage)),
+      assert(chainedSpellAttackDamageChoices(ChromaticOrbChainedSpellAttack) == Set(ChromaticOrbAcid, ChromaticOrbCold, ChromaticOrbFire, ChromaticOrbLightning, ChromaticOrbPoison, ChromaticOrbThunder)),
+      assert(chainedSpellAttackDamageBaseSpellLevel(ChromaticOrbChainedSpellAttack) == 1),
+      assert(chainedSpellAttackDamageDieSize(ChromaticOrbChainedSpellAttack) == 8),
+      assert(chainedSpellAttackDamageDice(ChromaticOrbChainedSpellAttack, 1) == 3),
+      assert(chainedSpellAttackDamageDice(ChromaticOrbChainedSpellAttack, 3) == 5),
       assert(saveGatedDamageFailedSaveActiveEffects(ViciousMockerySaveGate) == Set(ViciousMockeryNextAttackDisadvantage)),
       assert(saveGatedConditionTargeting(ColorSpraySaveGate) == AreaSaveTargets),
       assert(saveGatedConditionFailedSaveActiveEffects(ColorSpraySaveGate) == Set(ColorSprayBlinded)),
@@ -3026,6 +3315,230 @@ module battleRuntime {
       assert(attackBurstSaveDamageSpendsLevelOneSlot(IceKnifeAttackBurstSaveDamage)),
       assert(attackBurstSaveDamageAttackType(IceKnifeAttackBurstSaveDamage) == Piercing),
       assert(attackBurstSaveDamageBurstType(IceKnifeAttackBurstSaveDamage) == Cold),
+    }
+  }
+
+  run test_chromatic_orb_chained_replay_facts = {
+    val noDuplicateFaces = {
+      face1: 1,
+      face2: 1,
+      face3: 1,
+      face4: 0,
+      face5: 0,
+      face6: 0,
+      face7: 0,
+      face8: 0,
+    }
+    val duplicateFaces = {
+      face1: 2,
+      face2: 0,
+      face3: 1,
+      face4: 0,
+      face5: 0,
+      face6: 0,
+      face7: 0,
+      face8: 0,
+    }
+    val criticalDuplicateFaces = {
+      face1: 2,
+      face2: 1,
+      face3: 1,
+      face4: 1,
+      face5: 1,
+      face6: 0,
+      face7: 0,
+      face8: 0,
+    }
+    val level3DuplicateFaces = {
+      face1: 2,
+      face2: 1,
+      face3: 1,
+      face4: 1,
+      face5: 0,
+      face6: 0,
+      face7: 0,
+      face8: 0,
+    }
+    val negativeFaceCount = {
+      face1: -1,
+      face2: 2,
+      face3: 2,
+      face4: 0,
+      face5: 0,
+      face6: 0,
+      face7: 0,
+      face8: 0,
+    }
+
+    all {
+      assert(d8FaceCountsMatchRolledDice(ChromaticOrbChainedSpellAttack, 1, false, noDuplicateFaces)),
+      assert(d8FaceCountsMatchRolledDice(ChromaticOrbChainedSpellAttack, 1, true, criticalDuplicateFaces)),
+      assert(not(d8FaceCountsMatchRolledDice(ChromaticOrbChainedSpellAttack, 0, false, noDuplicateFaces))),
+      assert(not(d8FaceCountsMatchRolledDice(ChromaticOrbChainedSpellAttack, 1, false, negativeFaceCount))),
+      assert(not(damageRollHasDuplicateD8Face(noDuplicateFaces))),
+      assert(damageRollHasDuplicateD8Face(duplicateFaces)),
+      assert(chainedSpellAttackDamageCanLeap(ChromaticOrbChainedSpellAttack, 1, 0, false, duplicateFaces)),
+      assert(chainedSpellAttackDamageCanLeap(ChromaticOrbChainedSpellAttack, 1, 0, true, criticalDuplicateFaces)),
+      assert(not(chainedSpellAttackDamageCanLeap(ChromaticOrbChainedSpellAttack, 1, 1, false, duplicateFaces))),
+      assert(not(chainedSpellAttackDamageCanLeap(ChromaticOrbChainedSpellAttack, 1, -1, false, duplicateFaces))),
+      assert(chainedSpellAttackDamageCanLeap(ChromaticOrbChainedSpellAttack, 3, 2, false, level3DuplicateFaces)),
+      assert(not(chainedSpellAttackDamageCanLeap(ChromaticOrbChainedSpellAttack, 3, 2, false, duplicateFaces))),
+      assert(not(chainedSpellAttackDamageCanLeap(ChromaticOrbChainedSpellAttack, 3, 3, false, level3DuplicateFaces))),
+      assert(not(chainedSpellAttackDamageCanLeap(ChromaticOrbChainedSpellAttack, 3, 0, false, noDuplicateFaces))),
+      assert(not(chainedSpellAttackDamageCanLeap(ChromaticOrbChainedSpellAttack, 3, 0, false, negativeFaceCount))),
+      assert(chromaticOrbDamageTypeChoice(ChromaticOrbAcid) == Acid),
+      assert(chromaticOrbDamageTypeChoice(ChromaticOrbCold) == Cold),
+      assert(chromaticOrbDamageTypeChoice(ChromaticOrbFire) == Fire),
+      assert(chromaticOrbDamageTypeChoice(ChromaticOrbLightning) == Lightning),
+      assert(chromaticOrbDamageTypeChoice(ChromaticOrbPoison) == Poison),
+      assert(chromaticOrbDamageTypeChoice(ChromaticOrbThunder) == Thunder),
+      assert(chainedSpellAttackDamageStepDamageType(ChromaticOrbChainedSpellAttack, ChromaticOrbFire, 0) == Fire),
+      assert(chainedSpellAttackDamageStepDamageType(ChromaticOrbChainedSpellAttack, ChromaticOrbFire, 2) == Fire),
+    }
+  }
+
+  run test_chromatic_orb_chained_replay_holes_are_ordered = {
+    all {
+      assert(chainedSpellAttackDamageReplayHoles(ChromaticOrbChainedSpellAttack, true, ChainedNeedsDamageType) == Set(ChainedSpellDamageTypeChoice)),
+      assert(chainedSpellAttackDamageReplayHoles(ChromaticOrbChainedSpellAttack, true, ChainedNeedsInitialTarget({ slotLevel: 1, selectedDamageType: ChromaticOrbLightning })) == Set(ChainedStepTargetChoice({ stepIndex: 0 }))),
+      assert(chainedSpellAttackDamageReplayHoles(ChromaticOrbChainedSpellAttack, true, ChainedNeedsInitialTarget({ slotLevel: 0, selectedDamageType: ChromaticOrbLightning })) == Set()),
+      assert(chainedSpellAttackDamageReplayHoles(ChromaticOrbChainedSpellAttack, true, ChainedNeedsAttackRoll({
+        slotLevel: 1,
+        selectedDamageType: ChromaticOrbLightning,
+        stepIndex: 0,
+        target: Goblin,
+        targeted: Set(Goblin),
+        leapsUsed: 0,
+      })) == Set(ChainedStepAttackRoll({ stepIndex: 0 }))),
+      assert(chainedSpellAttackDamageReplayHoles(ChromaticOrbChainedSpellAttack, true, ChainedNeedsAttackRoll({
+        slotLevel: 1,
+        selectedDamageType: ChromaticOrbLightning,
+        stepIndex: 1,
+        target: Goblin,
+        targeted: Set(Goblin),
+        leapsUsed: 0,
+      })) == Set()),
+      assert(chainedSpellAttackDamageReplayHoles(ChromaticOrbChainedSpellAttack, true, ChainedNeedsAttackRoll({
+        slotLevel: 1,
+        selectedDamageType: ChromaticOrbLightning,
+        stepIndex: 0,
+        target: Fighter,
+        targeted: Set(Goblin),
+        leapsUsed: 0,
+      })) == Set()),
+      assert(chainedSpellAttackDamageReplayHoles(ChromaticOrbChainedSpellAttack, true, ChainedNeedsDamageRoll({
+        slotLevel: 1,
+        selectedDamageType: ChromaticOrbLightning,
+        stepIndex: 0,
+        target: Goblin,
+        targeted: Set(Goblin),
+        leapsUsed: 0,
+        criticalHit: false,
+      })) == Set(ChainedStepDamageRoll({ stepIndex: 0 }))),
+      assert(chainedSpellAttackDamageReplayHoles(ChromaticOrbChainedSpellAttack, true, ChainedNeedsDamageRoll({
+        slotLevel: 1,
+        selectedDamageType: ChromaticOrbLightning,
+        stepIndex: 0,
+        target: Goblin,
+        targeted: Set(Goblin),
+        leapsUsed: -1,
+        criticalHit: false,
+      })) == Set()),
+      assert(chainedSpellAttackDamageReplayHoles(ChromaticOrbChainedSpellAttack, true, ChainedNeedsDamageRoll({
+        slotLevel: 2,
+        selectedDamageType: ChromaticOrbLightning,
+        stepIndex: 1,
+        target: Goblin,
+        targeted: Set(),
+        leapsUsed: 1,
+        criticalHit: false,
+      })) == Set()),
+      assert(chainedSpellAttackDamageReplayHoles(ChromaticOrbChainedSpellAttack, true, ChainedNeedsLeapTarget({
+        slotLevel: 1,
+        selectedDamageType: ChromaticOrbLightning,
+        previousTarget: Goblin,
+        targeted: Set(Goblin),
+        leapsUsed: 0,
+      })) == Set(ChainedStepTargetChoice({ stepIndex: 1 }))),
+      assert(chainedSpellAttackDamageReplayHoles(ChromaticOrbChainedSpellAttack, true, ChainedNeedsLeapTarget({
+        slotLevel: 1,
+        selectedDamageType: ChromaticOrbLightning,
+        previousTarget: Goblin,
+        targeted: Set(Goblin),
+        leapsUsed: 1,
+      })) == Set()),
+      assert(chainedSpellAttackDamageReplayHoles(ChromaticOrbChainedSpellAttack, true, ChainedNeedsLeapTarget({
+        slotLevel: 2,
+        selectedDamageType: ChromaticOrbLightning,
+        previousTarget: Fighter,
+        targeted: Set(Goblin),
+        leapsUsed: 0,
+      })) == Set()),
+      assert(chainedSpellAttackDamageReplayHoles(ChromaticOrbChainedSpellAttack, true, ChainedNeedsLeapTarget({
+        slotLevel: 2,
+        selectedDamageType: ChromaticOrbLightning,
+        previousTarget: Goblin,
+        targeted: Set(Goblin),
+        leapsUsed: 1,
+      })) == Set()),
+      assert(chainedSpellAttackDamageReplayHoles(ChromaticOrbChainedSpellAttack, true, ChainedComplete) == Set()),
+      assert(chainedSpellAttackDamageReplayHoles(ChromaticOrbChainedSpellAttack, false, ChainedNeedsDamageType) == Set()),
+    }
+  }
+
+  run test_chromatic_orb_leap_target_invariants = {
+    all {
+      assert(chainedSpellAttackDamageTargetAllowed(ChromaticOrbChainedSpellAttack, ChainedNeedsInitialTarget({ slotLevel: 1, selectedDamageType: ChromaticOrbAcid }), Goblin, false)),
+      assert(not(chainedSpellAttackDamageTargetAllowed(ChromaticOrbChainedSpellAttack, ChainedNeedsInitialTarget({ slotLevel: 0, selectedDamageType: ChromaticOrbAcid }), Goblin, false))),
+      assert(chainedSpellAttackDamageTargetAllowed(ChromaticOrbChainedSpellAttack, ChainedNeedsLeapTarget({
+        slotLevel: 2,
+        selectedDamageType: ChromaticOrbAcid,
+        previousTarget: Goblin,
+        targeted: Set(Goblin),
+        leapsUsed: 0,
+      }), Fighter, true)),
+      assert(not(chainedSpellAttackDamageTargetAllowed(ChromaticOrbChainedSpellAttack, ChainedNeedsLeapTarget({
+        slotLevel: 2,
+        selectedDamageType: ChromaticOrbAcid,
+        previousTarget: Goblin,
+        targeted: Set(Goblin),
+        leapsUsed: 0,
+      }), Goblin, true))),
+      assert(not(chainedSpellAttackDamageTargetAllowed(ChromaticOrbChainedSpellAttack, ChainedNeedsLeapTarget({
+        slotLevel: 2,
+        selectedDamageType: ChromaticOrbAcid,
+        previousTarget: Goblin,
+        targeted: Set(Goblin),
+        leapsUsed: 0,
+      }), Fighter, false))),
+      assert(not(chainedSpellAttackDamageTargetAllowed(ChromaticOrbChainedSpellAttack, ChainedNeedsLeapTarget({
+        slotLevel: 1,
+        selectedDamageType: ChromaticOrbAcid,
+        previousTarget: Goblin,
+        targeted: Set(Goblin),
+        leapsUsed: 1,
+      }), Fighter, true))),
+      assert(not(chainedSpellAttackDamageTargetAllowed(ChromaticOrbChainedSpellAttack, ChainedNeedsLeapTarget({
+        slotLevel: 2,
+        selectedDamageType: ChromaticOrbAcid,
+        previousTarget: Goblin,
+        targeted: Set(Goblin),
+        leapsUsed: -1,
+      }), Fighter, true))),
+      assert(not(chainedSpellAttackDamageTargetAllowed(ChromaticOrbChainedSpellAttack, ChainedNeedsLeapTarget({
+        slotLevel: 2,
+        selectedDamageType: ChromaticOrbAcid,
+        previousTarget: Fighter,
+        targeted: Set(Goblin),
+        leapsUsed: 0,
+      }), Fighter, true))),
+      assert(not(chainedSpellAttackDamageTargetAllowed(ChromaticOrbChainedSpellAttack, ChainedNeedsLeapTarget({
+        slotLevel: 2,
+        selectedDamageType: ChromaticOrbAcid,
+        previousTarget: Goblin,
+        targeted: Set(Goblin),
+        leapsUsed: 1,
+      }), Fighter, true))),
     }
   }
 
