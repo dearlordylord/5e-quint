@@ -460,7 +460,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 227,
       "id": "SRDINV29F3",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Admit Chromatic Orb Runtime Support"
     }
   ]
