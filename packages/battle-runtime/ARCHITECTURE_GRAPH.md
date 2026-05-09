@@ -179,9 +179,12 @@ flowchart TD
   either ask for one creature
   target first, as with `sacred_flame` and `inflict_wounds`, or use a
   table-supplied affected-target outcome hole for admitted areas such as
-  `acid_splash`; damage is requested only for targets whose Saving Throw
-  outcome and admitted replacement riders still produce damage. `vicious_mockery`
-  adds an attack-roll-only Disadvantage effect on failed saves.
+  `acid_splash` and `burning_hands`; damage is requested only for targets whose
+  Saving Throw outcome and admitted replacement riders still produce damage.
+  `burning_hands` is the self-origin Cone save-for-half branch; the table
+  supplies affected targets rather than the reducer deriving grid geometry.
+  `vicious_mockery` adds an attack-roll-only Disadvantage effect on failed
+  saves.
 - Stat Block damage vulnerabilities, resistances, and immunities are read from
   the retained `StatBlockRecord` at the HP mutation boundary.
 - Optional attack damage riders are retained feature profiles, not named
@@ -243,8 +246,8 @@ restoration pressure, not as active package architecture:
 - spell-slot and use-count gates;
 - generic Surface attachment projection and damage-type hole projection,
   including temporary attachment and damage-type reference fills;
-- broader save-gate spell support outside the admitted one-creature and
-  point-origin Sphere damage profiles.
+- broader save-gate spell support outside the admitted one-creature,
+  point-origin Sphere, and self-origin Cone damage profiles.
 
 Future restorations belong in `@dnd/battle-runtime` implementation,
 package-local deterministic tests, and `battle-runtime.qnt`. Restore SRD

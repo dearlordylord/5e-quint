@@ -1389,6 +1389,12 @@ function savingThrowOutcomeFill(
   if (hole.kind !== "savingThrowOutcome") {
     throw new Error("Expected savingThrowOutcome hole.");
   }
+  if (!("spell" in hole)) {
+    throw new Error("Expected spell Saving Throw outcome hole.");
+  }
+  if (hole.spell.targeting.kind === "singleCombatant") {
+    throw new Error("Expected area spell Saving Throw outcome hole.");
+  }
   return {
     kind: "savingThrowOutcome",
     holeId: hole.holeId,

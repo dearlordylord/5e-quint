@@ -316,7 +316,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 203,
       "id": "SRDINV29A",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Burning Hands Cone Damage Runtime"
     },
     {
@@ -525,7 +525,7 @@ Keep it synchronized with the DAG table and task details.
 | 200   | SRDINV28C - Promote Spell Attack Damage Runtime | done | SRDINV28A | SRDINV28D-SRDINV28E, SRDINV29A-SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [battle-runtime reducer](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promoted spell attack damage without mandatory speed reduction: ranged spell attack paths remain covered, and damage-only Chill Touch now covers melee spell attack damage with checker-visible deferred healing suppression and generic-target eligibility. |
 | 201   | SRDINV28D - Promote Spell Rider Timing Runtime | done | SRDINV28B-SRDINV28C | SRDINV29A-SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [battle-runtime active effects](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promoted typed runtime support for SRD spell riders in scope: Ray of Sickness spell-owned Poisoned expiration, Shocking Grasp Opportunity Attack denial, Guiding Bolt next attack against target Advantage, and Vicious Mockery next attack by target Disadvantage, with Chill Touch healing suppression still excluded from this slice. |
 | 202   | SRDINV28E - Decide Starry Wisp Object Targeting | done | SRDINV28A-SRDINV28C | SRDINV29A-SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [battle-runtime target facts](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [SRD Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [SRD Chill Touch](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Closed by deferring Starry Wisp support with checker-visible `needs-surface-widening` evidence: object target identity, object AC/HP damage disposition, Dim Light emission, and Invisible benefit denial remain unpromoted, while Chill Touch stays limited to its combatant-target damage subset. |
-| 203   | SRDINV29A - Promote Burning Hands Cone Damage Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Burning Hands](/workspace/typescript/dnd/packages/surface/content/burning_hands.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote the self-origin cone save-for-half damage boundary for Burning Hands without broad spatial derivation. |
+| 203   | SRDINV29A - Promote Burning Hands Cone Damage Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Burning Hands](/workspace/typescript/dnd/packages/surface/content/burning_hands.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promoted Burning Hands through the self-origin Cone save-for-half boundary with caller-supplied affected targets, Dexterity save outcomes, Fire damage, slot scaling, and action/slot spend evidence. |
 | 204   | SRDINV29B - Promote Color Spray Cone Condition Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Color Spray](/workspace/typescript/dnd/packages/surface/content/color_spray.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote self-origin cone Blinded application with source-owned end-of-caster-next-turn expiration. |
 | 205   | SRDINV29C - Promote Entangle Area Restraint Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Entangle](/workspace/typescript/dnd/packages/surface/content/entangle.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote point-origin area Restrained application, Concentration cleanup, and escape action for Entangle. |
 | 206   | SRDINV29D - Promote Grease Ground Hazard Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Grease](/workspace/typescript/dnd/packages/surface/content/grease.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Grease as one-minute ground hazard with on-cast Prone and recurring enter/end-turn saves, or keep unsupported if recurrence is not executable. |
@@ -2434,7 +2434,7 @@ and `pnpm quality`; MBT only if promoted battle-runtime behavior changes.
 
 ### Task 203 - SRDINV29A - Promote Burning Hands Cone Damage Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV28A-SRDINV28E
 
@@ -2446,6 +2446,10 @@ cover, LOS, or pathfinding. Verification must cover RAW, cone target fill,
 Dexterity save success/failure, Fire damage, slot scaling, action/slot spend,
 QNT parity if promoted behavior changes, `pnpm unit-profile-coverage:check`,
 `pnpm quality`, and `/simplify`.
+
+Closed with deterministic admission/projection, package-local runtime tests,
+package-local Quint facts/tests, inventory evidence, `pnpm unit-profile-coverage:check`,
+`pnpm quality`, promoted battle-runtime MBT, and two simplify/self-review passes.
 
 ### Task 204 - SRDINV29B - Promote Color Spray Cone Condition Runtime
 

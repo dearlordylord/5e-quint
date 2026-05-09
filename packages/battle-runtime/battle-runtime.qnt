@@ -131,9 +131,9 @@ module battleRuntime {
   // - Spells/Descriptions-M-P.md lines 643-654, Descriptions-S-Z.md lines
   //   7-18, Descriptions-E-L.md lines 1417-1428, and
   //   Descriptions-A-D.md lines 707-720: Poison Spray, Sacred Flame, Inflict
-  //   Wounds, and the damage-only slice of Chill Touch are action-time direct
-  //   damage spells with creature targets, cantrip/slot scaling, and the
-  //   listed attack/save outcomes.
+  //   Wounds, Burning Hands, and the damage-only slice of Chill Touch are
+  //   action-time direct damage spells with creature or table-supplied area
+  //   targets, cantrip/slot scaling, and the listed attack/save outcomes.
   // - Character-Origins.md lines 253-255, Playing-the-Game.md lines 788-806,
   //   Rules-Glossary.md lines 361-365, and UBIQUITOUS_LANGUAGE.md:
   //   Orc Adrenaline Rush spends a limited-use Bonus Action Dash, grants
@@ -149,11 +149,11 @@ module battleRuntime {
   type CombatantSide = PartySide | OppositionSide
 
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
-  type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic
+  type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | HealingWord | CureWounds | MassHealingWord | Shield | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | HealingWord | CureWounds | MassHealingWord | Shield | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack
-  type SaveGatedDamageInvocation = AcidSplashSaveGate | SacredFlameSaveGate | InflictWoundsSaveGate | ViciousMockerySaveGate
+  type SaveGatedDamageInvocation = AcidSplashSaveGate | SacredFlameSaveGate | InflictWoundsSaveGate | BurningHandsSaveGate | ViciousMockerySaveGate
   type SaveGatedDamageTargeting = AreaSaveTargets | SingleSaveTarget
   type SaveGatedDamageSuccess = NoDamageOnSaveSuccess | HalfDamageOnSaveSuccess
   type MovementSpeedKind = WalkSpeedKind | ClimbSpeedKind | SwimSpeedKind
@@ -1861,6 +1861,7 @@ module battleRuntime {
       | ChillTouch => false
       | SacredFlame => false
       | InflictWounds => true
+      | BurningHands => true
       | HealingWord => true
       | CureWounds => true
       | MassHealingWord => true
@@ -1934,6 +1935,7 @@ module battleRuntime {
       | AcidSplashSaveGate => Set()
       | SacredFlameSaveGate => Set()
       | InflictWoundsSaveGate => Set()
+      | BurningHandsSaveGate => Set()
       | ViciousMockerySaveGate => Set(ViciousMockeryNextAttackDisadvantage)
     }
 
@@ -1962,6 +1964,7 @@ module battleRuntime {
       | AcidSplashSaveGate => AreaSaveTargets
       | SacredFlameSaveGate => SingleSaveTarget
       | InflictWoundsSaveGate => SingleSaveTarget
+      | BurningHandsSaveGate => AreaSaveTargets
       | ViciousMockerySaveGate => SingleSaveTarget
     }
 
@@ -1970,6 +1973,7 @@ module battleRuntime {
       | AcidSplashSaveGate => NoDamageOnSaveSuccess
       | SacredFlameSaveGate => NoDamageOnSaveSuccess
       | InflictWoundsSaveGate => HalfDamageOnSaveSuccess
+      | BurningHandsSaveGate => HalfDamageOnSaveSuccess
       | ViciousMockerySaveGate => NoDamageOnSaveSuccess
     }
 
@@ -1978,6 +1982,7 @@ module battleRuntime {
       | AcidSplashSaveGate => Acid
       | SacredFlameSaveGate => Radiant
       | InflictWoundsSaveGate => Necrotic
+      | BurningHandsSaveGate => Fire
       | ViciousMockerySaveGate => Psychic
     }
 
@@ -1986,6 +1991,7 @@ module battleRuntime {
       | AcidSplashSaveGate => false
       | SacredFlameSaveGate => false
       | InflictWoundsSaveGate => true
+      | BurningHandsSaveGate => true
       | ViciousMockerySaveGate => false
     }
 
@@ -2082,6 +2088,35 @@ module battleRuntime {
         fighter: acidSplashDamageTarget(state.fighter, fighterFailedSavingThrow, damageRoll, fighterConcentrationSaveSucceeded),
         goblin: acidSplashDamageTarget(state.goblin, goblinFailedSavingThrow, damageRoll, goblinConcentrationSaveSucceeded),
         actionAvailable: false,
+      }
+
+  pure def resolveBurningHands(
+    state: BattleState,
+    fighterSavingThrowSucceeded: bool,
+    goblinSavingThrowSucceeded: bool,
+    damageRoll: int,
+    fighterConcentrationSaveSucceeded: bool,
+    goblinConcentrationSaveSucceeded: bool,
+  ): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)))
+      state
+    else
+      {
+        ...state,
+        fighter: saveGatedDamageTarget(BurningHandsSaveGate, state.fighter, fighterSavingThrowSucceeded, damageRoll, fighterConcentrationSaveSucceeded),
+        goblin: saveGatedDamageTarget(BurningHandsSaveGate, state.goblin, goblinSavingThrowSucceeded, damageRoll, goblinConcentrationSaveSucceeded),
+        actionAvailable: false,
+        spellSlotExpendedThisTurn: true,
+      }
+
+  pure def resolveBurningHandsEmptyArea(state: BattleState): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)))
+      state
+    else
+      {
+        ...state,
+        actionAvailable: false,
+        spellSlotExpendedThisTurn: true,
       }
 
   pure def resolveSingleTargetSaveGatedDamage(
@@ -2721,6 +2756,9 @@ module battleRuntime {
       assert(saveGatedDamageTargeting(InflictWoundsSaveGate) == SingleSaveTarget),
       assert(saveGatedDamageSuccess(InflictWoundsSaveGate) == HalfDamageOnSaveSuccess),
       assert(saveGatedDamageType(InflictWoundsSaveGate) == Necrotic),
+      assert(saveGatedDamageTargeting(BurningHandsSaveGate) == AreaSaveTargets),
+      assert(saveGatedDamageSuccess(BurningHandsSaveGate) == HalfDamageOnSaveSuccess),
+      assert(saveGatedDamageType(BurningHandsSaveGate) == Fire),
       assert(saveGatedDamageTargeting(ViciousMockerySaveGate) == SingleSaveTarget),
       assert(saveGatedDamageSuccess(ViciousMockerySaveGate) == NoDamageOnSaveSuccess),
       assert(saveGatedDamageType(ViciousMockerySaveGate) == Psychic),
@@ -2743,6 +2781,8 @@ module battleRuntime {
       assert(saveGatedDamageReplayHoles(SacredFlameSaveGate, true, true, true, true) == Set(DamageRoll)),
       assert(saveGatedDamageReplayHoles(SacredFlameSaveGate, true, true, true, false) == Set()),
       assert(saveGatedDamageReplayHoles(InflictWoundsSaveGate, true, true, true, true) == Set(DamageRoll)),
+      assert(saveGatedDamageReplayHoles(BurningHandsSaveGate, true, true, false, false) == Set(SavingThrowOutcome)),
+      assert(saveGatedDamageReplayHoles(BurningHandsSaveGate, true, true, true, true) == Set(DamageRoll)),
     }
   }
 
@@ -2752,6 +2792,26 @@ module battleRuntime {
       assert(result.actionAvailable == false),
       assert(result.fighter.hp == 12),
       assert(result.goblin.hp == 6),
+    }
+  }
+
+  run test_burning_hands_area_save_damage_halves_success_and_spends_slot = {
+    val result = resolveBurningHands(initialState, false, true, 6, true, true)
+    all {
+      assert(result.actionAvailable == false),
+      assert(result.spellSlotExpendedThisTurn == true),
+      assert(result.fighter.hp == 6),
+      assert(result.goblin.hp == 7),
+    }
+  }
+
+  run test_burning_hands_empty_area_spends_slot_without_damage = {
+    val result = resolveBurningHandsEmptyArea(initialState)
+    all {
+      assert(result.actionAvailable == false),
+      assert(result.spellSlotExpendedThisTurn == true),
+      assert(result.fighter.hp == 12),
+      assert(result.goblin.hp == 10),
     }
   }
 

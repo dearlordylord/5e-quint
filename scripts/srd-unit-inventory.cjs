@@ -168,10 +168,7 @@ const spellUnitExecutableFollowUpBatches = [
     label: "Spell attack and save-damage runtime",
     nextAction:
       "Admit these authored Spell Definitions and add battle-runtime spell invocation/projection for attack rolls, saving throws, damage, cantrip scaling, slot-scaled damage, object targeting where SRD permits it, and simple rider outcomes.",
-    unitIds: [
-      "burning_hands",
-      "starry_wisp",
-    ],
+    unitIds: ["starry_wisp"],
   },
   {
     id: "spell-area-chain-and-typed-damage-runtime",
@@ -2098,9 +2095,7 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
     spellPressure.filter((row) =>
       unitIds.includes(row.candidateUnitId),
     );
-  const srdinv28PureDamageRows = spellRowsByUnitIds([
-    "burning_hands",
-  ]);
+  const srdinv28PureDamageRows = spellRowsByUnitIds([]);
   const srdinv28SpellAttackDamageRows = spellRowsByUnitIds([
     "chill_touch",
     "guiding_bolt",
@@ -2116,7 +2111,7 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
     "vicious_mockery",
   ]);
   const srdinv28StarryWispRows = spellRowsByUnitIds(["starry_wisp"]);
-  const srdinv29ABurningHandsRows = spellRowsByUnitIds(["burning_hands"]);
+  const srdinv29ABurningHandsRows = spellRowsByUnitIds([]);
   const srdinv29BColorSprayRows = spellRowsByUnitIds(["color_spray"]);
   const srdinv29CEntangleRows = spellRowsByUnitIds(["entangle"]);
   const srdinv29DGreaseRows = spellRowsByUnitIds(["grease"]);

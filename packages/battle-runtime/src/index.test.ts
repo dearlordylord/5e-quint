@@ -95,6 +95,7 @@ import shockingGraspInput from "../../surface/content/shocking_grasp.json";
 import guidingBoltInput from "../../surface/content/guiding_bolt.json";
 import rayOfSicknessInput from "../../surface/content/ray_of_sickness.json";
 import viciousMockeryInput from "../../surface/content/vicious_mockery.json";
+import burningHandsInput from "../../surface/content/burning_hands.json";
 import healingWordInput from "../../surface/content/healing_word.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type {
@@ -219,6 +220,7 @@ const testSpellRecords = new Map(
     guidingBoltInput,
     rayOfSicknessInput,
     viciousMockeryInput,
+    burningHandsInput,
     healingWordInput,
   ]
     .map((input) => decodeUnitRecordSync(input))
@@ -14372,6 +14374,200 @@ describe("battle runtime", () => {
     ]);
   });
 
+  test("Burning Hands uses self-origin Cone outcomes, Fire damage, slot scaling, and slot spend", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-burning-hands"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            cantrips: [],
+            preparedSpells: [spellRecord("burning_hands")],
+            spellSlots: [{ spellLevel: 2, count: 1 }],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+        statBlockCreatureInit({
+          combatantId: secondSkeletonId,
+          displayName: "Second Skeleton",
+          initiative: 8,
+          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+        }),
+      ],
+    });
+    const subject: BattleSubject = {
+      tag: "actionSpell",
+      actorId: wizardId,
+      invocation: spellSlotInvocationRef("burning_hands", 2, "saveGatedDamage"),
+      mode: { tag: "cast" },
+    };
+    const savingThrows = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "savingThrowOutcome",
+    );
+    expect(savingThrows).toMatchObject({
+      label: "Burning Hands self-origin Cone Saving Throw outcomes",
+      ability: "dex",
+      spell: {
+        targeting: { kind: "selfOriginCone", lengthFeet: 15 },
+        damage: { expr: { dice: 4, dieSize: 6 }, damageType: "fire" },
+        successDamage: "half",
+        rangeFeet: 0,
+      },
+    });
+    const saveFill = savingThrowOutcomeFill(savingThrows, [
+      { targetId: skeletonId, succeeded: false },
+      { targetId: secondSkeletonId, succeeded: true },
+    ]);
+    if (!("area" in saveFill.value)) {
+      throw new Error("Expected area Saving Throw fill.");
+    }
+    expect(saveFill.value.area).toEqual({
+      originAnchorId: wizardId,
+      affectedTargetIds: [skeletonId, secondSkeletonId],
+    });
+    const damage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [saveFill],
+      }),
+      "rolledDice",
+    );
+    expect(damage).toMatchObject({
+      label: "Burning Hands damage (4d6-fire)",
+    });
+
+    const result = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [saveFill, damageRollFillWithGroups(damage, [[3, 3, 3, 3]])],
+      }),
+    );
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId, hp: 12 },
+          { combatantId: skeletonId, hp: 1 },
+          { combatantId: secondSkeletonId, hp: 7 },
+        ],
+        turn: { actionResources: [] },
+      },
+    });
+    const caster = result.state.combatants.get(wizardId);
+    if (caster?.origin.kind !== "character") {
+      throw new Error("Expected character spellcaster.");
+    }
+    expect(caster.origin.spellcasting?.spellSlots).toEqual([
+      { spellLevel: 2, count: 1, expended: 1 },
+    ]);
+  });
+
+  test("Burning Hands rejects self-origin Cone outcomes anchored to another combatant", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-burning-hands-invalid-origin"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            cantrips: [],
+            preparedSpells: [spellRecord("burning_hands")],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject = magicSubject("burning_hands");
+    const savingThrows = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "savingThrowOutcome",
+    );
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          {
+            kind: "savingThrowOutcome",
+            holeId: savingThrows.holeId,
+            value: {
+              area: {
+                originAnchorId: skeletonId,
+                affectedTargetIds: [skeletonId],
+              },
+              outcomes: [{ targetId: skeletonId, succeeded: false }],
+            },
+          },
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Self-origin Cone save-gate spell area must originate from the caster.",
+    });
+  });
+
+  test("Burning Hands can resolve with an empty table-supplied Cone membership", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-burning-hands-empty-cone"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            cantrips: [],
+            preparedSpells: [spellRecord("burning_hands")],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject = magicSubject("burning_hands");
+    const savingThrows = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "savingThrowOutcome",
+    );
+    const result = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [savingThrowOutcomeFill(savingThrows, [])],
+      }),
+    );
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId, hp: 12 },
+          { combatantId: skeletonId, hp: 13 },
+        ],
+        turn: { actionResources: [] },
+      },
+    });
+    const caster = result.state.combatants.get(wizardId);
+    if (caster?.origin.kind !== "character") {
+      throw new Error("Expected character spellcaster.");
+    }
+    expect(caster.origin.spellcasting?.spellSlots).toEqual([
+      { spellLevel: 1, count: 1, expended: 1 },
+    ]);
+  });
+
   test("save-damage replacement riders reduce failed half-damage saves", () => {
     const state = wizardVsRogueBattle({ evasion: true });
     const subject = magicSubject("dex_half_cantrip");
@@ -14800,7 +14996,7 @@ function runCanonicalBattleRuntimeQntSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("105 passing");
+  expect(quintOutput).toContain("107 passing");
 }
 
 function hidePrerequisites(
@@ -15658,16 +15854,14 @@ function savingThrowOutcomeFill(
     kind: "savingThrowOutcome",
     holeId: hole.holeId,
     value:
-      "spell" in hole
-        ? hole.spell.targeting.kind === "singleCombatant"
-          ? { outcomes }
-          : {
-              area: {
-                originAnchorId: wizardId,
-                affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
-              },
-              outcomes,
-            }
+      "spell" in hole && hole.spell.targeting.kind !== "singleCombatant"
+        ? {
+            area: {
+              originAnchorId: wizardId,
+              affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
+            },
+            outcomes,
+          }
         : { outcomes },
   };
 }
@@ -17303,6 +17497,7 @@ function spellRecord(
     | "guiding_bolt"
     | "ray_of_sickness"
     | "vicious_mockery"
+    | "burning_hands"
     | "healing_word",
 ) {
   const unit = testSpellRecords.get(spellId);
@@ -17326,6 +17521,7 @@ function magicSubject(
     | "guiding_bolt"
     | "ray_of_sickness"
     | "vicious_mockery"
+    | "burning_hands"
     | "dex_half_cantrip",
 ): BattleSubject {
   return {
@@ -17336,7 +17532,7 @@ function magicSubject(
         ? spellSlotInvocationRef(spellId, 1, "repeatedDamageAllocation")
         : spellId === "mage_armor"
           ? spellSlotInvocationRef(spellId, 1, "persistentArmorEffect")
-          : spellId === "inflict_wounds"
+          : spellId === "inflict_wounds" || spellId === "burning_hands"
             ? spellSlotInvocationRef(spellId, 1, "saveGatedDamage")
             : spellId === "vicious_mockery"
               ? cantripSpellInvocationRef(spellId, "saveGatedDamage")

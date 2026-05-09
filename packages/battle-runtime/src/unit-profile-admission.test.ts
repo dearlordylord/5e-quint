@@ -4,6 +4,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV28B inflict_wounds poison_spray sacred_flame
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV28C chill_touch
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV28D guiding_bolt ray_of_sickness shocking_grasp vicious_mockery
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29A burning_hands
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT25 healing_word
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT32 cure_wounds mass_healing_word
@@ -125,6 +126,7 @@ const rogueEvasionUnitId = "rogue_evasion";
 const rogueUncannyDodgeUnitId = "rogue_uncanny_dodge";
 const rogueSneakAttackUnitId = "rogue_sneak_attack";
 const bardCuttingWordsUnitId = "bard_cutting_words";
+const burningHandsUnitId = "burning_hands";
 const monkDeflectAttacksUnitId = "monk_deflect_attacks";
 const defenseUnitId = "defense";
 const myceliumStepUnitId = "mycelium_step";
@@ -2708,6 +2710,54 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
     ]);
   });
 
+  test("burning_hands is admitted as a self-origin Cone save-gated slot damage spell", () => {
+    const spell = spellRecord(burningHandsUnitId);
+    const act = spellAct({
+      state: spellBattle({
+        preparedSpells: [spell],
+        spellSlots: [{ spellLevel: 2, count: 1 }],
+      }),
+      spellId: burningHandsUnitId,
+      slotLevel: 2,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef("burning_hands", 2, "saveGatedDamage"),
+      mode: { tag: "cast" },
+    });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+    expect(savingThrow).toEqual(
+      expect.objectContaining({
+        label: "Burning Hands self-origin Cone Saving Throw outcomes",
+        ability: "dex",
+        dc: { kind: "caster_spell_save_dc" },
+      }),
+    );
+    expect(spellHoleInvocation([savingThrow])).toEqual(
+      expect.objectContaining({
+        procedure: "saveGatedDamage",
+        spell,
+        resource: { tag: "spellSlot", slotLevel: 2 },
+        ability: "dex",
+        targeting: { kind: "selfOriginCone", lengthFeet: 15 },
+        damage: {
+          expr: { dice: 4, dieSize: 6 },
+          damageType: "fire",
+        },
+        successDamage: "half",
+        rangeFeet: 0,
+      }),
+    );
+    expect(act.initialHoles).toEqual([
+      expect.objectContaining({
+        kind: "savingThrowOutcome",
+        areaChoices: [],
+      }),
+    ]);
+  });
+
   test("mage_armor is admitted through catalog spell access and projected as a persistent prepared spell", () => {
     const spell = spellRecord(mageArmorUnitId);
     const act = spellAct({
@@ -4283,7 +4333,7 @@ function spellBattle(input: {
   readonly cantrips?: readonly SpellRecord[];
   readonly preparedSpells?: readonly SpellRecord[];
   readonly spellSlots?: readonly {
-    readonly spellLevel: 1 | 3 | 5 | 6;
+    readonly spellLevel: 1 | 2 | 3 | 5 | 6;
     readonly count: number;
   }[];
   readonly extraTargetIds?: readonly CombatantId[];
@@ -5534,16 +5584,14 @@ function savingThrowOutcomeFill(
     kind: "savingThrowOutcome",
     holeId: hole.holeId,
     value:
-      "spell" in hole
-        ? hole.spell.targeting.kind === "singleCombatant"
-          ? { outcomes }
-          : {
-              area: {
-                originAnchorId: spellCasterId,
-                affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
-              },
-              outcomes,
-            }
+      "spell" in hole && hole.spell.targeting.kind !== "singleCombatant"
+        ? {
+            area: {
+              originAnchorId: spellCasterId,
+              affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
+            },
+            outcomes,
+          }
         : { outcomes },
   };
 }

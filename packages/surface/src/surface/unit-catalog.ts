@@ -11,6 +11,7 @@ import barbarianFastMovementInput from "../../content/barbarian_fast_movement.js
 import barbarianRecklessAttackInput from "../../content/barbarian_reckless_attack.json";
 import barbarianUnarmoredDefenseInput from "../../content/barbarian_unarmored_defense.json";
 import barbarianWeaponMasteryInput from "../../content/barbarian_weapon_mastery.json";
+import burningHandsInput from "../../content/burning_hands.json";
 import classBardInput from "../../content/class_bard.json";
 import classBarbarianInput from "../../content/class_barbarian.json";
 import classClericInput from "../../content/class_cleric.json";
@@ -267,6 +268,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     orcDarkvisionInput,
     orcRelentlessEnduranceInput,
     acidSplashInput,
+    burningHandsInput,
     chillTouchInput,
     cureWoundsInput,
     fireBoltInput,
