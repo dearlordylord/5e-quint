@@ -352,7 +352,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 209,
       "id": "SRDINV30A",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Simple Scalar Buff Spell Runtime"
     },
     {
@@ -549,7 +549,7 @@ Keep it synchronized with the DAG table and task details.
 | 206   | SRDINV29D - Promote Grease Ground Hazard Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Grease](/workspace/typescript/dnd/packages/surface/content/grease.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Closed by keeping Grease unsupported in Unit profile evidence: SRD one-minute ground hazard support requires an active area lifecycle plus executable enter-area/end-turn Dexterity save procedures with table-supplied area-membership facts, and the authored on-cast Prone save is not claimed as a supported partial runtime profile. |
 | 207   | SRDINV29E - Promote Ice Knife Mixed Attack Burst Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Ice Knife](/workspace/typescript/dnd/packages/surface/content/ice_knife.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promoted Ice Knife through a mixed ranged spell attack plus mandatory primary-target-origin Emanation save boundary, with Piercing attack damage, Critical Hit doubling limited to attack dice, Cold burst slot scaling, primary target inclusion, and Concentration follow-up. |
 | 208   | SRDINV29F - Research Chromatic Orb Chained Attack Runtime | done | SRDINV28A-SRDINV28E | SRDINV29F1 | [Chromatic Orb research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV29F_CHROMATIC_ORB_CHAINED_ATTACK_RESEARCH.md), [Chromatic Orb](/workspace/typescript/dnd/packages/surface/content/chromatic_orb.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed research: Chromatic Orb needs a separate chained spell-attack replay procedure rather than widening `spellAttackDamage`; implementation is split into QNT replay facts, reducer runtime, and admission/evidence closure. |
-| 209   | SRDINV30A - Promote Simple Scalar Buff Spell Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [False Life](/workspace/typescript/dnd/packages/surface/content/false_life.dhall), [Longstrider](/workspace/typescript/dnd/packages/surface/content/longstrider.dhall), [Shield of Faith](/workspace/typescript/dnd/packages/surface/content/shield_of_faith.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote simple temp HP, Speed, and AC scalar spell effects. |
+| 209   | SRDINV30A - Promote Simple Scalar Buff Spell Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [False Life](/workspace/typescript/dnd/packages/surface/content/false_life.dhall), [Longstrider](/workspace/typescript/dnd/packages/surface/content/longstrider.dhall), [Shield of Faith](/workspace/typescript/dnd/packages/surface/content/shield_of_faith.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote simple temp HP, Speed, and AC scalar spell effects. |
 | 210   | SRDINV30B - Promote Roll Modifier Spell Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Bane](/workspace/typescript/dnd/packages/surface/content/bane.dhall), [Bless](/workspace/typescript/dnd/packages/surface/content/bless.dhall), [Guidance](/workspace/typescript/dnd/packages/surface/content/guidance.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote Bane, Bless, and Guidance as D20 roll modifier active effects. |
 | 211   | SRDINV30C - Promote Protection and Charm Spell Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Animal Friendship](/workspace/typescript/dnd/packages/surface/content/animal_friendship.dhall), [Protection from Evil and Good](/workspace/typescript/dnd/packages/surface/content/protection_from_evil_and_good.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote creature-type-scoped charm/protection effects with explicit blockers for omitted clauses. |
 | 212   | SRDINV30D - Promote Heroism Turn-Start Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Heroism](/workspace/typescript/dnd/packages/surface/content/heroism.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote Heroism's Frightened immunity plus target-turn-start Temporary Hit Points. |
@@ -2581,7 +2581,7 @@ closure; do not claim Chromatic Orb support through the existing
 
 ### Task 209 - SRDINV30A - Promote Simple Scalar Buff Spell Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV28A-SRDINV28E
 
