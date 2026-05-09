@@ -1,12 +1,13 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-condition-save spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-chained-attack-damage
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-weapon-damage-rider
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-marked-damage-rider
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-attack-roll-advantage-save
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-damage-reduction
 module battleRuntime {
   // SRD traceability for this canonical battle runtime spec:
   // - Playing-the-Game.md lines 479-495: combat proceeds in rounds and turns
@@ -213,7 +214,7 @@ module battleRuntime {
   type RollModifierSpell = BaneRollModifier | BlessRollModifier | GuidanceRollModifier
   type SpellActionCost = SpellMagicAction | SpellBonusAction
 
-  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | FaerieFireAttackRollAdvantage | AnimalFriendshipCharmed({ durationTicks: int }) | ProtectionFromEvilAndGoodAttackDisadvantage | ProduceFlameHeldLight({ durationTicks: int })
+  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | FaerieFireAttackRollAdvantage | AnimalFriendshipCharmed({ durationTicks: int }) | ProtectionFromEvilAndGoodAttackDisadvantage | ProduceFlameHeldLight({ durationTicks: int })
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
   type RuntimeCreatureType = HumanoidCreature | BeastCreature | AberrationCreature | CelestialCreature | ElementalCreature | FeyCreature | FiendCreature | UndeadCreature
 
@@ -644,13 +645,19 @@ module battleRuntime {
     match nextActor {
       | Fighter => {
           ...state,
-          fighter: { ...state.fighter, activeEffects: state.fighter.activeEffects.exclude(Set(ShieldArmorClassBonus)) },
+          fighter: { ...state.fighter, activeEffects: resetResistanceDamageReductions(state.fighter.activeEffects).exclude(Set(ShieldArmorClassBonus)) },
         }
       | Goblin => {
           ...state,
-          goblin: { ...state.goblin, activeEffects: state.goblin.activeEffects.exclude(Set(ShieldArmorClassBonus)) },
+          goblin: { ...state.goblin, activeEffects: resetResistanceDamageReductions(state.goblin.activeEffects).exclude(Set(ShieldArmorClassBonus)) },
         }
     }
+
+  pure def resetResistanceDamageReductions(effects: Set[ActiveEffect]): Set[ActiveEffect] =
+    effects.map(effect => match effect {
+      | ResistanceDamageReduction(data) => ResistanceDamageReduction({ ...data, usedThisTurn: false })
+      | _ => effect
+    })
 
   pure def applyStartOfTurnSpellEffects(state: BattleState, nextActor: Actor): BattleState =
     match nextActor {
@@ -765,6 +772,7 @@ module battleRuntime {
         | BaneD20RollPenalty => false
         | BlessD20RollBonus => false
         | GuidanceAbilityCheckBonus => false
+        | ResistanceDamageReduction(_) => false
         | DivineFavorWeaponDamageRider(_) => false
         | HuntersMarkDamageRider(_) => false
         | RayOfSicknessPoisoned => false
@@ -1553,6 +1561,7 @@ module battleRuntime {
       .exclude(spellEffectConcentrationActiveEffects)
       .filter(effect => match effect {
         | HeroismTurnStartTemporaryHitPoints(_) => false
+        | ResistanceDamageReduction(_) => false
         | _ => true
       })
 
@@ -2313,6 +2322,37 @@ module battleRuntime {
       vulnerabilities,
       immunities,
     )
+
+  pure def resistanceDamageReductionAvailable(effects: Set[ActiveEffect], damageType: DamageType): bool =
+    effects.exists(effect => match effect {
+      | ResistanceDamageReduction(data) => data.damageType == damageType and not(data.usedThisTurn)
+      | _ => false
+    })
+
+  pure def damageAfterResistanceSpellReduction(damage: int, damageType: DamageType, effects: Set[ActiveEffect], reductionRoll: int): int =
+    if (damage > 0 and resistanceDamageReductionAvailable(effects, damageType))
+      if (damage - reductionRoll < 0) 0 else damage - reductionRoll
+    else
+      damage
+
+  pure def activeEffectsAfterResistanceSpellReduction(effects: Set[ActiveEffect], damageType: DamageType): Set[ActiveEffect] =
+    effects.map(effect => match effect {
+      | ResistanceDamageReduction(data) =>
+          if (data.damageType == damageType and not(data.usedThisTurn))
+            ResistanceDamageReduction({ ...data, usedThisTurn: true })
+          else
+            effect
+      | _ => effect
+    })
+
+  pure def applyResistanceSpellReductionToFighter(state: BattleState, damageType: DamageType, damage: int, reductionRoll: int): BattleState = {
+    val reducedDamage = damageAfterResistanceSpellReduction(damage, damageType, state.fighter.activeEffects, reductionRoll)
+    val updatedEffects = activeEffectsAfterResistanceSpellReduction(state.fighter.activeEffects, damageType)
+    {
+      ...state,
+      fighter: applyDamage({ ...state.fighter, activeEffects: updatedEffects }, reducedDamage, 1, true),
+    }
+  }
 
   pure def grantActionSurge(
     state: BattleState,
@@ -3708,6 +3748,27 @@ module battleRuntime {
     assert(
       sameTypeDamageAfterAdjustments([3, 1], Slashing, Set(Slashing), Set(), Set()) == 2
     )
+  }
+
+  run test_resistance_spell_reduces_matching_damage_once_per_turn = {
+    val protected = { ...initialState, fighter: { ...initialState.fighter, activeEffects: Set(ResistanceDamageReduction({ damageType: Slashing, usedThisTurn: false })) } }
+    val reduced = applyResistanceSpellReductionToFighter(protected, Slashing, 4, 3)
+    val second = applyResistanceSpellReductionToFighter(reduced, Slashing, 4, 3)
+    all {
+      assert(reduced.fighter.hp == 9),
+      assert(reduced.fighter.activeEffects.contains(ResistanceDamageReduction({ damageType: Slashing, usedThisTurn: true }))),
+      assert(second.fighter.hp == 5),
+    }
+  }
+
+  run test_resistance_spell_ignores_nonmatching_damage_and_resets_next_turn = {
+    val protected = { ...initialState, fighter: { ...initialState.fighter, activeEffects: Set(ResistanceDamageReduction({ damageType: Piercing, usedThisTurn: true })) } }
+    val nonmatching = applyResistanceSpellReductionToFighter(protected, Slashing, 4, 3)
+    val reset = endTurn(nonmatching)
+    all {
+      assert(nonmatching.fighter.hp == 6),
+      assert(reset.fighter.activeEffects.contains(ResistanceDamageReduction({ damageType: Piercing, usedThisTurn: false }))),
+    }
   }
 
   run test_action_surge_grants_one_extra_action_and_spends_use = {

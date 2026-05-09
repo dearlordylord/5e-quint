@@ -87,6 +87,7 @@ import rangerExtraAttackInput from "../../content/ranger_extra_attack.json";
 import rangerFavoredEnemyInput from "../../content/ranger_favored_enemy.json";
 import rangerRovingInput from "../../content/ranger_roving.json";
 import rangerWeaponMasteryInput from "../../content/ranger_weapon_mastery.json";
+import resistanceInput from "../../content/resistance.json";
 import speciesOrcInput from "../../content/species_orc.json";
 import subclassFighterChampionInput from "../../content/subclass_fighter_champion.json";
 import subclassWizardEvokerInput from "../../content/subclass_wizard_evoker.json";
@@ -311,6 +312,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     produceFlameInput,
     rayOfFrostInput,
     rayOfSicknessInput,
+    resistanceInput,
     sacredFlameInput,
     shockingGraspInput,
     viciousMockeryInput,

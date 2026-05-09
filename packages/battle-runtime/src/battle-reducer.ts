@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 import { Brand, Match, Schema } from "effect";
 import { isNonEmptyReadonlyArray } from "effect/Array";
 import * as Either from "effect/Either";
@@ -112,7 +112,7 @@ import {
   spellSlotLevel,
   type Condition,
   type DamageDieSize,
-  type DieRollResult,
+  DieRollResult,
   type HandUse,
   type ProficiencyBonus as ProficiencyBonusType,
   type Round as RoundType,
@@ -300,6 +300,9 @@ const BATTLE_D20_ROLL_MODIFIER_KINDS = [
 const KNOWN_WILLING_TARGET_ROLL_MODIFIER_SPELL_IDS: ReadonlyArray<
   SpellRecord["id"]
 > = ["guidance"];
+const KNOWN_WILLING_TARGET_DAMAGE_REDUCTION_SPELL_IDS: ReadonlyArray<
+  SpellRecord["id"]
+> = ["resistance"];
 const BATTLE_SURFACE_SKILLS = SURFACE_SKILLS satisfies ReadonlyArray<Skill>;
 const PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES = [
   "aberration",
@@ -422,6 +425,16 @@ export type BattleActiveEffect =
   | (BattleSpellEffectBase & {
       readonly kind: "turnStartTemporaryHitPoints";
       readonly amount: number;
+      readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "spellDamageReduction";
+      readonly damageType: DamageType;
+      readonly amount: {
+        readonly dice: 1;
+        readonly dieSize: 4;
+      };
+      readonly usedThisTurn: boolean;
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {
@@ -1052,6 +1065,7 @@ type TargetListSpellInvocation =
       >;
     })
   | Extract<SupportedSpellInvocation, { readonly procedure: "rollModifier" }>
+  | Extract<SupportedSpellInvocation, { readonly procedure: "damageReduction" }>
   | (Extract<
       SupportedSpellInvocation,
       { readonly procedure: "saveGatedCondition" }
@@ -1105,6 +1119,7 @@ function isTargetListSpellInvocation(
     (invocation.procedure === "scalarBuff" &&
       invocation.targeting.kind === "targetList") ||
     invocation.procedure === "rollModifier" ||
+    invocation.procedure === "damageReduction" ||
     (invocation.procedure === "saveGatedCondition" &&
       invocation.targeting.kind === "targetList") ||
     invocation.procedure === "creatureTypeProtection" ||
@@ -1146,6 +1161,21 @@ type CreatureTypeProtectionSpellInvocation = {
     BattleActiveEffect,
     { readonly kind: "attackerTypeScopedAttackRollAgainstSelf" }
   >;
+  readonly rangeFeet: MovementFeet;
+};
+type DamageReductionSpellInvocation = {
+  readonly access: ClassCantripSpellAccess;
+  readonly resource: NoSpellInvocationResource;
+  readonly procedure: "damageReduction";
+  readonly spell: SpellRecord;
+  readonly actionCost: "magicAction";
+  readonly targeting: RollModifierSpellTargeting;
+  readonly damageTypeChoices: readonly DamageType[];
+  readonly amount: {
+    readonly dice: 1;
+    readonly dieSize: 4;
+  };
+  readonly expiresAt: BattleActiveEffectExpiration;
   readonly rangeFeet: MovementFeet;
 };
 type ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation = {
@@ -1243,6 +1273,7 @@ type HeldLightHurlSpellInvocation = DamageSpellSource & {
 export type SupportedSpellInvocation =
   | HeldLightSpellInvocation
   | HeldLightHurlSpellInvocation
+  | DamageReductionSpellInvocation
   | {
       readonly access: PreparedSpellAccess;
       readonly resource: SpellSlotInvocationResource;
@@ -1424,6 +1455,7 @@ type SupportedDamageSpellInvocation = Exclude<
     readonly procedure:
       | "persistentArmorEffect"
       | "directHitPointRestoration"
+      | "damageReduction"
       | "rollModifier"
       | "creatureTypeProtection"
       | "conditionImmunityAndTurnStartTemporaryHitPoints"
@@ -1877,7 +1909,7 @@ export type BattleSpellDamageTypeChoiceHole = {
   readonly label: string;
   readonly spell: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "chainedSpellAttackDamage" }
+    { readonly procedure: "chainedSpellAttackDamage" | "damageReduction" }
   >;
   readonly choices: readonly DamageType[];
 };
@@ -1915,6 +1947,7 @@ export type BattleSpellTargetListHole = {
         | "rollModifier"
         | "saveGatedCondition"
         | "creatureTypeProtection"
+        | "damageReduction"
         | "scalarBuff"
         | "conditionImmunityAndTurnStartTemporaryHitPoints";
     }
@@ -1981,6 +2014,12 @@ export type BattleSpellDamageRollHole = Extract<
   >;
   readonly critical: boolean;
   readonly spellMarkedDamageRiders?: readonly SpellMarkedDamageRider[];
+};
+export type BattleSpellDamageReductionRollHole = Extract<
+  RuntimeHole,
+  { readonly kind: "rolledDice" }
+> & {
+  readonly spellDamageReduction: SpellDamageReductionRoll;
 };
 export type BattleSpellHealingRollHole = Extract<
   RuntimeHole,
@@ -2167,6 +2206,7 @@ export type BattleHole =
   | BattleSpellAttackRollHole
   | BattleDamageRollHole
   | BattleSpellDamageRollHole
+  | BattleSpellDamageReductionRollHole
   | BattleSpellHealingRollHole
   | BattleSpellSkillChoiceHole
   | BattleSpellSavingThrowOutcomeHole
@@ -2610,6 +2650,25 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       rangeFeet: MovementFeet,
     }),
     Schema.Struct({
+      access: ClassCantripSpellAccessSchema,
+      resource: NoSpellInvocationResourceSchema,
+      procedure: Schema.Literal("damageReduction"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      targeting: Schema.Struct({
+        kind: Schema.Literal("targetList"),
+        minTargets: Schema.Literal(1),
+        maxTargets: Schema.Number,
+      }),
+      damageTypeChoices: Schema.Array(DamageTypeSchema),
+      amount: Schema.Struct({
+        dice: Schema.Literal(1),
+        dieSize: Schema.Literal(4),
+      }),
+      expiresAt: BattleRuntimeObjectSchema,
+      rangeFeet: MovementFeet,
+    }),
+    Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("scalarBuff"),
@@ -2876,6 +2935,20 @@ export const BattleHoleSchema = Schema.Union(
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("rolledDice"),
+    spellDamageReduction: Schema.Struct({
+      sourceSpellId: Schema.String,
+      sourceCombatantId: CombatantId,
+      targetId: CombatantId,
+      damageType: DamageTypeSchema,
+      amount: Schema.Struct({
+        dice: Schema.Literal(1),
+        dieSize: Schema.Literal(4),
+      }),
+    }),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("rolledDice"),
     spell: SupportedSpellInvocationSchema,
   }),
   Schema.Struct({
@@ -3006,6 +3079,19 @@ export type BattleRolledDiceFill = {
   readonly value: readonly [RolledDiceGroup, ...RolledDiceGroup[]];
   readonly selectedAttackDamageRiderUnitIds?: readonly UnitRecord["id"][];
   readonly weaponDamageDiceRollChoice?: WeaponDamageDiceRollChoiceFill;
+};
+type SpellDamageReductionFill = {
+  readonly sourceSpellId: SpellRecord["id"];
+  readonly sourceCombatantId: CombatantId;
+  readonly targetId: CombatantId;
+  readonly damageType: DamageType;
+  readonly roll: DieRollResult;
+};
+type SpellDamageReductionRoll = Omit<SpellDamageReductionFill, "roll"> & {
+  readonly amount: {
+    readonly dice: 1;
+    readonly dieSize: 4;
+  };
 };
 export type BattleFill =
   | {
@@ -6489,6 +6575,15 @@ function attackDamageEventAfterPendingReductions(
   );
 }
 
+function attackDamageEventWithEntries(
+  event: BattleAttackDamageEvent,
+  entries: readonly DamageAmountByTypeEntry[],
+): BattleAttackDamageEvent {
+  return event.kind === "rolledDamage"
+    ? { ...event, damageRollByType: entries }
+    : { ...event, damageByTypeBeforeTargetAdjustments: entries };
+}
+
 function attackDamageEventAfterPendingReduction(
   event: BattleAttackDamageEvent,
   reduction: BattlePendingAttackDamageReduction,
@@ -9435,15 +9530,47 @@ function resolveAttack(
       damageEvent,
       pendingAttackDamageReductions,
     );
-    const reducedFixedDamageAmount = attackDamageEventAmountForTarget(
+    const spellReduction = applyAvailableSpellDamageReduction(
       target,
+      damageAmountByTypeEntriesToMap(
+        attackDamageEventEntries(reducedDamageEvent),
+      ),
+      fillSet.spellDamageReductionRoll,
+    );
+    if (spellReduction.tag === "invalid") {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Spell damage reduction roll does not match an unused matching damage-reduction spell effect.",
+      );
+    }
+    if (spellReduction.tag === "needsHoles") {
+      return needsHolesResult(attackRolledState, input.subject, [
+        ...spellReduction.holes,
+      ]);
+    }
+    const reducedDamageEventAfterSpellReduction = attackDamageEventWithEntries(
       reducedDamageEvent,
+      damageAmountByTypeMapEntries(spellReduction.damageByType),
+    );
+    const spellReducedState = {
+      ...attackRolledState,
+      combatants: new Map(attackRolledState.combatants).set(
+        target.combatantId,
+        spellReduction.target,
+      ),
+    };
+    const reducedFixedDamageAmount = attackDamageEventAmountForTarget(
+      spellReduction.target,
+      reducedDamageEventAfterSpellReduction,
     );
     const reducedFixedDamageBeforeTargetAdjustments =
-      attackDamageEventAmountBeforeTargetAdjustments(reducedDamageEvent);
+      attackDamageEventAmountBeforeTargetAdjustments(
+        reducedDamageEventAfterSpellReduction,
+      );
     const redirectState =
       resolveAttackDamageReductionZeroDamageRedirectAfterReduction({
-        state: attackRolledState,
+        state: spellReducedState,
         reductions: pendingAttackDamageReductions,
         reducedDamageBeforeTargetAdjustments:
           reducedFixedDamageBeforeTargetAdjustments,
@@ -9455,14 +9582,14 @@ function resolveAttack(
       return invalidResult(input.state, "invalidFill", redirectState.message);
     }
     if (redirectState.tag === "needsHoles") {
-      return needsHolesResult(redirectState.state, input.subject, [
+      return needsHolesResult(attackRolledState, input.subject, [
         ...redirectState.holes,
       ]);
     }
     const damageDispositionHole = attackDamageDispositionHole({
       attack,
       attackerId: input.subject.actorId,
-      target,
+      target: spellReduction.target,
       damageAmount: reducedFixedDamageAmount,
     });
     const damageDispositionValidation = damageDispositionFillValidation({
@@ -9479,7 +9606,7 @@ function resolveAttack(
     }
     if (damageDispositionHole !== null) {
       if (!fillSet.damageDispositionFilled) {
-        return needsHolesResult(redirectState.state, input.subject, [
+        return needsHolesResult(attackRolledState, input.subject, [
           damageDispositionHole,
         ]);
       }
@@ -9493,7 +9620,7 @@ function resolveAttack(
           subject: input.subject,
           attackerId: input.subject.actorId,
           targetId: target.combatantId,
-          damageEvent: reducedDamageEvent,
+          damageEvent: reducedDamageEventAfterSpellReduction,
           fills: attackDamagePrefixFills(input.fills),
           deathFailuresAtZeroHp: critical ? 2 : 1,
           damageDisposition: fillSet.damageDisposition,
@@ -9517,7 +9644,7 @@ function resolveAttack(
           };
     }
     const concentrationSave = concentrationSavingThrowHole(
-      target,
+      spellReduction.target,
       reducedFixedDamageAmount,
     );
     if (concentrationSave !== null) {
@@ -9531,7 +9658,7 @@ function resolveAttack(
             subject: input.subject,
             attackerId: input.subject.actorId,
             targetId: target.combatantId,
-            damageEvent: reducedDamageEvent,
+            damageEvent: reducedDamageEventAfterSpellReduction,
             fills: attackDamagePrefixFills(input.fills),
             deathFailuresAtZeroHp: critical ? 2 : 1,
             damageDisposition: fillSet.damageDisposition,
@@ -9657,15 +9784,47 @@ function resolveAttack(
       damageEvent,
       pendingAttackDamageReductions,
     );
-    const reducedDamageAmount = attackDamageEventAmountForTarget(
+    const spellReduction = applyAvailableSpellDamageReduction(
       target,
+      damageAmountByTypeEntriesToMap(
+        attackDamageEventEntries(reducedDamageEvent),
+      ),
+      fillSet.spellDamageReductionRoll,
+    );
+    if (spellReduction.tag === "invalid") {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Spell damage reduction roll does not match an unused matching damage-reduction spell effect.",
+      );
+    }
+    if (spellReduction.tag === "needsHoles") {
+      return needsHolesResult(attackRolledState, input.subject, [
+        ...spellReduction.holes,
+      ]);
+    }
+    const reducedDamageEventAfterSpellReduction = attackDamageEventWithEntries(
       reducedDamageEvent,
+      damageAmountByTypeMapEntries(spellReduction.damageByType),
+    );
+    const spellReducedState = {
+      ...attackRolledState,
+      combatants: new Map(attackRolledState.combatants).set(
+        target.combatantId,
+        spellReduction.target,
+      ),
+    };
+    const reducedDamageAmount = attackDamageEventAmountForTarget(
+      spellReduction.target,
+      reducedDamageEventAfterSpellReduction,
     );
     const reducedDamageBeforeTargetAdjustments =
-      attackDamageEventAmountBeforeTargetAdjustments(reducedDamageEvent);
+      attackDamageEventAmountBeforeTargetAdjustments(
+        reducedDamageEventAfterSpellReduction,
+      );
     const redirectState =
       resolveAttackDamageReductionZeroDamageRedirectAfterReduction({
-        state: attackRolledState,
+        state: spellReducedState,
         reductions: pendingAttackDamageReductions,
         reducedDamageBeforeTargetAdjustments,
         redirectTarget: fillSet.attackDamageReductionRedirectTarget,
@@ -9676,14 +9835,14 @@ function resolveAttack(
       return invalidResult(input.state, "invalidFill", redirectState.message);
     }
     if (redirectState.tag === "needsHoles") {
-      return needsHolesResult(redirectState.state, input.subject, [
+      return needsHolesResult(attackRolledState, input.subject, [
         ...redirectState.holes,
       ]);
     }
     const damageDispositionHole = attackDamageDispositionHole({
       attack,
       attackerId: input.subject.actorId,
-      target,
+      target: spellReduction.target,
       damageAmount: reducedDamageAmount,
     });
     const damageDispositionValidation = damageDispositionFillValidation({
@@ -9700,7 +9859,7 @@ function resolveAttack(
     }
     if (damageDispositionHole !== null) {
       if (!fillSet.damageDispositionFilled) {
-        return needsHolesResult(redirectState.state, input.subject, [
+        return needsHolesResult(attackRolledState, input.subject, [
           damageDispositionHole,
         ]);
       }
@@ -9714,7 +9873,7 @@ function resolveAttack(
           subject: input.subject,
           attackerId: input.subject.actorId,
           targetId: target.combatantId,
-          damageEvent: reducedDamageEvent,
+          damageEvent: reducedDamageEventAfterSpellReduction,
           fills: attackDamagePrefixFills(input.fills),
           deathFailuresAtZeroHp: critical ? 2 : 1,
           damageDisposition: fillSet.damageDisposition,
@@ -9741,7 +9900,7 @@ function resolveAttack(
           };
     }
     const concentrationSave = concentrationSavingThrowHole(
-      target,
+      spellReduction.target,
       reducedDamageAmount,
     );
     if (concentrationSave !== null) {
@@ -9755,7 +9914,7 @@ function resolveAttack(
             subject: input.subject,
             attackerId: input.subject.actorId,
             targetId: target.combatantId,
-            damageEvent: reducedDamageEvent,
+            damageEvent: reducedDamageEventAfterSpellReduction,
             fills: attackDamagePrefixFills(input.fills),
             deathFailuresAtZeroHp: critical ? 2 : 1,
             damageDisposition: fillSet.damageDisposition,
@@ -10898,14 +11057,44 @@ function resolveOffHandAttack(
       damageEvent,
       pendingAttackDamageReductions,
     );
-    const damageAmount = attackDamageEventAmountForTarget(
+    const spellReduction = applyAvailableSpellDamageReduction(
       target,
+      damageAmountByTypeEntriesToMap(
+        attackDamageEventEntries(reducedDamageEvent),
+      ),
+      fillSet.spellDamageReductionRoll,
+    );
+    if (spellReduction.tag === "invalid") {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Spell damage reduction roll does not match an unused matching damage-reduction spell effect.",
+      );
+    }
+    if (spellReduction.tag === "needsHoles") {
+      return needsHolesResult(attackRolledState, input.subject, [
+        ...spellReduction.holes,
+      ]);
+    }
+    const reducedDamageEventAfterSpellReduction = attackDamageEventWithEntries(
       reducedDamageEvent,
+      damageAmountByTypeMapEntries(spellReduction.damageByType),
+    );
+    const spellReducedState = {
+      ...attackRolledState,
+      combatants: new Map(attackRolledState.combatants).set(
+        target.combatantId,
+        spellReduction.target,
+      ),
+    };
+    const damageAmount = attackDamageEventAmountForTarget(
+      spellReduction.target,
+      reducedDamageEventAfterSpellReduction,
     );
     const damageDispositionHole = attackDamageDispositionHole({
       attack,
       attackerId: input.subject.actorId,
-      target,
+      target: spellReduction.target,
       damageAmount,
     });
     const damageDispositionValidation = damageDispositionFillValidation({
@@ -10928,7 +11117,7 @@ function resolveOffHandAttack(
       }
     }
     const attackDamageReactionWindow = maybeOpenReactionWindow(
-      attackRolledState,
+      spellReducedState,
       {
         trigger: "attackDamage",
         continuation: {
@@ -10936,7 +11125,7 @@ function resolveOffHandAttack(
           subject: input.subject,
           attackerId: input.subject.actorId,
           targetId: target.combatantId,
-          damageEvent: reducedDamageEvent,
+          damageEvent: reducedDamageEventAfterSpellReduction,
           fills: attackDamagePrefixFills(input.fills),
           deathFailuresAtZeroHp: critical ? 2 : 1,
           damageDisposition: fillSet.damageDisposition,
@@ -10959,7 +11148,7 @@ function resolveOffHandAttack(
           };
     }
     const concentrationSave = concentrationSavingThrowHole(
-      target,
+      spellReduction.target,
       damageAmount,
     );
     if (concentrationSave !== null) {
@@ -10985,7 +11174,7 @@ function resolveOffHandAttack(
       );
     }
     const damaged = applyAttackDamageAmount(
-      attackRolledState,
+      spellReducedState,
       input.subject.actorId,
       target.combatantId,
       damageAmount,
@@ -11489,6 +11678,7 @@ type AttackFillSet =
       readonly damageDisposition: BattleAttackDamageDisposition;
       readonly damageDispositionFilled: boolean;
       readonly damageRoll: BattleRolledDiceFill | undefined;
+      readonly spellDamageReductionRoll: BattleRolledDiceFill | undefined;
       readonly attackDamageReductionRedirectTarget:
         | Extract<BattleFill, { readonly kind: "targetChoice" }>
         | undefined;
@@ -11523,6 +11713,7 @@ function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
   };
   let damageDispositionFilled = false;
   let damageRoll: BattleRolledDiceFill | undefined;
+  let spellDamageReductionRoll: BattleRolledDiceFill | undefined;
   let attackDamageReductionRedirectTarget:
     | Extract<BattleFill, { readonly kind: "targetChoice" }>
     | undefined;
@@ -11597,6 +11788,17 @@ function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
       continue;
     }
 
+    if (fill.kind === "rolledDice" && isSpellDamageReductionRollFill(fill)) {
+      if (spellDamageReductionRoll !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Spell damage reduction roll was filled twice.",
+        };
+      }
+      spellDamageReductionRoll = fill;
+      continue;
+    }
+
     if (fill.kind === "rolledDice") {
       if (damageRoll !== undefined) {
         return { tag: "invalid", message: "Attack damage was filled twice." };
@@ -11649,6 +11851,7 @@ function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     damageDisposition,
     damageDispositionFilled,
     damageRoll,
+    spellDamageReductionRoll,
     attackDamageReductionRedirectTarget,
     attackDamageReductionRedirectSave,
     attackDamageReductionRedirectDamage,
@@ -12301,10 +12504,12 @@ function resolveEndTurn(
           nextActorId,
           statBlockRechargeRolls,
         );
+  const combatantsAfterDamageReductionReset =
+    resetSpellDamageReductionsForNewTurn(combatantsAfterRecharge);
   const nextState = {
     ...state,
     initiative,
-    combatants: combatantsAfterRecharge,
+    combatants: combatantsAfterDamageReductionReset,
     currentTurnResources: resetBattleTurnResources(state.currentTurnResources),
     readiedSpells,
     readiedMovements,
@@ -12320,6 +12525,25 @@ function resolveEndTurn(
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
+}
+
+function resetSpellDamageReductionsForNewTurn(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  return new Map(
+    [...combatants].map(([id, combatant]) => {
+      const activeEffects = combatant.activeEffects.map((effect) =>
+        effect.kind === "spellDamageReduction" && effect.usedThisTurn
+          ? { ...effect, usedThisTurn: false }
+          : effect,
+      );
+      return activeEffects.some(
+        (effect, index) => effect !== combatant.activeEffects[index],
+      )
+        ? [id, { ...combatant, activeEffects }]
+        : [id, combatant];
+    }),
+  );
 }
 
 function expireStartOfTurnEffects(
@@ -12977,14 +13201,44 @@ function resolveOpportunityAttackCommand(
       damageEvent,
       pendingAttackDamageReductions,
     );
-    const reducedFixedDamageAmount = attackDamageEventAmountForTarget(
+    const spellReduction = applyAvailableSpellDamageReduction(
       target,
+      damageAmountByTypeEntriesToMap(
+        attackDamageEventEntries(reducedDamageEvent),
+      ),
+      fillSet.spellDamageReductionRoll,
+    );
+    if (spellReduction.tag === "invalid") {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Spell damage reduction roll does not match an unused matching damage-reduction spell effect.",
+      );
+    }
+    if (spellReduction.tag === "needsHoles") {
+      return needsHolesResult(attackRolledState, input.subject, [
+        ...spellReduction.holes,
+      ]);
+    }
+    const reducedDamageEventAfterSpellReduction = attackDamageEventWithEntries(
       reducedDamageEvent,
+      damageAmountByTypeMapEntries(spellReduction.damageByType),
+    );
+    const spellReducedState = {
+      ...attackRolledState,
+      combatants: new Map(attackRolledState.combatants).set(
+        target.combatantId,
+        spellReduction.target,
+      ),
+    };
+    const reducedFixedDamageAmount = attackDamageEventAmountForTarget(
+      spellReduction.target,
+      reducedDamageEventAfterSpellReduction,
     );
     const damageDispositionHole = attackDamageDispositionHole({
       attack,
       attackerId: subject.reactorId,
-      target,
+      target: spellReduction.target,
       damageAmount: reducedFixedDamageAmount,
     });
     const damageDispositionValidation = damageDispositionFillValidation({
@@ -13007,7 +13261,7 @@ function resolveOpportunityAttackCommand(
       }
     }
     const attackDamageReactionWindow = maybeOpenReactionWindow(
-      attackRolledState,
+      spellReducedState,
       {
         trigger: "attackDamage",
         continuation: {
@@ -13015,7 +13269,7 @@ function resolveOpportunityAttackCommand(
           subject: input.subject,
           attackerId: subject.reactorId,
           targetId: subject.targetId,
-          damageEvent: reducedDamageEvent,
+          damageEvent: reducedDamageEventAfterSpellReduction,
           fills: attackDamagePrefixFills(input.fills),
           deathFailuresAtZeroHp: critical ? 2 : 1,
           damageDisposition: fillSet.damageDisposition,
@@ -13028,7 +13282,7 @@ function resolveOpportunityAttackCommand(
       return attackDamageReactionWindow;
     }
     const concentrationSave = concentrationSavingThrowHole(
-      target,
+      spellReduction.target,
       reducedFixedDamageAmount,
     );
     if (concentrationSave !== null) {
@@ -13054,7 +13308,7 @@ function resolveOpportunityAttackCommand(
       );
     }
     const nextState = applyAttackDamageAmount(
-      attackRolledState,
+      spellReducedState,
       subject.reactorId,
       subject.targetId,
       reducedFixedDamageAmount,
@@ -13143,14 +13397,44 @@ function resolveOpportunityAttackCommand(
     damageEvent,
     pendingAttackDamageReductions,
   );
-  const reducedDamageAmount = attackDamageEventAmountForTarget(
+  const spellReduction = applyAvailableSpellDamageReduction(
     target,
+    damageAmountByTypeEntriesToMap(
+      attackDamageEventEntries(reducedDamageEvent),
+    ),
+    fillSet.spellDamageReductionRoll,
+  );
+  if (spellReduction.tag === "invalid") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Spell damage reduction roll does not match an unused matching damage-reduction spell effect.",
+    );
+  }
+  if (spellReduction.tag === "needsHoles") {
+    return needsHolesResult(attackRolledState, input.subject, [
+      ...spellReduction.holes,
+    ]);
+  }
+  const reducedDamageEventAfterSpellReduction = attackDamageEventWithEntries(
     reducedDamageEvent,
+    damageAmountByTypeMapEntries(spellReduction.damageByType),
+  );
+  const spellReducedState = {
+    ...attackRolledState,
+    combatants: new Map(attackRolledState.combatants).set(
+      target.combatantId,
+      spellReduction.target,
+    ),
+  };
+  const reducedDamageAmount = attackDamageEventAmountForTarget(
+    spellReduction.target,
+    reducedDamageEventAfterSpellReduction,
   );
   const damageDispositionHole = attackDamageDispositionHole({
     attack,
     attackerId: subject.reactorId,
-    target,
+    target: spellReduction.target,
     damageAmount: reducedDamageAmount,
   });
   const damageDispositionValidation = damageDispositionFillValidation({
@@ -13173,7 +13457,7 @@ function resolveOpportunityAttackCommand(
     }
   }
   const attackDamageReactionWindow = maybeOpenReactionWindow(
-    attackRolledState,
+    spellReducedState,
     {
       trigger: "attackDamage",
       continuation: {
@@ -13181,7 +13465,7 @@ function resolveOpportunityAttackCommand(
         subject: input.subject,
         attackerId: subject.reactorId,
         targetId: subject.targetId,
-        damageEvent: reducedDamageEvent,
+        damageEvent: reducedDamageEventAfterSpellReduction,
         fills: attackDamagePrefixFills(input.fills),
         deathFailuresAtZeroHp: critical ? 2 : 1,
         damageDisposition: fillSet.damageDisposition,
@@ -13197,7 +13481,7 @@ function resolveOpportunityAttackCommand(
     return attackDamageReactionWindow;
   }
   const concentrationSave = concentrationSavingThrowHole(
-    target,
+    spellReduction.target,
     reducedDamageAmount,
   );
   if (concentrationSave !== null) {
@@ -13215,7 +13499,7 @@ function resolveOpportunityAttackCommand(
     }
   }
   const nextState = applyAttackDamageAmount(
-    attackRolledState,
+    spellReducedState,
     subject.reactorId,
     subject.targetId,
     reducedDamageAmount,
@@ -14770,6 +15054,29 @@ function discoverSupportedSpellInvocations(
               ];
         return castActs;
       }
+      if (invocation.procedure === "damageReduction") {
+        const targetHole = spellTargetHole(state, actorId, invocation);
+        const castActs =
+          targetHole.choices.length === 0
+            ? []
+            : [
+                {
+                  subject: {
+                    tag: "actionSpell" as const,
+                    actorId,
+                    invocation: supportedSpellInvocationRef(invocation),
+                    mode: { tag: "cast" as const },
+                  },
+                  label: invocation.spell.name,
+                  summary: spellInvocationCastSummary(invocation),
+                  initialHoles: [
+                    targetHole,
+                    spellDamageTypeChoiceHole(invocation),
+                  ],
+                },
+              ];
+        return castActs;
+      }
       if (invocation.procedure === "heldLight") {
         return [
           {
@@ -14959,6 +15266,9 @@ function spellInvocationCastSummary(
   if (invocation.procedure === "creatureTypeProtection") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
+  if (invocation.procedure === "damageReduction") {
+    return `Cast ${invocation.spell.name} as a cantrip.`;
+  }
   if (
     invocation.procedure === "conditionImmunityAndTurnStartTemporaryHitPoints"
   ) {
@@ -15081,6 +15391,7 @@ function isReadiedSpellInvocation(
     invocation.procedure !== "directHitPointRestoration" &&
     invocation.procedure !== "heldLight" &&
     invocation.procedure !== "heldLightHurl" &&
+    invocation.procedure !== "damageReduction" &&
     invocation.procedure !== "persistentArmorEffect" &&
     invocation.procedure !== "rollModifier" &&
     invocation.procedure !== "creatureTypeProtection" &&
@@ -15101,6 +15412,7 @@ function readiedSpellAct(
   if (
     invocation.procedure === "persistentArmorEffect" ||
     invocation.procedure === "directHitPointRestoration" ||
+    invocation.procedure === "damageReduction" ||
     invocation.procedure === "scalarBuff" ||
     invocation.procedure === "weaponDamageRider" ||
     invocation.procedure === "markedDamageRider" ||
@@ -15196,6 +15508,7 @@ function resolveSpellAct(
     subject.mode.tag === "ready" &&
     (invocation.procedure === "directHitPointRestoration" ||
       invocation.procedure === "heldLightHurl" ||
+      invocation.procedure === "damageReduction" ||
       invocation.procedure === "scalarBuff" ||
       invocation.procedure === "rollModifier" ||
       invocation.procedure === "creatureTypeProtection" ||
@@ -15303,6 +15616,14 @@ function resolveSpellAct(
   }
   if (invocation.procedure === "creatureTypeProtection") {
     return resolveCreatureTypeProtectionSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "damageReduction") {
+    return resolveDamageReductionSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
@@ -15616,16 +15937,40 @@ function resolveSpellAct(
   if (damageValidation !== null) {
     return invalidResult(input.state, "invalidFill", damageValidation);
   }
-  const spellDamageAmount = spellDamageAmountForTarget(
+  const spellReductionRoll = spellDamageReductionRollForTarget(
+    fillSet.spellDamageReductionRolls,
     target,
-    invocation,
-    fillSet.damageRoll,
-    "full",
-    spellMarkedDamageRiders,
-    critical,
+  );
+  const spellReduction = applyAvailableSpellDamageReduction(
+    target,
+    spellDamageByTypeForTarget(
+      target,
+      invocation,
+      fillSet.damageRoll,
+      "full",
+      spellMarkedDamageRiders,
+      critical,
+    ),
+    spellReductionRoll,
+  );
+  if (spellReduction.tag === "invalid") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Spell damage reduction roll does not match an unused matching damage-reduction spell effect.",
+    );
+  }
+  if (spellReduction.tag === "needsHoles") {
+    return needsHolesResult(spellResolutionState, input.subject, [
+      ...spellReduction.holes,
+    ]);
+  }
+  const spellDamageAmount = damageAmountByTypeAfterTargetAdjustments(
+    spellReduction.target,
+    spellReduction.damageByType,
   );
   const concentrationSave = concentrationSavingThrowHole(
-    target,
+    spellReduction.target,
     spellDamageAmount,
   );
   const concentrationFill =
@@ -15657,7 +16002,7 @@ function resolveSpellAct(
   }
   const damageDispositionHole = zeroHitPointReplacementDispositionHole({
     damageSourceId: subject.actorId,
-    target,
+    target: spellReduction.target,
     damageAmount: spellDamageAmount,
   });
   const damageDispositionValidation = damageDispositionFillsValidation({
@@ -15696,6 +16041,7 @@ function resolveSpellAct(
       target.combatantId,
     ),
     spellMarkedDamageRiders,
+    spellReductionRoll,
   );
   const effected = applySpellActiveEffects(
     damaged,
@@ -17384,6 +17730,120 @@ function resolveCreatureTypeProtectionSpellAct(input: {
       };
 }
 
+function resolveDamageReductionSpellAct(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "damageReduction" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  if (
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.targetAllocation !== undefined ||
+    input.fillSet.targetList !== undefined ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.attackBurstDamageRoll !== undefined ||
+    input.fillSet.healingRoll !== undefined ||
+    input.fillSet.skillChoice !== undefined ||
+    input.fillSet.savingThrowOutcomes !== undefined ||
+    input.fillSet.damageDispositions.length > 0 ||
+    input.fillSet.concentrationSavingThrows.length > 0
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Damage-reduction spells use one target fill and one damage type choice.",
+    );
+  }
+
+  const targetHole = spellTargetHole(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+  );
+  if (input.fillSet.targetId === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      targetHole,
+    ]);
+  }
+  if (
+    !spellTargetIsLegal(
+      input.input.state,
+      input.actorId,
+      input.fillSet.targetId,
+      input.invocation,
+      input.fillSet.targetSpatialFacts,
+    )
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Spell target must be a combatant within the selected spell's supported range.",
+    );
+  }
+  if (input.fillSet.damageTypeChoice === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      spellDamageTypeChoiceHole(input.invocation),
+    ]);
+  }
+  if (
+    !input.invocation.damageTypeChoices.includes(
+      input.fillSet.damageTypeChoice.value,
+    )
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Damage-reduction spell damage type must be one of the selected spell's choices.",
+    );
+  }
+
+  const spellCastReactionWindow = maybeOpenReactionWindow(
+    input.input.state,
+    {
+      trigger: "spellCast",
+      casterId: input.actorId,
+      spellId: input.invocation.spell.id,
+      targetIds: [input.fillSet.targetId],
+      continuation: {
+        kind: "replay",
+        subject: input.input.subject,
+        fills: input.input.fills,
+      },
+    },
+    input.input.suppressedReactionTrigger,
+  );
+  if (spellCastReactionWindow !== null) {
+    return spellCastReactionWindow;
+  }
+
+  const concentrationBase = spellRequiresConcentration(input.invocation)
+    ? breakBattleConcentration(input.input.state, input.actorId)
+    : input.input.state;
+  const effected = applyDamageReductionSpellEffect(
+    concentrationBase,
+    input.actorId,
+    input.fillSet.targetId,
+    input.fillSet.damageTypeChoice.value,
+    input.invocation,
+  );
+  const resourced = spendSpellCastResources({
+    state: effected,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
+  return resourced.tag === "invalid"
+    ? resourced
+    : {
+        tag: "resolved",
+        state: resourced.state,
+        snapshot: snapshotBattle(resourced.state),
+      };
+}
+
 type HealingSpellTargetSelection =
   | { readonly tag: "ok"; readonly targetIds: readonly CombatantId[] }
   | { readonly tag: "needsHoles"; readonly hole: BattleHole }
@@ -18426,6 +18886,9 @@ type SpellFillSet =
         | BattleSpellSavingThrowOutcomeValue
         | undefined;
       readonly skillChoice: Skill | undefined;
+      readonly damageTypeChoice:
+        | Extract<BattleFill, { readonly kind: "damageTypeChoice" }>
+        | undefined;
       readonly concentrationSavingThrows: readonly Extract<
         BattleFill,
         { readonly kind: "concentrationSavingThrow" }
@@ -18437,6 +18900,10 @@ type SpellFillSet =
       readonly damageRoll:
         | Extract<BattleFill, { readonly kind: "rolledDice" }>
         | undefined;
+      readonly spellDamageReductionRolls: readonly Extract<
+        BattleFill,
+        { readonly kind: "rolledDice" }
+      >[];
       readonly attackBurstDamageRoll:
         | Extract<BattleFill, { readonly kind: "rolledDice" }>
         | undefined;
@@ -18470,6 +18937,9 @@ function spellFillSet(
   let attackRoll: AttackRollResult | undefined;
   let savingThrowOutcomes: BattleSpellSavingThrowOutcomeValue | undefined;
   let skillChoice: Skill | undefined;
+  let damageTypeChoice:
+    | Extract<BattleFill, { readonly kind: "damageTypeChoice" }>
+    | undefined;
   const concentrationSavingThrows: Extract<
     BattleFill,
     { readonly kind: "concentrationSavingThrow" }
@@ -18481,6 +18951,10 @@ function spellFillSet(
   let damageRoll:
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
     | undefined;
+  const spellDamageReductionRolls: Extract<
+    BattleFill,
+    { readonly kind: "rolledDice" }
+  >[] = [];
   let attackBurstDamageRoll:
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
     | undefined;
@@ -18529,6 +19003,7 @@ function spellFillSet(
         invocation.procedure !== "directHitPointRestoration" &&
         invocation.procedure !== "scalarBuff" &&
         invocation.procedure !== "rollModifier" &&
+        invocation.procedure !== "damageReduction" &&
         invocation.procedure !== "saveGatedCondition" &&
         invocation.procedure !==
           "conditionImmunityAndTurnStartTemporaryHitPoints"
@@ -18664,7 +19139,45 @@ function spellFillSet(
       continue;
     }
 
+    if (fill.kind === "damageTypeChoice") {
+      if (invocation.procedure !== "damageReduction") {
+        return {
+          tag: "invalid",
+          message: "Spell damage type choice does not match this spell act.",
+        };
+      }
+      if (fill.holeId !== spellDamageTypeChoiceHole(invocation).holeId) {
+        return {
+          tag: "invalid",
+          message:
+            "Spell damage type choice must use the selected spell act choice hole.",
+        };
+      }
+      if (damageTypeChoice !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Spell damage type choice was filled twice.",
+        };
+      }
+      damageTypeChoice = fill;
+      continue;
+    }
+
     if (fill.kind === "rolledDice") {
+      if (isSpellDamageReductionRollFill(fill)) {
+        if (
+          spellDamageReductionRolls.some(
+            (candidate) => candidate.holeId === fill.holeId,
+          )
+        ) {
+          return {
+            tag: "invalid",
+            message: "Spell damage reduction roll was filled twice.",
+          };
+        }
+        spellDamageReductionRolls.push(fill);
+        continue;
+      }
       if (
         invocation.procedure === "directHitPointRestoration" ||
         (invocation.procedure === "scalarBuff" &&
@@ -18761,9 +19274,11 @@ function spellFillSet(
     attackRoll,
     savingThrowOutcomes,
     skillChoice,
+    damageTypeChoice,
     concentrationSavingThrows,
     damageDispositions,
     damageRoll,
+    spellDamageReductionRolls,
     attackBurstDamageRoll,
     healingRoll,
   };
@@ -20523,18 +21038,29 @@ function applyAttackDamage(
   if (target == null) {
     return state;
   }
-  const damageAmount = attackDamageAmount(
-    state.combatants.get(attackerId),
+  const reduction = applySpellDamageReductions(
     target,
-    attack,
-    fillSet.damageRoll,
-    critical,
-    fillSet.attackRoll,
-    attackDamageRiders,
-    spellWeaponDamageRiders,
-    spellMarkedDamageRiders,
+    attackDamageByType(
+      state.combatants.get(attackerId),
+      attack,
+      fillSet.damageRoll,
+      critical,
+      fillSet.attackRoll,
+      attackDamageRiders,
+      spellWeaponDamageRiders,
+      spellMarkedDamageRiders,
+    ),
+    [],
   );
-  const damaged = applyHpDamage(target, damageAmount, {
+  if (reduction.tag === "invalid") {
+    return state;
+  }
+  const damageAmount = damageAmountByTypeAfterTargetAdjustments(
+    reduction.target,
+    reduction.damageByType,
+  );
+  const damagedTarget = reduction.target;
+  const damaged = applyHpDamage(damagedTarget, damageAmount, {
     deathFailuresAtZeroHp: critical ? 2 : 1,
     damageDisposition: fillSet.damageDisposition,
   });
@@ -21241,32 +21767,6 @@ type DamageAmountByTypeEntry = {
   readonly amount: number;
 };
 
-function attackDamageAmount(
-  attacker: BattleCreatureState | undefined,
-  target: BattleCreatureState,
-  attack: SupportedAttackActionOption,
-  damageRoll: BattleRolledDiceFill,
-  critical: boolean,
-  attackRoll?: AttackRollResult,
-  attackDamageRiders: readonly AttackDamageRider[] = [],
-  spellWeaponDamageRiders: readonly SpellWeaponDamageRider[] = [],
-  spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
-): number {
-  return damageAmountByTypeAfterTargetAdjustments(
-    target,
-    attackDamageByType(
-      attacker,
-      attack,
-      damageRoll,
-      critical,
-      attackRoll,
-      attackDamageRiders,
-      spellWeaponDamageRiders,
-      spellMarkedDamageRiders,
-    ),
-  );
-}
-
 function attackDamageByTypeEntries(
   attacker: BattleCreatureState | undefined,
   attack: SupportedAttackActionOption,
@@ -21340,6 +21840,178 @@ function damageAmountByTypeEntriesToMap(
       addDamageAmountForType(totals, entry.damageType, entry.amount),
     new Map(),
   );
+}
+
+function damageAmountByTypeMapEntries(
+  damageByType: ReadonlyMap<DamageType, number>,
+): readonly DamageAmountByTypeEntry[] {
+  return [...damageByType].map(([damageType, amount]) => ({
+    damageType,
+    amount,
+  }));
+}
+
+const SPELL_DAMAGE_REDUCTION_ROLL_HOLE_PREFIX =
+  "battle:spell-damage-reduction-roll";
+
+function isSpellDamageReductionRollFill(
+  fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+): boolean {
+  return fill.holeId.startsWith(SPELL_DAMAGE_REDUCTION_ROLL_HOLE_PREFIX);
+}
+
+function spellDamageReductionRollProtocolId(
+  reduction: Omit<SpellDamageReductionRoll, "amount">,
+): string {
+  return [
+    SPELL_DAMAGE_REDUCTION_ROLL_HOLE_PREFIX,
+    reduction.sourceSpellId,
+    reduction.sourceCombatantId,
+    reduction.targetId,
+    reduction.damageType,
+  ].join(":");
+}
+
+function spellDamageReductionRollHole(
+  reduction: SpellDamageReductionRoll,
+): BattleSpellDamageReductionRollHole {
+  const protocolId = spellDamageReductionRollProtocolId(reduction);
+  return {
+    kind: "rolledDice",
+    holeId: holeId(protocolId),
+    holeInstanceKey: holeInstanceKey(protocolId),
+    label: "Resistance damage reduction (1d4)",
+    spellDamageReduction: reduction,
+  };
+}
+
+function availableSpellDamageReduction(
+  target: BattleCreatureState,
+  damageByType: ReadonlyMap<DamageType, number>,
+): SpellDamageReductionRoll | null {
+  const effect = target.activeEffects.find(
+    (candidate) =>
+      candidate.kind === "spellDamageReduction" &&
+      !candidate.usedThisTurn &&
+      (damageByType.get(candidate.damageType) ?? 0) > 0,
+  );
+  return effect?.kind === "spellDamageReduction"
+    ? {
+        sourceSpellId: effect.sourceSpellId,
+        sourceCombatantId: effect.sourceCombatantId,
+        targetId: target.combatantId,
+        damageType: effect.damageType,
+        amount: effect.amount,
+      }
+    : null;
+}
+
+function spellDamageReductionRollForTarget(
+  rolls: readonly Extract<BattleFill, { readonly kind: "rolledDice" }>[],
+  target: BattleCreatureState,
+): Extract<BattleFill, { readonly kind: "rolledDice" }> | undefined {
+  return rolls.find((roll) => roll.holeId.includes(`:${target.combatantId}:`));
+}
+
+function applyAvailableSpellDamageReduction(
+  target: BattleCreatureState,
+  damageByType: ReadonlyMap<DamageType, number>,
+  roll: Extract<BattleFill, { readonly kind: "rolledDice" }> | undefined,
+):
+  | {
+      readonly tag: "ok";
+      readonly target: BattleCreatureState;
+      readonly damageByType: ReadonlyMap<DamageType, number>;
+    }
+  | { readonly tag: "needsHoles"; readonly holes: readonly BattleHole[] }
+  | { readonly tag: "invalid" } {
+  const reduction = availableSpellDamageReduction(target, damageByType);
+  if (roll === undefined) {
+    return reduction === null
+      ? { tag: "ok", target, damageByType }
+      : { tag: "needsHoles", holes: [spellDamageReductionRollHole(reduction)] };
+  }
+  if (
+    reduction === null ||
+    roll.holeId !== spellDamageReductionRollHole(reduction).holeId
+  ) {
+    return { tag: "invalid" };
+  }
+  const validation = validateRolledDiceForDiceExpr(roll.value, {
+    dice: reduction.amount.dice,
+    dieSize: reduction.amount.dieSize,
+  });
+  if (validation !== null) {
+    return { tag: "invalid" };
+  }
+  const applied = applySpellDamageReductions(target, damageByType, [
+    {
+      sourceSpellId: reduction.sourceSpellId,
+      sourceCombatantId: reduction.sourceCombatantId,
+      targetId: reduction.targetId,
+      damageType: reduction.damageType,
+      roll: DieRollResult(rolledDiceTotal(roll.value)),
+    },
+  ]);
+  return applied;
+}
+
+function applySpellDamageReductions(
+  target: BattleCreatureState,
+  damageByType: ReadonlyMap<DamageType, number>,
+  reductions: readonly SpellDamageReductionFill[],
+):
+  | {
+      readonly tag: "ok";
+      readonly target: BattleCreatureState;
+      readonly damageByType: ReadonlyMap<DamageType, number>;
+    }
+  | { readonly tag: "invalid" } {
+  if (reductions.length === 0) {
+    return { tag: "ok", target, damageByType };
+  }
+  if (reductions.length !== 1) {
+    return { tag: "invalid" };
+  }
+  const reduction = reductions[0];
+  if (reduction === undefined || reduction.targetId !== target.combatantId) {
+    return { tag: "invalid" };
+  }
+  const effectIndex = target.activeEffects.findIndex(
+    (effect) =>
+      effect.kind === "spellDamageReduction" &&
+      effect.sourceSpellId === reduction.sourceSpellId &&
+      effect.sourceCombatantId === reduction.sourceCombatantId &&
+      effect.damageType === reduction.damageType &&
+      !effect.usedThisTurn,
+  );
+  const effect = target.activeEffects[effectIndex];
+  if (
+    effect?.kind !== "spellDamageReduction" ||
+    !Number.isInteger(Number(reduction.roll)) ||
+    Number(reduction.roll) < effect.amount.dice ||
+    Number(reduction.roll) > effect.amount.dice * effect.amount.dieSize ||
+    (damageByType.get(reduction.damageType) ?? 0) <= 0
+  ) {
+    return { tag: "invalid" };
+  }
+  const reducedDamageByType = new Map(damageByType).set(
+    reduction.damageType,
+    Math.max(
+      0,
+      (damageByType.get(reduction.damageType) ?? 0) - Number(reduction.roll),
+    ),
+  );
+  const activeEffects = target.activeEffects.map((candidate, index) =>
+    index === effectIndex && candidate.kind === "spellDamageReduction"
+      ? { ...candidate, usedThisTurn: true }
+      : candidate,
+  );
+  return {
+    tag: "ok",
+    target: { ...target, activeEffects },
+    damageByType: reducedDamageByType,
+  };
 }
 
 function entriesAfterProportionalDamageReduction(
@@ -21647,6 +22319,9 @@ function supportedSpellActs(
     ),
     ...spellcasting.cantrips.flatMap((spell) =>
       supportedCantripRollModifierSpellProfile(actor.combatantId, spell),
+    ),
+    ...spellcasting.cantrips.flatMap((spell) =>
+      supportedCantripDamageReductionSpellProfile(actor.combatantId, spell),
     ),
   ];
 }
@@ -22315,8 +22990,7 @@ function supportedPreparedConditionImmunityAndTurnStartTemporaryHitPointsSpellPr
   if (projection === null) {
     return [];
   }
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] =>
-  {
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
     if (Number(slot.spellLevel) < spell.mechanics.level) {
       return [];
     }
@@ -22602,6 +23276,25 @@ function supportedCantripRollModifierSpellProfile(
       ];
 }
 
+function supportedCantripDamageReductionSpellProfile(
+  actorId: CombatantId,
+  spell: SpellRecord,
+): readonly SupportedSpellInvocation[] {
+  const projection = damageReductionSpellProjection(actorId, spell);
+  return projection === null
+    ? []
+    : [
+        {
+          access: { tag: "classCantrip" },
+          resource: { tag: "none" },
+          procedure: "damageReduction",
+          spell,
+          actionCost: "magicAction",
+          ...projection,
+        },
+      ];
+}
+
 function scalarBuffSpellActionCost(
   castingTime: SpellRecord["mechanics"]["castingTime"],
 ): HealingSpellActionCost | null {
@@ -22855,6 +23548,71 @@ function rollModifierActiveEffect(
       expiresAt,
     },
     skillChoices: skillFilter.kind === "choice" ? skillFilter.options : null,
+  };
+}
+
+function damageReductionSpellProjection(
+  actorId: CombatantId,
+  spell: SpellRecord,
+): Pick<
+  DamageReductionSpellInvocation,
+  "amount" | "damageTypeChoices" | "expiresAt" | "rangeFeet" | "targeting"
+> | null {
+  if (
+    spell.name !== "Resistance" ||
+    spell.provenance.kind !== "srd-5.2.1" ||
+    spell.provenance.section !== "Spells/Descriptions-Q-R#Resistance" ||
+    spell.mechanics.family !== "ongoing_effect" ||
+    spell.mechanics.level !== 0 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "touch" ||
+    spell.mechanics.duration.kind !== "concentration" ||
+    spell.mechanics.duration.upTo.unit !== "minute" ||
+    spell.mechanics.duration.upTo.amount !== 1 ||
+    spell.mechanics.attachment.kind !== "hole" ||
+    spell.mechanics.attachment.value.kind !== "target" ||
+    spell.mechanics.attachment.value.selection.mode !== "one" ||
+    spell.mechanics.operations.length !== 1
+  ) {
+    return null;
+  }
+  const operation = spell.mechanics.operations[0];
+  const effect = operation?.effect;
+  const damageType =
+    effect?.kind === "reduce_damage_taken" ? effect.damageType : undefined;
+  const expiresAt = scalarBuffActiveEffectExpiration(
+    actorId,
+    spell.mechanics.duration,
+  );
+  if (
+    operation?.trigger.kind !== "passive" ||
+    effect?.kind !== "reduce_damage_taken" ||
+    effect.amount.kind !== "fixed" ||
+    effect.amount.expr.dice !== 1 ||
+    effect.amount.expr.dieSize !== 4 ||
+    (effect.amount.expr.flat ?? 0) !== 0 ||
+    typeof damageType !== "object" ||
+    damageType?.kind !== "hole" ||
+    expiresAt === null
+  ) {
+    return null;
+  }
+  const choiceValue = damageType.value;
+  if (typeof choiceValue !== "object" || choiceValue.kind !== "choice") {
+    return null;
+  }
+  const choices = choiceValue.options.filter((option): option is DamageType =>
+    Schema.is(DamageTypeSchema)(option),
+  );
+  if (choices.length !== choiceValue.options.length) {
+    return null;
+  }
+  return {
+    targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
+    damageTypeChoices: choices,
+    amount: { dice: 1, dieSize: 4 },
+    expiresAt,
+    rangeFeet: movementFeet(5),
   };
 }
 
@@ -23480,8 +24238,10 @@ function supportedPreparedSaveGateAttackRollAdvantageProfile(
   spell: SpellRecord,
   spellSlots: CharacterBattleSpellcastingState["spellSlots"],
 ): readonly SupportedSpellInvocation[] {
-  const attackRollAdvantageSpell =
-    faerieFireSaveGateAttackRollAdvantageSpell(actorId, spell);
+  const attackRollAdvantageSpell = faerieFireSaveGateAttackRollAdvantageSpell(
+    actorId,
+    spell,
+  );
   if (attackRollAdvantageSpell === null) {
     return [];
   }
@@ -23508,7 +24268,10 @@ function supportedPreparedSaveGateAttackRollAdvantageProfile(
 
 type SaveGateAttackRollAdvantageSpell = {
   readonly phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>;
-  readonly targeting: Extract<SpellTargeting, { readonly kind: "pointOriginCube" }>;
+  readonly targeting: Extract<
+    SpellTargeting,
+    { readonly kind: "pointOriginCube" }
+  >;
   readonly effect: SpellFailedSaveAttackRollEffect;
   readonly rangeFeet: MovementFeet;
 };
@@ -24541,7 +25304,12 @@ function spellInvocationRequiresKnownWillingTarget(
 ): boolean {
   return (
     invocation.procedure === "persistentArmorEffect" ||
-    invocation.procedure === "conditionImmunityAndTurnStartTemporaryHitPoints" ||
+    invocation.procedure ===
+      "conditionImmunityAndTurnStartTemporaryHitPoints" ||
+    (invocation.procedure === "damageReduction" &&
+      KNOWN_WILLING_TARGET_DAMAGE_REDUCTION_SPELL_IDS.includes(
+        invocation.spell.id,
+      )) ||
     (invocation.procedure === "rollModifier" &&
       KNOWN_WILLING_TARGET_ROLL_MODIFIER_SPELL_IDS.includes(
         invocation.spell.id,
@@ -24564,6 +25332,11 @@ function supportedSpellInvocationRef(
       tag: "cantrip" as const,
       spellId: spellId(cantrip.spell.id),
       procedure: "heldLight" as const,
+    })),
+    Match.when({ procedure: "damageReduction" }, (cantrip) => ({
+      tag: "cantrip" as const,
+      spellId: spellId(cantrip.spell.id),
+      procedure: "damageReduction" as const,
     })),
     Match.when({ procedure: "repeatedDamageAllocation" }, (slotSpell) => ({
       tag: "spellSlot" as const,
@@ -24633,8 +25406,7 @@ function supportedSpellInvocationRef(
         tag: "spellSlot" as const,
         spellId: spellId(heroism.spell.id),
         slotLevel: heroism.resource.slotLevel,
-        procedure:
-          "conditionImmunityAndTurnStartTemporaryHitPoints" as const,
+        procedure: "conditionImmunityAndTurnStartTemporaryHitPoints" as const,
       }),
     ),
     Match.when({ procedure: "weaponDamageRider" }, (riderSpell) => ({
@@ -24766,7 +25538,7 @@ function spellAttackRollHole(
 function spellDamageTypeChoiceHole(
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "chainedSpellAttackDamage" }
+    { readonly procedure: "chainedSpellAttackDamage" | "damageReduction" }
   >,
 ): BattleSpellDamageTypeChoiceHole {
   const protocolId = `battle:spell:damage-type:${invocation.spell.id}`;
@@ -25370,20 +26142,35 @@ function applySpellDamage(
     kind: "ordinaryDamage",
   },
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
+  spellDamageReductionRoll?: Extract<
+    BattleFill,
+    { readonly kind: "rolledDice" }
+  >,
 ): BattleState {
   const target = state.combatants.get(targetId);
   if (target == null) {
     return state;
   }
-  const damaged = applyHpDamage(
+  const reduction = applyAvailableSpellDamageReduction(
     target,
-    spellDamageAmountForTarget(
+    spellDamageByTypeForTarget(
       target,
       invocation,
       damageRoll,
       saveDamageResult,
       spellMarkedDamageRiders,
       critical,
+    ),
+    spellDamageReductionRoll,
+  );
+  if (reduction.tag !== "ok") {
+    return state;
+  }
+  const damaged = applyHpDamage(
+    reduction.target,
+    damageAmountByTypeAfterTargetAdjustments(
+      reduction.target,
+      reduction.damageByType,
     ),
     { deathFailuresAtZeroHp: critical ? 2 : 1, damageDisposition },
   );
@@ -25455,6 +26242,27 @@ function spellDamageAmountForTarget(
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
   critical = false,
 ): number {
+  return damageAmountByTypeAfterTargetAdjustments(
+    target,
+    spellDamageByTypeForTarget(
+      target,
+      invocation,
+      damageRoll,
+      saveDamageResult,
+      spellMarkedDamageRiders,
+      critical,
+    ),
+  );
+}
+
+function spellDamageByTypeForTarget(
+  _target: BattleCreatureState,
+  invocation: SupportedDamageSpellInvocation,
+  damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+  saveDamageResult: SaveDamageResult = "full",
+  spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
+  critical = false,
+): ReadonlyMap<DamageType, number> {
   if (spellMarkedDamageRiders.length > 0) {
     const components = spellDamageComponents(
       invocation,
@@ -25475,7 +26283,7 @@ function spellDamageAmountForTarget(
       const unadjusted = diceTotal + component.flat;
       return addDamageAmountForType(totals, component.damageType, unadjusted);
     }, new Map());
-    return damageAmountByTypeAfterTargetAdjustments(target, damageByType);
+    return damageByType;
   }
   const diceTotal = damageRoll.value.reduce(
     (total, group) =>
@@ -25495,10 +26303,10 @@ function spellDamageAmountForTarget(
     diceTotal + flat,
     saveDamageResult,
   );
-  return damageAmountAfterTargetAdjustments(
-    target,
-    saveAdjustedDamage,
+  return addDamageAmountForType(
+    new Map(),
     invocation.damage.damageType,
+    saveAdjustedDamage,
   );
 }
 
@@ -26348,6 +27156,48 @@ function applyCreatureTypeProtectionSpellEffect(
       }),
     };
   }, state);
+}
+
+function applyDamageReductionSpellEffect(
+  state: BattleState,
+  actorId: CombatantId,
+  targetId: CombatantId,
+  damageType: DamageType,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "damageReduction" }
+  >,
+): BattleState {
+  const target = state.combatants.get(targetId);
+  if (target === undefined) {
+    return state;
+  }
+  const nextEffect = {
+    kind: "spellDamageReduction" as const,
+    sourceSpellId: invocation.spell.id,
+    sourceCombatantId: actorId,
+    damageType,
+    amount: invocation.amount,
+    usedThisTurn: false,
+    expiresAt: invocation.expiresAt,
+  };
+  const activeEffects = [
+    ...target.activeEffects.filter(
+      (effect) =>
+        !(
+          effect.kind === "spellDamageReduction" &&
+          effect.sourceSpellId === invocation.spell.id
+        ),
+    ),
+    nextEffect,
+  ];
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(targetId, {
+      ...target,
+      activeEffects,
+    }),
+  };
 }
 
 function applyConditionImmunityAndTurnStartTemporaryHitPointsEffects(
@@ -27456,12 +28306,7 @@ function requiredAttackRollMode(
     state.helpAttacks.some(
       (help) => help.allyId === attackerId && help.targetEnemyId === targetId,
     ) ||
-    activeEffectGrantsAttackRollMode(
-      state,
-      attacker,
-      target,
-      "advantage",
-    ) ||
+    activeEffectGrantsAttackRollMode(state, attacker, target, "advantage") ||
     ongoingFeatureGrantsAttackRollMode(attacker, target, "advantage", attack);
   const hasDisadvantage =
     hiddenTargetDisadvantage ||
@@ -27469,12 +28314,7 @@ function requiredAttackRollMode(
     grappleDisadvantage ||
     longRangeDisadvantage ||
     hasCondition(attacker?.conditions ?? EMPTY_CONDITION_STATE, "poisoned") ||
-    activeEffectGrantsAttackRollMode(
-      state,
-      attacker,
-      target,
-      "disadvantage",
-    ) ||
+    activeEffectGrantsAttackRollMode(state, attacker, target, "disadvantage") ||
     ongoingFeatureGrantsAttackRollMode(
       attacker,
       target,
@@ -27499,12 +28339,7 @@ function attackRollHasAdvantageSource(
     state.helpAttacks.some(
       (help) => help.allyId === attackerId && help.targetEnemyId === targetId,
     ) ||
-    activeEffectGrantsAttackRollMode(
-      state,
-      attacker,
-      target,
-      "advantage",
-    ) ||
+    activeEffectGrantsAttackRollMode(state, attacker, target, "advantage") ||
     ongoingFeatureGrantsAttackRollMode(attacker, target, "advantage", attack)
   );
 }

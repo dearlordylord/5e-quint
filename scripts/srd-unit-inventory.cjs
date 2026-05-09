@@ -182,10 +182,7 @@ const spellUnitExecutableFollowUpBatches = [
     label: "Buff, debuff, and protection spell runtime",
     nextAction:
       "Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction.",
-    unitIds: [
-      "heroism",
-      "resistance",
-    ],
+    unitIds: ["heroism"],
   },
   {
     id: "spell-attack-rider-and-smite-runtime",
