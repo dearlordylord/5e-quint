@@ -454,7 +454,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 226,
       "id": "SRDINV29F2",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Implement Chromatic Orb Chained Attack Runtime"
     },
     {
@@ -566,7 +566,7 @@ Keep it synchronized with the DAG table and task details.
 | 223   | SRDINV33 - Recursive SRD Inventory Planning Review | blocked | SRDINV28A-SRDINV28E, SRDINV29A-SRDINV29E, SRDINV29F3, SRDINV30A-SRDINV32B | SRDINV34 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review the split spell-runtime closure, refresh spell Unit metrics, and append Ralph-sized follow-up tasks only after checking execution-invariant granularity. |
 | 224   | SRDINV34 - Promote Starry Wisp Object Target Runtime | blocked | SRDINV33 | none | [SRDINV28E decision](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV28E_STARRY_WISP_OBJECT_TARGET_DECISION.md), [battle-runtime target facts](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [Starry Wisp](/workspace/typescript/dnd/packages/surface/content/starry_wisp.dhall), [Chill Touch](/workspace/typescript/dnd/packages/surface/content/chill_touch.dhall), [SRD Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [SRD Chill Touch](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote the Starry Wisp creature-or-object target boundary only after SRDINV33 orders it against the remaining spell-runtime frontier. |
 | 225   | SRDINV29F1 - Model Chromatic Orb Chained Replay Facts | done | SRDINV29F | SRDINV29F2 | [Chromatic Orb research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV29F_CHROMATIC_ORB_CHAINED_ATTACK_RESEARCH.md), [Chromatic Orb](/workspace/typescript/dnd/packages/surface/content/chromatic_orb.dhall), [battle-runtime Quint spec](/workspace/typescript/dnd/packages/battle-runtime/battle-runtime.qnt), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Added promoted QNT procedure facts and replay-hole invariants for Chromatic Orb's damage-type choice, ordered target/attack/damage steps, duplicate-face gate, target uniqueness, previous-target range, and slot-level leap cap. |
-| 226   | SRDINV29F2 - Implement Chromatic Orb Chained Attack Runtime | ready-for-implementation-after-light-research | SRDINV29F1 | SRDINV29F3 | [Chromatic Orb research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV29F_CHROMATIC_ORB_CHAINED_ATTACK_RESEARCH.md), [battle-runtime reducer](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [battle-runtime subjects](/workspace/typescript/dnd/packages/battle-runtime/src/battle-subjects.ts), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Implement the chained spell-attack reducer procedure with step-scoped holes/fills, duplicate-face continuation, target uniqueness/range rejection, damage-type reuse, reaction lifecycle composition, and one action/slot spend. |
+| 226   | SRDINV29F2 - Implement Chromatic Orb Chained Attack Runtime | done | SRDINV29F1 | SRDINV29F3 | [Chromatic Orb research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV29F_CHROMATIC_ORB_CHAINED_ATTACK_RESEARCH.md), [battle-runtime reducer](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [battle-runtime subjects](/workspace/typescript/dnd/packages/battle-runtime/src/battle-subjects.ts), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Implement the chained spell-attack reducer procedure with step-scoped holes/fills, duplicate-face continuation, target uniqueness/range rejection, damage-type reuse, reaction lifecycle composition, and one action/slot spend. |
 | 227   | SRDINV29F3 - Admit Chromatic Orb Runtime Support | blocked | SRDINV29F2 | SRDINV33 | [Chromatic Orb research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV29F_CHROMATIC_ORB_CHAINED_ATTACK_RESEARCH.md), [Chromatic Orb](/workspace/typescript/dnd/packages/surface/content/chromatic_orb.dhall), [unit claims](/workspace/typescript/dnd/plans/unit-profile-coverage/unit-claims.jsonl), [unit evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/unit-evidence.jsonl), [battle-runtime README](/workspace/typescript/dnd/packages/battle-runtime/README.md) | Admit Chromatic Orb through the new procedure, close deterministic projection/evidence, update coverage artifacts and docs, and run the promoted runtime verification lane. |
 
 ## Task Details
@@ -2852,7 +2852,7 @@ changes; `/simplify` convergence, minimum two rounds.
 
 ### Task 226 - SRDINV29F2 - Implement Chromatic Orb Chained Attack Runtime
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: SRDINV29F1
 
