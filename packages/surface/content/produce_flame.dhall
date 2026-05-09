@@ -26,11 +26,11 @@
 -- OMITTED (DM agenda):
 --   "The flame emits no heat and ignites nothing" — world-state narrative,
 --   no mechanical atom models heat or ignition gating.
---   "a creature or an object within 60 feet" — the 60-foot range of the
---   hurled flame is not captured on OngoingEffect.attack_roll (which omits
---   `attachment`). Attack targets a separate creature; range is session-
---   resolved. Surface limitation noted; not a blocking widening since
---   OngoingEffect.attack_roll was designed for this spell.
+--   Runtime support for the hurled flame is currently the combatant-target
+--   subset. Object targeting remains checker-visible unsupported until object
+--   target identity, AC/HP, and damage disposition are executable runtime
+--   facts. The 60-foot range is enforced by the promoted runtime profile; it
+--   is not captured on OngoingEffect.attack_roll, which omits `attachment`.
 
 let produceFlame =
       { kind = "spell"

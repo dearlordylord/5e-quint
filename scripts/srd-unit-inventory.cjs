@@ -204,13 +204,6 @@ const spellUnitExecutableFollowUpBatches = [
       "true_strike",
     ],
   },
-  {
-    id: "spell-held-light-and-hurled-attack-runtime",
-    label: "Held light and hurled spell attack runtime",
-    nextAction:
-      "Admit Produce Flame after adding held-flame duration, Bright Light and Dim Light emission, recast expiry, later Magic action hurling, creature or object targeting within range, ranged spell attack resolution, Fire damage, and cantrip scaling.",
-    unitIds: ["produce_flame"],
-  },
 ];
 
 const spellUnitExecutableFollowUps = new Map(

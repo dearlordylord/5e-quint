@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 348,
-      "numerator": 84,
-      "percent": "24.1%"
+      "numerator": 85,
+      "percent": "24.4%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 415,
-      "numerator": 108,
-      "percent": "26%"
+      "numerator": 109,
+      "percent": "26.3%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 109
+      "value": 110
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 55,
@@ -67,8 +67,8 @@
       "percent": "92.7%"
     },
     "profileClassificationCoverage": {
-      "denominator": 109,
-      "numerator": 109,
+      "denominator": 110,
+      "numerator": 110,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -97,9 +97,9 @@
       "percent": "18.2%"
     },
     "supportedProfileCoverage": {
-      "denominator": 85,
+      "denominator": 86,
       "numerator": 55,
-      "percent": "64.7%"
+      "percent": "64%"
     }
   },
   "metricSemantics": [
@@ -789,7 +789,8 @@
       "taskRefs": [
         "QCORE10",
         "QMBT5",
-        "SRDINV29E"
+        "SRDINV29E",
+        "SRDINV32B"
       ],
       "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
       "verificationOwners": [
@@ -1387,6 +1388,22 @@
         "spell.invocation-roll-modifier"
       ],
       "taskId": "SRDINV30B"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Produce Flame's held-state-gated later Magic action hurl, Fire damage, and cantrip scaling.",
+      "profileIds": [
+        "spell.invocation-damage-save-or-attack"
+      ],
+      "taskId": "SRDINV32B"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests for Produce Flame's held-state-gated later Magic action hurl over the combatant-target subset, with object targeting kept checker-visible unsupported.",
+      "profileIds": [
+        "spell.invocation-damage-save-or-attack"
+      ],
+      "taskId": "SRDINV32B"
     }
   ],
   "units": [
@@ -3616,7 +3633,8 @@
           "taskRefs": [
             "QCORE10",
             "QMBT5",
-            "SRDINV29E"
+            "SRDINV29E",
+            "SRDINV32B"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -3808,7 +3826,8 @@
           "taskRefs": [
             "QCORE10",
             "QMBT5",
-            "SRDINV29E"
+            "SRDINV29E",
+            "SRDINV32B"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -3907,7 +3926,8 @@
           "taskRefs": [
             "QCORE10",
             "QMBT5",
-            "SRDINV29E"
+            "SRDINV29E",
+            "SRDINV32B"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -4371,7 +4391,8 @@
           "taskRefs": [
             "QCORE10",
             "QMBT5",
-            "SRDINV29E"
+            "SRDINV29E",
+            "SRDINV32B"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -4454,7 +4475,8 @@
           "taskRefs": [
             "QCORE10",
             "QMBT5",
-            "SRDINV29E"
+            "SRDINV29E",
+            "SRDINV32B"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -4511,7 +4533,8 @@
           "taskRefs": [
             "QCORE10",
             "QMBT5",
-            "SRDINV29E"
+            "SRDINV29E",
+            "SRDINV32B"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -4667,7 +4690,8 @@
           "taskRefs": [
             "QCORE10",
             "QMBT5",
-            "SRDINV29E"
+            "SRDINV29E",
+            "SRDINV32B"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -4719,6 +4743,76 @@
         "status": "installed"
       },
       "claim": {
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "SRDINV34",
+            "mechanic": "object target identity, Armor Class/Hit Points, and damage disposition for the SRD creature-or-object hurl target"
+          }
+        ],
+        "profileIds": [
+          "spell.invocation-damage-save-or-attack"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Bonus Action held-light state",
+          "held-state-gated later Magic action hurl",
+          "combatant-target ranged spell attack damage",
+          "Fire damage",
+          "cantrip damage scaling"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV32B"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-damage-save-or-attack",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE10",
+            "QMBT5",
+            "SRDINV29E",
+            "SRDINV32B"
+          ],
+          "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/produce_flame.json",
+      "unitId": "produce_flame"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "spell.invocation-damage-save-or-attack",
           "spell.readied-action-time-spell"
@@ -4751,7 +4845,8 @@
           "taskRefs": [
             "QCORE10",
             "QMBT5",
-            "SRDINV29E"
+            "SRDINV29E",
+            "SRDINV32B"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -4835,7 +4930,8 @@
           "taskRefs": [
             "QCORE10",
             "QMBT5",
-            "SRDINV29E"
+            "SRDINV29E",
+            "SRDINV32B"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -4919,7 +5015,8 @@
           "taskRefs": [
             "QCORE10",
             "QMBT5",
-            "SRDINV29E"
+            "SRDINV29E",
+            "SRDINV32B"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -5003,7 +5100,8 @@
           "taskRefs": [
             "QCORE10",
             "QMBT5",
-            "SRDINV29E"
+            "SRDINV29E",
+            "SRDINV32B"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -5087,7 +5185,8 @@
           "taskRefs": [
             "QCORE10",
             "QMBT5",
-            "SRDINV29E"
+            "SRDINV29E",
+            "SRDINV32B"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -5189,7 +5288,8 @@
           "taskRefs": [
             "QCORE10",
             "QMBT5",
-            "SRDINV29E"
+            "SRDINV29E",
+            "SRDINV32B"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -5273,7 +5373,8 @@
           "taskRefs": [
             "QCORE10",
             "QMBT5",
-            "SRDINV29E"
+            "SRDINV29E",
+            "SRDINV32B"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -9788,24 +9889,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/prismatic_wall.json",
       "unitId": "prismatic_wall"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/produce_flame.json",
-      "unitId": "produce_flame"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

@@ -165,7 +165,7 @@ module battleRuntime {
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
 
   type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Bane | Bless | Guidance | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame
-  type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack
+  type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack
   type ChainedSpellAttackDamageInvocation =
     | ChromaticOrbChainedSpellAttack
   type ChromaticOrbDamageTypeChoice = ChromaticOrbAcid | ChromaticOrbCold | ChromaticOrbFire | ChromaticOrbLightning | ChromaticOrbPoison | ChromaticOrbThunder
@@ -263,6 +263,7 @@ module battleRuntime {
     | ResumeRayOfFrost
     | ResumePoisonSpray
     | ResumeChillTouch
+    | ResumeProduceFlameHurl
     | ResumeIceKnife
     | ResumeSaveGateDamage
     | ResumeAfterDamage
@@ -1004,6 +1005,7 @@ module battleRuntime {
       | ResumeRayOfFrost => resolveRayOfFrost(state, 15, 10, 4, true)
       | ResumePoisonSpray => resolvePoisonSpray(state, 15, 10, 7, true)
       | ResumeChillTouch => resolveChillTouch(state, 15, 10, 6, true)
+      | ResumeProduceFlameHurl => resolveProduceFlameHurl(state, 15, 10, 5, true)
       | ResumeIceKnife => resolveIceKnife(state, 15, 10, 4, false, true, false, 6, true, true)
       | ResumeSaveGateDamage => resolveAcidSplash(state, false, true, 4, true, true)
       | ResumeAfterDamage => state
@@ -1977,6 +1979,47 @@ module battleRuntime {
       state
     }
 
+  pure def produceFlameHurlDamageDice(characterLevel: int): int =
+    if (characterLevel >= 17) 4
+    else if (characterLevel >= 11) 3
+    else if (characterLevel >= 5) 2
+    else 1
+
+  pure def resolveProduceFlameHurl(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+  ): BattleState =
+    if (
+      not(state.actionAvailable) or
+      currentActor(state) != Fighter or
+      state.fighter.unconscious or
+      state.fighter.incapacitated or
+      fighterHasRage(state) or
+      not(activeEffectsContainProduceFlameHeldLight(state.fighter.activeEffects))
+    )
+      state
+    else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), 20))) {
+      val rolled = recordFighterAttackRoll(revealFighterHidden(state))
+      { ...rolled, actionAvailable: false }
+    }
+    else if (state.goblin.reactionAvailable and not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
+      openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
+        trigger: AttackHit,
+        eligibleReactors: Set(Goblin),
+        offeredReactors: Set(),
+        continuation: ResumeProduceFlameHurl,
+      })
+    }
+    else {
+      val rolled = recordFighterAttackRoll(revealFighterHidden(state))
+      val adjustedDamage = damageAfterAdjustments(damageRoll, Fire, Set(), Set(), Set())
+      val damaged = applyDamage(state.goblin, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded)
+      { ...rolled, goblin: damaged, actionAvailable: false }
+    }
+
   pure def damageAfterAdjustments(
     damage: int,
     damageType: DamageType,
@@ -2245,6 +2288,7 @@ module battleRuntime {
       | ShockingGraspSpellAttack => Lightning
       | GuidingBoltSpellAttack => Radiant
       | RayOfSicknessSpellAttack => Poison
+      | ProduceFlameHurlSpellAttack => Fire
     }
 
   pure def spellAttackDamageActiveEffects(invocation: SpellAttackDamageInvocation): Set[ActiveEffect] =
@@ -2255,6 +2299,7 @@ module battleRuntime {
       | ShockingGraspSpellAttack => Set(ShockingGraspOpportunityAttackDenied)
       | GuidingBoltSpellAttack => Set(GuidingBoltNextAttackAdvantage)
       | RayOfSicknessSpellAttack => Set(RayOfSicknessPoisoned)
+      | ProduceFlameHurlSpellAttack => Set()
     }
 
   pure def chromaticOrbDamageTypeChoice(choice: ChromaticOrbDamageTypeChoice): DamageType =
@@ -4327,6 +4372,30 @@ module battleRuntime {
     all {
       assert(activeEffectsContainProduceFlameHeldLight(stillSameRound.fighter.activeEffects)),
       assert(not(activeEffectsContainProduceFlameHeldLight(nextRound.fighter.activeEffects))),
+    }
+  }
+
+  run test_produce_flame_hurl_requires_held_light_and_deals_fire_damage = {
+    val unlit = resolveProduceFlameHurl(initialState, 15, 10, 5, true)
+    val lit = resolveProduceFlameHeldLight(initialState)
+    val nextTurn = { ...lit, actionAvailable: true, bonusActionAvailable: true }
+    val hit = resolveProduceFlameHurl(nextTurn, 15, 10, 5, true)
+    all {
+      assert(unlit == initialState),
+      assert(hit.goblin.hp == 7),
+      assert(not(hit.actionAvailable)),
+      assert(activeEffectsContainProduceFlameHeldLight(hit.fighter.activeEffects)),
+      assert(spellAttackDamageType(ProduceFlameHurlSpellAttack) == Fire),
+      assert(spellAttackDamageActiveEffects(ProduceFlameHurlSpellAttack) == Set()),
+    }
+  }
+
+  run test_produce_flame_hurl_cantrip_damage_dice_scale_by_character_level = {
+    all {
+      assert(produceFlameHurlDamageDice(1) == 1),
+      assert(produceFlameHurlDamageDice(5) == 2),
+      assert(produceFlameHurlDamageDice(11) == 3),
+      assert(produceFlameHurlDamageDice(17) == 4),
     }
   }
 

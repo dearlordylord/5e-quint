@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.held-light spell.invocation-chained-attack-damage spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-roll-modifier spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.invocation-chained-attack-damage spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-roll-modifier spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 import { Brand, Match, Schema } from "effect";
 import { isNonEmptyReadonlyArray } from "effect/Array";
 import * as Either from "effect/Either";
@@ -297,9 +297,7 @@ const BATTLE_D20_ROLL_MODIFIER_KINDS = [
 ] as const satisfies ReadonlyArray<BattleD20RollModifierKind>;
 const KNOWN_WILLING_TARGET_ROLL_MODIFIER_SPELL_IDS: ReadonlyArray<
   SpellRecord["id"]
-> = [
-  "guidance",
-];
+> = ["guidance"];
 const BATTLE_SURFACE_SKILLS = SURFACE_SKILLS satisfies ReadonlyArray<Skill>;
 type CriticalHitThreshold = (typeof CRITICAL_HIT_THRESHOLDS)[number];
 type BattleD20RollModifierKind = Extract<
@@ -1050,10 +1048,28 @@ type HeldLightSpellInvocation = {
   };
   readonly expiresAt: BattleActiveEffectExpiration;
 };
+type HeldLightHurlSpellInvocation = DamageSpellSource & {
+  readonly access: ClassCantripSpellAccess;
+  readonly resource: NoSpellInvocationResource;
+  readonly procedure: "heldLightHurl";
+  readonly spell: SpellRecord;
+  readonly targeting: Extract<
+    SpellTargeting,
+    { readonly kind: "singleCombatant" }
+  >;
+  readonly damage: {
+    readonly expr: DiceExpr;
+    readonly damageType: DamageType;
+  };
+  readonly rangeFeet: MovementFeet;
+  readonly attackKind: Extract<SpellAttackKind, "ranged_spell_attack">;
+  readonly attackBonus: AttackBonus;
+};
 // SupportedAttackActionOption is a currently executable option for spending an
 // immediate attack made as part of the Attack action. It is narrower than all
 export type SupportedSpellInvocation =
   | HeldLightSpellInvocation
+  | HeldLightHurlSpellInvocation
   | {
       readonly access: PreparedSpellAccess;
       readonly resource: SpellSlotInvocationResource;
@@ -1228,7 +1244,10 @@ type SupportedDamageSpellInvocation = Exclude<
   }
 >;
 type ReadiedSpellInvocation =
-  | SupportedDamageSpellInvocation
+  | Exclude<
+      SupportedDamageSpellInvocation,
+      { readonly procedure: "heldLightHurl" }
+    >
   | Extract<
       SupportedSpellInvocation,
       { readonly procedure: "chainedSpellAttackDamage" }
@@ -1747,6 +1766,7 @@ export type BattleSpellDamageRollHole = Extract<
       readonly procedure:
         | "attackBurstSaveDamage"
         | "chainedSpellAttackDamage"
+        | "heldLightHurl"
         | "repeatedDamageAllocation"
         | "saveGatedDamage"
         | "spellAttackDamage";
@@ -2064,6 +2084,22 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
         dimAdditionalFeet: MovementFeet,
       }),
       expiresAt: BattleRuntimeObjectSchema,
+    }),
+    Schema.Struct({
+      access: ClassCantripSpellAccessSchema,
+      resource: NoSpellInvocationResourceSchema,
+      procedure: Schema.Literal("heldLightHurl"),
+      spell: BattleRuntimeObjectSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("singleCombatant"),
+      }),
+      damage: Schema.Struct({
+        expr: BattleRuntimeObjectSchema,
+        damageType: DamageTypeSchema,
+      }),
+      rangeFeet: MovementFeet,
+      attackKind: Schema.Literal("ranged_spell_attack"),
+      attackBonus: AttackBonus,
     }),
     Schema.Struct({
       access: PreparedSpellAccessSchema,
@@ -14163,6 +14199,9 @@ function discoverSupportedSpellInvocations(
       if (!spellHasAvailableSpend(actor, invocation)) {
         return [];
       }
+      if (!spellInvocationCasterPrerequisiteIsMet(actor, invocation)) {
+        return [];
+      }
       if (
         !spellActTurnResourceAvailable(state.currentTurnResources, invocation)
       ) {
@@ -14354,6 +14393,9 @@ function spellInvocationCastSummary(
   if (invocation.procedure === "heldLight") {
     return `Cast ${invocation.spell.name} as a cantrip.`;
   }
+  if (invocation.procedure === "heldLightHurl") {
+    return `Take a Magic action to hurl ${invocation.spell.name}.`;
+  }
   if (invocation.procedure === "repeatedDamageAllocation") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot, allocating ${invocation.targeting.repeatedEffectCount} repeated effects among targets.`;
   }
@@ -14434,8 +14476,38 @@ function activeOngoingFeaturesPreventSpellcasting(
   );
 }
 
+function spellInvocationCasterPrerequisiteIsMet(
+  actor: BattleCreatureState,
+  invocation: SupportedSpellInvocation,
+): boolean {
+  return (
+    invocation.procedure !== "heldLightHurl" ||
+    actor.activeEffects.some(
+      (effect) =>
+        effect.kind === "heldLight" &&
+        effect.sourceSpellId === invocation.spell.id &&
+        effect.sourceCombatantId === actor.combatantId,
+    )
+  );
+}
+
 function spellRequiresVerbal(spell: SpellRecord): boolean {
   return "components" in spell.mechanics && spell.mechanics.components.v;
+}
+
+function isReadiedSpellInvocation(
+  invocation: SupportedSpellInvocation,
+): invocation is ReadiedSpellInvocation {
+  return (
+    invocation.procedure !== "directHitPointRestoration" &&
+    invocation.procedure !== "heldLight" &&
+    invocation.procedure !== "heldLightHurl" &&
+    invocation.procedure !== "persistentArmorEffect" &&
+    invocation.procedure !== "rollModifier" &&
+    invocation.procedure !== "scalarBuff" &&
+    invocation.procedure !== "saveGatedCondition" &&
+    invocation.procedure !== "shieldReaction"
+  );
 }
 
 function readiedSpellAct(
@@ -14448,6 +14520,7 @@ function readiedSpellAct(
     invocation.procedure === "directHitPointRestoration" ||
     invocation.procedure === "scalarBuff" ||
     invocation.procedure === "heldLight" ||
+    invocation.procedure === "heldLightHurl" ||
     invocation.procedure === "rollModifier" ||
     invocation.procedure === "attackBurstSaveDamage" ||
     invocation.procedure === "saveGatedCondition" ||
@@ -14494,6 +14567,13 @@ function resolveSpellAct(
       "Action-time spell act no longer has its required runtime spell resource.",
     );
   }
+  if (!spellInvocationCasterPrerequisiteIsMet(actor, invocation)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Action-time spell act requires its active caster spell effect.",
+    );
+  }
   if (activeOngoingFeaturesPreventSpellcasting(actor)) {
     return invalidResult(
       input.state,
@@ -14528,6 +14608,7 @@ function resolveSpellAct(
   if (
     subject.mode.tag === "ready" &&
     (invocation.procedure === "directHitPointRestoration" ||
+      invocation.procedure === "heldLightHurl" ||
       invocation.procedure === "scalarBuff" ||
       invocation.procedure === "rollModifier" ||
       invocation.procedure === "saveGatedCondition")
@@ -14543,6 +14624,13 @@ function resolveSpellAct(
     ? revealHidden(input.state, subject.actorId)
     : input.state;
   if (subject.mode.tag === "ready") {
+    if (!isReadiedSpellInvocation(invocation)) {
+      return invalidResult(
+        input.state,
+        "unsupportedSubject",
+        "This spell procedure cannot be readied by this runtime lane.",
+      );
+    }
     return resolveReadySpellAct({ ...input, state: castingState }, invocation);
   }
 
@@ -14707,7 +14795,10 @@ function resolveSpellAct(
     return spellCastReactionWindow;
   }
 
-  if (invocation.procedure === "spellAttackDamage") {
+  if (
+    invocation.procedure === "spellAttackDamage" ||
+    invocation.procedure === "heldLightHurl"
+  ) {
     const requiredRollMode = requiredAttackRollMode(
       castingState,
       subject.actorId,
@@ -14841,7 +14932,9 @@ function resolveSpellAct(
     ]);
   }
   const spellAttackMissToHitReplacement =
-    invocation.procedure === "spellAttackDamage" && fillSet.attackRoll != null
+    (invocation.procedure === "spellAttackDamage" ||
+      invocation.procedure === "heldLightHurl") &&
+    fillSet.attackRoll != null
       ? selectedAttackRollMissToHitReplacement({
           state: castingState,
           subject: input.subject,
@@ -14855,7 +14948,9 @@ function resolveSpellAct(
         })
       : null;
   const spellResolutionState =
-    invocation.procedure === "spellAttackDamage" && fillSet.attackRoll != null
+    (invocation.procedure === "spellAttackDamage" ||
+      invocation.procedure === "heldLightHurl") &&
+    fillSet.attackRoll != null
       ? recordAttackRollMissToHitReplacementUsed(
           consumeHelpAttackForAttackRoll(
             recordAttackRollOngoingFeatures(
@@ -14877,7 +14972,8 @@ function resolveSpellAct(
         )
       : castingState;
   const critical =
-    invocation.procedure === "spellAttackDamage" &&
+    (invocation.procedure === "spellAttackDamage" ||
+      invocation.procedure === "heldLightHurl") &&
     fillSet.attackRoll != null &&
     attackRollIsCriticalHit(fillSet.attackRoll);
   const damageValidation = validateSpellDamageFill(
@@ -16475,7 +16571,8 @@ function rollModifierSpellTargetSelection(input: {
     if (input.fillSet.targetList !== undefined) {
       return {
         tag: "invalid",
-        message: "Single-target roll modifier spells require one target choice.",
+        message:
+          "Single-target roll modifier spells require one target choice.",
       };
     }
     if (input.fillSet.targetId === undefined) {
@@ -16561,7 +16658,8 @@ function rollModifierSpellSkillSelection(input: {
     ? { tag: "ok", skill: input.fillSet.skillChoice }
     : {
         tag: "invalid",
-        message: "Roll modifier spell skill choice is not legal for this spell.",
+        message:
+          "Roll modifier spell skill choice is not legal for this spell.",
       };
 }
 
@@ -16634,57 +16732,8 @@ function rollModifierSpellAffectedTargets(input: {
 
 function resolveReadySpellAct(
   input: ActionSpellBattleResolutionInput,
-  invocation: SupportedSpellInvocation,
+  invocation: ReadiedSpellInvocation,
 ): BattleResolutionResult {
-  if (invocation.procedure === "persistentArmorEffect") {
-    return invalidResult(
-      input.state,
-      "unsupportedActOption",
-      "Persistent spell effects cannot be readied by this runtime lane.",
-    );
-  }
-  if (invocation.procedure === "directHitPointRestoration") {
-    return invalidResult(
-      input.state,
-      "unsupportedActOption",
-      "Hit Point restoration spells cannot be readied by this runtime lane.",
-    );
-  }
-  if (invocation.procedure === "scalarBuff") {
-    return invalidResult(
-      input.state,
-      "unsupportedActOption",
-      "Scalar buff spells cannot be readied by this runtime lane.",
-    );
-  }
-  if (invocation.procedure === "rollModifier") {
-    return invalidResult(
-      input.state,
-      "unsupportedActOption",
-      "Roll modifier spells cannot be readied by this runtime lane.",
-    );
-  }
-  if (invocation.procedure === "heldLight") {
-    return invalidResult(
-      input.state,
-      "unsupportedActOption",
-      "Held light spells cannot be readied by this runtime lane.",
-    );
-  }
-  if (invocation.procedure === "shieldReaction") {
-    return invalidResult(
-      input.state,
-      "unsupportedActOption",
-      "Reaction spells cannot be readied by this runtime lane.",
-    );
-  }
-  if (invocation.procedure === "saveGatedCondition") {
-    return invalidResult(
-      input.state,
-      "unsupportedActOption",
-      "Save-gate condition spells cannot be readied by this runtime lane.",
-    );
-  }
   if (input.fills.length > 0) {
     return invalidResult(
       input.state,
@@ -19999,6 +20048,14 @@ function supportedSpellActs(
       supportedCantripHeldLightSpellProfile(spell),
     ),
     ...spellcasting.cantrips.flatMap((spell) =>
+      supportedCantripHeldLightHurlSpellProfile(
+        spell,
+        spellcasting.spellcastingAbilityModifier,
+        spellcasting.proficiencyBonus,
+        characterLevel,
+      ),
+    ),
+    ...spellcasting.cantrips.flatMap((spell) =>
       supportedCantripSpellAttackProfile(
         spell,
         spellcasting.spellcastingAbilityModifier,
@@ -20018,25 +20075,7 @@ function supportedSpellActs(
 function supportedCantripHeldLightSpellProfile(
   spell: SpellRecord,
 ): readonly SupportedSpellInvocation[] {
-  const earlyEnd =
-    spell.mechanics.duration.kind === "timed"
-      ? (spell.mechanics.duration.earlyEnd ?? [])
-      : [];
-  if (
-    spell.name !== "Produce Flame" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-M-P#Produce Flame" ||
-    spell.mechanics.family !== "ongoing_effect" ||
-    spell.mechanics.level !== 0 ||
-    spell.mechanics.castingTime.kind !== "bonus_action" ||
-    spell.mechanics.range.kind !== "self" ||
-    spell.mechanics.attachment.kind !== "self" ||
-    spell.mechanics.duration.kind !== "timed" ||
-    spell.mechanics.duration.value.unit !== "minute" ||
-    spell.mechanics.duration.value.amount !== 10 ||
-    earlyEnd.length !== 1 ||
-    earlyEnd[0]?.kind !== "caster_recasts_spell"
-  ) {
+  if (!isProduceFlameOngoingEffectSpell(spell)) {
     return [];
   }
   const lightOperation = spell.mechanics.operations.find(
@@ -20052,9 +20091,11 @@ function supportedCantripHeldLightSpellProfile(
   ) {
     return [];
   }
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
-    spell.mechanics.duration.value,
-  );
+  const duration = spell.mechanics.duration;
+  if (duration.kind !== "timed") {
+    return [];
+  }
+  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(duration.value);
   return Either.isLeft(durationTicks)
     ? []
     : [
@@ -20075,6 +20116,97 @@ function supportedCantripHeldLightSpellProfile(
           expiresAt: { kind: "duration", durationTicks: durationTicks.right },
         },
       ];
+}
+
+function supportedCantripHeldLightHurlSpellProfile(
+  spell: SpellRecord,
+  spellcastingAbilityModifier: AbilityModifier,
+  proficiencyBonus: ProficiencyBonusType,
+  characterLevel: number,
+): readonly SupportedSpellInvocation[] {
+  if (!isProduceFlameOngoingEffectSpell(spell)) {
+    return [];
+  }
+  const hurlOperation = spell.mechanics.operations.find(
+    (operation) =>
+      operation.trigger.kind === "on_caster_spends_action" &&
+      operation.trigger.cost?.kind === "standard_action" &&
+      operation.trigger.cost.action === "magic" &&
+      operation.effect.kind === "attack_roll",
+  );
+  if (
+    hurlOperation === undefined ||
+    hurlOperation.effect.kind !== "attack_roll" ||
+    hurlOperation.effect.attackKind !== "ranged_spell_attack" ||
+    hurlOperation.effect.onHit.length !== 1 ||
+    hurlOperation.effect.onMiss.length !== 1 ||
+    hurlOperation.effect.onMiss[0]?.kind !== "none"
+  ) {
+    return [];
+  }
+  const damageEffect = hurlOperation.effect.onHit[0];
+  if (
+    damageEffect?.kind !== "damage" ||
+    damageEffect.damageType !== "fire" ||
+    damageEffect.amount === undefined
+  ) {
+    return [];
+  }
+  const damageExpr = supportedDamageAmountExpr({
+    amount: damageEffect.amount,
+    spellLevel: spell.mechanics.level,
+    characterLevel,
+  });
+  if (damageExpr === null) {
+    return [];
+  }
+  return [
+    {
+      access: { tag: "classCantrip" },
+      resource: { tag: "none" },
+      procedure: "heldLightHurl",
+      spell,
+      targeting: { kind: "singleCombatant" },
+      damage: {
+        expr: damageExpr,
+        damageType: damageEffect.damageType,
+      },
+      rangeFeet: movementFeet(60),
+      attackKind: hurlOperation.effect.attackKind,
+      attackBonus: attackBonus(
+        Number(spellcastingAbilityModifier) + Number(proficiencyBonus),
+      ),
+    },
+  ];
+}
+
+function isProduceFlameOngoingEffectSpell(
+  spell: SpellRecord,
+): spell is SpellRecord & {
+  readonly mechanics: Extract<
+    SpellRecord["mechanics"],
+    { family: "ongoing_effect" }
+  >;
+} {
+  const earlyEnd =
+    spell.mechanics.duration.kind === "timed"
+      ? (spell.mechanics.duration.earlyEnd ?? [])
+      : [];
+  return (
+    spell.name === "Produce Flame" &&
+    spell.provenance.kind === "srd-5.2.1" &&
+    spell.provenance.section === "Spells/Descriptions-M-P#Produce Flame" &&
+    spell.mechanics.family === "ongoing_effect" &&
+    spell.mechanics.level === 0 &&
+    spell.mechanics.castingTime.kind === "bonus_action" &&
+    spell.mechanics.range.kind === "self" &&
+    spell.mechanics.attachment.kind === "self" &&
+    spell.mechanics.duration.kind === "timed" &&
+    spell.mechanics.duration.value.unit === "minute" &&
+    spell.mechanics.duration.value.amount === 10 &&
+    earlyEnd.length === 1 &&
+    earlyEnd[0]?.kind === "caster_recasts_spell"
+  );
 }
 
 function supportedPreparedShieldReactionSpellProfile(
@@ -20493,7 +20625,11 @@ function supportedCantripRollModifierSpellProfile(
   if (spell.mechanics.level !== 0) {
     return [];
   }
-  const projection = rollModifierSpellProjection(actorId, spell, spellSlotLevel(0));
+  const projection = rollModifierSpellProjection(
+    actorId,
+    spell,
+    spellSlotLevel(0),
+  );
   return projection === null
     ? []
     : [
@@ -20760,16 +20896,12 @@ function rollModifierActiveEffect(
       skill: skillFilter.kind === "fixed" ? skillFilter.skill : null,
       expiresAt,
     },
-    skillChoices:
-      skillFilter.kind === "choice" ? skillFilter.options : null,
+    skillChoices: skillFilter.kind === "choice" ? skillFilter.options : null,
   };
 }
 
 function rollModifierDelta(
-  delta: Extract<
-    EffectAtom,
-    { readonly kind: "modify_roll_numeric" }
-  >["delta"],
+  delta: Extract<EffectAtom, { readonly kind: "modify_roll_numeric" }>["delta"],
 ): BattleD20RollModifierDelta | null {
   return delta.kind === "fixed_dice" &&
     delta.dieSize === 4 &&
@@ -20782,9 +20914,7 @@ function rollModifierKindsAreSupported(
   kinds: readonly string[],
 ): kinds is readonly BattleD20RollModifierKind[] {
   return kinds.every((kind) =>
-    BATTLE_D20_ROLL_MODIFIER_KINDS.includes(
-      kind as BattleD20RollModifierKind,
-    ),
+    BATTLE_D20_ROLL_MODIFIER_KINDS.includes(kind as BattleD20RollModifierKind),
   );
 }
 
@@ -22292,6 +22422,7 @@ function supportedSpellInvocationRef(
       slotLevel: slotSpell.resource.slotLevel,
       procedure: "chainedSpellAttackDamage" as const,
     })),
+    Match.when({ procedure: "heldLightHurl" }, damageSpellInvocationRef),
     Match.when({ procedure: "spellAttackDamage" }, damageSpellInvocationRef),
     Match.when({ procedure: "saveGatedDamage" }, damageSpellInvocationRef),
     Match.when({ procedure: "saveGatedCondition" }, (conditionSpell) => ({
@@ -22345,10 +22476,18 @@ function supportedSpellInvocationRef(
 function damageSpellInvocationRef(
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "spellAttackDamage" | "saveGatedDamage" }
+    {
+      readonly procedure:
+        | "heldLightHurl"
+        | "spellAttackDamage"
+        | "saveGatedDamage";
+    }
   >,
 ): SpellInvocationRef {
-  if (isPreparedDamageSpellSource(invocation)) {
+  if (
+    invocation.procedure !== "heldLightHurl" &&
+    isPreparedDamageSpellSource(invocation)
+  ) {
     return {
       tag: "spellSlot",
       spellId: spellId(invocation.spell.id),
@@ -22394,7 +22533,12 @@ function spellAttackRollHole(
   attackerId: CombatantId,
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "attackBurstSaveDamage" | "spellAttackDamage" }
+    {
+      readonly procedure:
+        | "attackBurstSaveDamage"
+        | "heldLightHurl"
+        | "spellAttackDamage";
+    }
   >,
   rollMode?: AttackRollMode,
 ): BattleSpellAttackRollHole {
@@ -22617,7 +22761,7 @@ function chainedSpellLeapTargetIsLegal(
 function spellDamageTypes(
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "spellAttackDamage" }
+    { readonly procedure: "heldLightHurl" | "spellAttackDamage" }
   >,
 ): readonly DamageType[] {
   return [invocation.damage.damageType];
@@ -22778,22 +22922,22 @@ function spellSavingThrowOutcomeHole(
       invocation.procedure === "attackBurstSaveDamage"
         ? invocation.burst.ability
         : invocation.procedure === "rollModifier"
-          ? invocation.saveGate?.ability ?? "cha"
-        : invocation.ability,
+          ? (invocation.saveGate?.ability ?? "cha")
+          : invocation.ability,
     dc:
       invocation.procedure === "attackBurstSaveDamage"
         ? invocation.burst.dc
         : invocation.procedure === "rollModifier"
-          ? invocation.saveGate?.dc ?? { kind: "caster_spell_save_dc" }
-        : invocation.dc,
+          ? (invocation.saveGate?.dc ?? { kind: "caster_spell_save_dc" })
+          : invocation.dc,
     areaChoices: [],
     targetRollModes: savingThrowRollModeProjections(
       state,
       invocation.procedure === "attackBurstSaveDamage"
         ? invocation.burst.ability
         : invocation.procedure === "rollModifier"
-          ? invocation.saveGate?.ability ?? "cha"
-        : invocation.ability,
+          ? (invocation.saveGate?.ability ?? "cha")
+          : invocation.ability,
     ),
   };
 }
@@ -22883,7 +23027,8 @@ function validateSpellDamageFill(
       invocation.procedure === "repeatedDamageAllocation"
         ? invocation.damage.expr.dice * invocation.targeting.repeatedEffectCount
         : invocation.damage.expr.dice *
-          ((invocation.procedure === "spellAttackDamage" ||
+          ((invocation.procedure === "heldLightHurl" ||
+            invocation.procedure === "spellAttackDamage" ||
             invocation.procedure === "attackBurstSaveDamage") &&
           critical
             ? 2
@@ -23857,7 +24002,8 @@ function spellDamageExpression(
     invocation.procedure === "repeatedDamageAllocation"
       ? invocation.damage.expr.dice * invocation.targeting.repeatedEffectCount
       : invocation.damage.expr.dice *
-        ((invocation.procedure === "spellAttackDamage" ||
+        ((invocation.procedure === "heldLightHurl" ||
+          invocation.procedure === "spellAttackDamage" ||
           invocation.procedure === "attackBurstSaveDamage") &&
         critical
           ? 2

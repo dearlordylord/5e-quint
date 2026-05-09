@@ -11,7 +11,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29F3 chromatic_orb
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30A false_life longstrider shield_of_faith
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30B bane bless guidance
-// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV32A produce_flame
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV32B produce_flame
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT25 healing_word
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT32 cure_wounds mass_healing_word
@@ -35,6 +35,7 @@ import { describe, expect, test } from "vitest";
 
 import myceliumStepInput from "../../../plans/unit-profile-coverage/fixtures/classic-non-srd/mycelium_step.json";
 import starryWispInput from "../../surface/content/starry_wisp.json";
+import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import {
   abilityModifier,
   defaultArmorClassState,
@@ -3414,7 +3415,8 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     expect(resolved).toEqual({
       tag: "invalid",
       reason: "invalidFill",
-      message: "Scalar buff spells use target fills and optional scalar dice roll.",
+      message:
+        "Scalar buff spells use target fills and optional scalar dice roll.",
       snapshot: snapshotBattle(state),
     });
   });
@@ -3771,6 +3773,166 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
         ),
     ).toBe(false);
   });
+
+  test("produce_flame hurl is admitted only while the caster holds the flame", () => {
+    const spell = spellRecord(produceFlameUnitId);
+    const unlitState = spellBattle({ cantrips: [spell] });
+
+    expect(
+      maybeSpellAct({ state: unlitState, spellId: produceFlameUnitId }),
+    ).toBeUndefined();
+
+    const lit = resolveBattleSubject({
+      state: unlitState,
+      subject: bonusSpellAct({
+        state: unlitState,
+        spellId: produceFlameUnitId,
+      }).subject,
+      fills: [],
+    });
+    expect(lit).toMatchObject({ tag: "resolved" });
+    if (lit.tag !== "resolved") {
+      throw new Error("Expected Produce Flame held light to resolve.");
+    }
+
+    const hurl = spellAct({ state: lit.state, spellId: produceFlameUnitId });
+
+    expect(hurl.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: cantripSpellInvocationRef(
+        produceFlameUnitId,
+        "heldLightHurl",
+      ),
+      mode: { tag: "cast" },
+    });
+    const attackRoll = requireResultHole(
+      resolveBattleSubject({
+        state: lit.state,
+        subject: hurl.subject,
+        fills: [
+          spellTargetFill(
+            requireHole(hurl.initialHoles, "targetChoice"),
+            produceFlameUnitId,
+            spellCasterId,
+            spellTargetId,
+          ),
+        ],
+      }),
+      "attackRoll",
+    );
+    expect(spellHoleInvocation([attackRoll])).toEqual(
+      expect.objectContaining({
+        procedure: "heldLightHurl",
+        spell,
+        targeting: { kind: "singleCombatant" },
+        damage: {
+          expr: { dice: 1, dieSize: 8 },
+          damageType: "fire",
+        },
+        rangeFeet: 60,
+        attackKind: "ranged_spell_attack",
+      }),
+    );
+    expect(hurl.initialHoles).toEqual([
+      expect.objectContaining({
+        kind: "targetChoice",
+        choices: [spellCasterId, spellTargetId],
+      }),
+    ]);
+  });
+
+  test("produce_flame hurl resolves ranged spell attack Fire damage without ending the held flame", () => {
+    const spell = spellRecord(produceFlameUnitId);
+    const state = spellBattle({
+      cantrips: [spell],
+      casterClassLevels: [{ className: "druid", level: classLevel(5) }],
+      targetHp: 20,
+      targetMaxHp: 20,
+    });
+    const lit = resolveBattleSubject({
+      state,
+      subject: bonusSpellAct({ state, spellId: produceFlameUnitId }).subject,
+      fills: [],
+    });
+    if (lit.tag !== "resolved") {
+      throw new Error("Expected Produce Flame held light to resolve.");
+    }
+    const hurl = spellAct({ state: lit.state, spellId: produceFlameUnitId });
+    const target = requireHole(hurl.initialHoles, "targetChoice");
+    const attack = requireResultHole(
+      resolveBattleSubject({
+        state: lit.state,
+        subject: hurl.subject,
+        fills: [
+          spellTargetFill(
+            target,
+            produceFlameUnitId,
+            spellCasterId,
+            spellTargetId,
+          ),
+        ],
+      }),
+      "attackRoll",
+    );
+    const damage = requireResultHole(
+      resolveBattleSubject({
+        state: lit.state,
+        subject: hurl.subject,
+        fills: [
+          spellTargetFill(
+            target,
+            produceFlameUnitId,
+            spellCasterId,
+            spellTargetId,
+          ),
+          attackRollFill(attack, { total: 18, naturalD20: 12 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    expect(damage).toMatchObject({
+      label: "Produce Flame damage (2d8-fire)",
+    });
+
+    const resolved = resolveBattleSubject({
+      state: lit.state,
+      subject: hurl.subject,
+      fills: [
+        spellTargetFill(
+          target,
+          produceFlameUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+        attackRollFill(attack, { total: 18, naturalD20: 12 }),
+        damageRollFillWithGroups(damage, [[4, 5]]),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Produce Flame hurl to resolve.");
+    }
+    expect(resolved.state.combatants.get(spellTargetId)?.hp).toStrictEqual(
+      Hp(11),
+    );
+    expect(
+      resolved.state.combatants
+        .get(spellCasterId)
+        ?.activeEffects.some(
+          (effect) =>
+            effect.kind === "heldLight" &&
+            effect.sourceSpellId === produceFlameUnitId,
+        ),
+    ).toBe(true);
+    expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
+      false,
+    );
+    expect(resolved.state.currentTurnResources.spellSlotExpendedThisTurn).toBe(
+      false,
+    );
+  });
 });
 
 describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
@@ -3905,10 +4067,12 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Bless recast to resolve.");
     }
-    expect(resolved.state.combatants.get(spellCasterId)?.concentration).toEqual({
-      sourceSpellId: blessUnitId,
-      effectKind: "spellEffect",
-    });
+    expect(resolved.state.combatants.get(spellCasterId)?.concentration).toEqual(
+      {
+        sourceSpellId: blessUnitId,
+        effectKind: "spellEffect",
+      },
+    );
     expect(
       resolved.state.combatants
         .get(spellTargetId)
@@ -5581,6 +5745,10 @@ function spellBattle(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["characterUnitRefs"];
+  readonly casterClassLevels?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["classLevels"];
 }): BattleState {
   const result = startBattle({
     battleId: battleId("unit-profile-spell-admission"),
@@ -5598,6 +5766,9 @@ function spellBattle(input: {
           preparedSpells: input.preparedSpells ?? [],
           spellSlots: input.spellSlots ?? [{ spellLevel: 1, count: 2 }],
         },
+        ...(input.casterClassLevels === undefined
+          ? {}
+          : { classLevels: input.casterClassLevels }),
       }),
       characterCreature({
         combatantId: spellTargetId,
