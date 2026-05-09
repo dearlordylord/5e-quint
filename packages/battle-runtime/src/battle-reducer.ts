@@ -22347,6 +22347,10 @@ function supportedPreparedMarkedDamageRiderSpellProfile(
   const rangeFeet = movementFeet(spell.mechanics.range.feet);
   const activeMark = activeMarkedDamageRiderEffect(actor, spell.id);
   if (activeMark !== null) {
+    // TODO: Allow an ordinary recast while the current mark is still active.
+    // RAW permits replacing Concentration by casting the spell again and
+    // choosing a new quarry; this branch currently exposes only the slotless
+    // Bonus Action transfer after the marked target drops to 0 Hit Points.
     return activeMark.transferAvailable
       ? [
           {
