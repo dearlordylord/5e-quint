@@ -1,11 +1,12 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-chained-attack-damage spell.invocation-condition-save spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-condition-save spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-chained-attack-damage
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-weapon-damage-rider
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-marked-damage-rider
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-attack-roll-advantage-save
 module battleRuntime {
   // SRD traceability for this canonical battle runtime spec:
   // - Playing-the-Game.md lines 479-495: combat proceeds in rounds and turns
@@ -190,7 +191,7 @@ module battleRuntime {
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | AnimalFriendship | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | FaerieFire | AnimalFriendship | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack
   type ChainedSpellAttackDamageInvocation =
     | ChromaticOrbChainedSpellAttack
@@ -202,6 +203,8 @@ module battleRuntime {
     | ColorSpraySaveGate
     | EntangleSaveGate
     | AnimalFriendshipSaveGate
+  type SaveGatedAttackRollAdvantageInvocation =
+    | FaerieFireSaveGate
   type SaveGatedTargeting = AreaSaveTargets | SingleSaveTarget
   type SaveGatedDamageSuccess = NoDamageOnSaveSuccess | HalfDamageOnSaveSuccess
   type MovementSpeedKind = WalkSpeedKind | ClimbSpeedKind | SwimSpeedKind
@@ -210,7 +213,7 @@ module battleRuntime {
   type RollModifierSpell = BaneRollModifier | BlessRollModifier | GuidanceRollModifier
   type SpellActionCost = SpellMagicAction | SpellBonusAction
 
-  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | AnimalFriendshipCharmed({ durationTicks: int }) | ProtectionFromEvilAndGoodAttackDisadvantage | ProduceFlameHeldLight({ durationTicks: int })
+  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | FaerieFireAttackRollAdvantage | AnimalFriendshipCharmed({ durationTicks: int }) | ProtectionFromEvilAndGoodAttackDisadvantage | ProduceFlameHeldLight({ durationTicks: int })
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
   type RuntimeCreatureType = HumanoidCreature | BeastCreature | AberrationCreature | CelestialCreature | ElementalCreature | FeyCreature | FiendCreature | UndeadCreature
 
@@ -770,6 +773,7 @@ module battleRuntime {
         | ViciousMockeryNextAttackDisadvantage => false
         | ColorSprayBlinded => false
         | EntangleRestrained => false
+        | FaerieFireAttackRollAdvantage => false
         | AnimalFriendshipCharmed(_) => false
         | ProtectionFromEvilAndGoodAttackDisadvantage => false
         | ProduceFlameHeldLight(_) => false
@@ -1542,7 +1546,7 @@ module battleRuntime {
   }
 
   pure def spellEffectConcentrationActiveEffects(): Set[ActiveEffect] =
-    Set(ShieldOfFaithArmorClassBonus, HeroismFrightenedImmunity, BaneD20RollPenalty, BlessD20RollBonus, GuidanceAbilityCheckBonus, EntangleRestrained, ProtectionFromEvilAndGoodAttackDisadvantage)
+    Set(ShieldOfFaithArmorClassBonus, HeroismFrightenedImmunity, BaneD20RollPenalty, BlessD20RollBonus, GuidanceAbilityCheckBonus, EntangleRestrained, FaerieFireAttackRollAdvantage, ProtectionFromEvilAndGoodAttackDisadvantage)
 
   pure def activeEffectsWithoutSpellEffectConcentration(effects: Set[ActiveEffect]): Set[ActiveEffect] =
     effects
@@ -2481,6 +2485,7 @@ module battleRuntime {
       | BurningHands => true
       | ColorSpray => true
       | Entangle => true
+      | FaerieFire => true
       | AnimalFriendship => true
       | ProtectionFromEvilAndGood => true
       | IceKnife => true
@@ -2805,10 +2810,11 @@ module battleRuntime {
   pure def spellAttackRollModeFromActiveEffects(
     attackerEffects: Set[ActiveEffect],
     targetEffects: Set[ActiveEffect],
+    attackerCanSeeTarget: bool,
   ): SpellAttackRollMode =
-    if (attackerEffects.contains(ViciousMockeryNextAttackDisadvantage) and targetEffects.contains(GuidingBoltNextAttackAdvantage))
+    if (attackerEffects.contains(ViciousMockeryNextAttackDisadvantage) and (targetEffects.contains(GuidingBoltNextAttackAdvantage) or (attackerCanSeeTarget and targetEffects.contains(FaerieFireAttackRollAdvantage))))
       NormalSpellAttackRoll
-    else if (targetEffects.contains(GuidingBoltNextAttackAdvantage))
+    else if (targetEffects.contains(GuidingBoltNextAttackAdvantage) or (attackerCanSeeTarget and targetEffects.contains(FaerieFireAttackRollAdvantage)))
       AdvantageSpellAttackRoll
     else if (attackerEffects.contains(ViciousMockeryNextAttackDisadvantage))
       DisadvantageSpellAttackRoll
@@ -2827,15 +2833,24 @@ module battleRuntime {
     attackerCreatureType: RuntimeCreatureType,
     attackerEffects: Set[ActiveEffect],
     targetEffects: Set[ActiveEffect],
-  ): SpellAttackRollMode =
-    if (
-      targetEffects.contains(ProtectionFromEvilAndGoodAttackDisadvantage)
-      and protectionFromEvilAndGoodCreatureTypeIsScoped(attackerCreatureType)
-      and not(targetEffects.contains(GuidingBoltNextAttackAdvantage))
-    )
+    attackerCanSeeTarget: bool,
+  ): SpellAttackRollMode = {
+    val hasAdvantage =
+      targetEffects.contains(GuidingBoltNextAttackAdvantage)
+      or (attackerCanSeeTarget and targetEffects.contains(FaerieFireAttackRollAdvantage))
+    val hasDisadvantage =
+      attackerEffects.contains(ViciousMockeryNextAttackDisadvantage)
+      or (
+        targetEffects.contains(ProtectionFromEvilAndGoodAttackDisadvantage)
+        and protectionFromEvilAndGoodCreatureTypeIsScoped(attackerCreatureType)
+      )
+    if (hasAdvantage and not(hasDisadvantage))
+      AdvantageSpellAttackRoll
+    else if (hasDisadvantage and not(hasAdvantage))
       DisadvantageSpellAttackRoll
     else
-      spellAttackRollModeFromActiveEffects(attackerEffects, targetEffects)
+      NormalSpellAttackRoll
+  }
 
   pure def rayOfFrostSpeedEffectActive(
     hit: bool,
@@ -2954,6 +2969,28 @@ module battleRuntime {
       Set()
     else if (saveGatedConditionTargeting(invocation) == SingleSaveTarget and not(targetFilled))
       Set(TargetChoice)
+    else if (not(savingThrowOutcomesFilled))
+      Set(SavingThrowOutcome)
+    else
+      Set()
+
+  pure def saveGatedAttackRollAdvantageTargeting(invocation: SaveGatedAttackRollAdvantageInvocation): SaveGatedTargeting =
+    match invocation {
+      | FaerieFireSaveGate => AreaSaveTargets
+    }
+
+  pure def saveGatedAttackRollAdvantageFailedSaveActiveEffects(invocation: SaveGatedAttackRollAdvantageInvocation): Set[ActiveEffect] =
+    match invocation {
+      | FaerieFireSaveGate => Set(FaerieFireAttackRollAdvantage)
+    }
+
+  pure def saveGatedAttackRollAdvantageReplayHoles(
+    invocation: SaveGatedAttackRollAdvantageInvocation,
+    canCastSpells: bool,
+    savingThrowOutcomesFilled: bool,
+  ): Set[Hole] =
+    if (not(canCastSpells))
+      Set()
     else if (not(savingThrowOutcomesFilled))
       Set(SavingThrowOutcome)
     else
@@ -3118,6 +3155,48 @@ module battleRuntime {
         actionAvailable: false,
         spellSlotExpendedThisTurn: true,
       }
+
+  pure def saveGatedAttackRollAdvantageTarget(
+    invocation: SaveGatedAttackRollAdvantageInvocation,
+    target: Combatant,
+    savingThrowSucceeded: bool,
+  ): Combatant =
+    if (savingThrowSucceeded)
+      target
+    else
+      { ...target, activeEffects: target.activeEffects.union(saveGatedAttackRollAdvantageFailedSaveActiveEffects(invocation)) }
+
+  pure def breakFighterFaerieFireConcentration(state: BattleState): BattleState =
+    {
+      ...state,
+      fighter: {
+        ...state.fighter,
+        concentrating: false,
+        activeEffects: state.fighter.activeEffects.exclude(Set(FaerieFireAttackRollAdvantage)),
+      },
+      goblin: {
+        ...state.goblin,
+        activeEffects: state.goblin.activeEffects.exclude(Set(FaerieFireAttackRollAdvantage)),
+      },
+    }
+
+  pure def resolveFaerieFire(
+    state: BattleState,
+    fighterSavingThrowSucceeded: bool,
+    goblinSavingThrowSucceeded: bool,
+  ): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)))
+      state
+    else {
+      val withoutPrior = breakFighterFaerieFireConcentration(state)
+      {
+        ...withoutPrior,
+        fighter: { ...saveGatedAttackRollAdvantageTarget(FaerieFireSaveGate, withoutPrior.fighter, fighterSavingThrowSucceeded), concentrating: true },
+        goblin: saveGatedAttackRollAdvantageTarget(FaerieFireSaveGate, withoutPrior.goblin, goblinSavingThrowSucceeded),
+        actionAvailable: false,
+        spellSlotExpendedThisTurn: true,
+      }
+    }
 
   pure def breakFighterEntangleConcentration(state: BattleState): BattleState =
     {
@@ -3905,15 +3984,23 @@ module battleRuntime {
       assert(saveGatedConditionFailedSaveActiveEffects(ColorSpraySaveGate) == Set(ColorSprayBlinded)),
       assert(saveGatedConditionTargeting(EntangleSaveGate) == AreaSaveTargets),
       assert(saveGatedConditionFailedSaveActiveEffects(EntangleSaveGate) == Set(EntangleRestrained)),
+      assert(saveGatedAttackRollAdvantageTargeting(FaerieFireSaveGate) == AreaSaveTargets),
+      assert(saveGatedAttackRollAdvantageFailedSaveActiveEffects(FaerieFireSaveGate) == Set(FaerieFireAttackRollAdvantage)),
       assert(saveGatedConditionTargeting(AnimalFriendshipSaveGate) == SingleSaveTarget),
       assert(saveGatedConditionTargetCreatureTypeIsLegal(AnimalFriendshipSaveGate, BeastCreature)),
       assert(not(saveGatedConditionTargetCreatureTypeIsLegal(AnimalFriendshipSaveGate, HumanoidCreature))),
       assert(saveGatedConditionFailedSaveActiveEffects(AnimalFriendshipSaveGate) == Set(AnimalFriendshipCharmed({ durationTicks: 24 * 60 }))),
-      assert(spellAttackRollModeFromActiveEffects(Set(), Set(GuidingBoltNextAttackAdvantage)) == AdvantageSpellAttackRoll),
-      assert(spellAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), Set()) == DisadvantageSpellAttackRoll),
-      assert(spellAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), Set(GuidingBoltNextAttackAdvantage)) == NormalSpellAttackRoll),
-      assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(ProtectionFromEvilAndGoodAttackDisadvantage)) == DisadvantageSpellAttackRoll),
-      assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(HumanoidCreature, Set(), Set(ProtectionFromEvilAndGoodAttackDisadvantage)) == NormalSpellAttackRoll),
+      assert(spellAttackRollModeFromActiveEffects(Set(), Set(GuidingBoltNextAttackAdvantage), false) == AdvantageSpellAttackRoll),
+      assert(spellAttackRollModeFromActiveEffects(Set(), Set(FaerieFireAttackRollAdvantage), true) == AdvantageSpellAttackRoll),
+      assert(spellAttackRollModeFromActiveEffects(Set(), Set(FaerieFireAttackRollAdvantage), false) == NormalSpellAttackRoll),
+      assert(spellAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), Set(), true) == DisadvantageSpellAttackRoll),
+      assert(spellAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), Set(GuidingBoltNextAttackAdvantage), true) == NormalSpellAttackRoll),
+      assert(spellAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), Set(FaerieFireAttackRollAdvantage), true) == NormalSpellAttackRoll),
+      assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(ProtectionFromEvilAndGoodAttackDisadvantage), true) == DisadvantageSpellAttackRoll),
+      assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(GuidingBoltNextAttackAdvantage, ProtectionFromEvilAndGoodAttackDisadvantage), false) == NormalSpellAttackRoll),
+      assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(FaerieFireAttackRollAdvantage, ProtectionFromEvilAndGoodAttackDisadvantage), true) == NormalSpellAttackRoll),
+      assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(FaerieFireAttackRollAdvantage, ProtectionFromEvilAndGoodAttackDisadvantage), false) == DisadvantageSpellAttackRoll),
+      assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(HumanoidCreature, Set(), Set(ProtectionFromEvilAndGoodAttackDisadvantage), true) == NormalSpellAttackRoll),
       assert(saveGatedTargeting(SacredFlameSaveGate) == SingleSaveTarget),
       assert(saveGatedDamageSuccess(SacredFlameSaveGate) == NoDamageOnSaveSuccess),
       assert(saveGatedDamageType(SacredFlameSaveGate) == Radiant),
@@ -4248,6 +4335,8 @@ module battleRuntime {
       assert(saveGatedConditionReplayHoles(ColorSpraySaveGate, true, true, true) == Set()),
       assert(saveGatedConditionReplayHoles(EntangleSaveGate, true, true, false) == Set(SavingThrowOutcome)),
       assert(saveGatedConditionReplayHoles(EntangleSaveGate, true, true, true) == Set()),
+      assert(saveGatedAttackRollAdvantageReplayHoles(FaerieFireSaveGate, true, false) == Set(SavingThrowOutcome)),
+      assert(saveGatedAttackRollAdvantageReplayHoles(FaerieFireSaveGate, true, true) == Set()),
     }
   }
 
@@ -4370,6 +4459,21 @@ module battleRuntime {
       assert(result.spellSlotExpendedThisTurn == true),
       assert(not(result.fighter.activeEffects.contains(ColorSprayBlinded))),
       assert(not(result.goblin.activeEffects.contains(ColorSprayBlinded))),
+    }
+  }
+
+  run test_faerie_fire_applies_attack_roll_advantage_until_concentration_break = {
+    val lit = resolveFaerieFire(initialState, true, false)
+    val broken = breakFighterFaerieFireConcentration(lit)
+    all {
+      assert(lit.actionAvailable == false),
+      assert(lit.spellSlotExpendedThisTurn == true),
+      assert(lit.fighter.concentrating),
+      assert(not(lit.fighter.activeEffects.contains(FaerieFireAttackRollAdvantage))),
+      assert(lit.goblin.activeEffects.contains(FaerieFireAttackRollAdvantage)),
+      assert(spellAttackRollModeFromActiveEffects(Set(), lit.goblin.activeEffects, true) == AdvantageSpellAttackRoll),
+      assert(spellAttackRollModeFromActiveEffects(Set(), lit.goblin.activeEffects, false) == NormalSpellAttackRoll),
+      assert(not(broken.goblin.activeEffects.contains(FaerieFireAttackRollAdvantage))),
     }
   }
 

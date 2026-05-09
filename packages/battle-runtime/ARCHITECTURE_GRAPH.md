@@ -184,6 +184,10 @@ flowchart TD
   produce damage. `burning_hands` is the self-origin Cone save-for-half branch;
   `color_spray` is the self-origin Cone save-gated condition branch. The table
   supplies affected targets rather than the reducer deriving grid geometry.
+  `faerie_fire` uses a non-excluding point-origin Cube affected-target outcome
+  hole and stores concentration-owned sight-gated attack-roll Advantage on
+  failed-save creatures; object outline, light, and Invisible benefit denial
+  remain outside this runtime subset.
   `chromatic_orb` is a separate chained spell attack profile with one
   cast-local damage-type choice, step-scoped target/attack/damage holes,
   duplicate-d8 leap gating, target uniqueness, and previous-target range facts.

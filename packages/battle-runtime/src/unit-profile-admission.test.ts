@@ -12,6 +12,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30A false_life longstrider shield_of_faith
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30B bane bless guidance
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30C animal_friendship protection_from_evil_and_good
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30E faerie_fire
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31A divine_favor
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31B hunters_mark
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV32B produce_flame
@@ -32,7 +33,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT59 monk_deflect_attacks
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT62 fighter_tactical_mind
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT65 bard_cutting_words
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-chained-attack-damage spell.invocation-condition-save spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-condition-save spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.scalar-buff
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -171,6 +172,7 @@ const animalFriendshipUnitId = "animal_friendship";
 const chillTouchUnitId = "chill_touch";
 const fireBoltUnitId = "fire_bolt";
 const falseLifeUnitId = "false_life";
+const faerieFireUnitId = "faerie_fire";
 const guidingBoltUnitId = "guiding_bolt";
 const guidanceUnitId = "guidance";
 const heroismUnitId = "heroism";
@@ -3775,6 +3777,307 @@ describe("SRDINV30D deterministic Heroism Spell Unit admission", () => {
       ],
     });
     expect(resolved).toMatchObject({ tag: "resolved" });
+  });
+});
+
+describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
+  test("faerie_fire is admitted as point-origin Cube save-gated attack Advantage", () => {
+    const spell = spellRecord(faerieFireUnitId);
+    const act = spellAct({
+      state: spellBattle({
+        preparedSpells: [spell],
+        spellSlots: [{ spellLevel: 1, count: 1 }],
+      }),
+      spellId: faerieFireUnitId,
+      slotLevel: 1,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(
+        faerieFireUnitId,
+        1,
+        "saveGatedAttackRollAdvantage",
+      ),
+      mode: { tag: "cast" },
+    });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+    expect(savingThrow).toEqual(
+      expect.objectContaining({
+        label: "Faerie Fire point-origin Cube Saving Throw outcomes",
+        ability: "dex",
+        dc: { kind: "caster_spell_save_dc" },
+      }),
+    );
+    expect(spellHoleInvocation([savingThrow])).toEqual(
+      expect.objectContaining({
+        procedure: "saveGatedAttackRollAdvantage",
+        spell,
+        resource: { tag: "spellSlot", slotLevel: 1 },
+        ability: "dex",
+        targeting: { kind: "pointOriginCube", sideFeet: 20 },
+        effect: expect.objectContaining({
+          kind: "visibleAttackRollAgainstSelf",
+          sourceSpellId: faerieFireUnitId,
+          sourceCombatantId: spellCasterId,
+          mode: "advantage",
+          expiresAt: { kind: "concentration", combatantId: spellCasterId },
+        }),
+        rangeFeet: 60,
+      }),
+    );
+    expect(act.initialHoles).toEqual([
+      expect.objectContaining({
+        kind: "savingThrowOutcome",
+        areaChoices: [],
+      }),
+    ]);
+  });
+
+  test("faerie_fire grants persistent attack Advantage against failed-save creatures", () => {
+    const spell = spellRecord(faerieFireUnitId);
+    const state = spellBattle({ preparedSpells: [spell] });
+    const act = spellAct({ state, spellId: faerieFireUnitId });
+    const savingThrows = requireHole(act.initialHoles, "savingThrowOutcome");
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        savingThrowOutcomeFill(savingThrows, [
+          { targetId: spellCasterId, succeeded: true },
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.objectContaining({
+            combatantId: spellCasterId,
+            concentrating: true,
+          }),
+          expect.objectContaining({ combatantId: spellTargetId }),
+        ],
+      },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Faerie Fire to resolve.");
+    }
+    expect(resolved.state.combatants.get(spellTargetId)?.activeEffects).toEqual(
+      [
+        expect.objectContaining({
+          kind: "visibleAttackRollAgainstSelf",
+          sourceSpellId: faerieFireUnitId,
+          sourceCombatantId: spellCasterId,
+          mode: "advantage",
+          expiresAt: { kind: "concentration", combatantId: spellCasterId },
+        }),
+      ],
+    );
+
+    const afterCasterTurn = resolveBattleSubject({
+      state: resolved.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellCasterId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+    if (afterCasterTurn.tag !== "resolved") {
+      throw new Error("Expected Faerie Fire caster end turn to resolve.");
+    }
+    const afterTargetTurn = resolveBattleSubject({
+      state: afterCasterTurn.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellTargetId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+    if (afterTargetTurn.tag !== "resolved") {
+      throw new Error("Expected Faerie Fire target end turn to resolve.");
+    }
+    const attackSubject: BattleSubject = {
+      tag: "action",
+      actorId: spellCasterId,
+      action: "attack",
+      attackName: "Unarmed Strike",
+    };
+    const targetHole = requireResultHole(
+      resolveBattleSubject({
+        state: afterTargetTurn.state,
+        subject: attackSubject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const attackRoll = requireResultHole(
+      resolveBattleSubject({
+        state: afterTargetTurn.state,
+        subject: attackSubject,
+        fills: [
+          attackTargetFill(targetHole, spellCasterId, spellTargetId),
+        ],
+      }),
+      "attackRoll",
+    );
+    expect(attackRoll).toMatchObject({ rollMode: "advantage" });
+  });
+
+  test("faerie_fire attack Advantage requires the attacker to see the affected creature", () => {
+    const spell = spellRecord(faerieFireUnitId);
+    const state = spellBattle({ preparedSpells: [spell] });
+    const act = spellAct({ state, spellId: faerieFireUnitId });
+    const savingThrows = requireHole(act.initialHoles, "savingThrowOutcome");
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        savingThrowOutcomeFill(savingThrows, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Faerie Fire to resolve.");
+    }
+    const target = resolved.state.combatants.get(spellTargetId);
+    if (target === undefined) {
+      throw new Error("Expected Faerie Fire target combatant.");
+    }
+    if (target.positiveHpUnconscious !== null) {
+      throw new Error("Expected a conscious Faerie Fire target combatant.");
+    }
+    const unseenState = {
+      ...resolved.state,
+      combatants: new Map(resolved.state.combatants).set(spellTargetId, {
+        ...target,
+        conditions: applyCondition(target.conditions, "invisible"),
+      }),
+    };
+    const afterCasterTurn = resolveBattleSubject({
+      state: unseenState,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellCasterId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+    if (afterCasterTurn.tag !== "resolved") {
+      throw new Error("Expected Faerie Fire caster end turn to resolve.");
+    }
+    const afterTargetTurn = resolveBattleSubject({
+      state: afterCasterTurn.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellTargetId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+    if (afterTargetTurn.tag !== "resolved") {
+      throw new Error("Expected Faerie Fire target end turn to resolve.");
+    }
+    const attackSubject: BattleSubject = {
+      tag: "action",
+      actorId: spellCasterId,
+      action: "attack",
+      attackName: "Unarmed Strike",
+    };
+    const targetHole = requireResultHole(
+      resolveBattleSubject({
+        state: afterTargetTurn.state,
+        subject: attackSubject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const attackRoll = requireResultHole(
+      resolveBattleSubject({
+        state: afterTargetTurn.state,
+        subject: attackSubject,
+        fills: [
+          attackTargetFill(targetHole, spellCasterId, spellTargetId),
+        ],
+      }),
+      "attackRoll",
+    );
+    expect(attackRoll).not.toMatchObject({ rollMode: "advantage" });
+  });
+
+  test("breaking faerie_fire Concentration clears its attack Advantage effect", () => {
+    const spell = spellRecord(faerieFireUnitId);
+    const state = spellBattle({ preparedSpells: [spell] });
+    const act = spellAct({ state, spellId: faerieFireUnitId });
+    const savingThrows = requireHole(act.initialHoles, "savingThrowOutcome");
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        savingThrowOutcomeFill(savingThrows, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Faerie Fire to resolve.");
+    }
+
+    const afterCasterTurn = resolveBattleSubject({
+      state: resolved.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellCasterId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+    if (afterCasterTurn.tag !== "resolved") {
+      throw new Error("Expected Faerie Fire caster end turn to resolve.");
+    }
+    const afterTargetTurn = resolveBattleSubject({
+      state: afterCasterTurn.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellTargetId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+    if (afterTargetTurn.tag !== "resolved") {
+      throw new Error("Expected Faerie Fire target end turn to resolve.");
+    }
+    const recast = spellAct({
+      state: afterTargetTurn.state,
+      spellId: faerieFireUnitId,
+    });
+    const recastSavingThrows = requireHole(
+      recast.initialHoles,
+      "savingThrowOutcome",
+    );
+    const broken = resolveBattleSubject({
+      state: afterTargetTurn.state,
+      subject: recast.subject,
+      fills: [
+        savingThrowOutcomeFill(recastSavingThrows, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+      ],
+    });
+
+    expect(broken).toMatchObject({ tag: "resolved" });
+    if (broken.tag !== "resolved") {
+      throw new Error("Expected Faerie Fire recast to resolve.");
+    }
+    expect(broken.state.combatants.get(spellTargetId)?.activeEffects).toEqual(
+      [],
+    );
   });
 });
 

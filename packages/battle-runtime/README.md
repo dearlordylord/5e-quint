@@ -590,6 +590,12 @@ Feature and spell resources:
   `inflict_wounds` and `burning_hands`. `color_spray` applies spell-owned
   Blinded to failed self-origin Cone Constitution saves until the caster's next
   turn ends without deleting unrelated Blinded sources when it expires.
+- `faerie_fire` admits the executable creature subset: table-supplied
+  affected creatures in the point-origin Cube make Dexterity saves, and failed
+  saves receive a concentration-owned attack-roll Advantage effect for attacks
+  against them when the attacker can see the affected creature. Object
+  outline/Advantage, Dim Light emission, and Invisible benefit denial remain
+  explicit planning follow-ups.
 - creature-type-scoped spell effects admit `animal_friendship` and
   `protection_from_evil_and_good` from retained Spell Records. Animal
   Friendship filters targets by Beast creature type, asks for Wisdom saves, and

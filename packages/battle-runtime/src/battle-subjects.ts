@@ -67,6 +67,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "attackBurstSaveDamage",
   "chainedSpellAttackDamage",
   "saveGatedCondition",
+  "saveGatedAttackRollAdvantage",
   "repeatedDamageAllocation",
   "directHitPointRestoration",
   "rollModifier",

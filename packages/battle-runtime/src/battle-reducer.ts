@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-chained-attack-damage spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 import { Brand, Match, Schema } from "effect";
 import { isNonEmptyReadonlyArray } from "effect/Array";
 import * as Either from "effect/Either";
@@ -407,6 +407,11 @@ export type BattleActiveEffect =
       readonly kind: "attackerTypeScopedAttackRollAgainstSelf";
       readonly mode: "disadvantage";
       readonly attackerCreatureTypes: readonly CreatureType[];
+      readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "visibleAttackRollAgainstSelf";
+      readonly mode: AttackRollMode;
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {
@@ -972,6 +977,10 @@ type SpellTargeting =
       readonly sideFeet: MovementFeet;
     }
   | {
+      readonly kind: "pointOriginCube";
+      readonly sideFeet: MovementFeet;
+    }
+  | {
       readonly kind: "selfOriginCone";
       readonly lengthFeet: MovementFeet;
     }
@@ -1018,6 +1027,10 @@ type SpellFailedSaveConditionEffect = {
       };
   readonly escape: SpellConditionEscape | null;
 };
+type SpellFailedSaveAttackRollEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "visibleAttackRollAgainstSelf" }
+>;
 type ScalarBuffSpellTargeting =
   | {
       readonly kind: "self";
@@ -1334,6 +1347,17 @@ export type SupportedSpellInvocation =
   | {
       readonly access: PreparedSpellAccess;
       readonly resource: SpellSlotInvocationResource;
+      readonly procedure: "saveGatedAttackRollAdvantage";
+      readonly spell: SpellRecord;
+      readonly ability: Ability;
+      readonly dc: DcSource;
+      readonly targeting: SpellTargeting;
+      readonly effect: SpellFailedSaveAttackRollEffect;
+      readonly rangeFeet: MovementFeet;
+    }
+  | {
+      readonly access: PreparedSpellAccess;
+      readonly resource: SpellSlotInvocationResource;
       readonly procedure: "scalarBuff";
       readonly spell: SpellRecord;
       readonly actionCost: HealingSpellActionCost;
@@ -1409,6 +1433,7 @@ type SupportedDamageSpellInvocation = Exclude<
       | "heldLight"
       | "shieldReaction"
       | "saveGatedCondition"
+      | "saveGatedAttackRollAdvantage"
       | "chainedSpellAttackDamage";
   }
 >;
@@ -2019,7 +2044,8 @@ export type BattleSpellSavingThrowOutcomeHole = {
         | "attackBurstSaveDamage"
         | "rollModifier"
         | "saveGatedDamage"
-        | "saveGatedCondition";
+        | "saveGatedCondition"
+        | "saveGatedAttackRollAdvantage";
     }
   >;
   readonly ability: Ability;
@@ -2429,6 +2455,10 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
           sideFeet: MovementFeet,
         }),
         Schema.Struct({
+          kind: Schema.Literal("pointOriginCube"),
+          sideFeet: MovementFeet,
+        }),
+        Schema.Struct({
           kind: Schema.Literal("selfOriginCone"),
           lengthFeet: MovementFeet,
         }),
@@ -2489,6 +2519,10 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
           sideFeet: MovementFeet,
         }),
         Schema.Struct({
+          kind: Schema.Literal("pointOriginCube"),
+          sideFeet: MovementFeet,
+        }),
+        Schema.Struct({
           kind: Schema.Literal("selfOriginCone"),
           lengthFeet: MovementFeet,
         }),
@@ -2532,6 +2566,10 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
           sideFeet: MovementFeet,
         }),
         Schema.Struct({
+          kind: Schema.Literal("pointOriginCube"),
+          sideFeet: MovementFeet,
+        }),
+        Schema.Struct({
           kind: Schema.Literal("selfOriginCone"),
           lengthFeet: MovementFeet,
         }),
@@ -2553,6 +2591,22 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
           }),
         ),
       }),
+      rangeFeet: MovementFeet,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("saveGatedAttackRollAdvantage"),
+      spell: BattleRuntimeObjectSchema,
+      ability: AbilitySchema,
+      dc: DcSourceSchema,
+      targeting: Schema.Union(
+        Schema.Struct({
+          kind: Schema.Literal("pointOriginCube"),
+          sideFeet: MovementFeet,
+        }),
+      ),
+      effect: BattleRuntimeObjectSchema,
       rangeFeet: MovementFeet,
     }),
     Schema.Struct({
@@ -14609,7 +14663,8 @@ function discoverSupportedSpellInvocations(
       }
       if (
         invocation.procedure === "saveGatedDamage" ||
-        invocation.procedure === "saveGatedCondition"
+        invocation.procedure === "saveGatedCondition" ||
+        invocation.procedure === "saveGatedAttackRollAdvantage"
       ) {
         if (
           invocation.targeting.kind === "singleCombatant" ||
@@ -14942,7 +14997,8 @@ function spellActivationInvocationCastSummary(
         | "rollModifier"
         | "creatureTypeProtection"
         | "saveGatedDamage"
-        | "saveGatedCondition";
+        | "saveGatedCondition"
+        | "saveGatedAttackRollAdvantage";
     }
   >,
 ): string {
@@ -15032,6 +15088,7 @@ function isReadiedSpellInvocation(
     invocation.procedure !== "weaponDamageRider" &&
     invocation.procedure !== "markedDamageRider" &&
     invocation.procedure !== "saveGatedCondition" &&
+    invocation.procedure !== "saveGatedAttackRollAdvantage" &&
     invocation.procedure !== "shieldReaction"
   );
 }
@@ -15053,6 +15110,7 @@ function readiedSpellAct(
     invocation.procedure === "creatureTypeProtection" ||
     invocation.procedure === "attackBurstSaveDamage" ||
     invocation.procedure === "saveGatedCondition" ||
+    invocation.procedure === "saveGatedAttackRollAdvantage" ||
     invocation.procedure === "shieldReaction" ||
     state.readiedSpells.has(actorId)
   ) {
@@ -15143,7 +15201,8 @@ function resolveSpellAct(
       invocation.procedure === "creatureTypeProtection" ||
       invocation.procedure ===
         "conditionImmunityAndTurnStartTemporaryHitPoints" ||
-      invocation.procedure === "saveGatedCondition")
+      invocation.procedure === "saveGatedCondition" ||
+      invocation.procedure === "saveGatedAttackRollAdvantage")
   ) {
     return invalidResult(
       input.state,
@@ -15196,6 +15255,14 @@ function resolveSpellAct(
   }
   if (invocation.procedure === "saveGatedCondition") {
     return resolveSaveGateConditionSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "saveGatedAttackRollAdvantage") {
+    return resolveSaveGateAttackRollAdvantageSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
@@ -18518,6 +18585,7 @@ function spellFillSet(
         invocation.procedure !== "attackBurstSaveDamage" &&
         invocation.procedure !== "saveGatedDamage" &&
         invocation.procedure !== "saveGatedCondition" &&
+        invocation.procedure !== "saveGatedAttackRollAdvantage" &&
         !(
           invocation.procedure === "rollModifier" &&
           invocation.saveGate !== null
@@ -18707,7 +18775,8 @@ function spellFillSetSavingThrowTargeting(
   return invocation.procedure === "attackBurstSaveDamage"
     ? invocation.burst.targeting
     : invocation.procedure === "saveGatedDamage" ||
-        invocation.procedure === "saveGatedCondition"
+        invocation.procedure === "saveGatedCondition" ||
+        invocation.procedure === "saveGatedAttackRollAdvantage"
       ? invocation.targeting
       : { kind: "singleCombatant" };
 }
@@ -20077,6 +20146,115 @@ function resolveSaveGateConditionSpellAct(input: {
   };
 }
 
+function resolveSaveGateAttackRollAdvantageSpellAct(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "saveGatedAttackRollAdvantage" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  const savingThrowHole = spellSavingThrowOutcomeHole(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+  );
+  if (input.fillSet.targetId !== undefined) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Save-gate attack-roll advantage spells use saving throw outcome fills, not a single-target fill.",
+    );
+  }
+  if (
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.concentrationSavingThrows.length > 0 ||
+    input.fillSet.damageDispositions.length > 0
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Save-gate attack-roll advantage spells do not use attack or damage fills.",
+    );
+  }
+  if (input.fillSet.savingThrowOutcomes === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      savingThrowHole,
+    ]);
+  }
+  const savingThrowOutcomes = input.fillSet.savingThrowOutcomes;
+  const savingThrowValidation = validateSavingThrowOutcomes(
+    savingThrowOutcomes,
+    savingThrowHole,
+    input.input.state,
+    input.actorId,
+    undefined,
+    undefined,
+  );
+  if (savingThrowValidation !== null) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      savingThrowValidation,
+    );
+  }
+
+  const selectedTargetIds = savingThrowOutcomes.outcomes.map(
+    (outcome) => outcome.targetId,
+  );
+  const failedTargets = savingThrowOutcomes.outcomes.flatMap((outcome) =>
+    outcome.succeeded ? [] : [outcome.targetId],
+  );
+  if (failedTargets.length > 0) {
+    const saveFailedReactionWindow = maybeOpenReactionWindow(
+      input.input.state,
+      {
+        trigger: "saveFailed",
+        targetId: failedTargets[0]!,
+        sourceSpellId: input.invocation.spell.id,
+        continuation: {
+          kind: "replay",
+          subject:
+            input.input.reactionContinuationSubject ?? input.input.subject,
+          fills: input.input.fills,
+        },
+      },
+      input.input.suppressedReactionTrigger,
+    );
+    if (saveFailedReactionWindow !== null) {
+      return saveFailedReactionWindow;
+    }
+  }
+
+  const resourced = spendSpellCastResources({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
+  if (resourced.tag === "invalid") {
+    return resourced;
+  }
+  const effected = applyFailedSaveAttackRollAdvantageEffects(
+    resourced.state,
+    input.actorId,
+    failedTargets,
+    input.invocation,
+  );
+  const nextState = extendSavingThrowOngoingFeatures(
+    effected,
+    input.actorId,
+    selectedTargetIds,
+  );
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
 function validateSavingThrowOutcomes(
   value: BattleSpellSavingThrowOutcomeValue,
   hole: BattleSpellSavingThrowOutcomeHole,
@@ -21378,6 +21556,13 @@ function supportedSpellActs(
     ),
     ...spellcasting.preparedSpells.flatMap((spell) =>
       supportedPreparedSaveGateConditionProfile(spell, spellcasting.spellSlots),
+    ),
+    ...spellcasting.preparedSpells.flatMap((spell) =>
+      supportedPreparedSaveGateAttackRollAdvantageProfile(
+        actor.combatantId,
+        spell,
+        spellcasting.spellSlots,
+      ),
     ),
     ...spellcasting.preparedSpells.flatMap((spell) =>
       supportedPreparedScalarBuffSpellProfile(
@@ -23290,6 +23475,100 @@ function supportedSaveGateConditionSpell(
   );
 }
 
+function supportedPreparedSaveGateAttackRollAdvantageProfile(
+  actorId: CombatantId,
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  const attackRollAdvantageSpell =
+    faerieFireSaveGateAttackRollAdvantageSpell(actorId, spell);
+  if (attackRollAdvantageSpell === null) {
+    return [];
+  }
+
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    return [
+      {
+        access: { tag: "prepared" },
+        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        procedure: "saveGatedAttackRollAdvantage",
+        spell,
+        ability: attackRollAdvantageSpell.phase.ability,
+        dc: attackRollAdvantageSpell.phase.dc,
+        targeting: attackRollAdvantageSpell.targeting,
+        effect: attackRollAdvantageSpell.effect,
+        rangeFeet: attackRollAdvantageSpell.rangeFeet,
+      },
+    ];
+  });
+}
+
+type SaveGateAttackRollAdvantageSpell = {
+  readonly phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>;
+  readonly targeting: Extract<SpellTargeting, { readonly kind: "pointOriginCube" }>;
+  readonly effect: SpellFailedSaveAttackRollEffect;
+  readonly rangeFeet: MovementFeet;
+};
+
+function faerieFireSaveGateAttackRollAdvantageSpell(
+  actorId: CombatantId,
+  spell: SpellRecord,
+): SaveGateAttackRollAdvantageSpell | null {
+  if (spell.mechanics.family !== "activation") {
+    return null;
+  }
+  const phase = spell.mechanics.phases[0];
+  const failedEffect = phase?.kind === "save_gate" ? phase.onFail : undefined;
+  if (
+    spell.name !== "Faerie Fire" ||
+    spell.provenance.kind !== "srd-5.2.1" ||
+    spell.provenance.section !== "Spells/Descriptions-E-L#Faerie Fire" ||
+    spell.mechanics.level !== 1 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "point" ||
+    spell.mechanics.range.feet !== 60 ||
+    spell.mechanics.duration.kind !== "concentration" ||
+    spell.mechanics.duration.upTo.unit !== "minute" ||
+    spell.mechanics.duration.upTo.amount !== 1 ||
+    spell.mechanics.phases.length !== 1 ||
+    phase?.kind !== "save_gate" ||
+    "repeatSave" in phase ||
+    phase.ability !== "dex" ||
+    phase.dc.kind !== "caster_spell_save_dc" ||
+    phase.onSuccess.kind !== "none" ||
+    phase.attachment.kind !== "hole" ||
+    phase.attachment.value.kind !== "area" ||
+    phase.attachment.value.origin.kind !== "point_within_range" ||
+    phase.attachment.value.shape.kind !== "cube" ||
+    phase.attachment.value.shape.sideFeet !==
+      SUPPORTED_POINT_CUBE_SAVE_GATE_SIDE_FEET ||
+    failedEffect?.kind !== "modify_roll_advantage" ||
+    failedEffect.mode !== "advantage" ||
+    !sameStringSet(failedEffect.on, ["attack_roll"])
+  ) {
+    return null;
+  }
+
+  return {
+    phase,
+    targeting: {
+      kind: "pointOriginCube",
+      sideFeet: movementFeet(phase.attachment.value.shape.sideFeet),
+    },
+    effect: {
+      kind: "visibleAttackRollAgainstSelf",
+      sourceSpellId: spell.id,
+      sourceCombatantId: actorId,
+      mode: "advantage",
+      expiresAt: { kind: "concentration", combatantId: actorId },
+    },
+    rangeFeet: movementFeet(spell.mechanics.range.feet),
+  };
+}
+
 function animalFriendshipSaveGateConditionSpell(
   spell: SpellRecord,
 ): SaveGateConditionSpell | null {
@@ -23593,6 +23872,9 @@ function areaSaveGateSpellRangeFeet(
       range.kind === "point" ? movementFeet(range.feet) : null,
     ),
     Match.when({ kind: "pointOriginCubeExcludingCaster" }, () =>
+      range.kind === "point" ? movementFeet(range.feet) : null,
+    ),
+    Match.when({ kind: "pointOriginCube" }, () =>
       range.kind === "point" ? movementFeet(range.feet) : null,
     ),
     Match.when({ kind: "selfOriginCone" }, () =>
@@ -24310,6 +24592,15 @@ function supportedSpellInvocationRef(
       slotLevel: conditionSpell.resource.slotLevel,
       procedure: "saveGatedCondition" as const,
     })),
+    Match.when(
+      { procedure: "saveGatedAttackRollAdvantage" },
+      (attackRollAdvantageSpell) => ({
+        tag: "spellSlot" as const,
+        spellId: spellId(attackRollAdvantageSpell.spell.id),
+        slotLevel: attackRollAdvantageSpell.resource.slotLevel,
+        procedure: "saveGatedAttackRollAdvantage" as const,
+      }),
+    ),
     Match.when({ procedure: "scalarBuff" }, (buffSpell) => ({
       tag: "spellSlot" as const,
       spellId: spellId(buffSpell.spell.id),
@@ -24825,7 +25116,8 @@ function spellSavingThrowOutcomeHole(
         | "attackBurstSaveDamage"
         | "rollModifier"
         | "saveGatedDamage"
-        | "saveGatedCondition";
+        | "saveGatedCondition"
+        | "saveGatedAttackRollAdvantage";
     }
   >,
 ): BattleSpellSavingThrowOutcomeHole {
@@ -24876,7 +25168,8 @@ function spellSavingThrowAbility(
         | "attackBurstSaveDamage"
         | "rollModifier"
         | "saveGatedDamage"
-        | "saveGatedCondition";
+        | "saveGatedCondition"
+        | "saveGatedAttackRollAdvantage";
     }
   >,
 ): Ability {
@@ -24896,7 +25189,8 @@ function spellSavingThrowTargeting(
       readonly procedure:
         | "attackBurstSaveDamage"
         | "saveGatedDamage"
-        | "saveGatedCondition";
+        | "saveGatedCondition"
+        | "saveGatedAttackRollAdvantage";
     }
   >,
 ): SpellTargeting {
@@ -24914,6 +25208,7 @@ function spellAreaTargetingLabel(
       { kind: "pointOriginCubeExcludingCaster" },
       () => "point-origin Cube",
     ),
+    Match.when({ kind: "pointOriginCube" }, () => "point-origin Cube"),
     Match.when({ kind: "selfOriginCone" }, () => "self-origin Cone"),
     Match.when(
       { kind: "primaryTargetOriginEmanation" },
@@ -25489,6 +25784,41 @@ function applyFailedSaveSpellConditionEffects(
       targetId,
       battleCreatureWithSpellActiveEffects(target, activeEffects),
     );
+  }
+  return { ...state, combatants };
+}
+
+function applyFailedSaveAttackRollAdvantageEffects(
+  state: BattleState,
+  actorId: CombatantId,
+  targetIds: readonly CombatantId[],
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "saveGatedAttackRollAdvantage" }
+  >,
+): BattleState {
+  const combatants = new Map(state.combatants);
+  for (const targetId of targetIds) {
+    const target = combatants.get(targetId);
+    if (target === undefined) {
+      continue;
+    }
+    const nextEffect = {
+      ...invocation.effect,
+      sourceCombatantId: actorId,
+    };
+    const activeEffects = [
+      ...target.activeEffects.filter(
+        (effect) =>
+          !(
+            effect.kind === "visibleAttackRollAgainstSelf" &&
+            effect.sourceSpellId === invocation.spell.id &&
+            effect.sourceCombatantId === actorId
+          ),
+      ),
+      nextEffect,
+    ];
+    combatants.set(targetId, { ...target, activeEffects });
   }
   return { ...state, combatants };
 }
@@ -27126,7 +27456,12 @@ function requiredAttackRollMode(
     state.helpAttacks.some(
       (help) => help.allyId === attackerId && help.targetEnemyId === targetId,
     ) ||
-    activeEffectGrantsAttackRollMode(attacker, target, "advantage") ||
+    activeEffectGrantsAttackRollMode(
+      state,
+      attacker,
+      target,
+      "advantage",
+    ) ||
     ongoingFeatureGrantsAttackRollMode(attacker, target, "advantage", attack);
   const hasDisadvantage =
     hiddenTargetDisadvantage ||
@@ -27134,7 +27469,12 @@ function requiredAttackRollMode(
     grappleDisadvantage ||
     longRangeDisadvantage ||
     hasCondition(attacker?.conditions ?? EMPTY_CONDITION_STATE, "poisoned") ||
-    activeEffectGrantsAttackRollMode(attacker, target, "disadvantage") ||
+    activeEffectGrantsAttackRollMode(
+      state,
+      attacker,
+      target,
+      "disadvantage",
+    ) ||
     ongoingFeatureGrantsAttackRollMode(
       attacker,
       target,
@@ -27159,7 +27499,12 @@ function attackRollHasAdvantageSource(
     state.helpAttacks.some(
       (help) => help.allyId === attackerId && help.targetEnemyId === targetId,
     ) ||
-    activeEffectGrantsAttackRollMode(attacker, target, "advantage") ||
+    activeEffectGrantsAttackRollMode(
+      state,
+      attacker,
+      target,
+      "advantage",
+    ) ||
     ongoingFeatureGrantsAttackRollMode(attacker, target, "advantage", attack)
   );
 }
@@ -27331,6 +27676,7 @@ function ongoingFeatureGrantsAttackRollMode(
 }
 
 function activeEffectGrantsAttackRollMode(
+  state: BattleState,
   attacker: BattleCreatureState | undefined,
   target: BattleCreatureState | undefined,
   mode: AttackRollMode,
@@ -27345,6 +27691,11 @@ function activeEffectGrantsAttackRollMode(
     target?.activeEffects.some(
       (effect) =>
         (effect.kind === "nextAttackRollAgainstSelf" && effect.mode === mode) ||
+        (effect.kind === "visibleAttackRollAgainstSelf" &&
+          effect.mode === mode &&
+          attacker !== undefined &&
+          target !== undefined &&
+          combatantCanSee(state, attacker.combatantId, target.combatantId)) ||
         (effect.kind === "attackerTypeScopedAttackRollAgainstSelf" &&
           effect.mode === mode &&
           attackerCreatureType !== null &&
