@@ -9,6 +9,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29C entangle
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29E ice_knife
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29F3 chromatic_orb
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30A false_life longstrider shield_of_faith
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT25 healing_word
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT32 cure_wounds mass_healing_word
@@ -26,7 +27,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT59 monk_deflect_attacks
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT62 fighter_tactical_mind
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT65 bard_cutting_words
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.invocation-chained-attack-damage spell.invocation-condition-save
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.invocation-chained-attack-damage spell.invocation-condition-save spell.scalar-buff
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -36,6 +37,8 @@ import {
   abilityModifier,
   defaultArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
+import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
+import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { classLevel } from "@dnd/shared/types";
 import {
   attackBonus,
@@ -145,8 +148,10 @@ const savageAttackerUnitId = "feat_savage_attacker";
 const acidSplashUnitId = "acid_splash";
 const chillTouchUnitId = "chill_touch";
 const fireBoltUnitId = "fire_bolt";
+const falseLifeUnitId = "false_life";
 const guidingBoltUnitId = "guiding_bolt";
 const inflictWoundsUnitId = "inflict_wounds";
+const longstriderUnitId = "longstrider";
 const mageArmorUnitId = "mage_armor";
 const magicMissileUnitId = "magic_missile";
 const poisonSprayUnitId = "poison_spray";
@@ -158,6 +163,7 @@ const massHealingWordUnitId = "mass_healing_word";
 const rayOfFrostUnitId = "ray_of_frost";
 const rayOfSicknessUnitId = "ray_of_sickness";
 const shieldUnitId = "shield";
+const shieldOfFaithUnitId = "shield_of_faith";
 const shockingGraspUnitId = "shocking_grasp";
 const viciousMockeryUnitId = "vicious_mockery";
 const paladinExtraAttackUnitId = "paladin_extra_attack";
@@ -3026,7 +3032,9 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
       ),
     ).toBe(false);
     expect(
-      acts.some((act) => act.subject.invocation.procedure === "saveGatedDamage"),
+      acts.some(
+        (act) => act.subject.invocation.procedure === "saveGatedDamage",
+      ),
     ).toBe(false);
   });
 
@@ -3197,6 +3205,332 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
         spellId: shieldUnitId,
       }),
     ).toBeUndefined();
+  });
+});
+
+describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
+  test("false_life is admitted as self Temporary Hit Points with slot scaling", () => {
+    const spell = spellRecord(falseLifeUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = spellAct({ state, spellId: falseLifeUnitId, slotLevel: 2 });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(falseLifeUnitId, 2, "scalarBuff"),
+      mode: { tag: "cast" },
+    });
+    const tempHpHole = requireHole(act.initialHoles, "rolledDice");
+    expect(spellHoleInvocation([tempHpHole])).toEqual(
+      expect.objectContaining({
+        procedure: "scalarBuff",
+        effect: {
+          kind: "temporaryHitPoints",
+          amount: { expr: { dice: 2, dieSize: 4, flat: 9 } },
+        },
+      }),
+    );
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [damageRollFillWithGroups(tempHpHole, [[4, 3]])],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.objectContaining({
+            combatantId: spellCasterId,
+            tempHp: 16,
+          }),
+          expect.anything(),
+        ],
+      },
+    });
+  });
+
+  test("longstrider is admitted as timed Speed increase with slot-scaled targets", () => {
+    const spell = spellRecord(longstriderUnitId);
+    const secondTargetId = combatantId("unit-profile-longstrider-target-2");
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      extraTargetIds: [secondTargetId],
+    });
+    const act = spellAct({ state, spellId: longstriderUnitId, slotLevel: 2 });
+    const targetListHole = requireHole(act.initialHoles, "spellTargetList");
+
+    expect(targetListHole).toEqual(
+      expect.objectContaining({
+        minTargets: 1,
+        maxTargets: 2,
+      }),
+    );
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetListFill(targetListHole, spellCasterId, longstriderUnitId, [
+          spellTargetId,
+          secondTargetId,
+        ]),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.anything(),
+          expect.objectContaining({
+            combatantId: spellTargetId,
+            movement: expect.objectContaining({ speedFeet: 40 }),
+          }),
+          expect.objectContaining({
+            combatantId: secondTargetId,
+            movement: expect.objectContaining({ speedFeet: 40 }),
+          }),
+        ],
+      },
+    });
+
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Longstrider to resolve.");
+    }
+    const target = resolved.state.combatants.get(spellTargetId);
+    if (target === undefined) {
+      throw new Error("Expected Longstrider target.");
+    }
+    const expiringTarget = {
+      ...target,
+      activeEffects: target.activeEffects.map((effect) =>
+        effect.kind === "speedDelta" &&
+        effect.sourceSpellId === longstriderUnitId
+          ? {
+              ...effect,
+              expiresAt: {
+                kind: "duration" as const,
+                durationTicks: elapsedTimeTicks(1),
+              },
+            }
+          : effect,
+      ),
+    };
+    const oneRoundRemaining = {
+      ...resolved.state,
+      combatants: new Map(resolved.state.combatants).set(
+        spellTargetId,
+        expiringTarget,
+      ),
+    };
+    const targetTurn = resolveBattleSubject({
+      state: oneRoundRemaining,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellCasterId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected Longstrider caster end turn to resolve.");
+    }
+    const secondTargetTurn = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellTargetId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+    if (secondTargetTurn.tag !== "resolved") {
+      throw new Error("Expected Longstrider target end turn to resolve.");
+    }
+    const nextRound = resolveBattleSubject({
+      state: secondTargetTurn.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: secondTargetId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+
+    expect(nextRound).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.anything(),
+          expect.objectContaining({
+            combatantId: spellTargetId,
+            movement: expect.objectContaining({ speedFeet: 30 }),
+          }),
+          expect.anything(),
+        ],
+      },
+    });
+  });
+
+  test("longstrider rejects unrelated attack-roll fills", () => {
+    const spell = spellRecord(longstriderUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = spellAct({ state, spellId: longstriderUnitId, slotLevel: 2 });
+    const targetListHole = requireHole(act.initialHoles, "spellTargetList");
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetListFill(targetListHole, spellCasterId, longstriderUnitId, [
+          spellTargetId,
+        ]),
+        {
+          kind: "attackRoll",
+          holeId: holeId("battle:attack:roll"),
+          value: {
+            total: 20,
+            naturalD20: DieRollResult(15),
+          },
+        },
+      ],
+    });
+
+    expect(resolved).toEqual({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "Scalar buff spells use target fills and optional scalar dice roll.",
+      snapshot: snapshotBattle(state),
+    });
+  });
+
+  test("longstrider does not stack with an overlapping casting of the same spell", () => {
+    const spell = spellRecord(longstriderUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+    });
+    const target = state.combatants.get(spellTargetId);
+    if (target === undefined) {
+      throw new Error("Expected Longstrider target.");
+    }
+    const priorCasterId = combatantId("unit-profile-prior-longstrider-caster");
+    const stateWithPriorCasting: BattleState = {
+      ...state,
+      combatants: new Map(state.combatants).set(spellTargetId, {
+        ...target,
+        activeEffects: [
+          ...target.activeEffects,
+          {
+            kind: "speedDelta",
+            sourceSpellId: longstriderUnitId,
+            sourceCombatantId: priorCasterId,
+            deltaFeet: movementDeltaFeet(10),
+            expiresAt: {
+              kind: "duration",
+              durationTicks: elapsedTimeTicks(600),
+            },
+          },
+        ],
+      }),
+    };
+    const act = spellAct({
+      state: stateWithPriorCasting,
+      spellId: longstriderUnitId,
+      slotLevel: 1,
+    });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+
+    const resolved = resolveBattleSubject({
+      state: stateWithPriorCasting,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(
+          targetHole,
+          longstriderUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.anything(),
+          expect.objectContaining({
+            combatantId: spellTargetId,
+            movement: expect.objectContaining({ speedFeet: 40 }),
+          }),
+        ],
+      },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Longstrider to resolve.");
+    }
+    const speedEffects =
+      resolved.state.combatants
+        .get(spellTargetId)
+        ?.activeEffects.filter(
+          (effect) =>
+            effect.kind === "speedDelta" &&
+            effect.sourceSpellId === longstriderUnitId,
+        ) ?? [];
+    expect(speedEffects).toEqual([
+      expect.objectContaining({ sourceCombatantId: spellCasterId }),
+    ]);
+  });
+
+  test("shield_of_faith is admitted as a Bonus Action concentration AC bonus", () => {
+    const spell = spellRecord(shieldOfFaithUnitId);
+    const state = spellBattle({ preparedSpells: [spell] });
+    const act = bonusSpellAct({ state, spellId: shieldOfFaithUnitId });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+
+    expect(act.subject).toEqual({
+      tag: "bonusActionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(shieldOfFaithUnitId, 1, "scalarBuff"),
+      mode: { tag: "cast" },
+    });
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(
+          targetHole,
+          shieldOfFaithUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.objectContaining({
+            combatantId: spellCasterId,
+            concentrating: true,
+          }),
+          expect.objectContaining({
+            combatantId: spellTargetId,
+            armorClass: 12,
+          }),
+        ],
+      },
+    });
   });
 });
 

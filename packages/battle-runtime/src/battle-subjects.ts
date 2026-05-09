@@ -66,6 +66,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "saveGatedCondition",
   "repeatedDamageAllocation",
   "directHitPointRestoration",
+  "scalarBuff",
   "persistentArmorEffect",
   "shieldReaction",
 ] as const;

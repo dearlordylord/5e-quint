@@ -48,6 +48,7 @@ import fighterSecondWindInput from "../../content/fighter_second_wind.json";
 import fighterTacticalMindInput from "../../content/fighter_tactical_mind.json";
 import fighterWeaponMasteryInput from "../../content/fighter_weapon_mastery.json";
 import detectMagicInput from "../../content/detect_magic.json";
+import falseLifeInput from "../../content/false_life.json";
 import fireBoltInput from "../../content/fire_bolt.json";
 import guidingBoltInput from "../../content/guiding_bolt.json";
 import healingWordInput from "../../content/healing_word.json";
@@ -55,6 +56,7 @@ import hellishRebukeInput from "../../content/hellish_rebuke.json";
 import iceKnifeInput from "../../content/ice_knife.json";
 import inflictWoundsInput from "../../content/inflict_wounds.json";
 import lightInput from "../../content/light.json";
+import longstriderInput from "../../content/longstrider.json";
 import mageArmorInput from "../../content/mage_armor.json";
 import magicMissileInput from "../../content/magic_missile.json";
 import massCureWoundsInput from "../../content/mass_cure_wounds.json";
@@ -88,6 +90,7 @@ import rogueSneakAttackInput from "../../content/rogue_sneak_attack.json";
 import rogueThievesCantInput from "../../content/rogue_thieves_cant.json";
 import rogueWeaponMasteryInput from "../../content/rogue_weapon_mastery.json";
 import shieldInput from "../../content/shield.json";
+import shieldOfFaithInput from "../../content/shield_of_faith.json";
 import shockingGraspInput from "../../content/shocking_grasp.json";
 import sleepInput from "../../content/sleep.json";
 import sacredFlameInput from "../../content/sacred_flame.json";
@@ -278,11 +281,13 @@ export const srdUnitCollection = defineSrdUnitCollection({
     colorSprayInput,
     cureWoundsInput,
     entangleInput,
+    falseLifeInput,
     fireBoltInput,
     guidingBoltInput,
     iceKnifeInput,
     inflictWoundsInput,
     lightInput,
+    longstriderInput,
     poisonSprayInput,
     rayOfFrostInput,
     rayOfSicknessInput,
@@ -296,6 +301,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     massHealingWordInput,
     healingWordInput,
     shieldInput,
+    shieldOfFaithInput,
     sleepInput,
     thunderwaveInput,
     eldritchBlastInput,

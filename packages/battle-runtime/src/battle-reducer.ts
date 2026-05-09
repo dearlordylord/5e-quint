@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.invocation-chained-attack-damage spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.invocation-chained-attack-damage spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 import { Brand, Match, Schema } from "effect";
 import { isNonEmptyReadonlyArray } from "effect/Array";
 import * as Either from "effect/Either";
@@ -53,6 +53,7 @@ import {
   validDeathSaveRuntimeState,
 } from "@dnd/shared-algebras/death-saves-algebra";
 import {
+  elapsedTimeTicks,
   elapsedTimeTicksFromHours,
   elapsedTimeTicksFromTimeSpanDuration,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -132,6 +133,7 @@ import type {
   DcSource,
   DiceAmount as SurfaceDiceAmount,
   DiceExpr,
+  EffectAtom,
   ActivationPhase,
   Attachment,
   Size,
@@ -303,10 +305,14 @@ export type BattleActiveEffectExpiration =
   | {
       readonly kind: "concentration";
       readonly combatantId: CombatantId;
+    }
+  | {
+      readonly kind: "duration";
+      readonly durationTicks: ElapsedTimeTicks;
     };
 type TurnAnchoredBattleActiveEffectExpiration = Exclude<
   BattleActiveEffectExpiration,
-  { readonly kind: "concentration" }
+  { readonly kind: "concentration" } | { readonly kind: "duration" }
 >;
 export type BattleSpellEffectEarlyEnd =
   | { readonly kind: "targetDonsArmor" }
@@ -923,6 +929,54 @@ type SpellFailedSaveConditionEffect = {
   readonly expiresAt: "endOfCasterNextTurn" | "concentration";
   readonly escape: SpellConditionEscape | null;
 };
+type ScalarBuffSpellTargeting =
+  | {
+      readonly kind: "self";
+    }
+  | {
+      readonly kind: "targetList";
+      readonly minTargets: 1;
+      readonly maxTargets: number;
+    };
+type TargetListSpellInvocation =
+  | Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "directHitPointRestoration" }
+    >
+  | (Extract<SupportedSpellInvocation, { readonly procedure: "scalarBuff" }> & {
+      readonly targeting: Extract<
+        ScalarBuffSpellTargeting,
+        { readonly kind: "targetList" }
+      >;
+    });
+type ScalarBuffSpellEffect =
+  | {
+      readonly kind: "temporaryHitPoints";
+      readonly amount: { readonly expr: DiceExpr };
+    }
+  | {
+      readonly kind: "activeEffect";
+      readonly activeEffect: Extract<
+        BattleActiveEffect,
+        { readonly kind: "speedDelta" | "spellArmorClassBonus" }
+      >;
+    };
+function isScalarBuffTargetListInvocation(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "scalarBuff" }
+  >,
+): invocation is Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "scalarBuff" }
+> & {
+  readonly targeting: Extract<
+    ScalarBuffSpellTargeting,
+    { readonly kind: "targetList" }
+  >;
+} {
+  return invocation.targeting.kind === "targetList";
+}
 // SupportedAttackActionOption is a currently executable option for spending an
 // immediate attack made as part of the Attack action. It is narrower than all
 export type SupportedSpellInvocation =
@@ -1029,6 +1083,16 @@ export type SupportedSpellInvocation =
   | {
       readonly access: PreparedSpellAccess;
       readonly resource: SpellSlotInvocationResource;
+      readonly procedure: "scalarBuff";
+      readonly spell: SpellRecord;
+      readonly actionCost: HealingSpellActionCost;
+      readonly targeting: ScalarBuffSpellTargeting;
+      readonly effect: ScalarBuffSpellEffect;
+      readonly rangeFeet: MovementFeet;
+    }
+  | {
+      readonly access: PreparedSpellAccess;
+      readonly resource: SpellSlotInvocationResource;
       readonly procedure: "persistentArmorEffect";
       readonly spell: SpellRecord;
       readonly rangeFeet: MovementFeet;
@@ -1080,6 +1144,7 @@ type SupportedDamageSpellInvocation = Exclude<
     readonly procedure:
       | "persistentArmorEffect"
       | "directHitPointRestoration"
+      | "scalarBuff"
       | "shieldReaction"
       | "saveGatedCondition"
       | "chainedSpellAttackDamage";
@@ -1546,7 +1611,7 @@ export type BattleSpellTargetListHole = {
   readonly label: string;
   readonly spell: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "directHitPointRestoration" }
+    { readonly procedure: "directHitPointRestoration" | "scalarBuff" }
   >;
   readonly minTargets: 1;
   readonly maxTargets: number;
@@ -1613,7 +1678,7 @@ export type BattleSpellHealingRollHole = Extract<
 > & {
   readonly spell: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "directHitPointRestoration" }
+    { readonly procedure: "directHitPointRestoration" | "scalarBuff" }
   >;
 };
 export type BattleSavingThrowOutcome = {
@@ -2145,6 +2210,36 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("scalarBuff"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction", "bonusAction"),
+      targeting: Schema.Union(
+        Schema.Struct({
+          kind: Schema.Literal("self"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("targetList"),
+          minTargets: Schema.Literal(1),
+          maxTargets: Schema.Number,
+        }),
+      ),
+      effect: Schema.Union(
+        Schema.Struct({
+          kind: Schema.Literal("temporaryHitPoints"),
+          amount: Schema.Struct({
+            expr: BattleRuntimeObjectSchema,
+          }),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("activeEffect"),
+          activeEffect: BattleRuntimeObjectSchema,
+        }),
+      ),
+      rangeFeet: MovementFeet,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("persistentArmorEffect"),
       spell: BattleRuntimeObjectSchema,
       rangeFeet: MovementFeet,
@@ -2187,7 +2282,7 @@ export const BattleHoleSchema = Schema.Union(
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("spellTargetList"),
-    spell: SupportedHealingSpellInvocationSchema,
+    spell: SupportedSpellInvocationSchema,
     minTargets: Schema.Literal(1),
     maxTargets: Schema.Number,
     choices: Schema.Array(CombatantId),
@@ -2273,7 +2368,7 @@ export const BattleHoleSchema = Schema.Union(
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("rolledDice"),
-    spell: SupportedHealingSpellInvocationSchema,
+    spell: SupportedSpellInvocationSchema,
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -11600,11 +11695,15 @@ function resolveEndTurn(
     combatantsAfterStartOngoingFeatures,
     nextActorId,
   );
+  const combatantsAfterDurationTick =
+    Number(initiative.round) > Number(state.initiative.round)
+      ? tickDurationEffects(combatantsAfterStartEffects)
+      : combatantsAfterStartEffects;
   const combatantsAfterRecharge =
     statBlockRechargeRolls === undefined
-      ? combatantsAfterStartEffects
+      ? combatantsAfterDurationTick
       : processStatBlockRechargeRolls(
-          combatantsAfterStartEffects,
+          combatantsAfterDurationTick,
           nextActorId,
           statBlockRechargeRolls,
         );
@@ -11654,6 +11753,48 @@ function expireEndOfTurnEffects(
       effect.expiresAt.kind === "endOfTurn" &&
       effect.expiresAt.combatantId === actorId &&
       effect.expiresAt.round === round,
+  );
+}
+
+function tickDurationEffects(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  return new Map(
+    [...combatants].map(([id, combatant]) => {
+      const expiring: BattleActiveEffect[] = [];
+      const activeEffects = combatant.activeEffects.flatMap((effect) => {
+        if (!("expiresAt" in effect) || effect.expiresAt.kind !== "duration") {
+          return [effect];
+        }
+        const remainingTicks = Number(effect.expiresAt.durationTicks) - 1;
+        if (remainingTicks <= 0) {
+          expiring.push(effect);
+          return [];
+        }
+        return [
+          {
+            ...effect,
+            expiresAt: {
+              ...effect.expiresAt,
+              durationTicks: elapsedTimeTicks(remainingTicks),
+            },
+          },
+        ];
+      });
+      const nextCombatant: BattleCreatureState =
+        combatant.positiveHpUnconscious === null
+          ? {
+              ...combatant,
+              activeEffects,
+              conditions: conditionsAfterExpiringSpellConditionEffects(
+                combatant.conditions,
+                activeEffects,
+                expiring,
+              ),
+            }
+          : { ...combatant, activeEffects };
+      return [id, nextCombatant];
+    }),
   );
 }
 
@@ -13929,6 +14070,51 @@ function discoverSupportedSpellInvocations(
         ];
         return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
       }
+      if (
+        invocation.procedure === "scalarBuff" &&
+        invocation.targeting.kind === "self"
+      ) {
+        const castActs = [
+          {
+            subject: {
+              tag: spellSubjectTagForInvocation(invocation),
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: invocation.spell.name,
+            summary: spellInvocationCastSummary(invocation),
+            initialHoles: scalarBuffInitialHoles(invocation),
+          },
+        ];
+        return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
+      }
+      if (invocation.procedure === "scalarBuff") {
+        if (!isScalarBuffTargetListInvocation(invocation)) {
+          return [];
+        }
+        const targetHole =
+          invocation.targeting.maxTargets > 1
+            ? spellTargetListHole(state, actorId, invocation)
+            : spellTargetHole(state, actorId, invocation);
+        const castActs =
+          targetHole.choices.length === 0
+            ? []
+            : [
+                {
+                  subject: {
+                    tag: spellSubjectTagForInvocation(invocation),
+                    actorId,
+                    invocation: supportedSpellInvocationRef(invocation),
+                    mode: { tag: "cast" as const },
+                  },
+                  label: invocation.spell.name,
+                  summary: spellInvocationCastSummary(invocation),
+                  initialHoles: [targetHole],
+                },
+              ];
+        return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
+      }
       const targetHole =
         invocation.procedure === "repeatedDamageAllocation"
           ? spellTargetAllocationHole(state, actorId, invocation)
@@ -13964,6 +14150,9 @@ function spellInvocationCastSummary(
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot, allocating ${invocation.targeting.repeatedEffectCount} repeated effects among targets.`;
   }
   if (invocation.procedure === "directHitPointRestoration") {
+    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+  }
+  if (invocation.procedure === "scalarBuff") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
   if (invocation.procedure === "persistentArmorEffect") {
@@ -14004,7 +14193,10 @@ function spellSubjectTagForInvocation(
   return invocation.procedure === "directHitPointRestoration" &&
     invocation.actionCost === "bonusAction"
     ? "bonusActionSpell"
-    : "actionSpell";
+    : invocation.procedure === "scalarBuff" &&
+        invocation.actionCost === "bonusAction"
+      ? "bonusActionSpell"
+      : "actionSpell";
 }
 
 function activeOngoingFeaturesPreventSpellcasting(
@@ -14031,6 +14223,7 @@ function readiedSpellAct(
   if (
     invocation.procedure === "persistentArmorEffect" ||
     invocation.procedure === "directHitPointRestoration" ||
+    invocation.procedure === "scalarBuff" ||
     invocation.procedure === "attackBurstSaveDamage" ||
     invocation.procedure === "saveGatedCondition" ||
     invocation.procedure === "shieldReaction" ||
@@ -14083,14 +14276,11 @@ function resolveSpellAct(
       "Action-time spell act is unavailable while an active ongoing feature prevents spellcasting.",
     );
   }
-  if (
-    invocation.procedure === "directHitPointRestoration" &&
-    invocation.actionCost === "bonusAction"
-  ) {
+  if ("actionCost" in invocation && invocation.actionCost === "bonusAction") {
     return invalidResult(
       input.state,
       "unsupportedSubject",
-      "Prepared Bonus Action healing spells must use the Bonus Action spell subject.",
+      "Prepared Bonus Action spells must use the Bonus Action spell subject.",
     );
   }
   if (invocation.procedure === "shieldReaction") {
@@ -14113,6 +14303,7 @@ function resolveSpellAct(
   if (
     subject.mode.tag === "ready" &&
     (invocation.procedure === "directHitPointRestoration" ||
+      invocation.procedure === "scalarBuff" ||
       invocation.procedure === "saveGatedCondition")
   ) {
     return invalidResult(
@@ -14175,6 +14366,14 @@ function resolveSpellAct(
   }
   if (invocation.procedure === "directHitPointRestoration") {
     return resolvePreparedHealingSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "scalarBuff") {
+    return resolveScalarBuffSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
@@ -15335,7 +15534,15 @@ function resolveBonusActionSpellAct(
       "Bonus Action spell act requires a supported prepared spell.",
     );
   }
-  if (
+  if (invocation.procedure === "scalarBuff") {
+    if (invocation.actionCost !== "bonusAction") {
+      return invalidResult(
+        input.state,
+        "unsupportedSubject",
+        "Bonus Action spell subject requires a supported Bonus Action spell act.",
+      );
+    }
+  } else if (
     invocation.procedure !== "directHitPointRestoration" ||
     invocation.actionCost !== "bonusAction"
   ) {
@@ -15375,6 +15582,14 @@ function resolveBonusActionSpellAct(
   const fillSet = spellFillSet(input.fills, invocation);
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
+  }
+  if (invocation.procedure === "scalarBuff") {
+    return resolveScalarBuffSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
   }
   return resolvePreparedHealingSpellAct({
     input: { ...input, state: castingState },
@@ -15509,6 +15724,137 @@ function resolvePreparedHealingSpellAct(input: {
   };
 }
 
+function resolveScalarBuffSpellAct(input: {
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "scalarBuff" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  if (
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.targetAllocation !== undefined ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.damageDispositions.length > 0 ||
+    input.fillSet.savingThrowOutcomes !== undefined ||
+    input.fillSet.concentrationSavingThrows.length > 0
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Scalar buff spells use target fills and optional scalar dice roll.",
+    );
+  }
+  const targetSelection = scalarBuffSpellTargetSelection(input);
+  if (targetSelection.tag === "needsHoles") {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      targetSelection.hole,
+    ]);
+  }
+  if (targetSelection.tag === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      targetSelection.message,
+    );
+  }
+
+  const spellCastReactionWindow = maybeOpenReactionWindow(
+    input.input.state,
+    {
+      trigger: "spellCast",
+      casterId: input.actorId,
+      spellId: input.invocation.spell.id,
+      targetIds: targetSelection.targetIds,
+      continuation: {
+        kind: "replay",
+        subject: input.input.subject,
+        fills: input.input.fills,
+      },
+    },
+    input.input.suppressedReactionTrigger,
+  );
+  if (spellCastReactionWindow !== null) {
+    return spellCastReactionWindow;
+  }
+
+  if (
+    input.invocation.effect.kind === "temporaryHitPoints" &&
+    input.fillSet.healingRoll == null
+  ) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      spellScalarBuffRollHole(input.invocation),
+    ]);
+  }
+  if (
+    input.invocation.effect.kind === "temporaryHitPoints" &&
+    input.fillSet.healingRoll !== undefined
+  ) {
+    const validation = validateScalarBuffTemporaryHitPointsFill(
+      input.fillSet.healingRoll,
+      input.invocation,
+    );
+    if (validation !== null) {
+      return invalidResult(input.input.state, "invalidFill", validation);
+    }
+  }
+
+  const concentrationBase = spellRequiresConcentration(input.invocation)
+    ? breakBattleConcentration(input.input.state, input.actorId)
+    : input.input.state;
+  const effected = applyScalarBuffSpellEffect(
+    concentrationBase,
+    input.actorId,
+    targetSelection.targetIds,
+    input.invocation,
+    input.fillSet.healingRoll,
+  );
+  const spent =
+    input.invocation.actionCost === "bonusAction"
+      ? spendActivationResource(effected.currentTurnResources, {
+          kind: "bonusAction",
+        })
+      : spendAction(effected.currentTurnResources, "magic");
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.input.state,
+      "staleSubject",
+      input.invocation.actionCost === "bonusAction"
+        ? "Bonus Action spell is no longer available for the current actor."
+        : "Magic action is no longer available for the current actor.",
+    );
+  }
+  const slotTurnResources = markSpellSlotExpendedThisTurn(spent.right);
+  if (Either.isLeft(slotTurnResources)) {
+    return invalidResult(
+      input.input.state,
+      "staleSubject",
+      "This turn has already expended a Spell Slot.",
+    );
+  }
+  const slotted = expendSpellSlot(
+    effected,
+    input.actorId,
+    input.invocation.resource.slotLevel,
+  );
+  const resourced = {
+    ...slotted,
+    currentTurnResources: slotTurnResources.right,
+  };
+  const nextState = spellRequiresConcentration(input.invocation)
+    ? startSpellEffectConcentration(resourced, input.actorId, input.invocation)
+    : resourced;
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
 type HealingSpellTargetSelection =
   | { readonly tag: "ok"; readonly targetIds: readonly CombatantId[] }
   | { readonly tag: "needsHoles"; readonly hole: BattleHole }
@@ -15590,6 +15936,99 @@ function healingSpellTargetSelection(input: {
     : { tag: "invalid", message: validation };
 }
 
+type ScalarBuffSpellTargetSelection =
+  | { readonly tag: "ok"; readonly targetIds: readonly CombatantId[] }
+  | { readonly tag: "needsHoles"; readonly hole: BattleHole }
+  | { readonly tag: "invalid"; readonly message: string };
+
+function scalarBuffSpellTargetSelection(input: {
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "scalarBuff" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): ScalarBuffSpellTargetSelection {
+  if (input.invocation.targeting.kind === "self") {
+    return input.fillSet.targetId !== undefined ||
+      input.fillSet.targetList !== undefined
+      ? {
+          tag: "invalid",
+          message:
+            "Self-targeting scalar buff spells do not accept target fills.",
+        }
+      : { tag: "ok", targetIds: [input.actorId] };
+  }
+  if (!isScalarBuffTargetListInvocation(input.invocation)) {
+    return {
+      tag: "invalid",
+      message: "Scalar buff spell target shape is unsupported.",
+    };
+  }
+
+  if (input.invocation.targeting.maxTargets === 1) {
+    if (input.fillSet.targetList !== undefined) {
+      return {
+        tag: "invalid",
+        message: "Single-target scalar buff spells require one target choice.",
+      };
+    }
+    if (input.fillSet.targetId === undefined) {
+      return {
+        tag: "needsHoles",
+        hole: spellTargetHole(
+          input.input.state,
+          input.actorId,
+          input.invocation,
+        ),
+      };
+    }
+    return spellTargetIsLegal(
+      input.input.state,
+      input.actorId,
+      input.fillSet.targetId,
+      input.invocation,
+      input.fillSet.targetSpatialFacts,
+    )
+      ? { tag: "ok", targetIds: [input.fillSet.targetId] }
+      : {
+          tag: "invalid",
+          message:
+            "Scalar buff spell target must be a combatant within the selected spell's supported range.",
+        };
+  }
+
+  if (input.fillSet.targetId !== undefined) {
+    return {
+      tag: "invalid",
+      message: "Multi-target scalar buff spells require a target list.",
+    };
+  }
+  if (input.fillSet.targetList === undefined) {
+    return {
+      tag: "needsHoles",
+      hole: spellTargetListHole(
+        input.input.state,
+        input.actorId,
+        input.invocation,
+      ),
+    };
+  }
+  const validation = validateSpellTargetList(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+    input.fillSet.targetList.targetIds,
+    input.fillSet.targetList.spatialFacts,
+  );
+  return validation === null
+    ? { tag: "ok", targetIds: input.fillSet.targetList.targetIds }
+    : { tag: "invalid", message: validation };
+}
+
 function resolveReadySpellAct(
   input: ActionSpellBattleResolutionInput,
   invocation: SupportedSpellInvocation,
@@ -15606,6 +16045,13 @@ function resolveReadySpellAct(
       input.state,
       "unsupportedActOption",
       "Hit Point restoration spells cannot be readied by this runtime lane.",
+    );
+  }
+  if (invocation.procedure === "scalarBuff") {
+    return invalidResult(
+      input.state,
+      "unsupportedActOption",
+      "Scalar buff spells cannot be readied by this runtime lane.",
     );
   }
   if (invocation.procedure === "shieldReaction") {
@@ -16174,7 +16620,19 @@ function spellFillSet(
     }
 
     if (fill.kind === "spellTargetList") {
-      if (invocation.procedure !== "directHitPointRestoration") {
+      if (
+        invocation.procedure !== "directHitPointRestoration" &&
+        invocation.procedure !== "scalarBuff"
+      ) {
+        return {
+          tag: "invalid",
+          message: "Spell target list does not match this spell act.",
+        };
+      }
+      if (
+        invocation.procedure === "scalarBuff" &&
+        !isScalarBuffTargetListInvocation(invocation)
+      ) {
         return {
           tag: "invalid",
           message: "Spell target list does not match this spell act.",
@@ -16261,9 +16719,16 @@ function spellFillSet(
     }
 
     if (fill.kind === "rolledDice") {
-      if (invocation.procedure === "directHitPointRestoration") {
+      if (
+        invocation.procedure === "directHitPointRestoration" ||
+        (invocation.procedure === "scalarBuff" &&
+          invocation.effect.kind === "temporaryHitPoints")
+      ) {
         if (healingRoll !== undefined) {
-          return { tag: "invalid", message: "Spell healing was filled twice." };
+          return {
+            tag: "invalid",
+            message: "Spell scalar dice result was filled twice.",
+          };
         }
         healingRoll = fill;
         continue;
@@ -18460,10 +18925,11 @@ function withoutConcentration(
     concentration: null,
     activeEffects: combatant.activeEffects.filter(
       (effect) =>
-        effect.kind !== "spellBaseArmorClass" ||
-        !effect.earlyEnds.some(
-          (earlyEnd) => earlyEnd.kind === "concentrationBroken",
-        ),
+        !("expiresAt" in effect && effect.expiresAt.kind === "concentration") &&
+        (effect.kind !== "spellBaseArmorClass" ||
+          !effect.earlyEnds.some(
+            (earlyEnd) => earlyEnd.kind === "concentrationBroken",
+          )),
     ),
   };
 }
@@ -18814,6 +19280,13 @@ function supportedSpellActs(
       supportedPreparedSaveGateConditionProfile(spell, spellcasting.spellSlots),
     ),
     ...spellcasting.preparedSpells.flatMap((spell) =>
+      supportedPreparedScalarBuffSpellProfile(
+        actor.combatantId,
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...spellcasting.preparedSpells.flatMap((spell) =>
       supportedPreparedPersistentSpellProfile(actor.combatantId, spell),
     ),
     ...spellcasting.preparedSpells.flatMap((spell) =>
@@ -19161,6 +19634,225 @@ function supportedPreparedSlotSpellProfile(
       },
     ];
   });
+}
+
+function supportedPreparedScalarBuffSpellProfile(
+  actorId: CombatantId,
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  if (spell.mechanics.family !== "activation") {
+    return [];
+  }
+  const phase = spell.mechanics.phases[0];
+  const effect = phase?.kind === "direct" ? phase.effects?.[0] : undefined;
+  const actionCost = scalarBuffSpellActionCost(spell.mechanics.castingTime);
+  const rangeFeet = scalarBuffSpellRangeFeet(spell.mechanics.range);
+  if (
+    actionCost === null ||
+    rangeFeet === null ||
+    spell.mechanics.phases.length !== 1 ||
+    phase?.kind !== "direct" ||
+    phase.effects?.length !== 1 ||
+    effect === undefined
+  ) {
+    return [];
+  }
+
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    const targeting = scalarBuffSpellTargeting(
+      phase.attachment,
+      spell.mechanics.level,
+      slot.spellLevel,
+    );
+    const scalarEffect = scalarBuffSpellEffect(
+      actorId,
+      spell,
+      effect,
+      spell.mechanics.duration,
+      spell.mechanics.level,
+      slot.spellLevel,
+    );
+    return targeting === null || scalarEffect === null
+      ? []
+      : [
+          {
+            access: { tag: "prepared" },
+            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+            procedure: "scalarBuff",
+            spell,
+            actionCost,
+            targeting,
+            effect: scalarEffect,
+            rangeFeet,
+          },
+        ];
+  });
+}
+
+function scalarBuffSpellActionCost(
+  castingTime: SpellRecord["mechanics"]["castingTime"],
+): HealingSpellActionCost | null {
+  return Match.value(castingTime).pipe(
+    Match.when({ kind: "action" }, () => "magicAction" as const),
+    Match.when({ kind: "bonus_action" }, () => "bonusAction" as const),
+    Match.orElse(() => null),
+  );
+}
+
+function scalarBuffSpellRangeFeet(
+  range: SpellRecord["mechanics"]["range"],
+): MovementFeet | null {
+  return Match.value(range).pipe(
+    Match.when({ kind: "self" }, () => movementFeet(0)),
+    Match.when({ kind: "touch" }, () => movementFeet(5)),
+    Match.when({ kind: "point" }, (point) => movementFeet(point.feet)),
+    Match.orElse(() => null),
+  );
+}
+
+function scalarBuffSpellTargeting(
+  attachment: Attachment,
+  spellLevel: number,
+  slotLevel: SpellSlotLevel,
+): ScalarBuffSpellTargeting | null {
+  if (attachment.kind === "self") {
+    return { kind: "self" };
+  }
+  if (attachment.kind !== "hole" || attachment.value.kind !== "target") {
+    return null;
+  }
+  const targetCount = scalarBuffSpellTargetCount(
+    attachment.value.selection,
+    spellLevel,
+    slotLevel,
+  );
+  return targetCount === null
+    ? null
+    : { kind: "targetList", minTargets: 1, maxTargets: targetCount };
+}
+
+function scalarBuffSpellTargetCount(
+  selection: TargetSelection,
+  spellLevel: number,
+  slotLevel: SpellSlotLevel,
+): number | null {
+  if (selection.mode === "one") {
+    return 1;
+  }
+  if (selection.mode !== "choose_up_to" || selection.count === undefined) {
+    return null;
+  }
+  const count = selection.count;
+  if (typeof count === "number") {
+    return count;
+  }
+  if (count.kind !== "linear") {
+    return null;
+  }
+  const baseLevel = count.baseLevel ?? spellLevel;
+  return (
+    count.base +
+    Math.max(0, Number(slotLevel) - baseLevel) * count.perSlotAboveBase
+  );
+}
+
+function scalarBuffSpellEffect(
+  actorId: CombatantId,
+  spell: SpellRecord,
+  effect: EffectAtom,
+  duration: SpellRecord["mechanics"]["duration"],
+  spellLevel: number,
+  slotLevel: SpellSlotLevel,
+): ScalarBuffSpellEffect | null {
+  if (effect.kind === "grant_temp_hp" && duration.kind === "instantaneous") {
+    const expr = supportedTemporaryHitPointsAmountExpr(
+      effect.amount,
+      spellLevel,
+      slotLevel,
+    );
+    return expr === null
+      ? null
+      : { kind: "temporaryHitPoints", amount: { expr } };
+  }
+  const expiresAt = scalarBuffActiveEffectExpiration(actorId, duration);
+  if (expiresAt === null) {
+    return null;
+  }
+  if (effect.kind === "modify_speed" && effect.unit === "feet") {
+    return {
+      kind: "activeEffect",
+      activeEffect: {
+        kind: "speedDelta",
+        sourceSpellId: spell.id,
+        sourceCombatantId: actorId,
+        deltaFeet: movementDeltaFeet(effect.delta),
+        expiresAt,
+      },
+    };
+  }
+  if (
+    effect.kind === "modify_ac" &&
+    effect.delta.kind === "fixed_dice" &&
+    effect.delta.sign === "+" &&
+    effect.delta.dieSize === 1
+  ) {
+    return {
+      kind: "activeEffect",
+      activeEffect: {
+        kind: "spellArmorClassBonus",
+        sourceSpellId: spell.id,
+        sourceCombatantId: actorId,
+        bonus: effect.delta.dice,
+        negatedSpellIds: [],
+        expiresAt,
+      },
+    };
+  }
+  return null;
+}
+
+function scalarBuffActiveEffectExpiration(
+  actorId: CombatantId,
+  duration: SpellRecord["mechanics"]["duration"],
+): BattleActiveEffectExpiration | null {
+  if (duration.kind === "concentration") {
+    return { kind: "concentration", combatantId: actorId };
+  }
+  if (duration.kind === "timed") {
+    const ticks = elapsedTimeTicksFromTimeSpanDuration(duration.value);
+    return Either.isLeft(ticks)
+      ? null
+      : { kind: "duration", durationTicks: ticks.right };
+  }
+  return null;
+}
+
+function supportedTemporaryHitPointsAmountExpr(
+  amount: SurfaceDiceAmount,
+  spellLevel: number,
+  slotLevel: SpellSlotLevel,
+): DiceExpr | null {
+  if (amount.kind === "fixed") {
+    return amount.expr;
+  }
+  if (
+    amount.kind !== "linear_per_level" ||
+    amount.axis !== "slot" ||
+    amount.startingAtLevel !== spellLevel + 1 ||
+    amount.base.dieSize === undefined
+  ) {
+    return null;
+  }
+  const slotDelta = Math.max(0, Number(slotLevel) - amount.startingAtLevel + 1);
+  return {
+    dice: amount.base.dice + (amount.perLevel?.dice ?? 0) * slotDelta,
+    dieSize: amount.base.dieSize,
+    flat: (amount.base.flat ?? 0) + (amount.perLevel?.flat ?? 0) * slotDelta,
+  };
 }
 
 function supportedPreparedPersistentSpellProfile(
@@ -20267,8 +20959,7 @@ function spellActTurnResourceAvailable(
   if (resources.spellSlotExpendedThisTurn) {
     return false;
   }
-  return invocation.procedure === "directHitPointRestoration" &&
-    invocation.actionCost === "bonusAction"
+  return "actionCost" in invocation && invocation.actionCost === "bonusAction"
     ? resources.currentHasBonusAction
     : canSpendAction(resources, "magic");
 }
@@ -20331,10 +21022,7 @@ function spellTargetAllocationHole(
 }
 
 function spellTargetListHoleId(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "directHitPointRestoration" }
-  >,
+  invocation: TargetListSpellInvocation,
 ): BattleHoleId {
   return holeId(`battle:spell:target-list:${invocation.spell.id}`);
 }
@@ -20342,10 +21030,7 @@ function spellTargetListHoleId(
 function spellTargetListHole(
   state: BattleState,
   actorId: CombatantId,
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "directHitPointRestoration" }
-  >,
+  invocation: TargetListSpellInvocation,
 ): BattleSpellTargetListHole {
   const holeKey = `battle:spell:target-list:${invocation.spell.id}`;
   return {
@@ -20466,10 +21151,7 @@ function validateSpellTargetAllocation(
 function validateSpellTargetList(
   state: BattleState,
   actorId: CombatantId,
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "directHitPointRestoration" }
-  >,
+  invocation: TargetListSpellInvocation,
   targetIds: readonly CombatantId[],
   facts: readonly BattleSpellTargetListSpatialFact[],
 ): string | null {
@@ -20492,7 +21174,10 @@ function validateSpellTargetList(
       return "Spell targets must be combatants within the selected spell's supported range.";
     }
   }
-  if (invocation.targeting.kind === "pointOriginSphereTargetList") {
+  if (
+    invocation.procedure === "directHitPointRestoration" &&
+    invocation.targeting.kind === "pointOriginSphereTargetList"
+  ) {
     return validatePointOriginSphereSpellTargetList(
       state,
       actorId,
@@ -20596,6 +21281,12 @@ function supportedSpellInvocationRef(
       spellId: spellId(conditionSpell.spell.id),
       slotLevel: conditionSpell.resource.slotLevel,
       procedure: "saveGatedCondition" as const,
+    })),
+    Match.when({ procedure: "scalarBuff" }, (buffSpell) => ({
+      tag: "spellSlot" as const,
+      spellId: spellId(buffSpell.spell.id),
+      slotLevel: buffSpell.resource.slotLevel,
+      procedure: "scalarBuff" as const,
     })),
     Match.when({ procedure: "persistentArmorEffect" }, (persistent) => ({
       tag: "spellSlot" as const,
@@ -20958,6 +21649,37 @@ function spellHealingRollHole(
   };
 }
 
+function spellScalarBuffRollHole(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "scalarBuff" }
+  >,
+): BattleSpellHealingRollHole {
+  const expr = scalarBuffTemporaryHitPointsExpression(invocation);
+  return {
+    kind: "rolledDice",
+    holeId: holeId(
+      `battle:spell:scalar-buff-result:${invocation.spell.id}:${expr}`,
+    ),
+    holeInstanceKey: holeInstanceKey(
+      `battle:spell:scalar-buff-result:${invocation.spell.id}:${expr}`,
+    ),
+    label: `${invocation.spell.name} Temporary Hit Points (${expr})`,
+    spell: invocation,
+  };
+}
+
+function scalarBuffInitialHoles(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "scalarBuff" }
+  >,
+): readonly BattleHole[] {
+  return invocation.effect.kind === "temporaryHitPoints"
+    ? [spellScalarBuffRollHole(invocation)]
+    : [];
+}
+
 function spellSavingThrowOutcomeHoleId(
   invocation: SupportedSpellInvocation,
 ): BattleHoleId {
@@ -21094,6 +21816,26 @@ function validateSpellHealingFill(
   const validation = validateRolledDiceForDiceExpr(fill.value, {
     dice: invocation.healing.expr.dice,
     dieSize: invocation.healing.expr.dieSize,
+  });
+  return validation?.reason ?? null;
+}
+
+function validateScalarBuffTemporaryHitPointsFill(
+  fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "scalarBuff" }
+  >,
+): string | null {
+  if (invocation.effect.kind !== "temporaryHitPoints") {
+    return "Scalar buff dice are only valid for Temporary Hit Points effects.";
+  }
+  if (fill.holeId !== spellScalarBuffRollHole(invocation).holeId) {
+    return "Temporary Hit Points must use the selected scalar buff spell hole.";
+  }
+  const validation = validateRolledDiceForDiceExpr(fill.value, {
+    dice: invocation.effect.amount.expr.dice,
+    dieSize: invocation.effect.amount.expr.dieSize,
   });
   return validation?.reason ?? null;
 }
@@ -21818,6 +22560,55 @@ function applyPersistentSpellActiveEffect(
   };
 }
 
+function applyScalarBuffSpellEffect(
+  state: BattleState,
+  actorId: CombatantId,
+  targetIds: readonly CombatantId[],
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "scalarBuff" }
+  >,
+  temporaryHitPointsRoll:
+    | Extract<BattleFill, { readonly kind: "rolledDice" }>
+    | undefined,
+): BattleState {
+  const scalarEffect = invocation.effect;
+  return targetIds.reduce((nextState, targetId) => {
+    const target = nextState.combatants.get(targetId);
+    if (target === undefined) {
+      return nextState;
+    }
+    const nextTarget =
+      scalarEffect.kind === "temporaryHitPoints"
+        ? temporaryHitPointsRoll === undefined
+          ? target
+          : applyTemporaryHitPoints(
+              target,
+              scalarBuffTemporaryHitPointsAmount(
+                invocation,
+                temporaryHitPointsRoll,
+              ),
+            )
+        : battleCreatureWithSpellActiveEffects(target, [
+            ...target.activeEffects.filter(
+              (effect) =>
+                !(
+                  effect.kind === scalarEffect.activeEffect.kind &&
+                  effect.sourceSpellId === invocation.spell.id
+                ),
+            ),
+            {
+              ...scalarEffect.activeEffect,
+              sourceCombatantId: actorId,
+            },
+          ]);
+    return {
+      ...nextState,
+      combatants: new Map(nextState.combatants).set(targetId, nextTarget),
+    };
+  }, state);
+}
+
 function applyShieldReactionSpellActiveEffect(
   state: BattleState,
   reactorId: CombatantId,
@@ -21929,6 +22720,17 @@ function spellHealingExpression(
   return `${invocation.healing.expr.dice}d${invocation.healing.expr.dieSize}${signedModifier(invocation.healing.expr.flat ?? 0)}`;
 }
 
+function scalarBuffTemporaryHitPointsExpression(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "scalarBuff" }
+  >,
+): string {
+  return invocation.effect.kind === "temporaryHitPoints"
+    ? `${invocation.effect.amount.expr.dice}d${invocation.effect.amount.expr.dieSize}${signedModifier(invocation.effect.amount.expr.flat ?? 0)}`
+    : "0d1";
+}
+
 function spellHealingAmount(
   invocation: Extract<
     SupportedSpellInvocation,
@@ -21946,6 +22748,22 @@ function spellHealingAmount(
     0,
   );
   return diceTotal + (invocation.healing.expr.flat ?? 0);
+}
+
+function scalarBuffTemporaryHitPointsAmount(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "scalarBuff" }
+  >,
+  temporaryHitPointsRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+): number {
+  if (invocation.effect.kind !== "temporaryHitPoints") {
+    return 0;
+  }
+  return (
+    rolledDiceTotal(temporaryHitPointsRoll.value) +
+    (invocation.effect.amount.expr.flat ?? 0)
+  );
 }
 
 function needsHolesResult(

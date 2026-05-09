@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points spell.scalar-buff
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -117,6 +117,15 @@ type AdrenalineRushMbtProjection = {
   readonly lastInvalidReason: MbtLastInvalidReason;
 };
 
+type ScalarBuffMbtProjection = {
+  readonly fighterSpeed: number;
+  readonly goblinSpeed: number;
+  readonly actionAvailable: boolean;
+  readonly holes: readonly MbtHole[];
+  readonly lastResult: MbtLastResult;
+  readonly lastInvalidReason: MbtLastInvalidReason;
+};
+
 const fighterId = combatantId("fighter");
 const skeletonId = combatantId("skeleton");
 const deathSavingThrowTargetId = combatantId("death-saving-throw-target");
@@ -193,6 +202,13 @@ const adrenalineRushDriverSchema = {
   init: {},
   doAdrenalineRushDash: {},
   doRejectSecondDash: {},
+  step: {},
+} as const;
+
+const scalarBuffDriverSchema = {
+  init: {},
+  doFillLongstriderTarget: {},
+  doRejectStaleAfterResolved: {},
   step: {},
 } as const;
 
@@ -496,6 +512,66 @@ function createMagicMissileDriver() {
   });
 }
 
+function createScalarBuffDriver() {
+  return defineDriver(scalarBuffDriverSchema, () => {
+    let state = scalarBuffBattle();
+    let subject: BattleSubject = longstriderSubject();
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = discoverLongstriderHoles(
+      state,
+      subject,
+    );
+    let lastResult: ScalarBuffMbtProjection["lastResult"] = "init";
+    let lastInvalidReason: ScalarBuffMbtProjection["lastInvalidReason"] = "";
+
+    function reset(): void {
+      state = scalarBuffBattle();
+      subject = longstriderSubject();
+      fills = [];
+      holes = discoverLongstriderHoles(state, subject);
+      lastResult = "init";
+      lastInvalidReason = "";
+    }
+
+    function recordResult(result: BattleResolutionResult): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        holes = [];
+        lastInvalidReason = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        holes = result.holes;
+        lastInvalidReason = "";
+        return;
+      }
+      lastInvalidReason = mbtInvalidReason(result.reason);
+    }
+
+    return {
+      init: reset,
+      doFillLongstriderTarget: () => {
+        const target = requireHole(holes, "targetChoice");
+        fills = [spellTargetChoiceFill(target, skeletonId, "longstrider")];
+        recordResult(resolveBattleSubject({ state, subject, fills }));
+      },
+      doRejectStaleAfterResolved: () => {
+        recordResult(resolveBattleSubject({ state, subject, fills }));
+      },
+      step: () => {},
+      getState: () =>
+        projectScalarBuffMbtState({
+          state,
+          holes,
+          lastResult,
+          lastInvalidReason,
+        }),
+    };
+  });
+}
+
 function createAdrenalineRushDriver() {
   return defineDriver(adrenalineRushDriverSchema, () => {
     let state = adrenalineRushBattle();
@@ -721,6 +797,19 @@ function normalizeAdrenalineRushQuintState(
   };
 }
 
+function normalizeScalarBuffQuintState(raw: unknown): ScalarBuffMbtProjection {
+  const state = quintStateRecord(raw);
+
+  return {
+    fighterSpeed: numberFromQuintInt(state["qFighterSpeed"], "qFighterSpeed"),
+    goblinSpeed: numberFromQuintInt(state["qGoblinSpeed"], "qGoblinSpeed"),
+    actionAvailable: booleanField(state, "qActionAvailable"),
+    holes: quintHoleSet(state["qHoles"]).map(holeName).sort(),
+    lastResult: mbtLastResult(state["qLastResult"]),
+    lastInvalidReason: mbtLastInvalidReason(state["qLastInvalidReason"]),
+  };
+}
+
 function compareState(spec: MbtProjection, impl: MbtProjection): boolean {
   expect(impl).toEqual(spec);
   return true;
@@ -766,6 +855,13 @@ const extraAttackStateCheck = stateCheck(
 const adrenalineRushStateCheck = stateCheck(
   normalizeAdrenalineRushQuintState,
   (spec: AdrenalineRushMbtProjection, impl: AdrenalineRushMbtProjection) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+const scalarBuffStateCheck = stateCheck(
+  normalizeScalarBuffQuintState,
+  (spec: ScalarBuffMbtProjection, impl: ScalarBuffMbtProjection) => {
     expect(impl).toEqual(spec);
     return true;
   },
@@ -830,6 +926,22 @@ describe("battle-runtime MBT", () => {
       nTraces: Number(process.env["MBT_TRACES"] ?? 1),
       maxSteps: Number(process.env["MBT_STEPS"] ?? 2),
       stateCheck: adrenalineRushStateCheck,
+    });
+  }, 120_000);
+
+  it("replays Longstrider target-specific Speed increase", async () => {
+    await run({
+      spec: path.resolve(
+        import.meta.dirname,
+        "../battle-runtime-scalar-buff.mbt.qnt",
+      ),
+      init: "init",
+      step: "step",
+      driver: createScalarBuffDriver(),
+      backend: "typescript",
+      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
+      maxSteps: Number(process.env["MBT_STEPS"] ?? 2),
+      stateCheck: scalarBuffStateCheck,
     });
   }, 120_000);
 
@@ -976,6 +1088,34 @@ function projectAdrenalineRushMbtState(input: {
   };
 }
 
+function projectScalarBuffMbtState(input: {
+  readonly state: BattleState;
+  readonly holes: readonly BattleHole[];
+  readonly lastResult: ScalarBuffMbtProjection["lastResult"];
+  readonly lastInvalidReason: ScalarBuffMbtProjection["lastInvalidReason"];
+}): ScalarBuffMbtProjection {
+  const snapshot = snapshotBattle(input.state);
+  const fighter = snapshot.combatants.find(
+    (combatant) => combatant.combatantId === fighterId,
+  );
+  const skeleton = snapshot.combatants.find(
+    (combatant) => combatant.combatantId === skeletonId,
+  );
+  if (fighter == null || skeleton == null) {
+    throw new Error("Expected scalar buff MBT combatants.");
+  }
+  return {
+    fighterSpeed: Number(fighter.movement.speedFeet),
+    goblinSpeed: Number(skeleton.movement.speedFeet),
+    actionAvailable: snapshot.turn.actionResources.some(
+      (resource) => resource.source === "turn",
+    ),
+    holes: input.holes.map(projectHole).sort(),
+    lastResult: input.lastResult,
+    lastInvalidReason: input.lastInvalidReason,
+  };
+}
+
 function discoverAttackHoles(
   state: BattleState,
   subject: Extract<
@@ -991,6 +1131,23 @@ function discoverAttackHoles(
   );
   if (act == null) {
     throw new Error(`Expected ${subject.attackName} attack act.`);
+  }
+
+  return act.initialHoles;
+}
+
+function discoverLongstriderHoles(
+  state: BattleState,
+  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
+): readonly BattleHole[] {
+  const act = discoverBattleActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.actorId === subject.actorId &&
+      candidate.subject.invocation.spellId === subject.invocation.spellId,
+  );
+  if (act == null) {
+    throw new Error("Expected Longstrider spell act.");
   }
 
   return act.initialHoles;
@@ -1094,6 +1251,15 @@ function magicMissileSubject(): Extract<
   };
 }
 
+function longstriderSubject(): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
+  return {
+    tag: "actionSpell",
+    actorId: fighterId,
+    invocation: spellSlotInvocationRef("longstrider", 1, "scalarBuff"),
+    mode: { tag: "cast" },
+  };
+}
+
 function moveSubject(): Extract<
   BattleSubject,
   { readonly tag: "runtimeCommand"; readonly command: "move" }
@@ -1126,6 +1292,16 @@ function adrenalineRushBattle(): BattleState {
     battleId: battleId("battle-runtime-mbt-adrenaline-rush"),
     combatants: [
       adrenalineRushCreatureInit({ initiative: 20 }),
+      skeletonCreatureInit({ initiative: 10 }),
+    ],
+  });
+}
+
+function scalarBuffBattle(): BattleState {
+  return startBattleRight({
+    battleId: battleId("battle-runtime-mbt-scalar-buff"),
+    combatants: [
+      scalarBuffCasterCreatureInit({ initiative: 20 }),
       skeletonCreatureInit({ initiative: 10 }),
     ],
   });
@@ -1327,6 +1503,44 @@ function adrenalineRushCreatureInit(input: {
   };
 }
 
+function scalarBuffCasterCreatureInit(input: {
+  readonly initiative: number;
+}): BattleCreatureInit {
+  const unit = unitLibrary.requireUnit("longstrider");
+  if (unit.kind !== "spell") {
+    throw new Error("Expected Longstrider spell Unit.");
+  }
+  return {
+    combatantId: fighterId,
+    displayName: "Longstrider Caster",
+    initiative: initiativeScore(input.initiative),
+    side: partySide,
+    creatureInit: {
+      kind: "character",
+      characterId: characterId("scalar-buff-caster-character"),
+      characterUnitRefs: [],
+      classLevels: [{ className: "fighter", level: 1 }],
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(12),
+      maxHp: Hp(12),
+      tempHp: Hp(0),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: baseUnarmedStrike(),
+      spellcasting: {
+        spellcastingAbilityModifier: 3,
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [],
+        preparedSpells: [unit],
+        spellSlots: [{ spellLevel: 1, count: 1 }],
+      },
+    },
+  };
+}
+
 function extraAttackUnitRef(
   unit: UnitRecord,
 ): Extract<
@@ -1487,6 +1701,29 @@ function targetFill(
         attackerId: fighterId,
         targetId,
         allyId: combatantId("ally"),
+      },
+    ],
+  };
+}
+
+function spellTargetChoiceFill(
+  hole: BattleHole,
+  targetId: CombatantId,
+  spellId: string,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  if (hole.kind !== "targetChoice") {
+    throw new Error("Expected target choice hole.");
+  }
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value: targetId,
+    spatialFacts: [
+      {
+        kind: "spellTarget",
+        casterId: fighterId,
+        targetId,
+        spellId,
       },
     ],
   };

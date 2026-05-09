@@ -567,6 +567,12 @@ Feature and spell resources:
   modifier plus Proficiency Bonus, applies Cold damage on a hit, and records the
   `-10` Speed effect until the start of the caster's next turn without spending
   a Spell Slot;
+- prepared scalar buff spells admit `false_life`, `longstrider`, and
+  `shield_of_faith` from retained Spell Records. False Life grants rolled
+  Temporary Hit Points to the caster, Longstrider applies a timed Speed increase
+  to selected targets with slot-scaled target count, and Shield of Faith applies
+  a concentration-owned AC bonus. Overlapping effects from the same spell do not
+  stack on the same target;
 - pure damage spell attacks such as `poison_spray` use the same spell attack
   damage replay without a post-damage rider;
 - save-gate spells ask for target selection when the spell names one creature,

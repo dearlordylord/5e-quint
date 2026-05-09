@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 348,
-      "numerator": 78,
-      "percent": "22.4%"
+      "numerator": 81,
+      "percent": "23.3%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 415,
-      "numerator": 102,
-      "percent": "24.6%"
+      "numerator": 105,
+      "percent": "25.3%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,47 +59,47 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 103
+      "value": 106
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 49,
-      "numerator": 45,
-      "percent": "91.8%"
+      "denominator": 52,
+      "numerator": 48,
+      "percent": "92.3%"
     },
     "profileClassificationCoverage": {
-      "denominator": 103,
-      "numerator": 103,
+      "denominator": 106,
+      "numerator": 106,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 27,
-      "numerator": 27,
+      "denominator": 28,
+      "numerator": 28,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 27,
-      "numerator": 26,
-      "percent": "96.3%"
+      "denominator": 28,
+      "numerator": 27,
+      "percent": "96.4%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 27,
-      "numerator": 27,
+      "denominator": 28,
+      "numerator": 28,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 27,
-      "numerator": 27,
+      "denominator": 28,
+      "numerator": 28,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 49,
+      "denominator": 52,
       "numerator": 10,
-      "percent": "20.4%"
+      "percent": "19.2%"
     },
     "supportedProfileCoverage": {
-      "denominator": 79,
-      "numerator": 49,
-      "percent": "62%"
+      "denominator": 82,
+      "numerator": 52,
+      "percent": "63.4%"
     }
   },
   "metricSemantics": [
@@ -945,6 +945,30 @@
       ]
     },
     {
+      "id": "spell.scalar-buff",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "SRDINV30A"
+      ],
+      "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, or Armor Class effects",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        }
+      ]
+    },
+    {
       "id": "stat-block.attack-control",
       "profileKind": "stat-block-control",
       "qntOwners": [
@@ -1307,6 +1331,22 @@
         "spell.invocation-chained-attack-damage"
       ],
       "taskId": "SRDINV29F3"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for scalar buff spells: self Temporary Hit Points, timed Speed increase, and concentration Armor Class bonus.",
+      "profileIds": [
+        "spell.scalar-buff"
+      ],
+      "taskId": "SRDINV30A"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests for False Life, Longstrider, and Shield of Faith scalar buff spells.",
+      "profileIds": [
+        "spell.scalar-buff"
+      ],
+      "taskId": "SRDINV30A"
     }
   ],
   "units": [
@@ -4024,6 +4064,60 @@
         "status": "installed"
       },
       "claim": {
+        "profileIds": [
+          "spell.scalar-buff"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV30A"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.scalar-buff",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV30A"
+          ],
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, or Armor Class effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/false_life.json",
+      "unitId": "false_life"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "futureProfileOwner": "QCORE10",
         "issue": "QMBT23 keeps SRD Fire Bolt out of supported spell evidence until promoted spell invocation has an explicit object-target branch and object-ignition effect outcome; table-supplied object facts are required but are not a complete runtime boundary.",
         "tag": "needs-surface-widening"
@@ -4277,6 +4371,60 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/light.json",
       "unitId": "light"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "spell.scalar-buff"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV30A"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.scalar-buff",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV30A"
+          ],
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, or Armor Class effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/longstrider.json",
+      "unitId": "longstrider"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -5202,6 +5350,60 @@
       ],
       "sourceRecordPath": "packages/surface/content/shield.json",
       "unitId": "shield"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "spell.scalar-buff"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV30A"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.scalar-buff",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV30A"
+          ],
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, or Armor Class effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/shield_of_faith.json",
+      "unitId": "shield_of_faith"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -6965,24 +7167,6 @@
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [],
-      "sourceRecordPath": "packages/surface/content/false_life.json",
-      "unitId": "false_life"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
       "sourceRecordPath": "packages/surface/content/fear.json",
       "unitId": "fear"
     },
@@ -7620,24 +7804,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/lightning_bolt.json",
       "unitId": "lightning_bolt"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/longstrider.json",
-      "unitId": "longstrider"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -9762,24 +9928,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/shatter.json",
       "unitId": "shatter"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/shield_of_faith.json",
-      "unitId": "shield_of_faith"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

@@ -1,6 +1,7 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.invocation-chained-attack-damage spell.invocation-condition-save
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.invocation-chained-attack-damage spell.invocation-condition-save spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-chained-attack-damage
 module battleRuntime {
   // SRD traceability for this canonical battle runtime spec:
@@ -162,7 +163,7 @@ module battleRuntime {
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack
   type ChainedSpellAttackDamageInvocation =
     | ChromaticOrbChainedSpellAttack
@@ -177,9 +178,10 @@ module battleRuntime {
   type SaveGatedDamageSuccess = NoDamageOnSaveSuccess | HalfDamageOnSaveSuccess
   type MovementSpeedKind = WalkSpeedKind | ClimbSpeedKind | SwimSpeedKind
   type DirectHitPointRestorationSpell = HealingWordRestoration | CureWoundsRestoration | MassHealingWordRestoration
+  type ScalarBuffSpell = FalseLifeScalarBuff | LongstriderScalarBuff | ShieldOfFaithScalarBuff
   type SpellActionCost = SpellMagicAction | SpellBonusAction
 
-  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained
+  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
 
   type ChainedSpellAttackDamageHole =
@@ -660,6 +662,8 @@ module battleRuntime {
         | MageArmor => true
         | RayOfFrostSpeedDelta => false
         | ShieldArmorClassBonus => false
+        | LongstriderSpeedDelta => false
+        | ShieldOfFaithArmorClassBonus => false
         | RayOfSicknessPoisoned => false
         | ShockingGraspOpportunityAttackDenied => false
         | GuidingBoltNextAttackAdvantage => false
@@ -667,7 +671,9 @@ module battleRuntime {
         | ColorSprayBlinded => false
         | EntangleRestrained => false
       })) 13 + dexMod else baseAc
-      if (effects.contains(ShieldArmorClassBonus)) base + 5 else base
+      val shieldBonus = if (effects.contains(ShieldArmorClassBonus)) 5 else 0
+      val shieldOfFaithBonus = if (effects.contains(ShieldOfFaithArmorClassBonus)) 2 else 0
+      base + shieldBonus + shieldOfFaithBonus
     }
 
   pure def openHoles(state: BattleState): Set[Hole] =
@@ -1226,7 +1232,10 @@ module battleRuntime {
       { ...state, actionAvailable: false }
     else {
       val adjustedDamage = damageAfterAdjustments(damageRoll + 2, Slashing, fighterRageResistances(state), Set(), Set())
-      { ...state, fighter: applyDamage(state.fighter, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded), actionAvailable: false }
+      {
+        ...stateWithFighterDamage(state, applyDamage(state.fighter, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded)),
+        actionAvailable: false,
+      }
     }
 
   pure def resolveGoblinMultiattack(state: BattleState): BattleState =
@@ -1252,8 +1261,7 @@ module battleRuntime {
     else {
       val adjustedDamage = damageAfterAdjustments(damageRoll + 2, Slashing, fighterRageResistances(state), Set(), Set())
       {
-        ...state,
-        fighter: applyDamage(state.fighter, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded),
+        ...stateWithFighterDamage(state, applyDamage(state.fighter, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded)),
         goblinMultiattackDispatchesRemaining: state.goblinMultiattackDispatchesRemaining - 1,
       }
     }
@@ -1281,7 +1289,7 @@ module battleRuntime {
       state
     else {
       val adjustedDamage = damageAfterAdjustments(damageRoll + 2, Slashing, fighterRageResistances(state), Set(), Set())
-      { ...state, fighter: applyDamageWithDisposition(state.fighter, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, damageDisposition) }
+      stateWithFighterDamage(state, applyDamageWithDisposition(state.fighter, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, damageDisposition))
     }
 
   pure def resolveGoblinOpportunityAttackWithUncannyDodge(
@@ -1297,7 +1305,7 @@ module battleRuntime {
       state
     else {
       val adjustedDamage = damageAfterAdjustments(uncannyDodgeDamage(damageRoll + 2), Slashing, fighterRageResistances(state), Set(), Set())
-      { ...state, fighter: applyDamage(state.fighter, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded) }
+      stateWithFighterDamage(state, applyDamage(state.fighter, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded))
     }
 
   pure def resolveRayOfFrost(
@@ -1390,7 +1398,17 @@ module battleRuntime {
   }
 
   pure def breakConcentration(target: Combatant): Combatant =
-    { ...target, concentrating: false, activeEffects: target.activeEffects.exclude(Set(MageArmor)) }
+    { ...target, concentrating: false, activeEffects: target.activeEffects.exclude(Set(MageArmor, ShieldOfFaithArmorClassBonus)) }
+
+  pure def stateWithFighterDamage(state: BattleState, damagedFighter: Combatant): BattleState =
+    if (state.fighter.concentrating and not(damagedFighter.concentrating))
+      {
+        ...state,
+        fighter: damagedFighter,
+        goblin: { ...state.goblin, activeEffects: state.goblin.activeEffects.exclude(Set(ShieldOfFaithArmorClassBonus)) },
+      }
+    else
+      { ...state, fighter: damagedFighter }
 
   pure def applyDamage(target: Combatant, damage: int, deathFailuresAtZeroHp: int, concentrationSaveSucceeded: bool): Combatant =
     applyDamageWithDisposition(target, damage, deathFailuresAtZeroHp, concentrationSaveSucceeded, OrdinaryDamage)
@@ -1526,12 +1544,14 @@ module battleRuntime {
   pure def movementRemaining(combatant: Combatant): int =
     if (combatant.speed - combatant.movementSpent < 0) 0 else combatant.speed - combatant.movementSpent
 
-  pure def movementSpeed(combatant: Combatant, speedKind: MovementSpeedKind): int =
+  pure def movementSpeed(combatant: Combatant, speedKind: MovementSpeedKind): int = {
+    val walkSpeed = combatant.speed + (if (combatant.activeEffects.contains(LongstriderSpeedDelta)) 10 else 0)
     match speedKind {
-      | WalkSpeedKind => combatant.speed
-      | ClimbSpeedKind => if (combatant.hasRovingSpeedKindGrants) combatant.speed else 0
-      | SwimSpeedKind => if (combatant.hasRovingSpeedKindGrants) combatant.speed else 0
+      | WalkSpeedKind => walkSpeed
+      | ClimbSpeedKind => if (combatant.hasRovingSpeedKindGrants) walkSpeed else 0
+      | SwimSpeedKind => if (combatant.hasRovingSpeedKindGrants) walkSpeed else 0
     }
+  }
 
   pure def fighterGoblinGrappleExists(state: BattleState): bool =
     match state.grapple {
@@ -1720,6 +1740,92 @@ module battleRuntime {
       {
         ...state,
         fighter: healed,
+        actionAvailable: if (actionCost == SpellMagicAction) false else state.actionAvailable,
+        bonusActionAvailable: if (actionCost == SpellBonusAction) false else state.bonusActionAvailable,
+        spellSlotExpendedThisTurn: true,
+      }
+    } else {
+      state
+    }
+  }
+
+  pure def scalarBuffActionCost(invocation: ScalarBuffSpell): SpellActionCost =
+    if (invocation == ShieldOfFaithScalarBuff) SpellBonusAction
+    else SpellMagicAction
+
+  pure def scalarBuffMaximumTargets(invocation: ScalarBuffSpell, slotLevel: int): int =
+    if (invocation == LongstriderScalarBuff) slotLevel else 1
+
+  pure def scalarBuffTemporaryHitPoints(invocation: ScalarBuffSpell, slotLevel: int, rolledDice: int): int =
+    if (invocation == FalseLifeScalarBuff) rolledDice + 4 + ((if (slotLevel > 1) slotLevel - 1 else 0) * 5)
+    else 0
+
+  pure def scalarBuffActiveEffects(invocation: ScalarBuffSpell): Set[ActiveEffect] =
+    match invocation {
+      | FalseLifeScalarBuff => Set()
+      | LongstriderScalarBuff => Set(LongstriderSpeedDelta)
+      | ShieldOfFaithScalarBuff => Set(ShieldOfFaithArmorClassBonus)
+    }
+
+  pure def scalarBuffCombatant(
+    combatant: Combatant,
+    invocation: ScalarBuffSpell,
+    slotLevel: int,
+    rolledDice: int,
+  ): Combatant =
+    if (invocation == FalseLifeScalarBuff)
+      { ...combatant, tempHp: if (combatant.tempHp > scalarBuffTemporaryHitPoints(invocation, slotLevel, rolledDice)) combatant.tempHp else scalarBuffTemporaryHitPoints(invocation, slotLevel, rolledDice) }
+    else
+      { ...combatant, activeEffects: combatant.activeEffects.union(scalarBuffActiveEffects(invocation)) }
+
+  pure def scalarBuffTargetedState(
+    state: BattleState,
+    invocation: ScalarBuffSpell,
+    targets: Set[Actor],
+    slotLevel: int,
+    rolledDice: int,
+  ): BattleState =
+    {
+      ...state,
+      fighter: if (targets.contains(Fighter)) scalarBuffCombatant(state.fighter, invocation, slotLevel, rolledDice) else state.fighter,
+      goblin: if (targets.contains(Goblin)) scalarBuffCombatant(state.goblin, invocation, slotLevel, rolledDice) else state.goblin,
+    }
+
+  pure def resolveScalarBuffSpell(
+    state: BattleState,
+    invocation: ScalarBuffSpell,
+    targets: Set[Actor],
+    slotLevel: int,
+    rolledDice: int,
+  ): BattleState = {
+    val actionCost = scalarBuffActionCost(invocation)
+    val targetCount = targets.size()
+    val validTargetCount = targetCount >= 1 and targetCount <= scalarBuffMaximumTargets(invocation, slotLevel)
+    val canSpendActionCost =
+      if (actionCost == SpellBonusAction) state.bonusActionAvailable
+      else state.actionAvailable
+    if (
+      currentActor(state) == Fighter and
+      validTargetCount and
+      canSpendActionCost and
+      canExpendSpellSlotThisTurn(state) and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state))
+    ) {
+      val concentrationBase =
+        if (invocation == ShieldOfFaithScalarBuff)
+          {
+            ...state,
+            fighter: breakConcentration(state.fighter),
+            goblin: { ...state.goblin, activeEffects: state.goblin.activeEffects.exclude(Set(ShieldOfFaithArmorClassBonus)) },
+          }
+        else
+          state
+      val effected = scalarBuffTargetedState(concentrationBase, invocation, targets, slotLevel, rolledDice)
+      {
+        ...effected,
+        fighter: { ...effected.fighter, concentrating: if (invocation == ShieldOfFaithScalarBuff) true else effected.fighter.concentrating },
         actionAvailable: if (actionCost == SpellMagicAction) false else state.actionAvailable,
         bonusActionAvailable: if (actionCost == SpellBonusAction) false else state.bonusActionAvailable,
         spellSlotExpendedThisTurn: true,
@@ -1938,6 +2044,9 @@ module battleRuntime {
       | CureWounds => true
       | MassHealingWord => true
       | Shield => true
+      | FalseLife => true
+      | Longstrider => true
+      | ShieldOfFaith => true
       | ShockingGrasp => false
       | GuidingBolt => true
       | RayOfSickness => true
@@ -3944,6 +4053,38 @@ module battleRuntime {
     all {
       assert(activeEffectArmorClass(10, 2, Set(MageArmor)) == 15),
       assert(activeEffectArmorClass(10, 2, Set(RayOfFrostSpeedDelta)) == 10),
+    }
+  }
+
+  run test_scalar_buff_longstrider_targets_selected_creature = {
+    val result = resolveScalarBuffSpell(initialState, LongstriderScalarBuff, Set(Goblin), 1, 0)
+    all {
+      assert(not(result.fighter.activeEffects.contains(LongstriderSpeedDelta))),
+      assert(result.goblin.activeEffects.contains(LongstriderSpeedDelta)),
+      assert(movementSpeed(result.goblin, WalkSpeedKind) == 40),
+    }
+  }
+
+  run test_scalar_buff_shield_of_faith_targets_selected_creature_and_uses_concentration = {
+    val result = resolveScalarBuffSpell(initialState, ShieldOfFaithScalarBuff, Set(Goblin), 1, 0)
+    all {
+      assert(result.fighter.concentrating),
+      assert(not(result.fighter.activeEffects.contains(ShieldOfFaithArmorClassBonus))),
+      assert(result.goblin.activeEffects.contains(ShieldOfFaithArmorClassBonus)),
+      assert(combatantArmorClass(result.goblin) == 17),
+    }
+  }
+
+  run test_scalar_buff_shield_of_faith_ends_when_caster_concentration_breaks = {
+    val concentrating = {
+      ...endTurn(initialState),
+      fighter: { ...initialState.fighter, concentrating: true },
+      goblin: { ...initialState.goblin, activeEffects: Set(ShieldOfFaithArmorClassBonus) },
+    }
+    val result = resolveGoblinAttack(concentrating, 20, 18, 5, false)
+    all {
+      assert(not(result.fighter.concentrating)),
+      assert(not(result.goblin.activeEffects.contains(ShieldOfFaithArmorClassBonus))),
     }
   }
 

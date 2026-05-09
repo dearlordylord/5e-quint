@@ -97,7 +97,7 @@ flowchart TD
   EndTurn["runtimeCommand.endTurn<br/>success: resolved next turn<br/>invalid: fills are not accepted"]
   Attack["action.attack + attackName<br/>success: staged target/roll/damage replay<br/>invalid: actor missing, unsupported shape, no action resource, bad fills"]
   UnitFeature["unitFeature<br/>success: spend retained feature resource and resolve supported Unit procedure<br/>invalid: no use remains, no Bonus Action, or already used this turn"]
-  Magic["actionSpell + spellId<br/>success: staged action-time spell replay via Magic action, including supported attack, save, damage, and mixed attack-plus-burst spells<br/>invalid: unsupported spell shape, no Magic action, no slot for prepared spell"]
+  Magic["actionSpell + spellId<br/>success: staged action-time spell replay via Magic action, including supported attack, save, damage, mixed attack-plus-burst, and scalar buff spells<br/>invalid: unsupported spell shape, no Magic action, no slot for prepared spell"]
   AttackOption["supported Attack action option<br/>source: BattleCreatureState.origin character weapon or StatBlockRecord named attack<br/>why: selected attack identity and authored damage facts stay coupled"]
   Target["target choice<br/>caller/table supplies spatially legal target using authored reach/range metadata; ranged facts carry normal or long range band<br/>needsHoles until caller selects a combatant"]
   Roll["attack roll<br/>needsHoles until caller supplies AttackRollResult"]

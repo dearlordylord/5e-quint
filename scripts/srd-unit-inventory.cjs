@@ -187,13 +187,10 @@ const spellUnitExecutableFollowUpBatches = [
       "bane",
       "bless",
       "faerie_fire",
-      "false_life",
       "guidance",
       "heroism",
-      "longstrider",
       "protection_from_evil_and_good",
       "resistance",
-      "shield_of_faith",
     ],
   },
   {
@@ -1933,7 +1930,9 @@ function spellExecutableFollowUpRows(spellPressure, batchId) {
       return false;
     }
     if (!row.candidateUnitId) return false;
-    return spellUnitExecutableFollowUps.get(row.candidateUnitId)?.id === batchId;
+    return (
+      spellUnitExecutableFollowUps.get(row.candidateUnitId)?.id === batchId
+    );
   });
 }
 
@@ -2086,9 +2085,7 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
     "spell-attack-and-save-damage-runtime",
   );
   const spellRowsByUnitIds = (unitIds) =>
-    spellPressure.filter((row) =>
-      unitIds.includes(row.candidateUnitId),
-    );
+    spellPressure.filter((row) => unitIds.includes(row.candidateUnitId));
   const srdinv28PureDamageRows = spellRowsByUnitIds([]);
   const srdinv28SpellAttackDamageRows = spellRowsByUnitIds([
     "chill_touch",
@@ -2111,11 +2108,7 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
   const srdinv29DGreaseRows = spellRowsByUnitIds(["grease"]);
   const srdinv29EIceKnifeRows = spellRowsByUnitIds(["ice_knife"]);
   const srdinv29FChromaticOrbRows = spellRowsByUnitIds(["chromatic_orb"]);
-  const srdinv30ASimpleBuffRows = spellRowsByUnitIds([
-    "false_life",
-    "longstrider",
-    "shield_of_faith",
-  ]);
+  const srdinv30ASimpleBuffRows = spellRowsByUnitIds([]);
   const srdinv30BRollModifierRows = spellRowsByUnitIds([
     "bane",
     "bless",
@@ -2131,17 +2124,11 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
   const srdinv31ADivineFavorRows = spellRowsByUnitIds(["divine_favor"]);
   const srdinv31BHuntersMarkRows = spellRowsByUnitIds(["hunters_mark"]);
   const srdinv31CDivineSmiteRows = spellRowsByUnitIds(["divine_smite"]);
-  const srdinv31DEnsnaringStrikeRows = spellRowsByUnitIds([
-    "ensnaring_strike",
-  ]);
+  const srdinv31DEnsnaringStrikeRows = spellRowsByUnitIds(["ensnaring_strike"]);
   const srdinv31ESearingSmiteRows = spellRowsByUnitIds(["searing_smite"]);
   const srdinv31FTrueStrikeRows = spellRowsByUnitIds(["true_strike"]);
-  const srdinv32AProduceFlameLightRows = spellRowsByUnitIds([
-    "produce_flame",
-  ]);
-  const srdinv32BProduceFlameHurlRows = spellRowsByUnitIds([
-    "produce_flame",
-  ]);
+  const srdinv32AProduceFlameLightRows = spellRowsByUnitIds(["produce_flame"]);
+  const srdinv32BProduceFlameHurlRows = spellRowsByUnitIds(["produce_flame"]);
 
   const batches = [
     makeBatch({
@@ -2562,8 +2549,7 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
       id: "SRDINV28D",
       title: "Promote Spell Rider Timing Runtime",
       suggestedStatus: "blocked-on-SRDINV28B-SRDINV28C",
-      intent:
-        "Promote simple spell rider timing with source-owned expiration.",
+      intent: "Promote simple spell rider timing with source-owned expiration.",
       rows: srdinv28RiderTimingRows,
       nextAction:
         "Add executable support for Poisoned, Opportunity Attack denial, next-attack advantage/disadvantage, healing suppression where modeled, and condition/source ownership without removing unrelated pre-existing conditions.",
@@ -2670,8 +2656,7 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
       id: "SRDINV30B",
       title: "Promote Roll Modifier Spell Runtime",
       suggestedStatus: "blocked-on-SRDINV28A-SRDINV28E",
-      intent:
-        "Promote Bane, Bless, and Guidance as D20 roll modifier spells.",
+      intent: "Promote Bane, Bless, and Guidance as D20 roll modifier spells.",
       rows: srdinv30BRollModifierRows,
       nextAction:
         "Model save-gated negative modifiers, unconditional positive modifiers, ability-check skill filtering where authored, concentration, and slot-scaled target counts.",
@@ -2802,8 +2787,7 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
       id: "SRDINV32A",
       title: "Promote Produce Flame Held Light Runtime",
       suggestedStatus: "blocked-on-SRDINV28A-SRDINV28E",
-      intent:
-        "Promote Produce Flame as held illumination with recast expiry.",
+      intent: "Promote Produce Flame as held illumination with recast expiry.",
       rows: srdinv32AProduceFlameLightRows,
       nextAction:
         "Model Bonus Action casting, one active held flame, Bright Light and Dim Light facts, timed duration, and ending when the caster recasts the spell.",
@@ -2825,8 +2809,7 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
     makeBatch({
       id: "SRDINV33",
       title: "Recursive SRD Inventory Planning Review",
-      suggestedStatus:
-        "blocked-on-SRDINV28A-SRDINV28E-SRDINV29A-SRDINV32B",
+      suggestedStatus: "blocked-on-SRDINV28A-SRDINV28E-SRDINV29A-SRDINV32B",
       intent:
         "Review SRDINV28A-SRDINV28E and SRDINV29A-SRDINV32B spell-runtime closure and append the next concrete spell frontier.",
       rows: spellPressure,
