@@ -161,14 +161,24 @@ function validateProfiles(profiles) {
   return issues;
 }
 
-function validateUnitClaims(claims, inventory, profiles) {
+function unitClaimCollectionId(unit) {
+  return (
+    unit.collectionId ??
+    (unit.provenance?.kind === "srd-5.2.1" ? "srd-5.2.1" : undefined)
+  );
+}
+
+function validateUnitClaims(claims, inventory, authoredSurfaceUnits, profiles) {
   const issues = [];
-  const inventoryIds = new Set(inventory.map((unit) => unit.unitId));
+  const claimableUnitsById = new Map(
+    [...inventory, ...authoredSurfaceUnits].map((unit) => [unit.unitId, unit]),
+  );
   const profileIds = new Set(profiles.map((profile) => profile.id));
   const claimsByUnit = new Map();
 
   for (const claim of claims) {
-    if (!inventoryIds.has(claim.unitId)) {
+    const claimedUnit = claimableUnitsById.get(claim.unitId);
+    if (claimedUnit === undefined) {
       issues.push(`Claim references unknown Unit id ${claim.unitId}.`);
     }
     if (claimsByUnit.has(claim.unitId)) {
@@ -261,6 +271,21 @@ function validateUnitClaims(claims, inventory, profiles) {
     if (claim.collectionId !== unit.collectionId) {
       issues.push(
         `Unit ${unit.unitId} claim collection ${claim.collectionId} does not match inventory ${unit.collectionId}.`,
+      );
+    }
+  }
+  for (const [unitId, claim] of claimsByUnit.entries()) {
+    const claimedUnit = claimableUnitsById.get(unitId);
+    if (claimedUnit === undefined || claimedUnit.collectionId !== undefined) {
+      continue;
+    }
+    const expectedCollectionId = unitClaimCollectionId(claimedUnit);
+    if (
+      expectedCollectionId !== undefined &&
+      claim.collectionId !== expectedCollectionId
+    ) {
+      issues.push(
+        `Unit ${unitId} claim collection ${claim.collectionId} does not match authored Surface provenance ${expectedCollectionId}.`,
       );
     }
   }
@@ -794,12 +819,13 @@ function validateCoverageInputs({
   unitClaims,
   unitEvidence,
   taskClaims,
+  authoredSurfaceUnits,
   scannedClaims,
 }) {
   return [
     ...validateCollections(collections.collections, inventory),
     ...validateProfiles(profiles),
-    ...validateUnitClaims(unitClaims, inventory, profiles),
+    ...validateUnitClaims(unitClaims, inventory, authoredSurfaceUnits, profiles),
     ...validateUnitEvidence(root, unitEvidence, unitClaims, scannedClaims),
     ...validateOwnerClaims(
       profiles,

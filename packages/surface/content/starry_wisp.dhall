@@ -1,6 +1,11 @@
 -- Starry Wisp — SRD 5.2.1 Cantrip, Evocation.
 -- Family: activation (single attack_roll phase).
 -- Ranged spell attack; on hit: 1d8 Radiant damage (cantrip scaling).
+-- TARGET BLOCKER: RAW targets "one creature or object within range". The
+-- battle-runtime spell invocation profile currently admits combatant targets
+-- only, so this Unit must stay unsupported until object-target identity,
+-- attack adjudication, damage disposition, Dim Light emission, and Invisible
+-- benefit denial are executable.
 -- OMITTED RIDERS: "emits Dim Light in a 10-foot radius" and
 --   "can't benefit from the Invisible condition until end of next turn"
 --   → both require new atoms not in v4:
@@ -34,7 +39,9 @@ let starryWisp =
                     , label = "target"
                     , value =
                         { kind = "target"
-                        , selection = { mode = "one" }
+                        , selection =
+                            { mode = "one" }
+                              // { targetKinds = [ "creature", "object" ] }
                         }
                     }
                 , attackKind = "ranged_spell_attack"

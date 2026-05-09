@@ -889,8 +889,14 @@ function installedSpellUnitOwnerClassification(
   if (
     row.rowKind !== "spell-unit-pressure" ||
     (row.levelBand !== "spell-level-0" && row.levelBand !== "spell-level-1") ||
-    !row.candidateUnitId ||
-    !installedIds?.has(row.candidateUnitId)
+    !row.candidateUnitId
+  ) {
+    return undefined;
+  }
+  const isInstalled = installedIds?.has(row.candidateUnitId) ?? false;
+  if (
+    !isInstalled &&
+    !ownerEvidenceSources.unitClaims.has(row.candidateUnitId)
   ) {
     return undefined;
   }
@@ -2789,10 +2795,11 @@ function validateSrdUnitInventory(report) {
       }
       if (
         spellUnitExecutableFollowUps.has(row.candidateUnitId) &&
-        row.finalDisposition !== "catalog-authored-executable-follow-up"
+        row.finalDisposition !== "catalog-authored-executable-follow-up" &&
+        row.finalDisposition !== "needs-surface-widening"
       ) {
         issues.push(
-          `${row.id} is an authored Spell Unit executable follow-up but is not classified catalog-authored-executable-follow-up.`,
+          `${row.id} is an authored Spell Unit executable follow-up but is not classified catalog-authored-executable-follow-up or needs-surface-widening.`,
         );
       }
     }

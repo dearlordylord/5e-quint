@@ -64,6 +64,7 @@ function main() {
     root,
     collections,
     inventory,
+    authoredSurfaceUnits,
     profiles,
     unitClaims,
     unitEvidence,

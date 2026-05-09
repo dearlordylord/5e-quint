@@ -96,7 +96,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Unit | Collection | Profiles | Supported Mechanics | Deferred Mechanics |
 | --- | --- | --- | --- | --- |
-| `chill_touch` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | combatant-target melee spell attack damage; cantrip damage scaling; readied Action-time spell release | non-combatant target eligibility for the SRD generic target wording (SRDINV28E); target can't regain Hit Points until the end of the caster's next turn (SRDINV28D) |
+| `chill_touch` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | combatant-target melee spell attack damage; cantrip damage scaling; readied Action-time spell release | non-combatant target eligibility for the SRD generic target wording (SRDINV34); target can't regain Hit Points until the end of the caster's next turn (SRDINV28D) |
 
 ## Authored Surface Units Not In Unit Catalog
 
@@ -819,7 +819,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Unit | Profiles | Task | Owner | Deferred Mechanics |
 | --- | --- | --- | --- | --- |
-| `chill_touch` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28C | `packages/battle-runtime/src/unit-profile-admission.test.ts` | non-combatant target eligibility for the SRD generic target wording (SRDINV28E); target can't regain Hit Points until the end of the caster's next turn (SRDINV28D) |
+| `chill_touch` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28C | `packages/battle-runtime/src/unit-profile-admission.test.ts` | non-combatant target eligibility for the SRD generic target wording (SRDINV34); target can't regain Hit Points until the end of the caster's next turn (SRDINV28D) |
 
 ## Selected Identity MBT Evidence
 
@@ -876,7 +876,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `rogue_weapon_mastery` | unsupported-profile | Weapon mastery grant container; mastery Unit carries executable pressure. |
 | `mastery_sap` | unsupported-profile | Weapon mastery rider is authored but not yet a stable Unit profile row. |
 | `orc_darkvision` | unsupported-profile | Sense grant is authored data with no promoted execution profile. |
-| `chill_touch` | profile-subset-supported | supported subset: combatant-target melee spell attack damage; cantrip damage scaling; readied Action-time spell release; deferred: non-combatant target eligibility for the SRD generic target wording (SRDINV28E); target can't regain Hit Points until the end of the caster's next turn (SRDINV28D) |
+| `chill_touch` | profile-subset-supported | supported subset: combatant-target melee spell attack damage; cantrip damage scaling; readied Action-time spell release; deferred: non-combatant target eligibility for the SRD generic target wording (SRDINV34); target can't regain Hit Points until the end of the caster's next turn (SRDINV28D) |
 | `fire_bolt` | needs-surface-widening | QMBT23 keeps SRD Fire Bolt out of supported spell evidence until promoted spell invocation has an explicit object-target branch and object-ignition effect outcome; table-supplied object facts are required but are not a complete runtime boundary. |
 | `light` | unsupported-profile | Object light effect is authored but not promoted as an execution profile yet. |
 | `detect_magic` | unsupported-profile | Detection/concentration search semantics are not promoted as a battle Unit profile. |
@@ -894,6 +894,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `weapon_flail` | unsupported-profile | Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix. |
 | `weapon_shortbow` | unsupported-profile | Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix. |
 | `weapon_shortsword` | unsupported-profile | Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix. |
+| `starry_wisp` | needs-surface-widening | SRDINV28E keeps Starry Wisp out of supported spell evidence because the SRD target is one creature or object within range, while promoted Spell Invocation target selection and damage application currently admit combatant targets only; object identity, object AC/HP damage disposition, Dim Light emission, and Invisible benefit denial are not executable runtime facts. |
 
 ## Unsupported Pressure Summary
 
@@ -901,6 +902,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | --- | --- | --- | ---: | --- |
 | srd-5.2.1 | unassigned | unsupported-profile | 51 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `bard_bardic_inspiration`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `monk_martial_arts`, `ranger_favored_enemy`, `rogue_expertise`, `rogue_thieves_cant`, `sorcerer_innate_sorcery`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `mastery_sap`, `orc_darkvision`, `light`, `detect_magic`, `sleep`, `eldritch_blast`, `minor_illusion`, `charm_person`, `hellish_rebuke`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
 | srd-5.2.1 | QCORE10 | needs-surface-widening | 1 | `fire_bolt` |
+| srd-5.2.1 | SRDINV34 | needs-surface-widening | 1 | `starry_wisp` |
 | srd-5.2.1 | unassigned | needs-surface-widening | 1 | `thunderwave` |
 | srd-5.2.1 | unassigned | profile-subset-supported | 1 | `chill_touch` |
 

@@ -26,6 +26,7 @@ import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
 import myceliumStepInput from "../../../plans/unit-profile-coverage/fixtures/classic-non-srd/mycelium_step.json";
+import starryWispInput from "../../surface/content/starry_wisp.json";
 import {
   abilityModifier,
   defaultArmorClassState,
@@ -44,6 +45,7 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
+import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type {
   ActivationPhase,
   EffectAtom,
@@ -2744,6 +2746,24 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
       maybeSpellAct({
         state: spellBattle({ cantrips: [spell] }),
         spellId: fireBoltUnitId,
+      }),
+    ).toBeUndefined();
+  });
+
+  test("starry_wisp is not counted as deterministic admission while object targeting and visibility riders are unprojected", () => {
+    const unit = decodeUnitRecordSync(starryWispInput);
+
+    expect(unit.kind).toBe("spell");
+    if (unit.kind !== "spell") return;
+
+    const spell = unit;
+    expect(spell.id).toBe("starry_wisp");
+    expect(spell.mechanics.family).toBe("activation");
+    expect(spell.mechanics.level).toBe(0);
+    expect(
+      maybeSpellAct({
+        state: spellBattle({ cantrips: [spell] }),
+        spellId: spell.id,
       }),
     ).toBeUndefined();
   });

@@ -3494,7 +3494,7 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "SRDINV28E",
+            "followUpTaskId": "SRDINV34",
             "mechanic": "non-combatant target eligibility for the SRD generic target wording"
           },
           {
@@ -3526,7 +3526,60 @@
       ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-damage-save-or-attack",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE10",
+            "QMBT5"
+          ],
+          "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "spell.readied-action-time-spell",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE8",
+            "QCORE10",
+            "QMBT5"
+          ],
+          "title": "Action-time spell can be readied and released through the reaction protocol",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/chill_touch.json",
       "unitId": "chill_touch"
     },
@@ -9651,6 +9704,12 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "futureProfileOwner": "SRDINV34",
+        "issue": "SRDINV28E keeps Starry Wisp out of supported spell evidence because the SRD target is one creature or object within range, while promoted Spell Invocation target selection and damage application currently admit combatant targets only; object identity, object AC/HP damage disposition, Dim Light emission, and Invisible benefit denial are not executable runtime facts.",
+        "tag": "needs-surface-widening"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",

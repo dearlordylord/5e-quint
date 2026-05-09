@@ -185,9 +185,14 @@ function metrics({
   deterministicAdmissionProjectionEvidenceTag,
   selectedIdentityMbtEvidenceTag,
 }) {
-  const classified = unitClaims.length;
+  const inventoryIds = new Set(inventory.map((unit) => unit.unitId));
+  const installedUnitClaims = unitClaims.filter((claim) =>
+    inventoryIds.has(claim.unitId),
+  );
+  const classified = installedUnitClaims.length;
   const supportedUnitClaims = unitClaims.filter(
-    (claim) => claim.claim.tag === "supported-profile",
+    (claim) =>
+      inventoryIds.has(claim.unitId) && claim.claim.tag === "supported-profile",
   );
   const supportedUnitIds = new Set(
     supportedUnitClaims.map((claim) => claim.unitId),
@@ -376,6 +381,16 @@ function assertCatalogAdmissionDisposition(disposition) {
   return disposition;
 }
 
+function claimProfiles(claim, profileMap) {
+  if (
+    claim?.tag !== "supported-profile" &&
+    claim?.tag !== "profile-subset-supported"
+  ) {
+    return [];
+  }
+  return claim.profileIds.map((profileId) => profileMap.get(profileId));
+}
+
 function buildMatrix(
   {
     collections,
@@ -421,12 +436,7 @@ function buildMatrix(
         authoredSurfaceDuplicateIdCount:
           authoredUnitIdCounts.get(unit.unitId) ?? undefined,
         claim: claim?.claim,
-        profiles:
-          claim?.claim?.tag === "supported-profile"
-            ? claim.claim.profileIds.map((profileId) =>
-                profileMap.get(profileId),
-              )
-            : [],
+        profiles: claimProfiles(claim?.claim, profileMap),
         evidence: (evidenceByUnit.get(unit.unitId) ?? []).map(
           (row) => row.evidence,
         ),
@@ -435,10 +445,11 @@ function buildMatrix(
     .concat(
       authoredSurfaceUnits
         .filter((unit) => !installedSourcePaths.has(unit.sourceRecordPath))
-        .map((unit) =>
-          stable({
+        .map((unit) => {
+          const claim = claimsByUnit.get(unit.unitId);
+          return stable({
             unitId: unit.unitId,
-            collectionId: undefined,
+            collectionId: claim?.collectionId,
             catalogAdmission: {
               disposition: assertCatalogAdmissionDisposition(
                 notInCatalogDisposition(
@@ -455,11 +466,11 @@ function buildMatrix(
             executableMechanics: unit.executableMechanics,
             authoredSurfaceDuplicateIdCount:
               authoredUnitIdCounts.get(unit.unitId) ?? undefined,
-            claim: undefined,
-            profiles: [],
+            claim: claim?.claim,
+            profiles: claimProfiles(claim?.claim, profileMap),
             evidence: [],
-          }),
-        ),
+          });
+        }),
     );
   const executableProfiles = profiles.filter((profile) =>
     executableProfileKinds.has(profile.profileKind),
@@ -568,8 +579,11 @@ function renderReport(
   const authoredNotInCatalog = matrix.units.filter(
     (unit) => unit.catalogAdmission?.status === "not-in-unit-catalog",
   );
-  const unsupported = installedUnits.filter(
-    (unit) => unit.claim?.tag !== "supported-profile",
+  const unsupported = matrix.units.filter(
+    (unit) =>
+      (unit.catalogAdmission?.status === "installed" ||
+        unit.claim !== undefined) &&
+      unit.claim?.tag !== "supported-profile",
   );
   const supported = installedUnits.filter(
     (unit) => unit.claim?.tag === "supported-profile",
