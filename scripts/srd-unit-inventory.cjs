@@ -2116,22 +2116,43 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
     "vicious_mockery",
   ]);
   const srdinv28StarryWispRows = spellRowsByUnitIds(["starry_wisp"]);
-  const srdinv29SpellAreaChainAndTypedDamageRows = spellExecutableFollowUpRows(
-    spellPressure,
-    "spell-area-chain-and-typed-damage-runtime",
-  );
-  const srdinv30SpellBuffDebuffAndProtectionRows = spellExecutableFollowUpRows(
-    spellPressure,
-    "spell-buff-debuff-and-protection-runtime",
-  );
-  const srdinv31SpellAttackRiderAndSmiteRows = spellExecutableFollowUpRows(
-    spellPressure,
-    "spell-attack-rider-and-smite-runtime",
-  );
-  const srdinv32SpellHeldLightRows = spellExecutableFollowUpRows(
-    spellPressure,
-    "spell-held-light-and-hurled-attack-runtime",
-  );
+  const srdinv29ABurningHandsRows = spellRowsByUnitIds(["burning_hands"]);
+  const srdinv29BColorSprayRows = spellRowsByUnitIds(["color_spray"]);
+  const srdinv29CEntangleRows = spellRowsByUnitIds(["entangle"]);
+  const srdinv29DGreaseRows = spellRowsByUnitIds(["grease"]);
+  const srdinv29EIceKnifeRows = spellRowsByUnitIds(["ice_knife"]);
+  const srdinv29FChromaticOrbRows = spellRowsByUnitIds(["chromatic_orb"]);
+  const srdinv30ASimpleBuffRows = spellRowsByUnitIds([
+    "false_life",
+    "longstrider",
+    "shield_of_faith",
+  ]);
+  const srdinv30BRollModifierRows = spellRowsByUnitIds([
+    "bane",
+    "bless",
+    "guidance",
+  ]);
+  const srdinv30CProtectionRows = spellRowsByUnitIds([
+    "animal_friendship",
+    "protection_from_evil_and_good",
+  ]);
+  const srdinv30DHeroismRows = spellRowsByUnitIds(["heroism"]);
+  const srdinv30EFaerieFireRows = spellRowsByUnitIds(["faerie_fire"]);
+  const srdinv30FResistanceRows = spellRowsByUnitIds(["resistance"]);
+  const srdinv31ADivineFavorRows = spellRowsByUnitIds(["divine_favor"]);
+  const srdinv31BHuntersMarkRows = spellRowsByUnitIds(["hunters_mark"]);
+  const srdinv31CDivineSmiteRows = spellRowsByUnitIds(["divine_smite"]);
+  const srdinv31DEnsnaringStrikeRows = spellRowsByUnitIds([
+    "ensnaring_strike",
+  ]);
+  const srdinv31ESearingSmiteRows = spellRowsByUnitIds(["searing_smite"]);
+  const srdinv31FTrueStrikeRows = spellRowsByUnitIds(["true_strike"]);
+  const srdinv32AProduceFlameLightRows = spellRowsByUnitIds([
+    "produce_flame",
+  ]);
+  const srdinv32BProduceFlameHurlRows = spellRowsByUnitIds([
+    "produce_flame",
+  ]);
 
   const batches = [
     makeBatch({
@@ -2509,7 +2530,7 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
         "Reviewed SRDINV22-SRDINV26 promoted-runtime closure, recorded level-1 inventory completion, and appended the next concrete spell-runtime batch.",
       rows: levelOne,
       nextAction:
-        "Level-1 is complete; run SRDINV28A-SRDINV28E and SRDINV29-SRDINV32 before the next recursive SRDINV33 review.",
+        "Level-1 is complete; run SRDINV28A-SRDINV28E, the split SRDINV29A-SRDINV32B spell-runtime slices, and then SRDINV33 review.",
       acceptance:
         "SRDINV27 closed with final level-1 metrics and a concrete multi-task spell-runtime batch, not a recursive-only continuation.",
     }),
@@ -2573,64 +2594,257 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
         "Starry Wisp has either real object-target support or a checker-visible unsupported blocker.",
     }),
     makeBatch({
-      id: "SRDINV29",
-      title: "Promote Area, Chain, and Typed-Damage Spell Runtime",
+      id: "SRDINV29A",
+      title: "Promote Burning Hands Cone Damage Runtime",
       suggestedStatus: "blocked-on-SRDINV28A-SRDINV28E",
       intent:
-        "Promote authored Spell Definitions whose execution needs area resolution, chained targeting, or caster-chosen damage types.",
-      rows: srdinv29SpellAreaChainAndTypedDamageRows,
+        "Promote Burning Hands as self-origin cone save-for-half Fire damage with slot scaling.",
+      rows: srdinv29ABurningHandsRows,
       nextAction:
-        "Admit Chromatic Orb, Color Spray, Entangle, Grease, and Ice Knife after adding runtime support for spell-chosen damage types, chained target selection, mixed attack-plus-area resolution, area condition application, and terrain/ground effects.",
+        "Add the smallest self-origin cone target-list/fact boundary needed for Burning Hands while keeping spatial derivation caller supplied.",
       acceptance:
-        "Area, chain, and typed-damage Spell Unit rows have promoted runtime evidence while table-owned spatial facts remain caller supplied.",
+        "Burning Hands has deterministic admission/projection and promoted runtime evidence for cone save damage, half damage on success, slot scaling, and spell-slot/action spend.",
     }),
     makeBatch({
-      id: "SRDINV30",
-      title: "Promote Spell Buff, Debuff, and Protection Runtime",
+      id: "SRDINV29B",
+      title: "Promote Color Spray Cone Condition Runtime",
       suggestedStatus: "blocked-on-SRDINV28A-SRDINV28E",
       intent:
-        "Promote authored Spell Definitions that create timed buffs, debuffs, protection effects, or D20 modifiers.",
-      rows: srdinv30SpellBuffDebuffAndProtectionRows,
+        "Promote Color Spray as self-origin cone Blinded condition application with end-of-caster-next-turn expiration.",
+      rows: srdinv29BColorSprayRows,
       nextAction:
-        "Admit Animal Friendship, Bane, Bless, Faerie Fire, False Life, Guidance, Heroism, Longstrider, Protection from Evil and Good, Resistance, and Shield of Faith after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction.",
+        "Reuse the cone target-list/fact boundary from SRDINV29A if available, but keep condition source ownership and expiration tests explicit.",
       acceptance:
-        "Buff, debuff, and protection Spell Unit rows have promoted runtime evidence without duplicating Spell Definition source facts beside runtime spell effects.",
+        "Color Spray has promoted runtime evidence for save-gated Blinded application and precise source-owned expiration without affecting unrelated Blinded sources.",
     }),
     makeBatch({
-      id: "SRDINV31",
-      title: "Promote Attack-Rider and Smite Spell Runtime",
+      id: "SRDINV29C",
+      title: "Promote Entangle Area Restraint Runtime",
       suggestedStatus: "blocked-on-SRDINV28A-SRDINV28E",
       intent:
-        "Promote authored Spell Definitions that attach spell effects to weapon attacks, hit triggers, or retargetable marks.",
-      rows: srdinv31SpellAttackRiderAndSmiteRows,
+        "Promote Entangle as point-origin area Restrained application with Concentration duration and escape action.",
+      rows: srdinv29CEntangleRows,
       nextAction:
-        "Admit Divine Favor, Divine Smite, Ensnaring Strike, Hunter's Mark, Searing Smite, and True Strike after adding spell-hosted weapon attack riders, immediate hit-trigger Bonus Action casts, retargetable marks, ongoing start-turn damage, and spellcasting-ability weapon substitution.",
+        "Model caller-supplied square area facts, save-gated Restrained ownership, Concentration ending, and the Strength (Athletics) escape action.",
       acceptance:
-        "Attack-rider and smite Spell Unit rows have promoted runtime evidence with Spell Invocation, weapon attack, Concentration, and resource-spend facts kept distinct.",
+        "Entangle has promoted runtime evidence for initial area save, Restrained lifecycle, concentration cleanup, and escape action without grid/pathfinding derivation.",
     }),
     makeBatch({
-      id: "SRDINV32",
-      title: "Promote Held Light and Hurled Attack Spell Runtime",
+      id: "SRDINV29D",
+      title: "Promote Grease Ground Hazard Runtime",
       suggestedStatus: "blocked-on-SRDINV28A-SRDINV28E",
       intent:
-        "Promote Produce Flame through the held-light plus later hurled spell attack boundary.",
-      rows: srdinv32SpellHeldLightRows,
+        "Promote Grease as a timed ground area with on-cast Prone and recurring enter/end-turn saves.",
+      rows: srdinv29DGreaseRows,
       nextAction:
-        "Admit Produce Flame after adding held-flame duration, Bright Light and Dim Light emission, recast expiry, later Magic action hurling, creature or object targeting within range, ranged spell attack resolution, Fire damage, and cantrip scaling.",
+        "Use SRD one-minute duration semantics and table-supplied area membership; add recurring trigger support only if it is executable and tested.",
       acceptance:
-        "Produce Flame has promoted runtime evidence for both its held-light state and its later hurled ranged spell attack without collapsing illumination state into attack resolution.",
+        "Grease has promoted runtime evidence for on-cast Prone and recurring hazard saves, or remains explicitly unsupported rather than shortened to next-turn semantics.",
+    }),
+    makeBatch({
+      id: "SRDINV29E",
+      title: "Promote Ice Knife Mixed Attack Burst Runtime",
+      suggestedStatus: "blocked-on-SRDINV28A-SRDINV28E",
+      intent:
+        "Promote Ice Knife as a primary ranged spell attack followed by a mandatory burst save centered on the primary target.",
+      rows: srdinv29EIceKnifeRows,
+      nextAction:
+        "Model the target hole, attack roll, hit-only Piercing damage, hit-or-miss burst, primary-target anchored area facts, and Cold slot scaling.",
+      acceptance:
+        "Ice Knife has promoted runtime evidence proving the burst always happens, includes the primary target in the save set, and stays anchored to that target.",
+    }),
+    makeBatch({
+      id: "SRDINV29F",
+      title: "Research Chromatic Orb Chained Attack Runtime",
+      suggestedStatus: "blocked-on-SRDINV28A-SRDINV28E",
+      intent:
+        "Research and, only if tractable, promote Chromatic Orb chosen damage type and chained attack loop.",
+      rows: srdinv29FChromaticOrbRows,
+      nextAction:
+        "Treat Chromatic Orb as a state-machine research task: chosen damage type, duplicate-face damage-roll gate, one hole after each qualifying hit, target uniqueness, and slot-level maximum leaps. Use git-history restore sources from the deleted Core/prototype lanes for inspiration, especially commits 3066c771 and 1f192c9c.",
+      acceptance:
+        "Chromatic Orb is either split again into an implementable vertical slice with no support claim, or has promoted runtime evidence for the full chained-target loop.",
+    }),
+    makeBatch({
+      id: "SRDINV30A",
+      title: "Promote Simple Scalar Buff Spell Runtime",
+      suggestedStatus: "blocked-on-SRDINV28A-SRDINV28E",
+      intent:
+        "Promote False Life, Longstrider, and Shield of Faith as simple scalar HP, Speed, and AC effects.",
+      rows: srdinv30ASimpleBuffRows,
+      nextAction:
+        "Cover temp HP, timed Speed bonus, concentration AC bonus, action/bonus-action cost, slot scaling, and source-owned cleanup.",
+      acceptance:
+        "The scalar buff rows have promoted runtime evidence without mixing in roll modifiers, creature-type protection, or recurring turn-start effects.",
+    }),
+    makeBatch({
+      id: "SRDINV30B",
+      title: "Promote Roll Modifier Spell Runtime",
+      suggestedStatus: "blocked-on-SRDINV28A-SRDINV28E",
+      intent:
+        "Promote Bane, Bless, and Guidance as D20 roll modifier spells.",
+      rows: srdinv30BRollModifierRows,
+      nextAction:
+        "Model save-gated negative modifiers, unconditional positive modifiers, ability-check skill filtering where authored, concentration, and slot-scaled target counts.",
+      acceptance:
+        "Roll modifier spell rows have promoted runtime evidence for the exact roll kinds they modify and do not duplicate roll facts beside the active effect.",
+    }),
+    makeBatch({
+      id: "SRDINV30C",
+      title: "Promote Protection and Charm Spell Runtime",
+      suggestedStatus: "blocked-on-SRDINV28A-SRDINV28E",
+      intent:
+        "Promote Animal Friendship and Protection from Evil and Good as creature-type-scoped protection/charm effects.",
+      rows: srdinv30CProtectionRows,
+      nextAction:
+        "Keep Beast and creature-type filters executable, and make early-ending or scoped condition/attack effects explicit rather than metadata-only.",
+      acceptance:
+        "Protection/charm rows have promoted runtime evidence for the selected executable subset and checker-visible blockers for any omitted SRD clauses.",
+    }),
+    makeBatch({
+      id: "SRDINV30D",
+      title: "Promote Heroism Turn-Start Runtime",
+      suggestedStatus: "blocked-on-SRDINV28A-SRDINV28E",
+      intent:
+        "Promote Heroism as Frightened immunity plus turn-start Temporary Hit Points.",
+      rows: srdinv30DHeroismRows,
+      nextAction:
+        "Model concentration cleanup, target scaling, condition immunity, and attached target turn-start temp HP refresh.",
+      acceptance:
+        "Heroism has promoted runtime evidence for both passive immunity and recurring turn-start temp HP without conflating those effects.",
+    }),
+    makeBatch({
+      id: "SRDINV30E",
+      title: "Promote Faerie Fire Area Reveal Runtime",
+      suggestedStatus: "blocked-on-SRDINV28A-SRDINV28E",
+      intent:
+        "Promote Faerie Fire as area save-gated attack Advantage and visibility/invisibility-denial support where executable.",
+      rows: srdinv30EFaerieFireRows,
+      nextAction:
+        "Use caller-supplied cube facts; prove save-gated affected targets, concentration cleanup, and any supported Invisible/Dim Light subset.",
+      acceptance:
+        "Faerie Fire has promoted runtime evidence for its attack-advantage effect and explicit blockers for object outline or light/invisibility clauses not yet executable.",
+    }),
+    makeBatch({
+      id: "SRDINV30F",
+      title: "Promote Resistance Damage Reduction Runtime",
+      suggestedStatus: "blocked-on-SRDINV28A-SRDINV28E",
+      intent:
+        "Promote Resistance as chosen-damage-type reduction with once-per-turn semantics.",
+      rows: srdinv30FResistanceRows,
+      nextAction:
+        "Model the damage type choice, concentration duration, damage reduction fill, and per-turn usage cap.",
+      acceptance:
+        "Resistance has promoted runtime evidence for one reduction per turn against the chosen damage type, or remains unsupported if the usage cap cannot be represented.",
+    }),
+    makeBatch({
+      id: "SRDINV31A",
+      title: "Promote Divine Favor Weapon Rider Runtime",
+      suggestedStatus: "blocked-on-SRDINV28A-SRDINV28E",
+      intent:
+        "Promote Divine Favor as self-hosted extra Radiant damage on weapon hits.",
+      rows: srdinv31ADivineFavorRows,
+      nextAction:
+        "Attach the spell effect to the caster's weapon-hit damage path with timed duration and no target mark state.",
+      acceptance:
+        "Divine Favor has promoted runtime evidence for extra weapon-hit damage without leaking into spell attacks or unarmed-only paths.",
+    }),
+    makeBatch({
+      id: "SRDINV31B",
+      title: "Promote Hunter's Mark Runtime",
+      suggestedStatus: "blocked-on-SRDINV28A-SRDINV28E",
+      intent:
+        "Promote Hunter's Mark as marked-target damage plus zero-HP retargeting.",
+      rows: srdinv31BHuntersMarkRows,
+      nextAction:
+        "Model mark identity, attack-roll hit damage against the mark, concentration, and Bonus Action retarget after the mark drops to 0 HP.",
+      acceptance:
+        "Hunter's Mark has promoted runtime evidence for mark-scoped damage and retargeting without treating all caster attacks as eligible.",
+    }),
+    makeBatch({
+      id: "SRDINV31C",
+      title: "Promote Divine Smite After-Hit Runtime",
+      suggestedStatus: "blocked-on-SRDINV28A-SRDINV28E",
+      intent:
+        "Promote Divine Smite as an immediate after-hit Bonus Action damage spell.",
+      rows: srdinv31CDivineSmiteRows,
+      nextAction:
+        "Model the already-hit melee weapon/unarmed trigger, Bonus Action and slot spend, Radiant damage scaling, and Fiend/Undead bonus.",
+      acceptance:
+        "Divine Smite has promoted runtime evidence for trigger eligibility and damage without replaying or duplicating the base attack.",
+    }),
+    makeBatch({
+      id: "SRDINV31D",
+      title: "Promote Ensnaring Strike Runtime",
+      suggestedStatus: "blocked-on-SRDINV28A-SRDINV28E",
+      intent:
+        "Promote Ensnaring Strike as after-hit save-gated Restrained plus start-turn damage and escape.",
+      rows: srdinv31DEnsnaringStrikeRows,
+      nextAction:
+        "Model the weapon-hit trigger, save gate, concentration, Restrained ownership, start-turn Piercing damage, slot scaling, and escape action.",
+      acceptance:
+        "Ensnaring Strike has promoted runtime evidence for both initial hit/save behavior and ongoing restrained damage lifecycle.",
+    }),
+    makeBatch({
+      id: "SRDINV31E",
+      title: "Promote Searing Smite Runtime",
+      suggestedStatus: "blocked-on-SRDINV28A-SRDINV28E",
+      intent:
+        "Promote Searing Smite as after-hit Fire damage plus recurring start-turn damage/save-to-end.",
+      rows: srdinv31ESearingSmiteRows,
+      nextAction:
+        "Model the immediate after-hit damage, timed duration, start-turn damage, Constitution save, success ending, and slot scaling.",
+      acceptance:
+        "Searing Smite has promoted runtime evidence for immediate and recurring damage without collapsing the end-save into fixed expiration.",
+    }),
+    makeBatch({
+      id: "SRDINV31F",
+      title: "Promote True Strike Weapon Spell Runtime",
+      suggestedStatus: "blocked-on-SRDINV28A-SRDINV28E",
+      intent:
+        "Promote True Strike as a spell-hosted weapon attack using spellcasting ability and damage type choice.",
+      rows: srdinv31FTrueStrikeRows,
+      nextAction:
+        "Model material-component weapon eligibility, spellcasting ability override, Radiant-or-normal damage choice, and cantrip scaling.",
+      acceptance:
+        "True Strike has promoted runtime evidence for the spell-hosted weapon attack without depending on generic weapon mastery behavior.",
+    }),
+    makeBatch({
+      id: "SRDINV32A",
+      title: "Promote Produce Flame Held Light Runtime",
+      suggestedStatus: "blocked-on-SRDINV28A-SRDINV28E",
+      intent:
+        "Promote Produce Flame as held illumination with recast expiry.",
+      rows: srdinv32AProduceFlameLightRows,
+      nextAction:
+        "Model Bonus Action casting, one active held flame, Bright Light and Dim Light facts, timed duration, and ending when the caster recasts the spell.",
+      acceptance:
+        "Produce Flame held-light state has promoted runtime evidence without coupling it to the later hurled attack.",
+    }),
+    makeBatch({
+      id: "SRDINV32B",
+      title: "Promote Produce Flame Hurled Attack Runtime",
+      suggestedStatus: "blocked-on-SRDINV32A",
+      intent:
+        "Promote Produce Flame's later Magic action hurl as a ranged spell attack over the held-flame state.",
+      rows: srdinv32BProduceFlameHurlRows,
+      nextAction:
+        "Model the later Magic action, held-state consumption or continuation per RAW, ranged spell attack, Fire damage, cantrip scaling, and explicit object-target blocker if object support is still absent.",
+      acceptance:
+        "Produce Flame hurl has promoted runtime evidence for the executable target subset, and object targeting is either real or checker-visible unsupported.",
     }),
     makeBatch({
       id: "SRDINV33",
       title: "Recursive SRD Inventory Planning Review",
-      suggestedStatus: "blocked-on-SRDINV28A-SRDINV28E-SRDINV29-SRDINV32",
+      suggestedStatus:
+        "blocked-on-SRDINV28A-SRDINV28E-SRDINV29A-SRDINV32B",
       intent:
-        "Review SRDINV28A-SRDINV28E and SRDINV29-SRDINV32 spell-runtime closure and append the next concrete spell frontier.",
+        "Review SRDINV28A-SRDINV28E and SRDINV29A-SRDINV32B spell-runtime closure and append the next concrete spell frontier.",
       rows: spellPressure,
       nextAction:
-        "Refresh spell Unit inventory metrics after the runtime-ready spell batch, then choose the next concrete frontier among installed unsupported spell evidence, missing Detect spell authoring, and remaining Spell Surface blockers.",
+        "Refresh spell Unit inventory metrics after the runtime-ready spell batch, then choose the next concrete frontier among installed unsupported spell evidence, missing Detect spell authoring, and remaining Spell Surface blockers; split any future task with multiple execution invariants before marking it runnable.",
       acceptance:
-        "The next review records spell-runtime metrics and appends concrete follow-up work rather than a passive backlog list.",
+        "The next review records spell-runtime metrics and appends Ralph-sized follow-up work rather than a passive backlog list or omnibus runtime task.",
     }),
   ];
   return withActivePlanStatuses(batches, activePlanTaskStatuses);
