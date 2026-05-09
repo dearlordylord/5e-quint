@@ -346,7 +346,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 208,
       "id": "SRDINV29F",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Research Chromatic Orb Chained Attack Runtime"
     },
     {
@@ -444,6 +444,24 @@ Keep it synchronized with the DAG table and task details.
       "id": "SRDINV34",
       "status": "blocked",
       "title": "Promote Starry Wisp Object Target Runtime"
+    },
+    {
+      "number": 225,
+      "id": "SRDINV29F1",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Model Chromatic Orb Chained Replay Facts"
+    },
+    {
+      "number": 226,
+      "id": "SRDINV29F2",
+      "status": "blocked",
+      "title": "Implement Chromatic Orb Chained Attack Runtime"
+    },
+    {
+      "number": 227,
+      "id": "SRDINV29F3",
+      "status": "blocked",
+      "title": "Admit Chromatic Orb Runtime Support"
     }
   ]
 }
@@ -530,7 +548,7 @@ Keep it synchronized with the DAG table and task details.
 | 205   | SRDINV29C - Promote Entangle Area Restraint Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Entangle](/workspace/typescript/dnd/packages/surface/content/entangle.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promoted Entangle through point-origin cube affected-target saves excluding the caster, spell-owned Restrained until Concentration ends, Strength (Athletics) escape against spell save DC, and matrix-limited Difficult Terrain. |
 | 206   | SRDINV29D - Promote Grease Ground Hazard Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Grease](/workspace/typescript/dnd/packages/surface/content/grease.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Closed by keeping Grease unsupported in Unit profile evidence: SRD one-minute ground hazard support requires an active area lifecycle plus executable enter-area/end-turn Dexterity save procedures with table-supplied area-membership facts, and the authored on-cast Prone save is not claimed as a supported partial runtime profile. |
 | 207   | SRDINV29E - Promote Ice Knife Mixed Attack Burst Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Ice Knife](/workspace/typescript/dnd/packages/surface/content/ice_knife.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promoted Ice Knife through a mixed ranged spell attack plus mandatory primary-target-origin Emanation save boundary, with Piercing attack damage, Critical Hit doubling limited to attack dice, Cold burst slot scaling, primary target inclusion, and Concentration follow-up. |
-| 208   | SRDINV29F - Research Chromatic Orb Chained Attack Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Chromatic Orb](/workspace/typescript/dnd/packages/surface/content/chromatic_orb.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Research Chromatic Orb as its own state-machine problem: typed damage, duplicate-face damage gate, repeated post-hit target holes, target uniqueness, and slot-level leap cap. |
+| 208   | SRDINV29F - Research Chromatic Orb Chained Attack Runtime | done | SRDINV28A-SRDINV28E | SRDINV29F1 | [Chromatic Orb research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV29F_CHROMATIC_ORB_CHAINED_ATTACK_RESEARCH.md), [Chromatic Orb](/workspace/typescript/dnd/packages/surface/content/chromatic_orb.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed research: Chromatic Orb needs a separate chained spell-attack replay procedure rather than widening `spellAttackDamage`; implementation is split into QNT replay facts, reducer runtime, and admission/evidence closure. |
 | 209   | SRDINV30A - Promote Simple Scalar Buff Spell Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [False Life](/workspace/typescript/dnd/packages/surface/content/false_life.dhall), [Longstrider](/workspace/typescript/dnd/packages/surface/content/longstrider.dhall), [Shield of Faith](/workspace/typescript/dnd/packages/surface/content/shield_of_faith.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote simple temp HP, Speed, and AC scalar spell effects. |
 | 210   | SRDINV30B - Promote Roll Modifier Spell Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Bane](/workspace/typescript/dnd/packages/surface/content/bane.dhall), [Bless](/workspace/typescript/dnd/packages/surface/content/bless.dhall), [Guidance](/workspace/typescript/dnd/packages/surface/content/guidance.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote Bane, Bless, and Guidance as D20 roll modifier active effects. |
 | 211   | SRDINV30C - Promote Protection and Charm Spell Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Animal Friendship](/workspace/typescript/dnd/packages/surface/content/animal_friendship.dhall), [Protection from Evil and Good](/workspace/typescript/dnd/packages/surface/content/protection_from_evil_and_good.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote creature-type-scoped charm/protection effects with explicit blockers for omitted clauses. |
@@ -545,8 +563,11 @@ Keep it synchronized with the DAG table and task details.
 | 220   | SRDINV31F - Promote True Strike Weapon Spell Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [True Strike](/workspace/typescript/dnd/packages/surface/content/true_strike.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote spell-hosted weapon attack with spellcasting ability and damage type choice. |
 | 221   | SRDINV32A - Promote Produce Flame Held Light Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV32B, SRDINV33 | [Produce Flame](/workspace/typescript/dnd/packages/surface/content/produce_flame.dhall), [SRD Produce Flame](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-M-P.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Produce Flame held illumination and recast expiry without coupling it to hurl resolution. |
 | 222   | SRDINV32B - Promote Produce Flame Hurled Attack Runtime | ready-for-research | SRDINV32A | SRDINV33 | [Produce Flame](/workspace/typescript/dnd/packages/surface/content/produce_flame.dhall), [SRD Produce Flame](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-M-P.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote the later Magic action hurl over the held flame, with object targeting either executable or explicitly unsupported. |
-| 223   | SRDINV33 - Recursive SRD Inventory Planning Review | blocked | SRDINV28A-SRDINV28E, SRDINV29A-SRDINV32B | SRDINV34 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review the split spell-runtime closure, refresh spell Unit metrics, and append Ralph-sized follow-up tasks only after checking execution-invariant granularity. |
+| 223   | SRDINV33 - Recursive SRD Inventory Planning Review | blocked | SRDINV28A-SRDINV28E, SRDINV29A-SRDINV29E, SRDINV29F3, SRDINV30A-SRDINV32B | SRDINV34 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review the split spell-runtime closure, refresh spell Unit metrics, and append Ralph-sized follow-up tasks only after checking execution-invariant granularity. |
 | 224   | SRDINV34 - Promote Starry Wisp Object Target Runtime | blocked | SRDINV33 | none | [SRDINV28E decision](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV28E_STARRY_WISP_OBJECT_TARGET_DECISION.md), [battle-runtime target facts](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [Starry Wisp](/workspace/typescript/dnd/packages/surface/content/starry_wisp.dhall), [Chill Touch](/workspace/typescript/dnd/packages/surface/content/chill_touch.dhall), [SRD Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [SRD Chill Touch](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote the Starry Wisp creature-or-object target boundary only after SRDINV33 orders it against the remaining spell-runtime frontier. |
+| 225   | SRDINV29F1 - Model Chromatic Orb Chained Replay Facts | ready-for-implementation-after-light-research | SRDINV29F | SRDINV29F2 | [Chromatic Orb research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV29F_CHROMATIC_ORB_CHAINED_ATTACK_RESEARCH.md), [Chromatic Orb](/workspace/typescript/dnd/packages/surface/content/chromatic_orb.dhall), [battle-runtime Quint spec](/workspace/typescript/dnd/packages/battle-runtime/battle-runtime.qnt), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Add promoted QNT procedure facts and replay-hole invariants for Chromatic Orb's damage-type choice, ordered target/attack/damage steps, duplicate-face gate, target uniqueness, previous-target range, and slot-level leap cap. |
+| 226   | SRDINV29F2 - Implement Chromatic Orb Chained Attack Runtime | blocked | SRDINV29F1 | SRDINV29F3 | [Chromatic Orb research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV29F_CHROMATIC_ORB_CHAINED_ATTACK_RESEARCH.md), [battle-runtime reducer](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [battle-runtime subjects](/workspace/typescript/dnd/packages/battle-runtime/src/battle-subjects.ts), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Implement the chained spell-attack reducer procedure with step-scoped holes/fills, duplicate-face continuation, target uniqueness/range rejection, damage-type reuse, reaction lifecycle composition, and one action/slot spend. |
+| 227   | SRDINV29F3 - Admit Chromatic Orb Runtime Support | blocked | SRDINV29F2 | SRDINV33 | [Chromatic Orb research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV29F_CHROMATIC_ORB_CHAINED_ATTACK_RESEARCH.md), [Chromatic Orb](/workspace/typescript/dnd/packages/surface/content/chromatic_orb.dhall), [unit claims](/workspace/typescript/dnd/plans/unit-profile-coverage/unit-claims.jsonl), [unit evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/unit-evidence.jsonl), [battle-runtime README](/workspace/typescript/dnd/packages/battle-runtime/README.md) | Admit Chromatic Orb through the new procedure, close deterministic projection/evidence, update coverage artifacts and docs, and run the promoted runtime verification lane. |
 
 ## Task Details
 
@@ -2521,11 +2542,14 @@ and Concentration follow-up for damaged targets.
 
 ### Task 208 - SRDINV29F - Research Chromatic Orb Chained Attack Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV28A-SRDINV28E
 
-Blocks: SRDINV33
+Blocks: SRDINV29F1
+
+Research / plan:
+[SRDINV29F_CHROMATIC_ORB_CHAINED_ATTACK_RESEARCH.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV29F_CHROMATIC_ORB_CHAINED_ATTACK_RESEARCH.md)
 
 Scope: research Chromatic Orb as a separate state-machine problem before
 implementation. It needs chosen damage type, duplicate-face damage-roll gate,
@@ -2548,6 +2572,12 @@ damage per leap up to the slot-level cap. Also avoid widening every prepared
 `spellAttackDamage`/`saveGatedDamage` invocation ref with `damageType` unless
 `spellSlotInvocationRef` and all exported helper callers are updated to produce
 the same ref shape; otherwise existing prepared spell subjects regress.
+
+Completed with research showing Chromatic Orb needs a separate chained
+spell-attack replay procedure. Follow-up work is split into SRDINV29F1 QNT
+replay facts, SRDINV29F2 reducer runtime, and SRDINV29F3 admission/evidence
+closure; do not claim Chromatic Orb support through the existing
+`spellAttackDamage` procedure.
 
 ### Task 209 - SRDINV30A - Promote Simple Scalar Buff Spell Runtime
 
@@ -2718,7 +2748,7 @@ targeting must be executable or checker-visible unsupported.
 
 Status: `blocked`
 
-Depends on: SRDINV28A-SRDINV28E, SRDINV29A-SRDINV32B
+Depends on: SRDINV28A-SRDINV28E, SRDINV29A-SRDINV29E, SRDINV29F3, SRDINV30A-SRDINV32B
 
 Blocks: SRDINV34
 
@@ -2728,7 +2758,8 @@ Research / plan:
 [SRDINV_RALPH_BATCH_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md),
 [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
 
-Scope: review SRDINV28A-SRDINV28E and SRDINV29A-SRDINV32B spell-runtime
+Scope: review SRDINV28A-SRDINV28E, SRDINV29A-SRDINV29E, SRDINV29F3, and
+SRDINV30A-SRDINV32B spell-runtime
 closure, refresh generated inventory metrics, and append the next concrete
 spell frontier. Likely frontiers are installed unsupported spell owner evidence,
 missing Detect spell authoring, and remaining Spell Surface blockers.
@@ -2792,3 +2823,87 @@ focused tests for object target discovery/fill validation, range fact
 rejection, attack hit/miss, object damage disposition, and any supported rider
 subset; `pnpm unit-profile-coverage:check`; `pnpm quality`; MBT only if
 promoted battle-runtime behavior changes.
+
+### Task 225 - SRDINV29F1 - Model Chromatic Orb Chained Replay Facts
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: SRDINV29F
+
+Blocks: SRDINV29F2
+
+Research / plan:
+[SRDINV29F_CHROMATIC_ORB_CHAINED_ATTACK_RESEARCH.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV29F_CHROMATIC_ORB_CHAINED_ATTACK_RESEARCH.md),
+[Chromatic Orb](/workspace/typescript/dnd/packages/surface/content/chromatic_orb.dhall),
+[battle-runtime.qnt](/workspace/typescript/dnd/packages/battle-runtime/battle-runtime.qnt),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: add promoted QNT procedure facts and replay-hole invariants for
+Chromatic Orb's chained Spell Invocation: one damage-type choice reused by all
+steps, ordered target/attack/damage steps, duplicate d8 face detection, target
+uniqueness across the casting, previous-target 30-foot range facts, and
+slot-level leap cap. Do not claim Surface admission or runtime support yet.
+
+Verification: RAW trace to local SRD 5.2.1 Chromatic Orb, Attack Roll, Damage
+Roll, Critical Hit, Damage Types, Target, and Using a Higher-Level Spell Slot
+text; `UBIQUITOUS_LANGUAGE.md` term check; focused QNT tests/proofs for replay
+facts and invariants; `pnpm quality`; MBT only if promoted runtime behavior
+changes; `/simplify` convergence, minimum two rounds.
+
+### Task 226 - SRDINV29F2 - Implement Chromatic Orb Chained Attack Runtime
+
+Status: `blocked`
+
+Depends on: SRDINV29F1
+
+Blocks: SRDINV29F3
+
+Research / plan:
+[SRDINV29F_CHROMATIC_ORB_CHAINED_ATTACK_RESEARCH.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV29F_CHROMATIC_ORB_CHAINED_ATTACK_RESEARCH.md),
+[battle-runtime reducer](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts),
+[battle-runtime subjects](/workspace/typescript/dnd/packages/battle-runtime/src/battle-subjects.ts),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: implement a chained spell-attack reducer procedure for Chromatic Orb
+with a dedicated damage-type fill, step-scoped target/attack/damage holes,
+duplicate-face continuation, target uniqueness and previous-target range
+rejection, damage-type reuse, per-step hit/miss/damage handling, Concentration
+and zero-HP follow-ups, existing reaction lifecycle composition, and exactly one
+Magic action and Spell Slot spend when the invocation resolves. Do not widen
+`SpellInvocationRef` with the chosen damage type.
+
+Verification: focused reducer tests for no duplicate, duplicate with exhausted
+leap budget, duplicate opening a leap target hole, target uniqueness rejection,
+previous-target 30-foot rejection, miss stopping the chain, Critical Hit dice
+doubling, damage-type reuse, Concentration follow-up, zero-HP disposition, and
+one action/slot spend; parity with SRDINV29F1 QNT facts; `pnpm quality`; Tier 1
+battle-runtime MBT only after code changes are complete; `/simplify`
+convergence, minimum two rounds.
+
+### Task 227 - SRDINV29F3 - Admit Chromatic Orb Runtime Support
+
+Status: `blocked`
+
+Depends on: SRDINV29F2
+
+Blocks: SRDINV33
+
+Research / plan:
+[SRDINV29F_CHROMATIC_ORB_CHAINED_ATTACK_RESEARCH.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV29F_CHROMATIC_ORB_CHAINED_ATTACK_RESEARCH.md),
+[Chromatic Orb](/workspace/typescript/dnd/packages/surface/content/chromatic_orb.dhall),
+[unit claims](/workspace/typescript/dnd/plans/unit-profile-coverage/unit-claims.jsonl),
+[unit evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/unit-evidence.jsonl),
+[battle-runtime README](/workspace/typescript/dnd/packages/battle-runtime/README.md),
+[battle-runtime architecture graph](/workspace/typescript/dnd/packages/battle-runtime/ARCHITECTURE_GRAPH.md)
+
+Scope: parse `chromatic_orb` through the new chained spell-attack support
+profile, add deterministic admission/projection evidence, update
+`unit-claims.jsonl`, `unit-evidence.jsonl`, generated matrix/report artifacts,
+`packages/battle-runtime/README.md`, and
+`packages/battle-runtime/ARCHITECTURE_GRAPH.md`, then close Chromatic Orb as
+promoted only when the complete chained procedure is executable.
+
+Verification: deterministic admission/projection tests proving existing
+`spellAttackDamage` and `saveGatedDamage` subjects are not widened by a
+damage-type choice ref; `pnpm unit-profile-coverage:check`; `pnpm quality`;
+Tier 1 battle-runtime MBT; `/simplify` convergence, minimum two rounds.
