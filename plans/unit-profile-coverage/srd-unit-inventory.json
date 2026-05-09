@@ -1883,7 +1883,7 @@
     {
       "id": "SRDINV29",
       "title": "Promote Area, Chain, and Typed-Damage Spell Runtime",
-      "suggestedStatus": "blocked",
+      "suggestedStatus": "ready-for-research",
       "intent": "Promote authored Spell Definitions whose execution needs area resolution, chained targeting, or caster-chosen damage types.",
       "rowCount": 12,
       "rowIds": [
@@ -1906,7 +1906,7 @@
     {
       "id": "SRDINV30",
       "title": "Promote Spell Buff, Debuff, and Protection Runtime",
-      "suggestedStatus": "blocked",
+      "suggestedStatus": "ready-for-research",
       "intent": "Promote authored Spell Definitions that create timed buffs, debuffs, protection effects, or D20 modifiers.",
       "rowCount": 29,
       "rowIds": [
@@ -1946,7 +1946,7 @@
     {
       "id": "SRDINV31",
       "title": "Promote Attack-Rider and Smite Spell Runtime",
-      "suggestedStatus": "blocked",
+      "suggestedStatus": "ready-for-research",
       "intent": "Promote authored Spell Definitions that attach spell effects to weapon attacks, hit triggers, or retargetable marks.",
       "rowCount": 9,
       "rowIds": [
@@ -1966,7 +1966,7 @@
     {
       "id": "SRDINV32",
       "title": "Promote Held Light and Hurled Attack Spell Runtime",
-      "suggestedStatus": "blocked",
+      "suggestedStatus": "ready-for-research",
       "intent": "Promote Produce Flame through the held-light plus later hurled spell attack boundary.",
       "rowCount": 1,
       "rowIds": [

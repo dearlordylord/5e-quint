@@ -316,25 +316,25 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 203,
       "id": "SRDINV29",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Promote Area, Chain, and Typed-Damage Spell Runtime"
     },
     {
       "number": 204,
       "id": "SRDINV30",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Promote Spell Buff, Debuff, and Protection Runtime"
     },
     {
       "number": 205,
       "id": "SRDINV31",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Promote Attack-Rider and Smite Spell Runtime"
     },
     {
       "number": 206,
       "id": "SRDINV32",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Promote Held Light and Hurled Attack Spell Runtime"
     },
     {
@@ -429,10 +429,10 @@ Keep it synchronized with the DAG table and task details.
 | 200   | SRDINV28C - Promote Spell Attack Damage Runtime | done | SRDINV28A | SRDINV28D-SRDINV28E, SRDINV29-SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [battle-runtime reducer](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promoted spell attack damage without mandatory speed reduction: ranged spell attack paths remain covered, and damage-only Chill Touch now covers melee spell attack damage with checker-visible deferred healing suppression and generic-target eligibility. |
 | 201   | SRDINV28D - Promote Spell Rider Timing Runtime | done | SRDINV28B-SRDINV28C | SRDINV29-SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [battle-runtime active effects](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promoted typed runtime support for SRD spell riders in scope: Ray of Sickness spell-owned Poisoned expiration, Shocking Grasp Opportunity Attack denial, Guiding Bolt next attack against target Advantage, and Vicious Mockery next attack by target Disadvantage, with Chill Touch healing suppression still excluded from this slice. |
 | 202   | SRDINV28E - Decide Starry Wisp Object Targeting | done | SRDINV28A-SRDINV28C | SRDINV29-SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [battle-runtime target facts](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [SRD Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [SRD Chill Touch](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Closed by deferring Starry Wisp support with checker-visible `needs-surface-widening` evidence: object target identity, object AC/HP damage disposition, Dim Light emission, and Invisible benefit denial remain unpromoted, while Chill Touch stays limited to its combatant-target damage subset. |
-| 203   | SRDINV29 - Promote Area, Chain, and Typed-Damage Spell Runtime | blocked | SRDINV28A-SRDINV28E | SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote runtime evidence for Chromatic Orb, Color Spray, Entangle, Grease, and Ice Knife after the SRDINV28A-E spell damage foundation is explicit. |
-| 204   | SRDINV30 - Promote Spell Buff, Debuff, and Protection Runtime | blocked | SRDINV28A-SRDINV28E | SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote runtime evidence for Animal Friendship, Bane, Bless, Faerie Fire, False Life, Guidance, Heroism, Longstrider, Protection from Evil and Good, Resistance, and Shield of Faith. |
-| 205   | SRDINV31 - Promote Attack-Rider and Smite Spell Runtime | blocked | SRDINV28A-SRDINV28E | SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote runtime evidence for Divine Favor, Divine Smite, Ensnaring Strike, Hunter's Mark, Searing Smite, and True Strike. |
-| 206   | SRDINV32 - Promote Held Light and Hurled Attack Spell Runtime | blocked | SRDINV28A-SRDINV28E | SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD Produce Flame](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-M-P.md), [SRD Rules Glossary](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Produce Flame as held illumination plus later hurled ranged spell attack runtime. |
+| 203   | SRDINV29 - Promote Area, Chain, and Typed-Damage Spell Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote runtime evidence for Chromatic Orb, Color Spray, Entangle, Grease, and Ice Knife after the SRDINV28A-E spell damage foundation is explicit. |
+| 204   | SRDINV30 - Promote Spell Buff, Debuff, and Protection Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote runtime evidence for Animal Friendship, Bane, Bless, Faerie Fire, False Life, Guidance, Heroism, Longstrider, Protection from Evil and Good, Resistance, and Shield of Faith. |
+| 205   | SRDINV31 - Promote Attack-Rider and Smite Spell Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote runtime evidence for Divine Favor, Divine Smite, Ensnaring Strike, Hunter's Mark, Searing Smite, and True Strike. |
+| 206   | SRDINV32 - Promote Held Light and Hurled Attack Spell Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD Produce Flame](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-M-P.md), [SRD Rules Glossary](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Produce Flame as held illumination plus later hurled ranged spell attack runtime. |
 | 207   | SRDINV33 - Recursive SRD Inventory Planning Review | blocked | SRDINV28A-SRDINV28E, SRDINV29-SRDINV32 | SRDINV34 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review the SRDINV28A-E and SRDINV29-SRDINV32 spell-runtime closure, refresh spell Unit metrics, and append the next concrete frontier. |
 | 208   | SRDINV34 - Promote Starry Wisp Object Target Runtime | blocked | SRDINV33 | none | [SRDINV28E decision](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV28E_STARRY_WISP_OBJECT_TARGET_DECISION.md), [battle-runtime target facts](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [Starry Wisp](/workspace/typescript/dnd/packages/surface/content/starry_wisp.dhall), [Chill Touch](/workspace/typescript/dnd/packages/surface/content/chill_touch.dhall), [SRD Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [SRD Chill Touch](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote the Starry Wisp creature-or-object target boundary only after SRDINV33 orders it against the remaining spell-runtime frontier. |
 
@@ -2324,7 +2324,7 @@ and `pnpm quality`; MBT only if promoted battle-runtime behavior changes.
 
 ### Task 203 - SRDINV29 - Promote Area, Chain, and Typed-Damage Spell Runtime
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: SRDINV28A-SRDINV28E
 
@@ -2353,7 +2353,7 @@ two rounds.
 
 ### Task 204 - SRDINV30 - Promote Spell Buff, Debuff, and Protection Runtime
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: SRDINV28A-SRDINV28E
 
@@ -2383,7 +2383,7 @@ battle-runtime behavior changes; `/simplify` convergence, minimum two rounds.
 
 ### Task 205 - SRDINV31 - Promote Attack-Rider and Smite Spell Runtime
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: SRDINV28A-SRDINV28E
 
@@ -2412,7 +2412,7 @@ spend; focused runtime and projection tests; `pnpm unit-profile-coverage:check`;
 
 ### Task 206 - SRDINV32 - Promote Held Light and Hurled Attack Spell Runtime
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: SRDINV28A-SRDINV28E
 
