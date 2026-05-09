@@ -253,6 +253,19 @@ const CRITICAL_HIT_THRESHOLDS = [19, 20] as const;
 // targeted by the Magic Missile spell.
 const SHIELD_MAGIC_MISSILE_SPELL_ID =
   "magic_missile" satisfies SpellRecord["id"];
+const CHROMATIC_ORB_DAMAGE_TYPES = [
+  "acid",
+  "cold",
+  "fire",
+  "lightning",
+  "poison",
+  "thunder",
+] as const satisfies ReadonlyArray<DamageType>;
+const CHROMATIC_ORB_LEAP_RANGE_FEET = movementFeet(30);
+const CHROMATIC_ORB_CONTINUATION_LIMIT_KINDS = [
+  "max_leaps_from_slot_level",
+  "exclude_already_targeted_in_same_cast",
+] as const;
 const ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_TARGET_HOLE_ID = holeId(
   "battle:attack-damage-reduction-zero-damage-redirect:target",
 );
@@ -355,7 +368,7 @@ export type BattleConcentration = {
 // spell's resources immediately, holds the energy with Concentration, and
 // releases it later with a Reaction.
 export type BattleReadiedSpell = {
-  readonly invocation: SupportedDamageSpellInvocation;
+  readonly invocation: ReadiedSpellInvocation;
   readonly trigger: BattleReadiedSpellTrigger;
   readonly expiresAt: TurnAnchoredBattleActiveEffectExpiration;
 };
@@ -758,6 +771,13 @@ export type BattleTargetSpatialFact =
       readonly spellId: SpellRecord["id"];
     }
   | {
+      readonly kind: "spellLeapTargetWithinRange";
+      readonly previousTargetId: CombatantId;
+      readonly targetId: CombatantId;
+      readonly spellId: SpellRecord["id"];
+      readonly rangeFeet: MovementFeet;
+    }
+  | {
       readonly kind: "spellTargetsInPointOriginSphere";
       readonly casterId: CombatantId;
       readonly spellId: SpellRecord["id"];
@@ -937,6 +957,22 @@ export type SupportedSpellInvocation =
       readonly attackBonus: AttackBonus;
       readonly postDamageRiders: readonly SpellPostDamageRider[];
     })
+  | (PreparedDamageSpellSource & {
+      readonly procedure: "chainedSpellAttackDamage";
+      readonly spell: SpellRecord;
+      readonly targeting: Extract<
+        SpellTargeting,
+        { readonly kind: "singleCombatant" }
+      >;
+      readonly damage: {
+        readonly expr: DiceExpr;
+      };
+      readonly damageTypeChoices: readonly DamageType[];
+      readonly rangeFeet: MovementFeet;
+      readonly leapRangeFeet: MovementFeet;
+      readonly attackKind: SpellAttackKind;
+      readonly attackBonus: AttackBonus;
+    })
   | (DamageSpellSource & {
       readonly procedure: "saveGatedDamage";
       readonly spell: SpellRecord;
@@ -1045,9 +1081,16 @@ type SupportedDamageSpellInvocation = Exclude<
       | "persistentArmorEffect"
       | "directHitPointRestoration"
       | "shieldReaction"
-      | "saveGatedCondition";
+      | "saveGatedCondition"
+      | "chainedSpellAttackDamage";
   }
 >;
+type ReadiedSpellInvocation =
+  | SupportedDamageSpellInvocation
+  | Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "chainedSpellAttackDamage" }
+    >;
 
 type WeaponDamageDiceRollChoiceSelection = "first" | "second";
 type WeaponDamageDiceRollChoiceFill = {
@@ -1464,6 +1507,17 @@ export type BattleSpellTargetAllocation = {
   readonly targetId: CombatantId;
   readonly count: number;
 };
+export type BattleSpellDamageTypeChoiceHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "damageTypeChoice";
+  readonly label: string;
+  readonly spell: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "chainedSpellAttackDamage" }
+  >;
+  readonly choices: readonly DamageType[];
+};
 type BattleSpellTargetSpatialFact = Extract<
   BattleTargetSpatialFact,
   { readonly kind: "spellTarget" }
@@ -1540,7 +1594,17 @@ export type BattleSpellDamageRollHole = Extract<
   RuntimeHole,
   { readonly kind: "rolledDice" }
 > & {
-  readonly spell: SupportedDamageSpellInvocation;
+  readonly spell: Extract<
+    SupportedSpellInvocation,
+    {
+      readonly procedure:
+        | "attackBurstSaveDamage"
+        | "chainedSpellAttackDamage"
+        | "repeatedDamageAllocation"
+        | "saveGatedDamage"
+        | "spellAttackDamage";
+    }
+  >;
   readonly critical: boolean;
 };
 export type BattleSpellHealingRollHole = Extract<
@@ -1708,6 +1772,7 @@ export type BattleAttackDamageDispositionHole = {
 };
 export type BattleHole =
   | BattleTargetChoiceHole
+  | BattleSpellDamageTypeChoiceHole
   | BattleSpellTargetAllocationHole
   | BattleSpellTargetListHole
   | BattleAttackRollHole
@@ -1989,6 +2054,23 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("chainedSpellAttackDamage"),
+      spell: BattleRuntimeObjectSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("singleCombatant"),
+      }),
+      damage: Schema.Struct({
+        expr: BattleRuntimeObjectSchema,
+      }),
+      damageTypeChoices: Schema.Array(DamageTypeSchema),
+      rangeFeet: MovementFeet,
+      leapRangeFeet: MovementFeet,
+      attackKind: Schema.Literal("melee_spell_attack", "ranged_spell_attack"),
+      attackBonus: AttackBonus,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("saveGatedDamage"),
       spell: BattleRuntimeObjectSchema,
       ability: Schema.String,
@@ -2087,6 +2169,12 @@ export const BattleHoleSchema = Schema.Union(
     requiresTableSpatialFact: Schema.optionalWith(Schema.Boolean, {
       exact: true,
     }),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("damageTypeChoice"),
+    spell: SupportedSpellInvocationSchema,
+    choices: Schema.Array(DamageTypeSchema),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2317,6 +2405,11 @@ export type BattleFill =
     }
   | BattleRolledDiceFill
   | {
+      readonly kind: "damageTypeChoice";
+      readonly holeId: BattleHoleId;
+      readonly value: DamageType;
+    }
+  | {
       readonly kind: "savingThrowOutcome";
       readonly holeId: BattleHoleId;
       readonly value: BattleSavingThrowOutcomeValue;
@@ -2448,6 +2541,13 @@ type BattleFillEncoded =
             readonly spellId: string;
           }
         | {
+            readonly kind: "spellLeapTargetWithinRange";
+            readonly previousTargetId: string;
+            readonly targetId: string;
+            readonly spellId: string;
+            readonly rangeFeet: number;
+          }
+        | {
             readonly kind: "spellTargetsInPointOriginSphere";
             readonly casterId: string;
             readonly spellId: string;
@@ -2489,6 +2589,11 @@ type BattleFillEncoded =
             readonly allyId: string;
           }
       )[];
+    }
+  | {
+      readonly kind: "damageTypeChoice";
+      readonly holeId: string;
+      readonly value: DamageType;
     }
   | {
       readonly kind: "spellTargetAllocation";
@@ -2712,6 +2817,13 @@ export const BattleFillSchema: Schema.Schema<
               spellId: Schema.String,
             }),
             Schema.Struct({
+              kind: Schema.Literal("spellLeapTargetWithinRange"),
+              previousTargetId: CombatantId,
+              targetId: CombatantId,
+              spellId: Schema.String,
+              rangeFeet: MovementFeet,
+            }),
+            Schema.Struct({
               kind: Schema.Literal("spellTargetsInPointOriginSphere"),
               casterId: CombatantId,
               spellId: Schema.String,
@@ -2810,6 +2922,11 @@ export const BattleFillSchema: Schema.Schema<
       kind: Schema.Literal("attackRoll"),
       holeId: BattleHoleIdSchema,
       value: BattleAttackRollResultSchema,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("damageTypeChoice"),
+      holeId: BattleHoleIdSchema,
+      value: DamageTypeSchema,
     }),
     Schema.Struct({
       kind: Schema.Literal("savingThrowOutcome"),
@@ -12589,6 +12706,9 @@ function readiedSpellInitialHoles(
   if (readied.invocation.procedure === "repeatedDamageAllocation") {
     return [spellTargetAllocationHole(state, casterId, readied.invocation)];
   }
+  if (readied.invocation.procedure === "chainedSpellAttackDamage") {
+    return [spellDamageTypeChoiceHole(readied.invocation)];
+  }
   return [spellTargetHole(state, casterId, readied.invocation)];
 }
 
@@ -13793,6 +13913,22 @@ function discoverSupportedSpellInvocations(
         ];
         return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
       }
+      if (invocation.procedure === "chainedSpellAttackDamage") {
+        const castActs = [
+          {
+            subject: {
+              tag: "actionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: invocation.spell.name,
+            summary: spellInvocationCastSummary(invocation),
+            initialHoles: [spellDamageTypeChoiceHole(invocation)],
+          },
+        ];
+        return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
+      }
       const targetHole =
         invocation.procedure === "repeatedDamageAllocation"
           ? spellTargetAllocationHole(state, actorId, invocation)
@@ -13838,6 +13974,9 @@ function spellInvocationCastSummary(
   }
   if (invocation.procedure === "spellAttackDamage") {
     return spellActivationInvocationCastSummary(invocation);
+  }
+  if (invocation.procedure === "chainedSpellAttackDamage") {
+    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
   return spellActivationInvocationCastSummary(invocation);
 }
@@ -13988,6 +14127,14 @@ function resolveSpellAct(
     : input.state;
   if (subject.mode.tag === "ready") {
     return resolveReadySpellAct({ ...input, state: castingState }, invocation);
+  }
+
+  if (invocation.procedure === "chainedSpellAttackDamage") {
+    return resolveChainedSpellAttackDamageAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+    });
   }
 
   const fillSet = spellFillSet(input.fills, invocation);
@@ -14426,6 +14573,750 @@ function resolveSpellAct(
   };
 }
 
+type ChainedSpellStepFills = {
+  readonly target:
+    | Extract<BattleFill, { readonly kind: "targetChoice" }>
+    | undefined;
+  readonly attackRoll:
+    | Extract<BattleFill, { readonly kind: "attackRoll" }>
+    | undefined;
+  readonly damageRoll:
+    | Extract<BattleFill, { readonly kind: "rolledDice" }>
+    | undefined;
+};
+type ChainedSpellFillSet =
+  | {
+      readonly tag: "ok";
+      readonly damageType:
+        | Extract<BattleFill, { readonly kind: "damageTypeChoice" }>
+        | undefined;
+      readonly steps: readonly ChainedSpellStepFills[];
+      readonly concentrationSavingThrows: readonly Extract<
+        BattleFill,
+        { readonly kind: "concentrationSavingThrow" }
+      >[];
+      readonly damageDispositions: readonly Extract<
+        BattleFill,
+        { readonly kind: "attackDamageDisposition" }
+      >[];
+    }
+  | { readonly tag: "invalid"; readonly message: string };
+
+function resolveChainedSpellAttackDamageAct(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "chainedSpellAttackDamage" }
+  >;
+  readonly opensSpellCastReactionWindow?: boolean;
+  readonly spendsCastResources?: boolean;
+}): BattleResolutionResult {
+  const fillSet = chainedSpellFillSet(input.input.fills, input.invocation);
+  if (fillSet.tag === "invalid") {
+    return invalidResult(input.input.state, "invalidFill", fillSet.message);
+  }
+  if (fillSet.damageType === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      spellDamageTypeChoiceHole(input.invocation),
+    ]);
+  }
+  const selectedDamageType = fillSet.damageType.value;
+  if (!input.invocation.damageTypeChoices.includes(selectedDamageType)) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Chained spell damage type must be one of the selected spell's choices.",
+    );
+  }
+
+  let replayState = input.input.state;
+  let targeted: readonly CombatantId[] = [];
+  const afterDamageEvents: BattleAfterDamageEvent[] = [];
+  const concentrationHoles: BattleConcentrationSavingThrowHole[] = [];
+  const damageDispositionHoles: BattleAttackDamageDispositionHole[] = [];
+  const maxLeaps = Number(input.invocation.resource.slotLevel);
+
+  for (let stepIndex = 0; stepIndex <= maxLeaps; stepIndex += 1) {
+    const step = fillSet.steps[stepIndex] ?? emptyChainedSpellStepFills();
+    if (step.target === undefined) {
+      return needsHolesResult(replayState, input.input.subject, [
+        chainedSpellTargetHole({
+          state: replayState,
+          actorId: input.actorId,
+          invocation: input.invocation,
+          stepIndex,
+          targeted,
+        }),
+      ]);
+    }
+    const target = replayState.combatants.get(step.target.value);
+    if (target === undefined) {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        "Chained spell target must be a combatant.",
+      );
+    }
+    if (targeted.includes(target.combatantId)) {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        "Chromatic Orb cannot target a creature more than once in the same casting.",
+      );
+    }
+    if (
+      stepIndex === 0
+        ? !spellTargetIsLegal(
+            replayState,
+            input.actorId,
+            target.combatantId,
+            input.invocation,
+            step.target.spatialFacts ?? [],
+          )
+        : !chainedSpellLeapTargetIsLegal(
+            input.invocation,
+            targeted[stepIndex - 1],
+            target.combatantId,
+            step.target.spatialFacts ?? [],
+          )
+    ) {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        stepIndex === 0
+          ? "Spell target must be a combatant within the selected spell's supported range."
+          : "Chromatic Orb leap target must be different and within 30 feet of the previous target.",
+      );
+    }
+    targeted = [...targeted, target.combatantId];
+
+    if (stepIndex === 0 && input.opensSpellCastReactionWindow !== false) {
+      const spellCastReactionWindow = maybeOpenReactionWindow(
+        replayState,
+        {
+          trigger: "spellCast",
+          casterId: input.actorId,
+          spellId: input.invocation.spell.id,
+          targetIds: [target.combatantId],
+          continuation: {
+            kind: "replay",
+            subject: input.input.subject,
+            fills: input.input.fills,
+          },
+        },
+        input.input.suppressedReactionTrigger,
+      );
+      if (spellCastReactionWindow !== null) {
+        return spellCastReactionWindow;
+      }
+    }
+
+    const requiredRollMode = requiredAttackRollMode(
+      replayState,
+      input.actorId,
+      target.combatantId,
+    );
+    if (step.attackRoll === undefined) {
+      return needsHolesResult(replayState, input.input.subject, [
+        chainedSpellAttackRollHole(
+          replayState,
+          input.actorId,
+          input.invocation,
+          stepIndex,
+          requiredRollMode,
+        ),
+      ]);
+    }
+    if (!attackRollResultIsValid(step.attackRoll.value)) {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        "Spell attack roll result is outside the d20 attack-roll protocol.",
+      );
+    }
+    if (!attackRollModeMatches(step.attackRoll.value, requiredRollMode)) {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        "Spell attack roll mode does not match the current attack-roll rule.",
+      );
+    }
+
+    const ordinaryHit = attackRollHits(
+      step.attackRoll.value,
+      currentArmorClass(activeEffectArmorClass(target)),
+    );
+    const missToHitReplacement = selectedAttackRollMissToHitReplacement({
+      state: replayState,
+      subject: input.input.subject,
+      attackerId: input.actorId,
+      targetId: target.combatantId,
+      attackRoll: step.attackRoll.value,
+      ordinaryHit,
+    });
+    if (
+      step.attackRoll.value.missToHitReplacementUnitId !== undefined &&
+      missToHitReplacement === null
+    ) {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        ordinaryHit
+          ? "Attack-roll miss-to-hit replacement can only be selected after a miss."
+          : "Attack-roll miss-to-hit replacement is not available for this spell attack roll.",
+      );
+    }
+    const attackRolledState = recordAttackRollMissToHitReplacementUsed(
+      consumeHelpAttackForAttackRoll(
+        recordAttackRollOngoingFeatures(
+          replayState,
+          input.actorId,
+          target.combatantId,
+          null,
+        ),
+        input.actorId,
+        target.combatantId,
+      ),
+      input.actorId,
+      missToHitReplacement,
+      {
+        subject: input.input.subject,
+        targetId: target.combatantId,
+        attackRoll: step.attackRoll.value,
+      },
+    );
+    replayState = attackRolledState;
+    const hit = ordinaryHit || missToHitReplacement !== null;
+    const critical = attackRollIsCriticalHit(step.attackRoll.value);
+    if (!hit) {
+      if (!chainedSpellLaterStepsAreEmpty(fillSet.steps, stepIndex)) {
+        return invalidResult(
+          input.input.state,
+          "invalidFill",
+          "Chromatic Orb chain cannot continue after a missed attack roll.",
+        );
+      }
+      const extraFillValidation = validateChainedSpellFollowUpFills({
+        concentrationHoles,
+        concentrationFills: fillSet.concentrationSavingThrows,
+        damageDispositionHoles,
+        damageDispositionFills: fillSet.damageDispositions,
+      });
+      if (extraFillValidation !== null) {
+        return invalidResult(
+          input.input.state,
+          "invalidFill",
+          extraFillValidation,
+        );
+      }
+      return resolveCompletedChainedSpell({
+        input,
+        state: replayState,
+        afterDamageEvents,
+      });
+    }
+
+    const attackHitReactionWindow = maybeOpenReactionWindow(
+      replayState,
+      {
+        trigger: "attackHit",
+        attackerId: input.actorId,
+        targetId: target.combatantId,
+        attackRoll: step.attackRoll.value,
+        attackKind: spellAttackKindForRedirect(input.invocation.attackKind),
+        damageTypes: [selectedDamageType],
+        continuation: {
+          kind: "replay",
+          subject: input.input.subject,
+          fills: input.input.fills,
+        },
+      },
+      input.input.suppressedReactionTrigger,
+    );
+    if (attackHitReactionWindow !== null) {
+      return attackHitReactionWindow;
+    }
+
+    if (step.damageRoll === undefined) {
+      return needsHolesResult(replayState, input.input.subject, [
+        chainedSpellDamageRollHole(input.invocation, selectedDamageType, {
+          stepIndex,
+          critical,
+        }),
+      ]);
+    }
+    const damageValidation = validateChainedSpellDamageFill(
+      step.damageRoll,
+      input.invocation,
+      selectedDamageType,
+      { stepIndex, critical },
+    );
+    if (damageValidation !== null) {
+      return invalidResult(input.input.state, "invalidFill", damageValidation);
+    }
+    const damageAmount = chainedSpellDamageAmountForTarget(
+      target,
+      input.invocation,
+      selectedDamageType,
+      step.damageRoll,
+    );
+    const concentrationSave = concentrationSavingThrowHole(
+      target,
+      damageAmount,
+    );
+    if (concentrationSave !== null) {
+      concentrationHoles.push(concentrationSave);
+      if (
+        concentrationSavingThrowFillFor(
+          fillSet.concentrationSavingThrows,
+          concentrationSave,
+        ) === undefined
+      ) {
+        return needsHolesResult(replayState, input.input.subject, [
+          concentrationSave,
+        ]);
+      }
+    }
+    const dispositionHole = zeroHitPointReplacementDispositionHole({
+      damageSourceId: input.actorId,
+      target,
+      damageAmount,
+    });
+    if (dispositionHole !== null) {
+      damageDispositionHoles.push(dispositionHole);
+      if (
+        damageDispositionFillFor(
+          fillSet.damageDispositions,
+          dispositionHole,
+        ) === undefined
+      ) {
+        return needsHolesResult(replayState, input.input.subject, [
+          dispositionHole,
+        ]);
+      }
+    }
+    replayState = applyChainedSpellDamage(
+      replayState,
+      target.combatantId,
+      input.invocation,
+      selectedDamageType,
+      step.damageRoll,
+      critical,
+      concentrationSave === null
+        ? undefined
+        : concentrationSavingThrowFillFor(
+            fillSet.concentrationSavingThrows,
+            concentrationSave,
+          ),
+      damageDispositionForTarget(
+        dispositionHole === null ? [] : [dispositionHole],
+        fillSet.damageDispositions,
+        target.combatantId,
+      ),
+    );
+    afterDamageEvents.push({
+      damageSourceId: input.actorId,
+      damagedId: target.combatantId,
+      damageAmount: toDamageAmount(damageAmount),
+    });
+
+    if (
+      !damageRollHasDuplicateD8Face(step.damageRoll) ||
+      stepIndex >= maxLeaps
+    ) {
+      if (!chainedSpellLaterStepsAreEmpty(fillSet.steps, stepIndex)) {
+        return invalidResult(
+          input.input.state,
+          "invalidFill",
+          "Chromatic Orb chain can continue only after duplicate d8 damage faces and remaining leap budget.",
+        );
+      }
+      const extraFillValidation = validateChainedSpellFollowUpFills({
+        concentrationHoles,
+        concentrationFills: fillSet.concentrationSavingThrows,
+        damageDispositionHoles,
+        damageDispositionFills: fillSet.damageDispositions,
+      });
+      if (extraFillValidation !== null) {
+        return invalidResult(
+          input.input.state,
+          "invalidFill",
+          extraFillValidation,
+        );
+      }
+      return resolveCompletedChainedSpell({
+        input,
+        state: replayState,
+        afterDamageEvents,
+      });
+    }
+  }
+
+  return invalidResult(
+    input.input.state,
+    "invalidFill",
+    "Chromatic Orb chain exceeded its spell-slot leap budget.",
+  );
+}
+
+function resolveCompletedChainedSpell(input: {
+  readonly input: {
+    readonly input: ActionSpellBattleResolutionInput;
+    readonly actorId: CombatantId;
+    readonly invocation: Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "chainedSpellAttackDamage" }
+    >;
+    readonly spendsCastResources?: boolean;
+  };
+  readonly state: BattleState;
+  readonly afterDamageEvents: readonly BattleAfterDamageEvent[];
+}): BattleResolutionResult {
+  if (input.input.spendsCastResources === false) {
+    return openAfterDamageSequenceReactionWindow({
+      state: input.state,
+      subject: input.input.input.subject,
+      events: input.afterDamageEvents,
+      suppressedReactionTrigger: input.input.input.suppressedReactionTrigger,
+    });
+  }
+  const spentResources = spendSpellCastResources({
+    state: input.state,
+    actorId: input.input.actorId,
+    invocation: input.input.invocation,
+    errorState: input.input.input.state,
+  });
+  if (spentResources.tag !== "resolved") {
+    return spentResources;
+  }
+  return openAfterDamageSequenceReactionWindow({
+    state: spentResources.state,
+    subject: input.input.input.subject,
+    events: input.afterDamageEvents,
+    suppressedReactionTrigger: input.input.input.suppressedReactionTrigger,
+  });
+}
+
+function emptyChainedSpellStepFills(): ChainedSpellStepFills {
+  return {
+    target: undefined,
+    attackRoll: undefined,
+    damageRoll: undefined,
+  };
+}
+
+function chainedSpellFillSet(
+  fills: readonly BattleFill[],
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "chainedSpellAttackDamage" }
+  >,
+): ChainedSpellFillSet {
+  let damageType:
+    | Extract<BattleFill, { readonly kind: "damageTypeChoice" }>
+    | undefined;
+  const steps = Array.from(
+    { length: Number(invocation.resource.slotLevel) + 1 },
+    () => emptyChainedSpellStepFills(),
+  );
+  const concentrationSavingThrows: Extract<
+    BattleFill,
+    { readonly kind: "concentrationSavingThrow" }
+  >[] = [];
+  const damageDispositions: Extract<
+    BattleFill,
+    { readonly kind: "attackDamageDisposition" }
+  >[] = [];
+
+  for (const fill of fills) {
+    if (fill.kind === "damageTypeChoice") {
+      if (fill.holeId !== spellDamageTypeChoiceHole(invocation).holeId) {
+        return {
+          tag: "invalid",
+          message:
+            "Damage type choice must use the selected chained spell act damage-type hole.",
+        };
+      }
+      if (damageType !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Chained spell damage type was filled twice.",
+        };
+      }
+      damageType = fill;
+      continue;
+    }
+    if (
+      fill.kind === "targetChoice" ||
+      fill.kind === "attackRoll" ||
+      fill.kind === "rolledDice"
+    ) {
+      const stepIndex = chainedSpellStepIndexForFill(fill, invocation);
+      if (stepIndex === null || steps[stepIndex] === undefined) {
+        return {
+          tag: "invalid",
+          message: `Fill ${fill.kind} does not match the chained spell replay holes.`,
+        };
+      }
+      const step = steps[stepIndex];
+      if (fill.kind === "targetChoice") {
+        if (step.target !== undefined) {
+          return {
+            tag: "invalid",
+            message: "Chained spell target was filled twice for one step.",
+          };
+        }
+        steps[stepIndex] = { ...step, target: fill };
+        continue;
+      }
+      if (fill.kind === "attackRoll") {
+        if (step.attackRoll !== undefined) {
+          return {
+            tag: "invalid",
+            message: "Chained spell attack roll was filled twice for one step.",
+          };
+        }
+        steps[stepIndex] = { ...step, attackRoll: fill };
+        continue;
+      }
+      if (step.damageRoll !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Chained spell damage roll was filled twice for one step.",
+        };
+      }
+      steps[stepIndex] = { ...step, damageRoll: fill };
+      continue;
+    }
+    if (fill.kind === "concentrationSavingThrow") {
+      if (
+        concentrationSavingThrows.some(
+          (candidate) => candidate.holeId === fill.holeId,
+        )
+      ) {
+        return {
+          tag: "invalid",
+          message: "Concentration Saving Throw was filled twice.",
+        };
+      }
+      concentrationSavingThrows.push(fill);
+      continue;
+    }
+    if (fill.kind === "attackDamageDisposition") {
+      if (
+        damageDispositions.some((candidate) => candidate.holeId === fill.holeId)
+      ) {
+        return {
+          tag: "invalid",
+          message: "Damage disposition was filled twice.",
+        };
+      }
+      damageDispositions.push(fill);
+      continue;
+    }
+    return {
+      tag: "invalid",
+      message: `Fill ${fill.kind} does not match the chained spell replay holes.`,
+    };
+  }
+
+  return {
+    tag: "ok",
+    damageType,
+    steps,
+    concentrationSavingThrows,
+    damageDispositions,
+  };
+}
+
+function chainedSpellStepIndexForFill(
+  fill: Extract<
+    BattleFill,
+    { readonly kind: "targetChoice" | "attackRoll" | "rolledDice" }
+  >,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "chainedSpellAttackDamage" }
+  >,
+): number | null {
+  for (
+    let stepIndex = 0;
+    stepIndex <= Number(invocation.resource.slotLevel);
+    stepIndex += 1
+  ) {
+    if (
+      fill.kind === "targetChoice" &&
+      fill.holeId === chainedSpellTargetHoleId(invocation, stepIndex)
+    ) {
+      return stepIndex;
+    }
+    if (
+      fill.kind === "attackRoll" &&
+      fill.holeId === chainedSpellAttackRollHoleId(invocation, stepIndex)
+    ) {
+      return stepIndex;
+    }
+    if (
+      fill.kind === "rolledDice" &&
+      (fill.holeId ===
+        chainedSpellDamageRollHoleId(invocation, stepIndex, false) ||
+        fill.holeId ===
+          chainedSpellDamageRollHoleId(invocation, stepIndex, true))
+    ) {
+      return stepIndex;
+    }
+  }
+  return null;
+}
+
+function chainedSpellLaterStepsAreEmpty(
+  steps: readonly ChainedSpellStepFills[],
+  completedStepIndex: number,
+): boolean {
+  return steps
+    .slice(completedStepIndex + 1)
+    .every(
+      (step) =>
+        step.target === undefined &&
+        step.attackRoll === undefined &&
+        step.damageRoll === undefined,
+    );
+}
+
+function validateChainedSpellFollowUpFills(input: {
+  readonly concentrationHoles: readonly BattleConcentrationSavingThrowHole[];
+  readonly concentrationFills: readonly Extract<
+    BattleFill,
+    { readonly kind: "concentrationSavingThrow" }
+  >[];
+  readonly damageDispositionHoles: readonly BattleAttackDamageDispositionHole[];
+  readonly damageDispositionFills: readonly Extract<
+    BattleFill,
+    { readonly kind: "attackDamageDisposition" }
+  >[];
+}): string | null {
+  const concentrationHoleIds = new Set(
+    input.concentrationHoles.map((hole) => hole.holeId),
+  );
+  if (
+    input.concentrationFills.some(
+      (fill) => !concentrationHoleIds.has(fill.holeId),
+    )
+  ) {
+    return "Concentration Saving Throw fill is only valid for a concentrating damaged target.";
+  }
+  return damageDispositionFillsValidation({
+    holes: input.damageDispositionHoles,
+    fills: input.damageDispositionFills,
+  });
+}
+
+function damageRollHasDuplicateD8Face(
+  fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+): boolean {
+  const counts = new Map<number, number>();
+  for (const group of fill.value) {
+    for (const result of group.results) {
+      const face = Number(result);
+      counts.set(face, (counts.get(face) ?? 0) + 1);
+    }
+  }
+  return [...counts.values()].some((count) => count >= 2);
+}
+
+function validateChainedSpellDamageFill(
+  fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "chainedSpellAttackDamage" }
+  >,
+  damageType: DamageType,
+  step: { readonly stepIndex: number; readonly critical: boolean },
+): string | null {
+  if (
+    fill.holeId !==
+    chainedSpellDamageRollHole(invocation, damageType, step).holeId
+  ) {
+    return step.critical
+      ? "Critical hit chained spell damage must use the critical step damage hole."
+      : "Chained spell damage must use the selected step damage hole.";
+  }
+  const validation = validateRolledDiceForDiceExpr(fill.value, {
+    dice: invocation.damage.expr.dice * (step.critical ? 2 : 1),
+    dieSize: invocation.damage.expr.dieSize,
+  });
+  return validation?.reason ?? null;
+}
+
+function chainedSpellDamageAmountForTarget(
+  target: BattleCreatureState,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "chainedSpellAttackDamage" }
+  >,
+  damageType: DamageType,
+  damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+): number {
+  const diceTotal = damageRoll.value.reduce(
+    (total, group) =>
+      total +
+      group.results.reduce(
+        (groupTotal, dieResult) => groupTotal + Number(dieResult),
+        0,
+      ),
+    0,
+  );
+  return damageAmountAfterTargetAdjustments(
+    target,
+    diceTotal + (invocation.damage.expr.flat ?? 0),
+    damageType,
+  );
+}
+
+function applyChainedSpellDamage(
+  state: BattleState,
+  targetId: CombatantId,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "chainedSpellAttackDamage" }
+  >,
+  damageType: DamageType,
+  damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+  critical: boolean,
+  concentrationSavingThrow:
+    | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
+    | undefined,
+  damageDisposition: BattleAttackDamageDisposition,
+): BattleState {
+  const target = state.combatants.get(targetId);
+  if (target === undefined) {
+    return state;
+  }
+  const damaged = applyHpDamage(
+    target,
+    chainedSpellDamageAmountForTarget(
+      target,
+      invocation,
+      damageType,
+      damageRoll,
+    ),
+    { deathFailuresAtZeroHp: critical ? 2 : 1, damageDisposition },
+  );
+  const nextState = {
+    ...state,
+    combatants: new Map(state.combatants).set(targetId, damaged),
+  };
+  return concentrationSavingThrow?.value.succeeded === false ||
+    (target.concentration !== null && damaged.concentration === null)
+    ? breakBattleConcentrationAfterDamage({
+        state: nextState,
+        combatantId: targetId,
+        priorConcentration: target.concentration,
+      })
+    : nextState;
+}
+
 function resolveBonusActionSpellAct(
   input: BonusActionSpellBattleResolutionInput,
 ): BattleResolutionResult {
@@ -14832,8 +15723,17 @@ function resolveReadySpellAct(
 
 function resolveSpellRelease(
   input: ActionSpellBattleResolutionInput,
-  invocation: SupportedDamageSpellInvocation,
+  invocation: ReadiedSpellInvocation,
 ): BattleResolutionResult {
+  if (invocation.procedure === "chainedSpellAttackDamage") {
+    return resolveChainedSpellAttackDamageAct({
+      input,
+      actorId: input.subject.actorId,
+      invocation,
+      opensSpellCastReactionWindow: false,
+      spendsCastResources: false,
+    });
+  }
   const fillSet = spellFillSet(input.fills, invocation);
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
@@ -15993,10 +16893,9 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
   const attackDamageDispositionHoleIds = new Set<BattleHoleId>(
     attackDamageDispositionHoles.map((hole) => hole.holeId),
   );
-  const attackDamageDispositionFills =
-    input.fillSet.damageDispositions.filter((fill) =>
-      attackDamageDispositionHoleIds.has(fill.holeId),
-    );
+  const attackDamageDispositionFills = input.fillSet.damageDispositions.filter(
+    (fill) => attackDamageDispositionHoleIds.has(fill.holeId),
+  );
   const attackDamageDispositionValidation = damageDispositionFillsValidation({
     holes: attackDamageDispositionHoles,
     fills: attackDamageDispositionFills,
@@ -17893,6 +18792,14 @@ function supportedSpellActs(
       ),
     ),
     ...spellcasting.preparedSpells.flatMap((spell) =>
+      supportedPreparedChainedSpellAttackDamageProfile(
+        spell,
+        spellcasting.spellSlots,
+        spellcasting.spellcastingAbilityModifier,
+        spellcasting.proficiencyBonus,
+      ),
+    ),
+    ...spellcasting.preparedSpells.flatMap((spell) =>
       supportedPreparedAttackBurstSaveDamageProfile(
         spell,
         spellcasting.spellSlots,
@@ -18053,6 +18960,14 @@ function sameStringSet(
     left.length === right.length &&
     left.every((value) => right.includes(value)) &&
     right.every((value) => left.includes(value))
+  );
+}
+
+function sameDiceExpr(left: DiceExpr, right: DiceExpr): boolean {
+  return (
+    left.dice === right.dice &&
+    left.dieSize === right.dieSize &&
+    (left.flat ?? 0) === (right.flat ?? 0)
   );
 }
 
@@ -18333,6 +19248,138 @@ function supportedPreparedSpellAttackProfile(
       slotLevel: slot.spellLevel,
     });
   });
+}
+
+function supportedPreparedChainedSpellAttackDamageProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+  spellcastingAbilityModifier: AbilityModifier,
+  proficiencyBonus: ProficiencyBonusType,
+): readonly SupportedSpellInvocation[] {
+  if (!isCanonicalSrdChromaticOrbSpellDefinition(spell)) {
+    return [];
+  }
+  const range = spell.mechanics.range;
+  if (
+    spell.mechanics.family !== "activation" ||
+    spell.mechanics.level !== 1 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.duration.kind !== "instantaneous" ||
+    range.kind !== "point" ||
+    spell.mechanics.phases.length !== 1
+  ) {
+    return [];
+  }
+  const phase = spell.mechanics.phases[0];
+  const continuation = phase?.kind === "attack_roll" ? phase.continue : null;
+  const leapPhase =
+    continuation?.kind === "repeat" ? continuation.next[0] : undefined;
+  const hitDamage = phase?.kind === "attack_roll" ? phase.onHit[0] : undefined;
+  const leapHitDamage =
+    leapPhase?.kind === "attack_roll" ? leapPhase.onHit[0] : undefined;
+  const targeting =
+    phase?.kind === "attack_roll"
+      ? spellAttackDamageTargeting(phase.attachment)
+      : null;
+  const leapTargeting =
+    leapPhase?.kind === "attack_roll"
+      ? spellAttackDamageTargeting(leapPhase.attachment)
+      : null;
+  if (
+    phase?.kind !== "attack_roll" ||
+    leapPhase?.kind !== "attack_roll" ||
+    !supportedSpellAttackKind(phase.attackKind) ||
+    !supportedSpellAttackKind(leapPhase.attackKind) ||
+    phase.attackKind !== leapPhase.attackKind ||
+    targeting === null ||
+    leapTargeting === null ||
+    phase.onHit.length !== 1 ||
+    phase.onMiss.length !== 1 ||
+    phase.onMiss[0]?.kind !== "none" ||
+    leapPhase.onHit.length !== 1 ||
+    leapPhase.onMiss.length !== 1 ||
+    leapPhase.onMiss[0]?.kind !== "none" ||
+    continuation?.kind !== "repeat" ||
+    continuation.when.kind !== "damage_roll_has_duplicate_faces" ||
+    continuation.when.minimumMultiplicity !== 2 ||
+    continuation.next.length !== 1 ||
+    !isCanonicalChromaticOrbContinuationLimitSet(continuation.limits) ||
+    hitDamage?.kind !== "damage" ||
+    leapHitDamage?.kind !== "damage" ||
+    typeof hitDamage.damageType !== "object" ||
+    hitDamage.damageType.kind !== "hole" ||
+    typeof hitDamage.damageType.value !== "object" ||
+    hitDamage.damageType.value.kind !== "choice" ||
+    !sameStringSet(hitDamage.damageType.value.options, [
+      ...CHROMATIC_ORB_DAMAGE_TYPES,
+    ]) ||
+    typeof leapHitDamage.damageType !== "object" ||
+    leapHitDamage.damageType.kind !== "same_choice_as" ||
+    leapHitDamage.damageType.holeId !== hitDamage.damageType.holeId
+  ) {
+    return [];
+  }
+
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    const damageExpr = supportedDamageAmountExpr({
+      amount: hitDamage.amount,
+      spellLevel: spell.mechanics.level,
+      slotLevel: slot.spellLevel,
+    });
+    const leapDamageExpr = supportedDamageAmountExpr({
+      amount: leapHitDamage.amount,
+      spellLevel: spell.mechanics.level,
+      slotLevel: slot.spellLevel,
+    });
+    if (
+      damageExpr === null ||
+      leapDamageExpr === null ||
+      !sameDiceExpr(damageExpr, leapDamageExpr)
+    ) {
+      return [];
+    }
+    return [
+      {
+        access: { tag: "prepared" },
+        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        procedure: "chainedSpellAttackDamage",
+        spell,
+        targeting,
+        damage: { expr: damageExpr },
+        damageTypeChoices: CHROMATIC_ORB_DAMAGE_TYPES,
+        rangeFeet: movementFeet(range.feet),
+        leapRangeFeet: CHROMATIC_ORB_LEAP_RANGE_FEET,
+        attackKind: phase.attackKind,
+        attackBonus: attackBonus(
+          Number(spellcastingAbilityModifier) + Number(proficiencyBonus),
+        ),
+      },
+    ];
+  });
+}
+
+function isCanonicalSrdChromaticOrbSpellDefinition(
+  spell: SpellRecord,
+): boolean {
+  return (
+    spell.name === "Chromatic Orb" &&
+    spell.provenance.kind === "srd-5.2.1" &&
+    spell.provenance.section === "Spells/Descriptions-A-D#Chromatic Orb"
+  );
+}
+
+function isCanonicalChromaticOrbContinuationLimitSet(
+  limits: readonly { readonly kind: string }[],
+): boolean {
+  return (
+    limits.length === CHROMATIC_ORB_CONTINUATION_LIMIT_KINDS.length &&
+    CHROMATIC_ORB_CONTINUATION_LIMIT_KINDS.every((requiredKind) =>
+      limits.some((limit) => limit.kind === requiredKind),
+    )
+  );
 }
 
 function supportedPreparedAttackBurstSaveDamageProfile(
@@ -19536,6 +20583,12 @@ function supportedSpellInvocationRef(
       slotLevel: slotSpell.resource.slotLevel,
       procedure: "attackBurstSaveDamage" as const,
     })),
+    Match.when({ procedure: "chainedSpellAttackDamage" }, (slotSpell) => ({
+      tag: "spellSlot" as const,
+      spellId: spellId(slotSpell.spell.id),
+      slotLevel: slotSpell.resource.slotLevel,
+      procedure: "chainedSpellAttackDamage" as const,
+    })),
     Match.when({ procedure: "spellAttackDamage" }, damageSpellInvocationRef),
     Match.when({ procedure: "saveGatedDamage" }, damageSpellInvocationRef),
     Match.when({ procedure: "saveGatedCondition" }, (conditionSpell) => ({
@@ -19632,6 +20685,210 @@ function spellAttackRollHole(
     ...(rollMode === undefined ? {} : { rollMode }),
     ...attackRollMissToHitReplacementHolePayload(state, attackerId),
   };
+}
+
+function spellDamageTypeChoiceHole(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "chainedSpellAttackDamage" }
+  >,
+): BattleSpellDamageTypeChoiceHole {
+  const protocolId = `battle:spell:damage-type:${invocation.spell.id}`;
+  return {
+    kind: "damageTypeChoice",
+    holeId: holeId(protocolId),
+    holeInstanceKey: holeInstanceKey(protocolId),
+    label: `${invocation.spell.name} damage type`,
+    spell: invocation,
+    choices: invocation.damageTypeChoices,
+  };
+}
+
+function chainedSpellTargetHole(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "chainedSpellAttackDamage" }
+  >;
+  readonly stepIndex: number;
+  readonly targeted: readonly CombatantId[];
+}): BattleTargetChoiceHole {
+  const protocolId = chainedSpellTargetProtocolId(
+    input.invocation,
+    input.stepIndex,
+  );
+  const targeted = new Set(input.targeted);
+  return {
+    kind: "targetChoice",
+    holeId: holeId(protocolId),
+    holeInstanceKey: holeInstanceKey(protocolId),
+    label:
+      input.stepIndex === 0
+        ? `${input.invocation.spell.name} target`
+        : `${input.invocation.spell.name} leap target ${input.stepIndex}`,
+    requiresTableSpatialFact: true,
+    choices: [...input.state.combatants.keys()].filter(
+      (targetId) =>
+        !targeted.has(targetId) &&
+        spellTargetHasNonSpatialPrerequisites(
+          input.state,
+          input.actorId,
+          targetId,
+          input.invocation,
+        ),
+    ),
+  };
+}
+
+function chainedSpellAttackRollHole(
+  state: BattleState,
+  attackerId: CombatantId,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "chainedSpellAttackDamage" }
+  >,
+  stepIndex: number,
+  rollMode?: AttackRollMode,
+): BattleSpellAttackRollHole {
+  const protocolId = chainedSpellAttackRollProtocolId(invocation, stepIndex);
+  return {
+    kind: "attackRoll",
+    holeId: holeId(protocolId),
+    holeInstanceKey: holeInstanceKey(protocolId),
+    label: `${invocation.spell.name} spell attack roll ${stepIndex + 1}`,
+    spell: invocation,
+    attackBonus: invocation.attackBonus,
+    ...(rollMode === undefined ? {} : { rollMode }),
+    ...attackRollMissToHitReplacementHolePayload(state, attackerId),
+  };
+}
+
+function chainedSpellDamageRollHole(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "chainedSpellAttackDamage" }
+  >,
+  damageType: DamageType,
+  step: { readonly stepIndex: number; readonly critical: boolean },
+): BattleSpellDamageRollHole {
+  const protocolId = chainedSpellDamageRollProtocolId(
+    invocation,
+    step.stepIndex,
+    step.critical,
+  );
+  const expr = chainedSpellDamageExpression(
+    invocation,
+    damageType,
+    step.critical,
+  );
+  return {
+    kind: "rolledDice",
+    holeId: holeId(protocolId),
+    holeInstanceKey: holeInstanceKey(protocolId),
+    label: `${invocation.spell.name} damage ${step.stepIndex + 1} (${expr})`,
+    spell: invocation,
+    critical: step.critical,
+  };
+}
+
+function chainedSpellTargetHoleId(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "chainedSpellAttackDamage" }
+  >,
+  stepIndex: number,
+): BattleHoleId {
+  return holeId(chainedSpellTargetProtocolId(invocation, stepIndex));
+}
+
+function chainedSpellAttackRollHoleId(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "chainedSpellAttackDamage" }
+  >,
+  stepIndex: number,
+): BattleHoleId {
+  return holeId(chainedSpellAttackRollProtocolId(invocation, stepIndex));
+}
+
+function chainedSpellDamageRollHoleId(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "chainedSpellAttackDamage" }
+  >,
+  stepIndex: number,
+  critical: boolean,
+): BattleHoleId {
+  return holeId(
+    chainedSpellDamageRollProtocolId(invocation, stepIndex, critical),
+  );
+}
+
+function chainedSpellTargetProtocolId(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "chainedSpellAttackDamage" }
+  >,
+  stepIndex: number,
+): string {
+  return `battle:spell:chained-target:${invocation.spell.id}:${stepIndex}`;
+}
+
+function chainedSpellAttackRollProtocolId(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "chainedSpellAttackDamage" }
+  >,
+  stepIndex: number,
+): string {
+  return `battle:spell:chained-attack-roll:${invocation.spell.id}:${stepIndex}`;
+}
+
+function chainedSpellDamageRollProtocolId(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "chainedSpellAttackDamage" }
+  >,
+  stepIndex: number,
+  critical: boolean,
+): string {
+  return `battle:spell:chained-damage:${invocation.spell.id}:${stepIndex}:${critical ? "critical" : "normal"}`;
+}
+
+function chainedSpellDamageExpression(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "chainedSpellAttackDamage" }
+  >,
+  damageType: DamageType,
+  critical: boolean,
+): string {
+  const dice = invocation.damage.expr.dice * (critical ? 2 : 1);
+  return `${dice}d${invocation.damage.expr.dieSize}${signedModifier(invocation.damage.expr.flat ?? 0)}-${damageType}`;
+}
+
+function chainedSpellLeapTargetIsLegal(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "chainedSpellAttackDamage" }
+  >,
+  previousTargetId: CombatantId | undefined,
+  targetId: CombatantId,
+  facts: readonly BattleTargetSpatialFact[],
+): boolean {
+  return (
+    previousTargetId !== undefined &&
+    previousTargetId !== targetId &&
+    facts.some(
+      (fact) =>
+        fact.kind === "spellLeapTargetWithinRange" &&
+        fact.previousTargetId === previousTargetId &&
+        fact.targetId === targetId &&
+        fact.spellId === invocation.spell.id &&
+        fact.rangeFeet === invocation.leapRangeFeet,
+    )
+  );
 }
 
 function spellDamageTypes(

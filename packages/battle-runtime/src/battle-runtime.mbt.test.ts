@@ -1649,6 +1649,9 @@ function projectHole(hole: BattleHole): MbtHole {
         "Battle runtime MBT does not model concentration saving throw holes.",
       );
     }),
+    Match.when({ kind: "damageTypeChoice" }, () => {
+      throw new Error("Battle runtime MBT does not model damage type holes.");
+    }),
     Match.when({ kind: "reactionDecision" }, () => {
       throw new Error("Battle runtime MBT does not model reaction holes.");
     }),
