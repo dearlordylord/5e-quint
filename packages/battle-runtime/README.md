@@ -215,6 +215,12 @@ The support-profile parser surface should cover these profile families:
   action-cast save-gate damage profile for either single creature targets or
   admitted caller-supplied area target sets, currently point-origin Spheres and
   self-origin Cones.
+- `SpellProfile.creatureTypeProtectionAndCharm`: an action-cast, slot-spent
+  profile for creature-type-scoped condition/protection clauses. Animal
+  Friendship admits Beast targets and applies spell-owned Charmed on failed
+  Wisdom saves. Protection from Evil and Good applies a concentration active
+  effect that gives scoped attacker creature types Disadvantage on attack rolls
+  against the protected target.
 - `SpellProfile.preparedPersistentSpell`: a prepared persistent effect profile,
   such as a timed touch AC effect.
 - `SpellProfile.preparedShieldReactionSpell`: a prepared triggered-Reaction
@@ -584,6 +590,16 @@ Feature and spell resources:
   `inflict_wounds` and `burning_hands`. `color_spray` applies spell-owned
   Blinded to failed self-origin Cone Constitution saves until the caster's next
   turn ends without deleting unrelated Blinded sources when it expires.
+- creature-type-scoped spell effects admit `animal_friendship` and
+  `protection_from_evil_and_good` from retained Spell Records. Animal
+  Friendship filters targets by Beast creature type, asks for Wisdom saves, and
+  applies spell-owned Charmed on failed saves. Its damage-break clause is
+  deferred because ally/source-scoped damage-to-target early ending is not yet
+  an executable active-effect lifecycle. Protection from Evil and Good stores
+  the SRD attacker creature-type list on a concentration active effect and feeds
+  attack-roll Disadvantage when those creature types attack the protected
+  target. Possession prevention, scoped Charmed/Frightened immunity, and
+  Advantage on later saves against already-applied effects remain unsupported.
 - prepared `ice_knife` is a mixed spell profile: the primary target uses the
   ranged spell attack replay and takes Piercing damage only on a hit, then the
   burst always asks for a primary-target-origin Emanation Dexterity Saving

@@ -52,7 +52,7 @@ flowchart TD
   AttackOption["supported Attack action option<br/>source: character selected weapon or StatBlockRecord named attack<br/>why: attack bonus, damage, reach, normal/long range, and attack identity derive from authored inputs"]
   MonsterControl["monster control resources<br/>success: spend X/Day or Recharge; discover Legendary Actions after another turn; refresh Legendary Actions and recharge rolls at start turn; pending Multiattack dispatches expose matching dispatch attacks, Movement, and End Turn<br/>why: reusable Stat Block limited-use protocol"]
   UnitFeature["Unit feature activation/passive support<br/>source: retained Unit + runtime use-count, turn-resource, or support-profile state<br/>success: Action Surge grants one non-Magic action; Second Wind spends Bonus Action and heals; Defense admits a passive Armor Class bonus profile; Savage Attacker chooses weapon damage dice"]
-  SpellAct["spell act<br/>source: retained Spell Records + runtime Spell Slot/effect state<br/>success: action-time spells consume Magic action; Magic Missile allocates darts and spends the selected slot; direct healing spells restore selected targets, including Mass Cure Wounds point-origin Sphere choices; Shield spends Reaction + slot from trigger windows; Ray of Frost records Speed effect; Shocking Grasp denies Opportunity Attacks; Guiding Bolt, Ray of Sickness, and Vicious Mockery record source-owned timed attack-roll/condition riders; Poison Spray, damage-only Chill Touch, Sacred Flame, Acid Splash, and Inflict Wounds apply admitted spell damage"]
+  SpellAct["spell act<br/>source: retained Spell Records + runtime Spell Slot/effect state<br/>success: action-time spells consume Magic action; Magic Missile allocates darts and spends the selected slot; direct healing spells restore selected targets, including Mass Cure Wounds point-origin Sphere choices; Shield spends Reaction + slot from trigger windows; Ray of Frost records Speed effect; Shocking Grasp denies Opportunity Attacks; Guiding Bolt, Ray of Sickness, and Vicious Mockery record source-owned timed attack-roll/condition riders; Animal Friendship and Protection from Evil and Good record creature-type-scoped condition/protection effects; Poison Spray, damage-only Chill Touch, Sacred Flame, Acid Splash, and Inflict Wounds apply admitted spell damage"]
   AttackReplay["Attack replay<br/>subject carries attack name; needs target -> attack roll -> damage on hit<br/>success: miss spends action, hit applies damage then spends action<br/>why: staged holes match the SRD attack sequence without a second attack IR"]
   Damage["apply HP damage<br/>success: temp HP absorbed first, HP clamped at 0, zero-HP lifecycle or melee Knock Out applied<br/>why: one HP mutation boundary"]
   Hidden["Hidden state<br/>source: Hide/Search procedure<br/>data: discovery DC<br/>why: battle-owned execution fact for Invisible projection, Search, and reveal triggers"]
@@ -97,7 +97,7 @@ flowchart TD
   EndTurn["runtimeCommand.endTurn<br/>success: resolved next turn<br/>invalid: fills are not accepted"]
   Attack["action.attack + attackName<br/>success: staged target/roll/damage replay<br/>invalid: actor missing, unsupported shape, no action resource, bad fills"]
   UnitFeature["unitFeature<br/>success: spend retained feature resource and resolve supported Unit procedure<br/>invalid: no use remains, no Bonus Action, or already used this turn"]
-  Magic["actionSpell + spellId<br/>success: staged action-time spell replay via Magic action, including supported attack, save, damage, mixed attack-plus-burst, and scalar buff spells<br/>invalid: unsupported spell shape, no Magic action, no slot for prepared spell"]
+  Magic["actionSpell + spellId<br/>success: staged action-time spell replay via Magic action, including supported attack, save, damage, mixed attack-plus-burst, scalar buff, and creature-type protection/charm spells<br/>invalid: unsupported spell shape, no Magic action, no slot for prepared spell"]
   AttackOption["supported Attack action option<br/>source: BattleCreatureState.origin character weapon or StatBlockRecord named attack<br/>why: selected attack identity and authored damage facts stay coupled"]
   Target["target choice<br/>caller/table supplies spatially legal target using authored reach/range metadata; ranged facts carry normal or long range band<br/>needsHoles until caller selects a combatant"]
   Roll["attack roll<br/>needsHoles until caller supplies AttackRollResult"]
@@ -189,6 +189,12 @@ flowchart TD
   duplicate-d8 leap gating, target uniqueness, and previous-target range facts.
   `vicious_mockery` adds an attack-roll-only Disadvantage effect on failed
   saves.
+  `animal_friendship` adds the same save-gated condition procedure for
+  Beast-target Charmed effects, while keeping its damage-break clause outside
+  this active-effect lifecycle. `protection_from_evil_and_good` adds a
+  concentration protection active effect whose attacker creature-type filter
+  feeds attack-roll Disadvantage; possession, condition-immunity, and
+  already-applied-effect save-Advantage clauses stay unsupported.
 - Stat Block damage vulnerabilities, resistances, and immunities are read from
   the retained `StatBlockRecord` at the HP mutation boundary.
 - Optional attack damage riders are retained feature profiles, not named

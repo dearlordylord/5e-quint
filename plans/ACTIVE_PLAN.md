@@ -364,7 +364,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 211,
       "id": "SRDINV30C",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Protection and Charm Spell Runtime"
     },
     {
@@ -551,7 +551,7 @@ Keep it synchronized with the DAG table and task details.
 | 208   | SRDINV29F - Research Chromatic Orb Chained Attack Runtime | done | SRDINV28A-SRDINV28E | SRDINV29F1 | [Chromatic Orb research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV29F_CHROMATIC_ORB_CHAINED_ATTACK_RESEARCH.md), [Chromatic Orb](/workspace/typescript/dnd/packages/surface/content/chromatic_orb.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed research: Chromatic Orb needs a separate chained spell-attack replay procedure rather than widening `spellAttackDamage`; implementation is split into QNT replay facts, reducer runtime, and admission/evidence closure. |
 | 209   | SRDINV30A - Promote Simple Scalar Buff Spell Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [False Life](/workspace/typescript/dnd/packages/surface/content/false_life.dhall), [Longstrider](/workspace/typescript/dnd/packages/surface/content/longstrider.dhall), [Shield of Faith](/workspace/typescript/dnd/packages/surface/content/shield_of_faith.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote simple temp HP, Speed, and AC scalar spell effects. |
 | 210   | SRDINV30B - Promote Roll Modifier Spell Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Bane](/workspace/typescript/dnd/packages/surface/content/bane.dhall), [Bless](/workspace/typescript/dnd/packages/surface/content/bless.dhall), [Guidance](/workspace/typescript/dnd/packages/surface/content/guidance.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote Bane, Bless, and Guidance as D20 roll modifier active effects. |
-| 211   | SRDINV30C - Promote Protection and Charm Spell Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Animal Friendship](/workspace/typescript/dnd/packages/surface/content/animal_friendship.dhall), [Protection from Evil and Good](/workspace/typescript/dnd/packages/surface/content/protection_from_evil_and_good.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote creature-type-scoped charm/protection effects with explicit blockers for omitted clauses. |
+| 211   | SRDINV30C - Promote Protection and Charm Spell Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Animal Friendship](/workspace/typescript/dnd/packages/surface/content/animal_friendship.dhall), [Protection from Evil and Good](/workspace/typescript/dnd/packages/surface/content/protection_from_evil_and_good.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promoted Animal Friendship Beast-target Charmed application and Protection from Evil and Good attacker-creature-type attack Disadvantage, with omitted damage-break, possession, condition-immunity, and save-Advantage clauses retained as checker-visible SRDINV33 blockers. |
 | 212   | SRDINV30D - Promote Heroism Turn-Start Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Heroism](/workspace/typescript/dnd/packages/surface/content/heroism.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote Heroism's Frightened immunity plus target-turn-start Temporary Hit Points. |
 | 213   | SRDINV30E - Promote Faerie Fire Area Reveal Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Faerie Fire](/workspace/typescript/dnd/packages/surface/content/faerie_fire.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote Faerie Fire area save-gated attack Advantage and any executable reveal/invisibility subset. |
 | 214   | SRDINV30F - Promote Resistance Damage Reduction Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Resistance](/workspace/typescript/dnd/packages/surface/content/resistance.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote Resistance chosen damage type reduction with once-per-turn semantics. |
@@ -2605,16 +2605,16 @@ skill filtering where authored, and slot-scaled target counts.
 
 ### Task 211 - SRDINV30C - Promote Protection and Charm Spell Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV28A-SRDINV28E
 
 Blocks: SRDINV33
 
-Scope: promote Animal Friendship and Protection from Evil and Good only for
-executable creature-type-scoped charm/protection clauses. Record checker-visible
-blockers for any omitted possession, condition-immunity, save-advantage, or
-damage-break clauses.
+Scope: promoted Animal Friendship and Protection from Evil and Good only for
+executable creature-type-scoped charm/protection clauses. Checker-visible
+blockers remain recorded for omitted possession, condition-immunity,
+save-advantage, and damage-break clauses.
 
 ### Task 212 - SRDINV30D - Promote Heroism Turn-Start Runtime
 

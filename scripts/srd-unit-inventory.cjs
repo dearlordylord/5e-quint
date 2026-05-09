@@ -183,10 +183,8 @@ const spellUnitExecutableFollowUpBatches = [
     nextAction:
       "Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction.",
     unitIds: [
-      "animal_friendship",
       "faerie_fire",
       "heroism",
-      "protection_from_evil_and_good",
       "resistance",
     ],
   },
@@ -2098,10 +2096,7 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
   const srdinv29FChromaticOrbRows = spellRowsByUnitIds(["chromatic_orb"]);
   const srdinv30ASimpleBuffRows = spellRowsByUnitIds([]);
   const srdinv30BRollModifierRows = spellRowsByUnitIds([]);
-  const srdinv30CProtectionRows = spellRowsByUnitIds([
-    "animal_friendship",
-    "protection_from_evil_and_good",
-  ]);
+  const srdinv30CProtectionRows = spellRowsByUnitIds([]);
   const srdinv30DHeroismRows = spellRowsByUnitIds(["heroism"]);
   const srdinv30EFaerieFireRows = spellRowsByUnitIds(["faerie_fire"]);
   const srdinv30FResistanceRows = spellRowsByUnitIds(["resistance"]);

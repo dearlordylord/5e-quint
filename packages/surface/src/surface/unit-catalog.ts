@@ -3,6 +3,7 @@ import { Option } from "effect";
 // Content JSON is generated from the matching content/*.dhall source.
 // Keep authoring changes in Dhall, then regenerate JSON and trace output.
 import armorChainMailInput from "../../content/armor_chain_mail.json";
+import animalFriendshipInput from "../../content/animal_friendship.json";
 import backgroundSoldierInput from "../../content/background_soldier.json";
 import bardBardicInspirationInput from "../../content/bard_bardic_inspiration.json";
 import bardCuttingWordsInput from "../../content/bard_cutting_words.json";
@@ -78,6 +79,7 @@ import paladinExtraAttackInput from "../../content/paladin_extra_attack.json";
 import paladinLayOnHandsInput from "../../content/paladin_lay_on_hands.json";
 import paladinWeaponMasteryInput from "../../content/paladin_weapon_mastery.json";
 import poisonSprayInput from "../../content/poison_spray.json";
+import protectionFromEvilAndGoodInput from "../../content/protection_from_evil_and_good.json";
 import produceFlameInput from "../../content/produce_flame.json";
 import rangerExtraAttackInput from "../../content/ranger_extra_attack.json";
 import rangerFavoredEnemyInput from "../../content/ranger_favored_enemy.json";
@@ -281,6 +283,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     orcDarkvisionInput,
     orcRelentlessEnduranceInput,
     acidSplashInput,
+    animalFriendshipInput,
     baneInput,
     blessInput,
     burningHandsInput,
@@ -300,6 +303,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     lightInput,
     longstriderInput,
     poisonSprayInput,
+    protectionFromEvilAndGoodInput,
     produceFlameInput,
     rayOfFrostInput,
     rayOfSicknessInput,

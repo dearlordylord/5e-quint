@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.invocation-chained-attack-damage spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-chained-attack-damage spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 import { Brand, Match, Schema } from "effect";
 import { isNonEmptyReadonlyArray } from "effect/Array";
 import * as Either from "effect/Either";
@@ -119,6 +119,7 @@ import {
 } from "@dnd/shared/types";
 import {
   STANDARD_ACTION_KINDS,
+  type CreatureType,
   type SpeedType,
   type StandardActionKind,
 } from "@dnd/shared/game-facts";
@@ -300,6 +301,14 @@ const KNOWN_WILLING_TARGET_ROLL_MODIFIER_SPELL_IDS: ReadonlyArray<
   SpellRecord["id"]
 > = ["guidance"];
 const BATTLE_SURFACE_SKILLS = SURFACE_SKILLS satisfies ReadonlyArray<Skill>;
+const PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES = [
+  "aberration",
+  "celestial",
+  "elemental",
+  "fey",
+  "fiend",
+  "undead",
+] as const satisfies ReadonlyArray<CreatureType>;
 type CriticalHitThreshold = (typeof CRITICAL_HIT_THRESHOLDS)[number];
 type BattleD20RollModifierKind = Extract<
   Extract<EffectAtom, { readonly kind: "modify_roll_numeric" }>["on"][number],
@@ -392,6 +401,12 @@ export type BattleActiveEffect =
       readonly on: readonly BattleD20RollModifierKind[];
       readonly delta: BattleD20RollModifierDelta;
       readonly skill: Skill | null;
+      readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "attackerTypeScopedAttackRollAgainstSelf";
+      readonly mode: "disadvantage";
+      readonly attackerCreatureTypes: readonly CreatureType[];
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {
@@ -934,6 +949,11 @@ type SpellTargeting =
       readonly kind: "singleCombatant";
     }
   | {
+      readonly kind: "targetList";
+      readonly minTargets: 1;
+      readonly maxTargets: number;
+    }
+  | {
       readonly kind: "pointOriginSphere";
       readonly radiusFeet: MovementFeet;
     }
@@ -979,7 +999,13 @@ type SpellFailedSavePostDamageRider = {
 };
 type SpellFailedSaveConditionEffect = {
   readonly condition: Condition;
-  readonly expiresAt: "endOfCasterNextTurn" | "concentration";
+  readonly expiresAt:
+    | "endOfCasterNextTurn"
+    | "concentration"
+    | {
+        readonly kind: "duration";
+        readonly durationTicks: ElapsedTimeTicks;
+      };
   readonly escape: SpellConditionEscape | null;
 };
 type ScalarBuffSpellTargeting =
@@ -1002,7 +1028,20 @@ type TargetListSpellInvocation =
         { readonly kind: "targetList" }
       >;
     })
-  | Extract<SupportedSpellInvocation, { readonly procedure: "rollModifier" }>;
+  | Extract<SupportedSpellInvocation, { readonly procedure: "rollModifier" }>
+  | (Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "saveGatedCondition" }
+    > & {
+      readonly targeting: Extract<
+        SpellTargeting,
+        { readonly kind: "targetList" }
+      >;
+    })
+  | Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "creatureTypeProtection" }
+    >;
 type ScalarBuffSpellEffect =
   | {
       readonly kind: "temporaryHitPoints";
@@ -1031,6 +1070,19 @@ function isScalarBuffTargetListInvocation(
 } {
   return invocation.targeting.kind === "targetList";
 }
+function isTargetListSpellInvocation(
+  invocation: SupportedSpellInvocation,
+): invocation is TargetListSpellInvocation {
+  return (
+    invocation.procedure === "directHitPointRestoration" ||
+    (invocation.procedure === "scalarBuff" &&
+      invocation.targeting.kind === "targetList") ||
+    invocation.procedure === "rollModifier" ||
+    (invocation.procedure === "saveGatedCondition" &&
+      invocation.targeting.kind === "targetList") ||
+    invocation.procedure === "creatureTypeProtection"
+  );
+}
 type RollModifierSpellTargeting = Extract<
   ScalarBuffSpellTargeting,
   { readonly kind: "targetList" }
@@ -1054,6 +1106,19 @@ type RollModifierSpellInvocation = {
   readonly rangeFeet: MovementFeet;
   readonly saveGate: RollModifierSpellSaveGate | null;
   readonly skillChoices: readonly Skill[] | null;
+};
+type CreatureTypeProtectionSpellInvocation = {
+  readonly access: PreparedSpellAccess;
+  readonly resource: SpellSlotInvocationResource;
+  readonly procedure: "creatureTypeProtection";
+  readonly spell: SpellRecord;
+  readonly actionCost: "magicAction";
+  readonly targeting: RollModifierSpellTargeting;
+  readonly activeEffect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "attackerTypeScopedAttackRollAgainstSelf" }
+  >;
+  readonly rangeFeet: MovementFeet;
 };
 type WeaponDamageRiderSpellInvocation = {
   readonly access: PreparedSpellAccess;
@@ -1231,6 +1296,7 @@ export type SupportedSpellInvocation =
       readonly ability: Ability;
       readonly dc: DcSource;
       readonly targeting: SpellTargeting;
+      readonly targetCreatureTypes: readonly CreatureType[] | null;
       readonly effect: SpellFailedSaveConditionEffect;
       readonly rangeFeet: MovementFeet;
     }
@@ -1245,6 +1311,7 @@ export type SupportedSpellInvocation =
       readonly rangeFeet: MovementFeet;
     }
   | RollModifierSpellInvocation
+  | CreatureTypeProtectionSpellInvocation
   | WeaponDamageRiderSpellInvocation
   | MarkedDamageRiderSpellInvocation
   | {
@@ -1302,6 +1369,7 @@ type SupportedDamageSpellInvocation = Exclude<
       | "persistentArmorEffect"
       | "directHitPointRestoration"
       | "rollModifier"
+      | "creatureTypeProtection"
       | "scalarBuff"
       | "weaponDamageRider"
       | "markedDamageRider"
@@ -1787,6 +1855,8 @@ export type BattleSpellTargetListHole = {
       readonly procedure:
         | "directHitPointRestoration"
         | "rollModifier"
+        | "saveGatedCondition"
+        | "creatureTypeProtection"
         | "scalarBuff";
     }
   >;
@@ -2312,6 +2382,11 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
           kind: Schema.Literal("singleCombatant"),
         }),
         Schema.Struct({
+          kind: Schema.Literal("targetList"),
+          minTargets: Schema.Literal(1),
+          maxTargets: Schema.Number,
+        }),
+        Schema.Struct({
           kind: Schema.Literal("pointOriginSphere"),
           radiusFeet: MovementFeet,
         }),
@@ -2367,6 +2442,11 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
           kind: Schema.Literal("singleCombatant"),
         }),
         Schema.Struct({
+          kind: Schema.Literal("targetList"),
+          minTargets: Schema.Literal(1),
+          maxTargets: Schema.Number,
+        }),
+        Schema.Struct({
           kind: Schema.Literal("pointOriginSphere"),
           radiusFeet: MovementFeet,
         }),
@@ -2405,6 +2485,11 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
           kind: Schema.Literal("singleCombatant"),
         }),
         Schema.Struct({
+          kind: Schema.Literal("targetList"),
+          minTargets: Schema.Literal(1),
+          maxTargets: Schema.Number,
+        }),
+        Schema.Struct({
           kind: Schema.Literal("pointOriginSphere"),
           radiusFeet: MovementFeet,
         }),
@@ -2417,9 +2502,16 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
           lengthFeet: MovementFeet,
         }),
       ),
+      targetCreatureTypes: Schema.NullOr(Schema.Array(Schema.String)),
       effect: Schema.Struct({
         condition: Schema.Literal(...ALL_CONDITIONS),
-        expiresAt: Schema.Literal("endOfCasterNextTurn", "concentration"),
+        expiresAt: Schema.Union(
+          Schema.Literal("endOfCasterNextTurn", "concentration"),
+          Schema.Struct({
+            kind: Schema.Literal("duration"),
+            durationTicks: BattleRuntimeObjectSchema,
+          }),
+        ),
         escape: Schema.NullOr(
           Schema.Struct({
             ability: Schema.Literal("str"),
@@ -2487,6 +2579,20 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       skillChoices: Schema.NullOr(
         Schema.Array(Schema.Literal(...BATTLE_SURFACE_SKILLS)),
       ),
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("creatureTypeProtection"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      targeting: Schema.Struct({
+        kind: Schema.Literal("targetList"),
+        minTargets: Schema.Literal(1),
+        maxTargets: Schema.Number,
+      }),
+      activeEffect: BattleRuntimeObjectSchema,
+      rangeFeet: MovementFeet,
     }),
     Schema.Struct({
       access: PreparedSpellAccessSchema,
@@ -14418,8 +14524,20 @@ function discoverSupportedSpellInvocations(
         invocation.procedure === "saveGatedDamage" ||
         invocation.procedure === "saveGatedCondition"
       ) {
-        if (invocation.targeting.kind === "singleCombatant") {
-          const targetHole = spellTargetHole(state, actorId, invocation);
+        if (
+          invocation.targeting.kind === "singleCombatant" ||
+          (invocation.procedure === "saveGatedCondition" &&
+            invocation.targeting.kind === "targetList")
+        ) {
+          const targetHole =
+            invocation.targeting.kind === "singleCombatant"
+              ? spellTargetHole(state, actorId, invocation)
+              : isTargetListSpellInvocation(invocation)
+                ? spellTargetListHole(state, actorId, invocation)
+                : null;
+          if (targetHole === null) {
+            return [];
+          }
           if (targetHole.choices.length === 0) {
             return [];
           }
@@ -14486,6 +14604,26 @@ function discoverSupportedSpellInvocations(
                   label: invocation.spell.name,
                   summary: spellInvocationCastSummary(invocation),
                   initialHoles,
+                },
+              ];
+        return castActs;
+      }
+      if (invocation.procedure === "creatureTypeProtection") {
+        const targetHole = spellTargetHole(state, actorId, invocation);
+        const castActs =
+          targetHole.choices.length === 0
+            ? []
+            : [
+                {
+                  subject: {
+                    tag: "actionSpell" as const,
+                    actorId,
+                    invocation: supportedSpellInvocationRef(invocation),
+                    mode: { tag: "cast" as const },
+                  },
+                  label: invocation.spell.name,
+                  summary: spellInvocationCastSummary(invocation),
+                  initialHoles: [targetHole],
                 },
               ];
         return castActs;
@@ -14650,6 +14788,9 @@ function spellInvocationCastSummary(
       ? `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`
       : `Cast ${invocation.spell.name} as a cantrip.`;
   }
+  if (invocation.procedure === "creatureTypeProtection") {
+    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+  }
   if (invocation.procedure === "weaponDamageRider") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
@@ -14681,6 +14822,7 @@ function spellActivationInvocationCastSummary(
         | "attackBurstSaveDamage"
         | "spellAttackDamage"
         | "rollModifier"
+        | "creatureTypeProtection"
         | "saveGatedDamage"
         | "saveGatedCondition";
     }
@@ -14767,6 +14909,7 @@ function isReadiedSpellInvocation(
     invocation.procedure !== "heldLightHurl" &&
     invocation.procedure !== "persistentArmorEffect" &&
     invocation.procedure !== "rollModifier" &&
+    invocation.procedure !== "creatureTypeProtection" &&
     invocation.procedure !== "scalarBuff" &&
     invocation.procedure !== "weaponDamageRider" &&
     invocation.procedure !== "markedDamageRider" &&
@@ -14789,6 +14932,7 @@ function readiedSpellAct(
     invocation.procedure === "heldLight" ||
     invocation.procedure === "heldLightHurl" ||
     invocation.procedure === "rollModifier" ||
+    invocation.procedure === "creatureTypeProtection" ||
     invocation.procedure === "attackBurstSaveDamage" ||
     invocation.procedure === "saveGatedCondition" ||
     invocation.procedure === "shieldReaction" ||
@@ -14878,6 +15022,7 @@ function resolveSpellAct(
       invocation.procedure === "heldLightHurl" ||
       invocation.procedure === "scalarBuff" ||
       invocation.procedure === "rollModifier" ||
+      invocation.procedure === "creatureTypeProtection" ||
       invocation.procedure === "saveGatedCondition")
   ) {
     return invalidResult(
@@ -14963,6 +15108,14 @@ function resolveSpellAct(
   }
   if (invocation.procedure === "rollModifier") {
     return resolveRollModifierSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "creatureTypeProtection") {
+    return resolveCreatureTypeProtectionSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
@@ -16950,6 +17103,90 @@ function resolveRollModifierSpellAct(input: {
       };
 }
 
+function resolveCreatureTypeProtectionSpellAct(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "creatureTypeProtection" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  if (
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.targetAllocation !== undefined ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.attackBurstDamageRoll !== undefined ||
+    input.fillSet.healingRoll !== undefined ||
+    input.fillSet.skillChoice !== undefined ||
+    input.fillSet.savingThrowOutcomes !== undefined ||
+    input.fillSet.damageDispositions.length > 0 ||
+    input.fillSet.concentrationSavingThrows.length > 0
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Creature-type protection spells use one target fill.",
+    );
+  }
+
+  const targetSelection = creatureTypeProtectionSpellTargetSelection(input);
+  if (targetSelection.tag === "needsHoles") {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      targetSelection.hole,
+    ]);
+  }
+  if (targetSelection.tag === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      targetSelection.message,
+    );
+  }
+
+  const spellCastReactionWindow = maybeOpenReactionWindow(
+    input.input.state,
+    {
+      trigger: "spellCast",
+      casterId: input.actorId,
+      spellId: input.invocation.spell.id,
+      targetIds: targetSelection.targetIds,
+      continuation: {
+        kind: "replay",
+        subject: input.input.subject,
+        fills: input.input.fills,
+      },
+    },
+    input.input.suppressedReactionTrigger,
+  );
+  if (spellCastReactionWindow !== null) {
+    return spellCastReactionWindow;
+  }
+
+  const concentrationBase = spellRequiresConcentration(input.invocation)
+    ? breakBattleConcentration(input.input.state, input.actorId)
+    : input.input.state;
+  const effected = applyCreatureTypeProtectionSpellEffect(
+    concentrationBase,
+    input.actorId,
+    targetSelection.targetIds,
+    input.invocation,
+  );
+  const resourced = spendSpellCastResources({
+    state: effected,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
+  return resourced.tag === "invalid"
+    ? resourced
+    : {
+        tag: "resolved",
+        state: resourced.state,
+        snapshot: snapshotBattle(resourced.state),
+      };
+}
+
 type HealingSpellTargetSelection =
   | { readonly tag: "ok"; readonly targetIds: readonly CombatantId[] }
   | { readonly tag: "needsHoles"; readonly hole: BattleHole }
@@ -17197,6 +17434,47 @@ function rollModifierSpellTargetSelection(input: {
   return validation === null
     ? { tag: "ok", targetIds: input.fillSet.targetList.targetIds }
     : { tag: "invalid", message: validation };
+}
+
+type CreatureTypeProtectionSpellTargetSelection =
+  | { readonly tag: "ok"; readonly targetIds: readonly [CombatantId] }
+  | { readonly tag: "needsHoles"; readonly hole: BattleHole }
+  | { readonly tag: "invalid"; readonly message: string };
+
+function creatureTypeProtectionSpellTargetSelection(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "creatureTypeProtection" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): CreatureTypeProtectionSpellTargetSelection {
+  if (input.fillSet.targetList !== undefined) {
+    return {
+      tag: "invalid",
+      message: "Creature-type protection spells require one target choice.",
+    };
+  }
+  if (input.fillSet.targetId === undefined) {
+    return {
+      tag: "needsHoles",
+      hole: spellTargetHole(input.input.state, input.actorId, input.invocation),
+    };
+  }
+  return spellTargetIsLegal(
+    input.input.state,
+    input.actorId,
+    input.fillSet.targetId,
+    input.invocation,
+    input.fillSet.targetSpatialFacts,
+  )
+    ? { tag: "ok", targetIds: [input.fillSet.targetId] }
+    : {
+        tag: "invalid",
+        message:
+          "Creature-type protection spell target must be a combatant within the selected spell's supported range.",
+      };
 }
 
 type RollModifierSpellSkillSelection =
@@ -17874,7 +18152,8 @@ function spellFillSet(
       if (
         invocation.procedure !== "directHitPointRestoration" &&
         invocation.procedure !== "scalarBuff" &&
-        invocation.procedure !== "rollModifier"
+        invocation.procedure !== "rollModifier" &&
+        invocation.procedure !== "saveGatedCondition"
       ) {
         return {
           tag: "invalid",
@@ -17882,8 +18161,10 @@ function spellFillSet(
         };
       }
       if (
-        invocation.procedure === "scalarBuff" &&
-        !isScalarBuffTargetListInvocation(invocation)
+        (invocation.procedure === "scalarBuff" &&
+          !isScalarBuffTargetListInvocation(invocation)) ||
+        (invocation.procedure === "saveGatedCondition" &&
+          !isTargetListSpellInvocation(invocation))
       ) {
         return {
           tag: "invalid",
@@ -17953,6 +18234,7 @@ function spellFillSet(
         invocation.procedure !== "rollModifier" &&
         spellFillSetSavingThrowTargeting(invocation).kind !==
           "singleCombatant" &&
+        spellFillSetSavingThrowTargeting(invocation).kind !== "targetList" &&
         !("area" in fill.value)
       ) {
         return {
@@ -19001,6 +19283,7 @@ function resolveSaveGateDamageSpellAct(input: {
   );
   if (
     input.invocation.targeting.kind !== "singleCombatant" &&
+    input.invocation.targeting.kind !== "targetList" &&
     input.fillSet.targetId !== undefined
   ) {
     return invalidResult(
@@ -19053,6 +19336,7 @@ function resolveSaveGateDamageSpellAct(input: {
     input.input.state,
     input.actorId,
     input.fillSet.targetId,
+    input.fillSet.targetList?.targetIds,
   );
   if (savingThrowValidation !== null) {
     return invalidResult(
@@ -19359,6 +19643,41 @@ function resolveSaveGateConditionSpellAct(input: {
       );
     }
   }
+  if (input.invocation.targeting.kind === "targetList") {
+    if (!isTargetListSpellInvocation(input.invocation)) {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        "Save-gate condition spell target-list shape is unsupported.",
+      );
+    }
+    if (input.fillSet.targetId !== undefined) {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        "Multi-target save-gate condition spells require a target list.",
+      );
+    }
+    if (input.fillSet.targetList === undefined) {
+      return needsHolesResult(input.input.state, input.input.subject, [
+        spellTargetListHole(input.input.state, input.actorId, input.invocation),
+      ]);
+    }
+    const targetListValidation = validateSpellTargetList(
+      input.input.state,
+      input.actorId,
+      input.invocation,
+      input.fillSet.targetList.targetIds,
+      input.fillSet.targetList.spatialFacts,
+    );
+    if (targetListValidation !== null) {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        targetListValidation,
+      );
+    }
+  }
   if (
     input.fillSet.attackRoll !== undefined ||
     input.fillSet.damageRoll !== undefined ||
@@ -19383,6 +19702,7 @@ function resolveSaveGateConditionSpellAct(input: {
     input.input.state,
     input.actorId,
     input.fillSet.targetId,
+    input.fillSet.targetList?.targetIds,
   );
   if (savingThrowValidation !== null) {
     return invalidResult(
@@ -19452,6 +19772,7 @@ function validateSavingThrowOutcomes(
   state: BattleState,
   actorId: CombatantId,
   targetId: CombatantId | undefined,
+  targetListIds?: readonly CombatantId[],
 ): string | null {
   const outcomes = value.outcomes;
   if (hole.spell.procedure === "rollModifier") {
@@ -19493,8 +19814,43 @@ function validateSavingThrowOutcomes(
       ? null
       : "Save-gate spell target must be a combatant in this battle.";
   }
+  if (targeting.kind === "targetList") {
+    if ("area" in value) {
+      return "Target-list save-gate spell outcomes must not include area facts.";
+    }
+    if (targetListIds === undefined) {
+      return "Target-list save-gate spell requires target choices before Saving Throw outcomes.";
+    }
+    if (outcomes.length === 0) {
+      return "Target-list save-gate spell must include at least one target Saving Throw outcome.";
+    }
+    if (
+      targetListIds.length < targeting.minTargets ||
+      targetListIds.length > targeting.maxTargets
+    ) {
+      return "Target-list save-gate spell target count is outside the selected spell's target count.";
+    }
+    if (outcomes.length !== targetListIds.length) {
+      return "Target-list save-gate spell Saving Throw outcomes exceed the selected spell's target count.";
+    }
+    const selectedTargets = new Set(targetListIds);
+    const seenTargets = new Set<CombatantId>();
+    for (const outcome of outcomes) {
+      if (!selectedTargets.has(outcome.targetId)) {
+        return "Target-list save-gate spell Saving Throw outcomes must match the selected targets.";
+      }
+      if (!state.combatants.has(outcome.targetId)) {
+        return "Target-list save-gate spell target must be a combatant in this battle.";
+      }
+      if (seenTargets.has(outcome.targetId)) {
+        return "Target-list save-gate spell Saving Throw outcomes must not duplicate targets.";
+      }
+      seenTargets.add(outcome.targetId);
+    }
+    return null;
+  }
   if (!("area" in value)) {
-    return "Save-gate spell Saving Throw outcomes require area facts.";
+    return `Save-gate spell Saving Throw outcomes require area facts for ${targeting.kind}.`;
   }
   if (!state.combatants.has(value.area.originAnchorId)) {
     return "Save-gate spell area origin anchor must be a combatant in this battle.";
@@ -20727,6 +21083,13 @@ function supportedSpellActs(
       ),
     ),
     ...spellcasting.preparedSpells.flatMap((spell) =>
+      supportedPreparedCreatureTypeProtectionSpellProfile(
+        actor.combatantId,
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...spellcasting.preparedSpells.flatMap((spell) =>
       supportedPreparedWeaponDamageRiderSpellProfile(
         actor.combatantId,
         spell,
@@ -21328,6 +21691,109 @@ function supportedPreparedRollModifierSpellProfile(
           },
         ];
   });
+}
+
+function supportedPreparedCreatureTypeProtectionSpellProfile(
+  actorId: CombatantId,
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  const projection = creatureTypeProtectionSpellProjection(actorId, spell);
+  if (projection === null) {
+    return [];
+  }
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] =>
+    Number(slot.spellLevel) < spell.mechanics.level
+      ? []
+      : [
+          {
+            access: { tag: "prepared" },
+            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+            procedure: "creatureTypeProtection",
+            spell,
+            actionCost: "magicAction",
+            ...projection,
+          },
+        ],
+  );
+}
+
+function creatureTypeProtectionSpellProjection(
+  actorId: CombatantId,
+  spell: SpellRecord,
+): Pick<
+  CreatureTypeProtectionSpellInvocation,
+  "activeEffect" | "rangeFeet" | "targeting"
+> | null {
+  if (
+    spell.name !== "Protection from Evil and Good" ||
+    spell.provenance.kind !== "srd-5.2.1" ||
+    spell.provenance.section !==
+      "Spells/Descriptions-M-P#Protection from Evil and Good" ||
+    spell.mechanics.family !== "activation" ||
+    spell.mechanics.level !== 1 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "touch" ||
+    spell.mechanics.duration.kind !== "concentration" ||
+    spell.mechanics.duration.upTo.unit !== "minute" ||
+    spell.mechanics.duration.upTo.amount !== 10 ||
+    spell.mechanics.phases.length !== 1
+  ) {
+    return null;
+  }
+  const phase = spell.mechanics.phases[0];
+  const effects = phase?.kind === "direct" ? (phase.effects ?? []) : [];
+  const effect = effects[0];
+  const expiresAt = scalarBuffActiveEffectExpiration(
+    actorId,
+    spell.mechanics.duration,
+  );
+  if (
+    phase?.kind !== "direct" ||
+    phase.attachment.kind !== "hole" ||
+    phase.attachment.value.kind !== "target" ||
+    phase.attachment.value.selection.mode !== "one" ||
+    effects.length !== 1 ||
+    effect?.kind !== "modify_roll_advantage" ||
+    effect.mode !== "disadvantage" ||
+    effect.on.length !== 1 ||
+    effect.on[0] !== "attack_roll" ||
+    effect.attackerTypeFilter === undefined ||
+    !sameCreatureTypeSet(
+      effect.attackerTypeFilter,
+      PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES,
+    ) ||
+    expiresAt === null
+  ) {
+    return null;
+  }
+
+  return {
+    targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
+    activeEffect: {
+      kind: "attackerTypeScopedAttackRollAgainstSelf",
+      sourceSpellId: spell.id,
+      sourceCombatantId: actorId,
+      mode: "disadvantage",
+      attackerCreatureTypes: [...PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES],
+      expiresAt,
+    },
+    rangeFeet: movementFeet(5),
+  };
+}
+
+function sameCreatureTypeSet(
+  left: readonly CreatureType[],
+  right: readonly CreatureType[],
+): boolean {
+  const leftTypes = new Set(left);
+  const rightTypes = new Set(right);
+  return (
+    leftTypes.size === left.length &&
+    rightTypes.size === right.length &&
+    leftTypes.size === rightTypes.size &&
+    left.every((type) => rightTypes.has(type))
+  );
 }
 
 function supportedPreparedWeaponDamageRiderSpellProfile(
@@ -22342,7 +22808,8 @@ function supportedPreparedSaveGateConditionProfile(
         spell,
         ability: conditionSpell.phase.ability,
         dc: conditionSpell.phase.dc,
-        targeting: conditionSpell.targeting,
+        targeting: conditionSpell.targeting(slot.spellLevel),
+        targetCreatureTypes: conditionSpell.targetCreatureTypes,
         effect: conditionSpell.effect,
         rangeFeet: conditionSpell.rangeFeet,
       },
@@ -22352,7 +22819,8 @@ function supportedPreparedSaveGateConditionProfile(
 
 type SaveGateConditionSpell = {
   readonly phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>;
-  readonly targeting: SpellTargeting;
+  readonly targeting: (slotLevel: SpellSlotLevel) => SpellTargeting;
+  readonly targetCreatureTypes: readonly CreatureType[] | null;
   readonly effect: SpellFailedSaveConditionEffect;
   readonly rangeFeet: MovementFeet;
 };
@@ -22361,9 +22829,88 @@ function supportedSaveGateConditionSpell(
   spell: SpellRecord,
 ): SaveGateConditionSpell | null {
   return (
+    animalFriendshipSaveGateConditionSpell(spell) ??
     colorSpraySaveGateConditionSpell(spell) ??
     entangleSaveGateConditionSpell(spell)
   );
+}
+
+function animalFriendshipSaveGateConditionSpell(
+  spell: SpellRecord,
+): SaveGateConditionSpell | null {
+  if (spell.mechanics.family !== "activation") {
+    return null;
+  }
+  const phase = spell.mechanics.phases[0];
+  const failedEffect = phase?.kind === "save_gate" ? phase.onFail : undefined;
+  const targetSelection =
+    phase?.kind === "save_gate" &&
+    phase.attachment.kind === "hole" &&
+    phase.attachment.value.kind === "target"
+      ? phase.attachment.value.selection
+      : null;
+  const earlyEnd =
+    spell.mechanics.duration.kind === "timed"
+      ? (spell.mechanics.duration.earlyEnd ?? [])
+      : [];
+  if (
+    spell.name !== "Animal Friendship" ||
+    spell.provenance.kind !== "srd-5.2.1" ||
+    spell.provenance.section !== "Spells/Descriptions-A-D#Animal Friendship" ||
+    spell.mechanics.level !== 1 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "point" ||
+    spell.mechanics.range.feet !== 30 ||
+    spell.mechanics.duration.kind !== "timed" ||
+    spell.mechanics.duration.value.unit !== "hour" ||
+    spell.mechanics.duration.value.amount !== 24 ||
+    earlyEnd.length !== 1 ||
+    earlyEnd[0]?.kind !== "target_damaged_by_caster_or_ally" ||
+    spell.mechanics.phases.length !== 1 ||
+    phase?.kind !== "save_gate" ||
+    "repeatSave" in phase ||
+    phase.ability !== "wis" ||
+    phase.dc.kind !== "caster_spell_save_dc" ||
+    phase.onSuccess.kind !== "none" ||
+    targetSelection === null ||
+    targetSelection.mode !== "choose_up_to" ||
+    targetSelection.count === undefined ||
+    targetSelection.typeFilter?.length !== 1 ||
+    targetSelection.typeFilter[0] !== "beast" ||
+    failedEffect?.kind !== "apply_condition" ||
+    failedEffect.condition !== "charmed"
+  ) {
+    return null;
+  }
+  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
+    spell.mechanics.duration.value,
+  );
+  if (Either.isLeft(durationTicks)) {
+    return null;
+  }
+
+  return {
+    phase,
+    targeting: (slotLevel): SpellTargeting => {
+      const targetCount = scalarBuffSpellTargetCount(
+        targetSelection,
+        spell.mechanics.level,
+        slotLevel,
+      );
+      return {
+        kind: "targetList",
+        minTargets: 1,
+        maxTargets: targetCount ?? 1,
+      };
+    },
+    targetCreatureTypes: ["beast"],
+    effect: {
+      condition: "charmed",
+      expiresAt: { kind: "duration", durationTicks: durationTicks.right },
+      escape: null,
+    },
+    rangeFeet: movementFeet(spell.mechanics.range.feet),
+  };
 }
 
 function colorSpraySaveGateConditionSpell(
@@ -22397,13 +22944,15 @@ function colorSpraySaveGateConditionSpell(
   ) {
     return null;
   }
+  const coneShape = phase.attachment.shape;
 
   return {
     phase,
-    targeting: {
+    targeting: () => ({
       kind: "selfOriginCone",
-      lengthFeet: movementFeet(phase.attachment.shape.lengthFeet),
-    },
+      lengthFeet: movementFeet(coneShape.lengthFeet),
+    }),
+    targetCreatureTypes: null,
     effect: {
       condition: COLOR_SPRAY_FAILED_SAVE_CONDITION,
       expiresAt: "endOfCasterNextTurn",
@@ -22446,13 +22995,15 @@ function entangleSaveGateConditionSpell(
   ) {
     return null;
   }
+  const cubeShape = phase.attachment.value.shape;
 
   return {
     phase,
-    targeting: {
+    targeting: () => ({
       kind: "pointOriginCubeExcludingCaster",
-      sideFeet: movementFeet(phase.attachment.value.shape.sideFeet),
-    },
+      sideFeet: movementFeet(cubeShape.sideFeet),
+    }),
+    targetCreatureTypes: null,
     effect: {
       condition: ENTANGLE_FAILED_SAVE_CONDITION,
       expiresAt: "concentration",
@@ -22593,6 +23144,9 @@ function areaSaveGateSpellRangeFeet(
       range.kind === "self" ? movementFeet(0) : null,
     ),
     Match.when({ kind: "primaryTargetOriginEmanation" }, () =>
+      range.kind === "point" ? movementFeet(range.feet) : null,
+    ),
+    Match.when({ kind: "targetList" }, () =>
       range.kind === "point" ? movementFeet(range.feet) : null,
     ),
     Match.exhaustive,
@@ -23091,6 +23645,16 @@ function spellTargetHasNonSpatialPrerequisites(
   ) {
     return false;
   }
+  const targetCreatureType =
+    target === undefined ? null : battleCreatureType(target);
+  if (
+    invocation.procedure === "saveGatedCondition" &&
+    invocation.targetCreatureTypes !== null &&
+    (targetCreatureType === null ||
+      !invocation.targetCreatureTypes.includes(targetCreatureType))
+  ) {
+    return false;
+  }
   return target !== undefined;
 }
 
@@ -23310,6 +23874,12 @@ function supportedSpellInvocationRef(
             procedure: "rollModifier" as const,
           },
     ),
+    Match.when({ procedure: "creatureTypeProtection" }, (protectionSpell) => ({
+      tag: "spellSlot" as const,
+      spellId: spellId(protectionSpell.spell.id),
+      slotLevel: protectionSpell.resource.slotLevel,
+      procedure: "creatureTypeProtection" as const,
+    })),
     Match.when({ procedure: "weaponDamageRider" }, (riderSpell) => ({
       tag: "spellSlot" as const,
       spellId: spellId(riderSpell.spell.id),
@@ -23883,6 +24453,7 @@ function spellAreaTargetingLabel(
       { kind: "primaryTargetOriginEmanation" },
       () => "primary-target-origin Emanation",
     ),
+    Match.when({ kind: "targetList" }, () => "target-list"),
     Match.exhaustive,
   );
 }
@@ -24555,6 +25126,9 @@ function activeEffectExpirationForPostDamageRider(
     | SpellFailedSaveConditionEffect["expiresAt"]
     | undefined,
 ): BattleActiveEffectExpiration {
+  if (typeof expiresAt === "object" && expiresAt.kind === "duration") {
+    return expiresAt;
+  }
   if (expiresAt === undefined) {
     return { kind: "startOfTurn", combatantId: casterId };
   }
@@ -24906,6 +25480,44 @@ function applyRollModifierSpellEffect(
         (effect) =>
           !(
             effect.kind === "d20RollModifier" &&
+            effect.sourceSpellId === invocation.spell.id
+          ),
+      ),
+      nextEffect,
+    ];
+    return {
+      ...nextState,
+      combatants: new Map(nextState.combatants).set(targetId, {
+        ...target,
+        activeEffects,
+      }),
+    };
+  }, state);
+}
+
+function applyCreatureTypeProtectionSpellEffect(
+  state: BattleState,
+  actorId: CombatantId,
+  targetIds: readonly CombatantId[],
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "creatureTypeProtection" }
+  >,
+): BattleState {
+  return targetIds.reduce((nextState, targetId) => {
+    const target = nextState.combatants.get(targetId);
+    if (target === undefined) {
+      return nextState;
+    }
+    const nextEffect = {
+      ...invocation.activeEffect,
+      sourceCombatantId: actorId,
+    };
+    const activeEffects = [
+      ...target.activeEffects.filter(
+        (effect) =>
+          !(
+            effect.kind === "attackerTypeScopedAttackRollAgainstSelf" &&
             effect.sourceSpellId === invocation.spell.id
           ),
       ),
@@ -26197,6 +26809,8 @@ function activeEffectGrantsAttackRollMode(
   target: BattleCreatureState | undefined,
   mode: AttackRollMode,
 ): boolean {
+  const attackerCreatureType =
+    attacker === undefined ? null : battleCreatureType(attacker);
   return (
     attacker?.activeEffects.some(
       (effect) =>
@@ -26204,9 +26818,23 @@ function activeEffectGrantsAttackRollMode(
     ) === true ||
     target?.activeEffects.some(
       (effect) =>
-        effect.kind === "nextAttackRollAgainstSelf" && effect.mode === mode,
+        (effect.kind === "nextAttackRollAgainstSelf" && effect.mode === mode) ||
+        (effect.kind === "attackerTypeScopedAttackRollAgainstSelf" &&
+          effect.mode === mode &&
+          attackerCreatureType !== null &&
+          effect.attackerCreatureTypes.includes(attackerCreatureType)),
     ) === true
   );
+}
+
+function battleCreatureType(
+  combatant: BattleCreatureState,
+): CreatureType | null {
+  if (combatant.origin.kind !== "statBlock") {
+    return "humanoid";
+  }
+  const creatureType = combatant.origin.statBlock.statBlock.creatureType;
+  return typeof creatureType === "string" ? creatureType : null;
 }
 
 function attackAbilityMatchesModifier(

@@ -71,6 +71,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "directHitPointRestoration",
   "rollModifier",
   "scalarBuff",
+  "creatureTypeProtection",
   "weaponDamageRider",
   "markedDamageRider",
   "persistentArmorEffect",

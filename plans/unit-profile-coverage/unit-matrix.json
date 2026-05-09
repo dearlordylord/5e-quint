@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 348,
-      "numerator": 87,
-      "percent": "25%"
+      "numerator": 89,
+      "percent": "25.6%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 415,
-      "numerator": 111,
-      "percent": "26.7%"
+      "numerator": 113,
+      "percent": "27.2%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 112
+      "value": 114
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 57,
@@ -67,28 +67,28 @@
       "percent": "93%"
     },
     "profileClassificationCoverage": {
-      "denominator": 112,
-      "numerator": 112,
+      "denominator": 114,
+      "numerator": 114,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 31,
-      "numerator": 31,
+      "denominator": 32,
+      "numerator": 32,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 31,
+      "denominator": 32,
       "numerator": 30,
-      "percent": "96.8%"
+      "percent": "93.8%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 31,
-      "numerator": 31,
+      "denominator": 32,
+      "numerator": 32,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 31,
-      "numerator": 31,
+      "denominator": 32,
+      "numerator": 32,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -97,9 +97,9 @@
       "percent": "17.5%"
     },
     "supportedProfileCoverage": {
-      "denominator": 88,
+      "denominator": 90,
       "numerator": 57,
-      "percent": "64.8%"
+      "percent": "63.3%"
     }
   },
   "metricSemantics": [
@@ -1026,6 +1026,26 @@
       ]
     },
     {
+      "id": "spell.creature-type-protection-and-charm",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "SRDINV30C"
+      ],
+      "title": "Spell invocation applies creature-type-scoped Charmed or attack-roll protection active effects",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.scalar-buff",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -1444,6 +1464,14 @@
         "spell.invocation-roll-modifier"
       ],
       "taskId": "SRDINV30B"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests for Animal Friendship Beast-target Charmed application and Protection from Evil and Good attacker-creature-type attack Disadvantage. Damage-break, possession, condition-immunity, and already-applied-effect save-Advantage clauses remain checker-visible deferred mechanics.",
+      "profileIds": [
+        "spell.creature-type-protection-and-charm"
+      ],
+      "taskId": "SRDINV30C"
     },
     {
       "claimKind": "qnt-proof",
@@ -3774,6 +3802,68 @@
         "status": "installed"
       },
       "claim": {
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "SRDINV33",
+            "mechanic": "spell ends if caster or one of the caster's allies deals damage to the target"
+          }
+        ],
+        "profileIds": [
+          "spell.creature-type-protection-and-charm"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Beast creature-type target filter",
+          "Wisdom save-gated Charmed condition",
+          "24-hour spell-owned condition duration",
+          "slot-scaled target count"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV30C"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.creature-type-protection-and-charm",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV30C"
+          ],
+          "title": "Spell invocation applies creature-type-scoped Charmed or attack-roll protection active effects",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/animal_friendship.json",
+      "unitId": "animal_friendship"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "spell.invocation-roll-modifier"
         ],
@@ -4939,6 +5029,76 @@
       ],
       "sourceRecordPath": "packages/surface/content/poison_spray.json",
       "unitId": "poison_spray"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "SRDINV33",
+            "mechanic": "target can't be possessed by scoped creatures"
+          },
+          {
+            "followUpTaskId": "SRDINV33",
+            "mechanic": "target can't gain Charmed or Frightened from scoped creatures"
+          },
+          {
+            "followUpTaskId": "SRDINV33",
+            "mechanic": "Advantage on new saves against already-applied possession, Charmed, or Frightened effects from scoped creatures"
+          }
+        ],
+        "profileIds": [
+          "spell.creature-type-protection-and-charm"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "one touched target",
+          "concentration active effect",
+          "Aberration/Celestial/Elemental/Fey/Fiend/Undead attacker creature-type filter",
+          "attack-roll Disadvantage against the protected target"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV30C"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.creature-type-protection-and-charm",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV30C"
+          ],
+          "title": "Spell invocation applies creature-type-scoped Charmed or attack-roll protection active effects",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/protection_from_evil_and_good.json",
+      "unitId": "protection_from_evil_and_good"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -6308,24 +6468,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/alter_self.json",
       "unitId": "alter_self"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/animal_friendship.json",
-      "unitId": "animal_friendship"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -10075,24 +10217,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/protection_from_energy.json",
       "unitId": "protection_from_energy"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/protection_from_evil_and_good.json",
-      "unitId": "protection_from_evil_and_good"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

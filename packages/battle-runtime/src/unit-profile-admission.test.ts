@@ -11,6 +11,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29F3 chromatic_orb
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30A false_life longstrider shield_of_faith
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30B bane bless guidance
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30C animal_friendship protection_from_evil_and_good
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31A divine_favor
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31B hunters_mark
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV32B produce_flame
@@ -31,7 +32,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT59 monk_deflect_attacks
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT62 fighter_tactical_mind
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT65 bard_cutting_words
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.invocation-chained-attack-damage spell.invocation-condition-save spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-chained-attack-damage spell.invocation-condition-save spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.scalar-buff
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -58,11 +59,16 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
+import {
+  buildStatBlockCatalog,
+  srdStatBlockCollection,
+} from "@dnd/surface/surface/stat-block-catalog";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type {
   ActivationPhase,
   EffectAtom,
   SpellRecord,
+  StatBlockRecord,
   UnitRecord,
 } from "@dnd/surface/surface/types";
 
@@ -82,6 +88,7 @@ import {
   characterId,
   combatantId,
   discoverBattleActs,
+  endTurn,
   initiativeScore,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   resolveBattleReaction,
@@ -118,10 +125,14 @@ import {
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
 });
-if (unitCatalogResult.tag !== "ok") {
-  throw new Error("QMBT7 Unit profile admission test Unit catalog must build.");
+const statBlockCatalogResult = buildStatBlockCatalog({
+  collections: [srdStatBlockCollection],
+});
+if (unitCatalogResult.tag !== "ok" || statBlockCatalogResult.tag !== "ok") {
+  throw new Error("QMBT7 Unit profile admission test catalogs must build.");
 }
 const unitLibrary = unitCatalogResult.catalog;
+const statBlockCatalog = statBlockCatalogResult.catalog;
 const fighterSecondWindUnitId = "fighter_second_wind";
 const fighterActionSurgeUnitId = "fighter_action_surge";
 const fighterTacticalMindUnitId = "fighter_tactical_mind";
@@ -155,6 +166,7 @@ const archeryUnitId = "feat_archery";
 const boonOfCombatProwessUnitId = "feat_boon_of_combat_prowess";
 const savageAttackerUnitId = "feat_savage_attacker";
 const acidSplashUnitId = "acid_splash";
+const animalFriendshipUnitId = "animal_friendship";
 const chillTouchUnitId = "chill_touch";
 const fireBoltUnitId = "fire_bolt";
 const falseLifeUnitId = "false_life";
@@ -165,6 +177,7 @@ const longstriderUnitId = "longstrider";
 const mageArmorUnitId = "mage_armor";
 const magicMissileUnitId = "magic_missile";
 const poisonSprayUnitId = "poison_spray";
+const protectionFromEvilAndGoodUnitId = "protection_from_evil_and_good";
 const produceFlameUnitId = "produce_flame";
 const sacredFlameUnitId = "sacred_flame";
 const cureWoundsUnitId = "cure_wounds";
@@ -4539,6 +4552,255 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
   });
 });
 
+describe("SRDINV30C deterministic protection and charm Spell Unit admission", () => {
+  test("animal friendship only admits Beast targets and applies Charmed on a failed Wisdom save", () => {
+    const spell = spellRecord(animalFriendshipUnitId);
+    const beastId = combatantId("unit-profile-animal-friendship-beast");
+    const humanoidId = combatantId("unit-profile-animal-friendship-humanoid");
+    const state = spellBattle({
+      preparedSpells: [spell],
+      statBlockTargets: [
+        {
+          combatantId: beastId,
+          statBlock: statBlockWithCreatureType("beast"),
+          initiative: 9,
+        },
+        {
+          combatantId: humanoidId,
+          statBlock: statBlockWithCreatureType("humanoid"),
+          initiative: 8,
+        },
+      ],
+    });
+    const act = spellAct({ state, spellId: animalFriendshipUnitId });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+
+    expect(targetHole.choices).toContain(beastId);
+    expect(targetHole.choices).not.toContain(humanoidId);
+    expect(targetHole).toEqual(
+      expect.objectContaining({ minTargets: 1, maxTargets: 1 }),
+    );
+
+    const targetFill = spellTargetListFill(
+      targetHole,
+      spellCasterId,
+      animalFriendshipUnitId,
+      [beastId],
+    );
+    const awaitingSave = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    });
+    const saveHole = requireResultHole(awaitingSave, "savingThrowOutcome");
+
+    expect(saveHole).toMatchObject({ ability: "wis" });
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        savingThrowOutcomeFill(saveHole, [
+          { targetId: beastId, succeeded: false },
+        ]),
+      ],
+    });
+
+    if (resolved.tag !== "resolved") {
+      throw new Error(
+        resolved.tag === "invalid"
+          ? `Expected Animal Friendship to resolve: ${resolved.message}`
+          : "Expected Animal Friendship to resolve.",
+      );
+    }
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    expect(
+      resolved.state.combatants.get(beastId)?.activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "spellCondition",
+        sourceSpellId: animalFriendshipUnitId,
+        sourceCombatantId: spellCasterId,
+        condition: "charmed",
+        expiresAt: expect.objectContaining({ kind: "duration" }),
+      }),
+    );
+    expect(resolved.state.combatants.get(beastId)?.conditions).toEqual(
+      expect.objectContaining({ charmed: true }),
+    );
+  });
+
+  test("animal friendship scales target count by slot level", () => {
+    const spell = spellRecord(animalFriendshipUnitId);
+    const firstBeastId = combatantId("unit-profile-animal-friendship-beast-1");
+    const secondBeastId = combatantId("unit-profile-animal-friendship-beast-2");
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      statBlockTargets: [
+        {
+          combatantId: firstBeastId,
+          statBlock: statBlockWithCreatureType("beast"),
+          initiative: 9,
+        },
+        {
+          combatantId: secondBeastId,
+          statBlock: statBlockWithCreatureType("beast"),
+          initiative: 8,
+        },
+      ],
+    });
+    const act = spellAct({
+      state,
+      spellId: animalFriendshipUnitId,
+      slotLevel: 2,
+    });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+
+    expect(targetHole).toEqual(
+      expect.objectContaining({ minTargets: 1, maxTargets: 2 }),
+    );
+    expect(targetHole.choices).toEqual(
+      expect.arrayContaining([firstBeastId, secondBeastId]),
+    );
+  });
+
+  test("protection from evil and good imposes attack Disadvantage only for scoped creature types", () => {
+    const spell = spellRecord(protectionFromEvilAndGoodUnitId);
+    const undeadId = combatantId("unit-profile-protection-undead");
+    const humanoidId = combatantId("unit-profile-protection-humanoid");
+    const state = spellBattle({
+      preparedSpells: [spell],
+      statBlockTargets: [
+        {
+          combatantId: undeadId,
+          statBlock: statBlockWithCreatureType("undead"),
+          initiative: 19,
+        },
+        {
+          combatantId: humanoidId,
+          statBlock: statBlockWithCreatureType("humanoid"),
+          initiative: 18,
+        },
+      ],
+    });
+    const act = spellAct({
+      state,
+      spellId: protectionFromEvilAndGoodUnitId,
+    });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(
+          targetHole,
+          protectionFromEvilAndGoodUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Protection from Evil and Good to resolve.");
+    }
+    expect(
+      resolved.state.combatants.get(spellTargetId)?.activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "attackerTypeScopedAttackRollAgainstSelf",
+        sourceSpellId: protectionFromEvilAndGoodUnitId,
+        sourceCombatantId: spellCasterId,
+        mode: "disadvantage",
+        attackerCreatureTypes: [
+          "aberration",
+          "celestial",
+          "elemental",
+          "fey",
+          "fiend",
+          "undead",
+        ],
+        expiresAt: { kind: "concentration", combatantId: spellCasterId },
+      }),
+    );
+
+    const undeadTurn = endTurn({
+      state: resolved.state,
+      actorId: spellCasterId,
+    });
+    expect(undeadTurn).toMatchObject({ tag: "resolved" });
+    if (undeadTurn.tag !== "resolved") {
+      throw new Error("Expected to advance to undead attacker turn.");
+    }
+
+    const undeadAttack = statBlockAttackAct(
+      undeadTurn.state,
+      undeadId,
+      "Scimitar",
+    );
+    const undeadTarget = requireResultHole(
+      resolveBattleSubject({
+        state: undeadTurn.state,
+        subject: undeadAttack.subject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const undeadRoll = requireResultHole(
+      resolveBattleSubject({
+        state: undeadTurn.state,
+        subject: undeadAttack.subject,
+        fills: [
+          attackTargetFill(undeadTarget, undeadId, spellTargetId, "Scimitar"),
+        ],
+      }),
+      "attackRoll",
+    );
+    expect(undeadRoll.rollMode).toBe("disadvantage");
+
+    const humanoidTurn = endTurn({
+      state: undeadTurn.state,
+      actorId: undeadId,
+    });
+    expect(humanoidTurn).toMatchObject({ tag: "resolved" });
+    if (humanoidTurn.tag !== "resolved") {
+      throw new Error("Expected to advance to humanoid attacker turn.");
+    }
+    const humanoidAttack = statBlockAttackAct(
+      humanoidTurn.state,
+      humanoidId,
+      "Scimitar",
+    );
+    const humanoidTarget = requireResultHole(
+      resolveBattleSubject({
+        state: humanoidTurn.state,
+        subject: humanoidAttack.subject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const humanoidRoll = requireResultHole(
+      resolveBattleSubject({
+        state: humanoidTurn.state,
+        subject: humanoidAttack.subject,
+        fills: [
+          attackTargetFill(
+            humanoidTarget,
+            humanoidId,
+            spellTargetId,
+            "Scimitar",
+          ),
+        ],
+      }),
+      "attackRoll",
+    );
+    expect(humanoidRoll.rollMode).toBeUndefined();
+  });
+});
+
 describe("QMBT25 deterministic Spell Unit admission re-triage", () => {
   test("healing_word is admitted through catalog spell access and projected as a Bonus Action healing spell", () => {
     const spell = spellRecord(healingWordUnitId);
@@ -6061,6 +6323,11 @@ function spellBattle(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["classLevels"];
+  readonly statBlockTargets?: readonly {
+    readonly combatantId: CombatantId;
+    readonly statBlock: StatBlockRecord;
+    readonly initiative: number;
+  }[];
 }): BattleState {
   const result = startBattle({
     battleId: battleId("unit-profile-spell-admission"),
@@ -6105,6 +6372,13 @@ function spellBattle(input: {
           displayName: `Target ${index + 2}`,
           initiative: 9 - index,
           side: oppositionSide,
+        }),
+      ),
+      ...(input.statBlockTargets ?? []).map((target) =>
+        statBlockCreature({
+          combatantId: target.combatantId,
+          statBlock: target.statBlock,
+          initiative: target.initiative,
         }),
       ),
     ],
@@ -7017,6 +7291,80 @@ function characterCreature(input: {
   };
 }
 
+function statBlockWithCreatureType(
+  creatureType: StatBlockRecord["statBlock"]["creatureType"],
+): StatBlockRecord {
+  const base = statBlockCatalog.requireStatBlock("stat_block_goblin_warrior");
+  return {
+    ...base,
+    id: `stat_block_test_${creatureType}`,
+    name: `Test ${creatureType}`,
+    statBlock: {
+      ...base.statBlock,
+      displayName: `Test ${creatureType}`,
+      creatureType,
+    },
+  };
+}
+
+function statBlockCreature(input: {
+  readonly combatantId: CombatantId;
+  readonly statBlock: StatBlockRecord;
+  readonly initiative: number;
+  readonly side?: typeof partySide | typeof oppositionSide;
+}): BattleCreatureInit {
+  return {
+    combatantId: input.combatantId,
+    displayName: input.statBlock.statBlock.displayName,
+    initiative: initiativeScore(input.initiative),
+    side: input.side ?? oppositionSide,
+    creatureInit: {
+      kind: "statBlock",
+      statBlock: input.statBlock,
+      currentHp: Hp(statBlockLiteralNumber(input.statBlock.statBlock.hp)),
+      maxHp: Hp(statBlockLiteralNumber(input.statBlock.statBlock.hp)),
+      tempHp: Hp(0),
+    },
+  };
+}
+
+function statBlockLiteralNumber(
+  value: StatBlockRecord["statBlock"]["hp"],
+): number {
+  if (typeof value === "number") {
+    return value;
+  }
+  if (value.kind === "literal") {
+    return value.value;
+  }
+  throw new Error("Expected literal stat block number.");
+}
+
+function statBlockAttackAct(
+  state: BattleState,
+  actorId: CombatantId,
+  attackName: string,
+): AvailableBattleAct & {
+  readonly subject: Extract<BattleSubject, { readonly tag: "action" }>;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<BattleSubject, { readonly tag: "action" }>;
+    } =>
+      candidate.subject.tag === "action" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.action === "attack" &&
+      candidate.subject.attackName === attackName,
+  );
+  expect(act).toBeDefined();
+  if (act === undefined) {
+    throw new Error(`Expected ${attackName} stat block attack act.`);
+  }
+  return act;
+}
+
 function zeroAbilityWeaponAttack(
   unitId: "weapon_longsword" | "weapon_shortbow",
 ): NonNullable<
@@ -7304,7 +7652,8 @@ function savingThrowOutcomeFill(
     value:
       "spell" in hole &&
       hole.spell.procedure !== "rollModifier" &&
-      hole.spell.targeting.kind !== "singleCombatant"
+      hole.spell.targeting.kind !== "singleCombatant" &&
+      hole.spell.targeting.kind !== "targetList"
         ? {
             area: {
               originAnchorId: spellCasterId,

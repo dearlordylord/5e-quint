@@ -8,20 +8,20 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Metric | Value |
 | --- | ---: |
-| Installed collection inventory count | 112 Units |
+| Installed collection inventory count | 114 Units |
 
 ## Coverage Metrics
 
 | Metric | Covered | Percent |
 | --- | ---: | ---: |
-| Authored Surface Unit catalog admission | 111/415 | 26.7% |
-| Authored Surface executable catalog admission | 87/348 | 25% |
-| Installed Unit profile classification coverage | 112/112 | 100% |
-| Supported executable Unit coverage | 57/88 | 64.8% |
-| QNT profile modeling coverage | 31/31 | 100% |
-| QNT proof coverage | 30/31 | 96.8% |
-| Runtime mapping coverage | 31/31 | 100% |
-| Runtime parity coverage | 31/31 | 100% |
+| Authored Surface Unit catalog admission | 113/415 | 27.2% |
+| Authored Surface executable catalog admission | 89/348 | 25.6% |
+| Installed Unit profile classification coverage | 114/114 | 100% |
+| Supported executable Unit coverage | 57/90 | 63.3% |
+| QNT profile modeling coverage | 32/32 | 100% |
+| QNT proof coverage | 30/32 | 93.8% |
+| Runtime mapping coverage | 32/32 | 100% |
+| Runtime parity coverage | 32/32 | 100% |
 | Deterministic admission/projection coverage | 53/57 | 93% |
 | Selected identity MBT coverage | 10/57 | 17.5% |
 | Classic non-SRD expression gate | 1/1 | 100% |
@@ -109,7 +109,9 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Unit | Collection | Profiles | Supported Mechanics | Deferred Mechanics |
 | --- | --- | --- | --- | --- |
+| `animal_friendship` | srd-5.2.1 | `spell.creature-type-protection-and-charm` | Beast creature-type target filter; Wisdom save-gated Charmed condition; 24-hour spell-owned condition duration; slot-scaled target count | spell ends if caster or one of the caster's allies deals damage to the target (SRDINV33) |
 | `chill_touch` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | combatant-target melee spell attack damage; cantrip damage scaling; readied Action-time spell release | non-combatant target eligibility for the SRD generic target wording (SRDINV34); target can't regain Hit Points until the end of the caster's next turn (SRDINV28D) |
+| `protection_from_evil_and_good` | srd-5.2.1 | `spell.creature-type-protection-and-charm` | one touched target; concentration active effect; Aberration/Celestial/Elemental/Fey/Fiend/Undead attacker creature-type filter; attack-roll Disadvantage against the protected target | target can't be possessed by scoped creatures (SRDINV33); target can't gain Charmed or Frightened from scoped creatures (SRDINV33); Advantage on new saves against already-applied possession, Charmed, or Frightened effects from scoped creatures (SRDINV33) |
 | `produce_flame` | srd-5.2.1 | `spell.invocation-damage-save-or-attack` | Bonus Action held-light state; held-state-gated later Magic action hurl; combatant-target ranged spell attack damage; Fire damage; cantrip damage scaling | object target identity, Armor Class/Hit Points, and damage disposition for the SRD creature-or-object hurl target (SRDINV34) |
 
 ## Authored Surface Units Not In Unit Catalog
@@ -118,7 +120,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Kind | Count | Units |
 | --- | ---: | --- |
-| spell | 141 | `acid_arrow`, `aid`, `alarm`, `alter_self`, `animal_friendship`, `animal_shapes`, `animate_dead`, `animate_objects`, `antilife_shell`, `antimagic_field`, `arcane_eye`, `arcane_lock`, `arcane_sword`, `aura_of_life`, `banishment`, `barkskin`, `beacon_of_hope`, `blade_barrier`, `blight`, `blindness_deafness`, `blur`, `call_lightning`, `chain_lightning`, `charm_monster`, `circle_of_death`, `clairvoyance`, `cloudkill`, `comprehend_languages`, `compulsion`, `cone_of_cold`, `conjure_minor_elementals`, `conjure_woodland_beings`, `continual_flame`, `counterspell`, `create_food_and_water`, `create_undead`, `dancing_lights`, `daylight`, `death_ward`, `dimension_door`, `disintegrate`, `dispel_magic`, `divine_smite`, `dominate_beast`, `dominate_monster`, `dominate_person`, `earthquake`, `ensnaring_strike`, `fabricate`, `faerie_fire`, `fear`, `find_familiar`, `find_steed`, `finger_of_death`, `fire_shield`, `fire_storm`, `fireball`, `flame_blade`, `flame_strike`, `flesh_to_stone`, `fly`, `forcecage`, `freedom_of_movement`, `geas`, `gentle_repose`, `grease`, `greater_invisibility`, `harm`, `heal`, `heat_metal`, `heroism`, `hold_monster`, `hold_person`, `holy_aura`, `hypnotic_pattern`, `ice_storm`, `identify`, `incendiary_cloud`, `insect_plague`, `invisibility`, `lesser_restoration`, `lightning_bolt`, `magic_weapon`, `major_image`, `mass_suggestion`, `maze`, `meteor_swarm`, `mind_blank`, `mind_spike`, `misty_step`, `moonbeam`, `pass_without_trace`, `polymorph`, `power_word_heal`, `power_word_kill`, `power_word_stun`, `prayer_of_healing`, `prismatic_wall`, `protection_from_energy`, `protection_from_evil_and_good`, `protection_from_poison`, `ray_of_enfeeblement`, `resistance`, `reverse_gravity`, `scorching_ray`, `searing_smite`, `see_invisibility`, `sequester`, `shatter`, `shining_smite`, `silent_image`, `speak_with_animals`, `spider_climb`, `spike_growth`, `spirit_guardians`, `spiritual_weapon`, `starry_wisp`, `stinking_cloud`, `stoneskin`, `storm_of_vengeance`, `summon_dragon`, `sunbeam`, `sunburst`, `telekinesis`, `tongues`, `true_polymorph`, `true_seeing`, `true_strike`, `tsunami`, `vampiric_touch`, `wall_of_fire`, `wall_of_force`, `wall_of_ice`, `wall_of_stone`, `wall_of_thorns`, `warding_bond`, `water_breathing`, `web`, `weird`, `wind_walk`, `wind_wall` |
+| spell | 139 | `acid_arrow`, `aid`, `alarm`, `alter_self`, `animal_shapes`, `animate_dead`, `animate_objects`, `antilife_shell`, `antimagic_field`, `arcane_eye`, `arcane_lock`, `arcane_sword`, `aura_of_life`, `banishment`, `barkskin`, `beacon_of_hope`, `blade_barrier`, `blight`, `blindness_deafness`, `blur`, `call_lightning`, `chain_lightning`, `charm_monster`, `circle_of_death`, `clairvoyance`, `cloudkill`, `comprehend_languages`, `compulsion`, `cone_of_cold`, `conjure_minor_elementals`, `conjure_woodland_beings`, `continual_flame`, `counterspell`, `create_food_and_water`, `create_undead`, `dancing_lights`, `daylight`, `death_ward`, `dimension_door`, `disintegrate`, `dispel_magic`, `divine_smite`, `dominate_beast`, `dominate_monster`, `dominate_person`, `earthquake`, `ensnaring_strike`, `fabricate`, `faerie_fire`, `fear`, `find_familiar`, `find_steed`, `finger_of_death`, `fire_shield`, `fire_storm`, `fireball`, `flame_blade`, `flame_strike`, `flesh_to_stone`, `fly`, `forcecage`, `freedom_of_movement`, `geas`, `gentle_repose`, `grease`, `greater_invisibility`, `harm`, `heal`, `heat_metal`, `heroism`, `hold_monster`, `hold_person`, `holy_aura`, `hypnotic_pattern`, `ice_storm`, `identify`, `incendiary_cloud`, `insect_plague`, `invisibility`, `lesser_restoration`, `lightning_bolt`, `magic_weapon`, `major_image`, `mass_suggestion`, `maze`, `meteor_swarm`, `mind_blank`, `mind_spike`, `misty_step`, `moonbeam`, `pass_without_trace`, `polymorph`, `power_word_heal`, `power_word_kill`, `power_word_stun`, `prayer_of_healing`, `prismatic_wall`, `protection_from_energy`, `protection_from_poison`, `ray_of_enfeeblement`, `resistance`, `reverse_gravity`, `scorching_ray`, `searing_smite`, `see_invisibility`, `sequester`, `shatter`, `shining_smite`, `silent_image`, `speak_with_animals`, `spider_climb`, `spike_growth`, `spirit_guardians`, `spiritual_weapon`, `starry_wisp`, `stinking_cloud`, `stoneskin`, `storm_of_vengeance`, `summon_dragon`, `sunbeam`, `sunburst`, `telekinesis`, `tongues`, `true_polymorph`, `true_seeing`, `true_strike`, `tsunami`, `vampiric_touch`, `wall_of_fire`, `wall_of_force`, `wall_of_ice`, `wall_of_stone`, `wall_of_thorns`, `warding_bond`, `water_breathing`, `web`, `weird`, `wind_walk`, `wind_wall` |
 | magic_item | 71 | `cloak_of_protection`, `magic_item_amulet_of_health`, `magic_item_bag_of_holding`, `magic_item_bracers_of_defense`, `magic_item_brazier_of_commanding_fire_elementals`, `magic_item_brooch_of_shielding`, `magic_item_censer_of_controlling_air_elementals`, `magic_item_chime_of_opening`, `magic_item_cloak_of_arachnida`, `magic_item_cloak_of_protection`, `magic_item_crystal_ball_of_mind_reading`, `magic_item_cube_of_force`, `magic_item_eyes_of_minute_seeing`, `magic_item_folding_boat`, `magic_item_gauntlets_of_ogre_power`, `magic_item_gem_of_seeing`, `magic_item_goggles_of_night`, `magic_item_hat_of_disguise`, `magic_item_headband_of_intellect`, `magic_item_helm_of_comprehending_languages`, `magic_item_helm_of_teleportation`, `magic_item_instant_fortress`, `magic_item_javelin_of_lightning`, `magic_item_manual_of_gainful_exercise`, `magic_item_manual_of_quickness_of_action`, `magic_item_medallion_of_thoughts`, `magic_item_necklace_of_fireballs`, `magic_item_periapt_of_proof_against_poison`, `magic_item_potion_of_animal_friendship`, `magic_item_potion_of_clairvoyance`, `magic_item_potion_of_climbing`, `magic_item_potion_of_flying`, `magic_item_potion_of_giant_strength`, `magic_item_potion_of_heroism`, `magic_item_potion_of_invisibility`, `magic_item_potion_of_invulnerability`, `magic_item_potion_of_water_breathing`, `potion_of_healing`, `magic_item_quarterstaff_of_the_acrobat`, `magic_item_ring_of_invisibility`, `magic_item_ring_of_jumping`, `magic_item_ring_of_protection`, `magic_item_ring_of_resistance`, `ring_of_swimming`, `ring_of_telekinesis`, `ring_of_three_wishes`, `magic_item_ring_of_warmth`, `magic_item_ring_of_water_walking`, `magic_item_robe_of_the_archmagi`, `magic_item_rod_of_alertness`, `magic_item_rod_of_resurrection`, `magic_item_rod_of_rulership`, `magic_item_slippers_of_spider_climbing`, `magic_item_sovereign_glue`, `magic_item_staff_of_charming`, `magic_item_staff_of_fire`, `magic_item_staff_of_healing`, `magic_item_staff_of_power`, `magic_item_staff_of_the_woodlands`, `magic_item_stone_of_controlling_earth_elementals`, `magic_item_stone_of_good_luck_luckstone`, `magic_item_tome_of_clear_thought`, `magic_item_tome_of_leadership_and_influence`, `magic_item_tome_of_understanding`, `magic_item_wand_of_fear`, `magic_item_wand_of_fireballs`, `magic_item_wand_of_lightning_bolts`, `magic_item_wand_of_magic_detection`, `magic_item_wand_of_magic_missiles`, `magic_item_wand_of_paralysis`, `magic_item_wand_of_polymorph` |
 | weapon | 32 | `weapon_battleaxe`, `weapon_blowgun`, `weapon_club`, `weapon_dart`, `weapon_glaive`, `weapon_greataxe`, `weapon_greatclub`, `weapon_greatsword`, `weapon_halberd`, `weapon_hand_crossbow`, `weapon_handaxe`, `weapon_heavy_crossbow`, `weapon_javelin`, `weapon_lance`, `weapon_light_crossbow`, `weapon_light_hammer`, `weapon_longbow`, `weapon_mace`, `weapon_maul`, `weapon_morningstar`, `weapon_musket`, `weapon_pike`, `weapon_pistol`, `weapon_quarterstaff`, `weapon_rapier`, `weapon_scimitar`, `weapon_sickle`, `weapon_sling`, `weapon_trident`, `weapon_war_pick`, `weapon_warhammer`, `weapon_whip` |
 | class_feature | 29 | `barbarian_ability_score_improvement_l4`, `barbarian_danger_sense`, `barbarian_primal_champion`, `bard_ability_score_improvement_l4`, `bard_bonus_proficiencies`, `bard_epic_boon`, `bard_jack_of_all_trades`, `bard_words_of_creation`, `cleric_ability_score_improvement_l4`, `cleric_epic_boon`, `druid_ability_score_improvement_l4`, `druid_epic_boon`, `druid_natures_ward`, `fighter_epic_boon`, `monk_ability_score_improvement_l4`, `monk_body_and_mind`, `monk_epic_boon`, `paladin_epic_boon`, `paladin_fighting_style`, `paladin_paladins_smite`, `ranger_ability_score_improvement_l4`, `ranger_feral_senses`, `ranger_tireless`, `rogue_ability_score_improvement_l4`, `sorcerer_ability_score_improvement_l4`, `warlock_contact_patron`, `warlock_fiend_spells`, `wizard_ability_score_improvement_l4`, `wizard_scholar` |
@@ -134,7 +136,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Disposition | Planning lane | Count | Kind counts | Reason |
 | --- | --- | ---: | --- | --- |
-| srd-candidate | QMBT14-QMBT16 | 141 | spell: 141 | SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane. |
+| srd-candidate | QMBT14-QMBT16 | 139 | spell: 139 | SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane. |
 | intentional-backlog | future magic item profile intake | 79 | magic_item: 71, armor_template: 3, weapon_template: 3, shield_template: 2 | SRD magic item mechanics are authored, but this QMBT lane is focused on Unit feature and spell admission. |
 | non-runtime-authored-data | no promoted runtime lane | 43 | weapon: 32, armor: 11 | Authored SRD data has no mechanics payload, so catalog absence is not promoted runtime execution pressure. |
 | unsupported-widening-pressure | QMBT18 | 39 | class_feature: 29, species_trait: 8, mastery: 2 | Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice. |
@@ -147,7 +149,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `alarm` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/alarm.json` |
 | `alert` | duplicate-content-issue | content cleanup | feat | yes | `packages/surface/content/alert.json` |
 | `alter_self` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/alter_self.json` |
-| `animal_friendship` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/animal_friendship.json` |
 | `animal_shapes` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/animal_shapes.json` |
 | `animate_dead` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/animate_dead.json` |
 | `animate_objects` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/animate_objects.json` |
@@ -356,7 +357,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `prayer_of_healing` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/prayer_of_healing.json` |
 | `prismatic_wall` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/prismatic_wall.json` |
 | `protection_from_energy` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/protection_from_energy.json` |
-| `protection_from_evil_and_good` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/protection_from_evil_and_good.json` |
 | `protection_from_poison` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/protection_from_poison.json` |
 | `ranger_ability_score_improvement_l4` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/ranger_ability_score_improvement_l4.json` |
 | `ranger_feral_senses` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/ranger_feral_senses.json` |
@@ -456,7 +456,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `alarm` | spell | yes | `packages/surface/content/alarm.json` |
 | `alert` | feat | yes | `packages/surface/content/alert.json` |
 | `alter_self` | spell | yes | `packages/surface/content/alter_self.json` |
-| `animal_friendship` | spell | yes | `packages/surface/content/animal_friendship.json` |
 | `animal_shapes` | spell | yes | `packages/surface/content/animal_shapes.json` |
 | `animate_dead` | spell | yes | `packages/surface/content/animate_dead.json` |
 | `animate_objects` | spell | yes | `packages/surface/content/animate_objects.json` |
@@ -665,7 +664,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `prayer_of_healing` | spell | yes | `packages/surface/content/prayer_of_healing.json` |
 | `prismatic_wall` | spell | yes | `packages/surface/content/prismatic_wall.json` |
 | `protection_from_energy` | spell | yes | `packages/surface/content/protection_from_energy.json` |
-| `protection_from_evil_and_good` | spell | yes | `packages/surface/content/protection_from_evil_and_good.json` |
 | `protection_from_poison` | spell | yes | `packages/surface/content/protection_from_poison.json` |
 | `ranger_ability_score_improvement_l4` | class_feature | yes | `packages/surface/content/ranger_ability_score_improvement_l4.json` |
 | `ranger_feral_senses` | class_feature | yes | `packages/surface/content/ranger_feral_senses.json` |
@@ -818,7 +816,9 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Unit | Profiles | Task | Owner | Deferred Mechanics |
 | --- | --- | --- | --- | --- |
+| `animal_friendship` | `spell.creature-type-protection-and-charm` | SRDINV30C | `packages/battle-runtime/src/unit-profile-admission.test.ts` | spell ends if caster or one of the caster's allies deals damage to the target (SRDINV33) |
 | `chill_touch` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28C | `packages/battle-runtime/src/unit-profile-admission.test.ts` | non-combatant target eligibility for the SRD generic target wording (SRDINV34); target can't regain Hit Points until the end of the caster's next turn (SRDINV28D) |
+| `protection_from_evil_and_good` | `spell.creature-type-protection-and-charm` | SRDINV30C | `packages/battle-runtime/src/unit-profile-admission.test.ts` | target can't be possessed by scoped creatures (SRDINV33); target can't gain Charmed or Frightened from scoped creatures (SRDINV33); Advantage on new saves against already-applied possession, Charmed, or Frightened effects from scoped creatures (SRDINV33) |
 | `produce_flame` | `spell.invocation-damage-save-or-attack` | SRDINV32B | `packages/battle-runtime/src/unit-profile-admission.test.ts` | object target identity, Armor Class/Hit Points, and damage disposition for the SRD creature-or-object hurl target (SRDINV34) |
 
 ## Selected Identity MBT Evidence
@@ -876,9 +876,11 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `rogue_weapon_mastery` | unsupported-profile | Weapon mastery grant container; mastery Unit carries executable pressure. |
 | `mastery_sap` | unsupported-profile | Weapon mastery rider is authored but not yet a stable Unit profile row. |
 | `orc_darkvision` | unsupported-profile | Sense grant is authored data with no promoted execution profile. |
+| `animal_friendship` | profile-subset-supported | supported subset: Beast creature-type target filter; Wisdom save-gated Charmed condition; 24-hour spell-owned condition duration; slot-scaled target count; deferred: spell ends if caster or one of the caster's allies deals damage to the target (SRDINV33) |
 | `chill_touch` | profile-subset-supported | supported subset: combatant-target melee spell attack damage; cantrip damage scaling; readied Action-time spell release; deferred: non-combatant target eligibility for the SRD generic target wording (SRDINV34); target can't regain Hit Points until the end of the caster's next turn (SRDINV28D) |
 | `fire_bolt` | needs-surface-widening | QMBT23 keeps SRD Fire Bolt out of supported spell evidence until promoted spell invocation has an explicit object-target branch and object-ignition effect outcome; table-supplied object facts are required but are not a complete runtime boundary. |
 | `light` | unsupported-profile | Object light effect is authored but not promoted as an execution profile yet. |
+| `protection_from_evil_and_good` | profile-subset-supported | supported subset: one touched target; concentration active effect; Aberration/Celestial/Elemental/Fey/Fiend/Undead attacker creature-type filter; attack-roll Disadvantage against the protected target; deferred: target can't be possessed by scoped creatures (SRDINV33); target can't gain Charmed or Frightened from scoped creatures (SRDINV33); Advantage on new saves against already-applied possession, Charmed, or Frightened effects from scoped creatures (SRDINV33) |
 | `produce_flame` | profile-subset-supported | supported subset: Bonus Action held-light state; held-state-gated later Magic action hurl; combatant-target ranged spell attack damage; Fire damage; cantrip damage scaling; deferred: object target identity, Armor Class/Hit Points, and damage disposition for the SRD creature-or-object hurl target (SRDINV34) |
 | `detect_magic` | unsupported-profile | Detection/concentration search semantics are not promoted as a battle Unit profile. |
 | `sleep` | unsupported-profile | Hit Point ordered target allocation and Incapacitated/Unconscious application are not a stable Unit profile row. |
@@ -903,7 +905,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
 | srd-5.2.1 | unassigned | unsupported-profile | 52 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `bard_bardic_inspiration`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `monk_martial_arts`, `ranger_favored_enemy`, `rogue_expertise`, `rogue_thieves_cant`, `sorcerer_innate_sorcery`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `mastery_sap`, `orc_darkvision`, `light`, `detect_magic`, `sleep`, `eldritch_blast`, `minor_illusion`, `charm_person`, `hellish_rebuke`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `grease` |
-| srd-5.2.1 | unassigned | profile-subset-supported | 2 | `chill_touch`, `produce_flame` |
+| srd-5.2.1 | unassigned | profile-subset-supported | 4 | `animal_friendship`, `chill_touch`, `protection_from_evil_and_good`, `produce_flame` |
 | srd-5.2.1 | QCORE10 | needs-surface-widening | 1 | `fire_bolt` |
 | srd-5.2.1 | SRDINV34 | needs-surface-widening | 1 | `starry_wisp` |
 | srd-5.2.1 | unassigned | needs-surface-widening | 1 | `thunderwave` |
@@ -952,6 +954,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | SRDINV30A | completed-runtime-parity | `spell.scalar-buff` |
 | SRDINV30B | qnt-proof | `spell.invocation-roll-modifier` |
 | SRDINV30B | completed-runtime-parity | `spell.invocation-roll-modifier` |
+| SRDINV30C | completed-runtime-parity | `spell.creature-type-protection-and-charm` |
 | SRDINV31A | qnt-proof | `spell.invocation-weapon-damage-rider` |
 | SRDINV31A | completed-runtime-parity | `spell.invocation-weapon-damage-rider` |
 | SRDINV31B | qnt-proof | `spell.invocation-marked-damage-rider` |

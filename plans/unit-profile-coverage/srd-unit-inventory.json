@@ -164,16 +164,16 @@
       "non-runtime": 12,
       "catalog-only/dead-for-now": 74,
       "needs-surface-widening": 35,
-      "catalog-authored-executable-follow-up": 23,
-      "catalog-installed-owner-evidence-required": 14,
+      "catalog-authored-executable-follow-up": 15,
+      "catalog-installed-owner-evidence-required": 22,
       "missing-authored-record": 6
     },
     "spellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 74,
       "needs-surface-widening": 35,
-      "catalog-authored-executable-follow-up": 23,
+      "catalog-authored-executable-follow-up": 15,
       "catalog-installed-owner-evidence-present": 59,
-      "catalog-installed-owner-evidence-required": 14,
+      "catalog-installed-owner-evidence-required": 22,
       "missing-authored-record": 6
     },
     "levelOneRowsByCategory": {
@@ -529,11 +529,12 @@
       "title": "Classify Installed Cantrip and Level-1 Spell Units",
       "suggestedStatus": "done",
       "intent": "Classify installed SRD cantrip and level-1 Spell Unit owner evidence separately from missing and catalog-only spell rows.",
-      "rowCount": 95,
+      "rowCount": 103,
       "rowIds": [
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_light",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_minor_illusion",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_vicious_mockery",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_animal_friendship",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_bane",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_charm_person",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_color_spray",
@@ -553,10 +554,12 @@
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_guiding_bolt",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_healing_word",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_inflict_wounds",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_protection_from_evil_and_good",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_shield_of_faith",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_guidance",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_poison_spray",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_produce_flame",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_animal_friendship",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_charm_person",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_cure_wounds",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_detect_magic",
@@ -564,12 +567,15 @@
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_healing_word",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_ice_knife",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_longstrider",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_protection_from_evil_and_good",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_thunderwave",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_bless",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_cure_wounds",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_detect_magic",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_divine_favor",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_protection_from_evil_and_good",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_shield_of_faith",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_animal_friendship",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_cure_wounds",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_detect_magic",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_entangle",
@@ -604,6 +610,7 @@
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_charm_person",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_detect_magic",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hellish_rebuke",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_protection_from_evil_and_good",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_acid_splash",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_chill_touch",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_fire_bolt",
@@ -622,6 +629,7 @@
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_longstrider",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_mage_armor",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_magic_missile",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_protection_from_evil_and_good",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_ray_of_sickness",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_shield",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_sleep",
@@ -635,7 +643,7 @@
       "title": "Review Catalog-Only Cantrip and Level-1 Spell Units",
       "suggestedStatus": "done",
       "intent": "Keep catalog-only spell pressure explicit and counted without forcing unrelated class or nonspell rows into the same task.",
-      "rowCount": 97,
+      "rowCount": 89,
       "rowIds": [
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_dancing_lights",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_light",
@@ -645,7 +653,6 @@
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_minor_illusion",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_prestidigitation",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_true_strike",
-        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_animal_friendship",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_comprehend_languages",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_detect_magic",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_disguise_self",
@@ -662,29 +669,24 @@
         "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_thaumaturgy",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_create_or_destroy_water",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_magic",
-        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_protection_from_evil_and_good",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_purify_food_and_drink",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_druidcraft",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_elementalism",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_mending",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_message",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_resistance",
-        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_animal_friendship",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_create_or_destroy_water",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_detect_magic",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_faerie_fire",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_goodberry",
-        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_protection_from_evil_and_good",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_purify_food_and_drink",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_speak_with_animals",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_detect_magic",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_divine_smite",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_heroism",
-        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_protection_from_evil_and_good",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_purify_food_and_drink",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_searing_smite",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_alarm",
-        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_animal_friendship",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_detect_magic",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_ensnaring_strike",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_goodberry",
@@ -710,7 +712,6 @@
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_comprehend_languages",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_detect_magic",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_illusory_script",
-        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_protection_from_evil_and_good",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_speak_with_animals",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_unseen_servant",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_dancing_lights",
@@ -731,7 +732,6 @@
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_grease",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_identify",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_illusory_script",
-        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_protection_from_evil_and_good",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_silent_image",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_unseen_servant"
       ],
@@ -1967,19 +1967,10 @@
     {
       "id": "SRDINV30C",
       "title": "Promote Protection and Charm Spell Runtime",
-      "suggestedStatus": "ready-for-research",
+      "suggestedStatus": "done",
       "intent": "Promote Animal Friendship and Protection from Evil and Good as creature-type-scoped protection/charm effects.",
-      "rowCount": 8,
-      "rowIds": [
-        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_animal_friendship",
-        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_protection_from_evil_and_good",
-        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_animal_friendship",
-        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_protection_from_evil_and_good",
-        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_protection_from_evil_and_good",
-        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_animal_friendship",
-        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_protection_from_evil_and_good",
-        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_protection_from_evil_and_good"
-      ],
+      "rowCount": 0,
+      "rowIds": [],
       "nextAction": "Keep Beast and creature-type filters executable, and make early-ending or scoped condition/attack effects explicit rather than metadata-only.",
       "acceptance": "Protection/charm rows have promoted runtime evidence for the selected executable subset and checker-visible blockers for any omitted SRD clauses."
     },
@@ -3850,12 +3841,23 @@
         "sourceRecordPath": "packages/surface/content/animal_friendship.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "animal_friendship"
       },
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit animal_friendship is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_bane",
@@ -5802,12 +5804,23 @@
         "sourceRecordPath": "packages/surface/content/protection_from_evil_and_good.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "protection_from_evil_and_good"
       },
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit protection_from_evil_and_good is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_purify_food_and_drink",
@@ -6906,12 +6919,23 @@
         "sourceRecordPath": "packages/surface/content/animal_friendship.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "animal_friendship"
       },
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit animal_friendship is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_charm_person",
@@ -7395,12 +7419,23 @@
         "sourceRecordPath": "packages/surface/content/protection_from_evil_and_good.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "protection_from_evil_and_good"
       },
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit protection_from_evil_and_good is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_purify_food_and_drink",
@@ -9565,12 +9600,23 @@
         "sourceRecordPath": "packages/surface/content/protection_from_evil_and_good.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "protection_from_evil_and_good"
       },
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit protection_from_evil_and_good is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_purify_food_and_drink",
@@ -10299,12 +10345,23 @@
         "sourceRecordPath": "packages/surface/content/animal_friendship.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "animal_friendship"
       },
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit animal_friendship is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_cure_wounds",
@@ -14324,12 +14381,23 @@
         "sourceRecordPath": "packages/surface/content/protection_from_evil_and_good.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "protection_from_evil_and_good"
       },
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit protection_from_evil_and_good is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_speak_with_animals",
@@ -16305,12 +16373,23 @@
         "sourceRecordPath": "packages/surface/content/protection_from_evil_and_good.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "protection_from_evil_and_good"
       },
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit protection_from_evil_and_good is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_ray_of_sickness",

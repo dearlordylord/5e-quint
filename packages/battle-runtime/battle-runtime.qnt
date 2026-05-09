@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.invocation-chained-attack-damage spell.invocation-condition-save spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-chained-attack-damage spell.invocation-condition-save spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-chained-attack-damage
@@ -165,6 +165,12 @@ module battleRuntime {
   //   Orc Adrenaline Rush spends a limited-use Bonus Action Dash, grants
   //   Proficiency Bonus Temporary Hit Points that do not stack, and refreshes
   //   its use pool outside the battle turn reducer on Short or Long Rest.
+  // - Spells/Descriptions-A-D.md lines 86-97,
+  //   Spells/Descriptions-M-P.md lines 907-918, and
+  //   UBIQUITOUS_LANGUAGE.md: Animal Friendship is a Beast-only Wisdom-save
+  //   spell whose failed save grants Charmed for 24 hours, and Protection
+  //   from Evil and Good applies a Concentration protection whose scoped
+  //   creature types have Disadvantage on attack rolls against the target.
   //
   // This is the canonical package-local spec for implemented
   // @dnd/battle-runtime behavior. Old root battle.qnt is legacy/Core broad
@@ -177,7 +183,7 @@ module battleRuntime {
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Bane | Bless | Guidance | DivineFavor | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | AnimalFriendship | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Bane | Bless | Guidance | DivineFavor | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack
   type ChainedSpellAttackDamageInvocation =
     | ChromaticOrbChainedSpellAttack
@@ -188,6 +194,7 @@ module battleRuntime {
   type SaveGatedConditionInvocation =
     | ColorSpraySaveGate
     | EntangleSaveGate
+    | AnimalFriendshipSaveGate
   type SaveGatedTargeting = AreaSaveTargets | SingleSaveTarget
   type SaveGatedDamageSuccess = NoDamageOnSaveSuccess | HalfDamageOnSaveSuccess
   type MovementSpeedKind = WalkSpeedKind | ClimbSpeedKind | SwimSpeedKind
@@ -196,8 +203,9 @@ module battleRuntime {
   type RollModifierSpell = BaneRollModifier | BlessRollModifier | GuidanceRollModifier
   type SpellActionCost = SpellMagicAction | SpellBonusAction
 
-  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | ProduceFlameHeldLight({ durationTicks: int })
+  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | AnimalFriendshipCharmed({ durationTicks: int }) | ProtectionFromEvilAndGoodAttackDisadvantage | ProduceFlameHeldLight({ durationTicks: int })
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
+  type RuntimeCreatureType = HumanoidCreature | BeastCreature | AberrationCreature | CelestialCreature | ElementalCreature | FeyCreature | FiendCreature | UndeadCreature
 
   type ChainedSpellAttackDamageHole =
     | ChainedSpellDamageTypeChoice
@@ -639,12 +647,14 @@ module battleRuntime {
       .map(effect => match effect {
         | DivineFavorWeaponDamageRider(data) => DivineFavorWeaponDamageRider({ durationTicks: data.durationTicks - 1 })
         | HuntersMarkDamageRider(data) => HuntersMarkDamageRider(data)
+        | AnimalFriendshipCharmed(data) => AnimalFriendshipCharmed({ durationTicks: data.durationTicks - 1 })
         | ProduceFlameHeldLight(data) => ProduceFlameHeldLight({ durationTicks: data.durationTicks - 1 })
         | _ => effect
       })
       .filter(effect => match effect {
         | DivineFavorWeaponDamageRider(data) => data.durationTicks > 0
         | HuntersMarkDamageRider(_) => true
+        | AnimalFriendshipCharmed(data) => data.durationTicks > 0
         | ProduceFlameHeldLight(data) => data.durationTicks > 0
         | _ => true
       })
@@ -723,6 +733,8 @@ module battleRuntime {
         | ViciousMockeryNextAttackDisadvantage => false
         | ColorSprayBlinded => false
         | EntangleRestrained => false
+        | AnimalFriendshipCharmed(_) => false
+        | ProtectionFromEvilAndGoodAttackDisadvantage => false
         | ProduceFlameHeldLight(_) => false
       })) 13 + dexMod else baseAc
       val shieldBonus = if (effects.contains(ShieldArmorClassBonus)) 5 else 0
@@ -1493,7 +1505,7 @@ module battleRuntime {
   }
 
   pure def spellEffectConcentrationActiveEffects(): Set[ActiveEffect] =
-    Set(ShieldOfFaithArmorClassBonus, BaneD20RollPenalty, BlessD20RollBonus, GuidanceAbilityCheckBonus, EntangleRestrained)
+    Set(ShieldOfFaithArmorClassBonus, BaneD20RollPenalty, BlessD20RollBonus, GuidanceAbilityCheckBonus, EntangleRestrained, ProtectionFromEvilAndGoodAttackDisadvantage)
 
   pure def breakableSelfConcentrationActiveEffects(): Set[ActiveEffect] =
     spellEffectConcentrationActiveEffects.union(Set(MageArmor))
@@ -2390,6 +2402,8 @@ module battleRuntime {
       | BurningHands => true
       | ColorSpray => true
       | Entangle => true
+      | AnimalFriendship => true
+      | ProtectionFromEvilAndGood => true
       | IceKnife => true
       | HealingWord => true
       | CureWounds => true
@@ -2721,6 +2735,28 @@ module battleRuntime {
     else
       NormalSpellAttackRoll
 
+  pure def protectionFromEvilAndGoodCreatureTypeIsScoped(creatureType: RuntimeCreatureType): bool =
+    creatureType == AberrationCreature or
+    creatureType == CelestialCreature or
+    creatureType == ElementalCreature or
+    creatureType == FeyCreature or
+    creatureType == FiendCreature or
+    creatureType == UndeadCreature
+
+  pure def spellAttackRollModeFromCreatureTypeScopedActiveEffects(
+    attackerCreatureType: RuntimeCreatureType,
+    attackerEffects: Set[ActiveEffect],
+    targetEffects: Set[ActiveEffect],
+  ): SpellAttackRollMode =
+    if (
+      targetEffects.contains(ProtectionFromEvilAndGoodAttackDisadvantage)
+      and protectionFromEvilAndGoodCreatureTypeIsScoped(attackerCreatureType)
+      and not(targetEffects.contains(GuidingBoltNextAttackAdvantage))
+    )
+      DisadvantageSpellAttackRoll
+    else
+      spellAttackRollModeFromActiveEffects(attackerEffects, targetEffects)
+
   pure def rayOfFrostSpeedEffectActive(
     hit: bool,
     currentActor: Actor,
@@ -2808,12 +2844,24 @@ module battleRuntime {
     match invocation {
       | ColorSpraySaveGate => AreaSaveTargets
       | EntangleSaveGate => AreaSaveTargets
+      | AnimalFriendshipSaveGate => SingleSaveTarget
     }
 
   pure def saveGatedConditionFailedSaveActiveEffects(invocation: SaveGatedConditionInvocation): Set[ActiveEffect] =
     match invocation {
       | ColorSpraySaveGate => Set(ColorSprayBlinded)
       | EntangleSaveGate => Set(EntangleRestrained)
+      | AnimalFriendshipSaveGate => Set(AnimalFriendshipCharmed({ durationTicks: 24 * 60 }))
+    }
+
+  pure def saveGatedConditionTargetCreatureTypeIsLegal(
+    invocation: SaveGatedConditionInvocation,
+    targetCreatureType: RuntimeCreatureType,
+  ): bool =
+    match invocation {
+      | ColorSpraySaveGate => true
+      | EntangleSaveGate => true
+      | AnimalFriendshipSaveGate => targetCreatureType == BeastCreature
     }
 
   pure def saveGatedConditionReplayHoles(
@@ -3776,9 +3824,15 @@ module battleRuntime {
       assert(saveGatedConditionFailedSaveActiveEffects(ColorSpraySaveGate) == Set(ColorSprayBlinded)),
       assert(saveGatedConditionTargeting(EntangleSaveGate) == AreaSaveTargets),
       assert(saveGatedConditionFailedSaveActiveEffects(EntangleSaveGate) == Set(EntangleRestrained)),
+      assert(saveGatedConditionTargeting(AnimalFriendshipSaveGate) == SingleSaveTarget),
+      assert(saveGatedConditionTargetCreatureTypeIsLegal(AnimalFriendshipSaveGate, BeastCreature)),
+      assert(not(saveGatedConditionTargetCreatureTypeIsLegal(AnimalFriendshipSaveGate, HumanoidCreature))),
+      assert(saveGatedConditionFailedSaveActiveEffects(AnimalFriendshipSaveGate) == Set(AnimalFriendshipCharmed({ durationTicks: 24 * 60 }))),
       assert(spellAttackRollModeFromActiveEffects(Set(), Set(GuidingBoltNextAttackAdvantage)) == AdvantageSpellAttackRoll),
       assert(spellAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), Set()) == DisadvantageSpellAttackRoll),
       assert(spellAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), Set(GuidingBoltNextAttackAdvantage)) == NormalSpellAttackRoll),
+      assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(ProtectionFromEvilAndGoodAttackDisadvantage)) == DisadvantageSpellAttackRoll),
+      assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(HumanoidCreature, Set(), Set(ProtectionFromEvilAndGoodAttackDisadvantage)) == NormalSpellAttackRoll),
       assert(saveGatedTargeting(SacredFlameSaveGate) == SingleSaveTarget),
       assert(saveGatedDamageSuccess(SacredFlameSaveGate) == NoDamageOnSaveSuccess),
       assert(saveGatedDamageType(SacredFlameSaveGate) == Radiant),
@@ -3792,6 +3846,8 @@ module battleRuntime {
       assert(saveGatedDamageSuccess(ViciousMockerySaveGate) == NoDamageOnSaveSuccess),
       assert(saveGatedDamageType(ViciousMockerySaveGate) == Psychic),
       assert(spellInvocationSpendsLevelOneSlot(IceKnife)),
+      assert(spellInvocationSpendsLevelOneSlot(AnimalFriendship)),
+      assert(spellInvocationSpendsLevelOneSlot(ProtectionFromEvilAndGood)),
       assert(spellInvocationSpendsLevelOneSlot(DivineFavor)),
       assert(spellInvocationSpendsLevelOneSlot(HuntersMark)),
       assert(fighterDivineFavorDamage(3, Set(DivineFavorWeaponDamageRider({ durationTicks: 1 }))) == 3),
