@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 348,
-      "numerator": 77,
-      "percent": "22.1%"
+      "numerator": 78,
+      "percent": "22.4%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 415,
-      "numerator": 101,
-      "percent": "24.3%"
+      "numerator": 102,
+      "percent": "24.6%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,47 +59,47 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 102
+      "value": 103
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 48,
-      "numerator": 44,
-      "percent": "91.7%"
+      "denominator": 49,
+      "numerator": 45,
+      "percent": "91.8%"
     },
     "profileClassificationCoverage": {
-      "denominator": 102,
-      "numerator": 102,
+      "denominator": 103,
+      "numerator": 103,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 26,
-      "numerator": 26,
+      "denominator": 27,
+      "numerator": 27,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 26,
-      "numerator": 25,
-      "percent": "96.2%"
+      "denominator": 27,
+      "numerator": 26,
+      "percent": "96.3%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 26,
-      "numerator": 26,
+      "denominator": 27,
+      "numerator": 27,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 26,
-      "numerator": 26,
+      "denominator": 27,
+      "numerator": 27,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 48,
+      "denominator": 49,
       "numerator": 10,
-      "percent": "20.8%"
+      "percent": "20.4%"
     },
     "supportedProfileCoverage": {
-      "denominator": 78,
-      "numerator": 48,
-      "percent": "61.5%"
+      "denominator": 79,
+      "numerator": 49,
+      "percent": "62%"
     }
   },
   "metricSemantics": [
@@ -804,6 +804,36 @@
       ]
     },
     {
+      "id": "spell.invocation-chained-attack-damage",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "SRDINV29F1",
+        "SRDINV29F2",
+        "SRDINV29F3"
+      ],
+      "title": "Spell invocation resolves a chained spell attack with cast-local damage-type choice and leap replay",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/chromatic-orb-chained-spell.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.invocation-condition-save",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -1253,6 +1283,30 @@
         "spell.invocation-damage-save-or-attack"
       ],
       "taskId": "SRDINV29E"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Chromatic Orb's chained Spell Invocation replay: cast-local damage-type choice, ordered target/attack/damage steps, duplicate d8 face continuation, target uniqueness, previous-target range, and slot-level leap cap.",
+      "profileIds": [
+        "spell.invocation-chained-attack-damage"
+      ],
+      "taskId": "SRDINV29F1"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime reducer tests for Chromatic Orb's chained spell attack procedure, including step-scoped holes, duplicate-face continuation, target uniqueness, previous-target range, damage-type reuse, reaction lifecycle composition, and one action/slot spend.",
+      "profileIds": [
+        "spell.invocation-chained-attack-damage"
+      ],
+      "taskId": "SRDINV29F2"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Chromatic Orb runtime and admission evidence for the chained spell attack profile, including damage-type reuse, target uniqueness, leap range, duplicate-face continuation, resource spend, and readied spell release.",
+      "profileIds": [
+        "spell.invocation-chained-attack-damage"
+      ],
+      "taskId": "SRDINV29F3"
     }
   ],
   "units": [
@@ -3709,6 +3763,94 @@
       ],
       "sourceRecordPath": "packages/surface/content/chill_touch.json",
       "unitId": "chill_touch"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "spell.invocation-chained-attack-damage",
+          "spell.readied-action-time-spell"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV29F3"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-chained-attack-damage",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV29F1",
+            "SRDINV29F2",
+            "SRDINV29F3"
+          ],
+          "title": "Spell invocation resolves a chained spell attack with cast-local damage-type choice and leap replay",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/chromatic-orb-chained-spell.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "spell.readied-action-time-spell",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE8",
+            "QCORE10",
+            "QMBT5"
+          ],
+          "title": "Action-time spell can be readied and released through the reaction protocol",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/chromatic_orb.json",
+      "unitId": "chromatic_orb"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -6195,24 +6337,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/charm_monster.json",
       "unitId": "charm_monster"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/chromatic_orb.json",
-      "unitId": "chromatic_orb"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

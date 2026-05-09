@@ -184,6 +184,9 @@ flowchart TD
   produce damage. `burning_hands` is the self-origin Cone save-for-half branch;
   `color_spray` is the self-origin Cone save-gated condition branch. The table
   supplies affected targets rather than the reducer deriving grid geometry.
+  `chromatic_orb` is a separate chained spell attack profile with one
+  cast-local damage-type choice, step-scoped target/attack/damage holes,
+  duplicate-d8 leap gating, target uniqueness, and previous-target range facts.
   `vicious_mockery` adds an attack-roll-only Disadvantage effect on failed
   saves.
 - Stat Block damage vulnerabilities, resistances, and immunities are read from

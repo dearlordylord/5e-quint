@@ -1,3 +1,4 @@
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-chained-attack-damage
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 

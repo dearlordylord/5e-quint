@@ -60,6 +60,7 @@
 {"unitId":"orc_relentless_endurance","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["unit-feature.zero-hit-point-replacement"],"rawRequirementIds":["RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}}
 {"unitId":"acid_splash","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["spell.invocation-damage-save-or-attack","spell.readied-action-time-spell"],"rawRequirementIds":["RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"]}}
 {"unitId":"burning_hands","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["spell.invocation-damage-save-or-attack","spell.readied-action-time-spell"],"rawRequirementIds":["RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"]}}
+{"unitId":"chromatic_orb","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["spell.invocation-chained-attack-damage","spell.readied-action-time-spell"],"rawRequirementIds":["RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"]}}
 {"unitId":"color_spray","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["spell.invocation-condition-save"],"rawRequirementIds":["RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"]}}
 {"unitId":"entangle","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["spell.invocation-condition-save"],"rawRequirementIds":["RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"]}}
 {"unitId":"ice_knife","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["spell.invocation-damage-save-or-attack"],"rawRequirementIds":["RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"]}}

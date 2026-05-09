@@ -26,6 +26,7 @@ import classWarlockInput from "../../content/class_warlock.json";
 import classWizardInput from "../../content/class_wizard.json";
 import charmPersonInput from "../../content/charm_person.json";
 import chillTouchInput from "../../content/chill_touch.json";
+import chromaticOrbInput from "../../content/chromatic_orb.json";
 import clericDivineOrderInput from "../../content/cleric_divine_order.json";
 import colorSprayInput from "../../content/color_spray.json";
 import cureWoundsInput from "../../content/cure_wounds.json";
@@ -273,6 +274,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     acidSplashInput,
     burningHandsInput,
     chillTouchInput,
+    chromaticOrbInput,
     colorSprayInput,
     cureWoundsInput,
     entangleInput,

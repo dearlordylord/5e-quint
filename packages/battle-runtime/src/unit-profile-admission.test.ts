@@ -8,6 +8,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29B color_spray
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29C entangle
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29E ice_knife
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29F3 chromatic_orb
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT25 healing_word
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT32 cure_wounds mass_healing_word
@@ -25,7 +26,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT59 monk_deflect_attacks
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT62 fighter_tactical_mind
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT65 bard_cutting_words
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.invocation-condition-save
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.invocation-chained-attack-damage spell.invocation-condition-save
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -130,6 +131,7 @@ const rogueUncannyDodgeUnitId = "rogue_uncanny_dodge";
 const rogueSneakAttackUnitId = "rogue_sneak_attack";
 const bardCuttingWordsUnitId = "bard_cutting_words";
 const burningHandsUnitId = "burning_hands";
+const chromaticOrbUnitId = "chromatic_orb";
 const colorSprayUnitId = "color_spray";
 const entangleUnitId = "entangle";
 const iceKnifeUnitId = "ice_knife";
@@ -2948,6 +2950,179 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
         choices: [spellCasterId, spellTargetId],
       }),
     ]);
+  });
+
+  test("chromatic_orb is admitted as a chained spell attack with a cast-local damage-type choice", () => {
+    const spell = spellRecord(chromaticOrbUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = spellAct({
+      state,
+      spellId: chromaticOrbUnitId,
+      slotLevel: 2,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(
+        "chromatic_orb",
+        2,
+        "chainedSpellAttackDamage",
+      ),
+      mode: { tag: "cast" },
+    });
+    const damageType = requireHole(act.initialHoles, "damageTypeChoice");
+    expect(damageType).toEqual(
+      expect.objectContaining({
+        label: "Chromatic Orb damage type",
+        choices: ["acid", "cold", "fire", "lightning", "poison", "thunder"],
+      }),
+    );
+    expect(spellHoleInvocation([damageType])).toEqual(
+      expect.objectContaining({
+        procedure: "chainedSpellAttackDamage",
+        spell,
+        resource: { tag: "spellSlot", slotLevel: 2 },
+        targeting: { kind: "singleCombatant" },
+        attackKind: "ranged_spell_attack",
+        attackBonus: 5,
+        damage: { expr: { dice: 4, dieSize: 8 } },
+        damageTypeChoices: [
+          "acid",
+          "cold",
+          "fire",
+          "lightning",
+          "poison",
+          "thunder",
+        ],
+        rangeFeet: 90,
+        leapRangeFeet: 30,
+      }),
+    );
+  });
+
+  test("damage-type choice refs do not widen ordinary spell damage admission profiles", () => {
+    const spell = spellRecord(chromaticOrbUnitId);
+    const state = spellBattle({
+      cantrips: [spell],
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const acts = discoverBattleActs(state).filter(
+      (candidate): candidate is ActionSpellAct =>
+        candidate.subject.tag === "actionSpell" &&
+        candidate.subject.invocation.spellId === chromaticOrbUnitId,
+    );
+
+    expect(
+      [...new Set(acts.map((act) => act.subject.invocation.procedure))].sort(),
+    ).toEqual(["chainedSpellAttackDamage"]);
+    expect(
+      acts.some(
+        (act) => act.subject.invocation.procedure === "spellAttackDamage",
+      ),
+    ).toBe(false);
+    expect(
+      acts.some((act) => act.subject.invocation.procedure === "saveGatedDamage"),
+    ).toBe(false);
+  });
+
+  test("damage-type choice refs preserve existing spell attack and save-gated projections", () => {
+    const spellAttack = spellRecord(rayOfFrostUnitId);
+    const spellAttackAct = spellAct({
+      state: spellBattle({ cantrips: [spellAttack] }),
+      spellId: rayOfFrostUnitId,
+    });
+
+    expect(spellAttackAct.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: cantripSpellInvocationRef(
+        "ray_of_frost",
+        "spellAttackDamage",
+      ),
+      mode: { tag: "cast" },
+    });
+    expect(spellAttackAct.initialHoles).toEqual([
+      expect.objectContaining({
+        kind: "targetChoice",
+        choices: [spellCasterId, spellTargetId],
+      }),
+    ]);
+    const attackRoll = requireResultHole(
+      resolveBattleSubject({
+        state: spellBattle({ cantrips: [spellAttack] }),
+        subject: spellAttackAct.subject,
+        fills: [
+          spellTargetFill(
+            requireHole(spellAttackAct.initialHoles, "targetChoice"),
+            rayOfFrostUnitId,
+            spellCasterId,
+            spellTargetId,
+          ),
+        ],
+      }),
+      "attackRoll",
+    );
+    expect(spellHoleInvocation([attackRoll])).toEqual(
+      expect.objectContaining({
+        procedure: "spellAttackDamage",
+        spell: spellAttack,
+        targeting: { kind: "singleCombatant" },
+        attackKind: "ranged_spell_attack",
+        damage: {
+          expr: { dice: 1, dieSize: 8 },
+          damageType: "cold",
+        },
+        rangeFeet: 60,
+        postDamageRiders: [
+          {
+            kind: "speedDelta",
+            deltaFeet: movementDeltaFeet(-10),
+          },
+        ],
+      }),
+    );
+
+    const saveGated = spellRecord(acidSplashUnitId);
+    const saveGatedAct = spellAct({
+      state: spellBattle({ cantrips: [saveGated] }),
+      spellId: acidSplashUnitId,
+    });
+
+    expect(saveGatedAct.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: cantripSpellInvocationRef("acid_splash", "saveGatedDamage"),
+      mode: { tag: "cast" },
+    });
+    expect(saveGatedAct.initialHoles).toEqual([
+      expect.objectContaining({
+        kind: "savingThrowOutcome",
+        areaChoices: [],
+        targetRollModes: [],
+      }),
+    ]);
+    expect(spellActInvocation(saveGatedAct)).toEqual(
+      expect.objectContaining({
+        procedure: "saveGatedDamage",
+        spell: saveGated,
+        ability: "dex",
+        targeting: {
+          kind: "pointOriginSphere",
+          radiusFeet: 5,
+        },
+        damage: {
+          expr: { dice: 1, dieSize: 6 },
+          damageType: "acid",
+        },
+        successDamage: "none",
+        rangeFeet: 60,
+      }),
+    );
   });
 
   test("mage_armor is admitted through catalog spell access and projected as a persistent prepared spell", () => {

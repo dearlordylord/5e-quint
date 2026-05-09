@@ -1,6 +1,7 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.invocation-condition-save
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.invocation-chained-attack-damage spell.invocation-condition-save
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-chained-attack-damage
 module battleRuntime {
   // SRD traceability for this canonical battle runtime spec:
   // - Playing-the-Game.md lines 479-495: combat proceeds in rounds and turns
