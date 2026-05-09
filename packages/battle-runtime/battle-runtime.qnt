@@ -149,18 +149,19 @@ module battleRuntime {
   type CombatantSide = PartySide | OppositionSide
 
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
-  type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic
+  type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | HealingWord | CureWounds | MassHealingWord | Shield
-  type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack
-  type SaveGatedDamageInvocation = AcidSplashSaveGate | SacredFlameSaveGate | InflictWoundsSaveGate
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | HealingWord | CureWounds | MassHealingWord | Shield | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery
+  type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack
+  type SaveGatedDamageInvocation = AcidSplashSaveGate | SacredFlameSaveGate | InflictWoundsSaveGate | ViciousMockerySaveGate
   type SaveGatedDamageTargeting = AreaSaveTargets | SingleSaveTarget
   type SaveGatedDamageSuccess = NoDamageOnSaveSuccess | HalfDamageOnSaveSuccess
   type MovementSpeedKind = WalkSpeedKind | ClimbSpeedKind | SwimSpeedKind
   type DirectHitPointRestorationSpell = HealingWordRestoration | CureWoundsRestoration | MassHealingWordRestoration
   type SpellActionCost = SpellMagicAction | SpellBonusAction
 
-  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus
+  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage
+  type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
 
   type CreatureSize = Tiny | Small | Medium | Large | Huge | Gargantuan
 
@@ -593,6 +594,10 @@ module battleRuntime {
         | MageArmor => true
         | RayOfFrostSpeedDelta => false
         | ShieldArmorClassBonus => false
+        | RayOfSicknessPoisoned => false
+        | ShockingGraspOpportunityAttackDenied => false
+        | GuidingBoltNextAttackAdvantage => false
+        | ViciousMockeryNextAttackDisadvantage => false
       })) 13 + dexMod else baseAc
       if (effects.contains(ShieldArmorClassBonus)) base + 5 else base
     }
@@ -1860,6 +1865,10 @@ module battleRuntime {
       | CureWounds => true
       | MassHealingWord => true
       | Shield => true
+      | ShockingGrasp => false
+      | GuidingBolt => true
+      | RayOfSickness => true
+      | ViciousMockery => false
     }
 
   pure def canExpendSpellSlotThisTurn(state: BattleState): bool =
@@ -1905,7 +1914,41 @@ module battleRuntime {
       | RayOfFrostSpellAttack => Cold
       | PoisonSpraySpellAttack => Poison
       | ChillTouchSpellAttack => Necrotic
+      | ShockingGraspSpellAttack => Lightning
+      | GuidingBoltSpellAttack => Radiant
+      | RayOfSicknessSpellAttack => Poison
     }
+
+  pure def spellAttackDamageActiveEffects(invocation: SpellAttackDamageInvocation): Set[ActiveEffect] =
+    match invocation {
+      | RayOfFrostSpellAttack => Set(RayOfFrostSpeedDelta)
+      | PoisonSpraySpellAttack => Set()
+      | ChillTouchSpellAttack => Set()
+      | ShockingGraspSpellAttack => Set(ShockingGraspOpportunityAttackDenied)
+      | GuidingBoltSpellAttack => Set(GuidingBoltNextAttackAdvantage)
+      | RayOfSicknessSpellAttack => Set(RayOfSicknessPoisoned)
+    }
+
+  pure def saveGatedDamageFailedSaveActiveEffects(invocation: SaveGatedDamageInvocation): Set[ActiveEffect] =
+    match invocation {
+      | AcidSplashSaveGate => Set()
+      | SacredFlameSaveGate => Set()
+      | InflictWoundsSaveGate => Set()
+      | ViciousMockerySaveGate => Set(ViciousMockeryNextAttackDisadvantage)
+    }
+
+  pure def spellAttackRollModeFromActiveEffects(
+    attackerEffects: Set[ActiveEffect],
+    targetEffects: Set[ActiveEffect],
+  ): SpellAttackRollMode =
+    if (attackerEffects.contains(ViciousMockeryNextAttackDisadvantage) and targetEffects.contains(GuidingBoltNextAttackAdvantage))
+      NormalSpellAttackRoll
+    else if (targetEffects.contains(GuidingBoltNextAttackAdvantage))
+      AdvantageSpellAttackRoll
+    else if (attackerEffects.contains(ViciousMockeryNextAttackDisadvantage))
+      DisadvantageSpellAttackRoll
+    else
+      NormalSpellAttackRoll
 
   pure def rayOfFrostSpeedEffectActive(
     hit: bool,
@@ -1919,6 +1962,7 @@ module battleRuntime {
       | AcidSplashSaveGate => AreaSaveTargets
       | SacredFlameSaveGate => SingleSaveTarget
       | InflictWoundsSaveGate => SingleSaveTarget
+      | ViciousMockerySaveGate => SingleSaveTarget
     }
 
   pure def saveGatedDamageSuccess(invocation: SaveGatedDamageInvocation): SaveGatedDamageSuccess =
@@ -1926,6 +1970,7 @@ module battleRuntime {
       | AcidSplashSaveGate => NoDamageOnSaveSuccess
       | SacredFlameSaveGate => NoDamageOnSaveSuccess
       | InflictWoundsSaveGate => HalfDamageOnSaveSuccess
+      | ViciousMockerySaveGate => NoDamageOnSaveSuccess
     }
 
   pure def saveGatedDamageType(invocation: SaveGatedDamageInvocation): DamageType =
@@ -1933,6 +1978,7 @@ module battleRuntime {
       | AcidSplashSaveGate => Acid
       | SacredFlameSaveGate => Radiant
       | InflictWoundsSaveGate => Necrotic
+      | ViciousMockerySaveGate => Psychic
     }
 
   pure def saveGatedDamageSpendsLevelOneSlot(invocation: SaveGatedDamageInvocation): bool =
@@ -1940,6 +1986,7 @@ module battleRuntime {
       | AcidSplashSaveGate => false
       | SacredFlameSaveGate => false
       | InflictWoundsSaveGate => true
+      | ViciousMockerySaveGate => false
     }
 
   pure def saveGatedDamageReplayHoles(
@@ -2658,12 +2705,25 @@ module battleRuntime {
       assert(not(rayOfFrostSpeedEffectActive(true, Fighter, Fighter))),
       assert(spellAttackDamageType(PoisonSpraySpellAttack) == Poison),
       assert(spellAttackDamageType(ChillTouchSpellAttack) == Necrotic),
+      assert(spellAttackDamageType(ShockingGraspSpellAttack) == Lightning),
+      assert(spellAttackDamageType(GuidingBoltSpellAttack) == Radiant),
+      assert(spellAttackDamageType(RayOfSicknessSpellAttack) == Poison),
+      assert(spellAttackDamageActiveEffects(RayOfSicknessSpellAttack) == Set(RayOfSicknessPoisoned)),
+      assert(spellAttackDamageActiveEffects(ShockingGraspSpellAttack) == Set(ShockingGraspOpportunityAttackDenied)),
+      assert(spellAttackDamageActiveEffects(GuidingBoltSpellAttack) == Set(GuidingBoltNextAttackAdvantage)),
+      assert(saveGatedDamageFailedSaveActiveEffects(ViciousMockerySaveGate) == Set(ViciousMockeryNextAttackDisadvantage)),
+      assert(spellAttackRollModeFromActiveEffects(Set(), Set(GuidingBoltNextAttackAdvantage)) == AdvantageSpellAttackRoll),
+      assert(spellAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), Set()) == DisadvantageSpellAttackRoll),
+      assert(spellAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), Set(GuidingBoltNextAttackAdvantage)) == NormalSpellAttackRoll),
       assert(saveGatedDamageTargeting(SacredFlameSaveGate) == SingleSaveTarget),
       assert(saveGatedDamageSuccess(SacredFlameSaveGate) == NoDamageOnSaveSuccess),
       assert(saveGatedDamageType(SacredFlameSaveGate) == Radiant),
       assert(saveGatedDamageTargeting(InflictWoundsSaveGate) == SingleSaveTarget),
       assert(saveGatedDamageSuccess(InflictWoundsSaveGate) == HalfDamageOnSaveSuccess),
       assert(saveGatedDamageType(InflictWoundsSaveGate) == Necrotic),
+      assert(saveGatedDamageTargeting(ViciousMockerySaveGate) == SingleSaveTarget),
+      assert(saveGatedDamageSuccess(ViciousMockerySaveGate) == NoDamageOnSaveSuccess),
+      assert(saveGatedDamageType(ViciousMockerySaveGate) == Psychic),
     }
   }
 

@@ -20,10 +20,14 @@
 {"unitId":"mage_armor","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT14","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"magic_missile","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT14","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"ray_of_frost","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT14","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
+{"unitId":"guiding_bolt","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV28D","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"inflict_wounds","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV28B","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
+{"unitId":"ray_of_sickness","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV28D","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
+{"unitId":"shocking_grasp","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV28D","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"chill_touch","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV28C","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"poison_spray","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV28B","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"sacred_flame","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV28B","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
+{"unitId":"vicious_mockery","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV28D","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"mycelium_step","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT21","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"defense","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT18","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"feat_archery","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT27","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}

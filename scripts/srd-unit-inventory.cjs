@@ -170,11 +170,7 @@ const spellUnitExecutableFollowUpBatches = [
       "Admit these authored Spell Definitions and add battle-runtime spell invocation/projection for attack rolls, saving throws, damage, cantrip scaling, slot-scaled damage, object targeting where SRD permits it, and simple rider outcomes.",
     unitIds: [
       "burning_hands",
-      "guiding_bolt",
-      "ray_of_sickness",
-      "shocking_grasp",
       "starry_wisp",
-      "vicious_mockery",
     ],
   },
   {

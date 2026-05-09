@@ -45,6 +45,7 @@ import fighterTacticalMindInput from "../../content/fighter_tactical_mind.json";
 import fighterWeaponMasteryInput from "../../content/fighter_weapon_mastery.json";
 import detectMagicInput from "../../content/detect_magic.json";
 import fireBoltInput from "../../content/fire_bolt.json";
+import guidingBoltInput from "../../content/guiding_bolt.json";
 import healingWordInput from "../../content/healing_word.json";
 import hellishRebukeInput from "../../content/hellish_rebuke.json";
 import inflictWoundsInput from "../../content/inflict_wounds.json";
@@ -73,6 +74,7 @@ import speciesOrcInput from "../../content/species_orc.json";
 import subclassFighterChampionInput from "../../content/subclass_fighter_champion.json";
 import subclassWizardEvokerInput from "../../content/subclass_wizard_evoker.json";
 import rayOfFrostInput from "../../content/ray_of_frost.json";
+import rayOfSicknessInput from "../../content/ray_of_sickness.json";
 import rogueCunningActionInput from "../../content/rogue_cunning_action.json";
 import rogueEvasionInput from "../../content/rogue_evasion.json";
 import rogueExpertiseInput from "../../content/rogue_expertise.json";
@@ -81,11 +83,13 @@ import rogueSneakAttackInput from "../../content/rogue_sneak_attack.json";
 import rogueThievesCantInput from "../../content/rogue_thieves_cant.json";
 import rogueWeaponMasteryInput from "../../content/rogue_weapon_mastery.json";
 import shieldInput from "../../content/shield.json";
+import shockingGraspInput from "../../content/shocking_grasp.json";
 import sleepInput from "../../content/sleep.json";
 import sacredFlameInput from "../../content/sacred_flame.json";
 import sorcererInnateSorceryInput from "../../content/sorcerer_innate_sorcery.json";
 import thunderwaveInput from "../../content/thunderwave.json";
 import warlockEldritchInvocationsInput from "../../content/warlock_eldritch_invocations.json";
+import viciousMockeryInput from "../../content/vicious_mockery.json";
 import weaponDaggerInput from "../../content/weapon_dagger.json";
 import weaponFlailInput from "../../content/weapon_flail.json";
 import weaponLongswordInput from "../../content/weapon_longsword.json";
@@ -266,11 +270,15 @@ export const srdUnitCollection = defineSrdUnitCollection({
     chillTouchInput,
     cureWoundsInput,
     fireBoltInput,
+    guidingBoltInput,
     inflictWoundsInput,
     lightInput,
     poisonSprayInput,
     rayOfFrostInput,
+    rayOfSicknessInput,
     sacredFlameInput,
+    shockingGraspInput,
+    viciousMockeryInput,
     detectMagicInput,
     mageArmorInput,
     magicMissileInput,

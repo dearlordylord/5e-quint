@@ -52,7 +52,7 @@ flowchart TD
   AttackOption["supported Attack action option<br/>source: character selected weapon or StatBlockRecord named attack<br/>why: attack bonus, damage, reach, normal/long range, and attack identity derive from authored inputs"]
   MonsterControl["monster control resources<br/>success: spend X/Day or Recharge; discover Legendary Actions after another turn; refresh Legendary Actions and recharge rolls at start turn; pending Multiattack dispatches expose matching dispatch attacks, Movement, and End Turn<br/>why: reusable Stat Block limited-use protocol"]
   UnitFeature["Unit feature activation/passive support<br/>source: retained Unit + runtime use-count, turn-resource, or support-profile state<br/>success: Action Surge grants one non-Magic action; Second Wind spends Bonus Action and heals; Defense admits a passive Armor Class bonus profile; Savage Attacker chooses weapon damage dice"]
-  SpellAct["spell act<br/>source: retained Spell Records + runtime Spell Slot/effect state<br/>success: action-time spells consume Magic action; Magic Missile allocates darts and spends the selected slot; direct healing spells restore selected targets, including Mass Cure Wounds point-origin Sphere choices; Shield spends Reaction + slot from trigger windows; Ray of Frost records Speed effect; Poison Spray, damage-only Chill Touch, Sacred Flame, Acid Splash, and Inflict Wounds apply admitted spell damage"]
+  SpellAct["spell act<br/>source: retained Spell Records + runtime Spell Slot/effect state<br/>success: action-time spells consume Magic action; Magic Missile allocates darts and spends the selected slot; direct healing spells restore selected targets, including Mass Cure Wounds point-origin Sphere choices; Shield spends Reaction + slot from trigger windows; Ray of Frost records Speed effect; Shocking Grasp denies Opportunity Attacks; Guiding Bolt, Ray of Sickness, and Vicious Mockery record source-owned timed attack-roll/condition riders; Poison Spray, damage-only Chill Touch, Sacred Flame, Acid Splash, and Inflict Wounds apply admitted spell damage"]
   AttackReplay["Attack replay<br/>subject carries attack name; needs target -> attack roll -> damage on hit<br/>success: miss spends action, hit applies damage then spends action<br/>why: staged holes match the SRD attack sequence without a second attack IR"]
   Damage["apply HP damage<br/>success: temp HP absorbed first, HP clamped at 0, zero-HP lifecycle or melee Knock Out applied<br/>why: one HP mutation boundary"]
   Hidden["Hidden state<br/>source: Hide/Search procedure<br/>data: discovery DC<br/>why: battle-owned execution fact for Invisible projection, Search, and reveal triggers"]
@@ -172,12 +172,16 @@ flowchart TD
   selected slot; cantrips do not. `magic_missile` derives dart count from slot
   level and uses a spell target allocation fill for one or several table-legal
   targets. `ray_of_frost` requires both its Cold damage and Speed-reduction
-  rider before discovery, while `poison_spray` uses the same spell attack
-  damage path with no rider. Save-gate damage spells either ask for one creature
+  rider before discovery. `shocking_grasp`, `guiding_bolt`, and
+  `ray_of_sickness` use the same spell attack damage path with typed
+  source-owned post-damage effects for Opportunity Attack denial, next attack
+  roll Advantage against the target, and Poisoned. Save-gate damage spells
+  either ask for one creature
   target first, as with `sacred_flame` and `inflict_wounds`, or use a
   table-supplied affected-target outcome hole for admitted areas such as
   `acid_splash`; damage is requested only for targets whose Saving Throw
-  outcome and admitted replacement riders still produce damage.
+  outcome and admitted replacement riders still produce damage. `vicious_mockery`
+  adds an attack-roll-only Disadvantage effect on failed saves.
 - Stat Block damage vulnerabilities, resistances, and immunities are read from
   the retained `StatBlockRecord` at the HP mutation boundary.
 - Optional attack damage riders are retained feature profiles, not named

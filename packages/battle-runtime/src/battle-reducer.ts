@@ -276,10 +276,16 @@ type BattlePassiveSpeedProfile =
   | BattlePassiveSpeedBonusSupportProfile
   | BattlePassiveSpeedKindGrantsSupportProfile;
 
-export type BattleActiveEffectExpiration = {
-  readonly kind: "startOfTurn";
-  readonly combatantId: CombatantId;
-};
+export type BattleActiveEffectExpiration =
+  | {
+      readonly kind: "startOfTurn";
+      readonly combatantId: CombatantId;
+    }
+  | {
+      readonly kind: "endOfTurn";
+      readonly combatantId: CombatantId;
+      readonly round: RoundType;
+    };
 export type BattleSpellEffectEarlyEnd =
   | { readonly kind: "targetDonsArmor" }
   | { readonly kind: "concentrationBroken" };
@@ -305,6 +311,26 @@ export type BattleActiveEffect =
       readonly ability: "dex";
       readonly earlyEnds: readonly BattleSpellEffectEarlyEnd[];
       readonly durationTicks: ElapsedTimeTicks;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "spellCondition";
+      readonly condition: Condition;
+      readonly conditionHadNonSpellSource: boolean;
+      readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "opportunityAttackDenied";
+      readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "nextAttackRollBySelf";
+      readonly mode: AttackRollMode;
+      readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "nextAttackRollAgainstSelf";
+      readonly mode: AttackRollMode;
+      readonly expiresAt: BattleActiveEffectExpiration;
     });
 export type BattleConcentration = {
   readonly sourceSpellId: SpellRecord["id"];
@@ -806,6 +832,10 @@ type SpellAttackHitEffect = Extract<
   SpellActivationPhase,
   { readonly kind: "attack_roll" }
 >["onHit"][number];
+type SaveGateFailureEffect = Extract<
+  SpellActivationPhase,
+  { readonly kind: "save_gate" }
+>["onFail"];
 type SpellTargeting =
   | {
       readonly kind: "singleCombatant";
@@ -814,9 +844,33 @@ type SpellTargeting =
       readonly kind: "pointOriginSphere";
       readonly radiusFeet: MovementFeet;
     };
-type SpellPostDamageRider = {
-  readonly kind: "speedDelta";
-  readonly deltaFeet: MovementDeltaFeet;
+type SpellPostDamageRider =
+  | {
+      readonly kind: "speedDelta";
+      readonly deltaFeet: MovementDeltaFeet;
+    }
+  | {
+      readonly kind: "condition";
+      readonly condition: Condition;
+      readonly expiresAt: "endOfCasterNextTurn";
+    }
+  | {
+      readonly kind: "opportunityAttackDenied";
+      readonly expiresAt: "startOfTargetNextTurn";
+    }
+  | {
+      readonly kind: "nextAttackRollAgainstTarget";
+      readonly mode: "advantage";
+      readonly expiresAt: "endOfCasterNextTurn";
+    };
+type SpellPostDamageRiderExpiration = Exclude<
+  SpellPostDamageRider,
+  { readonly kind: "speedDelta" }
+>["expiresAt"];
+type SpellFailedSavePostDamageRider = {
+  readonly kind: "nextAttackRollByTarget";
+  readonly mode: "disadvantage";
+  readonly expiresAt: "endOfTargetNextTurn";
 };
 // SupportedAttackActionOption is a currently executable option for spending an
 // immediate attack made as part of the Attack action. It is narrower than all
@@ -864,6 +918,7 @@ export type SupportedSpellInvocation =
       };
       readonly successDamage: "none" | "half";
       readonly rangeFeet: MovementFeet;
+      readonly failedSavePostDamageRiders: readonly SpellFailedSavePostDamageRider[];
     })
   | {
       readonly access: PreparedSpellAccess;
@@ -1718,10 +1773,26 @@ const SupportedSpellInvocationSchema = Schema.Union(
     attackKind: Schema.Literal("melee_spell_attack", "ranged_spell_attack"),
     attackBonus: AttackBonus,
     postDamageRiders: Schema.Array(
-      Schema.Struct({
-        kind: Schema.Literal("speedDelta"),
-        deltaFeet: MovementDeltaFeet,
-      }),
+      Schema.Union(
+        Schema.Struct({
+          kind: Schema.Literal("speedDelta"),
+          deltaFeet: MovementDeltaFeet,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("condition"),
+          condition: Schema.Literal(...ALL_CONDITIONS),
+          expiresAt: Schema.Literal("endOfCasterNextTurn"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("opportunityAttackDenied"),
+          expiresAt: Schema.Literal("startOfTargetNextTurn"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("nextAttackRollAgainstTarget"),
+          mode: Schema.Literal("advantage"),
+          expiresAt: Schema.Literal("endOfCasterNextTurn"),
+        }),
+      ),
     ),
   }),
   Schema.Struct({
@@ -1740,10 +1811,26 @@ const SupportedSpellInvocationSchema = Schema.Union(
     attackKind: Schema.Literal("melee_spell_attack", "ranged_spell_attack"),
     attackBonus: AttackBonus,
     postDamageRiders: Schema.Array(
-      Schema.Struct({
-        kind: Schema.Literal("speedDelta"),
-        deltaFeet: MovementDeltaFeet,
-      }),
+      Schema.Union(
+        Schema.Struct({
+          kind: Schema.Literal("speedDelta"),
+          deltaFeet: MovementDeltaFeet,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("condition"),
+          condition: Schema.Literal(...ALL_CONDITIONS),
+          expiresAt: Schema.Literal("endOfCasterNextTurn"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("opportunityAttackDenied"),
+          expiresAt: Schema.Literal("startOfTargetNextTurn"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("nextAttackRollAgainstTarget"),
+          mode: Schema.Literal("advantage"),
+          expiresAt: Schema.Literal("endOfCasterNextTurn"),
+        }),
+      ),
     ),
   }),
   Schema.Struct({
@@ -1768,6 +1855,13 @@ const SupportedSpellInvocationSchema = Schema.Union(
     }),
     successDamage: Schema.Literal("none", "half"),
     rangeFeet: MovementFeet,
+    failedSavePostDamageRiders: Schema.Array(
+      Schema.Struct({
+        kind: Schema.Literal("nextAttackRollByTarget"),
+        mode: Schema.Literal("disadvantage"),
+        expiresAt: Schema.Literal("endOfTargetNextTurn"),
+      }),
+    ),
   }),
   Schema.Struct({
     access: PreparedSpellAccessSchema,
@@ -1791,6 +1885,13 @@ const SupportedSpellInvocationSchema = Schema.Union(
     }),
     successDamage: Schema.Literal("none", "half"),
     rangeFeet: MovementFeet,
+    failedSavePostDamageRiders: Schema.Array(
+      Schema.Struct({
+        kind: Schema.Literal("nextAttackRollByTarget"),
+        mode: Schema.Literal("disadvantage"),
+        expiresAt: Schema.Literal("endOfTargetNextTurn"),
+      }),
+    ),
   }),
   Schema.Struct({
     access: PreparedSpellAccessSchema,
@@ -11040,8 +11141,13 @@ function resolveEndTurn(
     currentActorId(state),
     state.initiative.round,
   );
-  const combatantsAfterStartOngoingFeatures = expireStartOfTurnOngoingFeatures(
+  const combatantsAfterEndEffects = expireEndOfTurnEffects(
     combatantsAfterEndTurnOngoingFeatures,
+    currentActorId(state),
+    state.initiative.round,
+  );
+  const combatantsAfterStartOngoingFeatures = expireStartOfTurnOngoingFeatures(
+    combatantsAfterEndEffects,
     nextActorId,
   );
   const combatantsAfterStartEffects = expireStartOfTurnEffects(
@@ -11081,18 +11187,54 @@ function expireStartOfTurnEffects(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   actorId: CombatantId,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
+  return expireActiveEffects(
+    combatants,
+    (effect) =>
+      "expiresAt" in effect &&
+      effect.expiresAt.kind === "startOfTurn" &&
+      effect.expiresAt.combatantId === actorId,
+  );
+}
+
+function expireEndOfTurnEffects(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  actorId: CombatantId,
+  round: RoundType,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  return expireActiveEffects(
+    combatants,
+    (effect) =>
+      "expiresAt" in effect &&
+      effect.expiresAt.kind === "endOfTurn" &&
+      effect.expiresAt.combatantId === actorId &&
+      effect.expiresAt.round === round,
+  );
+}
+
+function expireActiveEffects(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  shouldExpire: (effect: BattleActiveEffect) => boolean,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
   return new Map(
-    [...combatants].map(([id, combatant]) => [
-      id,
-      {
-        ...combatant,
-        activeEffects: combatant.activeEffects.filter(
-          (effect) =>
-            !("expiresAt" in effect) ||
-            effect.expiresAt.combatantId !== actorId,
-        ),
-      },
-    ]),
+    [...combatants].map(([id, combatant]) => {
+      const expiring = combatant.activeEffects.filter(shouldExpire);
+      const activeEffects = combatant.activeEffects.filter(
+        (effect) => !shouldExpire(effect),
+      );
+      const nextCombatant: BattleCreatureState =
+        combatant.positiveHpUnconscious === null
+          ? {
+              ...combatant,
+              activeEffects,
+              conditions: conditionsAfterExpiringSpellConditionEffects(
+                combatant.conditions,
+                activeEffects,
+                expiring,
+              ),
+            }
+          : { ...combatant, activeEffects };
+      return [id, nextCombatant];
+    }),
   );
 }
 
@@ -13685,11 +13827,15 @@ function resolveSpellAct(
     const hit = ordinaryHit || missToHitReplacement !== null;
     const critical = attackRollIsCriticalHit(fillSet.attackRoll);
     const attackRolledState = recordAttackRollMissToHitReplacementUsed(
-      recordAttackRollOngoingFeatures(
-        castingState,
+      consumeHelpAttackForAttackRoll(
+        recordAttackRollOngoingFeatures(
+          castingState,
+          subject.actorId,
+          target.combatantId,
+          null,
+        ),
         subject.actorId,
         target.combatantId,
-        null,
       ),
       subject.actorId,
       missToHitReplacement,
@@ -13774,11 +13920,15 @@ function resolveSpellAct(
   const spellResolutionState =
     invocation.procedure === "spellAttackDamage" && fillSet.attackRoll != null
       ? recordAttackRollMissToHitReplacementUsed(
-          recordAttackRollOngoingFeatures(
-            castingState,
+          consumeHelpAttackForAttackRoll(
+            recordAttackRollOngoingFeatures(
+              castingState,
+              subject.actorId,
+              target.combatantId,
+              null,
+            ),
             subject.actorId,
             target.combatantId,
-            null,
           ),
           subject.actorId,
           spellAttackMissToHitReplacement,
@@ -14418,11 +14568,15 @@ function resolveSpellRelease(
       );
     }
     const releaseAttackRolledState = recordAttackRollMissToHitReplacementUsed(
-      recordAttackRollOngoingFeatures(
-        input.state,
+      consumeHelpAttackForAttackRoll(
+        recordAttackRollOngoingFeatures(
+          input.state,
+          input.subject.actorId,
+          target.combatantId,
+          null,
+        ),
         input.subject.actorId,
         target.combatantId,
-        null,
       ),
       input.subject.actorId,
       missToHitReplacement,
@@ -14545,11 +14699,15 @@ function resolveSpellRelease(
   const releaseResolutionState =
     invocation.procedure === "spellAttackDamage" && fillSet.attackRoll != null
       ? recordAttackRollMissToHitReplacementUsed(
-          recordAttackRollOngoingFeatures(
-            input.state,
+          consumeHelpAttackForAttackRoll(
+            recordAttackRollOngoingFeatures(
+              input.state,
+              input.subject.actorId,
+              target.combatantId,
+              null,
+            ),
             input.subject.actorId,
             target.combatantId,
-            null,
           ),
           input.subject.actorId,
           selectedAttackRollMissToHitReplacement({
@@ -15344,9 +15502,15 @@ function resolveSaveGateDamageSpellAct(input: {
         "Save-gate spell damage can only be filled when at least one target takes damage.",
       );
     }
+    const effected = applyFailedSaveSpellActiveEffects(
+      input.input.state,
+      input.actorId,
+      failedTargets,
+      input.invocation,
+    );
     return spendSpellCastResources({
       state: extendSavingThrowOngoingFeatures(
-        input.input.state,
+        effected,
         input.actorId,
         selectedTargetIds,
       ),
@@ -15479,8 +15643,14 @@ function resolveSaveGateDamageSpellAct(input: {
       ),
     input.input.state,
   );
-  const extended = extendSavingThrowOngoingFeatures(
+  const effected = applyFailedSaveSpellActiveEffects(
     damaged,
+    input.actorId,
+    failedTargets,
+    input.invocation,
+  );
+  const extended = extendSavingThrowOngoingFeatures(
+    effected,
     input.actorId,
     selectedTargetIds,
   );
@@ -17014,7 +17184,11 @@ function supportedSpellAttackDamageProfile(
   ) {
     return [];
   }
-  const postDamageRiders = supportedSpellPostDamageRiders(postDamageEffects);
+  const postDamageRiders = supportedSpellPostDamageRiders(
+    spell,
+    phase,
+    postDamageEffects,
+  );
   if (postDamageRiders === null) {
     return [];
   }
@@ -17116,6 +17290,10 @@ function supportedSaveGateDamageProfile(
       : spell.mechanics.range.kind === "point"
         ? movementFeet(spell.mechanics.range.feet)
         : null;
+  const failedSaveEffects =
+    phase?.kind === "save_gate"
+      ? supportedSaveGateFailedSaveEffects(spell, phase, phase.onFail)
+      : null;
   if (
     (input.access.tag === "classCantrip"
       ? spell.mechanics.level !== 0
@@ -17127,13 +17305,13 @@ function supportedSaveGateDamageProfile(
     targeting === null ||
     (phase.onSuccess.kind !== "none" &&
       phase.onSuccess.kind !== "half_damage") ||
-    phase.onFail.kind !== "damage" ||
-    typeof phase.onFail.damageType !== "string"
+    failedSaveEffects === null ||
+    typeof failedSaveEffects.damage.damageType !== "string"
   ) {
     return [];
   }
   const damageExpr = supportedDamageAmountExpr({
-    amount: phase.onFail.amount,
+    amount: failedSaveEffects.damage.amount,
     spellLevel: spell.mechanics.level,
     slotLevel: input.slotLevel,
     characterLevel: input.characterLevel,
@@ -17150,12 +17328,13 @@ function supportedSaveGateDamageProfile(
     targeting,
     damage: {
       expr: damageExpr,
-      damageType: phase.onFail.damageType,
+      damageType: failedSaveEffects.damage.damageType,
     },
     successDamage: (phase.onSuccess.kind === "half_damage"
       ? "half"
       : "none") as "half" | "none",
     rangeFeet,
+    failedSavePostDamageRiders: failedSaveEffects.postDamageRiders,
   };
 
   return [{ ...damageSpellSource(input), ...saveGatedInvocation }];
@@ -17170,7 +17349,8 @@ function saveGateDamageTargeting(
   if (
     attachment.value.kind === "target" &&
     attachment.value.selection.mode === "one" &&
-    sameStringSet(attachment.value.selection.targetKinds ?? [], ["creature"])
+    (attachment.value.selection.targetKinds === undefined ||
+      sameStringSet(attachment.value.selection.targetKinds, ["creature"]))
   ) {
     return { kind: "singleCombatant" };
   }
@@ -17218,23 +17398,176 @@ function spellAttackKindForRedirect(
 }
 
 function supportedSpellPostDamageRiders(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
   effects: readonly SpellAttackHitEffect[],
 ): readonly SpellPostDamageRider[] | null {
   const riders: SpellPostDamageRider[] = [];
   for (const effect of effects) {
+    if (effect.kind === "modify_speed") {
+      if (effect.unit !== "feet" || effect.delta >= 0) {
+        return null;
+      }
+      riders.push({
+        kind: "speedDelta",
+        deltaFeet: movementDeltaFeet(effect.delta),
+      });
+      continue;
+    }
     if (
-      effect.kind !== "modify_speed" ||
-      effect.unit !== "feet" ||
-      effect.delta >= 0
+      effect.kind === "apply_condition" &&
+      effect.condition === "poisoned" &&
+      isRayOfSicknessPoisonedRiderShape(spell, phase)
+    ) {
+      riders.push({
+        kind: "condition",
+        condition: effect.condition,
+        expiresAt: "endOfCasterNextTurn",
+      });
+      continue;
+    }
+    if (
+      effect.kind === "deny_opportunity_attack" &&
+      isShockingGraspOpportunityAttackRiderShape(spell, phase)
+    ) {
+      riders.push({
+        kind: "opportunityAttackDenied",
+        expiresAt: "startOfTargetNextTurn",
+      });
+      continue;
+    }
+    if (
+      effect.kind === "modify_roll_advantage" &&
+      effect.mode === "advantage" &&
+      sameStringSet(effect.on ?? [], ["attack_roll"]) &&
+      isGuidingBoltNextAttackRiderShape(spell, phase)
+    ) {
+      riders.push({
+        kind: "nextAttackRollAgainstTarget",
+        mode: "advantage",
+        expiresAt: "endOfCasterNextTurn",
+      });
+      continue;
+    }
+    return null;
+  }
+  return riders;
+}
+
+function isRayOfSicknessPoisonedRiderShape(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
+): boolean {
+  return (
+    spell.name === "Ray of Sickness" &&
+    spell.provenance.kind === "srd-5.2.1" &&
+    spell.provenance.section === "Spells/Descriptions-Q-R#Ray of Sickness" &&
+    spell.mechanics.level === 1 &&
+    spell.mechanics.duration.kind === "timed" &&
+    spell.mechanics.duration.value.unit === "round" &&
+    spell.mechanics.duration.value.amount === 1 &&
+    phase.attackKind === "ranged_spell_attack"
+  );
+}
+
+function isShockingGraspOpportunityAttackRiderShape(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
+): boolean {
+  return (
+    spell.name === "Shocking Grasp" &&
+    spell.provenance.kind === "srd-5.2.1" &&
+    spell.provenance.section === "Spells/Descriptions-S-Z#Shocking Grasp" &&
+    spell.mechanics.level === 0 &&
+    spell.mechanics.duration.kind === "instantaneous" &&
+    phase.attackKind === "melee_spell_attack"
+  );
+}
+
+function isGuidingBoltNextAttackRiderShape(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
+): boolean {
+  return (
+    spell.name === "Guiding Bolt" &&
+    spell.provenance.kind === "srd-5.2.1" &&
+    spell.provenance.section === "Spells/Descriptions-E-L#Guiding Bolt" &&
+    spell.mechanics.level === 1 &&
+    spell.mechanics.duration.kind === "timed" &&
+    spell.mechanics.duration.value.unit === "round" &&
+    spell.mechanics.duration.value.amount === 1 &&
+    phase.attackKind === "ranged_spell_attack"
+  );
+}
+
+function supportedSaveGateFailedSaveEffects(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
+  effect: SaveGateFailureEffect,
+): {
+  readonly damage: Extract<SaveGateFailureEffect, { readonly kind: "damage" }>;
+  readonly postDamageRiders: readonly SpellFailedSavePostDamageRider[];
+} | null {
+  if (effect.kind === "damage") {
+    return { damage: effect, postDamageRiders: [] };
+  }
+  if (effect.kind !== "composite") {
+    return null;
+  }
+  const [damage, ...riders] = effect.effects;
+  if (damage?.kind !== "damage") {
+    return null;
+  }
+  const postDamageRiders = supportedFailedSavePostDamageRiders(
+    spell,
+    phase,
+    riders,
+  );
+  return postDamageRiders === null ? null : { damage, postDamageRiders };
+}
+
+function supportedFailedSavePostDamageRiders(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
+  effects: readonly SaveGateFailureEffect[],
+): readonly SpellFailedSavePostDamageRider[] | null {
+  const riders: SpellFailedSavePostDamageRider[] = [];
+  for (const effect of effects) {
+    if (
+      effect.kind !== "modify_roll_advantage" ||
+      effect.mode !== "disadvantage" ||
+      !sameStringSet(effect.on ?? [], ["attack_roll"]) ||
+      effect.count !== 1 ||
+      effect.expiresOn?.kind !== "end_of_next_turn" ||
+      (effect.affects ?? "self_roll") !== "self_roll" ||
+      !isViciousMockeryNextAttackRiderShape(spell, phase)
     ) {
       return null;
     }
     riders.push({
-      kind: "speedDelta",
-      deltaFeet: movementDeltaFeet(effect.delta),
+      kind: "nextAttackRollByTarget",
+      mode: "disadvantage",
+      expiresAt: "endOfTargetNextTurn",
     });
   }
   return riders;
+}
+
+function isViciousMockeryNextAttackRiderShape(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
+): boolean {
+  return (
+    spell.name === "Vicious Mockery" &&
+    spell.provenance.kind === "srd-5.2.1" &&
+    spell.provenance.section === "Spells/Descriptions-S-Z#Vicious Mockery" &&
+    spell.mechanics.level === 0 &&
+    spell.mechanics.duration.kind === "timed" &&
+    spell.mechanics.duration.value.unit === "round" &&
+    spell.mechanics.duration.value.amount === 1 &&
+    phase.ability === "wis" &&
+    phase.onSuccess.kind === "none"
+  );
 }
 
 function supportedRepeatedEffectCount(
@@ -18132,42 +18465,295 @@ function applySpellActiveEffects(
   if (invocation.procedure !== "spellAttackDamage") {
     return state;
   }
-  const speedDelta = invocation.postDamageRiders.find(
-    (rider) => rider.kind === "speedDelta",
-  );
-  if (speedDelta === undefined) {
+  if (invocation.postDamageRiders.length === 0) {
     return state;
   }
   const target = state.combatants.get(targetId);
   if (target == null) {
     return state;
   }
+  const activeEffects = invocation.postDamageRiders.reduce(
+    (effects, rider): readonly BattleActiveEffect[] => {
+      const replacedEffects = effects.filter((effect) =>
+        spellPostDamageRiderReplacesActiveEffect(
+          rider,
+          effect,
+          invocation.spell.id,
+          actorId,
+        ),
+      );
+      return [
+        ...effects.filter((effect) => !replacedEffects.includes(effect)),
+        spellPostDamageRiderActiveEffect({
+          state,
+          actorId,
+          target,
+          spellId: invocation.spell.id,
+          rider,
+        }),
+      ];
+    },
+    target.activeEffects,
+  );
 
   return {
     ...state,
-    combatants: new Map(state.combatants).set(targetId, {
-      ...target,
-      activeEffects: [
-        ...target.activeEffects.filter(
+    combatants: new Map(state.combatants).set(
+      targetId,
+      battleCreatureWithSpellActiveEffects(target, activeEffects),
+    ),
+  };
+}
+
+function battleCreatureWithSpellActiveEffects(
+  combatant: BattleCreatureState,
+  activeEffects: readonly BattleActiveEffect[],
+): BattleCreatureState {
+  return combatant.positiveHpUnconscious === null
+    ? {
+        ...combatant,
+        activeEffects,
+        conditions: conditionsAfterApplyingSpellConditionEffects(
+          combatant.conditions,
+          activeEffects,
+        ),
+      }
+    : { ...combatant, activeEffects };
+}
+
+function applyFailedSaveSpellActiveEffects(
+  state: BattleState,
+  actorId: CombatantId,
+  targetIds: readonly CombatantId[],
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "saveGatedDamage" }
+  >,
+): BattleState {
+  if (invocation.failedSavePostDamageRiders.length === 0) {
+    return state;
+  }
+  const combatants = new Map(state.combatants);
+  for (const targetId of targetIds) {
+    const target = combatants.get(targetId);
+    if (target === undefined) {
+      continue;
+    }
+    const activeEffects = invocation.failedSavePostDamageRiders.reduce(
+      (effects, rider): readonly BattleActiveEffect[] => [
+        ...effects.filter(
           (effect) =>
             !(
-              effect.kind === "speedDelta" &&
-              effect.sourceSpellId === invocation.spell.id
+              effect.kind === "nextAttackRollBySelf" &&
+              effect.sourceSpellId === invocation.spell.id &&
+              effect.sourceCombatantId === actorId
             ),
         ),
         {
-          kind: "speedDelta",
+          kind: "nextAttackRollBySelf",
           sourceSpellId: invocation.spell.id,
           sourceCombatantId: actorId,
-          deltaFeet: speedDelta.deltaFeet,
-          expiresAt: {
-            kind: "startOfTurn",
-            combatantId: actorId,
-          },
+          mode: rider.mode,
+          expiresAt: activeEffectExpirationForPostDamageRider(
+            state,
+            actorId,
+            target.combatantId,
+            rider.expiresAt,
+          ),
         },
       ],
-    }),
+      target.activeEffects,
+    );
+    combatants.set(targetId, { ...target, activeEffects });
+  }
+  return { ...state, combatants };
+}
+
+function activeEffectKindForSpellPostDamageRider(
+  rider: SpellPostDamageRider,
+): BattleActiveEffect["kind"] {
+  return Match.value(rider).pipe(
+    Match.when({ kind: "speedDelta" }, () => "speedDelta" as const),
+    Match.when({ kind: "condition" }, () => "spellCondition" as const),
+    Match.when(
+      { kind: "opportunityAttackDenied" },
+      () => "opportunityAttackDenied" as const,
+    ),
+    Match.when(
+      { kind: "nextAttackRollAgainstTarget" },
+      () => "nextAttackRollAgainstSelf" as const,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function spellPostDamageRiderReplacesActiveEffect(
+  rider: SpellPostDamageRider,
+  effect: BattleActiveEffect,
+  spellId: SpellRecord["id"],
+  actorId: CombatantId,
+): boolean {
+  if (
+    effect.kind !== activeEffectKindForSpellPostDamageRider(rider) ||
+    effect.sourceSpellId !== spellId
+  ) {
+    return false;
+  }
+  return rider.kind === "speedDelta" || effect.sourceCombatantId === actorId;
+}
+
+function spellPostDamageRiderExpiration(
+  rider: SpellPostDamageRider,
+): SpellPostDamageRiderExpiration | undefined {
+  return "expiresAt" in rider ? rider.expiresAt : undefined;
+}
+
+function spellPostDamageRiderActiveEffect(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly target: BattleCreatureState;
+  readonly spellId: SpellRecord["id"];
+  readonly rider: SpellPostDamageRider;
+}): BattleActiveEffect {
+  const expiresAt = activeEffectExpirationForPostDamageRider(
+    input.state,
+    input.actorId,
+    input.target.combatantId,
+    spellPostDamageRiderExpiration(input.rider),
+  );
+  return Match.value(input.rider).pipe(
+    Match.when({ kind: "speedDelta" }, (rider) => ({
+      kind: "speedDelta" as const,
+      sourceSpellId: input.spellId,
+      sourceCombatantId: input.actorId,
+      deltaFeet: rider.deltaFeet,
+      expiresAt,
+    })),
+    Match.when({ kind: "condition" }, (rider) => ({
+      kind: "spellCondition" as const,
+      sourceSpellId: input.spellId,
+      sourceCombatantId: input.actorId,
+      condition: rider.condition,
+      conditionHadNonSpellSource: conditionHadNonSpellSourceBeforeSpellEffect(
+        input.target,
+        rider.condition,
+      ),
+      expiresAt,
+    })),
+    Match.when({ kind: "opportunityAttackDenied" }, () => ({
+      kind: "opportunityAttackDenied" as const,
+      sourceSpellId: input.spellId,
+      sourceCombatantId: input.actorId,
+      expiresAt,
+    })),
+    Match.when({ kind: "nextAttackRollAgainstTarget" }, (rider) => ({
+      kind: "nextAttackRollAgainstSelf" as const,
+      sourceSpellId: input.spellId,
+      sourceCombatantId: input.actorId,
+      mode: rider.mode,
+      expiresAt,
+    })),
+    Match.exhaustive,
+  );
+}
+
+function activeEffectExpirationForPostDamageRider(
+  state: BattleState,
+  casterId: CombatantId,
+  targetId: CombatantId,
+  expiresAt:
+    | SpellPostDamageRiderExpiration
+    | SpellFailedSavePostDamageRider["expiresAt"]
+    | undefined,
+): BattleActiveEffectExpiration {
+  if (expiresAt === undefined) {
+    return { kind: "startOfTurn", combatantId: casterId };
+  }
+  if (expiresAt === "startOfTargetNextTurn") {
+    return { kind: "startOfTurn", combatantId: targetId };
+  }
+  if (expiresAt === "endOfCasterNextTurn") {
+    return endOfNextTurnExpiration(state, casterId);
+  }
+  return endOfNextTurnExpiration(state, targetId);
+}
+
+function endOfNextTurnExpiration(
+  state: BattleState,
+  combatantId: CombatantId,
+): Extract<BattleActiveEffectExpiration, { readonly kind: "endOfTurn" }> {
+  const stillToAct = state.initiative.stillToAct.some(
+    (entry) => entry.creature === combatantId,
+  );
+  const round =
+    currentActorId(state) === combatantId || !stillToAct
+      ? ((state.initiative.round + 1) as RoundType)
+      : state.initiative.round;
+  return {
+    kind: "endOfTurn",
+    combatantId,
+    round,
   };
+}
+
+function conditionHasNonSpellSource(
+  combatant: BattleCreatureState,
+  condition: Condition,
+): boolean {
+  return (
+    hasCondition(combatant.conditions, condition) &&
+    !combatant.activeEffects.some(
+      (effect) =>
+        effect.kind === "spellCondition" && effect.condition === condition,
+    )
+  );
+}
+
+function conditionHadNonSpellSourceBeforeSpellEffect(
+  combatant: BattleCreatureState,
+  condition: Condition,
+): boolean {
+  return (
+    conditionHasNonSpellSource(combatant, condition) ||
+    combatant.activeEffects.some(
+      (effect) =>
+        effect.kind === "spellCondition" &&
+        effect.condition === condition &&
+        effect.conditionHadNonSpellSource,
+    )
+  );
+}
+
+function conditionsAfterApplyingSpellConditionEffects(
+  conditions: ConditionState,
+  activeEffects: readonly BattleActiveEffect[],
+): ConditionState {
+  return activeEffects
+    .filter((effect) => effect.kind === "spellCondition")
+    .reduce(
+      (nextConditions, effect) =>
+        applyCondition(nextConditions, effect.condition),
+      conditions,
+    );
+}
+
+function conditionsAfterExpiringSpellConditionEffects(
+  conditions: ConditionState,
+  remainingEffects: readonly BattleActiveEffect[],
+  expiringEffects: readonly BattleActiveEffect[],
+): ConditionState {
+  return expiringEffects
+    .filter((effect) => effect.kind === "spellCondition")
+    .reduce((nextConditions, effect) => {
+      const stillHasSpellSource = remainingEffects.some(
+        (remaining) =>
+          remaining.kind === "spellCondition" &&
+          remaining.condition === effect.condition,
+      );
+      return stillHasSpellSource || effect.conditionHadNonSpellSource
+        ? nextConditions
+        : removeCondition(nextConditions, effect.condition);
+    }, conditions);
 }
 
 function applyPersistentSpellActiveEffect(
@@ -18958,6 +19544,15 @@ function opportunityAttackOptionForReactor(
   targetId: CombatantId,
   attackName: string,
 ): SupportedAttackActionOption | undefined {
+  if (
+    state.combatants
+      .get(reactorId)
+      ?.activeEffects.some(
+        (effect) => effect.kind === "opportunityAttackDenied",
+      )
+  ) {
+    return undefined;
+  }
   return attackActionOptionsForActor(state, reactorId).find((attack) => {
     const constraint = attackTargetConstraint(attack);
     return (
@@ -19191,12 +19786,15 @@ function requiredAttackRollMode(
     state.helpAttacks.some(
       (help) => help.allyId === attackerId && help.targetEnemyId === targetId,
     ) ||
+    activeEffectGrantsAttackRollMode(attacker, target, "advantage") ||
     ongoingFeatureGrantsAttackRollMode(attacker, target, "advantage", attack);
   const hasDisadvantage =
     hiddenTargetDisadvantage ||
     dodgeDisadvantage ||
     grappleDisadvantage ||
     longRangeDisadvantage ||
+    hasCondition(attacker?.conditions ?? EMPTY_CONDITION_STATE, "poisoned") ||
+    activeEffectGrantsAttackRollMode(attacker, target, "disadvantage") ||
     ongoingFeatureGrantsAttackRollMode(
       attacker,
       target,
@@ -19221,6 +19819,7 @@ function attackRollHasAdvantageSource(
     state.helpAttacks.some(
       (help) => help.allyId === attackerId && help.targetEnemyId === targetId,
     ) ||
+    activeEffectGrantsAttackRollMode(attacker, target, "advantage") ||
     ongoingFeatureGrantsAttackRollMode(attacker, target, "advantage", attack)
   );
 }
@@ -19391,6 +19990,23 @@ function ongoingFeatureGrantsAttackRollMode(
   return outgoing || incoming;
 }
 
+function activeEffectGrantsAttackRollMode(
+  attacker: BattleCreatureState | undefined,
+  target: BattleCreatureState | undefined,
+  mode: AttackRollMode,
+): boolean {
+  return (
+    attacker?.activeEffects.some(
+      (effect) =>
+        effect.kind === "nextAttackRollBySelf" && effect.mode === mode,
+    ) === true ||
+    target?.activeEffects.some(
+      (effect) =>
+        effect.kind === "nextAttackRollAgainstSelf" && effect.mode === mode,
+    ) === true
+  );
+}
+
 function attackAbilityMatchesModifier(
   attack: CharacterWeaponAttackActionOption | null | undefined,
   modifier: OngoingFeatureRollModifier | OngoingFeatureDamageModifier,
@@ -19441,11 +20057,48 @@ function consumeHelpAttackForAttackRoll(
   const helpIndex = state.helpAttacks.findIndex(
     (help) => help.allyId === attackerId && help.targetEnemyId === targetId,
   );
-  if (helpIndex === -1) return state;
+  const withoutOneShotEffects = consumeOneShotAttackRollEffects(
+    state,
+    attackerId,
+    targetId,
+  );
+  if (helpIndex === -1) return withoutOneShotEffects;
   return {
-    ...state,
-    helpAttacks: state.helpAttacks.filter((_, index) => index !== helpIndex),
+    ...withoutOneShotEffects,
+    helpAttacks: withoutOneShotEffects.helpAttacks.filter(
+      (_, index) => index !== helpIndex,
+    ),
   };
+}
+
+function consumeOneShotAttackRollEffects(
+  state: BattleState,
+  attackerId: CombatantId,
+  targetId: CombatantId,
+): BattleState {
+  const attacker = state.combatants.get(attackerId);
+  const target = state.combatants.get(targetId);
+  const combatants = new Map(state.combatants);
+  let changed = false;
+  if (attacker !== undefined) {
+    const activeEffects = attacker.activeEffects.filter(
+      (effect) => effect.kind !== "nextAttackRollBySelf",
+    );
+    if (activeEffects.length !== attacker.activeEffects.length) {
+      changed = true;
+      combatants.set(attackerId, { ...attacker, activeEffects });
+    }
+  }
+  if (target !== undefined) {
+    const activeEffects = target.activeEffects.filter(
+      (effect) => effect.kind !== "nextAttackRollAgainstSelf",
+    );
+    if (activeEffects.length !== target.activeEffects.length) {
+      changed = true;
+      combatants.set(targetId, { ...target, activeEffects });
+    }
+  }
+  return changed ? { ...state, combatants } : state;
 }
 
 function combatantsAreEnemies(

@@ -3,6 +3,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT14 acid_splash mage_armor magic_missile ray_of_frost
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV28B inflict_wounds poison_spray sacred_flame
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV28C chill_touch
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV28D guiding_bolt ray_of_sickness shocking_grasp vicious_mockery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT25 healing_word
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT32 cure_wounds mass_healing_word
@@ -43,7 +44,12 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
+import type {
+  ActivationPhase,
+  EffectAtom,
+  SpellRecord,
+  UnitRecord,
+} from "@dnd/surface/surface/types";
 
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
@@ -126,6 +132,7 @@ const savageAttackerUnitId = "feat_savage_attacker";
 const acidSplashUnitId = "acid_splash";
 const chillTouchUnitId = "chill_touch";
 const fireBoltUnitId = "fire_bolt";
+const guidingBoltUnitId = "guiding_bolt";
 const inflictWoundsUnitId = "inflict_wounds";
 const mageArmorUnitId = "mage_armor";
 const magicMissileUnitId = "magic_missile";
@@ -136,7 +143,10 @@ const healingWordUnitId = "healing_word";
 const massCureWoundsUnitId = "mass_cure_wounds";
 const massHealingWordUnitId = "mass_healing_word";
 const rayOfFrostUnitId = "ray_of_frost";
+const rayOfSicknessUnitId = "ray_of_sickness";
 const shieldUnitId = "shield";
+const shockingGraspUnitId = "shocking_grasp";
+const viciousMockeryUnitId = "vicious_mockery";
 const paladinExtraAttackUnitId = "paladin_extra_attack";
 const rangerExtraAttackUnitId = "ranger_extra_attack";
 const archerySupportProfile = {
@@ -2280,6 +2290,308 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
         choices: [spellCasterId, spellTargetId],
       }),
     ]);
+  });
+
+  test("shocking_grasp is admitted as melee spell attack with Opportunity Attack denial rider", () => {
+    const spell = spellRecord(shockingGraspUnitId);
+    const act = spellAct({
+      state: spellBattle({ cantrips: [spell] }),
+      spellId: shockingGraspUnitId,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: cantripSpellInvocationRef(
+        "shocking_grasp",
+        "spellAttackDamage",
+      ),
+      mode: { tag: "cast" },
+    });
+    const attackRoll = requireResultHole(
+      resolveBattleSubject({
+        state: spellBattle({ cantrips: [spell] }),
+        subject: act.subject,
+        fills: [
+          spellTargetFill(
+            requireHole(act.initialHoles, "targetChoice"),
+            shockingGraspUnitId,
+            spellCasterId,
+            spellTargetId,
+          ),
+        ],
+      }),
+      "attackRoll",
+    );
+    expect(spellHoleInvocation([attackRoll])).toEqual(
+      expect.objectContaining({
+        procedure: "spellAttackDamage",
+        spell,
+        attackKind: "melee_spell_attack",
+        damage: {
+          expr: { dice: 1, dieSize: 8 },
+          damageType: "lightning",
+        },
+        postDamageRiders: [
+          {
+            kind: "opportunityAttackDenied",
+            expiresAt: "startOfTargetNextTurn",
+          },
+        ],
+      }),
+    );
+  });
+
+  test("guiding_bolt is admitted as ranged spell attack with next attack Advantage rider", () => {
+    const spell = spellRecord(guidingBoltUnitId);
+    const act = spellAct({
+      state: spellBattle({ preparedSpells: [spell] }),
+      spellId: guidingBoltUnitId,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(
+        "guiding_bolt",
+        1,
+        "spellAttackDamage",
+      ),
+      mode: { tag: "cast" },
+    });
+    const attackRoll = requireResultHole(
+      resolveBattleSubject({
+        state: spellBattle({ preparedSpells: [spell] }),
+        subject: act.subject,
+        fills: [
+          spellTargetFill(
+            requireHole(act.initialHoles, "targetChoice"),
+            guidingBoltUnitId,
+            spellCasterId,
+            spellTargetId,
+          ),
+        ],
+      }),
+      "attackRoll",
+    );
+    expect(spellHoleInvocation([attackRoll])).toEqual(
+      expect.objectContaining({
+        procedure: "spellAttackDamage",
+        spell,
+        attackKind: "ranged_spell_attack",
+        damage: {
+          expr: { dice: 4, dieSize: 6 },
+          damageType: "radiant",
+        },
+        postDamageRiders: [
+          {
+            kind: "nextAttackRollAgainstTarget",
+            mode: "advantage",
+            expiresAt: "endOfCasterNextTurn",
+          },
+        ],
+      }),
+    );
+  });
+
+  test("ray_of_sickness is admitted as ranged spell attack with Poisoned rider", () => {
+    const spell = spellRecord(rayOfSicknessUnitId);
+    const act = spellAct({
+      state: spellBattle({ preparedSpells: [spell] }),
+      spellId: rayOfSicknessUnitId,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(
+        "ray_of_sickness",
+        1,
+        "spellAttackDamage",
+      ),
+      mode: { tag: "cast" },
+    });
+    const attackRoll = requireResultHole(
+      resolveBattleSubject({
+        state: spellBattle({ preparedSpells: [spell] }),
+        subject: act.subject,
+        fills: [
+          spellTargetFill(
+            requireHole(act.initialHoles, "targetChoice"),
+            rayOfSicknessUnitId,
+            spellCasterId,
+            spellTargetId,
+          ),
+        ],
+      }),
+      "attackRoll",
+    );
+    expect(spellHoleInvocation([attackRoll])).toEqual(
+      expect.objectContaining({
+        procedure: "spellAttackDamage",
+        spell,
+        attackKind: "ranged_spell_attack",
+        damage: {
+          expr: { dice: 2, dieSize: 8 },
+          damageType: "poison",
+        },
+        postDamageRiders: [
+          {
+            kind: "condition",
+            condition: "poisoned",
+            expiresAt: "endOfCasterNextTurn",
+          },
+        ],
+      }),
+    );
+  });
+
+  test("vicious_mockery is admitted as save-gated cantrip with next attack Disadvantage rider", () => {
+    const spell = spellRecord(viciousMockeryUnitId);
+    const act = spellAct({
+      state: spellBattle({ cantrips: [spell] }),
+      spellId: viciousMockeryUnitId,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: cantripSpellInvocationRef(
+        "vicious_mockery",
+        "saveGatedDamage",
+      ),
+      mode: { tag: "cast" },
+    });
+    const savingThrow = requireResultHole(
+      resolveBattleSubject({
+        state: spellBattle({ cantrips: [spell] }),
+        subject: act.subject,
+        fills: [
+          spellTargetFill(
+            requireHole(act.initialHoles, "targetChoice"),
+            viciousMockeryUnitId,
+            spellCasterId,
+            spellTargetId,
+          ),
+        ],
+      }),
+      "savingThrowOutcome",
+    );
+    expect(spellHoleInvocation([savingThrow])).toEqual(
+      expect.objectContaining({
+        procedure: "saveGatedDamage",
+        spell,
+        ability: "wis",
+        targeting: { kind: "singleCombatant" },
+        damage: {
+          expr: { dice: 1, dieSize: 6 },
+          damageType: "psychic",
+        },
+        successDamage: "none",
+        failedSavePostDamageRiders: [
+          {
+            kind: "nextAttackRollByTarget",
+            mode: "disadvantage",
+            expiresAt: "endOfTargetNextTurn",
+          },
+        ],
+      }),
+    );
+  });
+
+  test("spell rider timing is admitted only for exact SRD target semantics", () => {
+    const genericPoisonRay = {
+      ...spellRecord(rayOfSicknessUnitId),
+      id: "generic_poison_ray",
+      name: "Generic Poison Ray",
+      provenance: {
+        kind: "srd-5.2.1" as const,
+        section: "Spells/Descriptions-Q-R#Generic Poison Ray",
+      },
+    };
+    const genericOpportunityAttackDenial = {
+      ...spellRecord(shockingGraspUnitId),
+      id: "generic_opportunity_attack_denial",
+      name: "Generic Opportunity Attack Denial",
+      provenance: {
+        kind: "srd-5.2.1" as const,
+        section: "Spells/Descriptions-S-Z#Generic Opportunity Attack Denial",
+      },
+    };
+    const genericNextAttackAdvantage = {
+      ...spellRecord(guidingBoltUnitId),
+      id: "generic_next_attack_advantage",
+      name: "Generic Next Attack Advantage",
+      provenance: {
+        kind: "srd-5.2.1" as const,
+        section: "Spells/Descriptions-E-L#Generic Next Attack Advantage",
+      },
+    };
+    const mockery = spellRecord(viciousMockeryUnitId);
+    if (mockery.mechanics.family !== "activation") {
+      throw new Error("Expected Vicious Mockery activation fixture.");
+    }
+    const mockeryPhase = mockery.mechanics.phases[0];
+    if (
+      mockeryPhase?.kind !== "save_gate" ||
+      mockeryPhase.onFail.kind !== "composite"
+    ) {
+      throw new Error("Expected Vicious Mockery save-gate composite fixture.");
+    }
+    const [incomingAttackDisadvantageFirst, ...incomingAttackDisadvantageRest] =
+      mockeryPhase.onFail.effects.map(
+        (effect): EffectAtom =>
+          effect.kind === "modify_roll_advantage"
+            ? { ...effect, affects: "rolls_against_self" }
+            : effect,
+      );
+    if (incomingAttackDisadvantageFirst === undefined) {
+      throw new Error("Expected Vicious Mockery failed-save effects.");
+    }
+    const incomingAttackDisadvantageEffects = [
+      incomingAttackDisadvantageFirst,
+      ...incomingAttackDisadvantageRest,
+    ] as const;
+    const incomingAttackDisadvantagePhase = {
+      ...mockeryPhase,
+      onFail: {
+        ...mockeryPhase.onFail,
+        effects: incomingAttackDisadvantageEffects,
+      },
+    } satisfies ActivationPhase;
+    const genericIncomingAttackDisadvantage = {
+      ...mockery,
+      id: "generic_incoming_attack_disadvantage",
+      mechanics: {
+        ...mockery.mechanics,
+        phases: [incomingAttackDisadvantagePhase] as const,
+      },
+    };
+
+    expect(
+      maybeSpellAct({
+        state: spellBattle({ preparedSpells: [genericPoisonRay] }),
+        spellId: genericPoisonRay.id,
+      }),
+    ).toBeUndefined();
+    expect(
+      maybeSpellAct({
+        state: spellBattle({ cantrips: [genericOpportunityAttackDenial] }),
+        spellId: genericOpportunityAttackDenial.id,
+      }),
+    ).toBeUndefined();
+    expect(
+      maybeSpellAct({
+        state: spellBattle({ preparedSpells: [genericNextAttackAdvantage] }),
+        spellId: genericNextAttackAdvantage.id,
+      }),
+    ).toBeUndefined();
+    expect(
+      maybeSpellAct({
+        state: spellBattle({ cantrips: [genericIncomingAttackDisadvantage] }),
+        spellId: genericIncomingAttackDisadvantage.id,
+      }),
+    ).toBeUndefined();
   });
 
   test("sacred_flame is admitted through catalog spell access and projected as single-target save-gated cantrip damage", () => {

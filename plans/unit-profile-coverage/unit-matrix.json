@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 348,
-      "numerator": 69,
-      "percent": "19.8%"
+      "numerator": 73,
+      "percent": "21%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 415,
-      "numerator": 93,
-      "percent": "22.4%"
+      "numerator": 97,
+      "percent": "23.4%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 94
+      "value": 98
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 40,
-      "numerator": 36,
-      "percent": "90%"
+      "denominator": 44,
+      "numerator": 40,
+      "percent": "90.9%"
     },
     "profileClassificationCoverage": {
-      "denominator": 94,
-      "numerator": 94,
+      "denominator": 98,
+      "numerator": 98,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 40,
+      "denominator": 44,
       "numerator": 10,
-      "percent": "25%"
+      "percent": "22.7%"
     },
     "supportedProfileCoverage": {
-      "denominator": 70,
-      "numerator": 40,
-      "percent": "57.1%"
+      "denominator": 74,
+      "numerator": 44,
+      "percent": "59.5%"
     }
   },
   "metricSemantics": [
@@ -3627,6 +3627,89 @@
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV28D"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-damage-save-or-attack",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE10",
+            "QMBT5"
+          ],
+          "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "spell.readied-action-time-spell",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE8",
+            "QCORE10",
+            "QMBT5"
+          ],
+          "title": "Action-time spell can be readied and released through the reaction protocol",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/guiding_bolt.json",
+      "unitId": "guiding_bolt"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "spell.invocation-damage-save-or-attack",
+          "spell.readied-action-time-spell"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
           "taskId": "SRDINV28B"
         }
       ],
@@ -3894,6 +3977,89 @@
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV28D"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-damage-save-or-attack",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE10",
+            "QMBT5"
+          ],
+          "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "spell.readied-action-time-spell",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE8",
+            "QCORE10",
+            "QMBT5"
+          ],
+          "title": "Action-time spell can be readied and released through the reaction protocol",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/ray_of_sickness.json",
+      "unitId": "ray_of_sickness"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "spell.invocation-damage-save-or-attack",
+          "spell.readied-action-time-spell"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
           "taskId": "SRDINV28B"
         }
       ],
@@ -3955,6 +4121,172 @@
       ],
       "sourceRecordPath": "packages/surface/content/sacred_flame.json",
       "unitId": "sacred_flame"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "spell.invocation-damage-save-or-attack",
+          "spell.readied-action-time-spell"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV28D"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-damage-save-or-attack",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE10",
+            "QMBT5"
+          ],
+          "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "spell.readied-action-time-spell",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE8",
+            "QCORE10",
+            "QMBT5"
+          ],
+          "title": "Action-time spell can be readied and released through the reaction protocol",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/shocking_grasp.json",
+      "unitId": "shocking_grasp"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "spell.invocation-damage-save-or-attack",
+          "spell.readied-action-time-spell"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV28D"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-damage-save-or-attack",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE10",
+            "QMBT5"
+          ],
+          "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "spell.readied-action-time-spell",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE8",
+            "QCORE10",
+            "QMBT5"
+          ],
+          "title": "Action-time spell can be readied and released through the reaction protocol",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/vicious_mockery.json",
+      "unitId": "vicious_mockery"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -6587,24 +6919,6 @@
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [],
-      "sourceRecordPath": "packages/surface/content/guiding_bolt.json",
-      "unitId": "guiding_bolt"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
       "sourceRecordPath": "packages/surface/content/harm.json",
       "unitId": "harm"
     },
@@ -8909,24 +9223,6 @@
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [],
-      "sourceRecordPath": "packages/surface/content/ray_of_sickness.json",
-      "unitId": "ray_of_sickness"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
       "sourceRecordPath": "packages/surface/content/resistance.json",
       "unitId": "resistance"
     },
@@ -9091,24 +9387,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/shining_smite.json",
       "unitId": "shining_smite"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/shocking_grasp.json",
-      "unitId": "shocking_grasp"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -9613,24 +9891,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/vampiric_touch.json",
       "unitId": "vampiric_touch"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/vicious_mockery.json",
-      "unitId": "vicious_mockery"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

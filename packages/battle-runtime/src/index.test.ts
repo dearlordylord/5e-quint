@@ -91,6 +91,10 @@ import chillTouchInput from "../../surface/content/chill_touch.json";
 import poisonSprayInput from "../../surface/content/poison_spray.json";
 import sacredFlameInput from "../../surface/content/sacred_flame.json";
 import inflictWoundsInput from "../../surface/content/inflict_wounds.json";
+import shockingGraspInput from "../../surface/content/shocking_grasp.json";
+import guidingBoltInput from "../../surface/content/guiding_bolt.json";
+import rayOfSicknessInput from "../../surface/content/ray_of_sickness.json";
+import viciousMockeryInput from "../../surface/content/vicious_mockery.json";
 import healingWordInput from "../../surface/content/healing_word.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type {
@@ -211,6 +215,10 @@ const testSpellRecords = new Map(
     poisonSprayInput,
     sacredFlameInput,
     inflictWoundsInput,
+    shockingGraspInput,
+    guidingBoltInput,
+    rayOfSicknessInput,
+    viciousMockeryInput,
     healingWordInput,
   ]
     .map((input) => decodeUnitRecordSync(input))
@@ -12143,6 +12151,784 @@ describe("battle runtime", () => {
     expect(expendedLevelOneSlots(afterSaveSpell, wizardId)).toBe(1);
   });
 
+  test("spell attack riders use SRD-specific expiration anchors", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-spell-rider-anchors"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("shocking_grasp")],
+            preparedSpells: [
+              spellRecord("guiding_bolt"),
+              spellRecord("ray_of_sickness"),
+            ],
+            spellSlots: [{ spellLevel: 1, count: 3 }],
+          }),
+        }),
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Fighter",
+          initiative: 15,
+        }),
+        characterSeed({
+          combatantId: skeletonId,
+          displayName: "Target",
+          initiative: 10,
+          side: oppositionSide,
+        }),
+      ],
+    });
+
+    const sickTarget = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: magicSubject("ray_of_sickness"),
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const sickRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: magicSubject("ray_of_sickness"),
+        fills: [targetFill(sickTarget, skeletonId)],
+      }),
+      "attackRoll",
+    );
+    const sickDamage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: magicSubject("ray_of_sickness"),
+        fills: [
+          targetFill(sickTarget, skeletonId),
+          attackRollFill(sickRoll, { total: 18, naturalD20: 12 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    const sick = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: magicSubject("ray_of_sickness"),
+        fills: [
+          targetFill(sickTarget, skeletonId),
+          attackRollFill(sickRoll, { total: 18, naturalD20: 12 }),
+          damageRollFillWithGroups(sickDamage, [[1, 1]]),
+        ],
+      }),
+    );
+    expect(sick.state.combatants.get(skeletonId)).toMatchObject({
+      conditions: expect.objectContaining({ poisoned: true }),
+      activeEffects: [
+        expect.objectContaining({
+          kind: "spellCondition",
+          condition: "poisoned",
+          expiresAt: {
+            kind: "endOfTurn",
+            combatantId: wizardId,
+            round: 2,
+          },
+        }),
+      ],
+    });
+    const afterWizard = endTurn({ state: sick.state, actorId: wizardId });
+    const afterFighter =
+      afterWizard.tag === "resolved"
+        ? endTurn({ state: afterWizard.state, actorId: fighterId })
+        : afterWizard;
+    const afterSkeleton =
+      afterFighter.tag === "resolved"
+        ? endTurn({ state: afterFighter.state, actorId: skeletonId })
+        : afterFighter;
+    const afterNextWizard =
+      afterSkeleton.tag === "resolved"
+        ? endTurn({ state: afterSkeleton.state, actorId: wizardId })
+        : afterSkeleton;
+    expect(afterNextWizard).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId },
+          { combatantId: fighterId },
+          {
+            combatantId: skeletonId,
+            conditions: expect.not.arrayContaining(["poisoned"]),
+          },
+        ],
+      },
+    });
+
+    const graspTarget = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: magicSubject("shocking_grasp"),
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const graspRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: magicSubject("shocking_grasp"),
+        fills: [targetFill(graspTarget, skeletonId)],
+      }),
+      "attackRoll",
+    );
+    const graspDamage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: magicSubject("shocking_grasp"),
+        fills: [
+          targetFill(graspTarget, skeletonId),
+          attackRollFill(graspRoll, { total: 18, naturalD20: 12 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    const grasp = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: magicSubject("shocking_grasp"),
+        fills: [
+          targetFill(graspTarget, skeletonId),
+          attackRollFill(graspRoll, { total: 18, naturalD20: 12 }),
+          damageRollFill(graspDamage, 1),
+        ],
+      }),
+    );
+    expect(
+      grasp.state.combatants.get(skeletonId)?.activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "opportunityAttackDenied",
+        expiresAt: { kind: "startOfTurn", combatantId: skeletonId },
+      }),
+    );
+    const fighterTurn = requireResolved(
+      endTurn({ state: grasp.state, actorId: wizardId }),
+    ).state;
+    const moveSubject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "move",
+    };
+    const move = requireHole(
+      resolveBattleSubject({
+        state: fighterTurn,
+        subject: moveSubject,
+        fills: [],
+      }),
+      "movement",
+    );
+    expect(
+      resolveBattleSubject({
+        state: fighterTurn,
+        subject: moveSubject,
+        fills: [
+          movementFill(move, {
+            movementCostFeet: 5,
+            provokedOpportunityAttacks: [
+              { reactorId: skeletonId, attackName: "Longsword" },
+            ],
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "resolved",
+      snapshot: { pendingReaction: null },
+    });
+  });
+
+  test("spell condition riders preserve unrelated pre-existing conditions", () => {
+    const poisoned = startBattleRight({
+      battleId: battleId("battle-spell-condition-rider-source"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("ray_of_sickness")],
+            spellSlots: [{ spellLevel: 1, count: 2 }],
+          }),
+        }),
+        characterSeed({
+          combatantId: skeletonId,
+          displayName: "Target",
+          initiative: 10,
+          side: oppositionSide,
+          conditions: ["poisoned"],
+        }),
+      ],
+    });
+    const target = requireHole(
+      resolveBattleSubject({
+        state: poisoned,
+        subject: magicSubject("ray_of_sickness"),
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const roll = requireHole(
+      resolveBattleSubject({
+        state: poisoned,
+        subject: magicSubject("ray_of_sickness"),
+        fills: [targetFill(target, skeletonId)],
+      }),
+      "attackRoll",
+    );
+    const damage = requireHole(
+      resolveBattleSubject({
+        state: poisoned,
+        subject: magicSubject("ray_of_sickness"),
+        fills: [
+          targetFill(target, skeletonId),
+          attackRollFill(roll, { total: 18, naturalD20: 12 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state: poisoned,
+        subject: magicSubject("ray_of_sickness"),
+        fills: [
+          targetFill(target, skeletonId),
+          attackRollFill(roll, { total: 18, naturalD20: 12 }),
+          damageRollFillWithGroups(damage, [[1, 1]]),
+        ],
+      }),
+    );
+    const skeletonTurn = requireResolved(
+      endTurn({ state: resolved.state, actorId: wizardId }),
+    ).state;
+    const nextWizard = endTurn({ state: skeletonTurn, actorId: skeletonId });
+    if (nextWizard.tag !== "resolved") {
+      throw new Error("Expected turn sequence to resolve.");
+    }
+    const refreshRoll = requireHole(
+      resolveBattleSubject({
+        state: nextWizard.state,
+        subject: magicSubject("ray_of_sickness"),
+        fills: [targetFill(target, skeletonId)],
+      }),
+      "attackRoll",
+    );
+    const refreshDamage = requireHole(
+      resolveBattleSubject({
+        state: nextWizard.state,
+        subject: magicSubject("ray_of_sickness"),
+        fills: [
+          targetFill(target, skeletonId),
+          attackRollFill(refreshRoll, { total: 18, naturalD20: 12 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    const refreshed = requireResolved(
+      resolveBattleSubject({
+        state: nextWizard.state,
+        subject: magicSubject("ray_of_sickness"),
+        fills: [
+          targetFill(target, skeletonId),
+          attackRollFill(refreshRoll, { total: 18, naturalD20: 12 }),
+          damageRollFillWithGroups(refreshDamage, [[1, 1]]),
+        ],
+      }),
+    );
+    const nextSkeletonAfterRefresh = requireResolved(
+      endTurn({ state: refreshed.state, actorId: wizardId }),
+    ).state;
+    const nextWizardAfterRefresh = requireResolved(
+      endTurn({ state: nextSkeletonAfterRefresh, actorId: skeletonId }),
+    ).state;
+    const expired = endTurn({
+      state: nextWizardAfterRefresh,
+      actorId: wizardId,
+    });
+    expect(expired).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId },
+          {
+            combatantId: skeletonId,
+            conditions: expect.arrayContaining(["poisoned"]),
+          },
+        ],
+      },
+    });
+  });
+
+  test("overlapping spell condition riders preserve a pre-existing non-spell condition source", () => {
+    const poisoned = startBattleRight({
+      battleId: battleId("battle-spell-condition-rider-overlap-source"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("ray_of_sickness")],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+        }),
+        characterSeed({
+          combatantId: secondWizardId,
+          displayName: "Second Wizard",
+          initiative: 15,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("ray_of_sickness")],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+        }),
+        characterSeed({
+          combatantId: skeletonId,
+          displayName: "Target",
+          initiative: 10,
+          side: oppositionSide,
+          conditions: ["poisoned"],
+        }),
+      ],
+    });
+
+    const castRayOfSickness = (state: BattleState, actorId: CombatantId) => {
+      const spatialFacts = [
+        {
+          kind: "spellTarget" as const,
+          casterId: actorId,
+          targetId: skeletonId,
+          spellId: "ray_of_sickness",
+        },
+      ];
+      const subject: BattleSubject = {
+        tag: "actionSpell",
+        actorId,
+        invocation: spellSlotInvocationRef(
+          "ray_of_sickness",
+          1,
+          "spellAttackDamage",
+        ),
+        mode: { tag: "cast" },
+      };
+      const target = requireHole(
+        resolveBattleSubject({ state, subject, fills: [] }),
+        "targetChoice",
+      );
+      const roll = requireHole(
+        resolveBattleSubject({
+          state,
+          subject,
+          fills: [targetFill(target, skeletonId, spatialFacts)],
+        }),
+        "attackRoll",
+      );
+      const damage = requireHole(
+        resolveBattleSubject({
+          state,
+          subject,
+          fills: [
+            targetFill(target, skeletonId, spatialFacts),
+            attackRollFill(roll, { total: 18, naturalD20: 12 }),
+          ],
+        }),
+        "rolledDice",
+      );
+      return requireResolved(
+        resolveBattleSubject({
+          state,
+          subject,
+          fills: [
+            targetFill(target, skeletonId, spatialFacts),
+            attackRollFill(roll, { total: 18, naturalD20: 12 }),
+            damageRollFillWithGroups(damage, [[1, 1]]),
+          ],
+        }),
+      ).state;
+    };
+
+    const firstSpell = castRayOfSickness(poisoned, wizardId);
+    const secondWizardTurn = requireResolved(
+      endTurn({ state: firstSpell, actorId: wizardId }),
+    ).state;
+    const secondSpell = castRayOfSickness(secondWizardTurn, secondWizardId);
+    const skeletonTurn = requireResolved(
+      endTurn({ state: secondSpell, actorId: secondWizardId }),
+    ).state;
+    const nextWizardTurn = requireResolved(
+      endTurn({ state: skeletonTurn, actorId: skeletonId }),
+    ).state;
+    const firstSpellExpired = requireResolved(
+      endTurn({ state: nextWizardTurn, actorId: wizardId }),
+    ).state;
+    expect(firstSpellExpired.combatants.get(skeletonId)).toMatchObject({
+      conditions: expect.objectContaining({ poisoned: true }),
+      activeEffects: [
+        expect.objectContaining({
+          kind: "spellCondition",
+          sourceCombatantId: secondWizardId,
+          condition: "poisoned",
+        }),
+      ],
+    });
+
+    const allSpellSourcesExpired = endTurn({
+      state: firstSpellExpired,
+      actorId: secondWizardId,
+    });
+    expect(allSpellSourcesExpired).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId },
+          { combatantId: secondWizardId },
+          {
+            combatantId: skeletonId,
+            conditions: expect.arrayContaining(["poisoned"]),
+          },
+        ],
+      },
+    });
+    expect(
+      requireResolved(allSpellSourcesExpired).state.combatants.get(skeletonId)
+        ?.activeEffects,
+    ).not.toContainEqual(
+      expect.objectContaining({
+        kind: "spellCondition",
+        condition: "poisoned",
+      }),
+    );
+  });
+
+  test("one-shot spell attack-roll riders affect only matching attack rolls", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-spell-one-shot-riders"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("vicious_mockery")],
+            preparedSpells: [spellRecord("guiding_bolt")],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+        }),
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Fighter",
+          initiative: 15,
+        }),
+        characterSeed({
+          combatantId: skeletonId,
+          displayName: "Target",
+          initiative: 10,
+          side: oppositionSide,
+        }),
+      ],
+    });
+    const guidingTarget = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: magicSubject("guiding_bolt"),
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const guidingRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: magicSubject("guiding_bolt"),
+        fills: [targetFill(guidingTarget, skeletonId)],
+      }),
+      "attackRoll",
+    );
+    const guidingDamage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: magicSubject("guiding_bolt"),
+        fills: [
+          targetFill(guidingTarget, skeletonId),
+          attackRollFill(guidingRoll, { total: 18, naturalD20: 12 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    const guided = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: magicSubject("guiding_bolt"),
+        fills: [
+          targetFill(guidingTarget, skeletonId),
+          attackRollFill(guidingRoll, { total: 18, naturalD20: 12 }),
+          damageRollFillWithGroups(guidingDamage, [[1, 1, 1, 1]]),
+        ],
+      }),
+    );
+    const fighterTurn = endTurn({ state: guided.state, actorId: wizardId });
+    if (fighterTurn.tag !== "resolved") {
+      throw new Error("Expected Fighter turn after Guiding Bolt.");
+    }
+    const fighterAttack: BattleSubject = {
+      tag: "action",
+      actorId: fighterId,
+      action: "attack",
+      attackName: "Longsword",
+    };
+    const fighterTarget = requireHole(
+      resolveBattleSubject({
+        state: fighterTurn.state,
+        subject: fighterAttack,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const fighterRoll = requireHole(
+      resolveBattleSubject({
+        state: fighterTurn.state,
+        subject: fighterAttack,
+        fills: [attackTargetFill(fighterTarget, fighterId, skeletonId)],
+      }),
+      "attackRoll",
+    );
+    expect(fighterRoll).toMatchObject({ rollMode: "advantage" });
+    const consumed = resolveBattleSubject({
+      state: fighterTurn.state,
+      subject: fighterAttack,
+      fills: [
+        attackTargetFill(fighterTarget, fighterId, skeletonId),
+        attackRollFill(fighterRoll, {
+          total: 8,
+          naturalD20: 4,
+          rollMode: "advantage",
+        }),
+      ],
+    });
+    expect(consumed).toMatchObject({ tag: "resolved" });
+    expect(
+      requireResolved(consumed).state.combatants.get(skeletonId)?.activeEffects,
+    ).toEqual([]);
+
+    const mockeryTarget = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: magicSubject("vicious_mockery"),
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const save = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: magicSubject("vicious_mockery"),
+        fills: [targetFill(mockeryTarget, skeletonId)],
+      }),
+      "savingThrowOutcome",
+    );
+    const mockeryDamage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: magicSubject("vicious_mockery"),
+        fills: [
+          targetFill(mockeryTarget, skeletonId),
+          savingThrowOutcomeFill(save, [
+            { targetId: skeletonId, succeeded: false },
+          ]),
+        ],
+      }),
+      "rolledDice",
+    );
+    const mocked = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: magicSubject("vicious_mockery"),
+        fills: [
+          targetFill(mockeryTarget, skeletonId),
+          savingThrowOutcomeFill(save, [
+            { targetId: skeletonId, succeeded: false },
+          ]),
+          damageRollFill(mockeryDamage, 1),
+        ],
+      }),
+    );
+    const afterWizard = endTurn({ state: mocked.state, actorId: wizardId });
+    const afterFighter =
+      afterWizard.tag === "resolved"
+        ? endTurn({ state: afterWizard.state, actorId: fighterId })
+        : afterWizard;
+    if (afterFighter.tag !== "resolved") {
+      throw new Error("Expected Skeleton turn after Vicious Mockery.");
+    }
+    const skeletonAttack: BattleSubject = {
+      tag: "action",
+      actorId: skeletonId,
+      action: "attack",
+      attackName: "Longsword",
+    };
+    const skeletonTarget = requireHole(
+      resolveBattleSubject({
+        state: afterFighter.state,
+        subject: skeletonAttack,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const skeletonRoll = requireHole(
+      resolveBattleSubject({
+        state: afterFighter.state,
+        subject: skeletonAttack,
+        fills: [
+          attackTargetFill(skeletonTarget, skeletonId, wizardId, "Longsword"),
+        ],
+      }),
+      "attackRoll",
+    );
+    expect(skeletonRoll).toMatchObject({ rollMode: "disadvantage" });
+  });
+
+  test("readied spell attack misses consume next-attack spell riders", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-readied-spell-miss-consumes-rider"),
+      combatants: [
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Cleric",
+          initiative: 30,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("guiding_bolt")],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+        }),
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("ray_of_frost")],
+          }),
+        }),
+        statBlockCreatureInit({
+          combatantId: goblinId,
+          initiative: 10,
+        }),
+      ],
+    });
+    const guidingSubject: BattleSubject = {
+      tag: "actionSpell",
+      actorId: fighterId,
+      invocation: spellSlotInvocationRef(
+        "guiding_bolt",
+        1,
+        "spellAttackDamage",
+      ),
+      mode: { tag: "cast" },
+    };
+    const target = requireHole(
+      resolveBattleSubject({ state, subject: guidingSubject, fills: [] }),
+      "targetChoice",
+    );
+    const roll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: guidingSubject,
+        fills: [targetFill(target, goblinId)],
+      }),
+      "attackRoll",
+    );
+    const damage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: guidingSubject,
+        fills: [
+          targetFill(target, goblinId),
+          attackRollFill(roll, { total: 18, naturalD20: 12 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    const guided = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: guidingSubject,
+        fills: [
+          targetFill(target, goblinId),
+          attackRollFill(roll, { total: 18, naturalD20: 12 }),
+          damageRollFillWithGroups(damage, [[1, 1, 1, 1]]),
+        ],
+      }),
+    ).state;
+    const wizardTurn = requireResolved(
+      endTurn({ state: guided, actorId: fighterId }),
+    ).state;
+    const readied = requireResolved(
+      resolveBattleSubject({
+        state: wizardTurn,
+        subject: {
+          tag: "actionSpell",
+          actorId: wizardId,
+          invocation: cantripSpellInvocationRef(
+            "ray_of_frost",
+            "spellAttackDamage",
+          ),
+          mode: { tag: "ready", trigger: "attackHit" },
+        },
+        fills: [],
+      }),
+    ).state;
+    const goblinTurn = requireResolved(
+      endTurn({ state: readied, actorId: wizardId }),
+    ).state;
+    const releaseSubject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: goblinId,
+      command: "releaseReadiedSpell",
+      readiedSpellCasterId: wizardId,
+    };
+    const releaseTarget = requireHole(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject: releaseSubject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const releaseRoll = requireHole(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject: releaseSubject,
+        fills: [targetFill(releaseTarget, goblinId)],
+      }),
+      "attackRoll",
+    );
+    expect(releaseRoll).toMatchObject({ rollMode: "advantage" });
+    const missed = requireResolved(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject: releaseSubject,
+        fills: [
+          targetFill(releaseTarget, goblinId),
+          attackRollFill(releaseRoll, {
+            total: 1,
+            naturalD20: 1,
+            rollMode: "advantage",
+          }),
+        ],
+      }),
+    );
+
+    expect(missed.state.combatants.get(goblinId)?.activeEffects).toEqual([]);
+  });
+
   test("spell damage invocation holes reject contradictory access and resource pairs", () => {
     const spell = slotAttackDamageSpell();
     const baseHole = {
@@ -14731,6 +15517,10 @@ function spellIdFromTargetHoleLabel(label: string | undefined): string {
   if (label?.startsWith("Chill Touch") === true) return "chill_touch";
   if (label?.startsWith("Sacred Flame") === true) return "sacred_flame";
   if (label?.startsWith("Inflict Wounds") === true) return "inflict_wounds";
+  if (label?.startsWith("Shocking Grasp") === true) return "shocking_grasp";
+  if (label?.startsWith("Guiding Bolt") === true) return "guiding_bolt";
+  if (label?.startsWith("Ray of Sickness") === true) return "ray_of_sickness";
+  if (label?.startsWith("Vicious Mockery") === true) return "vicious_mockery";
   return "";
 }
 
@@ -16509,6 +17299,10 @@ function spellRecord(
     | "poison_spray"
     | "sacred_flame"
     | "inflict_wounds"
+    | "shocking_grasp"
+    | "guiding_bolt"
+    | "ray_of_sickness"
+    | "vicious_mockery"
     | "healing_word",
 ) {
   const unit = testSpellRecords.get(spellId);
@@ -16528,6 +17322,10 @@ function magicSubject(
     | "poison_spray"
     | "sacred_flame"
     | "inflict_wounds"
+    | "shocking_grasp"
+    | "guiding_bolt"
+    | "ray_of_sickness"
+    | "vicious_mockery"
     | "dex_half_cantrip",
 ): BattleSubject {
   return {
@@ -16540,11 +17338,16 @@ function magicSubject(
           ? spellSlotInvocationRef(spellId, 1, "persistentArmorEffect")
           : spellId === "inflict_wounds"
             ? spellSlotInvocationRef(spellId, 1, "saveGatedDamage")
-            : spellId === "ray_of_frost" ||
-                spellId === "poison_spray" ||
-                spellId === "chill_touch"
-              ? cantripSpellInvocationRef(spellId, "spellAttackDamage")
-              : cantripSpellInvocationRef(spellId, "saveGatedDamage"),
+            : spellId === "vicious_mockery"
+              ? cantripSpellInvocationRef(spellId, "saveGatedDamage")
+              : spellId === "guiding_bolt" || spellId === "ray_of_sickness"
+                ? spellSlotInvocationRef(spellId, 1, "spellAttackDamage")
+                : spellId === "ray_of_frost" ||
+                    spellId === "poison_spray" ||
+                    spellId === "chill_touch" ||
+                    spellId === "shocking_grasp"
+                  ? cantripSpellInvocationRef(spellId, "spellAttackDamage")
+                  : cantripSpellInvocationRef(spellId, "saveGatedDamage"),
     mode: { tag: "cast" },
   };
 }
