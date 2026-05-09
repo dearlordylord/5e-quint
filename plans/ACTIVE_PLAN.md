@@ -2351,6 +2351,15 @@ projection tests; `pnpm unit-profile-coverage:check`; `pnpm quality`; MBT only
 if promoted battle-runtime behavior changes; `/simplify` convergence, minimum
 two rounds.
 
+Retry Guidance: implement the whole SRDINV29 surface or split this task before
+claiming support. Chromatic Orb must include its SRD chained target selection,
+not only caller-selected damage type. Grease ground effects must use the SRD
+1-minute duration semantics rather than next-turn expiration. Ice Knife mixed
+attack-plus-area resolution must require the burst to be anchored on the primary
+attack target and include that primary target in the area save set. Any promoted
+battle-runtime behavior must update `packages/battle-runtime/battle-runtime.qnt`
+and pass the corresponding parity verification.
+
 ### Task 204 - SRDINV30 - Promote Spell Buff, Debuff, and Protection Runtime
 
 Status: `ready-for-research`
