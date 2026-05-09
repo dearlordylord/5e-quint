@@ -9,11 +9,17 @@
 --    A creature that enters the area or ends its turn there must also
 --    succeed on that save or fall Prone."
 --
--- PARTIAL AUTHOR. The on-cast save_gate (Dex → Prone, affects creatures
--- standing in area at cast time) is authored. Area is modeled with
--- area shape "cube" (10-foot square — sphere/cube is the closest
--- RAW-matching shape for a 10ft ground square; the surface has no
--- 2-d square primitive, closed set per AREA_SHAPES).
+-- PARTIAL AUTHOR, NOT A SUPPORTED RUNTIME PROFILE. The on-cast
+-- save_gate (Dex → Prone, affects creatures standing in area at cast
+-- time) is authored, but the Unit profile matrix keeps Grease
+-- unsupported until battle-runtime has an active ground-area lifecycle
+-- and executable later procedures for creatures that enter the area or
+-- end turns there, with table-supplied area-membership facts.
+--
+-- Area is modeled with area shape "cube" (10-foot square —
+-- sphere/cube is the closest RAW-matching shape for a 10ft ground
+-- square; the surface has no 2-d square primitive, closed set per
+-- AREA_SHAPES).
 --
 -- Modeled as a 10-foot cube (sideFeet = 10) — the RAW "10-foot square"
 -- is a 2-D footprint, but the surface's closed AREA_SHAPES list lacks
@@ -24,9 +30,10 @@
 --      movement-cost is §B spatial agenda (sibling to terrain rulings).
 --   2. "A creature that enters the area or ends its turn there must
 --      also succeed on that save or fall Prone" — recurring per-event
---      save (enter-area OR end-turn-in-area) blocked by §A15
---      (per-turn-trigger ongoing operation); also requires an
---      enter-area trigger variant that does not exist today.
+--      save (enter-area OR end-turn-in-area) requires promoted
+--      battle-runtime active area state plus table-supplied
+--      membership facts at those later event boundaries. Storing the
+--      original spell area by itself is not support.
 
 let grease =
       { kind = "spell"

@@ -7083,6 +7083,11 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "reason": "SRDINV29D keeps Grease out of supported spell evidence because its SRD one-minute ground hazard requires an active area lifecycle plus executable recurring Dexterity save procedures for creatures that enter the area or end turns there; the promoted battle runtime currently has no table-supplied area-membership fact boundary for those later events, so the authored on-cast Prone save is not claimed as a supported partial runtime profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",

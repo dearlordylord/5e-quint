@@ -334,7 +334,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 206,
       "id": "SRDINV29D",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Grease Ground Hazard Runtime"
     },
     {
@@ -528,7 +528,7 @@ Keep it synchronized with the DAG table and task details.
 | 203   | SRDINV29A - Promote Burning Hands Cone Damage Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Burning Hands](/workspace/typescript/dnd/packages/surface/content/burning_hands.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promoted Burning Hands through the self-origin Cone save-for-half boundary with caller-supplied affected targets, Dexterity save outcomes, Fire damage, slot scaling, and action/slot spend evidence. |
 | 204   | SRDINV29B - Promote Color Spray Cone Condition Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Color Spray](/workspace/typescript/dnd/packages/surface/content/color_spray.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promoted Color Spray through the self-origin Cone save-gated condition boundary with caller-supplied affected targets, Constitution save outcomes, spell-owned Blinded until the caster's next turn ends, and unrelated Blinded source preservation. |
 | 205   | SRDINV29C - Promote Entangle Area Restraint Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Entangle](/workspace/typescript/dnd/packages/surface/content/entangle.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promoted Entangle through point-origin cube affected-target saves excluding the caster, spell-owned Restrained until Concentration ends, Strength (Athletics) escape against spell save DC, and matrix-limited Difficult Terrain. |
-| 206   | SRDINV29D - Promote Grease Ground Hazard Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Grease](/workspace/typescript/dnd/packages/surface/content/grease.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Grease as one-minute ground hazard with on-cast Prone and recurring enter/end-turn saves, or keep unsupported if recurrence is not executable. |
+| 206   | SRDINV29D - Promote Grease Ground Hazard Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Grease](/workspace/typescript/dnd/packages/surface/content/grease.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Closed by keeping Grease unsupported in Unit profile evidence: SRD one-minute ground hazard support requires an active area lifecycle plus executable enter-area/end-turn Dexterity save procedures with table-supplied area-membership facts, and the authored on-cast Prone save is not claimed as a supported partial runtime profile. |
 | 207   | SRDINV29E - Promote Ice Knife Mixed Attack Burst Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Ice Knife](/workspace/typescript/dnd/packages/surface/content/ice_knife.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Ice Knife's primary attack plus mandatory primary-target-anchored burst save. |
 | 208   | SRDINV29F - Research Chromatic Orb Chained Attack Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Chromatic Orb](/workspace/typescript/dnd/packages/surface/content/chromatic_orb.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Research Chromatic Orb as its own state-machine problem: typed damage, duplicate-face damage gate, repeated post-hit target holes, target uniqueness, and slot-level leap cap. |
 | 209   | SRDINV30A - Promote Simple Scalar Buff Spell Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [False Life](/workspace/typescript/dnd/packages/surface/content/false_life.dhall), [Longstrider](/workspace/typescript/dnd/packages/surface/content/longstrider.dhall), [Shield of Faith](/workspace/typescript/dnd/packages/surface/content/shield_of_faith.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote simple temp HP, Speed, and AC scalar spell effects. |
@@ -2483,22 +2483,19 @@ table/spatial agenda rather than executable persistent ground movement cost.
 
 ### Task 206 - SRDINV29D - Promote Grease Ground Hazard Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV28A-SRDINV28E
 
 Blocks: SRDINV33
 
-Scope: promote Grease only with SRD one-minute duration semantics. It must
-support on-cast Prone and recurring enter-area/end-turn-in-area saves if
-claimed. If recurring hazard triggers cannot be represented, keep Grease
-unsupported; do not approximate it as a next-turn-only effect.
-
-Retry guidance from rejected attempt: storing a `spellGroundArea` or similar
-metadata on the caster is not runtime support by itself. A support claim needs
-an executable later procedure for entering the area or ending a turn there,
-with table-supplied area membership facts and tests. If that procedure is not
-implemented, Grease must remain unsupported/partial in matrix claims.
+Completed: Grease remains unsupported in Unit profile evidence. The authored
+surface record still captures the on-cast Dexterity save to apply Prone, but
+the SRD one-minute ground hazard also requires recurring Dexterity saves for
+creatures that enter the area or end turns there. Promoted battle runtime does
+not yet have an active area lifecycle or table-supplied area-membership fact
+boundary for those later events, so Task 206 does not claim a supported partial
+runtime profile from inert area metadata.
 
 ### Task 207 - SRDINV29E - Promote Ice Knife Mixed Attack Burst Runtime
 

@@ -1907,7 +1907,7 @@
     {
       "id": "SRDINV29D",
       "title": "Promote Grease Ground Hazard Runtime",
-      "suggestedStatus": "ready-for-research",
+      "suggestedStatus": "done",
       "intent": "Promote Grease as a timed ground area with on-cast Prone and recurring enter/end-turn saves.",
       "rowCount": 2,
       "rowIds": [
