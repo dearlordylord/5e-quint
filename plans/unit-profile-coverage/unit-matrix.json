@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 348,
-      "numerator": 76,
-      "percent": "21.8%"
+      "numerator": 77,
+      "percent": "22.1%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 415,
-      "numerator": 100,
-      "percent": "24.1%"
+      "numerator": 101,
+      "percent": "24.3%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 101
+      "value": 102
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 47,
-      "numerator": 43,
-      "percent": "91.5%"
+      "denominator": 48,
+      "numerator": 44,
+      "percent": "91.7%"
     },
     "profileClassificationCoverage": {
-      "denominator": 101,
-      "numerator": 101,
+      "denominator": 102,
+      "numerator": 102,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 47,
+      "denominator": 48,
       "numerator": 10,
-      "percent": "21.3%"
+      "percent": "20.8%"
     },
     "supportedProfileCoverage": {
-      "denominator": 77,
-      "numerator": 47,
-      "percent": "61%"
+      "denominator": 78,
+      "numerator": 48,
+      "percent": "61.5%"
     }
   },
   "metricSemantics": [
@@ -788,7 +788,8 @@
       ],
       "taskRefs": [
         "QCORE10",
-        "QMBT5"
+        "QMBT5",
+        "SRDINV29E"
       ],
       "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
       "verificationOwners": [
@@ -1244,6 +1245,14 @@
         "spell.invocation-condition-save"
       ],
       "taskId": "SRDINV29B"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime Ice Knife tests for primary ranged spell attack, Critical Hit doubling limited to Piercing attack dice, mandatory primary-target-origin burst saves on hit or miss, Cold slot scaling, primary target inclusion, and Concentration follow-up for damaged burst targets.",
+      "profileIds": [
+        "spell.invocation-damage-save-or-attack"
+      ],
+      "taskId": "SRDINV29E"
     }
   ],
   "units": [
@@ -3472,7 +3481,8 @@
           ],
           "taskRefs": [
             "QCORE10",
-            "QMBT5"
+            "QMBT5",
+            "SRDINV29E"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -3555,7 +3565,8 @@
           ],
           "taskRefs": [
             "QCORE10",
-            "QMBT5"
+            "QMBT5",
+            "SRDINV29E"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -3653,7 +3664,8 @@
           ],
           "taskRefs": [
             "QCORE10",
-            "QMBT5"
+            "QMBT5",
+            "SRDINV29E"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -3920,7 +3932,8 @@
           ],
           "taskRefs": [
             "QCORE10",
-            "QMBT5"
+            "QMBT5",
+            "SRDINV29E"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -3973,6 +3986,62 @@
       },
       "claim": {
         "profileIds": [
+          "spell.invocation-damage-save-or-attack"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV29E"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-damage-save-or-attack",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE10",
+            "QMBT5",
+            "SRDINV29E"
+          ],
+          "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/ice_knife.json",
+      "unitId": "ice_knife"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
           "spell.invocation-damage-save-or-attack",
           "spell.readied-action-time-spell"
         ],
@@ -4003,7 +4072,8 @@
           ],
           "taskRefs": [
             "QCORE10",
-            "QMBT5"
+            "QMBT5",
+            "SRDINV29E"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -4104,7 +4174,8 @@
           ],
           "taskRefs": [
             "QCORE10",
-            "QMBT5"
+            "QMBT5",
+            "SRDINV29E"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -4187,7 +4258,8 @@
           ],
           "taskRefs": [
             "QCORE10",
-            "QMBT5"
+            "QMBT5",
+            "SRDINV29E"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -4270,7 +4342,8 @@
           ],
           "taskRefs": [
             "QCORE10",
-            "QMBT5"
+            "QMBT5",
+            "SRDINV29E"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -4353,7 +4426,8 @@
           ],
           "taskRefs": [
             "QCORE10",
-            "QMBT5"
+            "QMBT5",
+            "SRDINV29E"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -4436,7 +4510,8 @@
           ],
           "taskRefs": [
             "QCORE10",
-            "QMBT5"
+            "QMBT5",
+            "SRDINV29E"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -4519,7 +4594,8 @@
           ],
           "taskRefs": [
             "QCORE10",
-            "QMBT5"
+            "QMBT5",
+            "SRDINV29E"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -4620,7 +4696,8 @@
           ],
           "taskRefs": [
             "QCORE10",
-            "QMBT5"
+            "QMBT5",
+            "SRDINV29E"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -4703,7 +4780,8 @@
           ],
           "taskRefs": [
             "QCORE10",
-            "QMBT5"
+            "QMBT5",
+            "SRDINV29E"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -7292,24 +7370,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/hypnotic_pattern.json",
       "unitId": "hypnotic_pattern"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/ice_knife.json",
-      "unitId": "ice_knife"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

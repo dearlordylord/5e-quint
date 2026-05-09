@@ -7,6 +7,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29A burning_hands
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29B color_spray
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29C entangle
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29E ice_knife
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT25 healing_word
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT32 cure_wounds mass_healing_word
@@ -131,6 +132,7 @@ const bardCuttingWordsUnitId = "bard_cutting_words";
 const burningHandsUnitId = "burning_hands";
 const colorSprayUnitId = "color_spray";
 const entangleUnitId = "entangle";
+const iceKnifeUnitId = "ice_knife";
 const sleepUnitId = "sleep";
 const monkDeflectAttacksUnitId = "monk_deflect_attacks";
 const defenseUnitId = "defense";
@@ -2829,11 +2831,7 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
     expect(act.subject).toEqual({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(
-        "entangle",
-        1,
-        "saveGatedCondition",
-      ),
+      invocation: spellSlotInvocationRef("entangle", 1, "saveGatedCondition"),
       mode: { tag: "cast" },
     });
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
@@ -2881,6 +2879,75 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
         slotLevel: 1,
       }),
     ).toBeUndefined();
+  });
+
+  test("ice_knife is admitted as a mixed spell attack plus primary-target burst save", () => {
+    const spell = spellRecord(iceKnifeUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = spellAct({
+      state,
+      spellId: iceKnifeUnitId,
+      slotLevel: 2,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(
+        "ice_knife",
+        2,
+        "attackBurstSaveDamage",
+      ),
+      mode: { tag: "cast" },
+    });
+    const attackRoll = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          spellTargetFill(
+            requireHole(act.initialHoles, "targetChoice"),
+            iceKnifeUnitId,
+            spellCasterId,
+            spellTargetId,
+          ),
+        ],
+      }),
+      "attackRoll",
+    );
+    expect(spellHoleInvocation([attackRoll])).toEqual(
+      expect.objectContaining({
+        procedure: "attackBurstSaveDamage",
+        spell,
+        resource: { tag: "spellSlot", slotLevel: 2 },
+        targeting: { kind: "singleCombatant" },
+        attackKind: "ranged_spell_attack",
+        damage: {
+          expr: { dice: 1, dieSize: 10 },
+          damageType: "piercing",
+        },
+        burst: {
+          ability: "dex",
+          dc: { kind: "caster_spell_save_dc" },
+          targeting: { kind: "primaryTargetOriginEmanation", radiusFeet: 5 },
+          damage: {
+            expr: { dice: 3, dieSize: 6 },
+            damageType: "cold",
+          },
+          successDamage: "none",
+        },
+        rangeFeet: 60,
+      }),
+    );
+    expect(act.initialHoles).toEqual([
+      expect.objectContaining({
+        kind: "targetChoice",
+        choices: [spellCasterId, spellTargetId],
+      }),
+    ]);
   });
 
   test("mage_armor is admitted through catalog spell access and projected as a persistent prepared spell", () => {

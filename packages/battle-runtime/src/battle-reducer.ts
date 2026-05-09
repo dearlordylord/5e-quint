@@ -865,6 +865,10 @@ type SpellTargeting =
   | {
       readonly kind: "selfOriginCone";
       readonly lengthFeet: MovementFeet;
+    }
+  | {
+      readonly kind: "primaryTargetOriginEmanation";
+      readonly radiusFeet: MovementFeet;
     };
 type SpellPostDamageRider =
   | {
@@ -946,6 +950,34 @@ export type SupportedSpellInvocation =
       readonly successDamage: "none" | "half";
       readonly rangeFeet: MovementFeet;
       readonly failedSavePostDamageRiders: readonly SpellFailedSavePostDamageRider[];
+    })
+  | (PreparedDamageSpellSource & {
+      readonly procedure: "attackBurstSaveDamage";
+      readonly spell: SpellRecord;
+      readonly targeting: Extract<
+        SpellTargeting,
+        { readonly kind: "singleCombatant" }
+      >;
+      readonly attackKind: SpellAttackKind;
+      readonly attackBonus: AttackBonus;
+      readonly damage: {
+        readonly expr: DiceExpr;
+        readonly damageType: DamageType;
+      };
+      readonly burst: {
+        readonly ability: Ability;
+        readonly dc: DcSource;
+        readonly targeting: Extract<
+          SpellTargeting,
+          { readonly kind: "primaryTargetOriginEmanation" }
+        >;
+        readonly damage: {
+          readonly expr: DiceExpr;
+          readonly damageType: DamageType;
+        };
+        readonly successDamage: "none";
+      };
+      readonly rangeFeet: MovementFeet;
     })
   | {
       readonly access: PreparedSpellAccess;
@@ -1557,7 +1589,12 @@ export type BattleSpellSavingThrowOutcomeHole = {
   readonly label: string;
   readonly spell: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "saveGatedDamage" | "saveGatedCondition" }
+    {
+      readonly procedure:
+        | "attackBurstSaveDamage"
+        | "saveGatedDamage"
+        | "saveGatedCondition";
+    }
   >;
   readonly ability: Ability;
   readonly dc: DcSource;
@@ -1784,228 +1821,263 @@ const SupportedHealingSpellInvocationSchema = Schema.Struct({
   rangeFeet: MovementFeet,
 });
 
-const SupportedSpellInvocationSchema = Schema.Union(
-  Schema.Struct({
-    access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
-    procedure: Schema.Literal("repeatedDamageAllocation"),
-    spell: BattleRuntimeObjectSchema,
-    targeting: Schema.Struct({
-      kind: Schema.Literal("repeatedEffectTargetAllocation"),
-      repeatedEffectCount: Schema.Number,
+// Schema.Union preserves the runtime parser but infers a wider structural
+// union for nested BattleRuntimeObjectSchema fields than the authored
+// SupportedSpellInvocation variants. The variant discriminants below cover
+// every SupportedSpellInvocation branch locally, and callers still decode
+// through this schema at the boundary.
+const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
+  Schema.Union(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("attackBurstSaveDamage"),
+      spell: BattleRuntimeObjectSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("singleCombatant"),
+      }),
+      attackKind: Schema.Literal("melee_spell_attack", "ranged_spell_attack"),
+      attackBonus: AttackBonus,
+      damage: Schema.Struct({
+        expr: BattleRuntimeObjectSchema,
+        damageType: DamageTypeSchema,
+      }),
+      burst: Schema.Struct({
+        ability: AbilitySchema,
+        dc: DcSourceSchema,
+        targeting: Schema.Struct({
+          kind: Schema.Literal("primaryTargetOriginEmanation"),
+          radiusFeet: MovementFeet,
+        }),
+        damage: Schema.Struct({
+          expr: BattleRuntimeObjectSchema,
+          damageType: DamageTypeSchema,
+        }),
+        successDamage: Schema.Literal("none"),
+      }),
+      rangeFeet: MovementFeet,
     }),
-    damage: Schema.Struct({
-      expr: BattleRuntimeObjectSchema,
-      damageType: Schema.String,
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("repeatedDamageAllocation"),
+      spell: BattleRuntimeObjectSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("repeatedEffectTargetAllocation"),
+        repeatedEffectCount: Schema.Number,
+      }),
+      damage: Schema.Struct({
+        expr: BattleRuntimeObjectSchema,
+        damageType: Schema.String,
+      }),
+      rangeFeet: MovementFeet,
     }),
-    rangeFeet: MovementFeet,
-  }),
-  Schema.Struct({
-    access: ClassCantripSpellAccessSchema,
-    resource: NoSpellInvocationResourceSchema,
-    procedure: Schema.Literal("spellAttackDamage"),
-    spell: BattleRuntimeObjectSchema,
-    targeting: Schema.Struct({
-      kind: Schema.Literal("singleCombatant"),
+    Schema.Struct({
+      access: ClassCantripSpellAccessSchema,
+      resource: NoSpellInvocationResourceSchema,
+      procedure: Schema.Literal("spellAttackDamage"),
+      spell: BattleRuntimeObjectSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("singleCombatant"),
+      }),
+      damage: Schema.Struct({
+        expr: BattleRuntimeObjectSchema,
+        damageType: Schema.String,
+      }),
+      rangeFeet: MovementFeet,
+      attackKind: Schema.Literal("melee_spell_attack", "ranged_spell_attack"),
+      attackBonus: AttackBonus,
+      postDamageRiders: Schema.Array(
+        Schema.Union(
+          Schema.Struct({
+            kind: Schema.Literal("speedDelta"),
+            deltaFeet: MovementDeltaFeet,
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("condition"),
+            condition: Schema.Literal(...ALL_CONDITIONS),
+            expiresAt: Schema.Literal("endOfCasterNextTurn"),
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("opportunityAttackDenied"),
+            expiresAt: Schema.Literal("startOfTargetNextTurn"),
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("nextAttackRollAgainstTarget"),
+            mode: Schema.Literal("advantage"),
+            expiresAt: Schema.Literal("endOfCasterNextTurn"),
+          }),
+        ),
+      ),
     }),
-    damage: Schema.Struct({
-      expr: BattleRuntimeObjectSchema,
-      damageType: Schema.String,
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("spellAttackDamage"),
+      spell: BattleRuntimeObjectSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("singleCombatant"),
+      }),
+      damage: Schema.Struct({
+        expr: BattleRuntimeObjectSchema,
+        damageType: Schema.String,
+      }),
+      rangeFeet: MovementFeet,
+      attackKind: Schema.Literal("melee_spell_attack", "ranged_spell_attack"),
+      attackBonus: AttackBonus,
+      postDamageRiders: Schema.Array(
+        Schema.Union(
+          Schema.Struct({
+            kind: Schema.Literal("speedDelta"),
+            deltaFeet: MovementDeltaFeet,
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("condition"),
+            condition: Schema.Literal(...ALL_CONDITIONS),
+            expiresAt: Schema.Literal("endOfCasterNextTurn"),
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("opportunityAttackDenied"),
+            expiresAt: Schema.Literal("startOfTargetNextTurn"),
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("nextAttackRollAgainstTarget"),
+            mode: Schema.Literal("advantage"),
+            expiresAt: Schema.Literal("endOfCasterNextTurn"),
+          }),
+        ),
+      ),
     }),
-    rangeFeet: MovementFeet,
-    attackKind: Schema.Literal("melee_spell_attack", "ranged_spell_attack"),
-    attackBonus: AttackBonus,
-    postDamageRiders: Schema.Array(
-      Schema.Union(
+    Schema.Struct({
+      access: ClassCantripSpellAccessSchema,
+      resource: NoSpellInvocationResourceSchema,
+      procedure: Schema.Literal("saveGatedDamage"),
+      spell: BattleRuntimeObjectSchema,
+      ability: Schema.String,
+      dc: BattleRuntimeObjectSchema,
+      targeting: Schema.Union(
         Schema.Struct({
-          kind: Schema.Literal("speedDelta"),
-          deltaFeet: MovementDeltaFeet,
+          kind: Schema.Literal("singleCombatant"),
         }),
         Schema.Struct({
-          kind: Schema.Literal("condition"),
-          condition: Schema.Literal(...ALL_CONDITIONS),
-          expiresAt: Schema.Literal("endOfCasterNextTurn"),
+          kind: Schema.Literal("pointOriginSphere"),
+          radiusFeet: MovementFeet,
         }),
         Schema.Struct({
-          kind: Schema.Literal("opportunityAttackDenied"),
-          expiresAt: Schema.Literal("startOfTargetNextTurn"),
+          kind: Schema.Literal("pointOriginCubeExcludingCaster"),
+          sideFeet: MovementFeet,
         }),
         Schema.Struct({
-          kind: Schema.Literal("nextAttackRollAgainstTarget"),
-          mode: Schema.Literal("advantage"),
-          expiresAt: Schema.Literal("endOfCasterNextTurn"),
+          kind: Schema.Literal("selfOriginCone"),
+          lengthFeet: MovementFeet,
         }),
       ),
-    ),
-  }),
-  Schema.Struct({
-    access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
-    procedure: Schema.Literal("spellAttackDamage"),
-    spell: BattleRuntimeObjectSchema,
-    targeting: Schema.Struct({
-      kind: Schema.Literal("singleCombatant"),
-    }),
-    damage: Schema.Struct({
-      expr: BattleRuntimeObjectSchema,
-      damageType: Schema.String,
-    }),
-    rangeFeet: MovementFeet,
-    attackKind: Schema.Literal("melee_spell_attack", "ranged_spell_attack"),
-    attackBonus: AttackBonus,
-    postDamageRiders: Schema.Array(
-      Schema.Union(
+      damage: Schema.Struct({
+        expr: BattleRuntimeObjectSchema,
+        damageType: Schema.String,
+      }),
+      successDamage: Schema.Literal("none", "half"),
+      rangeFeet: MovementFeet,
+      failedSavePostDamageRiders: Schema.Array(
         Schema.Struct({
-          kind: Schema.Literal("speedDelta"),
-          deltaFeet: MovementDeltaFeet,
-        }),
-        Schema.Struct({
-          kind: Schema.Literal("condition"),
-          condition: Schema.Literal(...ALL_CONDITIONS),
-          expiresAt: Schema.Literal("endOfCasterNextTurn"),
-        }),
-        Schema.Struct({
-          kind: Schema.Literal("opportunityAttackDenied"),
-          expiresAt: Schema.Literal("startOfTargetNextTurn"),
-        }),
-        Schema.Struct({
-          kind: Schema.Literal("nextAttackRollAgainstTarget"),
-          mode: Schema.Literal("advantage"),
-          expiresAt: Schema.Literal("endOfCasterNextTurn"),
-        }),
-      ),
-    ),
-  }),
-  Schema.Struct({
-    access: ClassCantripSpellAccessSchema,
-    resource: NoSpellInvocationResourceSchema,
-    procedure: Schema.Literal("saveGatedDamage"),
-    spell: BattleRuntimeObjectSchema,
-    ability: Schema.String,
-    dc: BattleRuntimeObjectSchema,
-    targeting: Schema.Union(
-      Schema.Struct({
-        kind: Schema.Literal("singleCombatant"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("pointOriginSphere"),
-        radiusFeet: MovementFeet,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("pointOriginCubeExcludingCaster"),
-        sideFeet: MovementFeet,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("selfOriginCone"),
-        lengthFeet: MovementFeet,
-      }),
-    ),
-    damage: Schema.Struct({
-      expr: BattleRuntimeObjectSchema,
-      damageType: Schema.String,
-    }),
-    successDamage: Schema.Literal("none", "half"),
-    rangeFeet: MovementFeet,
-    failedSavePostDamageRiders: Schema.Array(
-      Schema.Struct({
-        kind: Schema.Literal("nextAttackRollByTarget"),
-        mode: Schema.Literal("disadvantage"),
-        expiresAt: Schema.Literal("endOfTargetNextTurn"),
-      }),
-    ),
-  }),
-  Schema.Struct({
-    access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
-    procedure: Schema.Literal("saveGatedDamage"),
-    spell: BattleRuntimeObjectSchema,
-    ability: Schema.String,
-    dc: BattleRuntimeObjectSchema,
-    targeting: Schema.Union(
-      Schema.Struct({
-        kind: Schema.Literal("singleCombatant"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("pointOriginSphere"),
-        radiusFeet: MovementFeet,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("pointOriginCubeExcludingCaster"),
-        sideFeet: MovementFeet,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("selfOriginCone"),
-        lengthFeet: MovementFeet,
-      }),
-    ),
-    damage: Schema.Struct({
-      expr: BattleRuntimeObjectSchema,
-      damageType: Schema.String,
-    }),
-    successDamage: Schema.Literal("none", "half"),
-    rangeFeet: MovementFeet,
-    failedSavePostDamageRiders: Schema.Array(
-      Schema.Struct({
-        kind: Schema.Literal("nextAttackRollByTarget"),
-        mode: Schema.Literal("disadvantage"),
-        expiresAt: Schema.Literal("endOfTargetNextTurn"),
-      }),
-    ),
-  }),
-  Schema.Struct({
-    access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
-    procedure: Schema.Literal("saveGatedCondition"),
-    spell: BattleRuntimeObjectSchema,
-    ability: Schema.String,
-    dc: BattleRuntimeObjectSchema,
-    targeting: Schema.Union(
-      Schema.Struct({
-        kind: Schema.Literal("singleCombatant"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("pointOriginSphere"),
-        radiusFeet: MovementFeet,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("pointOriginCubeExcludingCaster"),
-        sideFeet: MovementFeet,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("selfOriginCone"),
-        lengthFeet: MovementFeet,
-      }),
-    ),
-    effect: Schema.Struct({
-      condition: Schema.Literal(...ALL_CONDITIONS),
-      expiresAt: Schema.Literal("endOfCasterNextTurn", "concentration"),
-      escape: Schema.NullOr(
-        Schema.Struct({
-          ability: Schema.Literal("str"),
-          skill: Schema.Literal("athletics"),
+          kind: Schema.Literal("nextAttackRollByTarget"),
+          mode: Schema.Literal("disadvantage"),
+          expiresAt: Schema.Literal("endOfTargetNextTurn"),
         }),
       ),
     }),
-    rangeFeet: MovementFeet,
-  }),
-  Schema.Struct({
-    access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
-    procedure: Schema.Literal("persistentArmorEffect"),
-    spell: BattleRuntimeObjectSchema,
-    rangeFeet: MovementFeet,
-    activeEffect: BattleRuntimeObjectSchema,
-  }),
-  Schema.Struct({
-    access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
-    procedure: Schema.Literal("shieldReaction"),
-    spell: BattleRuntimeObjectSchema,
-    armorClassBonus: Schema.Number,
-    negatedSpellIds: Schema.Array(Schema.String),
-  }),
-  SupportedHealingSpellInvocationSchema,
-);
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("saveGatedDamage"),
+      spell: BattleRuntimeObjectSchema,
+      ability: Schema.String,
+      dc: BattleRuntimeObjectSchema,
+      targeting: Schema.Union(
+        Schema.Struct({
+          kind: Schema.Literal("singleCombatant"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("pointOriginSphere"),
+          radiusFeet: MovementFeet,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("pointOriginCubeExcludingCaster"),
+          sideFeet: MovementFeet,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("selfOriginCone"),
+          lengthFeet: MovementFeet,
+        }),
+      ),
+      damage: Schema.Struct({
+        expr: BattleRuntimeObjectSchema,
+        damageType: Schema.String,
+      }),
+      successDamage: Schema.Literal("none", "half"),
+      rangeFeet: MovementFeet,
+      failedSavePostDamageRiders: Schema.Array(
+        Schema.Struct({
+          kind: Schema.Literal("nextAttackRollByTarget"),
+          mode: Schema.Literal("disadvantage"),
+          expiresAt: Schema.Literal("endOfTargetNextTurn"),
+        }),
+      ),
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("saveGatedCondition"),
+      spell: BattleRuntimeObjectSchema,
+      ability: Schema.String,
+      dc: BattleRuntimeObjectSchema,
+      targeting: Schema.Union(
+        Schema.Struct({
+          kind: Schema.Literal("singleCombatant"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("pointOriginSphere"),
+          radiusFeet: MovementFeet,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("pointOriginCubeExcludingCaster"),
+          sideFeet: MovementFeet,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("selfOriginCone"),
+          lengthFeet: MovementFeet,
+        }),
+      ),
+      effect: Schema.Struct({
+        condition: Schema.Literal(...ALL_CONDITIONS),
+        expiresAt: Schema.Literal("endOfCasterNextTurn", "concentration"),
+        escape: Schema.NullOr(
+          Schema.Struct({
+            ability: Schema.Literal("str"),
+            skill: Schema.Literal("athletics"),
+          }),
+        ),
+      }),
+      rangeFeet: MovementFeet,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("persistentArmorEffect"),
+      spell: BattleRuntimeObjectSchema,
+      rangeFeet: MovementFeet,
+      activeEffect: BattleRuntimeObjectSchema,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("shieldReaction"),
+      spell: BattleRuntimeObjectSchema,
+      armorClassBonus: Schema.Number,
+      negatedSpellIds: Schema.Array(Schema.String),
+    }),
+    SupportedHealingSpellInvocationSchema,
+  ) as unknown as Schema.Schema<SupportedSpellInvocation>;
 
 export const BattleHoleSchema = Schema.Union(
   Schema.Struct({
@@ -13775,6 +13847,7 @@ function spellActivationInvocationCastSummary(
     SupportedSpellInvocation,
     {
       readonly procedure:
+        | "attackBurstSaveDamage"
         | "spellAttackDamage"
         | "saveGatedDamage"
         | "saveGatedCondition";
@@ -13819,6 +13892,7 @@ function readiedSpellAct(
   if (
     invocation.procedure === "persistentArmorEffect" ||
     invocation.procedure === "directHitPointRestoration" ||
+    invocation.procedure === "attackBurstSaveDamage" ||
     invocation.procedure === "saveGatedCondition" ||
     invocation.procedure === "shieldReaction" ||
     state.readiedSpells.has(actorId)
@@ -13919,6 +13993,14 @@ function resolveSpellAct(
   const fillSet = spellFillSet(input.fills, invocation);
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
+  }
+  if (invocation.procedure === "attackBurstSaveDamage") {
+    return resolveAttackBurstSaveDamageSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
   }
   if (invocation.procedure === "saveGatedDamage") {
     return resolveSaveGateDamageSpellAct({
@@ -15105,6 +15187,9 @@ type SpellFillSet =
       readonly damageRoll:
         | Extract<BattleFill, { readonly kind: "rolledDice" }>
         | undefined;
+      readonly attackBurstDamageRoll:
+        | Extract<BattleFill, { readonly kind: "rolledDice" }>
+        | undefined;
       readonly healingRoll:
         | Extract<BattleFill, { readonly kind: "rolledDice" }>
         | undefined;
@@ -15143,6 +15228,9 @@ function spellFillSet(
     { readonly kind: "attackDamageDisposition" }
   >[] = [];
   let damageRoll:
+    | Extract<BattleFill, { readonly kind: "rolledDice" }>
+    | undefined;
+  let attackBurstDamageRoll:
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
     | undefined;
   let healingRoll:
@@ -15225,6 +15313,7 @@ function spellFillSet(
 
     if (fill.kind === "savingThrowOutcome") {
       if (
+        invocation.procedure !== "attackBurstSaveDamage" &&
         invocation.procedure !== "saveGatedDamage" &&
         invocation.procedure !== "saveGatedCondition"
       ) {
@@ -15247,7 +15336,8 @@ function spellFillSet(
         };
       }
       if (
-        invocation.targeting.kind !== "singleCombatant" &&
+        spellFillSetSavingThrowTargeting(invocation).kind !==
+          "singleCombatant" &&
         !("area" in fill.value)
       ) {
         return {
@@ -15256,7 +15346,8 @@ function spellFillSet(
         };
       }
       if (
-        invocation.targeting.kind === "singleCombatant" &&
+        spellFillSetSavingThrowTargeting(invocation).kind ===
+          "singleCombatant" &&
         "area" in fill.value
       ) {
         return {
@@ -15276,6 +15367,38 @@ function spellFillSet(
         }
         healingRoll = fill;
         continue;
+      }
+      if (invocation.procedure === "attackBurstSaveDamage") {
+        const attackDamageHole = spellDamageHole(invocation, false);
+        const criticalAttackDamageHole = spellDamageHole(invocation, true);
+        const burstDamageHole = spellBurstDamageHole(invocation);
+        if (
+          fill.holeId === attackDamageHole.holeId ||
+          fill.holeId === criticalAttackDamageHole.holeId
+        ) {
+          if (attackBurstDamageRoll !== undefined) {
+            return {
+              tag: "invalid",
+              message: "Ice Knife attack damage was filled twice.",
+            };
+          }
+          attackBurstDamageRoll = fill;
+          continue;
+        }
+        if (fill.holeId === burstDamageHole.holeId) {
+          if (damageRoll !== undefined) {
+            return {
+              tag: "invalid",
+              message: "Ice Knife burst damage was filled twice.",
+            };
+          }
+          damageRoll = fill;
+          continue;
+        }
+        return {
+          tag: "invalid",
+          message: "Ice Knife damage must use an Ice Knife damage hole.",
+        };
       }
       if (damageRoll !== undefined) {
         return { tag: "invalid", message: "Spell damage was filled twice." };
@@ -15329,8 +15452,20 @@ function spellFillSet(
     concentrationSavingThrows,
     damageDispositions,
     damageRoll,
+    attackBurstDamageRoll,
     healingRoll,
   };
+}
+
+function spellFillSetSavingThrowTargeting(
+  invocation: SupportedSpellInvocation,
+): SpellTargeting {
+  return invocation.procedure === "attackBurstSaveDamage"
+    ? invocation.burst.targeting
+    : invocation.procedure === "saveGatedDamage" ||
+        invocation.procedure === "saveGatedCondition"
+      ? invocation.targeting
+      : { kind: "singleCombatant" };
 }
 
 function concentrationSavingThrowFillFor(
@@ -15653,6 +15788,533 @@ function resolvePreparedSlotSpellAct(input: {
     tag: "resolved",
     state: nextState,
     snapshot: snapshotBattle(nextState),
+  };
+}
+
+function resolveAttackBurstSaveDamageSpellAct(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "attackBurstSaveDamage" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  if (input.fillSet.targetId === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      spellTargetHole(input.input.state, input.actorId, input.invocation),
+    ]);
+  }
+  const target = input.input.state.combatants.get(input.fillSet.targetId);
+  if (
+    target === undefined ||
+    !spellTargetIsLegal(
+      input.input.state,
+      input.actorId,
+      target.combatantId,
+      input.invocation,
+      input.fillSet.targetSpatialFacts,
+    )
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Spell target must be a combatant within the selected spell's supported range.",
+    );
+  }
+
+  const spellCastReactionWindow = maybeOpenReactionWindow(
+    input.input.state,
+    {
+      trigger: "spellCast",
+      casterId: input.actorId,
+      spellId: input.invocation.spell.id,
+      targetIds: [target.combatantId],
+      continuation: {
+        kind: "replay",
+        subject: input.input.subject,
+        fills: input.input.fills,
+      },
+    },
+    input.input.suppressedReactionTrigger,
+  );
+  if (spellCastReactionWindow !== null) {
+    return spellCastReactionWindow;
+  }
+
+  const requiredRollMode = requiredAttackRollMode(
+    input.input.state,
+    input.actorId,
+    target.combatantId,
+  );
+  if (input.fillSet.attackRoll === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      spellAttackRollHole(
+        input.input.state,
+        input.actorId,
+        input.invocation,
+        requiredRollMode,
+      ),
+    ]);
+  }
+  if (!attackRollResultIsValid(input.fillSet.attackRoll)) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Spell attack roll result is outside the d20 attack-roll protocol.",
+    );
+  }
+  if (!attackRollModeMatches(input.fillSet.attackRoll, requiredRollMode)) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Spell attack roll mode does not match the current attack-roll rule.",
+    );
+  }
+
+  const ordinaryHit = attackRollHits(
+    input.fillSet.attackRoll,
+    currentArmorClass(activeEffectArmorClass(target)),
+  );
+  const missToHitReplacement = selectedAttackRollMissToHitReplacement({
+    state: input.input.state,
+    subject: input.input.subject,
+    attackerId: input.actorId,
+    targetId: target.combatantId,
+    attackRoll: input.fillSet.attackRoll,
+    ordinaryHit,
+  });
+  if (
+    input.fillSet.attackRoll.missToHitReplacementUnitId !== undefined &&
+    missToHitReplacement === null
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      ordinaryHit
+        ? "Attack-roll miss-to-hit replacement can only be selected after a miss."
+        : "Attack-roll miss-to-hit replacement is not available for this spell attack roll.",
+    );
+  }
+  const hit = ordinaryHit || missToHitReplacement !== null;
+  const critical = attackRollIsCriticalHit(input.fillSet.attackRoll);
+  const attackRolledState = recordAttackRollMissToHitReplacementUsed(
+    consumeHelpAttackForAttackRoll(
+      recordAttackRollOngoingFeatures(
+        input.input.state,
+        input.actorId,
+        target.combatantId,
+        null,
+      ),
+      input.actorId,
+      target.combatantId,
+    ),
+    input.actorId,
+    missToHitReplacement,
+    {
+      subject: input.input.subject,
+      targetId: target.combatantId,
+      attackRoll: input.fillSet.attackRoll,
+    },
+  );
+
+  if (hit && input.input.suppressedReactionTrigger !== "attackHit") {
+    const reactionWindow = maybeOpenReactionWindow(
+      attackRolledState,
+      {
+        trigger: "attackHit",
+        attackerId: input.actorId,
+        targetId: target.combatantId,
+        attackRoll: input.fillSet.attackRoll,
+        attackKind: spellAttackKindForRedirect(input.invocation.attackKind),
+        damageTypes: [input.invocation.damage.damageType],
+        continuation: {
+          kind: "replay",
+          subject: input.input.subject,
+          fills: input.input.fills,
+        },
+      },
+      input.input.suppressedReactionTrigger,
+    );
+    if (reactionWindow !== null) {
+      return reactionWindow;
+    }
+  }
+
+  if (hit && input.fillSet.attackBurstDamageRoll === undefined) {
+    return needsHolesResult(attackRolledState, input.input.subject, [
+      spellDamageHole(input.invocation, critical),
+    ]);
+  }
+  if (!hit && input.fillSet.attackBurstDamageRoll !== undefined) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Ice Knife attack damage can only be filled after a hit.",
+    );
+  }
+  if (hit && input.fillSet.attackBurstDamageRoll !== undefined) {
+    const attackDamageValidation = validateSpellDamageFill(
+      input.fillSet.attackBurstDamageRoll,
+      input.invocation,
+      critical,
+    );
+    if (attackDamageValidation !== null) {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        attackDamageValidation,
+      );
+    }
+  }
+
+  const attackDamageAmount =
+    hit && input.fillSet.attackBurstDamageRoll !== undefined
+      ? spellDamageAmountForTarget(
+          target,
+          input.invocation,
+          input.fillSet.attackBurstDamageRoll,
+        )
+      : 0;
+  const attackDamageDispositionHole =
+    attackDamageAmount > 0
+      ? zeroHitPointReplacementDispositionHole({
+          damageSourceId: input.actorId,
+          target,
+          damageAmount: attackDamageAmount,
+          holeKey: iceKnifeDamageDispositionHoleKey(
+            "attack",
+            target.combatantId,
+          ),
+        })
+      : null;
+  const attackDamageDispositionHoles =
+    attackDamageDispositionHole === null ? [] : [attackDamageDispositionHole];
+  const attackDamageDispositionHoleIds = new Set<BattleHoleId>(
+    attackDamageDispositionHoles.map((hole) => hole.holeId),
+  );
+  const attackDamageDispositionFills =
+    input.fillSet.damageDispositions.filter((fill) =>
+      attackDamageDispositionHoleIds.has(fill.holeId),
+    );
+  const attackDamageDispositionValidation = damageDispositionFillsValidation({
+    holes: attackDamageDispositionHoles,
+    fills: attackDamageDispositionFills,
+  });
+  if (attackDamageDispositionValidation !== null) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      attackDamageDispositionValidation,
+    );
+  }
+  const missingAttackDamageDispositionHoles =
+    attackDamageDispositionHoles.filter(
+      (hole) =>
+        damageDispositionFillFor(input.fillSet.damageDispositions, hole) ===
+        undefined,
+    );
+  if (missingAttackDamageDispositionHoles.length > 0) {
+    return needsHolesResult(
+      attackRolledState,
+      input.input.subject,
+      missingAttackDamageDispositionHoles,
+    );
+  }
+
+  const damagedByAttack =
+    hit && input.fillSet.attackBurstDamageRoll !== undefined
+      ? applySpellDamage(
+          attackRolledState,
+          target.combatantId,
+          input.invocation,
+          input.fillSet.attackBurstDamageRoll,
+          critical,
+          undefined,
+          "full",
+          damageDispositionForTarget(
+            attackDamageDispositionHoles,
+            input.fillSet.damageDispositions,
+            target.combatantId,
+          ),
+        )
+      : attackRolledState;
+
+  const savingThrowHole = spellSavingThrowOutcomeHole(
+    damagedByAttack,
+    input.actorId,
+    input.invocation,
+  );
+  if (input.fillSet.savingThrowOutcomes === undefined) {
+    return needsHolesResult(damagedByAttack, input.input.subject, [
+      savingThrowHole,
+    ]);
+  }
+  const savingThrowValidation = validateSavingThrowOutcomes(
+    input.fillSet.savingThrowOutcomes,
+    savingThrowHole,
+    damagedByAttack,
+    input.actorId,
+    target.combatantId,
+  );
+  if (savingThrowValidation !== null) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      savingThrowValidation,
+    );
+  }
+
+  const failedTargets = input.fillSet.savingThrowOutcomes.outcomes.flatMap(
+    (outcome) => (outcome.succeeded ? [] : [outcome.targetId]),
+  );
+  if (failedTargets.length > 0) {
+    const saveFailedReactionWindow = maybeOpenReactionWindow(
+      damagedByAttack,
+      {
+        trigger: "saveFailed",
+        targetId: failedTargets[0]!,
+        sourceSpellId: input.invocation.spell.id,
+        continuation: {
+          kind: "replay",
+          subject:
+            input.input.reactionContinuationSubject ?? input.input.subject,
+          fills: input.input.fills,
+        },
+      },
+      input.input.suppressedReactionTrigger,
+    );
+    if (saveFailedReactionWindow !== null) {
+      return saveFailedReactionWindow;
+    }
+  }
+
+  if (failedTargets.length > 0 && input.fillSet.damageRoll === undefined) {
+    return needsHolesResult(damagedByAttack, input.input.subject, [
+      spellBurstDamageHole(input.invocation),
+    ]);
+  }
+  if (failedTargets.length === 0 && input.fillSet.damageRoll !== undefined) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Ice Knife burst damage can only be filled when at least one target fails the Dexterity Saving Throw.",
+    );
+  }
+  if (input.fillSet.damageRoll !== undefined) {
+    const burstDamageValidation = validateSpellBurstDamageFill(
+      input.fillSet.damageRoll,
+      input.invocation,
+    );
+    if (burstDamageValidation !== null) {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        burstDamageValidation,
+      );
+    }
+  }
+
+  const burstDamageByTargetId = new Map(
+    failedTargets.flatMap((targetId): readonly [CombatantId, number][] => {
+      const burstTarget = damagedByAttack.combatants.get(targetId);
+      return burstTarget === undefined || input.fillSet.damageRoll === undefined
+        ? []
+        : [
+            [
+              targetId,
+              spellBurstDamageAmountForTarget(
+                burstTarget,
+                input.invocation,
+                input.fillSet.damageRoll,
+                "full",
+              ),
+            ],
+          ];
+    }),
+  );
+  const burstDamageDispositionHoles = Array.from(
+    burstDamageByTargetId,
+    ([targetId, damageAmount]) => {
+      const burstTarget = damagedByAttack.combatants.get(targetId);
+      return burstTarget === undefined
+        ? null
+        : zeroHitPointReplacementDispositionHole({
+            damageSourceId: input.actorId,
+            target: burstTarget,
+            damageAmount,
+            holeKey: iceKnifeDamageDispositionHoleKey("burst", targetId),
+          });
+    },
+  ).flatMap((hole) => (hole === null ? [] : [hole]));
+  const damageDispositionHoles = [
+    ...attackDamageDispositionHoles,
+    ...burstDamageDispositionHoles,
+  ];
+  const damageDispositionValidation = damageDispositionFillsValidation({
+    holes: damageDispositionHoles,
+    fills: input.fillSet.damageDispositions,
+  });
+  if (damageDispositionValidation !== null) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      damageDispositionValidation,
+    );
+  }
+  const missingBurstDamageDispositionHoles = burstDamageDispositionHoles.filter(
+    (hole) =>
+      damageDispositionFillFor(input.fillSet.damageDispositions, hole) ===
+      undefined,
+  );
+  if (missingBurstDamageDispositionHoles.length > 0) {
+    return needsHolesResult(
+      damagedByAttack,
+      input.input.subject,
+      missingBurstDamageDispositionHoles,
+    );
+  }
+  const concentrationDamageByTargetId = new Map<CombatantId, number>();
+  if (attackDamageAmount > 0) {
+    concentrationDamageByTargetId.set(target.combatantId, attackDamageAmount);
+  }
+  for (const [targetId, burstDamageAmount] of burstDamageByTargetId) {
+    concentrationDamageByTargetId.set(
+      targetId,
+      (concentrationDamageByTargetId.get(targetId) ?? 0) + burstDamageAmount,
+    );
+  }
+  const concentrationSaves = Array.from(
+    concentrationDamageByTargetId,
+    ([targetId, damageAmount]) => {
+      const damagedTarget = damagedByAttack.combatants.get(targetId);
+      return damagedTarget === undefined
+        ? null
+        : concentrationSavingThrowHole(damagedTarget, damageAmount);
+    },
+  ).flatMap((hole) => (hole === null ? [] : [hole]));
+  const missingConcentrationSaves = concentrationSaves.filter(
+    (concentrationSave) =>
+      concentrationSavingThrowFillFor(
+        input.fillSet.concentrationSavingThrows,
+        concentrationSave,
+      ) === undefined,
+  );
+  if (missingConcentrationSaves.length > 0) {
+    return needsHolesResult(
+      damagedByAttack,
+      input.input.subject,
+      missingConcentrationSaves,
+    );
+  }
+  const concentrationSaveIds = new Set<BattleHoleId>(
+    concentrationSaves.map((concentrationSave) => concentrationSave.holeId),
+  );
+  if (
+    input.fillSet.concentrationSavingThrows.some(
+      (fill) => !concentrationSaveIds.has(fill.holeId),
+    )
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Concentration Saving Throw fill is only valid for a concentrating damaged target.",
+    );
+  }
+  const concentrationSaveByTargetId = new Map(
+    concentrationSaves.map((concentrationSave) => [
+      concentrationSave.combatantId,
+      concentrationSavingThrowFillFor(
+        input.fillSet.concentrationSavingThrows,
+        concentrationSave,
+      ),
+    ]),
+  );
+
+  const damagedByAttackWithConcentration =
+    hit && input.fillSet.attackBurstDamageRoll !== undefined
+      ? applySpellDamage(
+          attackRolledState,
+          target.combatantId,
+          input.invocation,
+          input.fillSet.attackBurstDamageRoll,
+          critical,
+          concentrationSaveByTargetId.get(target.combatantId),
+          "full",
+          damageDispositionForTarget(
+            attackDamageDispositionHoles,
+            input.fillSet.damageDispositions,
+            target.combatantId,
+          ),
+        )
+      : attackRolledState;
+  const damagedByBurst =
+    input.fillSet.damageRoll === undefined
+      ? damagedByAttackWithConcentration
+      : failedTargets.reduce((state, targetId) => {
+          const damageAmount = burstDamageByTargetId.get(targetId);
+          return damageAmount === undefined
+            ? state
+            : applyPreparedSlotSpellDamage(
+                state,
+                targetId,
+                damageAmount,
+                concentrationSaveByTargetId.get(targetId),
+                damageDispositionForTarget(
+                  burstDamageDispositionHoles,
+                  input.fillSet.damageDispositions,
+                  targetId,
+                ),
+              );
+        }, damagedByAttackWithConcentration);
+
+  const spentResources = spendSpellCastResources({
+    state: damagedByBurst,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
+  if (spentResources.tag !== "resolved") {
+    return spentResources;
+  }
+
+  const afterDamageEvents: BattleAfterDamageEvent[] = [
+    ...(attackDamageAmount > 0
+      ? [
+          {
+            damageSourceId: input.actorId,
+            damagedId: target.combatantId,
+            damageAmount: toDamageAmount(attackDamageAmount),
+          },
+        ]
+      : []),
+    ...failedTargets.flatMap((targetId): readonly BattleAfterDamageEvent[] => {
+      const damageAmount = burstDamageByTargetId.get(targetId);
+      return damageAmount === undefined || damageAmount <= 0
+        ? []
+        : [
+            {
+              damageSourceId: input.actorId,
+              damagedId: targetId,
+              damageAmount: toDamageAmount(damageAmount),
+            },
+          ];
+    }),
+  ];
+  const afterDamageReactionWindow = openAfterDamageSequenceReactionWindow({
+    state: spentResources.state,
+    subject: input.input.subject,
+    events: afterDamageEvents,
+    suppressedReactionTrigger: input.input.suppressedReactionTrigger,
+  });
+  if (afterDamageReactionWindow.tag === "needsHoles") {
+    return afterDamageReactionWindow;
+  }
+
+  return {
+    tag: "resolved",
+    state: spentResources.state,
+    snapshot: snapshotBattle(spentResources.state),
   };
 }
 
@@ -16125,7 +16787,8 @@ function validateSavingThrowOutcomes(
   targetId: CombatantId | undefined,
 ): string | null {
   const outcomes = value.outcomes;
-  if (hole.spell.targeting.kind === "singleCombatant") {
+  const targeting = spellSavingThrowTargeting(hole.spell);
+  if (targeting.kind === "singleCombatant") {
     if (outcomes.length === 0) {
       return "Save-gate spell must include at least one affected target Saving Throw outcome.";
     }
@@ -16149,17 +16812,30 @@ function validateSavingThrowOutcomes(
     return "Save-gate spell area origin anchor must be a combatant in this battle.";
   }
   if (
-    hole.spell.targeting.kind === "selfOriginCone" &&
+    targeting.kind === "selfOriginCone" &&
     value.area.originAnchorId !== actorId
   ) {
     return "Self-origin Cone save-gate spell area must originate from the caster.";
+  }
+  if (
+    targeting.kind === "primaryTargetOriginEmanation" &&
+    value.area.originAnchorId !== targetId
+  ) {
+    return "Ice Knife burst area must originate from the primary target.";
   }
   const affectedTargets = new Set(value.area.affectedTargetIds);
   if (affectedTargets.size !== value.area.affectedTargetIds.length) {
     return "Save-gate spell area affected targets must not duplicate targets.";
   }
   if (
-    hole.spell.targeting.kind === "pointOriginCubeExcludingCaster" &&
+    targeting.kind === "primaryTargetOriginEmanation" &&
+    targetId !== undefined &&
+    !affectedTargets.has(targetId)
+  ) {
+    return "Ice Knife burst area must include the primary target.";
+  }
+  if (
+    targeting.kind === "pointOriginCubeExcludingCaster" &&
     affectedTargets.has(actorId)
   ) {
     return "Entangle area affected targets must exclude the caster.";
@@ -17217,6 +17893,14 @@ function supportedSpellActs(
       ),
     ),
     ...spellcasting.preparedSpells.flatMap((spell) =>
+      supportedPreparedAttackBurstSaveDamageProfile(
+        spell,
+        spellcasting.spellSlots,
+        spellcasting.spellcastingAbilityModifier,
+        spellcasting.proficiencyBonus,
+      ),
+    ),
+    ...spellcasting.preparedSpells.flatMap((spell) =>
       supportedPreparedSaveGateDamageProfile(spell, spellcasting.spellSlots),
     ),
     ...spellcasting.preparedSpells.flatMap((spell) =>
@@ -17651,6 +18335,129 @@ function supportedPreparedSpellAttackProfile(
   });
 }
 
+function supportedPreparedAttackBurstSaveDamageProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+  spellcastingAbilityModifier: AbilityModifier,
+  proficiencyBonus: ProficiencyBonusType,
+): readonly SupportedSpellInvocation[] {
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    return supportedAttackBurstSaveDamageProfile({
+      spell,
+      access: { tag: "prepared" },
+      resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+      spellcastingAbilityModifier,
+      proficiencyBonus,
+      slotLevel: slot.spellLevel,
+    });
+  });
+}
+
+function supportedAttackBurstSaveDamageProfile(
+  input: {
+    readonly spell: SpellRecord;
+    readonly spellcastingAbilityModifier: AbilityModifier;
+    readonly proficiencyBonus: ProficiencyBonusType;
+    readonly slotLevel: SpellSlotLevel;
+  } & PreparedDamageSpellSource,
+): readonly SupportedSpellInvocation[] {
+  const spell = input.spell;
+  if (spell.mechanics.family !== "activation") {
+    return [];
+  }
+  const [attackPhase, burstPhase] = spell.mechanics.phases;
+  const targeting =
+    attackPhase?.kind === "attack_roll"
+      ? spellAttackDamageTargeting(attackPhase.attachment)
+      : null;
+  const burstTargeting =
+    burstPhase?.kind === "save_gate"
+      ? primaryTargetOriginEmanationTargeting(burstPhase.attachment)
+      : null;
+  const rangeFeet =
+    targeting?.kind === "singleCombatant"
+      ? singleTargetSpellRangeFeet(spell.mechanics.range)
+      : null;
+  if (
+    spell.name !== "Ice Knife" ||
+    spell.provenance.kind !== "srd-5.2.1" ||
+    spell.provenance.section !== "Spells/Descriptions-E-L#Ice Knife" ||
+    spell.mechanics.level !== 1 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.duration.kind !== "instantaneous" ||
+    rangeFeet === null ||
+    spell.mechanics.phases.length !== 2 ||
+    attackPhase?.kind !== "attack_roll" ||
+    burstPhase?.kind !== "save_gate" ||
+    !supportedSpellAttackKind(attackPhase.attackKind) ||
+    targeting === null ||
+    burstTargeting === null ||
+    attackPhase.onHit.length !== 1 ||
+    attackPhase.onMiss.length !== 1 ||
+    attackPhase.onMiss[0]?.kind !== "none" ||
+    burstPhase.ability !== "dex" ||
+    burstPhase.dc.kind !== "caster_spell_save_dc" ||
+    burstPhase.onSuccess.kind !== "none" ||
+    burstPhase.onFail.kind !== "damage" ||
+    typeof burstPhase.onFail.damageType !== "string"
+  ) {
+    return [];
+  }
+  const hitDamage = attackPhase.onHit[0];
+  if (
+    hitDamage?.kind !== "damage" ||
+    typeof hitDamage.damageType !== "string"
+  ) {
+    return [];
+  }
+  const hitDamageExpr = supportedDamageAmountExpr({
+    amount: hitDamage.amount,
+    spellLevel: spell.mechanics.level,
+    slotLevel: input.slotLevel,
+  });
+  const burstDamageExpr = supportedDamageAmountExpr({
+    amount: burstPhase.onFail.amount,
+    spellLevel: spell.mechanics.level,
+    slotLevel: input.slotLevel,
+  });
+  if (hitDamageExpr === null || burstDamageExpr === null) {
+    return [];
+  }
+
+  return [
+    {
+      access: input.access,
+      resource: input.resource,
+      procedure: "attackBurstSaveDamage",
+      spell,
+      targeting,
+      attackKind: attackPhase.attackKind,
+      attackBonus: attackBonus(
+        Number(input.spellcastingAbilityModifier) +
+          Number(input.proficiencyBonus),
+      ),
+      damage: {
+        expr: hitDamageExpr,
+        damageType: hitDamage.damageType,
+      },
+      burst: {
+        ability: burstPhase.ability,
+        dc: burstPhase.dc,
+        targeting: burstTargeting,
+        damage: {
+          expr: burstDamageExpr,
+          damageType: burstPhase.onFail.damageType,
+        },
+        successDamage: "none",
+      },
+      rangeFeet,
+    },
+  ];
+}
+
 function supportedSpellAttackDamageProfile(
   input: {
     readonly spell: SpellRecord;
@@ -17749,6 +18556,27 @@ function spellAttackDamageTargeting(
     return null;
   }
   return { kind: "singleCombatant" };
+}
+
+function primaryTargetOriginEmanationTargeting(
+  attachment: Attachment,
+): Extract<
+  SpellTargeting,
+  { readonly kind: "primaryTargetOriginEmanation" }
+> | null {
+  const value = attachment.kind === "hole" ? attachment.value : attachment;
+  if (
+    value.kind === "area" &&
+    value.origin.kind === "on_primary_target" &&
+    value.shape.kind === "emanation" &&
+    value.shape.radiusFeet === SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET
+  ) {
+    return {
+      kind: "primaryTargetOriginEmanation",
+      radiusFeet: movementFeet(value.shape.radiusFeet),
+    };
+  }
+  return null;
 }
 
 function supportedCantripSaveGateDamageProfile(
@@ -18050,6 +18878,9 @@ function areaSaveGateSpellRangeFeet(
     ),
     Match.when({ kind: "selfOriginCone" }, () =>
       range.kind === "self" ? movementFeet(0) : null,
+    ),
+    Match.when({ kind: "primaryTargetOriginEmanation" }, () =>
+      range.kind === "point" ? movementFeet(range.feet) : null,
     ),
     Match.exhaustive,
   );
@@ -18699,6 +19530,12 @@ function supportedSpellInvocationRef(
       slotLevel: slotSpell.resource.slotLevel,
       procedure: "repeatedDamageAllocation" as const,
     })),
+    Match.when({ procedure: "attackBurstSaveDamage" }, (slotSpell) => ({
+      tag: "spellSlot" as const,
+      spellId: spellId(slotSpell.spell.id),
+      slotLevel: slotSpell.resource.slotLevel,
+      procedure: "attackBurstSaveDamage" as const,
+    })),
     Match.when({ procedure: "spellAttackDamage" }, damageSpellInvocationRef),
     Match.when({ procedure: "saveGatedDamage" }, damageSpellInvocationRef),
     Match.when({ procedure: "saveGatedCondition" }, (conditionSpell) => ({
@@ -18781,7 +19618,7 @@ function spellAttackRollHole(
   attackerId: CombatantId,
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "spellAttackDamage" }
+    { readonly procedure: "attackBurstSaveDamage" | "spellAttackDamage" }
   >,
   rollMode?: AttackRollMode,
 ): BattleSpellAttackRollHole {
@@ -18823,6 +19660,27 @@ function spellDamageHole(
   };
 }
 
+function spellBurstDamageHole(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "attackBurstSaveDamage" }
+  >,
+): BattleSpellDamageRollHole {
+  const expr = spellBurstDamageExpression(invocation);
+  return {
+    kind: "rolledDice",
+    holeId: holeId(
+      `battle:spell:burst-damage-result:${invocation.spell.id}:${expr}`,
+    ),
+    holeInstanceKey: holeInstanceKey(
+      `battle:spell:burst-damage-result:${invocation.spell.id}:${expr}`,
+    ),
+    label: `${invocation.spell.name} burst damage (${expr})`,
+    spell: invocation,
+    critical: false,
+  };
+}
+
 function spellHealingRollHole(
   invocation: Extract<
     SupportedSpellInvocation,
@@ -18854,7 +19712,12 @@ function spellSavingThrowOutcomeHole(
   _actorId: CombatantId,
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "saveGatedDamage" | "saveGatedCondition" }
+    {
+      readonly procedure:
+        | "attackBurstSaveDamage"
+        | "saveGatedDamage"
+        | "saveGatedCondition";
+    }
   >,
 ): BattleSpellSavingThrowOutcomeHole {
   const holeKey = `battle:spell:saving-throw-outcome:${invocation.spell.id}`;
@@ -18862,16 +19725,45 @@ function spellSavingThrowOutcomeHole(
     kind: "savingThrowOutcome",
     holeId: spellSavingThrowOutcomeHoleId(invocation),
     holeInstanceKey: holeInstanceKey(holeKey),
-    label:
-      invocation.targeting.kind === "singleCombatant"
+    label: (() => {
+      const targeting = spellSavingThrowTargeting(invocation);
+      return targeting.kind === "singleCombatant"
         ? `${invocation.spell.name} Saving Throw outcome`
-        : `${invocation.spell.name} ${spellAreaTargetingLabel(invocation.targeting)} Saving Throw outcomes`,
+        : `${invocation.spell.name} ${spellAreaTargetingLabel(targeting)} Saving Throw outcomes`;
+    })(),
     spell: invocation,
-    ability: invocation.ability,
-    dc: invocation.dc,
+    ability:
+      invocation.procedure === "attackBurstSaveDamage"
+        ? invocation.burst.ability
+        : invocation.ability,
+    dc:
+      invocation.procedure === "attackBurstSaveDamage"
+        ? invocation.burst.dc
+        : invocation.dc,
     areaChoices: [],
-    targetRollModes: savingThrowRollModeProjections(state, invocation.ability),
+    targetRollModes: savingThrowRollModeProjections(
+      state,
+      invocation.procedure === "attackBurstSaveDamage"
+        ? invocation.burst.ability
+        : invocation.ability,
+    ),
   };
+}
+
+function spellSavingThrowTargeting(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    {
+      readonly procedure:
+        | "attackBurstSaveDamage"
+        | "saveGatedDamage"
+        | "saveGatedCondition";
+    }
+  >,
+): SpellTargeting {
+  return invocation.procedure === "attackBurstSaveDamage"
+    ? invocation.burst.targeting
+    : invocation.targeting;
 }
 
 function spellAreaTargetingLabel(
@@ -18884,6 +19776,10 @@ function spellAreaTargetingLabel(
       () => "point-origin Cube",
     ),
     Match.when({ kind: "selfOriginCone" }, () => "self-origin Cone"),
+    Match.when(
+      { kind: "primaryTargetOriginEmanation" },
+      () => "primary-target-origin Emanation",
+    ),
     Match.exhaustive,
   );
 }
@@ -18918,7 +19814,11 @@ function validateSpellDamageFill(
       invocation.procedure === "repeatedDamageAllocation"
         ? invocation.damage.expr.dice * invocation.targeting.repeatedEffectCount
         : invocation.damage.expr.dice *
-          (invocation.procedure === "spellAttackDamage" && critical ? 2 : 1),
+          ((invocation.procedure === "spellAttackDamage" ||
+            invocation.procedure === "attackBurstSaveDamage") &&
+          critical
+            ? 2
+            : 1),
     dieSize: invocation.damage.expr.dieSize,
   });
   return validation?.reason ?? null;
@@ -18937,6 +19837,23 @@ function validateSpellHealingFill(
   const validation = validateRolledDiceForDiceExpr(fill.value, {
     dice: invocation.healing.expr.dice,
     dieSize: invocation.healing.expr.dieSize,
+  });
+  return validation?.reason ?? null;
+}
+
+function validateSpellBurstDamageFill(
+  fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "attackBurstSaveDamage" }
+  >,
+): string | null {
+  if (fill.holeId !== spellBurstDamageHole(invocation).holeId) {
+    return "Ice Knife burst damage must use the burst damage hole.";
+  }
+  const validation = validateRolledDiceForDiceExpr(fill.value, {
+    dice: invocation.burst.damage.expr.dice,
+    dieSize: invocation.burst.damage.expr.dieSize,
   });
   return validation?.reason ?? null;
 }
@@ -19062,6 +19979,32 @@ function spellDamageAmountForTarget(
     target,
     saveAdjustedDamage,
     invocation.damage.damageType,
+  );
+}
+
+function spellBurstDamageAmountForTarget(
+  target: BattleCreatureState,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "attackBurstSaveDamage" }
+  >,
+  damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+  saveDamageResult: SaveDamageResult,
+): number {
+  const diceTotal = damageRoll.value.reduce(
+    (total, group) =>
+      total +
+      group.results.reduce(
+        (groupTotal, dieResult) => groupTotal + Number(dieResult),
+        0,
+      ),
+    0,
+  );
+  const flat = invocation.burst.damage.expr.flat ?? 0;
+  return damageAmountAfterTargetAdjustments(
+    target,
+    applySaveDamageResult(diceTotal + flat, saveDamageResult),
+    invocation.burst.damage.damageType,
   );
 }
 
@@ -19698,13 +20641,26 @@ function spellDamageExpression(
     invocation.procedure === "repeatedDamageAllocation"
       ? invocation.damage.expr.dice * invocation.targeting.repeatedEffectCount
       : invocation.damage.expr.dice *
-        (invocation.procedure === "spellAttackDamage" && critical ? 2 : 1);
+        ((invocation.procedure === "spellAttackDamage" ||
+          invocation.procedure === "attackBurstSaveDamage") &&
+        critical
+          ? 2
+          : 1);
   const flat =
     (invocation.damage.expr.flat ?? 0) *
     (invocation.procedure === "repeatedDamageAllocation"
       ? invocation.targeting.repeatedEffectCount
       : 1);
   return `${dice}d${invocation.damage.expr.dieSize}${signedModifier(flat)}-${invocation.damage.damageType}`;
+}
+
+function spellBurstDamageExpression(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "attackBurstSaveDamage" }
+  >,
+): string {
+  return `${invocation.burst.damage.expr.dice}d${invocation.burst.damage.expr.dieSize}${signedModifier(invocation.burst.damage.expr.flat ?? 0)}-${invocation.burst.damage.damageType}`;
 }
 
 function spellHealingExpression(
@@ -21184,6 +22140,11 @@ function zeroHitPointReplacementDispositionHole(input: {
   readonly damageSourceId: CombatantId;
   readonly target: BattleCreatureState;
   readonly damageAmount: number;
+  readonly holeKey?: {
+    readonly holeId: BattleHoleId;
+    readonly holeInstanceKey: HoleInstanceKey;
+    readonly label: string;
+  };
 }): BattleAttackDamageDispositionHole | null {
   const choices: BattleAttackDamageDisposition[] = [
     { kind: "ordinaryDamage" },
@@ -21192,16 +22153,38 @@ function zeroHitPointReplacementDispositionHole(input: {
   return choices.length > 1
     ? {
         kind: "attackDamageDisposition",
-        holeId: damageDispositionHoleIdForTarget(input.target.combatantId),
-        holeInstanceKey: damageDispositionHoleInstanceForTarget(
-          input.target.combatantId,
-        ),
-        label: "Damage disposition",
+        holeId:
+          input.holeKey?.holeId ??
+          damageDispositionHoleIdForTarget(input.target.combatantId),
+        holeInstanceKey:
+          input.holeKey?.holeInstanceKey ??
+          damageDispositionHoleInstanceForTarget(input.target.combatantId),
+        label: input.holeKey?.label ?? "Damage disposition",
         attackerId: input.damageSourceId,
         targetId: input.target.combatantId,
         choices,
       }
     : null;
+}
+
+function iceKnifeDamageDispositionHoleKey(
+  part: "attack" | "burst",
+  targetId: CombatantId,
+): {
+  readonly holeId: BattleHoleId;
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly label: string;
+} {
+  return {
+    holeId: holeId(`battle:ice-knife:${part}:damage-disposition:${targetId}`),
+    holeInstanceKey: holeInstanceKey(
+      `battle:ice-knife:${part}:damage-disposition:${targetId}`,
+    ),
+    label:
+      part === "attack"
+        ? "Ice Knife attack damage disposition"
+        : "Ice Knife burst damage disposition",
+  };
 }
 
 function damageDispositionHoleIdForTarget(targetId: CombatantId): BattleHoleId {

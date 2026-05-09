@@ -51,6 +51,7 @@ import fireBoltInput from "../../content/fire_bolt.json";
 import guidingBoltInput from "../../content/guiding_bolt.json";
 import healingWordInput from "../../content/healing_word.json";
 import hellishRebukeInput from "../../content/hellish_rebuke.json";
+import iceKnifeInput from "../../content/ice_knife.json";
 import inflictWoundsInput from "../../content/inflict_wounds.json";
 import lightInput from "../../content/light.json";
 import mageArmorInput from "../../content/mage_armor.json";
@@ -277,6 +278,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     entangleInput,
     fireBoltInput,
     guidingBoltInput,
+    iceKnifeInput,
     inflictWoundsInput,
     lightInput,
     poisonSprayInput,

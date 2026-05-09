@@ -578,6 +578,12 @@ Feature and spell resources:
   `inflict_wounds` and `burning_hands`. `color_spray` applies spell-owned
   Blinded to failed self-origin Cone Constitution saves until the caster's next
   turn ends without deleting unrelated Blinded sources when it expires.
+- prepared `ice_knife` is a mixed spell profile: the primary target uses the
+  ranged spell attack replay and takes Piercing damage only on a hit, then the
+  burst always asks for a primary-target-origin Emanation Dexterity Saving
+  Throw. Failed burst saves take slot-scaled Cold damage, including the primary
+  target when it is inside the burst area, and damaged concentrating targets
+  receive the normal Concentration follow-up.
 
 Monster resources:
 

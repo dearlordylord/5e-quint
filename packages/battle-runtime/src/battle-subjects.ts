@@ -61,6 +61,7 @@ export type SpellDamageProcedure = (typeof SPELL_DAMAGE_PROCEDURES)[number];
 
 export const SPELL_SLOT_PROCEDURES = [
   ...SPELL_DAMAGE_PROCEDURES,
+  "attackBurstSaveDamage",
   "saveGatedCondition",
   "repeatedDamageAllocation",
   "directHitPointRestoration",

@@ -134,6 +134,10 @@ module battleRuntime {
   //   Wounds, Burning Hands, Color Spray, Entangle, and the damage-only slice
   //   of Chill Touch are action-time spells with creature or table-supplied
   //   area targets, cantrip/slot scaling, and the listed attack/save outcomes.
+  //   Spells/Descriptions-E-L.md lines 1307-1318: Ice Knife is a level-1
+  //   Action spell with a primary ranged spell attack, hit-only Piercing
+  //   damage, and an unconditional primary-target-anchored burst Dexterity
+  //   Saving Throw that deals Cold damage only on a failed save.
   // - Character-Origins.md lines 253-255, Playing-the-Game.md lines 788-806,
   //   Rules-Glossary.md lines 361-365, and UBIQUITOUS_LANGUAGE.md:
   //   Orc Adrenaline Rush spends a limited-use Bonus Action Dash, grants
@@ -151,9 +155,11 @@ module battleRuntime {
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | HealingWord | CureWounds | MassHealingWord | Shield | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack
   type SaveGatedDamageInvocation = AcidSplashSaveGate | SacredFlameSaveGate | InflictWoundsSaveGate | BurningHandsSaveGate | ViciousMockerySaveGate
+  type AttackBurstSaveDamageInvocation =
+    | IceKnifeAttackBurstSaveDamage
   type SaveGatedConditionInvocation =
     | ColorSpraySaveGate
     | EntangleSaveGate
@@ -197,6 +203,7 @@ module battleRuntime {
     | ResumeRayOfFrost
     | ResumePoisonSpray
     | ResumeChillTouch
+    | ResumeIceKnife
     | ResumeSaveGateDamage
     | ResumeAfterDamage
     | ResumeMovement({ speedKind: MovementSpeedKind, movementCost: int })
@@ -907,6 +914,7 @@ module battleRuntime {
       | ResumeRayOfFrost => resolveRayOfFrost(state, 15, 10, 4, true)
       | ResumePoisonSpray => resolvePoisonSpray(state, 15, 10, 7, true)
       | ResumeChillTouch => resolveChillTouch(state, 15, 10, 6, true)
+      | ResumeIceKnife => resolveIceKnife(state, 15, 10, 4, false, true, false, 6, true, true)
       | ResumeSaveGateDamage => resolveAcidSplash(state, false, true, 4, true, true)
       | ResumeAfterDamage => state
       | ResumeMovement(movement) => applyFighterMovementWithSpeedKind(state, movement.speedKind, movement.movementCost)
@@ -1869,6 +1877,7 @@ module battleRuntime {
       | BurningHands => true
       | ColorSpray => true
       | Entangle => true
+      | IceKnife => true
       | HealingWord => true
       | CureWounds => true
       | MassHealingWord => true
@@ -2001,6 +2010,46 @@ module battleRuntime {
       | BurningHandsSaveGate => true
       | ViciousMockerySaveGate => false
     }
+
+  pure def attackBurstSaveDamageSpendsLevelOneSlot(invocation: AttackBurstSaveDamageInvocation): bool =
+    match invocation {
+      | IceKnifeAttackBurstSaveDamage => true
+    }
+
+  pure def attackBurstSaveDamageAttackType(invocation: AttackBurstSaveDamageInvocation): DamageType =
+    match invocation {
+      | IceKnifeAttackBurstSaveDamage => Piercing
+    }
+
+  pure def attackBurstSaveDamageBurstType(invocation: AttackBurstSaveDamageInvocation): DamageType =
+    match invocation {
+      | IceKnifeAttackBurstSaveDamage => Cold
+    }
+
+  pure def attackBurstSaveDamageReplayHoles(
+    invocation: AttackBurstSaveDamageInvocation,
+    canCastSpells: bool,
+    targetFilled: bool,
+    attackRollFilled: bool,
+    attackHitsTarget: bool,
+    attackDamageFilled: bool,
+    savingThrowOutcomesFilled: bool,
+    anyBurstTargetFailsSavingThrow: bool,
+  ): Set[Hole] =
+    if (not(canCastSpells))
+      Set()
+    else if (not(targetFilled))
+      Set(TargetChoice)
+    else if (not(attackRollFilled))
+      Set(AttackRoll)
+    else if (attackHitsTarget and not(attackDamageFilled))
+      Set(DamageRoll)
+    else if (not(savingThrowOutcomesFilled))
+      Set(SavingThrowOutcome)
+    else if (anyBurstTargetFailsSavingThrow)
+      Set(SpellDamageRoll)
+    else
+      Set()
 
   pure def saveGatedConditionTargeting(invocation: SaveGatedConditionInvocation): SaveGatedTargeting =
     match invocation {
@@ -2272,6 +2321,100 @@ module battleRuntime {
     concentrationSaveSucceeded: bool,
   ): BattleState =
     resolveSingleTargetSaveGatedDamage(state, InflictWoundsSaveGate, savingThrowSucceeded, damageRoll, concentrationSaveSucceeded)
+
+  pure def adjustedAttackBurstSaveDamage(
+    damage: int,
+    damageType: DamageType,
+  ): int =
+    damageAfterAdjustments(damage, damageType, Set(), Set(), Set())
+
+  pure def applyIceKnifeDamageWithSingleConcentrationCheck(
+    target: Combatant,
+    attackDamage: int,
+    burstDamage: int,
+    concentrationSaveSucceeded: bool,
+  ): Combatant = {
+    val totalDamage = attackDamage + burstDamage
+    val afterAttack = applyDamage(target, attackDamage, 1, true)
+    val afterBurst = applyDamage(afterAttack, burstDamage, 1, true)
+    if (target.concentrating and totalDamage > 0 and not(concentrationSaveSucceeded))
+      breakConcentration(afterBurst)
+    else
+      afterBurst
+  }
+
+  pure def iceKnifeBurstTarget(
+    target: Combatant,
+    savingThrowSucceeded: bool,
+    burstDamageRoll: int,
+    concentrationSaveSucceeded: bool,
+  ): Combatant = {
+    val burstDamage =
+      if (savingThrowSucceeded)
+        0
+      else
+        adjustedAttackBurstSaveDamage(burstDamageRoll, attackBurstSaveDamageBurstType(IceKnifeAttackBurstSaveDamage))
+    applyIceKnifeDamageWithSingleConcentrationCheck(target, 0, burstDamage, concentrationSaveSucceeded)
+  }
+
+  pure def resolveIceKnife(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    attackDamageRoll: int,
+    goblinSavingThrowSucceeded: bool,
+    fighterIncludedInBurst: bool,
+    fighterSavingThrowSucceeded: bool,
+    burstDamageRoll: int,
+    goblinConcentrationSaveSucceeded: bool,
+    fighterConcentrationSaveSucceeded: bool,
+  ): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)))
+      state
+    else {
+      val rolled = recordFighterAttackRoll(revealFighterHidden(state))
+      val hit = attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), 20)
+      if (hit and state.goblin.reactionAvailable and not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
+        openReactionWindow(rolled, {
+          trigger: AttackHit,
+          eligibleReactors: Set(Goblin),
+          offeredReactors: Set(),
+          continuation: ResumeIceKnife,
+        })
+      } else {
+        val attackDamage =
+          if (hit)
+            adjustedAttackBurstSaveDamage(
+              attackDamageRoll * (if (attackIsCritical(naturalD20, 20)) 2 else 1),
+              attackBurstSaveDamageAttackType(IceKnifeAttackBurstSaveDamage),
+            )
+          else
+            0
+        val burstDamage =
+          if (goblinSavingThrowSucceeded)
+            0
+          else
+            adjustedAttackBurstSaveDamage(burstDamageRoll, attackBurstSaveDamageBurstType(IceKnifeAttackBurstSaveDamage))
+        val damagedGoblin = applyIceKnifeDamageWithSingleConcentrationCheck(
+          rolled.goblin,
+          attackDamage,
+          burstDamage,
+          goblinConcentrationSaveSucceeded,
+        )
+        val damagedFighter =
+          if (fighterIncludedInBurst)
+            iceKnifeBurstTarget(rolled.fighter, fighterSavingThrowSucceeded, burstDamageRoll, fighterConcentrationSaveSucceeded)
+          else
+            rolled.fighter
+        {
+          ...rolled,
+          fighter: damagedFighter,
+          goblin: damagedGoblin,
+          actionAvailable: false,
+          spellSlotExpendedThisTurn: true,
+        }
+      }
+    }
 
   pure def applyDropToZeroHp(target: Combatant): Combatant =
     match target.lifecycle {
@@ -2879,6 +3022,10 @@ module battleRuntime {
       assert(saveGatedTargeting(ViciousMockerySaveGate) == SingleSaveTarget),
       assert(saveGatedDamageSuccess(ViciousMockerySaveGate) == NoDamageOnSaveSuccess),
       assert(saveGatedDamageType(ViciousMockerySaveGate) == Psychic),
+      assert(spellInvocationSpendsLevelOneSlot(IceKnife)),
+      assert(attackBurstSaveDamageSpendsLevelOneSlot(IceKnifeAttackBurstSaveDamage)),
+      assert(attackBurstSaveDamageAttackType(IceKnifeAttackBurstSaveDamage) == Piercing),
+      assert(attackBurstSaveDamageBurstType(IceKnifeAttackBurstSaveDamage) == Cold),
     }
   }
 
@@ -2904,6 +3051,18 @@ module battleRuntime {
       assert(saveGatedConditionReplayHoles(ColorSpraySaveGate, true, true, true) == Set()),
       assert(saveGatedConditionReplayHoles(EntangleSaveGate, true, true, false) == Set(SavingThrowOutcome)),
       assert(saveGatedConditionReplayHoles(EntangleSaveGate, true, true, true) == Set()),
+    }
+  }
+
+  run test_ice_knife_replay_asks_for_attack_damage_then_mandatory_burst = {
+    all {
+      assert(attackBurstSaveDamageReplayHoles(IceKnifeAttackBurstSaveDamage, true, false, false, false, false, false, false) == Set(TargetChoice)),
+      assert(attackBurstSaveDamageReplayHoles(IceKnifeAttackBurstSaveDamage, true, true, false, false, false, false, false) == Set(AttackRoll)),
+      assert(attackBurstSaveDamageReplayHoles(IceKnifeAttackBurstSaveDamage, true, true, true, true, false, false, false) == Set(DamageRoll)),
+      assert(attackBurstSaveDamageReplayHoles(IceKnifeAttackBurstSaveDamage, true, true, true, false, false, false, false) == Set(SavingThrowOutcome)),
+      assert(attackBurstSaveDamageReplayHoles(IceKnifeAttackBurstSaveDamage, true, true, true, true, true, false, false) == Set(SavingThrowOutcome)),
+      assert(attackBurstSaveDamageReplayHoles(IceKnifeAttackBurstSaveDamage, true, true, true, false, false, true, true) == Set(SpellDamageRoll)),
+      assert(attackBurstSaveDamageReplayHoles(IceKnifeAttackBurstSaveDamage, false, false, false, false, false, false, false) == Set()),
     }
   }
 
@@ -2933,6 +3092,67 @@ module battleRuntime {
       assert(result.spellSlotExpendedThisTurn == true),
       assert(result.fighter.hp == 12),
       assert(result.goblin.hp == 10),
+    }
+  }
+
+  run test_ice_knife_critical_doubles_only_primary_piercing_attack_damage = {
+    val noReaction = { ...initialState, goblin: { ...initialState.goblin, reactionAvailable: false } }
+    val result = resolveIceKnife(noReaction, 20, 20, 5, false, false, false, 6, true, true)
+    all {
+      assert(result.actionAvailable == false),
+      assert(result.spellSlotExpendedThisTurn),
+      assert(result.attackRollMadeThisTurn),
+      assert(result.goblin.hp == 0),
+      assert(result.fighter.hp == 12),
+    }
+  }
+
+  run test_ice_knife_miss_still_resolves_primary_target_burst_save = {
+    val failed = resolveIceKnife(initialState, 1, 1, 5, false, false, false, 6, true, true)
+    val succeeded = resolveIceKnife(initialState, 1, 1, 5, true, false, false, 6, true, true)
+    all {
+      assert(failed.actionAvailable == false),
+      assert(failed.spellSlotExpendedThisTurn),
+      assert(failed.goblin.hp == 4),
+      assert(succeeded.actionAvailable == false),
+      assert(succeeded.spellSlotExpendedThisTurn),
+      assert(succeeded.goblin.hp == 10),
+    }
+  }
+
+  run test_ice_knife_burst_can_include_caster_but_primary_target_is_always_included = {
+    val result = resolveIceKnife(initialState, 1, 1, 5, false, true, false, 6, true, true)
+    val casterSucceeded = resolveIceKnife(initialState, 1, 1, 5, false, true, true, 6, true, true)
+    all {
+      assert(result.goblin.hp == 4),
+      assert(result.fighter.hp == 6),
+      assert(casterSucceeded.goblin.hp == 4),
+      assert(casterSucceeded.fighter.hp == 12),
+    }
+  }
+
+  run test_ice_knife_combines_attack_and_burst_damage_for_concentration = {
+    val concentratingGoblin = { ...initialState, goblin: { ...initialState.goblin, concentrating: true, reactionAvailable: false, activeEffects: Set(MageArmor) } }
+    val result = resolveIceKnife(concentratingGoblin, 15, 10, 4, false, false, false, 6, false, true)
+    all {
+      assert(result.goblin.hp == 0),
+      assert(not(result.goblin.concentrating)),
+      assert(not(result.goblin.activeEffects.contains(MageArmor))),
+    }
+  }
+
+  run test_ice_knife_spell_attack_hit_opens_shield_reaction_before_damage = {
+    val awaiting = resolveIceKnife(initialState, 15, 10, 4, false, false, false, 6, true, true)
+    all {
+      assert(pendingReactionFrame(awaiting.interruptStack[0]) == HasPendingReactionFrame({
+        trigger: AttackHit,
+        eligibleReactors: Set(Goblin),
+        offeredReactors: Set(),
+        continuation: ResumeIceKnife,
+      })),
+      assert(awaiting.goblin.hp == 10),
+      assert(awaiting.actionAvailable),
+      assert(not(awaiting.spellSlotExpendedThisTurn)),
     }
   }
 

@@ -175,7 +175,7 @@ const spellUnitExecutableFollowUpBatches = [
     label: "Area, chain, and typed-damage spell runtime",
     nextAction:
       "Admit these authored Spell Definitions after adding runtime support for spell-chosen damage types, chained target selection, mixed attack-plus-area resolution, area condition application, and terrain/ground effects.",
-    unitIds: ["chromatic_orb", "grease", "ice_knife"],
+    unitIds: ["chromatic_orb", "grease"],
   },
   {
     id: "spell-buff-debuff-and-protection-runtime",

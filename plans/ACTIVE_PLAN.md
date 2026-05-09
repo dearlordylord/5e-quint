@@ -340,7 +340,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 207,
       "id": "SRDINV29E",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Ice Knife Mixed Attack Burst Runtime"
     },
     {
@@ -529,7 +529,7 @@ Keep it synchronized with the DAG table and task details.
 | 204   | SRDINV29B - Promote Color Spray Cone Condition Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Color Spray](/workspace/typescript/dnd/packages/surface/content/color_spray.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promoted Color Spray through the self-origin Cone save-gated condition boundary with caller-supplied affected targets, Constitution save outcomes, spell-owned Blinded until the caster's next turn ends, and unrelated Blinded source preservation. |
 | 205   | SRDINV29C - Promote Entangle Area Restraint Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Entangle](/workspace/typescript/dnd/packages/surface/content/entangle.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promoted Entangle through point-origin cube affected-target saves excluding the caster, spell-owned Restrained until Concentration ends, Strength (Athletics) escape against spell save DC, and matrix-limited Difficult Terrain. |
 | 206   | SRDINV29D - Promote Grease Ground Hazard Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Grease](/workspace/typescript/dnd/packages/surface/content/grease.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Closed by keeping Grease unsupported in Unit profile evidence: SRD one-minute ground hazard support requires an active area lifecycle plus executable enter-area/end-turn Dexterity save procedures with table-supplied area-membership facts, and the authored on-cast Prone save is not claimed as a supported partial runtime profile. |
-| 207   | SRDINV29E - Promote Ice Knife Mixed Attack Burst Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Ice Knife](/workspace/typescript/dnd/packages/surface/content/ice_knife.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Ice Knife's primary attack plus mandatory primary-target-anchored burst save. |
+| 207   | SRDINV29E - Promote Ice Knife Mixed Attack Burst Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Ice Knife](/workspace/typescript/dnd/packages/surface/content/ice_knife.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promoted Ice Knife through a mixed ranged spell attack plus mandatory primary-target-origin Emanation save boundary, with Piercing attack damage, Critical Hit doubling limited to attack dice, Cold burst slot scaling, primary target inclusion, and Concentration follow-up. |
 | 208   | SRDINV29F - Research Chromatic Orb Chained Attack Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Chromatic Orb](/workspace/typescript/dnd/packages/surface/content/chromatic_orb.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Research Chromatic Orb as its own state-machine problem: typed damage, duplicate-face damage gate, repeated post-hit target holes, target uniqueness, and slot-level leap cap. |
 | 209   | SRDINV30A - Promote Simple Scalar Buff Spell Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [False Life](/workspace/typescript/dnd/packages/surface/content/false_life.dhall), [Longstrider](/workspace/typescript/dnd/packages/surface/content/longstrider.dhall), [Shield of Faith](/workspace/typescript/dnd/packages/surface/content/shield_of_faith.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote simple temp HP, Speed, and AC scalar spell effects. |
 | 210   | SRDINV30B - Promote Roll Modifier Spell Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Bane](/workspace/typescript/dnd/packages/surface/content/bane.dhall), [Bless](/workspace/typescript/dnd/packages/surface/content/bless.dhall), [Guidance](/workspace/typescript/dnd/packages/surface/content/guidance.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote Bane, Bless, and Guidance as D20 roll modifier active effects. |
@@ -2499,7 +2499,7 @@ runtime profile from inert area metadata.
 
 ### Task 207 - SRDINV29E - Promote Ice Knife Mixed Attack Burst Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV28A-SRDINV28E
 
@@ -2513,6 +2513,11 @@ Cold burst damage, slot scaling, and concentration damage follow-up.
 Retry guidance from rejected attempt: the primary attack is a spell attack and
 must support critical hits. Critical hits double only the 1d10 Piercing attack
 dice on a hit; the Cold burst save damage is not part of the attack critical.
+
+Completed with promoted battle-runtime support for Ice Knife's mixed ranged
+spell attack plus mandatory primary-target-origin Emanation save, including
+primary target inclusion, Cold slot scaling, zero-HP replacement dispositions,
+and Concentration follow-up for damaged targets.
 
 ### Task 208 - SRDINV29F - Research Chromatic Orb Chained Attack Runtime
 
