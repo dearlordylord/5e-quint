@@ -45,6 +45,7 @@ type SupportedUseCountActivationResource = UseCountActivationResource & {
     | { readonly kind: "proficiency_bonus" }
     | { readonly kind: "linear_per_level" }
     | { readonly kind: "threshold_tiers" }
+    | { readonly kind: "ability_modifier" }
     | { readonly kind: "unlimited" }
   >;
 };
@@ -277,6 +278,7 @@ function activationResourceIsSupportedByBattle(
       resource.cap.kind === "proficiency_bonus" ||
       resource.cap.kind === "linear_per_level" ||
       resource.cap.kind === "threshold_tiers" ||
+      resource.cap.kind === "ability_modifier" ||
       resource.cap.kind === "unlimited")
   );
 }
@@ -395,6 +397,14 @@ function supportedUseCountCapForLevel(
       resource.cap.base +
         Math.max(0, level - resource.cap.startingAtLevel + 1) *
           resource.cap.perLevel,
+    );
+  }
+  if (resource.cap.kind === "ability_modifier") {
+    return resourceCount(
+      Math.max(
+        resource.cap.minimum === undefined ? 1 : resource.cap.minimum,
+        1,
+      ),
     );
   }
 
