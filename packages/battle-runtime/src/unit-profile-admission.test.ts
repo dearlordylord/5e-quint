@@ -10,6 +10,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29E ice_knife
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29F3 chromatic_orb
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30A false_life longstrider shield_of_faith
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30B bane bless guidance
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT25 healing_word
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT32 cure_wounds mass_healing_word
@@ -27,7 +28,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT59 monk_deflect_attacks
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT62 fighter_tactical_mind
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT65 bard_cutting_words
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.invocation-chained-attack-damage spell.invocation-condition-save spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.invocation-chained-attack-damage spell.invocation-condition-save spell.invocation-roll-modifier spell.scalar-buff
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -133,6 +134,8 @@ const rogueEvasionUnitId = "rogue_evasion";
 const rogueUncannyDodgeUnitId = "rogue_uncanny_dodge";
 const rogueSneakAttackUnitId = "rogue_sneak_attack";
 const bardCuttingWordsUnitId = "bard_cutting_words";
+const baneUnitId = "bane";
+const blessUnitId = "bless";
 const burningHandsUnitId = "burning_hands";
 const chromaticOrbUnitId = "chromatic_orb";
 const colorSprayUnitId = "color_spray";
@@ -150,6 +153,7 @@ const chillTouchUnitId = "chill_touch";
 const fireBoltUnitId = "fire_bolt";
 const falseLifeUnitId = "false_life";
 const guidingBoltUnitId = "guiding_bolt";
+const guidanceUnitId = "guidance";
 const inflictWoundsUnitId = "inflict_wounds";
 const longstriderUnitId = "longstrider";
 const mageArmorUnitId = "mage_armor";
@@ -3534,6 +3538,300 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
   });
 });
 
+describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
+  test("bless is admitted as a concentration d4 bonus with slot-scaled targets", () => {
+    const spell = spellRecord(blessUnitId);
+    const secondTargetId = combatantId("unit-profile-bless-target-2");
+    const thirdTargetId = combatantId("unit-profile-bless-target-3");
+    const fourthTargetId = combatantId("unit-profile-bless-target-4");
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      extraTargetIds: [secondTargetId, thirdTargetId, fourthTargetId],
+    });
+    const act = spellAct({ state, spellId: blessUnitId, slotLevel: 2 });
+    const targetListHole = requireHole(act.initialHoles, "spellTargetList");
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(blessUnitId, 2, "rollModifier"),
+      mode: { tag: "cast" },
+    });
+    expect(targetListHole).toEqual(
+      expect.objectContaining({ minTargets: 1, maxTargets: 4 }),
+    );
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetListFill(targetListHole, spellCasterId, blessUnitId, [
+          spellTargetId,
+          secondTargetId,
+          thirdTargetId,
+          fourthTargetId,
+        ]),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.objectContaining({
+            combatantId: spellCasterId,
+            concentrating: true,
+          }),
+          expect.anything(),
+          expect.anything(),
+          expect.anything(),
+          expect.anything(),
+        ],
+      },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Bless to resolve.");
+    }
+    expect(
+      resolved.state.combatants.get(spellTargetId)?.activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "d20RollModifier",
+        sourceSpellId: blessUnitId,
+        sourceCombatantId: spellCasterId,
+        on: ["attack_roll", "saving_throw"],
+        delta: { dice: 1, dieSize: 4, sign: "+" },
+        skill: null,
+        expiresAt: { kind: "concentration", combatantId: spellCasterId },
+      }),
+    );
+  });
+
+  test("recasting bless replaces prior concentration-owned roll modifiers without removing the new one", () => {
+    const spell = spellRecord(blessUnitId);
+    const secondTargetId = combatantId("unit-profile-bless-recast-target-2");
+    const state = spellBattle({
+      preparedSpells: [spell],
+      extraTargetIds: [secondTargetId],
+    });
+    const caster = state.combatants.get(spellCasterId);
+    const firstTarget = state.combatants.get(spellTargetId);
+    const secondTarget = state.combatants.get(secondTargetId);
+    if (
+      caster === undefined ||
+      firstTarget === undefined ||
+      secondTarget === undefined
+    ) {
+      throw new Error("Expected Bless recast combatants.");
+    }
+    const priorBlessEffect = {
+      kind: "d20RollModifier" as const,
+      sourceSpellId: blessUnitId,
+      sourceCombatantId: spellCasterId,
+      on: ["attack_roll", "saving_throw"] as const,
+      delta: { dice: 1, dieSize: 4, sign: "+" } as const,
+      skill: null,
+      expiresAt: { kind: "concentration" as const, combatantId: spellCasterId },
+    };
+    const stateWithPriorBless: BattleState = {
+      ...state,
+      combatants: new Map(state.combatants)
+        .set(spellCasterId, {
+          ...caster,
+          concentration: {
+            sourceSpellId: blessUnitId,
+            effectKind: "spellEffect",
+          },
+        })
+        .set(spellTargetId, {
+          ...firstTarget,
+          activeEffects: [...firstTarget.activeEffects, priorBlessEffect],
+        })
+        .set(secondTargetId, {
+          ...secondTarget,
+          activeEffects: [...secondTarget.activeEffects, priorBlessEffect],
+        }),
+    };
+    const act = spellAct({ state: stateWithPriorBless, spellId: blessUnitId });
+    const targetListHole = requireHole(act.initialHoles, "spellTargetList");
+
+    const resolved = resolveBattleSubject({
+      state: stateWithPriorBless,
+      subject: act.subject,
+      fills: [
+        spellTargetListFill(targetListHole, spellCasterId, blessUnitId, [
+          spellTargetId,
+        ]),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Bless recast to resolve.");
+    }
+    expect(resolved.state.combatants.get(spellCasterId)?.concentration).toEqual({
+      sourceSpellId: blessUnitId,
+      effectKind: "spellEffect",
+    });
+    expect(
+      resolved.state.combatants
+        .get(spellTargetId)
+        ?.activeEffects.filter(
+          (effect) =>
+            effect.kind === "d20RollModifier" &&
+            effect.sourceSpellId === blessUnitId,
+        ),
+    ).toEqual([
+      expect.objectContaining({
+        sourceSpellId: blessUnitId,
+        sourceCombatantId: spellCasterId,
+        expiresAt: { kind: "concentration", combatantId: spellCasterId },
+      }),
+    ]);
+    expect(
+      resolved.state.combatants
+        .get(secondTargetId)
+        ?.activeEffects.some(
+          (effect) =>
+            effect.kind === "d20RollModifier" &&
+            effect.sourceSpellId === blessUnitId,
+        ),
+    ).toBe(false);
+  });
+
+  test("bane applies its negative d4 modifier only to targets that fail the Charisma save", () => {
+    const spell = spellRecord(baneUnitId);
+    const secondTargetId = combatantId("unit-profile-bane-target-2");
+    const state = spellBattle({
+      preparedSpells: [spell],
+      extraTargetIds: [secondTargetId],
+    });
+    const act = spellAct({ state, spellId: baneUnitId });
+    const targetListHole = requireHole(act.initialHoles, "spellTargetList");
+    const targetFill = spellTargetListFill(
+      targetListHole,
+      spellCasterId,
+      baneUnitId,
+      [spellTargetId, secondTargetId],
+    );
+    const awaitingSaves = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    });
+    const saveHole = requireResultHole(awaitingSaves, "savingThrowOutcome");
+
+    expect(saveHole).toEqual(
+      expect.objectContaining({
+        ability: "cha",
+        targetRollModes: [],
+      }),
+    );
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        savingThrowOutcomeFill(saveHole, [
+          { targetId: spellTargetId, succeeded: false },
+          { targetId: secondTargetId, succeeded: true },
+        ]),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Bane to resolve.");
+    }
+    expect(
+      resolved.state.combatants.get(spellTargetId)?.activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "d20RollModifier",
+        sourceSpellId: baneUnitId,
+        on: ["attack_roll", "saving_throw"],
+        delta: { dice: 1, dieSize: 4, sign: "-" },
+      }),
+    );
+    expect(
+      resolved.state.combatants
+        .get(secondTargetId)
+        ?.activeEffects.some(
+          (effect) =>
+            effect.kind === "d20RollModifier" &&
+            effect.sourceSpellId === baneUnitId,
+        ),
+    ).toBe(false);
+  });
+
+  test("guidance requires a cast-time skill choice and stores it on the d4 ability-check modifier", () => {
+    const spell = spellRecord(guidanceUnitId);
+    const state = spellBattle({ cantrips: [spell], spellSlots: [] });
+    const act = spellAct({ state, spellId: guidanceUnitId });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const skillHole = requireHole(act.initialHoles, "skillChoice");
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: cantripSpellInvocationRef(guidanceUnitId, "rollModifier"),
+      mode: { tag: "cast" },
+    });
+    expect(skillHole.choices).toContain("stealth");
+    expect(targetHole.choices).toEqual([spellCasterId]);
+
+    const unwillingTarget = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(
+          targetHole,
+          guidanceUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+        skillChoiceFill(skillHole, "stealth"),
+      ],
+    });
+    expect(unwillingTarget).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(
+          targetHole,
+          guidanceUnitId,
+          spellCasterId,
+          spellCasterId,
+        ),
+        skillChoiceFill(skillHole, "stealth"),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Guidance to resolve.");
+    }
+    expect(
+      resolved.state.combatants.get(spellCasterId)?.activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "d20RollModifier",
+        sourceSpellId: guidanceUnitId,
+        on: ["ability_check"],
+        delta: { dice: 1, dieSize: 4, sign: "+" },
+        skill: "stealth",
+      }),
+    );
+  });
+});
+
 describe("QMBT25 deterministic Spell Unit admission re-triage", () => {
   test("healing_word is admitted through catalog spell access and projected as a Bonus Action healing spell", () => {
     const spell = spellRecord(healingWordUnitId);
@@ -6285,7 +6583,9 @@ function savingThrowOutcomeFill(
     kind: "savingThrowOutcome",
     holeId: hole.holeId,
     value:
-      "spell" in hole && hole.spell.targeting.kind !== "singleCombatant"
+      "spell" in hole &&
+      hole.spell.procedure !== "rollModifier" &&
+      hole.spell.targeting.kind !== "singleCombatant"
         ? {
             area: {
               originAnchorId: spellCasterId,
@@ -6295,6 +6595,13 @@ function savingThrowOutcomeFill(
           }
         : { outcomes },
   };
+}
+
+function skillChoiceFill(
+  hole: Extract<BattleHole, { readonly kind: "skillChoice" }>,
+  value: Extract<BattleFill, { readonly kind: "skillChoice" }>["value"],
+): Extract<BattleFill, { readonly kind: "skillChoice" }> {
+  return { kind: "skillChoice", holeId: hole.holeId, value };
 }
 
 function damageRollFillWithGroups(

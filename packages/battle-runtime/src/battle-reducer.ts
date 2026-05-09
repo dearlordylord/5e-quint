@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.invocation-chained-attack-damage spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.invocation-chained-attack-damage spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-roll-modifier spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 import { Brand, Match, Schema } from "effect";
 import { isNonEmptyReadonlyArray } from "effect/Array";
 import * as Either from "effect/Either";
@@ -137,6 +137,8 @@ import type {
   ActivationPhase,
   Attachment,
   Size,
+  Skill,
+  SkillFilter,
   SpellRecord,
   StatBlockRecord,
   StatBlockValue,
@@ -144,6 +146,7 @@ import type {
   UnitRecord,
   WeaponRecord,
 } from "@dnd/surface/surface/types";
+import { SKILLS as SURFACE_SKILLS } from "@dnd/surface/surface/types";
 import {
   AbilitySchema,
   DamageTypeSchema,
@@ -287,7 +290,27 @@ const BATTLE_SPECIAL_SPEED_KINDS = [
   "climb",
   "swim",
 ] as const satisfies ReadonlyArray<Exclude<BattleMovementSpeedKind, "walk">>;
+const BATTLE_D20_ROLL_MODIFIER_KINDS = [
+  "ability_check",
+  "attack_roll",
+  "saving_throw",
+] as const satisfies ReadonlyArray<BattleD20RollModifierKind>;
+const KNOWN_WILLING_TARGET_ROLL_MODIFIER_SPELL_IDS: ReadonlyArray<
+  SpellRecord["id"]
+> = [
+  "guidance",
+];
+const BATTLE_SURFACE_SKILLS = SURFACE_SKILLS satisfies ReadonlyArray<Skill>;
 type CriticalHitThreshold = (typeof CRITICAL_HIT_THRESHOLDS)[number];
+type BattleD20RollModifierKind = Extract<
+  Extract<EffectAtom, { readonly kind: "modify_roll_numeric" }>["on"][number],
+  "ability_check" | "attack_roll" | "saving_throw"
+>;
+type BattleD20RollModifierDelta = {
+  readonly dice: number;
+  readonly dieSize: DamageDieSize;
+  readonly sign: "+" | "-";
+};
 type BattlePassiveSpeedProfile =
   | BattlePassiveSpeedBonusSupportProfile
   | BattlePassiveSpeedKindGrantsSupportProfile;
@@ -363,6 +386,13 @@ export type BattleActiveEffect =
   | (BattleSpellEffectBase & {
       readonly kind: "nextAttackRollAgainstSelf";
       readonly mode: AttackRollMode;
+      readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "d20RollModifier";
+      readonly on: readonly BattleD20RollModifierKind[];
+      readonly delta: BattleD20RollModifierDelta;
+      readonly skill: Skill | null;
       readonly expiresAt: BattleActiveEffectExpiration;
     });
 export type BattleConcentration = {
@@ -948,7 +978,8 @@ type TargetListSpellInvocation =
         ScalarBuffSpellTargeting,
         { readonly kind: "targetList" }
       >;
-    });
+    })
+  | Extract<SupportedSpellInvocation, { readonly procedure: "rollModifier" }>;
 type ScalarBuffSpellEffect =
   | {
       readonly kind: "temporaryHitPoints";
@@ -977,6 +1008,30 @@ function isScalarBuffTargetListInvocation(
 } {
   return invocation.targeting.kind === "targetList";
 }
+type RollModifierSpellTargeting = Extract<
+  ScalarBuffSpellTargeting,
+  { readonly kind: "targetList" }
+>;
+type RollModifierSpellEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "d20RollModifier" }
+>;
+type RollModifierSpellSaveGate = {
+  readonly ability: Ability;
+  readonly dc: DcSource;
+};
+type RollModifierSpellInvocation = {
+  readonly access: PreparedSpellAccess | ClassCantripSpellAccess;
+  readonly resource: SpellSlotInvocationResource | NoSpellInvocationResource;
+  readonly procedure: "rollModifier";
+  readonly spell: SpellRecord;
+  readonly actionCost: "magicAction";
+  readonly targeting: RollModifierSpellTargeting;
+  readonly effect: RollModifierSpellEffect;
+  readonly rangeFeet: MovementFeet;
+  readonly saveGate: RollModifierSpellSaveGate | null;
+  readonly skillChoices: readonly Skill[] | null;
+};
 // SupportedAttackActionOption is a currently executable option for spending an
 // immediate attack made as part of the Attack action. It is narrower than all
 export type SupportedSpellInvocation =
@@ -1090,6 +1145,7 @@ export type SupportedSpellInvocation =
       readonly effect: ScalarBuffSpellEffect;
       readonly rangeFeet: MovementFeet;
     }
+  | RollModifierSpellInvocation
   | {
       readonly access: PreparedSpellAccess;
       readonly resource: SpellSlotInvocationResource;
@@ -1144,6 +1200,7 @@ type SupportedDamageSpellInvocation = Exclude<
     readonly procedure:
       | "persistentArmorEffect"
       | "directHitPointRestoration"
+      | "rollModifier"
       | "scalarBuff"
       | "shieldReaction"
       | "saveGatedCondition"
@@ -1611,7 +1668,12 @@ export type BattleSpellTargetListHole = {
   readonly label: string;
   readonly spell: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "directHitPointRestoration" | "scalarBuff" }
+    {
+      readonly procedure:
+        | "directHitPointRestoration"
+        | "rollModifier"
+        | "scalarBuff";
+    }
   >;
   readonly minTargets: 1;
   readonly maxTargets: number;
@@ -1681,6 +1743,17 @@ export type BattleSpellHealingRollHole = Extract<
     { readonly procedure: "directHitPointRestoration" | "scalarBuff" }
   >;
 };
+export type BattleSpellSkillChoiceHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "skillChoice";
+  readonly label: string;
+  readonly spell: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "rollModifier" }
+  >;
+  readonly choices: readonly Skill[];
+};
 export type BattleSavingThrowOutcome = {
   readonly targetId: CombatantId;
   readonly succeeded: boolean;
@@ -1721,6 +1794,7 @@ export type BattleSpellSavingThrowOutcomeHole = {
     {
       readonly procedure:
         | "attackBurstSaveDamage"
+        | "rollModifier"
         | "saveGatedDamage"
         | "saveGatedCondition";
     }
@@ -1845,6 +1919,7 @@ export type BattleHole =
   | BattleDamageRollHole
   | BattleSpellDamageRollHole
   | BattleSpellHealingRollHole
+  | BattleSpellSkillChoiceHole
   | BattleSpellSavingThrowOutcomeHole
   | BattleUnitFeatureSavingThrowOutcomeHole
   | BattleUnitFeatureRollHole
@@ -2238,6 +2313,35 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       rangeFeet: MovementFeet,
     }),
     Schema.Struct({
+      access: Schema.Union(
+        PreparedSpellAccessSchema,
+        ClassCantripSpellAccessSchema,
+      ),
+      resource: Schema.Union(
+        SpellSlotInvocationResourceSchema,
+        NoSpellInvocationResourceSchema,
+      ),
+      procedure: Schema.Literal("rollModifier"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      targeting: Schema.Struct({
+        kind: Schema.Literal("targetList"),
+        minTargets: Schema.Literal(1),
+        maxTargets: Schema.Number,
+      }),
+      effect: BattleRuntimeObjectSchema,
+      rangeFeet: MovementFeet,
+      saveGate: Schema.NullOr(
+        Schema.Struct({
+          ability: AbilitySchema,
+          dc: DcSourceSchema,
+        }),
+      ),
+      skillChoices: Schema.NullOr(
+        Schema.Array(Schema.Literal(...BATTLE_SURFACE_SKILLS)),
+      ),
+    }),
+    Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("persistentArmorEffect"),
@@ -2369,6 +2473,13 @@ export const BattleHoleSchema = Schema.Union(
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("rolledDice"),
     spell: SupportedSpellInvocationSchema,
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("skillChoice"),
+    label: Schema.String,
+    spell: SupportedSpellInvocationSchema,
+    choices: Schema.Array(Schema.Literal(...BATTLE_SURFACE_SKILLS)),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2508,6 +2619,11 @@ export type BattleFill =
       readonly kind: "savingThrowOutcome";
       readonly holeId: BattleHoleId;
       readonly value: BattleSavingThrowOutcomeValue;
+    }
+  | {
+      readonly kind: "skillChoice";
+      readonly holeId: BattleHoleId;
+      readonly value: Skill;
     }
   | {
       readonly kind: "targetChoice";
@@ -2759,6 +2875,11 @@ type BattleFillEncoded =
               readonly succeeded: boolean;
             }[];
           };
+    }
+  | {
+      readonly kind: "skillChoice";
+      readonly holeId: string;
+      readonly value: Skill;
     }
   | {
       readonly kind: "rolledDice";
@@ -3048,6 +3169,11 @@ export const BattleFillSchema: Schema.Schema<
           ),
         }),
       ),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("skillChoice"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Literal(...BATTLE_SURFACE_SKILLS),
     }),
     Schema.Struct({
       kind: Schema.Literal("rolledDice"),
@@ -14028,7 +14154,7 @@ function discoverSupportedSpellInvocations(
                 mode: { tag: "cast" as const },
               },
               label: invocation.spell.name,
-              summary: `${spellActivationInvocationCastSummary(invocation)} Table-supplied affected targets make ${invocation.ability.toUpperCase()} Saving Throws.`,
+              summary: `${spellActivationInvocationCastSummary(invocation)} Table-supplied affected targets make ${spellSavingThrowAbility(invocation).toUpperCase()} Saving Throws.`,
               initialHoles: [targetHole],
             },
           ];
@@ -14048,11 +14174,43 @@ function discoverSupportedSpellInvocations(
               mode: { tag: "cast" as const },
             },
             label: invocation.spell.name,
-            summary: `${spellActivationInvocationCastSummary(invocation)} Table-supplied affected targets make ${invocation.ability.toUpperCase()} Saving Throws.`,
+            summary: `${spellActivationInvocationCastSummary(invocation)} Table-supplied affected targets make ${spellSavingThrowAbility(invocation).toUpperCase()} Saving Throws.`,
             initialHoles: [initialHole],
           },
         ];
         return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
+      }
+      if (invocation.procedure === "rollModifier") {
+        const targetHole =
+          invocation.targeting.maxTargets > 1
+            ? spellTargetListHole(state, actorId, invocation)
+            : spellTargetHole(state, actorId, invocation);
+        const initialHoles =
+          targetHole.choices.length === 0
+            ? []
+            : [
+                targetHole,
+                ...(invocation.skillChoices === null
+                  ? []
+                  : [spellRollModifierSkillChoiceHole(invocation)]),
+              ];
+        const castActs =
+          initialHoles.length === 0
+            ? []
+            : [
+                {
+                  subject: {
+                    tag: "actionSpell" as const,
+                    actorId,
+                    invocation: supportedSpellInvocationRef(invocation),
+                    mode: { tag: "cast" as const },
+                  },
+                  label: invocation.spell.name,
+                  summary: spellInvocationCastSummary(invocation),
+                  initialHoles,
+                },
+              ];
+        return castActs;
       }
       if (invocation.procedure === "chainedSpellAttackDamage") {
         const castActs = [
@@ -14155,6 +14313,11 @@ function spellInvocationCastSummary(
   if (invocation.procedure === "scalarBuff") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
+  if (invocation.procedure === "rollModifier") {
+    return invocation.resource.tag === "spellSlot"
+      ? `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`
+      : `Cast ${invocation.spell.name} as a cantrip.`;
+  }
   if (invocation.procedure === "persistentArmorEffect") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
@@ -14177,6 +14340,7 @@ function spellActivationInvocationCastSummary(
       readonly procedure:
         | "attackBurstSaveDamage"
         | "spellAttackDamage"
+        | "rollModifier"
         | "saveGatedDamage"
         | "saveGatedCondition";
     }
@@ -14224,6 +14388,7 @@ function readiedSpellAct(
     invocation.procedure === "persistentArmorEffect" ||
     invocation.procedure === "directHitPointRestoration" ||
     invocation.procedure === "scalarBuff" ||
+    invocation.procedure === "rollModifier" ||
     invocation.procedure === "attackBurstSaveDamage" ||
     invocation.procedure === "saveGatedCondition" ||
     invocation.procedure === "shieldReaction" ||
@@ -14304,6 +14469,7 @@ function resolveSpellAct(
     subject.mode.tag === "ready" &&
     (invocation.procedure === "directHitPointRestoration" ||
       invocation.procedure === "scalarBuff" ||
+      invocation.procedure === "rollModifier" ||
       invocation.procedure === "saveGatedCondition")
   ) {
     return invalidResult(
@@ -14374,6 +14540,14 @@ function resolveSpellAct(
   }
   if (invocation.procedure === "scalarBuff") {
     return resolveScalarBuffSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "rollModifier") {
+    return resolveRollModifierSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
@@ -15855,6 +16029,117 @@ function resolveScalarBuffSpellAct(input: {
   };
 }
 
+function resolveRollModifierSpellAct(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "rollModifier" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  if (
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.targetAllocation !== undefined ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.attackBurstDamageRoll !== undefined ||
+    input.fillSet.healingRoll !== undefined ||
+    input.fillSet.damageDispositions.length > 0 ||
+    input.fillSet.concentrationSavingThrows.length > 0
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Roll modifier spells use target, optional skill, and optional Saving Throw fills.",
+    );
+  }
+
+  const targetSelection = rollModifierSpellTargetSelection(input);
+  if (targetSelection.tag === "needsHoles") {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      targetSelection.hole,
+    ]);
+  }
+  if (targetSelection.tag === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      targetSelection.message,
+    );
+  }
+
+  const skillSelection = rollModifierSpellSkillSelection(input);
+  if (skillSelection.tag === "needsHoles") {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      skillSelection.hole,
+    ]);
+  }
+  if (skillSelection.tag === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      skillSelection.message,
+    );
+  }
+
+  const spellCastReactionWindow = maybeOpenReactionWindow(
+    input.input.state,
+    {
+      trigger: "spellCast",
+      casterId: input.actorId,
+      spellId: input.invocation.spell.id,
+      targetIds: targetSelection.targetIds,
+      continuation: {
+        kind: "replay",
+        subject: input.input.subject,
+        fills: input.input.fills,
+      },
+    },
+    input.input.suppressedReactionTrigger,
+  );
+  if (spellCastReactionWindow !== null) {
+    return spellCastReactionWindow;
+  }
+
+  const affectedTargets = rollModifierSpellAffectedTargets(input);
+  if (affectedTargets.tag === "needsHoles") {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      affectedTargets.hole,
+    ]);
+  }
+  if (affectedTargets.tag === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      affectedTargets.message,
+    );
+  }
+
+  const concentrationBase = spellRequiresConcentration(input.invocation)
+    ? breakBattleConcentration(input.input.state, input.actorId)
+    : input.input.state;
+  const effected = applyRollModifierSpellEffect(
+    concentrationBase,
+    input.actorId,
+    affectedTargets.targetIds,
+    input.invocation,
+    skillSelection.skill,
+  );
+  const resourced = spendSpellCastResources({
+    state: effected,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
+  return resourced.tag === "invalid"
+    ? resourced
+    : {
+        tag: "resolved",
+        state: resourced.state,
+        snapshot: snapshotBattle(resourced.state),
+      };
+}
+
 type HealingSpellTargetSelection =
   | { readonly tag: "ok"; readonly targetIds: readonly CombatantId[] }
   | { readonly tag: "needsHoles"; readonly hole: BattleHole }
@@ -16029,6 +16314,181 @@ function scalarBuffSpellTargetSelection(input: {
     : { tag: "invalid", message: validation };
 }
 
+type RollModifierSpellTargetSelection =
+  | { readonly tag: "ok"; readonly targetIds: readonly CombatantId[] }
+  | { readonly tag: "needsHoles"; readonly hole: BattleHole }
+  | { readonly tag: "invalid"; readonly message: string };
+
+function rollModifierSpellTargetSelection(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "rollModifier" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): RollModifierSpellTargetSelection {
+  if (input.invocation.targeting.maxTargets === 1) {
+    if (input.fillSet.targetList !== undefined) {
+      return {
+        tag: "invalid",
+        message: "Single-target roll modifier spells require one target choice.",
+      };
+    }
+    if (input.fillSet.targetId === undefined) {
+      return {
+        tag: "needsHoles",
+        hole: spellTargetHole(
+          input.input.state,
+          input.actorId,
+          input.invocation,
+        ),
+      };
+    }
+    return spellTargetIsLegal(
+      input.input.state,
+      input.actorId,
+      input.fillSet.targetId,
+      input.invocation,
+      input.fillSet.targetSpatialFacts,
+    )
+      ? { tag: "ok", targetIds: [input.fillSet.targetId] }
+      : {
+          tag: "invalid",
+          message:
+            "Roll modifier spell target must be a combatant within the selected spell's supported range.",
+        };
+  }
+
+  if (input.fillSet.targetId !== undefined) {
+    return {
+      tag: "invalid",
+      message: "Multi-target roll modifier spells require a target list.",
+    };
+  }
+  if (input.fillSet.targetList === undefined) {
+    return {
+      tag: "needsHoles",
+      hole: spellTargetListHole(
+        input.input.state,
+        input.actorId,
+        input.invocation,
+      ),
+    };
+  }
+  const validation = validateSpellTargetList(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+    input.fillSet.targetList.targetIds,
+    input.fillSet.targetList.spatialFacts,
+  );
+  return validation === null
+    ? { tag: "ok", targetIds: input.fillSet.targetList.targetIds }
+    : { tag: "invalid", message: validation };
+}
+
+type RollModifierSpellSkillSelection =
+  | { readonly tag: "ok"; readonly skill: Skill | null }
+  | { readonly tag: "needsHoles"; readonly hole: BattleHole }
+  | { readonly tag: "invalid"; readonly message: string };
+
+function rollModifierSpellSkillSelection(input: {
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "rollModifier" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): RollModifierSpellSkillSelection {
+  if (input.invocation.skillChoices === null) {
+    return input.fillSet.skillChoice === undefined
+      ? { tag: "ok", skill: input.invocation.effect.skill }
+      : {
+          tag: "invalid",
+          message: "This roll modifier spell does not choose a skill.",
+        };
+  }
+  if (input.fillSet.skillChoice === undefined) {
+    return {
+      tag: "needsHoles",
+      hole: spellRollModifierSkillChoiceHole(input.invocation),
+    };
+  }
+  return input.invocation.skillChoices.includes(input.fillSet.skillChoice)
+    ? { tag: "ok", skill: input.fillSet.skillChoice }
+    : {
+        tag: "invalid",
+        message: "Roll modifier spell skill choice is not legal for this spell.",
+      };
+}
+
+type RollModifierSpellAffectedTargets =
+  | { readonly tag: "ok"; readonly targetIds: readonly CombatantId[] }
+  | { readonly tag: "needsHoles"; readonly hole: BattleHole }
+  | { readonly tag: "invalid"; readonly message: string };
+
+function rollModifierSpellAffectedTargets(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "rollModifier" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): RollModifierSpellAffectedTargets {
+  if (input.invocation.saveGate === null) {
+    if (input.fillSet.savingThrowOutcomes !== undefined) {
+      return {
+        tag: "invalid",
+        message: "Ungated roll modifier spells do not use Saving Throw fills.",
+      };
+    }
+    const targetSelection = rollModifierSpellTargetSelection(input);
+    return targetSelection.tag === "ok"
+      ? { tag: "ok", targetIds: targetSelection.targetIds }
+      : targetSelection;
+  }
+
+  const savingThrowHole = spellSavingThrowOutcomeHole(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+  );
+  if (input.fillSet.savingThrowOutcomes === undefined) {
+    return { tag: "needsHoles", hole: savingThrowHole };
+  }
+  const validation = validateSavingThrowOutcomes(
+    input.fillSet.savingThrowOutcomes,
+    savingThrowHole,
+    input.input.state,
+    input.actorId,
+    undefined,
+  );
+  if (validation !== null) {
+    return { tag: "invalid", message: validation };
+  }
+  const targetSelection = rollModifierSpellTargetSelection(input);
+  if (targetSelection.tag !== "ok") {
+    return targetSelection;
+  }
+  const outcomeTargetIds = input.fillSet.savingThrowOutcomes.outcomes.map(
+    (outcome) => outcome.targetId,
+  );
+  if (!sameCombatantIdSet(targetSelection.targetIds, outcomeTargetIds)) {
+    return {
+      tag: "invalid",
+      message:
+        "Save-gated roll modifier spell Saving Throw outcomes must match the selected targets.",
+    };
+  }
+  return {
+    tag: "ok",
+    targetIds: input.fillSet.savingThrowOutcomes.outcomes.flatMap((outcome) =>
+      outcome.succeeded ? [] : [outcome.targetId],
+    ),
+  };
+}
+
 function resolveReadySpellAct(
   input: ActionSpellBattleResolutionInput,
   invocation: SupportedSpellInvocation,
@@ -16052,6 +16512,13 @@ function resolveReadySpellAct(
       input.state,
       "unsupportedActOption",
       "Scalar buff spells cannot be readied by this runtime lane.",
+    );
+  }
+  if (invocation.procedure === "rollModifier") {
+    return invalidResult(
+      input.state,
+      "unsupportedActOption",
+      "Roll modifier spells cannot be readied by this runtime lane.",
     );
   }
   if (invocation.procedure === "shieldReaction") {
@@ -16522,6 +16989,7 @@ type SpellFillSet =
       readonly savingThrowOutcomes:
         | BattleSpellSavingThrowOutcomeValue
         | undefined;
+      readonly skillChoice: Skill | undefined;
       readonly concentrationSavingThrows: readonly Extract<
         BattleFill,
         { readonly kind: "concentrationSavingThrow" }
@@ -16565,6 +17033,7 @@ function spellFillSet(
     | undefined;
   let attackRoll: AttackRollResult | undefined;
   let savingThrowOutcomes: BattleSpellSavingThrowOutcomeValue | undefined;
+  let skillChoice: Skill | undefined;
   const concentrationSavingThrows: Extract<
     BattleFill,
     { readonly kind: "concentrationSavingThrow" }
@@ -16622,7 +17091,8 @@ function spellFillSet(
     if (fill.kind === "spellTargetList") {
       if (
         invocation.procedure !== "directHitPointRestoration" &&
-        invocation.procedure !== "scalarBuff"
+        invocation.procedure !== "scalarBuff" &&
+        invocation.procedure !== "rollModifier"
       ) {
         return {
           tag: "invalid",
@@ -16673,7 +17143,11 @@ function spellFillSet(
       if (
         invocation.procedure !== "attackBurstSaveDamage" &&
         invocation.procedure !== "saveGatedDamage" &&
-        invocation.procedure !== "saveGatedCondition"
+        invocation.procedure !== "saveGatedCondition" &&
+        !(
+          invocation.procedure === "rollModifier" &&
+          invocation.saveGate !== null
+        )
       ) {
         return {
           tag: "invalid",
@@ -16694,6 +17168,7 @@ function spellFillSet(
         };
       }
       if (
+        invocation.procedure !== "rollModifier" &&
         spellFillSetSavingThrowTargeting(invocation).kind !==
           "singleCombatant" &&
         !("area" in fill.value)
@@ -16704,6 +17179,7 @@ function spellFillSet(
         };
       }
       if (
+        invocation.procedure !== "rollModifier" &&
         spellFillSetSavingThrowTargeting(invocation).kind ===
           "singleCombatant" &&
         "area" in fill.value
@@ -16715,6 +17191,33 @@ function spellFillSet(
         };
       }
       savingThrowOutcomes = fill.value;
+      continue;
+    }
+
+    if (fill.kind === "skillChoice") {
+      if (
+        invocation.procedure !== "rollModifier" ||
+        invocation.skillChoices === null
+      ) {
+        return {
+          tag: "invalid",
+          message: "Spell skill choice does not match this spell act.",
+        };
+      }
+      if (fill.holeId !== spellRollModifierSkillChoiceHoleId(invocation)) {
+        return {
+          tag: "invalid",
+          message:
+            "Spell skill choice must use the selected spell act skill-choice hole.",
+        };
+      }
+      if (skillChoice !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Spell skill choice was filled twice.",
+        };
+      }
+      skillChoice = fill.value;
       continue;
     }
 
@@ -16814,6 +17317,7 @@ function spellFillSet(
     targetList,
     attackRoll,
     savingThrowOutcomes,
+    skillChoice,
     concentrationSavingThrows,
     damageDispositions,
     damageRoll,
@@ -18151,6 +18655,27 @@ function validateSavingThrowOutcomes(
   targetId: CombatantId | undefined,
 ): string | null {
   const outcomes = value.outcomes;
+  if (hole.spell.procedure === "rollModifier") {
+    if (outcomes.length === 0) {
+      return "Save-gated roll modifier spell must include at least one target Saving Throw outcome.";
+    }
+    if ("area" in value) {
+      return "Save-gated roll modifier spell outcomes must not include area facts.";
+    }
+    const seenTargets = new Set<CombatantId>();
+    for (const outcome of outcomes) {
+      if (!state.combatants.has(outcome.targetId)) {
+        return "Save-gated roll modifier spell target must be a combatant in this battle.";
+      }
+      if (seenTargets.has(outcome.targetId)) {
+        return "Save-gated roll modifier spell Saving Throw outcomes must not duplicate targets.";
+      }
+      seenTargets.add(outcome.targetId);
+    }
+    return outcomes.length <= hole.spell.targeting.maxTargets
+      ? null
+      : "Save-gated roll modifier spell Saving Throw outcomes exceed the selected spell's target count.";
+  }
   const targeting = spellSavingThrowTargeting(hole.spell);
   if (targeting.kind === "singleCombatant") {
     if (outcomes.length === 0) {
@@ -19287,6 +19812,13 @@ function supportedSpellActs(
       ),
     ),
     ...spellcasting.preparedSpells.flatMap((spell) =>
+      supportedPreparedRollModifierSpellProfile(
+        actor.combatantId,
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...spellcasting.preparedSpells.flatMap((spell) =>
       supportedPreparedPersistentSpellProfile(actor.combatantId, spell),
     ),
     ...spellcasting.preparedSpells.flatMap((spell) =>
@@ -19312,6 +19844,9 @@ function supportedSpellActs(
     ),
     ...spellcasting.cantrips.flatMap((spell) =>
       supportedCantripSaveGateDamageProfile(spell, characterLevel),
+    ),
+    ...spellcasting.cantrips.flatMap((spell) =>
+      supportedCantripRollModifierSpellProfile(actor.combatantId, spell),
     ),
   ];
 }
@@ -19693,6 +20228,60 @@ function supportedPreparedScalarBuffSpellProfile(
   });
 }
 
+function supportedPreparedRollModifierSpellProfile(
+  actorId: CombatantId,
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  if (spell.mechanics.level < 1) {
+    return [];
+  }
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    const projection = rollModifierSpellProjection(
+      actorId,
+      spell,
+      slot.spellLevel,
+    );
+    return projection === null
+      ? []
+      : [
+          {
+            access: { tag: "prepared" },
+            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+            procedure: "rollModifier",
+            spell,
+            actionCost: "magicAction",
+            ...projection,
+          },
+        ];
+  });
+}
+
+function supportedCantripRollModifierSpellProfile(
+  actorId: CombatantId,
+  spell: SpellRecord,
+): readonly SupportedSpellInvocation[] {
+  if (spell.mechanics.level !== 0) {
+    return [];
+  }
+  const projection = rollModifierSpellProjection(actorId, spell, spellSlotLevel(0));
+  return projection === null
+    ? []
+    : [
+        {
+          access: { tag: "classCantrip" },
+          resource: { tag: "none" },
+          procedure: "rollModifier",
+          spell,
+          actionCost: "magicAction",
+          ...projection,
+        },
+      ];
+}
+
 function scalarBuffSpellActionCost(
   castingTime: SpellRecord["mechanics"]["castingTime"],
 ): HealingSpellActionCost | null {
@@ -19811,6 +20400,183 @@ function scalarBuffSpellEffect(
         expiresAt,
       },
     };
+  }
+  return null;
+}
+
+function rollModifierSpellProjection(
+  actorId: CombatantId,
+  spell: SpellRecord,
+  slotLevel: SpellSlotLevel,
+): Pick<
+  RollModifierSpellInvocation,
+  "effect" | "rangeFeet" | "saveGate" | "skillChoices" | "targeting"
+> | null {
+  if (spell.mechanics.castingTime.kind !== "action") {
+    return null;
+  }
+  const rangeFeet = scalarBuffSpellRangeFeet(spell.mechanics.range);
+  const expiresAt = scalarBuffActiveEffectExpiration(
+    actorId,
+    spell.mechanics.duration,
+  );
+  if (rangeFeet === null || expiresAt === null) {
+    return null;
+  }
+
+  if (spell.mechanics.family === "ongoing_effect") {
+    const operation = spell.mechanics.operations[0];
+    if (
+      spell.mechanics.operations.length !== 1 ||
+      operation?.trigger.kind !== "passive" ||
+      operation.effect.kind !== "modify_roll_numeric"
+    ) {
+      return null;
+    }
+    const targeting = rollModifierSpellTargeting(
+      spell.mechanics.attachment,
+      spell.mechanics.level,
+      slotLevel,
+    );
+    const modifier = rollModifierActiveEffect(
+      actorId,
+      spell,
+      operation.effect,
+      expiresAt,
+    );
+    return targeting === null || modifier === null
+      ? null
+      : {
+          targeting,
+          effect: modifier.effect,
+          rangeFeet,
+          saveGate: null,
+          skillChoices: modifier.skillChoices,
+        };
+  }
+
+  if (spell.mechanics.family !== "activation") {
+    return null;
+  }
+  const phase = spell.mechanics.phases[0];
+  if (
+    spell.mechanics.phases.length !== 1 ||
+    phase?.kind !== "save_gate" ||
+    phase.onFail.kind !== "modify_roll_numeric" ||
+    phase.onSuccess.kind !== "none"
+  ) {
+    return null;
+  }
+  const targeting = rollModifierSpellTargeting(
+    phase.attachment,
+    spell.mechanics.level,
+    slotLevel,
+  );
+  const modifier = rollModifierActiveEffect(
+    actorId,
+    spell,
+    phase.onFail,
+    expiresAt,
+  );
+  return targeting === null || modifier === null
+    ? null
+    : {
+        targeting,
+        effect: modifier.effect,
+        rangeFeet,
+        saveGate: { ability: phase.ability, dc: phase.dc },
+        skillChoices: modifier.skillChoices,
+      };
+}
+
+function rollModifierSpellTargeting(
+  attachment: Attachment,
+  spellLevel: number,
+  slotLevel: SpellSlotLevel,
+): RollModifierSpellTargeting | null {
+  if (attachment.kind !== "hole" || attachment.value.kind !== "target") {
+    return null;
+  }
+  const targetCount = scalarBuffSpellTargetCount(
+    attachment.value.selection,
+    spellLevel,
+    slotLevel,
+  );
+  return targetCount === null
+    ? null
+    : { kind: "targetList", minTargets: 1, maxTargets: targetCount };
+}
+
+function rollModifierActiveEffect(
+  actorId: CombatantId,
+  spell: SpellRecord,
+  effect: Extract<EffectAtom, { readonly kind: "modify_roll_numeric" }>,
+  expiresAt: BattleActiveEffectExpiration,
+): {
+  readonly effect: RollModifierSpellEffect;
+  readonly skillChoices: readonly Skill[] | null;
+} | null {
+  const delta = rollModifierDelta(effect.delta);
+  if (delta === null || !rollModifierKindsAreSupported(effect.on)) {
+    return null;
+  }
+  const skillFilter = rollModifierSkillFilter(effect.skillFilter);
+  if (skillFilter === null) {
+    return null;
+  }
+  return {
+    effect: {
+      kind: "d20RollModifier",
+      sourceSpellId: spell.id,
+      sourceCombatantId: actorId,
+      on: effect.on,
+      delta,
+      skill: skillFilter.kind === "fixed" ? skillFilter.skill : null,
+      expiresAt,
+    },
+    skillChoices:
+      skillFilter.kind === "choice" ? skillFilter.options : null,
+  };
+}
+
+function rollModifierDelta(
+  delta: Extract<
+    EffectAtom,
+    { readonly kind: "modify_roll_numeric" }
+  >["delta"],
+): BattleD20RollModifierDelta | null {
+  return delta.kind === "fixed_dice" &&
+    delta.dieSize === 4 &&
+    (delta.sign === "+" || delta.sign === "-")
+    ? { dice: delta.dice, dieSize: delta.dieSize, sign: delta.sign }
+    : null;
+}
+
+function rollModifierKindsAreSupported(
+  kinds: readonly string[],
+): kinds is readonly BattleD20RollModifierKind[] {
+  return kinds.every((kind) =>
+    BATTLE_D20_ROLL_MODIFIER_KINDS.includes(
+      kind as BattleD20RollModifierKind,
+    ),
+  );
+}
+
+function rollModifierSkillFilter(
+  skillFilter: SkillFilter | undefined,
+):
+  | { readonly kind: "none" }
+  | { readonly kind: "fixed"; readonly skill: Skill }
+  | { readonly kind: "choice"; readonly options: readonly Skill[] }
+  | null {
+  if (skillFilter === undefined) {
+    return { kind: "none" };
+  }
+  if (skillFilter.kind === "fixed" && skillFilter.skills.length === 1) {
+    return { kind: "fixed", skill: skillFilter.skills[0] };
+  }
+  if (skillFilter.kind === "choice") {
+    return { kind: "choice", options: skillFilter.options };
   }
   return null;
 }
@@ -21095,9 +21861,14 @@ function spellTargetHasNonSpatialPrerequisites(
 ): boolean {
   const target = state.combatants.get(targetId);
   if (
+    spellInvocationRequiresKnownWillingTarget(invocation) &&
+    !spellTargetIsKnownWilling(actorId, targetId)
+  ) {
+    return false;
+  }
+  if (
     invocation.procedure === "persistentArmorEffect" &&
-    (!persistentSpellTargetIsKnownWilling(actorId, targetId) ||
-      target?.armorClass.base.kind === "armor")
+    target?.armorClass.base.kind === "armor"
   ) {
     return false;
   }
@@ -21245,7 +22016,19 @@ function sameCombatantIdSet(
   return left.every((id) => rightIds.has(id));
 }
 
-function persistentSpellTargetIsKnownWilling(
+function spellInvocationRequiresKnownWillingTarget(
+  invocation: SupportedSpellInvocation,
+): boolean {
+  return (
+    invocation.procedure === "persistentArmorEffect" ||
+    (invocation.procedure === "rollModifier" &&
+      KNOWN_WILLING_TARGET_ROLL_MODIFIER_SPELL_IDS.includes(
+        invocation.spell.id,
+      ))
+  );
+}
+
+function spellTargetIsKnownWilling(
   actorId: CombatantId,
   targetId: CombatantId,
 ): boolean {
@@ -21288,6 +22071,20 @@ function supportedSpellInvocationRef(
       slotLevel: buffSpell.resource.slotLevel,
       procedure: "scalarBuff" as const,
     })),
+    Match.when({ procedure: "rollModifier" }, (modifierSpell) =>
+      modifierSpell.resource.tag === "none"
+        ? {
+            tag: "cantrip" as const,
+            spellId: spellId(modifierSpell.spell.id),
+            procedure: "rollModifier" as const,
+          }
+        : {
+            tag: "spellSlot" as const,
+            spellId: spellId(modifierSpell.spell.id),
+            slotLevel: modifierSpell.resource.slotLevel,
+            procedure: "rollModifier" as const,
+          },
+    ),
     Match.when({ procedure: "persistentArmorEffect" }, (persistent) => ({
       tag: "spellSlot" as const,
       spellId: spellId(persistent.spell.id),
@@ -21669,6 +22466,33 @@ function spellScalarBuffRollHole(
   };
 }
 
+function spellRollModifierSkillChoiceHoleId(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "rollModifier" }
+  >,
+): BattleHoleId {
+  return holeId(`battle:spell:skill-choice:${invocation.spell.id}`);
+}
+
+function spellRollModifierSkillChoiceHole(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "rollModifier" }
+  >,
+): BattleSpellSkillChoiceHole {
+  return {
+    kind: "skillChoice",
+    holeId: spellRollModifierSkillChoiceHoleId(invocation),
+    holeInstanceKey: holeInstanceKey(
+      `battle:spell:skill-choice:${invocation.spell.id}`,
+    ),
+    label: `${invocation.spell.name} skill`,
+    spell: invocation,
+    choices: invocation.skillChoices ?? [],
+  };
+}
+
 function scalarBuffInitialHoles(
   invocation: Extract<
     SupportedSpellInvocation,
@@ -21694,6 +22518,7 @@ function spellSavingThrowOutcomeHole(
     {
       readonly procedure:
         | "attackBurstSaveDamage"
+        | "rollModifier"
         | "saveGatedDamage"
         | "saveGatedCondition";
     }
@@ -21705,6 +22530,9 @@ function spellSavingThrowOutcomeHole(
     holeId: spellSavingThrowOutcomeHoleId(invocation),
     holeInstanceKey: holeInstanceKey(holeKey),
     label: (() => {
+      if (invocation.procedure === "rollModifier") {
+        return `${invocation.spell.name} Saving Throw outcomes`;
+      }
       const targeting = spellSavingThrowTargeting(invocation);
       return targeting.kind === "singleCombatant"
         ? `${invocation.spell.name} Saving Throw outcome`
@@ -21714,19 +22542,46 @@ function spellSavingThrowOutcomeHole(
     ability:
       invocation.procedure === "attackBurstSaveDamage"
         ? invocation.burst.ability
+        : invocation.procedure === "rollModifier"
+          ? invocation.saveGate?.ability ?? "cha"
         : invocation.ability,
     dc:
       invocation.procedure === "attackBurstSaveDamage"
         ? invocation.burst.dc
+        : invocation.procedure === "rollModifier"
+          ? invocation.saveGate?.dc ?? { kind: "caster_spell_save_dc" }
         : invocation.dc,
     areaChoices: [],
     targetRollModes: savingThrowRollModeProjections(
       state,
       invocation.procedure === "attackBurstSaveDamage"
         ? invocation.burst.ability
+        : invocation.procedure === "rollModifier"
+          ? invocation.saveGate?.ability ?? "cha"
         : invocation.ability,
     ),
   };
+}
+
+function spellSavingThrowAbility(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    {
+      readonly procedure:
+        | "attackBurstSaveDamage"
+        | "rollModifier"
+        | "saveGatedDamage"
+        | "saveGatedCondition";
+    }
+  >,
+): Ability {
+  if (invocation.procedure === "attackBurstSaveDamage") {
+    return invocation.burst.ability;
+  }
+  if (invocation.procedure === "rollModifier") {
+    return invocation.saveGate?.ability ?? "cha";
+  }
+  return invocation.ability;
 }
 
 function spellSavingThrowTargeting(
@@ -22605,6 +23460,46 @@ function applyScalarBuffSpellEffect(
     return {
       ...nextState,
       combatants: new Map(nextState.combatants).set(targetId, nextTarget),
+    };
+  }, state);
+}
+
+function applyRollModifierSpellEffect(
+  state: BattleState,
+  actorId: CombatantId,
+  targetIds: readonly CombatantId[],
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "rollModifier" }
+  >,
+  skill: Skill | null,
+): BattleState {
+  return targetIds.reduce((nextState, targetId) => {
+    const target = nextState.combatants.get(targetId);
+    if (target === undefined) {
+      return nextState;
+    }
+    const nextEffect = {
+      ...invocation.effect,
+      sourceCombatantId: actorId,
+      skill,
+    };
+    const activeEffects = [
+      ...target.activeEffects.filter(
+        (effect) =>
+          !(
+            effect.kind === "d20RollModifier" &&
+            effect.sourceSpellId === invocation.spell.id
+          ),
+      ),
+      nextEffect,
+    ];
+    return {
+      ...nextState,
+      combatants: new Map(nextState.combatants).set(targetId, {
+        ...target,
+        activeEffects,
+      }),
     };
   }, state);
 }

@@ -1,7 +1,8 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.invocation-chained-attack-damage spell.invocation-condition-save spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.invocation-chained-attack-damage spell.invocation-condition-save spell.invocation-roll-modifier spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-chained-attack-damage
 module battleRuntime {
   // SRD traceability for this canonical battle runtime spec:
@@ -163,7 +164,7 @@ module battleRuntime {
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Bane | Bless | Guidance | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack
   type ChainedSpellAttackDamageInvocation =
     | ChromaticOrbChainedSpellAttack
@@ -179,9 +180,10 @@ module battleRuntime {
   type MovementSpeedKind = WalkSpeedKind | ClimbSpeedKind | SwimSpeedKind
   type DirectHitPointRestorationSpell = HealingWordRestoration | CureWoundsRestoration | MassHealingWordRestoration
   type ScalarBuffSpell = FalseLifeScalarBuff | LongstriderScalarBuff | ShieldOfFaithScalarBuff
+  type RollModifierSpell = BaneRollModifier | BlessRollModifier | GuidanceRollModifier
   type SpellActionCost = SpellMagicAction | SpellBonusAction
 
-  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained
+  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
 
   type ChainedSpellAttackDamageHole =
@@ -664,6 +666,9 @@ module battleRuntime {
         | ShieldArmorClassBonus => false
         | LongstriderSpeedDelta => false
         | ShieldOfFaithArmorClassBonus => false
+        | BaneD20RollPenalty => false
+        | BlessD20RollBonus => false
+        | GuidanceAbilityCheckBonus => false
         | RayOfSicknessPoisoned => false
         | ShockingGraspOpportunityAttackDenied => false
         | GuidingBoltNextAttackAdvantage => false
@@ -1397,15 +1402,21 @@ module battleRuntime {
     if (floor > 30) 30 else floor
   }
 
+  pure def spellEffectConcentrationActiveEffects(): Set[ActiveEffect] =
+    Set(ShieldOfFaithArmorClassBonus, BaneD20RollPenalty, BlessD20RollBonus, GuidanceAbilityCheckBonus, EntangleRestrained)
+
+  pure def breakableSelfConcentrationActiveEffects(): Set[ActiveEffect] =
+    spellEffectConcentrationActiveEffects.union(Set(MageArmor))
+
   pure def breakConcentration(target: Combatant): Combatant =
-    { ...target, concentrating: false, activeEffects: target.activeEffects.exclude(Set(MageArmor, ShieldOfFaithArmorClassBonus)) }
+    { ...target, concentrating: false, activeEffects: target.activeEffects.exclude(breakableSelfConcentrationActiveEffects) }
 
   pure def stateWithFighterDamage(state: BattleState, damagedFighter: Combatant): BattleState =
     if (state.fighter.concentrating and not(damagedFighter.concentrating))
       {
         ...state,
         fighter: damagedFighter,
-        goblin: { ...state.goblin, activeEffects: state.goblin.activeEffects.exclude(Set(ShieldOfFaithArmorClassBonus)) },
+        goblin: { ...state.goblin, activeEffects: state.goblin.activeEffects.exclude(spellEffectConcentrationActiveEffects) },
       }
     else
       { ...state, fighter: damagedFighter }
@@ -1818,7 +1829,7 @@ module battleRuntime {
           {
             ...state,
             fighter: breakConcentration(state.fighter),
-            goblin: { ...state.goblin, activeEffects: state.goblin.activeEffects.exclude(Set(ShieldOfFaithArmorClassBonus)) },
+            goblin: { ...state.goblin, activeEffects: state.goblin.activeEffects.exclude(spellEffectConcentrationActiveEffects) },
           }
         else
           state
@@ -1829,6 +1840,75 @@ module battleRuntime {
         actionAvailable: if (actionCost == SpellMagicAction) false else state.actionAvailable,
         bonusActionAvailable: if (actionCost == SpellBonusAction) false else state.bonusActionAvailable,
         spellSlotExpendedThisTurn: true,
+      }
+    } else {
+      state
+    }
+  }
+
+  pure def rollModifierMaximumTargets(invocation: RollModifierSpell, slotLevel: int): int =
+    match invocation {
+      | BaneRollModifier => 3 + (if (slotLevel > 1) slotLevel - 1 else 0)
+      | BlessRollModifier => 3 + (if (slotLevel > 1) slotLevel - 1 else 0)
+      | GuidanceRollModifier => 1
+    }
+
+  pure def rollModifierActiveEffect(invocation: RollModifierSpell): ActiveEffect =
+    match invocation {
+      | BaneRollModifier => BaneD20RollPenalty
+      | BlessRollModifier => BlessD20RollBonus
+      | GuidanceRollModifier => GuidanceAbilityCheckBonus
+    }
+
+  pure def rollModifierRequiresFailedSave(invocation: RollModifierSpell): bool =
+    invocation == BaneRollModifier
+
+  pure def rollModifierSpendsLevelOneSlot(invocation: RollModifierSpell): bool =
+    invocation != GuidanceRollModifier
+
+  pure def rollModifierTargetedState(
+    state: BattleState,
+    invocation: RollModifierSpell,
+    targets: Set[Actor],
+  ): BattleState =
+    {
+      ...state,
+      fighter: if (targets.contains(Fighter)) { ...state.fighter, activeEffects: state.fighter.activeEffects.union(Set(rollModifierActiveEffect(invocation))) } else state.fighter,
+      goblin: if (targets.contains(Goblin)) { ...state.goblin, activeEffects: state.goblin.activeEffects.union(Set(rollModifierActiveEffect(invocation))) } else state.goblin,
+    }
+
+  pure def resolveRollModifierSpell(
+    state: BattleState,
+    invocation: RollModifierSpell,
+    selectedTargets: Set[Actor],
+    failedSaveTargets: Set[Actor],
+    slotLevel: int,
+  ): BattleState = {
+    val targetCount = selectedTargets.size()
+    val validTargetCount = targetCount >= 1 and targetCount <= rollModifierMaximumTargets(invocation, slotLevel)
+    val affectedTargets =
+      if (rollModifierRequiresFailedSave(invocation)) failedSaveTargets else selectedTargets
+    if (
+      currentActor(state) == Fighter and
+      validTargetCount and
+      failedSaveTargets.forall(target => selectedTargets.contains(target)) and
+      state.actionAvailable and
+      (not(rollModifierSpendsLevelOneSlot(invocation)) or canExpendSpellSlotThisTurn(state)) and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state))
+    ) {
+      val concentrationBase = {
+        ...state,
+        fighter: breakConcentration(state.fighter),
+        goblin: { ...state.goblin, activeEffects: state.goblin.activeEffects.exclude(spellEffectConcentrationActiveEffects) },
+      }
+      val effected = rollModifierTargetedState(concentrationBase, invocation, affectedTargets)
+      {
+        ...effected,
+        fighter: { ...effected.fighter, concentrating: true },
+        actionAvailable: false,
+        spellSlotExpendedThisTurn: state.spellSlotExpendedThisTurn or rollModifierSpendsLevelOneSlot(invocation),
       }
     } else {
       state
@@ -2047,6 +2127,9 @@ module battleRuntime {
       | FalseLife => true
       | Longstrider => true
       | ShieldOfFaith => true
+      | Bane => true
+      | Bless => true
+      | Guidance => false
       | ShockingGrasp => false
       | GuidingBolt => true
       | RayOfSickness => true
@@ -3339,6 +3422,9 @@ module battleRuntime {
       assert(expendedSlotsAfterInvocation(HealingWord, 0) == 1),
       assert(expendedSlotsAfterInvocation(CureWounds, 0) == 1),
       assert(expendedSlotsAfterInvocation(MassHealingWord, 0) == 1),
+      assert(expendedSlotsAfterInvocation(Bane, 0) == 1),
+      assert(expendedSlotsAfterInvocation(Bless, 0) == 1),
+      assert(expendedSlotsAfterInvocation(Guidance, 0) == 0),
     }
   }
 
@@ -3381,6 +3467,14 @@ module battleRuntime {
 
   run test_spell_invocation_executable_spell_facts = {
     all {
+      assert(rollModifierMaximumTargets(BlessRollModifier, 2) == 4),
+      assert(rollModifierMaximumTargets(BaneRollModifier, 3) == 5),
+      assert(rollModifierMaximumTargets(GuidanceRollModifier, 0) == 1),
+      assert(rollModifierRequiresFailedSave(BaneRollModifier)),
+      assert(not(rollModifierRequiresFailedSave(BlessRollModifier))),
+      assert(rollModifierActiveEffect(BaneRollModifier) == BaneD20RollPenalty),
+      assert(rollModifierActiveEffect(BlessRollModifier) == BlessD20RollBonus),
+      assert(rollModifierActiveEffect(GuidanceRollModifier) == GuidanceAbilityCheckBonus),
       assert(spellAttackModifier(3, 2) == 5),
       assert(magicMissileDartCount(1) == 3),
       assert(magicMissileDartCount(2) == 4),
@@ -3425,6 +3519,66 @@ module battleRuntime {
       assert(attackBurstSaveDamageSpendsLevelOneSlot(IceKnifeAttackBurstSaveDamage)),
       assert(attackBurstSaveDamageAttackType(IceKnifeAttackBurstSaveDamage) == Piercing),
       assert(attackBurstSaveDamageBurstType(IceKnifeAttackBurstSaveDamage) == Cold),
+    }
+  }
+
+  run test_roll_modifier_concentration_effects_end_when_caster_concentration_breaks = {
+    val concentrating = {
+      ...endTurn(initialState),
+      fighter: {
+        ...initialState.fighter,
+        concentrating: true,
+        activeEffects: Set(BaneD20RollPenalty, BlessD20RollBonus, GuidanceAbilityCheckBonus),
+      },
+      goblin: {
+        ...initialState.goblin,
+        activeEffects: Set(BaneD20RollPenalty, BlessD20RollBonus, GuidanceAbilityCheckBonus),
+      },
+    }
+    val result = resolveGoblinAttack(concentrating, 20, 18, 5, false)
+    all {
+      assert(not(result.fighter.concentrating)),
+      assert(not(result.fighter.activeEffects.contains(BaneD20RollPenalty))),
+      assert(not(result.fighter.activeEffects.contains(BlessD20RollBonus))),
+      assert(not(result.fighter.activeEffects.contains(GuidanceAbilityCheckBonus))),
+      assert(not(result.goblin.activeEffects.contains(BaneD20RollPenalty))),
+      assert(not(result.goblin.activeEffects.contains(BlessD20RollBonus))),
+      assert(not(result.goblin.activeEffects.contains(GuidanceAbilityCheckBonus))),
+    }
+  }
+
+  run test_roll_modifier_concentration_replacement_removes_prior_effects_before_new_effect = {
+    val prior = {
+      ...initialState,
+      fighter: {
+        ...initialState.fighter,
+        concentrating: true,
+        activeEffects: Set(BaneD20RollPenalty, GuidanceAbilityCheckBonus),
+      },
+      goblin: {
+        ...initialState.goblin,
+        activeEffects: Set(BaneD20RollPenalty, GuidanceAbilityCheckBonus),
+      },
+    }
+    val result = resolveRollModifierSpell(prior, BlessRollModifier, Set(Goblin), Set(), 1)
+    all {
+      assert(result.fighter.concentrating),
+      assert(not(result.fighter.activeEffects.contains(BaneD20RollPenalty))),
+      assert(not(result.fighter.activeEffects.contains(GuidanceAbilityCheckBonus))),
+      assert(not(result.fighter.activeEffects.contains(BlessD20RollBonus))),
+      assert(not(result.goblin.activeEffects.contains(BaneD20RollPenalty))),
+      assert(not(result.goblin.activeEffects.contains(GuidanceAbilityCheckBonus))),
+      assert(result.goblin.activeEffects.contains(BlessD20RollBonus)),
+    }
+  }
+
+  run test_guidance_preserves_existing_spell_slot_expended_turn_guard = {
+    val alreadySpent = { ...initialState, spellSlotExpendedThisTurn: true }
+    val result = resolveRollModifierSpell(alreadySpent, GuidanceRollModifier, Set(Fighter), Set(), 0)
+    all {
+      assert(result.fighter.concentrating),
+      assert(result.fighter.activeEffects.contains(GuidanceAbilityCheckBonus)),
+      assert(result.spellSlotExpendedThisTurn),
     }
   }
 

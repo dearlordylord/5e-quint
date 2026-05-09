@@ -50,6 +50,7 @@ export const BattleSubjectTextSchema = Schema.NonEmptyTrimmedString;
 export const CANTRIP_SPELL_PROCEDURES = [
   "spellAttackDamage",
   "saveGatedDamage",
+  "rollModifier",
 ] as const;
 export type CantripSpellProcedure = (typeof CANTRIP_SPELL_PROCEDURES)[number];
 
@@ -66,6 +67,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "saveGatedCondition",
   "repeatedDamageAllocation",
   "directHitPointRestoration",
+  "rollModifier",
   "scalarBuff",
   "persistentArmorEffect",
   "shieldReaction",

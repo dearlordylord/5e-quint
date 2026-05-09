@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 348,
-      "numerator": 81,
-      "percent": "23.3%"
+      "numerator": 84,
+      "percent": "24.1%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 415,
-      "numerator": 105,
-      "percent": "25.3%"
+      "numerator": 108,
+      "percent": "26%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,47 +59,47 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 106
+      "value": 109
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 52,
-      "numerator": 48,
-      "percent": "92.3%"
+      "denominator": 55,
+      "numerator": 51,
+      "percent": "92.7%"
     },
     "profileClassificationCoverage": {
-      "denominator": 106,
-      "numerator": 106,
+      "denominator": 109,
+      "numerator": 109,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 28,
-      "numerator": 28,
+      "denominator": 29,
+      "numerator": 29,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 28,
-      "numerator": 27,
-      "percent": "96.4%"
+      "denominator": 29,
+      "numerator": 28,
+      "percent": "96.6%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 28,
-      "numerator": 28,
+      "denominator": 29,
+      "numerator": 29,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 28,
-      "numerator": 28,
+      "denominator": 29,
+      "numerator": 29,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 52,
+      "denominator": 55,
       "numerator": 10,
-      "percent": "19.2%"
+      "percent": "18.2%"
     },
     "supportedProfileCoverage": {
-      "denominator": 82,
-      "numerator": 52,
-      "percent": "63.4%"
+      "denominator": 85,
+      "numerator": 55,
+      "percent": "64.7%"
     }
   },
   "metricSemantics": [
@@ -945,6 +945,30 @@
       ]
     },
     {
+      "id": "spell.invocation-roll-modifier",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "SRDINV30B"
+      ],
+      "title": "Spell invocation applies concentration d20 roll modifiers from target-list or skill-choice spell effects",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.scalar-buff",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -1347,6 +1371,22 @@
         "spell.scalar-buff"
       ],
       "taskId": "SRDINV30A"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Bane, Bless, and Guidance d20 roll modifier spell effects, concentration replacement, failed-save targeting, and cantrip slot behavior.",
+      "profileIds": [
+        "spell.invocation-roll-modifier"
+      ],
+      "taskId": "SRDINV30B"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests for Bane, Bless, and Guidance roll modifier spell invocations.",
+      "profileIds": [
+        "spell.invocation-roll-modifier"
+      ],
+      "taskId": "SRDINV30B"
     }
   ],
   "units": [
@@ -3629,6 +3669,114 @@
       },
       "claim": {
         "profileIds": [
+          "spell.invocation-roll-modifier"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV30B"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-roll-modifier",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV30B"
+          ],
+          "title": "Spell invocation applies concentration d20 roll modifiers from target-list or skill-choice spell effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/bane.json",
+      "unitId": "bane"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "spell.invocation-roll-modifier"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV30B"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-roll-modifier",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV30B"
+          ],
+          "title": "Spell invocation applies concentration d20 roll modifiers from target-list or skill-choice spell effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/bless.json",
+      "unitId": "bless"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
           "spell.invocation-damage-save-or-attack",
           "spell.readied-action-time-spell"
         ],
@@ -4129,6 +4277,60 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/fire_bolt.json",
       "unitId": "fire_bolt"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "spell.invocation-roll-modifier"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV30B"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-roll-modifier",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV30B"
+          ],
+          "title": "Spell invocation applies concentration d20 roll modifiers from target-list or skill-choice spell effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/guidance.json",
+      "unitId": "guidance"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -6195,24 +6397,6 @@
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [],
-      "sourceRecordPath": "packages/surface/content/bane.json",
-      "unitId": "bane"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
       "sourceRecordPath": "packages/surface/content/banishment.json",
       "unitId": "banishment"
     },
@@ -6413,24 +6597,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/blade_barrier.json",
       "unitId": "blade_barrier"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/bless.json",
-      "unitId": "bless"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -7498,24 +7664,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/greater_invisibility.json",
       "unitId": "greater_invisibility"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/guidance.json",
-      "unitId": "guidance"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

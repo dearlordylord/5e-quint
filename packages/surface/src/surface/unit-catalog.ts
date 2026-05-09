@@ -11,6 +11,8 @@ import barbarianFastMovementInput from "../../content/barbarian_fast_movement.js
 import barbarianRecklessAttackInput from "../../content/barbarian_reckless_attack.json";
 import barbarianUnarmoredDefenseInput from "../../content/barbarian_unarmored_defense.json";
 import barbarianWeaponMasteryInput from "../../content/barbarian_weapon_mastery.json";
+import baneInput from "../../content/bane.json";
+import blessInput from "../../content/bless.json";
 import burningHandsInput from "../../content/burning_hands.json";
 import classBardInput from "../../content/class_bard.json";
 import classBarbarianInput from "../../content/class_barbarian.json";
@@ -50,6 +52,7 @@ import fighterWeaponMasteryInput from "../../content/fighter_weapon_mastery.json
 import detectMagicInput from "../../content/detect_magic.json";
 import falseLifeInput from "../../content/false_life.json";
 import fireBoltInput from "../../content/fire_bolt.json";
+import guidanceInput from "../../content/guidance.json";
 import guidingBoltInput from "../../content/guiding_bolt.json";
 import healingWordInput from "../../content/healing_word.json";
 import hellishRebukeInput from "../../content/hellish_rebuke.json";
@@ -275,6 +278,8 @@ export const srdUnitCollection = defineSrdUnitCollection({
     orcDarkvisionInput,
     orcRelentlessEnduranceInput,
     acidSplashInput,
+    baneInput,
+    blessInput,
     burningHandsInput,
     chillTouchInput,
     chromaticOrbInput,
@@ -283,6 +288,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     entangleInput,
     falseLifeInput,
     fireBoltInput,
+    guidanceInput,
     guidingBoltInput,
     iceKnifeInput,
     inflictWoundsInput,

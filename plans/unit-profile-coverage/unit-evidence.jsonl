@@ -54,6 +54,9 @@
 {"unitId":"color_spray","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV29B","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"entangle","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV29C","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"ice_knife","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV29E","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
+{"unitId":"bane","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV30B","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
+{"unitId":"bless","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV30B","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
+{"unitId":"guidance","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV30B","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"false_life","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV30A","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"longstrider","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV30A","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"shield_of_faith","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV30A","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
