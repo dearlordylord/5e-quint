@@ -51,3 +51,4 @@
 {"unitId":"bard_cutting_words","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT65","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"burning_hands","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV29A","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"color_spray","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV29B","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
+{"unitId":"entangle","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV29C","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}

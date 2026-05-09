@@ -6,6 +6,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV28D guiding_bolt ray_of_sickness shocking_grasp vicious_mockery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29A burning_hands
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29B color_spray
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29C entangle
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT25 healing_word
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT32 cure_wounds mass_healing_word
@@ -129,6 +130,7 @@ const rogueSneakAttackUnitId = "rogue_sneak_attack";
 const bardCuttingWordsUnitId = "bard_cutting_words";
 const burningHandsUnitId = "burning_hands";
 const colorSprayUnitId = "color_spray";
+const entangleUnitId = "entangle";
 const sleepUnitId = "sleep";
 const monkDeflectAttacksUnitId = "monk_deflect_attacks";
 const defenseUnitId = "defense";
@@ -2797,8 +2799,64 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
         resource: { tag: "spellSlot", slotLevel: 1 },
         ability: "con",
         targeting: { kind: "selfOriginCone", lengthFeet: 15 },
-        effect: { condition: "blinded", expiresAt: "endOfCasterNextTurn" },
+        effect: {
+          condition: "blinded",
+          expiresAt: "endOfCasterNextTurn",
+          escape: null,
+        },
         rangeFeet: 0,
+      }),
+    );
+    expect(act.initialHoles).toEqual([
+      expect.objectContaining({
+        kind: "savingThrowOutcome",
+        areaChoices: [],
+      }),
+    ]);
+  });
+
+  test("entangle is admitted as a point-origin Cube save-gated slot condition spell", () => {
+    const spell = spellRecord(entangleUnitId);
+    const act = spellAct({
+      state: spellBattle({
+        preparedSpells: [spell],
+        spellSlots: [{ spellLevel: 1, count: 1 }],
+      }),
+      spellId: entangleUnitId,
+      slotLevel: 1,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(
+        "entangle",
+        1,
+        "saveGatedCondition",
+      ),
+      mode: { tag: "cast" },
+    });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+    expect(savingThrow).toEqual(
+      expect.objectContaining({
+        label: "Entangle point-origin Cube Saving Throw outcomes",
+        ability: "str",
+        dc: { kind: "caster_spell_save_dc" },
+      }),
+    );
+    expect(spellHoleInvocation([savingThrow])).toEqual(
+      expect.objectContaining({
+        procedure: "saveGatedCondition",
+        spell,
+        resource: { tag: "spellSlot", slotLevel: 1 },
+        ability: "str",
+        targeting: { kind: "pointOriginCubeExcludingCaster", sideFeet: 20 },
+        effect: {
+          condition: "restrained",
+          expiresAt: "concentration",
+          escape: { ability: "str", skill: "athletics" },
+        },
+        rangeFeet: 90,
       }),
     );
     expect(act.initialHoles).toEqual([

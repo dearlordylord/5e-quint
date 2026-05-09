@@ -155,7 +155,7 @@ import {
   battleReplayStackDepth,
   spellId,
 } from "./identity.ts";
-import type { CharacterId, InitiativeScore } from "./identity.ts";
+import type { CharacterId, InitiativeScore, SpellId } from "./identity.ts";
 import type { CharacterBattleClassLevel } from "./character-class-level.ts";
 import {
   characterBattleResourceUsage,
@@ -286,13 +286,25 @@ export type BattleActiveEffectExpiration =
       readonly kind: "endOfTurn";
       readonly combatantId: CombatantId;
       readonly round: RoundType;
+    }
+  | {
+      readonly kind: "concentration";
+      readonly combatantId: CombatantId;
     };
+type TurnAnchoredBattleActiveEffectExpiration = Exclude<
+  BattleActiveEffectExpiration,
+  { readonly kind: "concentration" }
+>;
 export type BattleSpellEffectEarlyEnd =
   | { readonly kind: "targetDonsArmor" }
   | { readonly kind: "concentrationBroken" };
 type BattleSpellEffectBase = {
   readonly sourceSpellId: SpellRecord["id"];
   readonly sourceCombatantId: CombatantId;
+};
+type SpellConditionEscape = {
+  readonly ability: "str";
+  readonly skill: "athletics";
 };
 export type BattleActiveEffect =
   | (BattleSpellEffectBase & {
@@ -317,6 +329,7 @@ export type BattleActiveEffect =
       readonly kind: "spellCondition";
       readonly condition: Condition;
       readonly conditionHadNonSpellSource: boolean;
+      readonly escape: SpellConditionEscape | null;
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {
@@ -344,7 +357,7 @@ export type BattleConcentration = {
 export type BattleReadiedSpell = {
   readonly invocation: SupportedDamageSpellInvocation;
   readonly trigger: BattleReadiedSpellTrigger;
-  readonly expiresAt: BattleActiveEffectExpiration;
+  readonly expiresAt: TurnAnchoredBattleActiveEffectExpiration;
 };
 // SRD 5.2.1 Ready [Action]: Ready can hold a chosen action, or the special
 // alternative to move up to Speed. This runtime slice models only that
@@ -352,7 +365,7 @@ export type BattleReadiedSpell = {
 export type BattleReadiedMovement = {
   // supported runtime trigger buckets, not the RAW Ready trigger taxonomy; RAW is closer to "table decision" and probably shall be modeled like that
   readonly trigger: BattleReactionTrigger;
-  readonly expiresAt: BattleActiveEffectExpiration;
+  readonly expiresAt: TurnAnchoredBattleActiveEffectExpiration;
 };
 // SRD 5.2.1 Help [Action], "Assist an Attack Roll": helper distracts an
 // enemy within 5 feet, granting Advantage to one ally's next attack roll
@@ -363,7 +376,7 @@ export type BattleHelpAttack = {
   readonly helperId: CombatantId;
   readonly allyId: CombatantId;
   readonly targetEnemyId: CombatantId;
-  readonly expiresAt: BattleActiveEffectExpiration;
+  readonly expiresAt: TurnAnchoredBattleActiveEffectExpiration;
 };
 export type BattleInterruptedProcedure =
   | {
@@ -846,6 +859,10 @@ type SpellTargeting =
       readonly radiusFeet: MovementFeet;
     }
   | {
+      readonly kind: "pointOriginCubeExcludingCaster";
+      readonly sideFeet: MovementFeet;
+    }
+  | {
       readonly kind: "selfOriginCone";
       readonly lengthFeet: MovementFeet;
     };
@@ -879,7 +896,8 @@ type SpellFailedSavePostDamageRider = {
 };
 type SpellFailedSaveConditionEffect = {
   readonly condition: Condition;
-  readonly expiresAt: "endOfCasterNextTurn";
+  readonly expiresAt: "endOfCasterNextTurn" | "concentration";
+  readonly escape: SpellConditionEscape | null;
 };
 // SupportedAttackActionOption is a currently executable option for spending an
 // immediate attack made as part of the Attack action. It is narrower than all
@@ -1390,7 +1408,9 @@ function battleStateInitIssue(
 
 const SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET = movementFeet(5);
 const SUPPORTED_SELF_CONE_SAVE_GATE_LENGTH_FEET = movementFeet(15);
+const SUPPORTED_POINT_CUBE_SAVE_GATE_SIDE_FEET = movementFeet(20);
 const COLOR_SPRAY_FAILED_SAVE_CONDITION = "blinded" satisfies Condition;
+const ENTANGLE_FAILED_SAVE_CONDITION = "restrained" satisfies Condition;
 
 export type AvailableBattleAct = {
   readonly subject: BattleSubject;
@@ -1627,7 +1647,7 @@ export type BattleAbilityCheckHole = {
   readonly kind: "abilityCheck";
   readonly label: string;
   readonly ability: Ability;
-  readonly skill: "stealth" | "perception";
+  readonly skill: "stealth" | "perception" | "athletics";
   readonly dc: DifficultyClass;
 };
 export type BattleGrappleOutcomeHole = {
@@ -1872,6 +1892,10 @@ const SupportedSpellInvocationSchema = Schema.Union(
         radiusFeet: MovementFeet,
       }),
       Schema.Struct({
+        kind: Schema.Literal("pointOriginCubeExcludingCaster"),
+        sideFeet: MovementFeet,
+      }),
+      Schema.Struct({
         kind: Schema.Literal("selfOriginCone"),
         lengthFeet: MovementFeet,
       }),
@@ -1904,6 +1928,10 @@ const SupportedSpellInvocationSchema = Schema.Union(
       Schema.Struct({
         kind: Schema.Literal("pointOriginSphere"),
         radiusFeet: MovementFeet,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("pointOriginCubeExcludingCaster"),
+        sideFeet: MovementFeet,
       }),
       Schema.Struct({
         kind: Schema.Literal("selfOriginCone"),
@@ -1940,13 +1968,23 @@ const SupportedSpellInvocationSchema = Schema.Union(
         radiusFeet: MovementFeet,
       }),
       Schema.Struct({
+        kind: Schema.Literal("pointOriginCubeExcludingCaster"),
+        sideFeet: MovementFeet,
+      }),
+      Schema.Struct({
         kind: Schema.Literal("selfOriginCone"),
         lengthFeet: MovementFeet,
       }),
     ),
     effect: Schema.Struct({
       condition: Schema.Literal(...ALL_CONDITIONS),
-      expiresAt: Schema.Literal("endOfCasterNextTurn"),
+      expiresAt: Schema.Literal("endOfCasterNextTurn", "concentration"),
+      escape: Schema.NullOr(
+        Schema.Struct({
+          ability: Schema.Literal("str"),
+          skill: Schema.Literal("athletics"),
+        }),
+      ),
     }),
     rangeFeet: MovementFeet,
   }),
@@ -2157,7 +2195,7 @@ export const BattleHoleSchema = Schema.Union(
     kind: Schema.Literal("abilityCheck"),
     label: Schema.String,
     ability: Schema.String,
-    skill: Schema.Literal("stealth", "perception"),
+    skill: Schema.Literal("stealth", "perception", "athletics"),
     dc: DifficultyClass,
   }),
   Schema.Struct({
@@ -2932,6 +2970,13 @@ type EscapeGrappleBattleResolutionInput = BattleResolutionInputForSubject<
     { readonly tag: "action"; readonly action: "escapeGrapple" }
   >
 >;
+type EscapeSpellRestraintBattleResolutionInput =
+  BattleResolutionInputForSubject<
+    Extract<
+      BattleSubject,
+      { readonly tag: "action"; readonly action: "escapeSpellRestraint" }
+    >
+  >;
 type ActionSpellBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<BattleSubject, { readonly tag: "actionSpell" }>
 > & {
@@ -3533,6 +3578,12 @@ const ESCAPE_GRAPPLE_OUTCOME_HOLE_ID = holeId("battle:escape-grapple:outcome");
 const ESCAPE_GRAPPLE_OUTCOME_HOLE_INSTANCE = holeInstanceKey(
   "battle:escape-grapple:outcome",
 );
+const ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_ID = holeId(
+  "battle:escape-spell-restraint:athletics-check",
+);
+const ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_INSTANCE = holeInstanceKey(
+  "battle:escape-spell-restraint:athletics-check",
+);
 const REACTION_MODIFIER_ROLL_HOLE_ID = holeId("battle:reaction:modifier-roll");
 const REACTION_MODIFIER_ROLL_HOLE_INSTANCE = holeInstanceKey(
   "battle:reaction:modifier-roll",
@@ -3893,6 +3944,27 @@ export function discoverBattleActs(
         label: "Escape Grapple",
         summary: "Use an action to attempt to end the Grappled condition.",
         initialHoles: [escapeGrappleOutcomeHole(grapple, actorId)],
+      });
+    }
+  }
+  for (const effect of spellRestraintEffects(state, actorId)) {
+    if (
+      combatantCanTakeActions(state.combatants.get(actorId)) &&
+      !actorHasStatBlockMultiattackActionResource(state, actorId) &&
+      canSpendAction(state.currentTurnResources, "utilize")
+    ) {
+      acts.push({
+        subject: {
+          tag: "action",
+          actorId,
+          action: "escapeSpellRestraint",
+          sourceSpellId: spellId(effect.sourceSpellId),
+          sourceCombatantId: effect.sourceCombatantId,
+        },
+        label: `Escape ${effect.sourceSpellId}`,
+        summary:
+          "Use an action to attempt to end a spell-imposed Restrained condition.",
+        initialHoles: [escapeSpellRestraintAbilityCheckHole(state, effect)],
       });
     }
   }
@@ -4502,7 +4574,8 @@ function resolveBattleSubjectInternal(
       input.subject.action === "ready" ||
       input.subject.action === "search" ||
       input.subject.action === "grapple" ||
-      input.subject.action === "escapeGrapple") &&
+      input.subject.action === "escapeGrapple" ||
+      input.subject.action === "escapeSpellRestraint") &&
     !combatantCanTakeActions(input.state.combatants.get(actorId))
   ) {
     return invalidResult(
@@ -4631,6 +4704,9 @@ function resolveBattleSubjectInternal(
     }
     if (subject.tag === "action" && subject.action === "escapeGrapple") {
       return resolveEscapeGrapple({ ...input, subject });
+    }
+    if (subject.tag === "action" && subject.action === "escapeSpellRestraint") {
+      return resolveEscapeSpellRestraint({ ...input, subject });
     }
     if (subject.tag === "bonusAction" && subject.action === "offHandAttack") {
       return resolveOffHandAttack({
@@ -4787,6 +4863,7 @@ function standardActionKindForSubject(
     Match.when("search", () => "search" as const),
     Match.when("grapple", () => "attack" as const),
     Match.when("escapeGrapple", () => "attack" as const),
+    Match.when("escapeSpellRestraint", () => "utilize" as const),
     Match.exhaustive,
   );
 }
@@ -8198,6 +8275,16 @@ function breakBattleConcentrationAfterDamage(input: {
   if (currentConcentration !== null) {
     return breakBattleConcentration(input.state, input.combatantId);
   }
+  if (input.priorConcentration?.effectKind === "spellEffect") {
+    return {
+      ...input.state,
+      combatants: breakCombatantConcentration(
+        input.state.combatants,
+        input.combatantId,
+        input.priorConcentration,
+      ),
+    };
+  }
   if (input.priorConcentration?.effectKind !== "readiedSpell") {
     return input.state;
   }
@@ -10413,6 +10500,84 @@ function resolveEscapeGrapple(
   };
 }
 
+function resolveEscapeSpellRestraint(
+  input: EscapeSpellRestraintBattleResolutionInput,
+): BattleResolutionResult {
+  const effect = spellRestraintEffectFor(
+    input.state,
+    input.subject.actorId,
+    input.subject.sourceSpellId,
+    input.subject.sourceCombatantId,
+  );
+  if (effect === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "No spell-imposed Restraint is available to escape.",
+    );
+  }
+  if (
+    actorHasStatBlockMultiattackActionResource(
+      input.state,
+      input.subject.actorId,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Escape spell Restraint is not available during a Stat Block Multiattack dispatch.",
+    );
+  }
+  const dc = spellSaveDcForCaster(input.state, effect.sourceCombatantId);
+  if (dc === null) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Spell-imposed Restraint escape DC is no longer available.",
+    );
+  }
+  const check = abilityCheckFill(
+    input.fills,
+    ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_ID,
+    "Escape spell Restraint",
+  );
+  if (check.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", check.message);
+  }
+  if (check.value === undefined) {
+    return needsHolesResult(input.state, input.subject, [
+      escapeSpellRestraintAbilityCheckHole(input.state, effect),
+    ]);
+  }
+  const spent = spendAction(input.state.currentTurnResources, "utilize");
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Escape spell Restraint is no longer available for the current actor.",
+    );
+  }
+  const nextState =
+    check.value.value.total >= dc
+      ? removeSpellConditionEffect(
+          {
+            ...input.state,
+            currentTurnResources: spent.right,
+          },
+          input.subject.actorId,
+          effect,
+        )
+      : {
+          ...input.state,
+          currentTurnResources: spent.right,
+        };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
 function resolveReleaseGrappleCommand(
   input: BattleResolutionInputForSubject<
     Extract<
@@ -10704,6 +10869,41 @@ function searchAbilityCheckHole(dc: DifficultyClass): BattleAbilityCheckHole {
     skill: "perception",
     dc,
   };
+}
+
+function escapeSpellRestraintAbilityCheckHole(
+  state: BattleState,
+  effect: Extract<BattleActiveEffect, { readonly kind: "spellCondition" }>,
+): BattleAbilityCheckHole {
+  const dc = spellSaveDcForCaster(state, effect.sourceCombatantId);
+  return {
+    holeInstanceKey: ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_INSTANCE,
+    holeId: ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_ID,
+    kind: "abilityCheck",
+    label: `Escape ${effect.sourceSpellId} Strength (Athletics) check (DC ${dc ?? 1})`,
+    ability: "str",
+    skill: "athletics",
+    dc: dc ?? difficultyClass(1),
+  };
+}
+
+function spellSaveDcForCaster(
+  state: BattleState,
+  casterId: CombatantId,
+): DifficultyClass | null {
+  const caster = state.combatants.get(casterId);
+  if (caster?.origin.kind !== "character") {
+    return null;
+  }
+  const spellcasting = caster.origin.spellcasting;
+  if (spellcasting === undefined) {
+    return null;
+  }
+  return difficultyClass(
+    8 +
+      Number(spellcasting.spellcastingAbilityModifier) +
+      spellcasting.proficiencyBonus,
+  );
 }
 
 function grappleFillSet(fills: readonly BattleFill[]): GrappleFillSet {
@@ -15890,22 +16090,31 @@ function resolveSaveGateConditionSpellAct(input: {
     }
   }
 
-  const effected = applyFailedSaveSpellConditionEffects(
-    input.input.state,
-    input.actorId,
-    failedTargets,
-    input.invocation,
-  );
-  return spendSpellCastResources({
-    state: extendSavingThrowOngoingFeatures(
-      effected,
-      input.actorId,
-      selectedTargetIds,
-    ),
+  const resourced = spendSpellCastResources({
+    state: input.input.state,
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
   });
+  if (resourced.tag === "invalid") {
+    return resourced;
+  }
+  const effected = applyFailedSaveSpellConditionEffects(
+    resourced.state,
+    input.actorId,
+    failedTargets,
+    input.invocation,
+  );
+  const nextState = extendSavingThrowOngoingFeatures(
+    effected,
+    input.actorId,
+    selectedTargetIds,
+  );
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
 }
 
 function validateSavingThrowOutcomes(
@@ -15949,6 +16158,12 @@ function validateSavingThrowOutcomes(
   if (affectedTargets.size !== value.area.affectedTargetIds.length) {
     return "Save-gate spell area affected targets must not duplicate targets.";
   }
+  if (
+    hole.spell.targeting.kind === "pointOriginCubeExcludingCaster" &&
+    affectedTargets.has(actorId)
+  ) {
+    return "Entangle area affected targets must exclude the caster.";
+  }
   for (const targetId of affectedTargets) {
     if (!state.combatants.has(targetId)) {
       return "Save-gate spell area affected target must be a combatant in this battle.";
@@ -15986,13 +16201,23 @@ function spendSpellCastResources(input: {
     );
   }
   if (input.invocation.resource.tag === "none") {
-    const nextState = {
-      ...input.state,
+    const afterPriorConcentration = spellRequiresConcentration(input.invocation)
+      ? breakBattleConcentration(input.state, input.actorId)
+      : input.state;
+    const resourced = {
+      ...afterPriorConcentration,
       currentTurnResources: clearPendingAttackRollMissToHitReplacementSelection(
         spent.right,
         input.actorId,
       ),
     };
+    const nextState = spellRequiresConcentration(input.invocation)
+      ? startSpellEffectConcentration(
+          resourced,
+          input.actorId,
+          input.invocation,
+        )
+      : resourced;
     return {
       tag: "resolved",
       state: nextState,
@@ -16007,22 +16232,55 @@ function spendSpellCastResources(input: {
       "This turn has already expended a Spell Slot.",
     );
   }
+  const afterPriorConcentration = spellRequiresConcentration(input.invocation)
+    ? breakBattleConcentration(input.state, input.actorId)
+    : input.state;
   const slotted = expendSpellSlot(
-    input.state,
+    afterPriorConcentration,
     input.actorId,
     input.invocation.resource.slotLevel,
   );
-  const nextState = {
+  const resourced = {
     ...slotted,
     currentTurnResources: clearPendingAttackRollMissToHitReplacementSelection(
       slotTurnResources.right,
       input.actorId,
     ),
   };
+  const nextState = spellRequiresConcentration(input.invocation)
+    ? startSpellEffectConcentration(resourced, input.actorId, input.invocation)
+    : resourced;
   return {
     tag: "resolved",
     state: nextState,
     snapshot: snapshotBattle(nextState),
+  };
+}
+
+function spellRequiresConcentration(
+  invocation: SupportedSpellInvocation,
+): boolean {
+  return invocation.spell.mechanics.duration.kind === "concentration";
+}
+
+function startSpellEffectConcentration(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: SupportedSpellInvocation,
+): BattleState {
+  const actor = state.combatants.get(actorId);
+  if (actor === undefined) {
+    return state;
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(actorId, {
+      ...actor,
+      concentration: {
+        sourceSpellId: invocation.spell.id,
+        effectKind: "spellEffect",
+      },
+    }),
   };
 }
 
@@ -16638,30 +16896,62 @@ function withoutConcentration(
 function breakCombatantConcentration(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   combatantId: CombatantId,
+  priorConcentration?: BattleConcentration,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
-  if (!combatants.has(combatantId)) {
+  const broken =
+    combatants.get(combatantId)?.concentration ?? priorConcentration;
+  if (broken === undefined) {
     return combatants;
   }
   return new Map(
-    [...combatants].map(([id, combatant]) => [
-      id,
-      {
-        ...combatant,
-        concentration: id === combatantId ? null : combatant.concentration,
-        activeEffects: combatant.activeEffects.filter(
-          (effect) => !concentrationBrokenEffectFrom(effect, combatantId),
-        ),
-      },
-    ]),
+    [...combatants].map(([id, combatant]) => {
+      const expiring = combatant.activeEffects.filter((effect) =>
+        concentrationBrokenEffectFrom(effect, combatantId, broken),
+      );
+      const activeEffects = combatant.activeEffects.filter(
+        (effect) => !expiring.includes(effect),
+      );
+      const nextCombatant =
+        combatant.positiveHpUnconscious === null
+          ? {
+              ...combatant,
+              concentration:
+                id === combatantId ? null : combatant.concentration,
+              activeEffects,
+              conditions: conditionsAfterExpiringSpellConditionEffects(
+                combatant.conditions,
+                activeEffects,
+                expiring,
+              ),
+            }
+          : {
+              ...combatant,
+              concentration:
+                id === combatantId ? null : combatant.concentration,
+              activeEffects,
+            };
+      return [id, nextCombatant];
+    }),
   );
 }
 
 function concentrationBrokenEffectFrom(
   effect: BattleActiveEffect,
   combatantId: CombatantId,
+  concentration: BattleConcentration | null,
 ): boolean {
+  if (effect.sourceCombatantId !== combatantId) {
+    return false;
+  }
+  if (
+    concentration?.effectKind === "spellEffect" &&
+    effect.sourceSpellId === concentration.sourceSpellId &&
+    "expiresAt" in effect &&
+    effect.expiresAt.kind === "concentration"
+  ) {
+    return true;
+  }
   return (
-    effect.sourceCombatantId === combatantId &&
     effect.kind === "spellBaseArmorClass" &&
     effect.earlyEnds.some((earlyEnd) => earlyEnd.kind === "concentrationBroken")
   );
@@ -17494,8 +17784,8 @@ function supportedPreparedSaveGateConditionProfile(
   spell: SpellRecord,
   spellSlots: CharacterBattleSpellcastingState["spellSlots"],
 ): readonly SupportedSpellInvocation[] {
-  const colorSpray = colorSpraySaveGateConditionSpell(spell);
-  if (colorSpray === null) {
+  const conditionSpell = supportedSaveGateConditionSpell(spell);
+  if (conditionSpell === null) {
     return [];
   }
 
@@ -17509,32 +17799,35 @@ function supportedPreparedSaveGateConditionProfile(
         resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
         procedure: "saveGatedCondition",
         spell,
-        ability: colorSpray.phase.ability,
-        dc: colorSpray.phase.dc,
-        targeting: colorSpray.targeting,
-        effect: {
-          condition: colorSpray.condition,
-          expiresAt: "endOfCasterNextTurn",
-        },
-        rangeFeet: colorSpray.rangeFeet,
+        ability: conditionSpell.phase.ability,
+        dc: conditionSpell.phase.dc,
+        targeting: conditionSpell.targeting,
+        effect: conditionSpell.effect,
+        rangeFeet: conditionSpell.rangeFeet,
       },
     ];
   });
 }
 
-type ColorSpraySaveGateConditionSpell = {
+type SaveGateConditionSpell = {
   readonly phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>;
-  readonly targeting: Extract<
-    SpellTargeting,
-    { readonly kind: "selfOriginCone" }
-  >;
-  readonly condition: typeof COLOR_SPRAY_FAILED_SAVE_CONDITION;
+  readonly targeting: SpellTargeting;
+  readonly effect: SpellFailedSaveConditionEffect;
   readonly rangeFeet: MovementFeet;
 };
 
+function supportedSaveGateConditionSpell(
+  spell: SpellRecord,
+): SaveGateConditionSpell | null {
+  return (
+    colorSpraySaveGateConditionSpell(spell) ??
+    entangleSaveGateConditionSpell(spell)
+  );
+}
+
 function colorSpraySaveGateConditionSpell(
   spell: SpellRecord,
-): ColorSpraySaveGateConditionSpell | null {
+): SaveGateConditionSpell | null {
   if (spell.mechanics.family !== "activation") {
     return null;
   }
@@ -17570,8 +17863,61 @@ function colorSpraySaveGateConditionSpell(
       kind: "selfOriginCone",
       lengthFeet: movementFeet(phase.attachment.shape.lengthFeet),
     },
-    condition: COLOR_SPRAY_FAILED_SAVE_CONDITION,
+    effect: {
+      condition: COLOR_SPRAY_FAILED_SAVE_CONDITION,
+      expiresAt: "endOfCasterNextTurn",
+      escape: null,
+    },
     rangeFeet: movementFeet(0),
+  };
+}
+
+function entangleSaveGateConditionSpell(
+  spell: SpellRecord,
+): SaveGateConditionSpell | null {
+  if (spell.mechanics.family !== "activation") {
+    return null;
+  }
+  const phase = spell.mechanics.phases[0];
+  const failedEffect = phase?.kind === "save_gate" ? phase.onFail : undefined;
+  if (
+    spell.mechanics.level !== 1 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "point" ||
+    spell.mechanics.range.feet !== 90 ||
+    spell.mechanics.duration.kind !== "concentration" ||
+    spell.mechanics.duration.upTo.unit !== "minute" ||
+    spell.mechanics.duration.upTo.amount !== 1 ||
+    spell.mechanics.phases.length !== 1 ||
+    phase?.kind !== "save_gate" ||
+    "repeatSave" in phase ||
+    phase.ability !== "str" ||
+    phase.dc.kind !== "caster_spell_save_dc" ||
+    phase.onSuccess.kind !== "none" ||
+    phase.attachment.kind !== "hole" ||
+    phase.attachment.value.kind !== "area" ||
+    phase.attachment.value.origin.kind !== "point_within_range" ||
+    phase.attachment.value.shape.kind !== "cube" ||
+    phase.attachment.value.shape.sideFeet !==
+      SUPPORTED_POINT_CUBE_SAVE_GATE_SIDE_FEET ||
+    failedEffect?.kind !== "apply_condition" ||
+    failedEffect.condition !== ENTANGLE_FAILED_SAVE_CONDITION
+  ) {
+    return null;
+  }
+
+  return {
+    phase,
+    targeting: {
+      kind: "pointOriginCubeExcludingCaster",
+      sideFeet: movementFeet(phase.attachment.value.shape.sideFeet),
+    },
+    effect: {
+      condition: ENTANGLE_FAILED_SAVE_CONDITION,
+      expiresAt: "concentration",
+      escape: { ability: "str", skill: "athletics" },
+    },
+    rangeFeet: movementFeet(spell.mechanics.range.feet),
   };
 }
 
@@ -17668,6 +18014,17 @@ function saveGateTargeting(attachment: Attachment): SpellTargeting | null {
   }
   if (
     value.kind === "area" &&
+    value.origin.kind === "point_within_range" &&
+    value.shape.kind === "cube" &&
+    value.shape.sideFeet === SUPPORTED_POINT_CUBE_SAVE_GATE_SIDE_FEET
+  ) {
+    return {
+      kind: "pointOriginCubeExcludingCaster",
+      sideFeet: movementFeet(value.shape.sideFeet),
+    };
+  }
+  if (
+    value.kind === "area" &&
     value.origin.kind === "self" &&
     value.shape.kind === "cone" &&
     value.shape.lengthFeet === SUPPORTED_SELF_CONE_SAVE_GATE_LENGTH_FEET
@@ -17686,6 +18043,9 @@ function areaSaveGateSpellRangeFeet(
 ): MovementFeet | null {
   return Match.value(targeting).pipe(
     Match.when({ kind: "pointOriginSphere" }, () =>
+      range.kind === "point" ? movementFeet(range.feet) : null,
+    ),
+    Match.when({ kind: "pointOriginCubeExcludingCaster" }, () =>
       range.kind === "point" ? movementFeet(range.feet) : null,
     ),
     Match.when({ kind: "selfOriginCone" }, () =>
@@ -18519,6 +18879,10 @@ function spellAreaTargetingLabel(
 ): string {
   return Match.value(targeting).pipe(
     Match.when({ kind: "pointOriginSphere" }, () => "point-origin Sphere"),
+    Match.when(
+      { kind: "pointOriginCubeExcludingCaster" },
+      () => "point-origin Cube",
+    ),
     Match.when({ kind: "selfOriginCone" }, () => "self-origin Cone"),
     Match.exhaustive,
   );
@@ -18944,6 +19308,7 @@ function applyFailedSaveSpellConditionEffects(
           target,
           invocation.effect.condition,
         ),
+        escape: invocation.effect.escape,
         expiresAt: activeEffectExpirationForPostDamageRider(
           state,
           actorId,
@@ -19029,6 +19394,7 @@ function spellPostDamageRiderActiveEffect(input: {
         input.target,
         rider.condition,
       ),
+      escape: null,
       expiresAt,
     })),
     Match.when({ kind: "opportunityAttackDenied" }, () => ({
@@ -19066,6 +19432,9 @@ function activeEffectExpirationForPostDamageRider(
   }
   if (expiresAt === "endOfCasterNextTurn") {
     return endOfNextTurnExpiration(state, casterId);
+  }
+  if (expiresAt === "concentration") {
+    return { kind: "concentration", combatantId: casterId };
   }
   return endOfNextTurnExpiration(state, targetId);
 }
@@ -19114,6 +19483,75 @@ function conditionHadNonSpellSourceBeforeSpellEffect(
         effect.conditionHadNonSpellSource,
     )
   );
+}
+
+function spellRestraintEffects(
+  state: BattleState,
+  combatantId: CombatantId,
+): readonly Extract<BattleActiveEffect, { readonly kind: "spellCondition" }>[] {
+  const combatant = state.combatants.get(combatantId);
+  if (
+    combatant === undefined ||
+    !hasCondition(combatant.conditions, "restrained")
+  ) {
+    return [];
+  }
+  return combatant.activeEffects.filter(
+    (
+      effect,
+    ): effect is Extract<
+      BattleActiveEffect,
+      { readonly kind: "spellCondition" }
+    > =>
+      effect.kind === "spellCondition" &&
+      effect.condition === "restrained" &&
+      effect.escape !== null,
+  );
+}
+
+function spellRestraintEffectFor(
+  state: BattleState,
+  combatantId: CombatantId,
+  sourceSpellId: SpellId,
+  sourceCombatantId: CombatantId,
+):
+  | Extract<BattleActiveEffect, { readonly kind: "spellCondition" }>
+  | undefined {
+  return spellRestraintEffects(state, combatantId).find(
+    (effect) =>
+      effect.sourceSpellId === sourceSpellId &&
+      effect.sourceCombatantId === sourceCombatantId,
+  );
+}
+
+function removeSpellConditionEffect(
+  state: BattleState,
+  combatantId: CombatantId,
+  effect: Extract<BattleActiveEffect, { readonly kind: "spellCondition" }>,
+): BattleState {
+  const combatant = state.combatants.get(combatantId);
+  if (combatant === undefined) {
+    return state;
+  }
+  const activeEffects = combatant.activeEffects.filter(
+    (candidate) => candidate !== effect,
+  );
+  const nextCombatant: BattleCreatureState =
+    combatant.positiveHpUnconscious === null
+      ? {
+          ...combatant,
+          activeEffects,
+          conditions: conditionsAfterExpiringSpellConditionEffects(
+            combatant.conditions,
+            activeEffects,
+            [effect],
+          ),
+        }
+      : { ...combatant, activeEffects };
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(combatantId, nextCombatant),
+  };
 }
 
 function conditionsAfterApplyingSpellConditionEffects(

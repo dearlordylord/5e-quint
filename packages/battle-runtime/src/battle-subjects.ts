@@ -19,6 +19,7 @@ export const BATTLE_SUBJECT_ACTIONS = [
   "search",
   "grapple",
   "escapeGrapple",
+  "escapeSpellRestraint",
 ] as const;
 export type BattleSubjectAction = (typeof BATTLE_SUBJECT_ACTIONS)[number];
 
@@ -210,6 +211,13 @@ export const BattleSubjectSchema = Schema.Union(
       ),
       { exact: true },
     ),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("escapeSpellRestraint"),
+    sourceSpellId: SpellId,
+    sourceCombatantId: CombatantId,
   }),
   Schema.Struct({
     tag: Schema.Literal("bonusAction"),
@@ -414,6 +422,15 @@ function battleSubjectKey(subject: BattleSubject): string {
         action.action,
         action.attackName ?? null,
         action.statBlockSection ?? null,
+      ]),
+    ),
+    Match.when({ tag: "action", action: "escapeSpellRestraint" }, (action) =>
+      JSON.stringify([
+        action.tag,
+        action.actorId,
+        action.action,
+        action.sourceSpellId,
+        action.sourceCombatantId,
       ]),
     ),
     Match.when({ tag: "bonusAction", action: "offHandAttack" }, (attack) =>

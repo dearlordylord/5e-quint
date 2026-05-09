@@ -175,12 +175,7 @@ const spellUnitExecutableFollowUpBatches = [
     label: "Area, chain, and typed-damage spell runtime",
     nextAction:
       "Admit these authored Spell Definitions after adding runtime support for spell-chosen damage types, chained target selection, mixed attack-plus-area resolution, area condition application, and terrain/ground effects.",
-    unitIds: [
-      "chromatic_orb",
-      "entangle",
-      "grease",
-      "ice_knife",
-    ],
+    unitIds: ["chromatic_orb", "grease", "ice_knife"],
   },
   {
     id: "spell-buff-debuff-and-protection-runtime",
@@ -2112,7 +2107,7 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
   const srdinv28StarryWispRows = spellRowsByUnitIds(["starry_wisp"]);
   const srdinv29ABurningHandsRows = spellRowsByUnitIds([]);
   const srdinv29BColorSprayRows = spellRowsByUnitIds([]);
-  const srdinv29CEntangleRows = spellRowsByUnitIds(["entangle"]);
+  const srdinv29CEntangleRows = spellRowsByUnitIds([]);
   const srdinv29DGreaseRows = spellRowsByUnitIds(["grease"]);
   const srdinv29EIceKnifeRows = spellRowsByUnitIds(["ice_knife"]);
   const srdinv29FChromaticOrbRows = spellRowsByUnitIds(["chromatic_orb"]);
@@ -2619,9 +2614,9 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
         "Promote Entangle as point-origin area Restrained application with Concentration duration and escape action.",
       rows: srdinv29CEntangleRows,
       nextAction:
-        "Model caller-supplied square area facts, save-gated Restrained ownership, caster exclusion from the affected save set, Concentration ending, and the Strength (Athletics) escape action.",
+        "Model caller-supplied square area facts, save-gated Restrained ownership, caster exclusion from the affected save set, Concentration ending, and the Strength (Athletics) escape action. Difficult Terrain remains table/spatial agenda because persistent spell-area movement-cost derivation is not executable in this slice.",
       acceptance:
-        "Entangle has promoted runtime evidence for initial area save, caster exclusion, Restrained lifecycle, concentration cleanup, and escape action without grid/pathfinding derivation; otherwise its matrix claim remains partial/unsupported.",
+        "Entangle has promoted runtime evidence for initial area save, caster exclusion, Restrained lifecycle, concentration cleanup, and escape action without grid/pathfinding derivation; Difficult Terrain is explicitly matrix-limited.",
     }),
     makeBatch({
       id: "SRDINV29D",

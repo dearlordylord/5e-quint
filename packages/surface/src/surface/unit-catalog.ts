@@ -32,6 +32,7 @@ import cureWoundsInput from "../../content/cure_wounds.json";
 import druidDruidicInput from "../../content/druid_druidic.json";
 import druidPrimalOrderInput from "../../content/druid_primal_order.json";
 import eldritchBlastInput from "../../content/eldritch_blast.json";
+import entangleInput from "../../content/entangle.json";
 import equipmentShieldInput from "../../content/equipment_shield.json";
 import featAbilityScoreImprovementInput from "../../content/feat_ability_score_improvement.json";
 import featArcheryInput from "../../content/feat_archery.json";
@@ -273,6 +274,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     chillTouchInput,
     colorSprayInput,
     cureWoundsInput,
+    entangleInput,
     fireBoltInput,
     guidingBoltInput,
     inflictWoundsInput,

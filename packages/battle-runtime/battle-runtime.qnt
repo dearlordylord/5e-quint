@@ -131,9 +131,9 @@ module battleRuntime {
   // - Spells/Descriptions-M-P.md lines 643-654, Descriptions-S-Z.md lines
   //   7-18, Descriptions-E-L.md lines 1417-1428, and
   //   Descriptions-A-D.md lines 707-720: Poison Spray, Sacred Flame, Inflict
-  //   Wounds, Burning Hands, Color Spray, and the damage-only slice of Chill
-  //   Touch are action-time spells with creature or table-supplied area
-  //   targets, cantrip/slot scaling, and the listed attack/save outcomes.
+  //   Wounds, Burning Hands, Color Spray, Entangle, and the damage-only slice
+  //   of Chill Touch are action-time spells with creature or table-supplied
+  //   area targets, cantrip/slot scaling, and the listed attack/save outcomes.
   // - Character-Origins.md lines 253-255, Playing-the-Game.md lines 788-806,
   //   Rules-Glossary.md lines 361-365, and UBIQUITOUS_LANGUAGE.md:
   //   Orc Adrenaline Rush spends a limited-use Bonus Action Dash, grants
@@ -151,18 +151,19 @@ module battleRuntime {
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | ColorSpray | HealingWord | CureWounds | MassHealingWord | Shield | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | HealingWord | CureWounds | MassHealingWord | Shield | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack
   type SaveGatedDamageInvocation = AcidSplashSaveGate | SacredFlameSaveGate | InflictWoundsSaveGate | BurningHandsSaveGate | ViciousMockerySaveGate
   type SaveGatedConditionInvocation =
     | ColorSpraySaveGate
+    | EntangleSaveGate
   type SaveGatedTargeting = AreaSaveTargets | SingleSaveTarget
   type SaveGatedDamageSuccess = NoDamageOnSaveSuccess | HalfDamageOnSaveSuccess
   type MovementSpeedKind = WalkSpeedKind | ClimbSpeedKind | SwimSpeedKind
   type DirectHitPointRestorationSpell = HealingWordRestoration | CureWoundsRestoration | MassHealingWordRestoration
   type SpellActionCost = SpellMagicAction | SpellBonusAction
 
-  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded
+  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
 
   type CreatureSize = Tiny | Small | Medium | Large | Huge | Gargantuan
@@ -601,6 +602,7 @@ module battleRuntime {
         | GuidingBoltNextAttackAdvantage => false
         | ViciousMockeryNextAttackDisadvantage => false
         | ColorSprayBlinded => false
+        | EntangleRestrained => false
       })) 13 + dexMod else baseAc
       if (effects.contains(ShieldArmorClassBonus)) base + 5 else base
     }
@@ -1866,6 +1868,7 @@ module battleRuntime {
       | InflictWounds => true
       | BurningHands => true
       | ColorSpray => true
+      | Entangle => true
       | HealingWord => true
       | CureWounds => true
       | MassHealingWord => true
@@ -2002,11 +2005,13 @@ module battleRuntime {
   pure def saveGatedConditionTargeting(invocation: SaveGatedConditionInvocation): SaveGatedTargeting =
     match invocation {
       | ColorSpraySaveGate => AreaSaveTargets
+      | EntangleSaveGate => AreaSaveTargets
     }
 
   pure def saveGatedConditionFailedSaveActiveEffects(invocation: SaveGatedConditionInvocation): Set[ActiveEffect] =
     match invocation {
       | ColorSpraySaveGate => Set(ColorSprayBlinded)
+      | EntangleSaveGate => Set(EntangleRestrained)
     }
 
   pure def saveGatedConditionReplayHoles(
@@ -2182,6 +2187,46 @@ module battleRuntime {
         ...state,
         actionAvailable: false,
         spellSlotExpendedThisTurn: true,
+      }
+
+  pure def breakFighterEntangleConcentration(state: BattleState): BattleState =
+    {
+      ...state,
+      fighter: {
+        ...state.fighter,
+        concentrating: false,
+        activeEffects: state.fighter.activeEffects.exclude(Set(EntangleRestrained)),
+      },
+      goblin: {
+        ...state.goblin,
+        activeEffects: state.goblin.activeEffects.exclude(Set(EntangleRestrained)),
+      },
+    }
+
+  pure def resolveEntangle(
+    state: BattleState,
+    fighterIncludedInArea: bool,
+    goblinSavingThrowSucceeded: bool,
+  ): BattleState =
+    if (fighterIncludedInArea or not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)))
+      state
+    else
+      {
+        ...breakFighterEntangleConcentration(state),
+        fighter: { ...breakFighterEntangleConcentration(state).fighter, concentrating: true },
+        goblin: saveGatedConditionTarget(EntangleSaveGate, breakFighterEntangleConcentration(state).goblin, goblinSavingThrowSucceeded),
+        actionAvailable: false,
+        spellSlotExpendedThisTurn: true,
+      }
+
+  pure def escapeEntangle(state: BattleState, checkSucceeded: bool): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Goblin or not(state.goblin.activeEffects.contains(EntangleRestrained)))
+      state
+    else
+      {
+        ...state,
+        goblin: if (checkSucceeded) { ...state.goblin, activeEffects: state.goblin.activeEffects.exclude(Set(EntangleRestrained)) } else state.goblin,
+        actionAvailable: false,
       }
 
   pure def resolveSingleTargetSaveGatedDamage(
@@ -2753,6 +2798,7 @@ module battleRuntime {
       assert(expendedSlotsAfterInvocation(InflictWounds, 0) == 1),
       assert(expendedSlotsAfterInvocation(BurningHands, 0) == 1),
       assert(expendedSlotsAfterInvocation(ColorSpray, 0) == 1),
+      assert(expendedSlotsAfterInvocation(Entangle, 0) == 1),
       assert(expendedSlotsAfterInvocation(HealingWord, 0) == 1),
       assert(expendedSlotsAfterInvocation(CureWounds, 0) == 1),
       assert(expendedSlotsAfterInvocation(MassHealingWord, 0) == 1),
@@ -2816,6 +2862,8 @@ module battleRuntime {
       assert(saveGatedDamageFailedSaveActiveEffects(ViciousMockerySaveGate) == Set(ViciousMockeryNextAttackDisadvantage)),
       assert(saveGatedConditionTargeting(ColorSpraySaveGate) == AreaSaveTargets),
       assert(saveGatedConditionFailedSaveActiveEffects(ColorSpraySaveGate) == Set(ColorSprayBlinded)),
+      assert(saveGatedConditionTargeting(EntangleSaveGate) == AreaSaveTargets),
+      assert(saveGatedConditionFailedSaveActiveEffects(EntangleSaveGate) == Set(EntangleRestrained)),
       assert(spellAttackRollModeFromActiveEffects(Set(), Set(GuidingBoltNextAttackAdvantage)) == AdvantageSpellAttackRoll),
       assert(spellAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), Set()) == DisadvantageSpellAttackRoll),
       assert(spellAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), Set(GuidingBoltNextAttackAdvantage)) == NormalSpellAttackRoll),
@@ -2854,6 +2902,8 @@ module battleRuntime {
       assert(saveGatedDamageReplayHoles(BurningHandsSaveGate, true, true, true, true) == Set(DamageRoll)),
       assert(saveGatedConditionReplayHoles(ColorSpraySaveGate, true, true, false) == Set(SavingThrowOutcome)),
       assert(saveGatedConditionReplayHoles(ColorSpraySaveGate, true, true, true) == Set()),
+      assert(saveGatedConditionReplayHoles(EntangleSaveGate, true, true, false) == Set(SavingThrowOutcome)),
+      assert(saveGatedConditionReplayHoles(EntangleSaveGate, true, true, true) == Set()),
     }
   }
 
@@ -2903,6 +2953,20 @@ module battleRuntime {
       assert(result.spellSlotExpendedThisTurn == true),
       assert(not(result.fighter.activeEffects.contains(ColorSprayBlinded))),
       assert(not(result.goblin.activeEffects.contains(ColorSprayBlinded))),
+    }
+  }
+
+  run test_entangle_excludes_caster_and_applies_restrained_until_concentration_or_escape = {
+    val rejectedCasterArea = resolveEntangle(initialState, true, false)
+    val entangled = resolveEntangle(initialState, false, false)
+    val broken = breakFighterEntangleConcentration(entangled)
+    val escaped = escapeEntangle({ ...entangled, initiative: { round: 1, alreadyActed: List(Fighter), stillToAct: List(Goblin) }, actionAvailable: true }, true)
+    all {
+      assert(not(rejectedCasterArea.goblin.activeEffects.contains(EntangleRestrained))),
+      assert(entangled.fighter.concentrating),
+      assert(entangled.goblin.activeEffects.contains(EntangleRestrained)),
+      assert(not(broken.goblin.activeEffects.contains(EntangleRestrained))),
+      assert(not(escaped.goblin.activeEffects.contains(EntangleRestrained))),
     }
   }
 

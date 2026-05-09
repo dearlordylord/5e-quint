@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 348,
-      "numerator": 75,
-      "percent": "21.6%"
+      "numerator": 76,
+      "percent": "21.8%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 415,
-      "numerator": 99,
-      "percent": "23.9%"
+      "numerator": 100,
+      "percent": "24.1%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 100
+      "value": 101
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 46,
-      "numerator": 42,
-      "percent": "91.3%"
+      "denominator": 47,
+      "numerator": 43,
+      "percent": "91.5%"
     },
     "profileClassificationCoverage": {
-      "denominator": 100,
-      "numerator": 100,
+      "denominator": 101,
+      "numerator": 101,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 46,
+      "denominator": 47,
       "numerator": 10,
-      "percent": "21.7%"
+      "percent": "21.3%"
     },
     "supportedProfileCoverage": {
-      "denominator": 76,
-      "numerator": 46,
-      "percent": "60.5%"
+      "denominator": 77,
+      "numerator": 47,
+      "percent": "61%"
     }
   },
   "metricSemantics": [
@@ -3816,6 +3816,60 @@
         "status": "installed"
       },
       "claim": {
+        "profileIds": [
+          "spell.invocation-condition-save"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV29C"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-condition-save",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV29B"
+          ],
+          "title": "Spell invocation resolves supported save-gated condition effects",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/entangle.json",
+      "unitId": "entangle"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "futureProfileOwner": "QCORE10",
         "issue": "QMBT23 keeps SRD Fire Bolt out of supported spell evidence until promoted spell invocation has an explicit object-target branch and object-ignition effect outcome; table-supplied object facts are required but are not a complete runtime boundary.",
         "tag": "needs-surface-widening"
@@ -6657,24 +6711,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/ensnaring_strike.json",
       "unitId": "ensnaring_strike"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/entangle.json",
-      "unitId": "entangle"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

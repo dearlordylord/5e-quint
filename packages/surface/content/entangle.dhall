@@ -11,12 +11,10 @@
 --    your spell save DC. On a success, it frees itself from the
 --    grasping plants and is no longer Restrained by them."
 --
--- ZERO-WIDENING VALIDATION REFERENCE. Area + STR save + apply
--- Restrained + concentration. Difficult terrain effect is DM agenda
--- (movement cost). The "action to escape with Athletics check" is a
--- nested dependent activation (same class as Detect Magic's 'Magic
--- action to see aura') — deferred; session/DM resolves the escape
--- attempt against the spell save DC.
+-- Runtime scope: area + STR save + spell-owned Restrained +
+-- Concentration cleanup + Strength (Athletics) escape action are promoted.
+-- Difficult Terrain remains table/spatial agenda because movement-cost
+-- derivation for persistent spell areas is not executable in this slice.
 
 let entangle =
       { kind = "spell"
