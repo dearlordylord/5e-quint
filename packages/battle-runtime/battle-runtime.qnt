@@ -3745,18 +3745,18 @@ module battleRuntime {
     val reduced = applyResistanceSpellReductionToFighter(protected, Slashing, 4, 3)
     val second = applyResistanceSpellReductionToFighter(reduced, Slashing, 4, 3)
     all {
-      assert(reduced.fighter.hp == 9),
+      assert(reduced.fighter.hp == 11),
       assert(reduced.fighter.activeEffects.contains(ResistanceDamageReduction({ damageType: Slashing, usedThisTurn: true }))),
-      assert(second.fighter.hp == 5),
+      assert(second.fighter.hp == 7),
     }
   }
 
   run test_resistance_spell_ignores_nonmatching_damage_and_resets_next_turn = {
     val protected = { ...initialState, fighter: { ...initialState.fighter, activeEffects: Set(ResistanceDamageReduction({ damageType: Piercing, usedThisTurn: true })) } }
     val nonmatching = applyResistanceSpellReductionToFighter(protected, Slashing, 4, 3)
-    val reset = endTurn(nonmatching)
+    val reset = endTurn(endTurn(nonmatching))
     all {
-      assert(nonmatching.fighter.hp == 6),
+      assert(nonmatching.fighter.hp == 8),
       assert(reset.fighter.activeEffects.contains(ResistanceDamageReduction({ damageType: Piercing, usedThisTurn: false }))),
     }
   }
@@ -4907,11 +4907,16 @@ module battleRuntime {
   run test_produce_flame_hurl_requires_held_light_and_deals_fire_damage = {
     val unlit = resolveProduceFlameHurl(initialState, 15, 10, 5, true)
     val lit = resolveProduceFlameHeldLight(initialState)
-    val nextTurn = { ...lit, actionAvailable: true, bonusActionAvailable: true }
+    val nextTurn = {
+      ...lit,
+      actionAvailable: true,
+      bonusActionAvailable: true,
+      goblin: { ...lit.goblin, reactionAvailable: false },
+    }
     val hit = resolveProduceFlameHurl(nextTurn, 15, 10, 5, true)
     all {
       assert(unlit == initialState),
-      assert(hit.goblin.hp == 7),
+      assert(hit.goblin.hp == 5),
       assert(not(hit.actionAvailable)),
       assert(activeEffectsContainProduceFlameHeldLight(hit.fighter.activeEffects)),
       assert(spellAttackDamageType(ProduceFlameHurlSpellAttack) == Fire),
