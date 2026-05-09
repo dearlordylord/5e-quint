@@ -43,6 +43,7 @@ import {
   abilityModifier,
   defaultArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
+import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { classLevel } from "@dnd/shared/types";
@@ -172,6 +173,7 @@ const fireBoltUnitId = "fire_bolt";
 const falseLifeUnitId = "false_life";
 const guidingBoltUnitId = "guiding_bolt";
 const guidanceUnitId = "guidance";
+const heroismUnitId = "heroism";
 const inflictWoundsUnitId = "inflict_wounds";
 const longstriderUnitId = "longstrider";
 const mageArmorUnitId = "mage_armor";
@@ -3556,6 +3558,223 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
         ],
       },
     });
+  });
+});
+
+describe("SRDINV30D deterministic Heroism Spell Unit admission", () => {
+  test("heroism stores Frightened immunity separately from turn-start Temporary Hit Points", () => {
+    const spell = spellRecord(heroismUnitId);
+    const state = spellBattle({ preparedSpells: [spell] });
+    const act = spellAct({ state, spellId: heroismUnitId });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(
+        heroismUnitId,
+        1,
+        "conditionImmunityAndTurnStartTemporaryHitPoints",
+      ),
+      mode: { tag: "cast" },
+    });
+    expect(targetHole.choices).toEqual([spellCasterId]);
+
+    const unwillingTarget = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(
+          targetHole,
+          heroismUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+      ],
+    });
+    expect(unwillingTarget).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(
+          targetHole,
+          heroismUnitId,
+          spellCasterId,
+          spellCasterId,
+        ),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Heroism to resolve.");
+    }
+    expect(
+      resolved.state.combatants.get(spellCasterId)?.activeEffects,
+    ).toEqual([
+      expect.objectContaining({
+        kind: "conditionImmunity",
+        sourceSpellId: heroismUnitId,
+        sourceCombatantId: spellCasterId,
+        condition: "frightened",
+        expiresAt: { kind: "concentration", combatantId: spellCasterId },
+      }),
+      expect.objectContaining({
+        kind: "turnStartTemporaryHitPoints",
+        sourceSpellId: heroismUnitId,
+        sourceCombatantId: spellCasterId,
+        amount: 3,
+        expiresAt: { kind: "concentration", combatantId: spellCasterId },
+      }),
+    ]);
+  });
+
+  test("heroism grants spellcasting-modifier Temporary Hit Points when the target starts its turn", () => {
+    const spell = spellRecord(heroismUnitId);
+    const state = spellBattle({ preparedSpells: [spell] });
+    const act = spellAct({ state, spellId: heroismUnitId });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(
+          targetHole,
+          heroismUnitId,
+          spellCasterId,
+          spellCasterId,
+        ),
+      ],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Heroism to resolve.");
+    }
+
+    const targetTurn = endTurn({
+      state: resolved.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected target opponent turn to resolve.");
+    }
+    const casterTurn = endTurn({
+      state: targetTurn.state,
+      actorId: spellTargetId,
+    });
+
+    expect(casterTurn).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.objectContaining({
+            combatantId: spellCasterId,
+            tempHp: 3,
+          }),
+          expect.anything(),
+        ],
+      },
+    });
+  });
+
+  test("heroism makes an already Frightened willing target unaffected by Frightened", () => {
+    const spell = spellRecord(heroismUnitId);
+    const baseState = spellBattle({ preparedSpells: [spell] });
+    const target = baseState.combatants.get(spellCasterId);
+    expect(target).not.toBeUndefined();
+    if (target === undefined) {
+      throw new Error("Expected Heroism target to exist.");
+    }
+    expect(target.positiveHpUnconscious).toBeNull();
+    if (target.positiveHpUnconscious !== null) {
+      throw new Error("Expected Heroism target to be conscious.");
+    }
+    const state: BattleState = {
+      ...baseState,
+      combatants: new Map(baseState.combatants).set(spellCasterId, {
+        ...target,
+        conditions: applyCondition(target.conditions, "frightened"),
+      }),
+    };
+    const act = spellAct({ state, spellId: heroismUnitId });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(
+          targetHole,
+          heroismUnitId,
+          spellCasterId,
+          spellCasterId,
+        ),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.objectContaining({
+            combatantId: spellCasterId,
+            conditions: expect.not.arrayContaining(["frightened"]),
+          }),
+          expect.anything(),
+        ],
+      },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Heroism to resolve.");
+    }
+    expect(resolved.state.combatants.get(spellCasterId)?.conditions).toEqual(
+      expect.objectContaining({ frightened: false }),
+    );
+  });
+
+  test("heroism scales target count by slot level while limiting choices to known-willing targets", () => {
+    const spell = spellRecord(heroismUnitId);
+    const secondTargetId = combatantId("unit-profile-heroism-target-2");
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      extraTargetIds: [secondTargetId],
+    });
+    const act = spellAct({ state, spellId: heroismUnitId, slotLevel: 2 });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+
+    expect(targetHole).toEqual(
+      expect.objectContaining({ minTargets: 1, maxTargets: 2 }),
+    );
+    expect(targetHole.choices).toEqual([spellCasterId]);
+    const unwillingTargets = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetListFill(targetHole, spellCasterId, heroismUnitId, [
+          spellCasterId,
+          secondTargetId,
+        ]),
+      ],
+    });
+    expect(unwillingTargets).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetListFill(targetHole, spellCasterId, heroismUnitId, [
+          spellCasterId,
+        ]),
+      ],
+    });
+    expect(resolved).toMatchObject({ tag: "resolved" });
   });
 });
 

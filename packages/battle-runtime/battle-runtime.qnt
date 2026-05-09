@@ -165,6 +165,13 @@ module battleRuntime {
   //   Orc Adrenaline Rush spends a limited-use Bonus Action Dash, grants
   //   Proficiency Bonus Temporary Hit Points that do not stack, and refreshes
   //   its use pool outside the battle turn reducer on Short or Long Rest.
+  // - Spells/Descriptions-E-L.md lines 1183-1194, Playing-the-Game.md
+  //   lines 736-738 and 788-808, and UBIQUITOUS_LANGUAGE.md:
+  //   Heroism targets willing touched creatures, grants Frightened immunity
+  //   until Concentration ends, and grants non-stacking Temporary Hit Points
+  //   equal to the caster's spellcasting ability modifier at the start of each
+  //   affected target's turns. The current runtime model only has a
+  //   table-executable known-willing fact for self targets.
   // - Spells/Descriptions-A-D.md lines 86-97,
   //   Spells/Descriptions-M-P.md lines 907-918, and
   //   UBIQUITOUS_LANGUAGE.md: Animal Friendship is a Beast-only Wisdom-save
@@ -183,7 +190,7 @@ module battleRuntime {
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | AnimalFriendship | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Bane | Bless | Guidance | DivineFavor | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | AnimalFriendship | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack
   type ChainedSpellAttackDamageInvocation =
     | ChromaticOrbChainedSpellAttack
@@ -203,7 +210,7 @@ module battleRuntime {
   type RollModifierSpell = BaneRollModifier | BlessRollModifier | GuidanceRollModifier
   type SpellActionCost = SpellMagicAction | SpellBonusAction
 
-  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | AnimalFriendshipCharmed({ durationTicks: int }) | ProtectionFromEvilAndGoodAttackDisadvantage | ProduceFlameHeldLight({ durationTicks: int })
+  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | AnimalFriendshipCharmed({ durationTicks: int }) | ProtectionFromEvilAndGoodAttackDisadvantage | ProduceFlameHeldLight({ durationTicks: int })
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
   type RuntimeCreatureType = HumanoidCreature | BeastCreature | AberrationCreature | CelestialCreature | ElementalCreature | FeyCreature | FiendCreature | UndeadCreature
 
@@ -642,6 +649,34 @@ module battleRuntime {
         }
     }
 
+  pure def applyStartOfTurnSpellEffects(state: BattleState, nextActor: Actor): BattleState =
+    match nextActor {
+      | Fighter => {
+          val heroismTempHp = state.fighter.activeEffects
+            .map(effect => match effect {
+              | HeroismTurnStartTemporaryHitPoints(data) => data.amount
+              | _ => 0
+            })
+            .fold(0, (highest, amount) => if (highest > amount) highest else amount)
+          {
+            ...state,
+            fighter: { ...state.fighter, tempHp: if (state.fighter.tempHp > heroismTempHp) state.fighter.tempHp else heroismTempHp },
+          }
+        }
+      | Goblin => {
+          val heroismTempHp = state.goblin.activeEffects
+            .map(effect => match effect {
+              | HeroismTurnStartTemporaryHitPoints(data) => data.amount
+              | _ => 0
+            })
+            .fold(0, (highest, amount) => if (highest > amount) highest else amount)
+          {
+            ...state,
+            goblin: { ...state.goblin, tempHp: if (state.goblin.tempHp > heroismTempHp) state.goblin.tempHp else heroismTempHp },
+          }
+        }
+    }
+
   pure def tickDurationActiveEffects(effects: Set[ActiveEffect]): Set[ActiveEffect] =
     effects
       .map(effect => match effect {
@@ -722,6 +757,8 @@ module battleRuntime {
         | ShieldArmorClassBonus => false
         | LongstriderSpeedDelta => false
         | ShieldOfFaithArmorClassBonus => false
+        | HeroismFrightenedImmunity => false
+        | HeroismTurnStartTemporaryHitPoints(_) => false
         | BaneD20RollPenalty => false
         | BlessD20RollBonus => false
         | GuidanceAbilityCheckBonus => false
@@ -848,7 +885,7 @@ module battleRuntime {
     val featureChecked = normalizeFighterEarlyEndedOngoingFeatures(expireFighterEndOfTurnOngoingFeatures(state))
     val advancedInitiative = nextInitiative(featureChecked.initiative)
     val nextActor = advancedInitiative.stillToAct[0]
-    val featureAdvanced = expireStartOfTurnSpellEffects(expireFighterStartOfTurnOngoingFeatures(featureChecked, nextActor), nextActor)
+    val featureAdvanced = applyStartOfTurnSpellEffects(expireStartOfTurnSpellEffects(expireFighterStartOfTurnOngoingFeatures(featureChecked, nextActor), nextActor), nextActor)
     val spellDurationAdvanced = if (advancedInitiative.round > featureChecked.initiative.round)
       tickRoundDurationSpellEffects(featureAdvanced)
     else
@@ -1505,20 +1542,25 @@ module battleRuntime {
   }
 
   pure def spellEffectConcentrationActiveEffects(): Set[ActiveEffect] =
-    Set(ShieldOfFaithArmorClassBonus, BaneD20RollPenalty, BlessD20RollBonus, GuidanceAbilityCheckBonus, EntangleRestrained, ProtectionFromEvilAndGoodAttackDisadvantage)
+    Set(ShieldOfFaithArmorClassBonus, HeroismFrightenedImmunity, BaneD20RollPenalty, BlessD20RollBonus, GuidanceAbilityCheckBonus, EntangleRestrained, ProtectionFromEvilAndGoodAttackDisadvantage)
 
-  pure def breakableSelfConcentrationActiveEffects(): Set[ActiveEffect] =
-    spellEffectConcentrationActiveEffects.union(Set(MageArmor))
+  pure def activeEffectsWithoutSpellEffectConcentration(effects: Set[ActiveEffect]): Set[ActiveEffect] =
+    effects
+      .exclude(spellEffectConcentrationActiveEffects)
+      .filter(effect => match effect {
+        | HeroismTurnStartTemporaryHitPoints(_) => false
+        | _ => true
+      })
 
   pure def breakConcentration(target: Combatant): Combatant =
-    { ...target, concentrating: false, activeEffects: activeEffectsWithoutHuntersMark(target.activeEffects.exclude(breakableSelfConcentrationActiveEffects)) }
+    { ...target, concentrating: false, activeEffects: activeEffectsWithoutHuntersMark(activeEffectsWithoutSpellEffectConcentration(target.activeEffects).exclude(Set(MageArmor))) }
 
   pure def stateWithFighterDamage(state: BattleState, damagedFighter: Combatant): BattleState =
     if (state.fighter.concentrating and not(damagedFighter.concentrating))
       {
         ...state,
         fighter: damagedFighter,
-        goblin: { ...state.goblin, activeEffects: state.goblin.activeEffects.exclude(spellEffectConcentrationActiveEffects) },
+        goblin: { ...state.goblin, activeEffects: activeEffectsWithoutSpellEffectConcentration(state.goblin.activeEffects) },
       }
     else
       { ...state, fighter: damagedFighter }
@@ -1931,7 +1973,7 @@ module battleRuntime {
           {
             ...state,
             fighter: breakConcentration(state.fighter),
-            goblin: { ...state.goblin, activeEffects: state.goblin.activeEffects.exclude(spellEffectConcentrationActiveEffects) },
+            goblin: { ...state.goblin, activeEffects: activeEffectsWithoutSpellEffectConcentration(state.goblin.activeEffects) },
           }
         else
           state
@@ -1941,6 +1983,43 @@ module battleRuntime {
         fighter: { ...effected.fighter, concentrating: if (invocation == ShieldOfFaithScalarBuff) true else effected.fighter.concentrating },
         actionAvailable: if (actionCost == SpellMagicAction) false else state.actionAvailable,
         bonusActionAvailable: if (actionCost == SpellBonusAction) false else state.bonusActionAvailable,
+        spellSlotExpendedThisTurn: true,
+      }
+    } else {
+      state
+    }
+  }
+
+  pure def resolveHeroismSpell(
+    state: BattleState,
+    targets: Set[Actor],
+    slotLevel: int,
+    spellcastingAbilityModifier: int,
+  ): BattleState = {
+    val targetCount = targets.size()
+    val validTargetCount = targetCount >= 1 and targetCount <= slotLevel
+    val knownWillingTargets = targets == Set(Fighter)
+    if (
+      currentActor(state) == Fighter and
+      validTargetCount and
+      knownWillingTargets and
+      state.actionAvailable and
+      canExpendSpellSlotThisTurn(state) and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state))
+    ) {
+      val concentrationBase = {
+        ...state,
+        fighter: breakConcentration(state.fighter),
+        goblin: { ...state.goblin, activeEffects: activeEffectsWithoutSpellEffectConcentration(state.goblin.activeEffects) },
+      }
+      val heroismEffects = Set(HeroismFrightenedImmunity, HeroismTurnStartTemporaryHitPoints({ amount: spellcastingAbilityModifier }))
+      {
+        ...concentrationBase,
+        fighter: if (targets.contains(Fighter)) { ...concentrationBase.fighter, concentrating: true, activeEffects: concentrationBase.fighter.activeEffects.union(heroismEffects) } else { ...concentrationBase.fighter, concentrating: true },
+        goblin: if (targets.contains(Goblin)) { ...concentrationBase.goblin, activeEffects: concentrationBase.goblin.activeEffects.union(heroismEffects) } else concentrationBase.goblin,
+        actionAvailable: false,
         spellSlotExpendedThisTurn: true,
       }
     } else {
@@ -2104,7 +2183,7 @@ module battleRuntime {
       val concentrationBase = {
         ...state,
         fighter: breakConcentration(state.fighter),
-        goblin: { ...state.goblin, activeEffects: state.goblin.activeEffects.exclude(spellEffectConcentrationActiveEffects) },
+        goblin: { ...state.goblin, activeEffects: activeEffectsWithoutSpellEffectConcentration(state.goblin.activeEffects) },
       }
       val effected = rollModifierTargetedState(concentrationBase, invocation, affectedTargets)
       {
@@ -2412,6 +2491,7 @@ module battleRuntime {
       | FalseLife => true
       | Longstrider => true
       | ShieldOfFaith => true
+      | Heroism => true
       | Bane => true
       | Bless => true
       | Guidance => false
@@ -3746,6 +3826,7 @@ module battleRuntime {
       assert(expendedSlotsAfterInvocation(HealingWord, 0) == 1),
       assert(expendedSlotsAfterInvocation(CureWounds, 0) == 1),
       assert(expendedSlotsAfterInvocation(MassHealingWord, 0) == 1),
+      assert(expendedSlotsAfterInvocation(Heroism, 0) == 1),
       assert(expendedSlotsAfterInvocation(Bane, 0) == 1),
       assert(expendedSlotsAfterInvocation(Bless, 0) == 1),
       assert(expendedSlotsAfterInvocation(Guidance, 0) == 0),
@@ -4565,6 +4646,37 @@ module battleRuntime {
       assert(not(result.fighter.activeEffects.contains(ShieldOfFaithArmorClassBonus))),
       assert(result.goblin.activeEffects.contains(ShieldOfFaithArmorClassBonus)),
       assert(combatantArmorClass(result.goblin) == 17),
+    }
+  }
+
+  run test_heroism_stores_distinct_immunity_and_turn_start_temporary_hit_points = {
+    val result = resolveHeroismSpell(initialState, Set(Fighter), 1, 3)
+    all {
+      assert(result.fighter.concentrating),
+      assert(result.fighter.activeEffects.contains(HeroismFrightenedImmunity)),
+      assert(result.fighter.activeEffects.contains(HeroismTurnStartTemporaryHitPoints({ amount: 3 }))),
+      assert(result.fighter.tempHp == 0),
+      assert(endTurn(endTurn(result)).fighter.tempHp == 3),
+    }
+  }
+
+  run test_heroism_slot_level_controls_target_count_and_concentration_cleanup = {
+    val hostile = resolveHeroismSpell(initialState, Set(Goblin), 1, 3)
+    val invalidCount = resolveHeroismSpell(initialState, Set(Fighter, Goblin), 1, 3)
+    val invalidWilling = resolveHeroismSpell(initialState, Set(Fighter, Goblin), 2, 3)
+    val valid = resolveHeroismSpell(initialState, Set(Fighter), 1, 3)
+    val broken = breakConcentration({ ...valid.fighter, activeEffects: valid.fighter.activeEffects.union(Set(HeroismTurnStartTemporaryHitPoints({ amount: 5 }))) })
+    all {
+      assert(hostile == initialState),
+      assert(invalidCount == initialState),
+      assert(invalidWilling == initialState),
+      assert(valid.fighter.activeEffects.contains(HeroismFrightenedImmunity)),
+      assert(valid.fighter.activeEffects.contains(HeroismTurnStartTemporaryHitPoints({ amount: 3 }))),
+      assert(not(broken.activeEffects.contains(HeroismFrightenedImmunity))),
+      assert(not(broken.activeEffects.exists(effect => match effect {
+        | HeroismTurnStartTemporaryHitPoints(_) => true
+        | _ => false
+      }))),
     }
   }
 
