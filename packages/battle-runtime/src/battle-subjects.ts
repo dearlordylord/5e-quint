@@ -48,6 +48,7 @@ export type BattleMovementSpeedKind =
 export const BattleSubjectTextSchema = Schema.NonEmptyTrimmedString;
 
 export const CANTRIP_SPELL_PROCEDURES = [
+  "heldLight",
   "spellAttackDamage",
   "saveGatedDamage",
   "rollModifier",

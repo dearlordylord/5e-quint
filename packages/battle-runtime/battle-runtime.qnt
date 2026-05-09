@@ -164,7 +164,7 @@ module battleRuntime {
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Bane | Bless | Guidance | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Bane | Bless | Guidance | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack
   type ChainedSpellAttackDamageInvocation =
     | ChromaticOrbChainedSpellAttack
@@ -183,7 +183,7 @@ module battleRuntime {
   type RollModifierSpell = BaneRollModifier | BlessRollModifier | GuidanceRollModifier
   type SpellActionCost = SpellMagicAction | SpellBonusAction
 
-  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained
+  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | ProduceFlameHeldLight({ durationTicks: int })
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
 
   type ChainedSpellAttackDamageHole =
@@ -610,6 +610,24 @@ module battleRuntime {
         }
     }
 
+  pure def tickDurationActiveEffects(effects: Set[ActiveEffect]): Set[ActiveEffect] =
+    effects
+      .map(effect => match effect {
+        | ProduceFlameHeldLight(data) => ProduceFlameHeldLight({ durationTicks: data.durationTicks - 1 })
+        | _ => effect
+      })
+      .filter(effect => match effect {
+        | ProduceFlameHeldLight(data) => data.durationTicks > 0
+        | _ => true
+      })
+
+  pure def tickRoundDurationSpellEffects(state: BattleState): BattleState =
+    {
+      ...state,
+      fighter: { ...state.fighter, activeEffects: tickDurationActiveEffects(state.fighter.activeEffects) },
+      goblin: { ...state.goblin, activeEffects: tickDurationActiveEffects(state.goblin.activeEffects) },
+    }
+
   pure def normalizeFighterEarlyEndedOngoingFeatures(state: BattleState): BattleState =
     if (state.fighter.wearingHeavyArmor)
       removeFighterBonusActionOngoingFeature(state)
@@ -675,6 +693,7 @@ module battleRuntime {
         | ViciousMockeryNextAttackDisadvantage => false
         | ColorSprayBlinded => false
         | EntangleRestrained => false
+        | ProduceFlameHeldLight(_) => false
       })) 13 + dexMod else baseAc
       val shieldBonus = if (effects.contains(ShieldArmorClassBonus)) 5 else 0
       val shieldOfFaithBonus = if (effects.contains(ShieldOfFaithArmorClassBonus)) 2 else 0
@@ -788,8 +807,12 @@ module battleRuntime {
     val advancedInitiative = nextInitiative(featureChecked.initiative)
     val nextActor = advancedInitiative.stillToAct[0]
     val featureAdvanced = expireStartOfTurnSpellEffects(expireFighterStartOfTurnOngoingFeatures(featureChecked, nextActor), nextActor)
+    val spellDurationAdvanced = if (advancedInitiative.round > featureChecked.initiative.round)
+      tickRoundDurationSpellEffects(featureAdvanced)
+    else
+      featureAdvanced
     {
-      ...featureAdvanced,
+      ...spellDurationAdvanced,
       initiative: advancedInitiative,
       actionAvailable: true,
       bonusActionAvailable: true,
@@ -798,12 +821,12 @@ module battleRuntime {
       dashMovementBonus: 0,
       disengaged: false,
       lightWeaponAttackMade: false,
-      fighterReadiedSpellHeld: if (featureAdvanced.fighterReadiedSpellHeld and nextActor == Fighter) false else featureAdvanced.fighterReadiedSpellHeld,
-      fighterReadiedMovementHeld: if (featureAdvanced.fighterReadiedMovementHeld and nextActor == Fighter) false else featureAdvanced.fighterReadiedMovementHeld,
-      fighterHelpAttackGoblinForGoblin: if (nextActor == Fighter) false else featureAdvanced.fighterHelpAttackGoblinForGoblin,
-      fighter: if (nextActor == Fighter) { ...featureAdvanced.fighter, reactionAvailable: true, movementSpent: 0, dodging: false } else featureAdvanced.fighter,
-      goblin: if (nextActor == Goblin) { ...featureAdvanced.goblin, reactionAvailable: true, movementSpent: 0, dodging: false } else featureAdvanced.goblin,
-      goblinLegendaryUsesRemaining: if (nextActor == Goblin) 2 else featureAdvanced.goblinLegendaryUsesRemaining,
+      fighterReadiedSpellHeld: if (spellDurationAdvanced.fighterReadiedSpellHeld and nextActor == Fighter) false else spellDurationAdvanced.fighterReadiedSpellHeld,
+      fighterReadiedMovementHeld: if (spellDurationAdvanced.fighterReadiedMovementHeld and nextActor == Fighter) false else spellDurationAdvanced.fighterReadiedMovementHeld,
+      fighterHelpAttackGoblinForGoblin: if (nextActor == Fighter) false else spellDurationAdvanced.fighterHelpAttackGoblinForGoblin,
+      fighter: if (nextActor == Fighter) { ...spellDurationAdvanced.fighter, reactionAvailable: true, movementSpent: 0, dodging: false } else spellDurationAdvanced.fighter,
+      goblin: if (nextActor == Goblin) { ...spellDurationAdvanced.goblin, reactionAvailable: true, movementSpent: 0, dodging: false } else spellDurationAdvanced.goblin,
+      goblinLegendaryUsesRemaining: if (nextActor == Goblin) 2 else spellDurationAdvanced.goblinLegendaryUsesRemaining,
       goblinMultiattackDispatchesRemaining: 0,
       lastTurnActor: if (currentActor(featureChecked) == Fighter) LastTurnFighter else LastTurnGoblin,
       legendaryActionWindowConsumed: false,
@@ -1915,6 +1938,45 @@ module battleRuntime {
     }
   }
 
+  pure def produceFlameBrightLightRadiusFeet: int = 20
+
+  pure def produceFlameDimLightAdditionalFeet: int = 20
+
+  pure def produceFlameDurationTicks: int = 100
+
+  pure def activeEffectsWithoutProduceFlameHeldLight(effects: Set[ActiveEffect]): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | ProduceFlameHeldLight(_) => false
+      | _ => true
+    })
+
+  pure def activeEffectsContainProduceFlameHeldLight(effects: Set[ActiveEffect]): bool =
+    effects.exists(effect => match effect {
+      | ProduceFlameHeldLight(_) => true
+      | _ => false
+    })
+
+  pure def resolveProduceFlameHeldLight(state: BattleState): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      state.bonusActionAvailable and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state))
+    ) {
+      {
+        ...state,
+        fighter: {
+          ...state.fighter,
+          activeEffects: activeEffectsWithoutProduceFlameHeldLight(state.fighter.activeEffects)
+            .union(Set(ProduceFlameHeldLight({ durationTicks: produceFlameDurationTicks }))),
+        },
+        bonusActionAvailable: false,
+      }
+    } else {
+      state
+    }
+
   pure def damageAfterAdjustments(
     damage: int,
     damageType: DamageType,
@@ -2134,6 +2196,7 @@ module battleRuntime {
       | GuidingBolt => true
       | RayOfSickness => true
       | ViciousMockery => false
+      | ProduceFlame => false
     }
 
   pure def canExpendSpellSlotThisTurn(state: BattleState): bool =
@@ -4226,6 +4289,44 @@ module battleRuntime {
       assert(not(result.fighter.activeEffects.contains(ShieldOfFaithArmorClassBonus))),
       assert(result.goblin.activeEffects.contains(ShieldOfFaithArmorClassBonus)),
       assert(combatantArmorClass(result.goblin) == 17),
+    }
+  }
+
+  run test_produce_flame_held_light_spends_bonus_action_and_records_light = {
+    val result = resolveProduceFlameHeldLight(initialState)
+    all {
+      assert(result.fighter.activeEffects.contains(ProduceFlameHeldLight({ durationTicks: produceFlameDurationTicks }))),
+      assert(not(result.bonusActionAvailable)),
+      assert(result.actionAvailable),
+      assert(not(result.spellSlotExpendedThisTurn)),
+      assert(produceFlameBrightLightRadiusFeet == 20),
+      assert(produceFlameDimLightAdditionalFeet == 20),
+    }
+  }
+
+  run test_produce_flame_held_light_recast_keeps_one_flame = {
+    val once = resolveProduceFlameHeldLight(initialState)
+    val nextTurn = { ...once, bonusActionAvailable: true }
+    val recast = resolveProduceFlameHeldLight(nextTurn)
+    all {
+      assert(recast.fighter.activeEffects.contains(ProduceFlameHeldLight({ durationTicks: produceFlameDurationTicks }))),
+      assert(recast.fighter.activeEffects.size() == 1),
+    }
+  }
+
+  run test_produce_flame_held_light_expires_after_duration_tick = {
+    val nearlyExpired = {
+      ...resolveProduceFlameHeldLight(initialState),
+      fighter: {
+        ...initialState.fighter,
+        activeEffects: Set(ProduceFlameHeldLight({ durationTicks: 1 })),
+      },
+    }
+    val stillSameRound = endTurn(nearlyExpired)
+    val nextRound = endTurn(stillSameRound)
+    all {
+      assert(activeEffectsContainProduceFlameHeldLight(stillSameRound.fighter.activeEffects)),
+      assert(not(activeEffectsContainProduceFlameHeldLight(nextRound.fighter.activeEffects))),
     }
   }
 

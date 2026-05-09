@@ -76,6 +76,7 @@ import paladinExtraAttackInput from "../../content/paladin_extra_attack.json";
 import paladinLayOnHandsInput from "../../content/paladin_lay_on_hands.json";
 import paladinWeaponMasteryInput from "../../content/paladin_weapon_mastery.json";
 import poisonSprayInput from "../../content/poison_spray.json";
+import produceFlameInput from "../../content/produce_flame.json";
 import rangerExtraAttackInput from "../../content/ranger_extra_attack.json";
 import rangerFavoredEnemyInput from "../../content/ranger_favored_enemy.json";
 import rangerRovingInput from "../../content/ranger_roving.json";
@@ -295,6 +296,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     lightInput,
     longstriderInput,
     poisonSprayInput,
+    produceFlameInput,
     rayOfFrostInput,
     rayOfSicknessInput,
     sacredFlameInput,

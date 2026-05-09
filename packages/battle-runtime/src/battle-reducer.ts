@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.invocation-chained-attack-damage spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-roll-modifier spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.held-light spell.invocation-chained-attack-damage spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-roll-modifier spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 import { Brand, Match, Schema } from "effect";
 import { isNonEmptyReadonlyArray } from "effect/Array";
 import * as Either from "effect/Either";
@@ -393,6 +393,12 @@ export type BattleActiveEffect =
       readonly on: readonly BattleD20RollModifierKind[];
       readonly delta: BattleD20RollModifierDelta;
       readonly skill: Skill | null;
+      readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "heldLight";
+      readonly brightRadiusFeet: MovementFeet;
+      readonly dimAdditionalFeet: MovementFeet;
       readonly expiresAt: BattleActiveEffectExpiration;
     });
 export type BattleConcentration = {
@@ -1032,9 +1038,22 @@ type RollModifierSpellInvocation = {
   readonly saveGate: RollModifierSpellSaveGate | null;
   readonly skillChoices: readonly Skill[] | null;
 };
+type HeldLightSpellInvocation = {
+  readonly access: ClassCantripSpellAccess;
+  readonly resource: NoSpellInvocationResource;
+  readonly procedure: "heldLight";
+  readonly spell: SpellRecord;
+  readonly actionCost: "bonusAction";
+  readonly light: {
+    readonly brightRadiusFeet: MovementFeet;
+    readonly dimAdditionalFeet: MovementFeet;
+  };
+  readonly expiresAt: BattleActiveEffectExpiration;
+};
 // SupportedAttackActionOption is a currently executable option for spending an
 // immediate attack made as part of the Attack action. It is narrower than all
 export type SupportedSpellInvocation =
+  | HeldLightSpellInvocation
   | {
       readonly access: PreparedSpellAccess;
       readonly resource: SpellSlotInvocationResource;
@@ -1202,6 +1221,7 @@ type SupportedDamageSpellInvocation = Exclude<
       | "directHitPointRestoration"
       | "rollModifier"
       | "scalarBuff"
+      | "heldLight"
       | "shieldReaction"
       | "saveGatedCondition"
       | "chainedSpellAttackDamage";
@@ -2033,6 +2053,18 @@ const SupportedHealingSpellInvocationSchema = Schema.Struct({
 // through this schema at the boundary.
 const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
   Schema.Union(
+    Schema.Struct({
+      access: ClassCantripSpellAccessSchema,
+      resource: NoSpellInvocationResourceSchema,
+      procedure: Schema.Literal("heldLight"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      light: Schema.Struct({
+        brightRadiusFeet: MovementFeet,
+        dimAdditionalFeet: MovementFeet,
+      }),
+      expiresAt: BattleRuntimeObjectSchema,
+    }),
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
@@ -14212,6 +14244,21 @@ function discoverSupportedSpellInvocations(
               ];
         return castActs;
       }
+      if (invocation.procedure === "heldLight") {
+        return [
+          {
+            subject: {
+              tag: "bonusActionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: invocation.spell.name,
+            summary: spellInvocationCastSummary(invocation),
+            initialHoles: [],
+          },
+        ];
+      }
       if (invocation.procedure === "chainedSpellAttackDamage") {
         const castActs = [
           {
@@ -14304,6 +14351,9 @@ function discoverSupportedSpellInvocations(
 function spellInvocationCastSummary(
   invocation: SupportedSpellInvocation,
 ): string {
+  if (invocation.procedure === "heldLight") {
+    return `Cast ${invocation.spell.name} as a cantrip.`;
+  }
   if (invocation.procedure === "repeatedDamageAllocation") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot, allocating ${invocation.targeting.repeatedEffectCount} repeated effects among targets.`;
   }
@@ -14354,13 +14404,22 @@ function spellActivationInvocationCastSummary(
 function spellSubjectTagForInvocation(
   invocation: SupportedSpellInvocation,
 ): "actionSpell" | "bonusActionSpell" {
-  return invocation.procedure === "directHitPointRestoration" &&
+  if (invocation.procedure === "heldLight") {
+    return "bonusActionSpell";
+  }
+  if (
+    invocation.procedure === "directHitPointRestoration" &&
     invocation.actionCost === "bonusAction"
-    ? "bonusActionSpell"
-    : invocation.procedure === "scalarBuff" &&
-        invocation.actionCost === "bonusAction"
-      ? "bonusActionSpell"
-      : "actionSpell";
+  ) {
+    return "bonusActionSpell";
+  }
+  if (
+    invocation.procedure === "scalarBuff" &&
+    invocation.actionCost === "bonusAction"
+  ) {
+    return "bonusActionSpell";
+  }
+  return "actionSpell";
 }
 
 function activeOngoingFeaturesPreventSpellcasting(
@@ -14388,6 +14447,7 @@ function readiedSpellAct(
     invocation.procedure === "persistentArmorEffect" ||
     invocation.procedure === "directHitPointRestoration" ||
     invocation.procedure === "scalarBuff" ||
+    invocation.procedure === "heldLight" ||
     invocation.procedure === "rollModifier" ||
     invocation.procedure === "attackBurstSaveDamage" ||
     invocation.procedure === "saveGatedCondition" ||
@@ -15705,10 +15765,18 @@ function resolveBonusActionSpellAct(
     return invalidResult(
       input.state,
       "unsupportedActOption",
-      "Bonus Action spell act requires a supported prepared spell.",
+      "Bonus Action spell act requires a supported Bonus Action spell.",
     );
   }
-  if (invocation.procedure === "scalarBuff") {
+  if (invocation.procedure === "heldLight") {
+    if (invocation.actionCost !== "bonusAction") {
+      return invalidResult(
+        input.state,
+        "unsupportedSubject",
+        "Bonus Action spell subject requires a supported Bonus Action spell act.",
+      );
+    }
+  } else if (invocation.procedure === "scalarBuff") {
     if (invocation.actionCost !== "bonusAction") {
       return invalidResult(
         input.state,
@@ -15757,6 +15825,14 @@ function resolveBonusActionSpellAct(
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
+  if (invocation.procedure === "heldLight") {
+    return resolveHeldLightSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
   if (invocation.procedure === "scalarBuff") {
     return resolveScalarBuffSpellAct({
       input: { ...input, state: castingState },
@@ -15771,6 +15847,73 @@ function resolveBonusActionSpellAct(
     invocation,
     fillSet,
   });
+}
+
+function resolveHeldLightSpellAct(input: {
+  readonly input: BonusActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "heldLight" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  if (
+    input.fillSet.targetId !== undefined ||
+    input.fillSet.targetList !== undefined ||
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.targetAllocation !== undefined ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.attackBurstDamageRoll !== undefined ||
+    input.fillSet.healingRoll !== undefined ||
+    input.fillSet.damageDispositions.length > 0 ||
+    input.fillSet.savingThrowOutcomes !== undefined ||
+    input.fillSet.concentrationSavingThrows.length > 0
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Held light spells do not use target, roll, damage, or save fills.",
+    );
+  }
+
+  const spellCastReactionWindow = maybeOpenReactionWindow(
+    input.input.state,
+    {
+      trigger: "spellCast",
+      casterId: input.actorId,
+      spellId: input.invocation.spell.id,
+      targetIds: [input.actorId],
+      continuation: {
+        kind: "replay",
+        subject: input.input.subject,
+        fills: input.input.fills,
+      },
+    },
+    input.input.suppressedReactionTrigger,
+  );
+  if (spellCastReactionWindow !== null) {
+    return spellCastReactionWindow;
+  }
+
+  const effected = applyHeldLightSpellEffect(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+  );
+  const resourced = spendSpellCastResources({
+    state: effected,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
+  return resourced.tag === "invalid"
+    ? resourced
+    : {
+        tag: "resolved",
+        state: resourced.state,
+        snapshot: snapshotBattle(resourced.state),
+      };
 }
 
 function resolvePreparedHealingSpellAct(input: {
@@ -16519,6 +16662,13 @@ function resolveReadySpellAct(
       input.state,
       "unsupportedActOption",
       "Roll modifier spells cannot be readied by this runtime lane.",
+    );
+  }
+  if (invocation.procedure === "heldLight") {
+    return invalidResult(
+      input.state,
+      "unsupportedActOption",
+      "Held light spells cannot be readied by this runtime lane.",
     );
   }
   if (invocation.procedure === "shieldReaction") {
@@ -18757,12 +18907,23 @@ function spendSpellCastResources(input: {
   readonly invocation: SupportedSpellInvocation;
   readonly errorState: BattleState;
 }): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
-  const spent = spendAction(input.state.currentTurnResources, "magic");
+  const actionCost =
+    "actionCost" in input.invocation
+      ? input.invocation.actionCost
+      : "magicAction";
+  const spent =
+    actionCost === "bonusAction"
+      ? spendActivationResource(input.state.currentTurnResources, {
+          kind: "bonusAction",
+        })
+      : spendAction(input.state.currentTurnResources, "magic");
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.errorState,
       "staleSubject",
-      "Magic action is no longer available for the current actor.",
+      actionCost === "bonusAction"
+        ? "Bonus Action spell is no longer available for the current actor."
+        : "Magic action is no longer available for the current actor.",
     );
   }
   if (input.invocation.resource.tag === "none") {
@@ -19835,6 +19996,9 @@ function supportedSpellActs(
       ),
     ),
     ...spellcasting.cantrips.flatMap((spell) =>
+      supportedCantripHeldLightSpellProfile(spell),
+    ),
+    ...spellcasting.cantrips.flatMap((spell) =>
       supportedCantripSpellAttackProfile(
         spell,
         spellcasting.spellcastingAbilityModifier,
@@ -19849,6 +20013,68 @@ function supportedSpellActs(
       supportedCantripRollModifierSpellProfile(actor.combatantId, spell),
     ),
   ];
+}
+
+function supportedCantripHeldLightSpellProfile(
+  spell: SpellRecord,
+): readonly SupportedSpellInvocation[] {
+  const earlyEnd =
+    spell.mechanics.duration.kind === "timed"
+      ? (spell.mechanics.duration.earlyEnd ?? [])
+      : [];
+  if (
+    spell.name !== "Produce Flame" ||
+    spell.provenance.kind !== "srd-5.2.1" ||
+    spell.provenance.section !== "Spells/Descriptions-M-P#Produce Flame" ||
+    spell.mechanics.family !== "ongoing_effect" ||
+    spell.mechanics.level !== 0 ||
+    spell.mechanics.castingTime.kind !== "bonus_action" ||
+    spell.mechanics.range.kind !== "self" ||
+    spell.mechanics.attachment.kind !== "self" ||
+    spell.mechanics.duration.kind !== "timed" ||
+    spell.mechanics.duration.value.unit !== "minute" ||
+    spell.mechanics.duration.value.amount !== 10 ||
+    earlyEnd.length !== 1 ||
+    earlyEnd[0]?.kind !== "caster_recasts_spell"
+  ) {
+    return [];
+  }
+  const lightOperation = spell.mechanics.operations.find(
+    (operation) =>
+      operation.trigger.kind === "passive" &&
+      operation.effect.kind === "emit_light",
+  );
+  if (
+    lightOperation === undefined ||
+    lightOperation.effect.kind !== "emit_light" ||
+    lightOperation.effect.brightRadiusFeet !== 20 ||
+    lightOperation.effect.dimAdditionalFeet !== 20
+  ) {
+    return [];
+  }
+  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
+    spell.mechanics.duration.value,
+  );
+  return Either.isLeft(durationTicks)
+    ? []
+    : [
+        {
+          access: { tag: "classCantrip" },
+          resource: { tag: "none" },
+          procedure: "heldLight",
+          spell,
+          actionCost: "bonusAction",
+          light: {
+            brightRadiusFeet: movementFeet(
+              lightOperation.effect.brightRadiusFeet,
+            ),
+            dimAdditionalFeet: movementFeet(
+              lightOperation.effect.dimAdditionalFeet,
+            ),
+          },
+          expiresAt: { kind: "duration", durationTicks: durationTicks.right },
+        },
+      ];
 }
 
 function supportedPreparedShieldReactionSpellProfile(
@@ -21719,15 +21945,19 @@ function spellActTurnResourceAvailable(
   resources: BattleTurnResources,
   invocation: SupportedSpellInvocation,
 ): boolean {
+  if (
+    invocation.resource.tag !== "none" &&
+    resources.spellSlotExpendedThisTurn
+  ) {
+    return false;
+  }
+  if ("actionCost" in invocation && invocation.actionCost === "bonusAction") {
+    return resources.currentHasBonusAction;
+  }
   if (invocation.resource.tag === "none") {
     return canSpendAction(resources, "magic");
   }
-  if (resources.spellSlotExpendedThisTurn) {
-    return false;
-  }
-  return "actionCost" in invocation && invocation.actionCost === "bonusAction"
-    ? resources.currentHasBonusAction
-    : canSpendAction(resources, "magic");
+  return canSpendAction(resources, "magic");
 }
 
 function markSpellSlotExpendedThisTurn(
@@ -22039,6 +22269,11 @@ function supportedSpellInvocationRef(
   invocation: SupportedSpellInvocation,
 ): SpellInvocationRef {
   return Match.value(invocation).pipe(
+    Match.when({ procedure: "heldLight" }, (cantrip) => ({
+      tag: "cantrip" as const,
+      spellId: spellId(cantrip.spell.id),
+      procedure: "heldLight" as const,
+    })),
     Match.when({ procedure: "repeatedDamageAllocation" }, (slotSpell) => ({
       tag: "spellSlot" as const,
       spellId: spellId(slotSpell.spell.id),
@@ -23410,6 +23645,44 @@ function applyPersistentSpellActiveEffect(
             ),
         ),
         { ...invocation.activeEffect, sourceCombatantId: actorId },
+      ],
+    }),
+  };
+}
+
+function applyHeldLightSpellEffect(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "heldLight" }
+  >,
+): BattleState {
+  const caster = state.combatants.get(actorId);
+  if (caster === undefined) {
+    return state;
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(actorId, {
+      ...caster,
+      activeEffects: [
+        ...caster.activeEffects.filter(
+          (effect) =>
+            !(
+              effect.kind === "heldLight" &&
+              effect.sourceSpellId === invocation.spell.id &&
+              effect.sourceCombatantId === actorId
+            ),
+        ),
+        {
+          kind: "heldLight",
+          sourceSpellId: invocation.spell.id,
+          sourceCombatantId: actorId,
+          brightRadiusFeet: invocation.light.brightRadiusFeet,
+          dimAdditionalFeet: invocation.light.dimAdditionalFeet,
+          expiresAt: invocation.expiresAt,
+        },
       ],
     }),
   };
