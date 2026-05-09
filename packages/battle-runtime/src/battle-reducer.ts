@@ -186,6 +186,7 @@ import {
   BattleSubjectTextSchema,
   BattleSubjectSchema,
   SpellInvocationRefSchema,
+  spellEffectInvocationRef,
   sameBattleSubject,
   type ActionHideSubject,
   type ActionSearchSubject,
@@ -395,6 +396,16 @@ export type BattleActiveEffect =
     })
   | (BattleSpellEffectBase & {
       readonly kind: "spellWeaponDamageRider";
+      readonly damage: {
+        readonly expr: DiceExpr;
+        readonly damageType: DamageType;
+      };
+      readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "spellMarkedDamageRider";
+      readonly targetCombatantId: CombatantId;
+      readonly transferAvailable: boolean;
       readonly damage: {
         readonly expr: DiceExpr;
         readonly damageType: DamageType;
@@ -1055,6 +1066,40 @@ type WeaponDamageRiderSpellInvocation = {
     { readonly kind: "spellWeaponDamageRider" }
   >;
 };
+type MarkedDamageRiderSpellInvocation =
+  | {
+      readonly access: PreparedSpellAccess;
+      readonly resource: SpellSlotInvocationResource;
+      readonly procedure: "markedDamageRider";
+      readonly action: "cast";
+      readonly spell: SpellRecord;
+      readonly actionCost: "bonusAction";
+      readonly targeting: { readonly kind: "singleCombatant" };
+      readonly damage: {
+        readonly expr: DiceExpr;
+        readonly damageType: DamageType;
+      };
+      readonly rangeFeet: MovementFeet;
+      readonly expiresAt: BattleActiveEffectExpiration;
+    }
+  | {
+      readonly access: PreparedSpellAccess;
+      readonly resource: NoSpellInvocationResource;
+      readonly procedure: "markedDamageRider";
+      readonly action: "transfer";
+      readonly spell: SpellRecord;
+      readonly actionCost: "bonusAction";
+      readonly targeting: { readonly kind: "singleCombatant" };
+      readonly damage: {
+        readonly expr: DiceExpr;
+        readonly damageType: DamageType;
+      };
+      readonly rangeFeet: MovementFeet;
+      readonly activeEffect: Extract<
+        BattleActiveEffect,
+        { readonly kind: "spellMarkedDamageRider" }
+      >;
+    };
 type HeldLightSpellInvocation = {
   readonly access: ClassCantripSpellAccess;
   readonly resource: NoSpellInvocationResource;
@@ -1201,6 +1246,7 @@ export type SupportedSpellInvocation =
     }
   | RollModifierSpellInvocation
   | WeaponDamageRiderSpellInvocation
+  | MarkedDamageRiderSpellInvocation
   | {
       readonly access: PreparedSpellAccess;
       readonly resource: SpellSlotInvocationResource;
@@ -1258,6 +1304,7 @@ type SupportedDamageSpellInvocation = Exclude<
       | "rollModifier"
       | "scalarBuff"
       | "weaponDamageRider"
+      | "markedDamageRider"
       | "heldLight"
       | "shieldReaction"
       | "saveGatedCondition"
@@ -1348,6 +1395,10 @@ export type AttackDamageRider = {
 type SpellWeaponDamageRider = Extract<
   BattleActiveEffect,
   { readonly kind: "spellWeaponDamageRider" }
+>;
+type SpellMarkedDamageRider = Extract<
+  BattleActiveEffect,
+  { readonly kind: "spellMarkedDamageRider" }
 >;
 export type AttackDamageRiderUsage = {
   readonly attackerId: CombatantId;
@@ -1780,6 +1831,7 @@ export type BattleDamageRollHole = Extract<
   readonly critical: boolean;
   readonly attackDamageRiders?: readonly AttackDamageRider[];
   readonly spellWeaponDamageRiders?: readonly SpellWeaponDamageRider[];
+  readonly spellMarkedDamageRiders?: readonly SpellMarkedDamageRider[];
   readonly weaponDamageDiceRollChoiceUnitIds?: readonly UnitRecord["id"][];
 };
 export type BattleSpellDamageRollHole = Extract<
@@ -1799,6 +1851,7 @@ export type BattleSpellDamageRollHole = Extract<
     }
   >;
   readonly critical: boolean;
+  readonly spellMarkedDamageRiders?: readonly SpellMarkedDamageRider[];
 };
 export type BattleSpellHealingRollHole = Extract<
   RuntimeHole,
@@ -2446,6 +2499,30 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("markedDamageRider"),
+      action: Schema.Literal("cast"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      targeting: Schema.Struct({ kind: Schema.Literal("singleCombatant") }),
+      damage: BattleRuntimeObjectSchema,
+      rangeFeet: MovementFeet,
+      expiresAt: BattleRuntimeObjectSchema,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: NoSpellInvocationResourceSchema,
+      procedure: Schema.Literal("markedDamageRider"),
+      action: Schema.Literal("transfer"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      targeting: Schema.Struct({ kind: Schema.Literal("singleCombatant") }),
+      damage: BattleRuntimeObjectSchema,
+      rangeFeet: MovementFeet,
+      activeEffect: BattleRuntimeObjectSchema,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("persistentArmorEffect"),
       spell: BattleRuntimeObjectSchema,
       rangeFeet: MovementFeet,
@@ -2564,6 +2641,10 @@ export const BattleHoleSchema = Schema.Union(
       Schema.Array(BattleRuntimeObjectSchema),
       { exact: true },
     ),
+    spellMarkedDamageRiders: Schema.optionalWith(
+      Schema.Array(BattleRuntimeObjectSchema),
+      { exact: true },
+    ),
     weaponDamageDiceRollChoiceUnitIds: Schema.optionalWith(
       Schema.Array(Schema.String),
       { exact: true },
@@ -2574,6 +2655,10 @@ export const BattleHoleSchema = Schema.Union(
     kind: Schema.Literal("rolledDice"),
     spell: SupportedSpellInvocationSchema,
     critical: Schema.Boolean,
+    spellMarkedDamageRiders: Schema.optionalWith(
+      Schema.Array(BattleRuntimeObjectSchema),
+      { exact: true },
+    ),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -9057,6 +9142,12 @@ function resolveAttack(
         attack,
       )
     : [];
+  const spellMarkedDamageRiders = hit
+    ? activeMarkedDamageRiders(
+        attackRolledState.combatants.get(input.subject.actorId),
+        target.combatantId,
+      )
+    : [];
   const selectedDamageRiders =
     fillSet.damageRoll === undefined
       ? []
@@ -9065,10 +9156,12 @@ function resolveAttack(
           fillSet.damageRoll.selectedAttackDamageRiderUnitIds,
         ) ?? []);
   const fixedDamageByTypeBeforeTargetAdjustments = hit
-    ? fixedAttackDamageByTypeEntries(
-        attackRolledState.combatants.get(input.subject.actorId),
-        attack,
-      )
+    ? spellMarkedDamageRiders.length > 0
+      ? null
+      : fixedAttackDamageByTypeEntries(
+          attackRolledState.combatants.get(input.subject.actorId),
+          attack,
+        )
     : null;
   const fixedDamageAmount =
     fixedDamageByTypeBeforeTargetAdjustments === null
@@ -9094,6 +9187,7 @@ function resolveAttack(
           fillSet.attackRoll,
           eligibleDamageRiders,
           spellWeaponDamageRiders,
+          spellMarkedDamageRiders,
         ),
         continuation: {
           kind: "replay",
@@ -9294,6 +9388,7 @@ function resolveAttack(
         fillSet.attackRoll,
         eligibleDamageRiders,
         spellWeaponDamageRiders,
+        spellMarkedDamageRiders,
         ongoingFeatureDamageModifier(
           attackRolledState.combatants.get(input.subject.actorId),
           attack,
@@ -9321,6 +9416,7 @@ function resolveAttack(
       fillSet.attackRoll,
       eligibleDamageRiders,
       spellWeaponDamageRiders,
+      spellMarkedDamageRiders,
       ongoingFeatureDamageModifier(
         attackRolledState.combatants.get(input.subject.actorId),
         attack,
@@ -9338,6 +9434,7 @@ function resolveAttack(
       fillSet.attackRoll,
       selectedDamageRiders,
       spellWeaponDamageRiders,
+      spellMarkedDamageRiders,
     );
     const damageEvent = {
       kind: "rolledDamage" as const,
@@ -9520,6 +9617,9 @@ function resolveAttack(
           attack,
           fillSet,
           critical,
+          selectedDamageRiders,
+          spellWeaponDamageRiders,
+          spellMarkedDamageRiders,
         )
       : attackRolledState,
     input.subject.actorId,
@@ -10476,6 +10576,12 @@ function resolveOffHandAttack(
         attack,
       )
     : [];
+  const spellMarkedDamageRiders = hit
+    ? activeMarkedDamageRiders(
+        attackRolledState.combatants.get(input.subject.actorId),
+        target.combatantId,
+      )
+    : [];
   const selectedDamageRiders =
     fillSet.damageRoll === undefined
       ? []
@@ -10498,6 +10604,7 @@ function resolveOffHandAttack(
           fillSet.attackRoll,
           eligibleDamageRiders,
           spellWeaponDamageRiders,
+          spellMarkedDamageRiders,
         ),
         continuation: {
           kind: "replay",
@@ -10519,6 +10626,7 @@ function resolveOffHandAttack(
         fillSet.attackRoll,
         eligibleDamageRiders,
         spellWeaponDamageRiders,
+        spellMarkedDamageRiders,
         ongoingFeatureDamageModifier(
           attackRolledState.combatants.get(input.subject.actorId),
           attack,
@@ -10549,6 +10657,7 @@ function resolveOffHandAttack(
       fillSet.attackRoll,
       eligibleDamageRiders,
       spellWeaponDamageRiders,
+      spellMarkedDamageRiders,
       ongoingFeatureDamageModifier(
         attackRolledState.combatants.get(input.subject.actorId),
         attack,
@@ -10566,6 +10675,7 @@ function resolveOffHandAttack(
       fillSet.attackRoll,
       selectedDamageRiders,
       spellWeaponDamageRiders,
+      spellMarkedDamageRiders,
     );
     const damageEvent = {
       kind: "rolledDamage" as const,
@@ -11482,6 +11592,7 @@ function validateAttackDamageFill(
   attackRoll: AttackRollResult,
   eligibleAttackDamageRiders: readonly AttackDamageRider[],
   spellWeaponDamageRiders: readonly SpellWeaponDamageRider[] = [],
+  spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
   ongoingDamageModifier = 0,
   eligibleWeaponDamageDiceRollChoiceUnitIds: readonly UnitRecord["id"][] = [],
 ): string | null {
@@ -11499,6 +11610,7 @@ function validateAttackDamageFill(
       critical,
       attackRoll,
       spellWeaponDamageRiders,
+      spellMarkedDamageRiders,
       ongoingDamageModifier,
     )
   ) {
@@ -11525,6 +11637,7 @@ function validateAttackDamageFill(
     attackRoll,
     selectedRiders,
     spellWeaponDamageRiders,
+    spellMarkedDamageRiders,
     weaponDamageDiceRollChoice ?? undefined,
   );
 }
@@ -11536,6 +11649,7 @@ function validateRolledDiceForWeaponAttack(
   attackRoll: AttackRollResult,
   attackDamageRiders: readonly AttackDamageRider[],
   spellWeaponDamageRiders: readonly SpellWeaponDamageRider[],
+  spellMarkedDamageRiders: readonly SpellMarkedDamageRider[],
   weaponDamageDiceRollChoice?: WeaponDamageDiceRollChoiceFill,
 ): string | null {
   const components = attackDamageComponents(
@@ -11544,6 +11658,7 @@ function validateRolledDiceForWeaponAttack(
     attackRoll,
     attackDamageRiders,
     spellWeaponDamageRiders,
+    spellMarkedDamageRiders,
   );
   if (groups.length !== components.length) {
     return "filled damage groups do not match current attack damage";
@@ -12522,6 +12637,12 @@ function resolveOpportunityAttackCommand(
         attack,
       )
     : [];
+  const spellMarkedDamageRiders = hit
+    ? activeMarkedDamageRiders(
+        attackRolledState.combatants.get(subject.reactorId),
+        subject.targetId,
+      )
+    : [];
   const selectedDamageRiders =
     fillSet.damageRoll === undefined
       ? []
@@ -12544,6 +12665,7 @@ function resolveOpportunityAttackCommand(
           fillSet.attackRoll,
           eligibleDamageRiders,
           spellWeaponDamageRiders,
+          spellMarkedDamageRiders,
         ),
         continuation: {
           kind: "replay",
@@ -12571,11 +12693,14 @@ function resolveOpportunityAttackCommand(
       snapshot: snapshotBattle(attackRolledState),
     };
   }
-  const fixedDamageAmount = fixedAttackDamageAmount(
-    attackRolledState.combatants.get(subject.reactorId),
-    target,
-    attack,
-  );
+  const fixedDamageAmount =
+    spellMarkedDamageRiders.length > 0
+      ? null
+      : fixedAttackDamageAmount(
+          attackRolledState.combatants.get(subject.reactorId),
+          target,
+          attack,
+        );
   if (fixedDamageAmount !== null) {
     if (fillSet.damageRoll != null) {
       return invalidResult(
@@ -12723,6 +12848,7 @@ function resolveOpportunityAttackCommand(
         fillSet.attackRoll,
         eligibleDamageRiders,
         spellWeaponDamageRiders,
+        spellMarkedDamageRiders,
         ongoingFeatureDamageModifier(
           attackRolledState.combatants.get(subject.reactorId),
           attack,
@@ -12742,6 +12868,7 @@ function resolveOpportunityAttackCommand(
     fillSet.attackRoll,
     eligibleDamageRiders,
     spellWeaponDamageRiders,
+    spellMarkedDamageRiders,
     ongoingFeatureDamageModifier(
       attackRolledState.combatants.get(subject.reactorId),
       attack,
@@ -12759,6 +12886,7 @@ function resolveOpportunityAttackCommand(
     fillSet.attackRoll,
     selectedDamageRiders,
     spellWeaponDamageRiders,
+    spellMarkedDamageRiders,
   );
   const damageEvent = {
     kind: "rolledDamage" as const,
@@ -14266,12 +14394,13 @@ function discoverSupportedSpellInvocations(
   if (actor?.origin.kind !== "character") {
     return [];
   }
-  if (activeOngoingFeaturesPreventSpellcasting(actor)) {
-    return [];
-  }
+  const spellcastingPrevented = activeOngoingFeaturesPreventSpellcasting(actor);
   return supportedSpellActs(actor).flatMap(
     (invocation): readonly AvailableBattleAct[] => {
       if (invocation.procedure === "shieldReaction") {
+        return [];
+      }
+      if (spellcastingPrevented && spellInvocationIsSpellcasting(invocation)) {
         return [];
       }
       if (!spellHasAvailableSpend(actor, invocation)) {
@@ -14391,6 +14520,24 @@ function discoverSupportedSpellInvocations(
           },
         ];
       }
+      if (invocation.procedure === "markedDamageRider") {
+        const targetHole = spellTargetHole(state, actorId, invocation);
+        return targetHole.choices.length === 0
+          ? []
+          : [
+              {
+                subject: {
+                  tag: "bonusActionSpell" as const,
+                  actorId,
+                  invocation: supportedSpellInvocationRef(invocation),
+                  mode: { tag: "cast" as const },
+                },
+                label: invocation.spell.name,
+                summary: spellInvocationCastSummary(invocation),
+                initialHoles: [targetHole],
+              },
+            ];
+      }
       if (invocation.procedure === "chainedSpellAttackDamage") {
         const castActs = [
           {
@@ -14506,6 +14653,11 @@ function spellInvocationCastSummary(
   if (invocation.procedure === "weaponDamageRider") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
+  if (invocation.procedure === "markedDamageRider") {
+    return invocation.action === "transfer"
+      ? `Move ${invocation.spell.name} to a new target.`
+      : `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+  }
   if (invocation.procedure === "persistentArmorEffect") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
@@ -14560,6 +14712,9 @@ function spellSubjectTagForInvocation(
   if (invocation.procedure === "weaponDamageRider") {
     return "bonusActionSpell";
   }
+  if (invocation.procedure === "markedDamageRider") {
+    return "bonusActionSpell";
+  }
   return "actionSpell";
 }
 
@@ -14572,6 +14727,15 @@ function activeOngoingFeaturesPreventSpellcasting(
         actor,
         key,
       )?.actionRestrictions.includes("spellcasting") === true,
+  );
+}
+
+function spellInvocationIsSpellcasting(
+  invocation: SupportedSpellInvocation,
+): boolean {
+  return !(
+    invocation.procedure === "markedDamageRider" &&
+    invocation.action === "transfer"
   );
 }
 
@@ -14605,6 +14769,7 @@ function isReadiedSpellInvocation(
     invocation.procedure !== "rollModifier" &&
     invocation.procedure !== "scalarBuff" &&
     invocation.procedure !== "weaponDamageRider" &&
+    invocation.procedure !== "markedDamageRider" &&
     invocation.procedure !== "saveGatedCondition" &&
     invocation.procedure !== "shieldReaction"
   );
@@ -14620,6 +14785,7 @@ function readiedSpellAct(
     invocation.procedure === "directHitPointRestoration" ||
     invocation.procedure === "scalarBuff" ||
     invocation.procedure === "weaponDamageRider" ||
+    invocation.procedure === "markedDamageRider" ||
     invocation.procedure === "heldLight" ||
     invocation.procedure === "heldLightHurl" ||
     invocation.procedure === "rollModifier" ||
@@ -14896,6 +15062,7 @@ function resolveSpellAct(
     return spellCastReactionWindow;
   }
 
+  let spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [];
   if (
     invocation.procedure === "spellAttackDamage" ||
     invocation.procedure === "heldLightHurl"
@@ -14974,6 +15141,12 @@ function resolveSpellAct(
         attackRoll: fillSet.attackRoll,
       },
     );
+    spellMarkedDamageRiders = hit
+      ? activeMarkedDamageRiders(
+          attackRolledState.combatants.get(subject.actorId),
+          target.combatantId,
+        )
+      : [];
     if (hit && input.suppressedReactionTrigger !== "attackHit") {
       const reactionWindow = maybeOpenReactionWindow(
         attackRolledState,
@@ -14983,7 +15156,14 @@ function resolveSpellAct(
           targetId: target.combatantId,
           attackRoll: fillSet.attackRoll,
           attackKind: spellAttackKindForRedirect(invocation.attackKind),
-          damageTypes: spellDamageTypes(invocation),
+          damageTypes: [
+            ...new Set([
+              ...spellDamageTypes(invocation),
+              ...spellMarkedDamageRiders.map(
+                (rider) => rider.damage.damageType,
+              ),
+            ]),
+          ],
           continuation: {
             kind: "replay",
             subject: input.subject,
@@ -14998,7 +15178,7 @@ function resolveSpellAct(
     }
     if (hit && fillSet.damageRoll == null) {
       return needsHolesResult(attackRolledState, input.subject, [
-        spellDamageHole(invocation, critical),
+        spellDamageHole(invocation, critical, spellMarkedDamageRiders),
       ]);
     }
     if (
@@ -15081,6 +15261,7 @@ function resolveSpellAct(
     fillSet.damageRoll,
     invocation,
     critical,
+    spellMarkedDamageRiders,
   );
   if (damageValidation !== null) {
     return invalidResult(input.state, "invalidFill", damageValidation);
@@ -15089,6 +15270,9 @@ function resolveSpellAct(
     target,
     invocation,
     fillSet.damageRoll,
+    "full",
+    spellMarkedDamageRiders,
+    critical,
   );
   const concentrationSave = concentrationSavingThrowHole(
     target,
@@ -15161,6 +15345,7 @@ function resolveSpellAct(
       fillSet.damageDispositions,
       target.combatantId,
     ),
+    spellMarkedDamageRiders,
   );
   const effected = applySpellActiveEffects(
     damaged,
@@ -15937,14 +16122,20 @@ function applyChainedSpellDamage(
     ...state,
     combatants: new Map(state.combatants).set(targetId, damaged),
   };
+  const afterMarkDrop = markMarkedDamageRiderTransferAvailable(
+    nextState,
+    targetId,
+    target.hp,
+    damaged.hp,
+  );
   return concentrationSavingThrow?.value.succeeded === false ||
     (target.concentration !== null && damaged.concentration === null)
     ? breakBattleConcentrationAfterDamage({
-        state: nextState,
+        state: afterMarkDrop,
         combatantId: targetId,
         priorConcentration: target.concentration,
       })
-    : nextState;
+    : afterMarkDrop;
 }
 
 function resolveBonusActionSpellAct(
@@ -15989,6 +16180,14 @@ function resolveBonusActionSpellAct(
         "Bonus Action spell subject requires a supported Bonus Action spell act.",
       );
     }
+  } else if (invocation.procedure === "markedDamageRider") {
+    if (invocation.actionCost !== "bonusAction") {
+      return invalidResult(
+        input.state,
+        "unsupportedSubject",
+        "Bonus Action spell subject requires a supported Bonus Action spell act.",
+      );
+    }
   } else if (
     invocation.procedure !== "directHitPointRestoration" ||
     invocation.actionCost !== "bonusAction"
@@ -16015,7 +16214,10 @@ function resolveBonusActionSpellAct(
       "This turn has already expended a Spell Slot.",
     );
   }
-  if (activeOngoingFeaturesPreventSpellcasting(actor)) {
+  if (
+    spellInvocationIsSpellcasting(invocation) &&
+    activeOngoingFeaturesPreventSpellcasting(actor)
+  ) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -16023,9 +16225,11 @@ function resolveBonusActionSpellAct(
     );
   }
 
-  const castingState = spellRequiresVerbal(invocation.spell)
-    ? revealHidden(input.state, subject.actorId)
-    : input.state;
+  const castingState =
+    spellInvocationIsSpellcasting(invocation) &&
+    spellRequiresVerbal(invocation.spell)
+      ? revealHidden(input.state, subject.actorId)
+      : input.state;
   const fillSet = spellFillSet(input.fills, invocation);
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
@@ -16048,6 +16252,14 @@ function resolveBonusActionSpellAct(
   }
   if (invocation.procedure === "weaponDamageRider") {
     return resolveWeaponDamageRiderSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "markedDamageRider") {
+    return resolveMarkedDamageRiderSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
@@ -16215,6 +16427,160 @@ function resolveWeaponDamageRiderSpellAct(input: {
         state: resourced.state,
         snapshot: snapshotBattle(resourced.state),
       };
+}
+
+function resolveMarkedDamageRiderSpellAct(input: {
+  readonly input: BonusActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "markedDamageRider" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  if (
+    input.fillSet.targetList !== undefined ||
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.targetAllocation !== undefined ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.attackBurstDamageRoll !== undefined ||
+    input.fillSet.healingRoll !== undefined ||
+    input.fillSet.damageDispositions.length > 0 ||
+    input.fillSet.savingThrowOutcomes !== undefined ||
+    input.fillSet.concentrationSavingThrows.length > 0
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Marked damage rider spells use one target fill.",
+    );
+  }
+  if (input.fillSet.targetId === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      spellTargetHole(input.input.state, input.actorId, input.invocation),
+    ]);
+  }
+  if (
+    !spellTargetIsLegal(
+      input.input.state,
+      input.actorId,
+      input.fillSet.targetId,
+      input.invocation,
+      input.fillSet.targetSpatialFacts,
+    )
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Marked spell target must be a combatant within the selected spell's supported range.",
+    );
+  }
+  if (input.invocation.action === "transfer") {
+    const activeMark = activeMarkedDamageRiderEffect(
+      input.input.state.combatants.get(input.actorId),
+      input.invocation.spell.id,
+    );
+    if (activeMark === null || !activeMark.transferAvailable) {
+      return invalidResult(
+        input.input.state,
+        "staleSubject",
+        "Hunter's Mark can move only after the marked target drops to 0 Hit Points.",
+      );
+    }
+  }
+  if (input.invocation.action === "cast") {
+    const spellCastReactionWindow = maybeOpenReactionWindow(
+      input.input.state,
+      {
+        trigger: "spellCast",
+        casterId: input.actorId,
+        spellId: input.invocation.spell.id,
+        targetIds: [input.fillSet.targetId],
+        continuation: {
+          kind: "replay",
+          subject: input.input.subject,
+          fills: input.input.fills,
+        },
+      },
+      input.input.suppressedReactionTrigger,
+    );
+    if (spellCastReactionWindow !== null) {
+      return spellCastReactionWindow;
+    }
+  }
+
+  const spent = spendActivationResource(
+    input.input.state.currentTurnResources,
+    {
+      kind: "bonusAction",
+    },
+  );
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.input.state,
+      "staleSubject",
+      "Bonus Action spell is no longer available for the current actor.",
+    );
+  }
+  if (input.invocation.action === "transfer") {
+    const nextState = applyMarkedDamageRiderSpellEffect(
+      {
+        ...input.input.state,
+        currentTurnResources:
+          clearPendingAttackRollMissToHitReplacementSelection(
+            spent.right,
+            input.actorId,
+          ),
+      },
+      input.actorId,
+      input.fillSet.targetId,
+      input.invocation,
+    );
+    return {
+      tag: "resolved",
+      state: nextState,
+      snapshot: snapshotBattle(nextState),
+    };
+  }
+  const slotTurnResources = markSpellSlotExpendedThisTurn(spent.right);
+  if (Either.isLeft(slotTurnResources)) {
+    return invalidResult(
+      input.input.state,
+      "staleSubject",
+      "This turn has already expended a Spell Slot.",
+    );
+  }
+  const concentrationBase = breakBattleConcentration(
+    input.input.state,
+    input.actorId,
+  );
+  const slotted = expendSpellSlot(
+    {
+      ...concentrationBase,
+      currentTurnResources: clearPendingAttackRollMissToHitReplacementSelection(
+        slotTurnResources.right,
+        input.actorId,
+      ),
+    },
+    input.actorId,
+    input.invocation.resource.slotLevel,
+  );
+  const effected = applyMarkedDamageRiderSpellEffect(
+    slotted,
+    input.actorId,
+    input.fillSet.targetId,
+    input.invocation,
+  );
+  const nextState = startSpellEffectConcentration(
+    effected,
+    input.actorId,
+    input.invocation,
+  );
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
 }
 
 function resolvePreparedHealingSpellAct(input: {
@@ -17094,6 +17460,7 @@ function resolveSpellRelease(
       "Readied spell target must be a combatant within the selected spell's supported range.",
     );
   }
+  let spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [];
   if (invocation.procedure === "spellAttackDamage") {
     const requiredRollMode = requiredAttackRollMode(
       input.state,
@@ -17169,9 +17536,15 @@ function resolveSpellRelease(
     );
     const hit = ordinaryHit || missToHitReplacement !== null;
     const critical = attackRollIsCriticalHit(fillSet.attackRoll);
+    spellMarkedDamageRiders = hit
+      ? activeMarkedDamageRiders(
+          releaseAttackRolledState.combatants.get(input.subject.actorId),
+          target.combatantId,
+        )
+      : [];
     if (hit && fillSet.damageRoll == null) {
       return needsHolesResult(releaseAttackRolledState, input.subject, [
-        spellDamageHole(invocation, critical),
+        spellDamageHole(invocation, critical, spellMarkedDamageRiders),
       ]);
     }
     if (
@@ -17212,6 +17585,7 @@ function resolveSpellRelease(
     fillSet.damageRoll,
     invocation,
     critical,
+    spellMarkedDamageRiders,
   );
   if (damageValidation !== null) {
     return invalidResult(input.state, "invalidFill", damageValidation);
@@ -17220,6 +17594,9 @@ function resolveSpellRelease(
     target,
     invocation,
     fillSet.damageRoll,
+    "full",
+    spellMarkedDamageRiders,
+    critical,
   );
   const concentrationSave = concentrationSavingThrowHole(
     target,
@@ -17322,6 +17699,7 @@ function resolveSpellRelease(
       fillSet.damageDispositions,
       target.combatantId,
     ),
+    spellMarkedDamageRiders,
   );
   const effected = applySpellActiveEffects(
     damaged,
@@ -18190,6 +18568,12 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
       attackRoll: input.fillSet.attackRoll,
     },
   );
+  const spellMarkedDamageRiders = hit
+    ? activeMarkedDamageRiders(
+        attackRolledState.combatants.get(input.actorId),
+        target.combatantId,
+      )
+    : [];
 
   if (hit && input.input.suppressedReactionTrigger !== "attackHit") {
     const reactionWindow = maybeOpenReactionWindow(
@@ -18200,7 +18584,12 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
         targetId: target.combatantId,
         attackRoll: input.fillSet.attackRoll,
         attackKind: spellAttackKindForRedirect(input.invocation.attackKind),
-        damageTypes: [input.invocation.damage.damageType],
+        damageTypes: [
+          ...new Set([
+            input.invocation.damage.damageType,
+            ...spellMarkedDamageRiders.map((rider) => rider.damage.damageType),
+          ]),
+        ],
         continuation: {
           kind: "replay",
           subject: input.input.subject,
@@ -18216,7 +18605,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
 
   if (hit && input.fillSet.attackBurstDamageRoll === undefined) {
     return needsHolesResult(attackRolledState, input.input.subject, [
-      spellDamageHole(input.invocation, critical),
+      spellDamageHole(input.invocation, critical, spellMarkedDamageRiders),
     ]);
   }
   if (!hit && input.fillSet.attackBurstDamageRoll !== undefined) {
@@ -18231,6 +18620,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
       input.fillSet.attackBurstDamageRoll,
       input.invocation,
       critical,
+      spellMarkedDamageRiders,
     );
     if (attackDamageValidation !== null) {
       return invalidResult(
@@ -18247,6 +18637,9 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
           target,
           input.invocation,
           input.fillSet.attackBurstDamageRoll,
+          "full",
+          spellMarkedDamageRiders,
+          critical,
         )
       : 0;
   const attackDamageDispositionHole =
@@ -18309,6 +18702,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
             input.fillSet.damageDispositions,
             target.combatantId,
           ),
+          spellMarkedDamageRiders,
         )
       : attackRolledState;
 
@@ -18518,6 +18912,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
             input.fillSet.damageDispositions,
             target.combatantId,
           ),
+          spellMarkedDamageRiders,
         )
       : attackRolledState;
   const damagedByBurst =
@@ -19272,6 +19667,8 @@ function applyAttackDamage(
   fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>,
   critical: boolean,
   attackDamageRiders: readonly AttackDamageRider[] = [],
+  spellWeaponDamageRiders: readonly SpellWeaponDamageRider[] = [],
+  spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
 ): BattleState {
   if (fillSet.damageRoll == null) {
     return state;
@@ -19289,6 +19686,8 @@ function applyAttackDamage(
     critical,
     fillSet.attackRoll,
     attackDamageRiders,
+    spellWeaponDamageRiders,
+    spellMarkedDamageRiders,
   );
   const damaged = applyHpDamage(target, damageAmount, {
     deathFailuresAtZeroHp: critical ? 2 : 1,
@@ -19300,15 +19699,21 @@ function applyAttackDamage(
     ...state,
     combatants,
   };
+  const afterMarkDrop = markMarkedDamageRiderTransferAvailable(
+    nextState,
+    targetId,
+    target.hp,
+    damaged.hp,
+  );
   const concentrated =
     fillSet.concentrationSavingThrow?.value.succeeded === false ||
     (target.concentration !== null && damaged.concentration === null)
       ? breakBattleConcentrationAfterDamage({
-          state: nextState,
+          state: afterMarkDrop,
           combatantId: targetId,
           priorConcentration: target.concentration,
         })
-      : nextState;
+      : afterMarkDrop;
   return normalizeBattleGrapples(
     recordAttackDamageUnitsUsed(concentrated, attackDamageRiders),
   );
@@ -19341,16 +19746,22 @@ function applyAttackDamageAmount(
     ...state,
     combatants,
   };
+  const afterMarkDrop = markMarkedDamageRiderTransferAvailable(
+    nextState,
+    targetId,
+    target.hp,
+    damaged.hp,
+  );
   const concentrated =
     Number(damageAmount) > 0 &&
     (concentrationSavingThrow?.value.succeeded === false ||
       (target.concentration !== null && damaged.concentration === null))
       ? breakBattleConcentrationAfterDamage({
-          state: nextState,
+          state: afterMarkDrop,
           combatantId: targetId,
           priorConcentration: target.concentration,
         })
-      : nextState;
+      : afterMarkDrop;
   return normalizeBattleGrapples(
     recordAttackDamageUnitsUsed(
       concentrated,
@@ -19390,6 +19801,37 @@ function recordAttackDamageUnitsUsed(
       ],
     },
   };
+}
+
+function markMarkedDamageRiderTransferAvailable(
+  state: BattleState,
+  targetId: CombatantId,
+  priorHp: Hp,
+  nextHp: Hp,
+): BattleState {
+  if (priorHp <= 0 || nextHp !== 0) {
+    return state;
+  }
+  const combatants = new Map(state.combatants);
+  let changed = false;
+  for (const [combatantId, combatant] of combatants) {
+    const activeEffects = combatant.activeEffects.map((effect) =>
+      effect.kind === "spellMarkedDamageRider" &&
+      effect.targetCombatantId === targetId &&
+      !effect.transferAvailable
+        ? { ...effect, transferAvailable: true }
+        : effect,
+    );
+    if (
+      activeEffects.some(
+        (effect, index) => effect !== combatant.activeEffects[index],
+      )
+    ) {
+      changed = true;
+      combatants.set(combatantId, { ...combatant, activeEffects });
+    }
+  }
+  return changed ? { ...state, combatants } : state;
 }
 
 type BattleDamageContext = {
@@ -19962,6 +20404,8 @@ function attackDamageAmount(
   critical: boolean,
   attackRoll?: AttackRollResult,
   attackDamageRiders: readonly AttackDamageRider[] = [],
+  spellWeaponDamageRiders: readonly SpellWeaponDamageRider[] = [],
+  spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
 ): number {
   return damageAmountByTypeAfterTargetAdjustments(
     target,
@@ -19972,6 +20416,8 @@ function attackDamageAmount(
       critical,
       attackRoll,
       attackDamageRiders,
+      spellWeaponDamageRiders,
+      spellMarkedDamageRiders,
     ),
   );
 }
@@ -19984,6 +20430,7 @@ function attackDamageByTypeEntries(
   attackRoll?: AttackRollResult,
   attackDamageRiders: readonly AttackDamageRider[] = [],
   spellWeaponDamageRiders: readonly SpellWeaponDamageRider[] = [],
+  spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
 ): readonly DamageAmountByTypeEntry[] {
   return [
     ...attackDamageByType(
@@ -19994,6 +20441,7 @@ function attackDamageByTypeEntries(
       attackRoll,
       attackDamageRiders,
       spellWeaponDamageRiders,
+      spellMarkedDamageRiders,
     ),
   ].map(([damageType, amount]) => ({ damageType, amount }));
 }
@@ -20006,6 +20454,7 @@ function attackDamageByType(
   attackRoll?: AttackRollResult,
   attackDamageRiders: readonly AttackDamageRider[] = [],
   spellWeaponDamageRiders: readonly SpellWeaponDamageRider[] = [],
+  spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
 ): ReadonlyMap<DamageType, number> {
   const components = attackDamageComponents(
     attack,
@@ -20013,6 +20462,7 @@ function attackDamageByType(
     attackRoll,
     attackDamageRiders,
     spellWeaponDamageRiders,
+    spellMarkedDamageRiders,
   );
   const damageByType = damageRoll.value.reduce<ReadonlyMap<DamageType, number>>(
     (totals, group, index) => {
@@ -20119,6 +20569,32 @@ function activeSpellWeaponDamageRiders(
   return attacker.activeEffects.filter(
     (effect): effect is SpellWeaponDamageRider =>
       effect.kind === "spellWeaponDamageRider",
+  );
+}
+
+function activeMarkedDamageRiderEffect(
+  attacker: BattleCreatureState | undefined,
+  spellId?: SpellRecord["id"],
+): SpellMarkedDamageRider | null {
+  const effects =
+    attacker?.activeEffects.filter(
+      (effect): effect is SpellMarkedDamageRider =>
+        effect.kind === "spellMarkedDamageRider" &&
+        (spellId === undefined || effect.sourceSpellId === spellId),
+    ) ?? [];
+  return effects[0] ?? null;
+}
+
+function activeMarkedDamageRiders(
+  attacker: BattleCreatureState | undefined,
+  targetId: CombatantId,
+): readonly SpellMarkedDamageRider[] {
+  return (
+    attacker?.activeEffects.filter(
+      (effect): effect is SpellMarkedDamageRider =>
+        effect.kind === "spellMarkedDamageRider" &&
+        effect.targetCombatantId === targetId,
+    ) ?? []
   );
 }
 
@@ -20253,6 +20729,13 @@ function supportedSpellActs(
     ...spellcasting.preparedSpells.flatMap((spell) =>
       supportedPreparedWeaponDamageRiderSpellProfile(
         actor.combatantId,
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...spellcasting.preparedSpells.flatMap((spell) =>
+      supportedPreparedMarkedDamageRiderSpellProfile(
+        actor,
         spell,
         spellcasting.spellSlots,
       ),
@@ -20903,6 +21386,84 @@ function supportedPreparedWeaponDamageRiderSpellProfile(
                 damageType: "radiant",
               },
               expiresAt,
+            },
+          },
+        ],
+  );
+}
+
+function supportedPreparedMarkedDamageRiderSpellProfile(
+  actor: BattleCreatureState,
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  if (
+    spell.name !== "Hunter's Mark" ||
+    spell.provenance.kind !== "srd-5.2.1" ||
+    spell.provenance.section !== "Spells/Descriptions-G-P#Hunter's Mark" ||
+    spell.mechanics.family !== "ongoing_effect" ||
+    spell.mechanics.level !== 1 ||
+    spell.mechanics.castingTime.kind !== "bonus_action" ||
+    spell.mechanics.range.kind !== "point" ||
+    spell.mechanics.range.feet !== 90 ||
+    spell.mechanics.attachment.kind !== "hole" ||
+    spell.mechanics.attachment.value.kind !== "mark" ||
+    spell.mechanics.attachment.value.selection.mode !== "one" ||
+    spell.mechanics.duration.kind !== "concentration" ||
+    spell.mechanics.operations.length !== 1
+  ) {
+    return [];
+  }
+  const operation = spell.mechanics.operations[0];
+  if (
+    operation?.trigger.kind !== "on_caster_attack_hit" ||
+    operation.effect.kind !== "damage" ||
+    operation.effect.damageType !== "force" ||
+    operation.effect.amount === undefined
+  ) {
+    return [];
+  }
+  const expr = supportedDamageAmountExpr({ amount: operation.effect.amount });
+  if (expr === null) {
+    return [];
+  }
+  const rangeFeet = movementFeet(spell.mechanics.range.feet);
+  const activeMark = activeMarkedDamageRiderEffect(actor, spell.id);
+  if (activeMark !== null) {
+    return activeMark.transferAvailable
+      ? [
+          {
+            access: { tag: "prepared" },
+            resource: { tag: "none" },
+            procedure: "markedDamageRider",
+            action: "transfer",
+            spell,
+            actionCost: "bonusAction",
+            targeting: { kind: "singleCombatant" },
+            damage: { expr, damageType: "force" },
+            rangeFeet,
+            activeEffect: activeMark,
+          },
+        ]
+      : [];
+  }
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] =>
+    Number(slot.spellLevel) < spell.mechanics.level
+      ? []
+      : [
+          {
+            access: { tag: "prepared" },
+            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+            procedure: "markedDamageRider",
+            action: "cast",
+            spell,
+            actionCost: "bonusAction",
+            targeting: { kind: "singleCombatant" },
+            damage: { expr, damageType: "force" },
+            rangeFeet,
+            expiresAt: {
+              kind: "concentration",
+              combatantId: actor.combatantId,
             },
           },
         ],
@@ -22523,6 +23084,13 @@ function spellTargetHasNonSpatialPrerequisites(
   ) {
     return false;
   }
+  if (
+    invocation.procedure === "markedDamageRider" &&
+    invocation.action === "transfer" &&
+    targetId === invocation.activeEffect.targetCombatantId
+  ) {
+    return false;
+  }
   return target !== undefined;
 }
 
@@ -22748,6 +23316,20 @@ function supportedSpellInvocationRef(
       slotLevel: riderSpell.resource.slotLevel,
       procedure: "weaponDamageRider" as const,
     })),
+    Match.when({ procedure: "markedDamageRider" }, (riderSpell) =>
+      riderSpell.action === "transfer"
+        ? spellEffectInvocationRef(
+            riderSpell.spell.id,
+            riderSpell.activeEffect.sourceCombatantId,
+            "markedDamageRiderTransfer",
+          )
+        : {
+            tag: "spellSlot" as const,
+            spellId: spellId(riderSpell.spell.id),
+            slotLevel: riderSpell.resource.slotLevel,
+            procedure: "markedDamageRider" as const,
+          },
+    ),
     Match.when({ procedure: "persistentArmorEffect" }, (persistent) => ({
       tag: "spellSlot" as const,
       spellId: spellId(persistent.spell.id),
@@ -22812,6 +23394,9 @@ function sameSpellInvocationRef(
   }
   if (left.tag === "cantrip" && right.tag === "cantrip") {
     return true;
+  }
+  if (left.tag === "spellEffect" && right.tag === "spellEffect") {
+    return left.sourceCombatantId === right.sourceCombatantId;
   }
   return left.tag === "spellSlot" && right.tag === "spellSlot"
     ? left.slotLevel === right.slotLevel
@@ -23067,8 +23652,13 @@ function spellDamageTypes(
 function spellDamageHole(
   invocation: SupportedDamageSpellInvocation,
   critical = false,
+  spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
 ): BattleSpellDamageRollHole {
-  const expr = spellDamageExpression(invocation, critical);
+  const expr = spellDamageExpression(
+    invocation,
+    critical,
+    spellMarkedDamageRiders,
+  );
   return {
     kind: "rolledDice",
     holeId: holeId(`battle:spell:damage-result:${invocation.spell.id}:${expr}`),
@@ -23078,6 +23668,9 @@ function spellDamageHole(
     label: `${invocation.spell.name} damage (${expr})`,
     spell: invocation,
     critical,
+    ...(spellMarkedDamageRiders.length === 0
+      ? {}
+      : { spellMarkedDamageRiders }),
   };
 }
 
@@ -23313,11 +23906,36 @@ function validateSpellDamageFill(
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
   invocation: SupportedDamageSpellInvocation,
   critical: boolean,
+  spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
 ): string | null {
-  if (fill.holeId !== spellDamageHole(invocation, critical).holeId) {
+  if (
+    fill.holeId !==
+    spellDamageHole(invocation, critical, spellMarkedDamageRiders).holeId
+  ) {
     return critical
       ? "Critical hit spell damage must use the critical spell damage hole."
       : "Spell damage must use the selected action-time spell act damage hole.";
+  }
+  if (spellMarkedDamageRiders.length > 0) {
+    const components = spellDamageComponents(
+      invocation,
+      critical,
+      spellMarkedDamageRiders,
+    );
+    if (fill.value.length !== components.length) {
+      return "filled spell damage groups do not match current spell damage";
+    }
+    for (const [index, component] of components.entries()) {
+      const group = fill.value[index];
+      if (group === undefined) {
+        return "filled spell damage groups do not match current spell damage";
+      }
+      const validation = validateRolledDiceForDiceExpr([group], component.expr);
+      if (validation !== null) {
+        return validation.reason;
+      }
+    }
+    return null;
   }
   const validation = validateRolledDiceForDiceExpr(fill.value, {
     dice:
@@ -23419,6 +24037,7 @@ function applySpellDamage(
   damageDisposition: BattleAttackDamageDisposition = {
     kind: "ordinaryDamage",
   },
+  spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
 ): BattleState {
   const target = state.combatants.get(targetId);
   if (target == null) {
@@ -23431,6 +24050,8 @@ function applySpellDamage(
       invocation,
       damageRoll,
       saveDamageResult,
+      spellMarkedDamageRiders,
+      critical,
     ),
     { deathFailuresAtZeroHp: critical ? 2 : 1, damageDisposition },
   );
@@ -23438,14 +24059,20 @@ function applySpellDamage(
     ...state,
     combatants: new Map(state.combatants).set(targetId, damaged),
   };
+  const afterMarkDrop = markMarkedDamageRiderTransferAvailable(
+    nextState,
+    targetId,
+    target.hp,
+    damaged.hp,
+  );
   return concentrationSavingThrow?.value.succeeded === false ||
     (target.concentration !== null && damaged.concentration === null)
     ? breakBattleConcentrationAfterDamage({
-        state: nextState,
+        state: afterMarkDrop,
         combatantId: targetId,
         priorConcentration: target.concentration,
       })
-    : nextState;
+    : afterMarkDrop;
 }
 
 function applyPreparedSlotSpellDamage(
@@ -23472,14 +24099,20 @@ function applyPreparedSlotSpellDamage(
     ...state,
     combatants: new Map(state.combatants).set(targetId, damaged),
   };
+  const afterMarkDrop = markMarkedDamageRiderTransferAvailable(
+    nextState,
+    targetId,
+    target.hp,
+    damaged.hp,
+  );
   return concentrationSavingThrow?.value.succeeded === false ||
     (target.concentration !== null && damaged.concentration === null)
     ? breakBattleConcentrationAfterDamage({
-        state: nextState,
+        state: afterMarkDrop,
         combatantId: targetId,
         priorConcentration: target.concentration,
       })
-    : nextState;
+    : afterMarkDrop;
 }
 
 function spellDamageAmountForTarget(
@@ -23487,7 +24120,31 @@ function spellDamageAmountForTarget(
   invocation: SupportedDamageSpellInvocation,
   damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
   saveDamageResult: SaveDamageResult = "full",
+  spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
+  critical = false,
 ): number {
+  if (spellMarkedDamageRiders.length > 0) {
+    const components = spellDamageComponents(
+      invocation,
+      critical,
+      spellMarkedDamageRiders,
+    );
+    const damageByType = damageRoll.value.reduce<
+      ReadonlyMap<DamageType, number>
+    >((totals, group, index) => {
+      const component = components[index];
+      if (component === undefined) {
+        return totals;
+      }
+      const diceTotal = group.results.reduce(
+        (groupTotal, dieResult) => groupTotal + Number(dieResult),
+        0,
+      );
+      const unadjusted = diceTotal + component.flat;
+      return addDamageAmountForType(totals, component.damageType, unadjusted);
+    }, new Map());
+    return damageAmountByTypeAfterTargetAdjustments(target, damageByType);
+  }
   const diceTotal = damageRoll.value.reduce(
     (total, group) =>
       total +
@@ -24130,6 +24787,51 @@ function applyHeldLightSpellEffect(
   };
 }
 
+function applyMarkedDamageRiderSpellEffect(
+  state: BattleState,
+  actorId: CombatantId,
+  targetId: CombatantId,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "markedDamageRider" }
+  >,
+): BattleState {
+  const caster = state.combatants.get(actorId);
+  if (caster === undefined) {
+    return state;
+  }
+  const existingExpiresAt =
+    invocation.action === "transfer"
+      ? invocation.activeEffect.expiresAt
+      : invocation.expiresAt;
+  const activeEffects = [
+    ...caster.activeEffects.filter(
+      (effect) =>
+        !(
+          effect.kind === "spellMarkedDamageRider" &&
+          effect.sourceSpellId === invocation.spell.id &&
+          effect.sourceCombatantId === actorId
+        ),
+    ),
+    {
+      kind: "spellMarkedDamageRider" as const,
+      sourceSpellId: invocation.spell.id,
+      sourceCombatantId: actorId,
+      targetCombatantId: targetId,
+      transferAvailable: false,
+      damage: invocation.damage,
+      expiresAt: existingExpiresAt,
+    },
+  ];
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(actorId, {
+      ...caster,
+      activeEffects,
+    }),
+  };
+}
+
 function applyScalarBuffSpellEffect(
   state: BattleState,
   actorId: CombatantId,
@@ -24294,8 +24996,22 @@ function expendSpellSlot(
 function spellDamageExpression(
   invocation: SupportedDamageSpellInvocation,
   critical = false,
+  spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
 ): string {
-  const dice =
+  return spellDamageComponents(invocation, critical, spellMarkedDamageRiders)
+    .map((component, index) => {
+      const flat = index === 0 ? component.flat : 0;
+      return `${component.expr.dice}d${component.expr.dieSize}${signedModifier(flat)}-${component.damageType}`;
+    })
+    .join("+");
+}
+
+function spellDamageComponents(
+  invocation: SupportedDamageSpellInvocation,
+  critical = false,
+  spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
+): readonly (AttackDamageComponent & { readonly flat: number })[] {
+  const baseDice =
     invocation.procedure === "repeatedDamageAllocation"
       ? invocation.damage.expr.dice * invocation.targeting.repeatedEffectCount
       : invocation.damage.expr.dice *
@@ -24305,12 +25021,26 @@ function spellDamageExpression(
         critical
           ? 2
           : 1);
-  const flat =
+  const baseFlat =
     (invocation.damage.expr.flat ?? 0) *
     (invocation.procedure === "repeatedDamageAllocation"
       ? invocation.targeting.repeatedEffectCount
       : 1);
-  return `${dice}d${invocation.damage.expr.dieSize}${signedModifier(flat)}-${invocation.damage.damageType}`;
+  return [
+    {
+      expr: { dice: baseDice, dieSize: invocation.damage.expr.dieSize },
+      damageType: invocation.damage.damageType,
+      flat: baseFlat,
+    },
+    ...spellMarkedDamageRiders.map((rider) => ({
+      expr: {
+        ...rider.damage.expr,
+        dice: critical ? rider.damage.expr.dice * 2 : rider.damage.expr.dice,
+      },
+      damageType: rider.damage.damageType,
+      flat: 0,
+    })),
+  ];
 }
 
 function spellBurstDamageExpression(
@@ -25764,6 +26494,7 @@ function attackDamageHole(
   attackRoll?: AttackRollResult,
   attackDamageRiders: readonly AttackDamageRider[] = [],
   spellWeaponDamageRiders: readonly SpellWeaponDamageRider[] = [],
+  spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
   ongoingDamageModifier = 0,
   weaponDamageDiceRollChoiceUnitIds: readonly UnitRecord["id"][] = [],
 ): BattleDamageRollHole {
@@ -25773,6 +26504,7 @@ function attackDamageHole(
     attackRoll,
     [],
     spellWeaponDamageRiders,
+    spellMarkedDamageRiders,
     ongoingDamageModifier,
   );
   const name = attackActionOptionName(attack);
@@ -25783,6 +26515,7 @@ function attackDamageHole(
       critical,
       attackRoll,
       spellWeaponDamageRiders,
+      spellMarkedDamageRiders,
       ongoingDamageModifier,
     ),
     holeInstanceKey: holeInstanceKey(
@@ -25795,6 +26528,9 @@ function attackDamageHole(
     ...(spellWeaponDamageRiders.length === 0
       ? {}
       : { spellWeaponDamageRiders }),
+    ...(spellMarkedDamageRiders.length === 0
+      ? {}
+      : { spellMarkedDamageRiders }),
     ...(weaponDamageDiceRollChoiceUnitIds.length === 0
       ? {}
       : { weaponDamageDiceRollChoiceUnitIds }),
@@ -25992,6 +26728,7 @@ function attackDamageHoleId(
   critical = false,
   attackRoll?: AttackRollResult,
   spellWeaponDamageRiders: readonly SpellWeaponDamageRider[] = [],
+  spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
   ongoingDamageModifier = 0,
 ): BattleHoleId {
   return holeId(
@@ -26001,6 +26738,7 @@ function attackDamageHoleId(
       attackRoll,
       [],
       spellWeaponDamageRiders,
+      spellMarkedDamageRiders,
       ongoingDamageModifier,
     )}`,
   );
@@ -26990,6 +27728,7 @@ function attackDamageComponents(
   attackRoll?: AttackRollResult,
   attackDamageRiders: readonly AttackDamageRider[] = [],
   spellWeaponDamageRiders: readonly SpellWeaponDamageRider[] = [],
+  spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
 ): readonly AttackDamageComponent[] {
   const riderComponents = attackDamageRiders.map((rider) => ({
     expr: {
@@ -26999,6 +27738,13 @@ function attackDamageComponents(
     damageType: rider.damage.damageType,
   }));
   const spellRiderComponents = spellWeaponDamageRiders.map((rider) => ({
+    expr: {
+      ...rider.damage.expr,
+      dice: critical ? rider.damage.expr.dice * 2 : rider.damage.expr.dice,
+    },
+    damageType: rider.damage.damageType,
+  }));
+  const markedRiderComponents = spellMarkedDamageRiders.map((rider) => ({
     expr: {
       ...rider.damage.expr,
       dice: critical ? rider.damage.expr.dice * 2 : rider.damage.expr.dice,
@@ -27062,7 +27808,12 @@ function attackDamageComponents(
     }),
     Match.exhaustive,
   );
-  return [...baseComponents, ...riderComponents, ...spellRiderComponents];
+  return [
+    ...baseComponents,
+    ...riderComponents,
+    ...spellRiderComponents,
+    ...markedRiderComponents,
+  ];
 }
 
 function weaponDamageComponent(
@@ -27088,6 +27839,7 @@ function attackPotentialDamageTypes(
   attackRoll: AttackRollResult,
   eligibleAttackDamageRiders: readonly AttackDamageRider[],
   spellWeaponDamageRiders: readonly SpellWeaponDamageRider[] = [],
+  spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
 ): readonly DamageType[] {
   return [
     ...new Set(
@@ -27097,6 +27849,7 @@ function attackPotentialDamageTypes(
         attackRoll,
         eligibleAttackDamageRiders,
         spellWeaponDamageRiders,
+        spellMarkedDamageRiders,
       ).map((component) => component.damageType),
     ),
   ];
@@ -27397,6 +28150,7 @@ function weaponAttackDamageExpression(
   attackRoll?: AttackRollResult,
   attackDamageRiders: readonly AttackDamageRider[] = [],
   spellWeaponDamageRiders: readonly SpellWeaponDamageRider[] = [],
+  spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
   ongoingDamageModifier = 0,
 ): string {
   const damage = attackDamage(attack);
@@ -27406,6 +28160,7 @@ function weaponAttackDamageExpression(
     attackRoll,
     attackDamageRiders,
     spellWeaponDamageRiders,
+    spellMarkedDamageRiders,
   );
   const modifier = signedModifier(
     attackDamageModifier(attack) + ongoingDamageModifier,

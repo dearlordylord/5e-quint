@@ -72,6 +72,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "rollModifier",
   "scalarBuff",
   "weaponDamageRider",
+  "markedDamageRider",
   "persistentArmorEffect",
   "shieldReaction",
 ] as const;
@@ -88,6 +89,12 @@ export const SpellInvocationRefSchema = Schema.Union(
     spellId: SpellId,
     slotLevel: SpellSlotLevel,
     procedure: Schema.Literal(...SPELL_SLOT_PROCEDURES),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("spellEffect"),
+    spellId: SpellId,
+    sourceCombatantId: CombatantId,
+    procedure: Schema.Literal("markedDamageRiderTransfer"),
   }),
 );
 export type SpellInvocationRef = typeof SpellInvocationRefSchema.Type;
@@ -113,6 +120,19 @@ export function spellSlotInvocationRef(
     tag: "spellSlot",
     spellId: makeSpellId(rawSpellId),
     slotLevel: spellSlotLevel(rawSlotLevel),
+    procedure,
+  };
+}
+
+export function spellEffectInvocationRef(
+  rawSpellId: string,
+  sourceCombatantId: CombatantId,
+  procedure: "markedDamageRiderTransfer",
+): SpellInvocationRef {
+  return {
+    tag: "spellEffect",
+    spellId: makeSpellId(rawSpellId),
+    sourceCombatantId,
     procedure,
   };
 }
@@ -355,9 +375,26 @@ export function sameBattleSubject(
 }
 
 function spellInvocationRefKey(ref: SpellInvocationRef): readonly unknown[] {
-  return ref.tag === "cantrip"
-    ? [ref.tag, ref.spellId, ref.procedure]
-    : [ref.tag, ref.spellId, ref.slotLevel, ref.procedure];
+  return Match.value(ref).pipe(
+    Match.when({ tag: "cantrip" }, (cantrip) => [
+      cantrip.tag,
+      cantrip.spellId,
+      cantrip.procedure,
+    ]),
+    Match.when({ tag: "spellSlot" }, (slot) => [
+      slot.tag,
+      slot.spellId,
+      slot.slotLevel,
+      slot.procedure,
+    ]),
+    Match.when({ tag: "spellEffect" }, (effect) => [
+      effect.tag,
+      effect.spellId,
+      effect.sourceCombatantId,
+      effect.procedure,
+    ]),
+    Match.exhaustive,
+  );
 }
 
 function spellSubjectModeKey(mode: SpellSubjectMode): readonly unknown[] {

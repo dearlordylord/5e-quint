@@ -43,6 +43,12 @@ module battleRuntime {
   //   self-hosted Bonus Action spell whose timed effect adds extra Radiant
   //   damage dice to the caster's weapon attacks on a hit; the rider is a
   //   mandatory weapon-hit damage-roll component while active.
+  // - Spells/Descriptions-E-L.md lines 1275-1288, Playing-the-Game.md lines
+  //   582-589 and 694-703, Rules-Glossary.md lines 138-140 and 239-247,
+  //   and UBIQUITOUS_LANGUAGE.md: Hunter's Mark is a Bonus Action
+  //   Concentration spell that marks one target, adds Force damage when the
+  //   caster hits that target with an Attack Roll, and can be moved with a
+  //   Bonus Action after the marked target drops to 0 HP.
   // - Classes/Monk.md lines 102-106, Classes/Rogue.md lines 109-111,
   //   Classes/Bard.md lines 332-334, and Playing-the-Game.md lines 326-332:
   //   Deflect Attacks, Uncanny Dodge, and Cutting Words are Reactions that
@@ -169,7 +175,7 @@ module battleRuntime {
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Bane | Bless | Guidance | DivineFavor | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Bane | Bless | Guidance | DivineFavor | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack
   type ChainedSpellAttackDamageInvocation =
     | ChromaticOrbChainedSpellAttack
@@ -188,7 +194,7 @@ module battleRuntime {
   type RollModifierSpell = BaneRollModifier | BlessRollModifier | GuidanceRollModifier
   type SpellActionCost = SpellMagicAction | SpellBonusAction
 
-  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | DivineFavorWeaponDamageRider({ durationTicks: int }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | ProduceFlameHeldLight({ durationTicks: int })
+  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | ProduceFlameHeldLight({ durationTicks: int })
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
 
   type ChainedSpellAttackDamageHole =
@@ -258,6 +264,11 @@ module battleRuntime {
   type FighterWeaponAttackDamageRoll = {
     weaponDamageRoll: int,
     divineFavorDamageRoll: int,
+    huntersMarkDamageRoll: int,
+  }
+  type FighterSpellAttackDamageRoll = {
+    spellDamageRoll: int,
+    huntersMarkDamageRoll: int,
   }
 
   type ReactionTrigger = AttackHit | AttackDamage | SpellCast | SaveFailed | AfterDamage | OpportunityAttack
@@ -625,11 +636,13 @@ module battleRuntime {
     effects
       .map(effect => match effect {
         | DivineFavorWeaponDamageRider(data) => DivineFavorWeaponDamageRider({ durationTicks: data.durationTicks - 1 })
+        | HuntersMarkDamageRider(data) => HuntersMarkDamageRider(data)
         | ProduceFlameHeldLight(data) => ProduceFlameHeldLight({ durationTicks: data.durationTicks - 1 })
         | _ => effect
       })
       .filter(effect => match effect {
         | DivineFavorWeaponDamageRider(data) => data.durationTicks > 0
+        | HuntersMarkDamageRider(_) => true
         | ProduceFlameHeldLight(data) => data.durationTicks > 0
         | _ => true
       })
@@ -701,6 +714,7 @@ module battleRuntime {
         | BlessD20RollBonus => false
         | GuidanceAbilityCheckBonus => false
         | DivineFavorWeaponDamageRider(_) => false
+        | HuntersMarkDamageRider(_) => false
         | RayOfSicknessPoisoned => false
         | ShockingGraspOpportunityAttackDenied => false
         | GuidingBoltNextAttackAdvantage => false
@@ -1079,13 +1093,28 @@ module battleRuntime {
     { ...state, fighter: { ...state.fighter, hp: hp, tempHp: tempHp } }
 
   pure def fighterWeaponAttackDamageRoll(weaponDamageRoll: int): FighterWeaponAttackDamageRoll =
-    { weaponDamageRoll: weaponDamageRoll, divineFavorDamageRoll: 0 }
+    { weaponDamageRoll: weaponDamageRoll, divineFavorDamageRoll: 0, huntersMarkDamageRoll: 0 }
 
   pure def fighterWeaponAttackDamageRollWithDivineFavor(
     weaponDamageRoll: int,
     divineFavorDamageRoll: int,
   ): FighterWeaponAttackDamageRoll =
-    { weaponDamageRoll: weaponDamageRoll, divineFavorDamageRoll: divineFavorDamageRoll }
+    { weaponDamageRoll: weaponDamageRoll, divineFavorDamageRoll: divineFavorDamageRoll, huntersMarkDamageRoll: 0 }
+
+  pure def fighterWeaponAttackDamageRollWithHuntersMark(
+    weaponDamageRoll: int,
+    huntersMarkDamageRoll: int,
+  ): FighterWeaponAttackDamageRoll =
+    { weaponDamageRoll: weaponDamageRoll, divineFavorDamageRoll: 0, huntersMarkDamageRoll: huntersMarkDamageRoll }
+
+  pure def fighterSpellAttackDamageRoll(spellDamageRoll: int): FighterSpellAttackDamageRoll =
+    { spellDamageRoll: spellDamageRoll, huntersMarkDamageRoll: 0 }
+
+  pure def fighterSpellAttackDamageRollWithHuntersMark(
+    spellDamageRoll: int,
+    huntersMarkDamageRoll: int,
+  ): FighterSpellAttackDamageRoll =
+    { spellDamageRoll: spellDamageRoll, huntersMarkDamageRoll: huntersMarkDamageRoll }
 
   pure def resolveAttack(
     state: BattleState,
@@ -1141,10 +1170,11 @@ module battleRuntime {
       val spent = spendFighterAttackActionOrExtraAttackSlot(revealed)
       val rageDamage = if (fighterHasRage(revealed)) fighterRageDamageBonus(barbarianLevel) else 0
       val divineFavorDamage = fighterDivineFavorDamage(damageRoll.divineFavorDamageRoll, revealed.fighter.activeEffects)
+      val huntersMarkDamage = fighterHuntersMarkDamage(damageRoll.huntersMarkDamageRoll, revealed.fighter.activeEffects, Goblin)
       if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), fighterCriticalThreshold(state))))
         { ...spent, lightWeaponAttackMade: true }
       else
-        { ...spent, goblin: applyDamageWithDisposition(state.goblin, damageRoll.weaponDamageRoll + 3 + rageDamage + divineFavorDamage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded, damageDisposition), lightWeaponAttackMade: true }
+        { ...spent, goblin: applyDamageWithDisposition(state.goblin, damageRoll.weaponDamageRoll + 3 + rageDamage + divineFavorDamage + huntersMarkDamage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded, damageDisposition), lightWeaponAttackMade: true }
     }
 
   pure def fighterSneakAttackEligible(
@@ -1368,6 +1398,15 @@ module battleRuntime {
     damageRoll: int,
     concentrationSaveSucceeded: bool,
   ): BattleState =
+    resolveRayOfFrostWithDamageRoll(state, attackTotal, naturalD20, fighterSpellAttackDamageRoll(damageRoll), concentrationSaveSucceeded)
+
+  pure def resolveRayOfFrostWithDamageRoll(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: FighterSpellAttackDamageRoll,
+    concentrationSaveSucceeded: bool,
+  ): BattleState =
     if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state))
       state
     else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), 20))) {
@@ -1384,7 +1423,8 @@ module battleRuntime {
     }
     else {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
-      val damaged = applyDamage(state.goblin, damageRoll, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded)
+      val huntersMarkDamage = fighterHuntersMarkDamage(damageRoll.huntersMarkDamageRoll, rolled.fighter.activeEffects, Goblin)
+      val damaged = applyDamage(state.goblin, damageRoll.spellDamageRoll + huntersMarkDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded)
       { ...rolled, goblin: { ...damaged, activeEffects: damaged.activeEffects.union(Set(RayOfFrostSpeedDelta)) }, actionAvailable: false }
     }
 
@@ -1457,7 +1497,7 @@ module battleRuntime {
     spellEffectConcentrationActiveEffects.union(Set(MageArmor))
 
   pure def breakConcentration(target: Combatant): Combatant =
-    { ...target, concentrating: false, activeEffects: target.activeEffects.exclude(breakableSelfConcentrationActiveEffects) }
+    { ...target, concentrating: false, activeEffects: activeEffectsWithoutHuntersMark(target.activeEffects.exclude(breakableSelfConcentrationActiveEffects)) }
 
   pure def stateWithFighterDamage(state: BattleState, damagedFighter: Combatant): BattleState =
     if (state.fighter.concentrating and not(damagedFighter.concentrating))
@@ -1933,6 +1973,68 @@ module battleRuntime {
   pure def fighterDivineFavorDamage(divineFavorDamageRoll: int, effects: Set[ActiveEffect]): int =
     if (activeEffectsContainDivineFavor(effects)) divineFavorDamageRoll else 0
 
+  pure def resolveHuntersMark(state: BattleState, target: Actor): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      target == Goblin and
+      state.bonusActionAvailable and
+      canExpendSpellSlotThisTurn(state) and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state))
+    )
+      {
+        ...state,
+        fighter: {
+          ...state.fighter,
+          concentrating: true,
+          activeEffects: activeEffectsWithoutHuntersMark(state.fighter.activeEffects)
+            .union(Set(HuntersMarkDamageRider({ target: target, transferAvailable: false }))),
+        },
+        bonusActionAvailable: false,
+        spellSlotExpendedThisTurn: true,
+      }
+    else
+      state
+
+  pure def transferHuntersMark(state: BattleState, target: Actor): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      target == Goblin and
+      state.bonusActionAvailable and
+      activeEffectsContainTransferableHuntersMark(state.fighter.activeEffects) and
+      state.fighter.concentrating
+    )
+      {
+        ...state,
+        fighter: {
+          ...state.fighter,
+          activeEffects: activeEffectsWithoutHuntersMark(state.fighter.activeEffects)
+            .union(Set(HuntersMarkDamageRider({ target: target, transferAvailable: false }))),
+        },
+        bonusActionAvailable: false,
+      }
+    else
+      state
+
+  pure def activeEffectsWithoutHuntersMark(effects: Set[ActiveEffect]): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | HuntersMarkDamageRider(_) => false
+      | _ => true
+    })
+
+  pure def activeEffectsContainTransferableHuntersMark(effects: Set[ActiveEffect]): bool =
+    effects.exists(effect => match effect {
+      | HuntersMarkDamageRider(data) => data.transferAvailable
+      | _ => false
+    })
+
+  pure def fighterHuntersMarkDamage(huntersMarkDamageRoll: int, effects: Set[ActiveEffect], target: Actor): int =
+    if (effects.exists(effect => match effect {
+      | HuntersMarkDamageRider(data) => data.target == target
+      | _ => false
+    })) huntersMarkDamageRoll else 0
+
   pure def rollModifierMaximumTargets(invocation: RollModifierSpell, slotLevel: int): int =
     match invocation {
       | BaneRollModifier => 3 + (if (slotLevel > 1) slotLevel - 1 else 0)
@@ -2298,6 +2400,7 @@ module battleRuntime {
       | Bless => true
       | Guidance => false
       | DivineFavor => true
+      | HuntersMark => true
       | ShockingGrasp => false
       | GuidingBolt => true
       | RayOfSickness => true
@@ -3688,8 +3791,12 @@ module battleRuntime {
       assert(saveGatedDamageType(ViciousMockerySaveGate) == Psychic),
       assert(spellInvocationSpendsLevelOneSlot(IceKnife)),
       assert(spellInvocationSpendsLevelOneSlot(DivineFavor)),
+      assert(spellInvocationSpendsLevelOneSlot(HuntersMark)),
       assert(fighterDivineFavorDamage(3, Set(DivineFavorWeaponDamageRider({ durationTicks: 1 }))) == 3),
       assert(fighterDivineFavorDamage(3, Set()) == 0),
+      assert(fighterHuntersMarkDamage(4, Set(HuntersMarkDamageRider({ target: Goblin, transferAvailable: false })), Goblin) == 4),
+      assert(fighterHuntersMarkDamage(4, Set(HuntersMarkDamageRider({ target: Fighter, transferAvailable: false })), Goblin) == 0),
+      assert(resolveRayOfFrostWithDamageRoll({ ...initialState, fighter: { ...initialState.fighter, activeEffects: Set(HuntersMarkDamageRider({ target: Goblin, transferAvailable: false })) }, goblin: { ...initialState.goblin, reactionAvailable: false } }, 15, 10, fighterSpellAttackDamageRollWithHuntersMark(4, 6), true).goblin.hp == 0),
       assert(attackBurstSaveDamageSpendsLevelOneSlot(IceKnifeAttackBurstSaveDamage)),
       assert(attackBurstSaveDamageAttackType(IceKnifeAttackBurstSaveDamage) == Piercing),
       assert(attackBurstSaveDamageBurstType(IceKnifeAttackBurstSaveDamage) == Cold),

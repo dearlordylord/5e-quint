@@ -54,6 +54,8 @@ import {
   type CombatantId,
   type BattleCreatureInit,
   type BattleUnitRef,
+  type ActiveOngoingFeatureOccurrence,
+  type OngoingFeatureSourceKey,
 } from "./index.ts";
 import {
   abilityModifier,
@@ -100,6 +102,7 @@ import viciousMockeryInput from "../../surface/content/vicious_mockery.json";
 import burningHandsInput from "../../surface/content/burning_hands.json";
 import colorSprayInput from "../../surface/content/color_spray.json";
 import iceKnifeInput from "../../surface/content/ice_knife.json";
+import huntersMarkInput from "../../surface/content/hunters_mark.json";
 import healingWordInput from "../../surface/content/healing_word.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type {
@@ -227,6 +230,7 @@ const testSpellRecords = new Map(
     burningHandsInput,
     colorSprayInput,
     iceKnifeInput,
+    huntersMarkInput,
     healingWordInput,
   ]
     .map((input) => decodeUnitRecordSync(input))
@@ -16064,6 +16068,495 @@ describe("battle runtime", () => {
     });
   });
 
+  test("Hunter's Mark adds Force damage to attack-roll hits against the mark and transfers after the mark drops", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-hunters-mark"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [
+            { className: "barbarian", level: 1 },
+            { className: "fighter", level: 1 },
+          ],
+          resources: [rageResource()],
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [
+              spellRecord("hunters_mark"),
+              spellRecord("magic_missile"),
+            ],
+          }),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+        skeletonCreatureInit({ initiative: 5 }),
+      ],
+    });
+    const markAct = discoverBattleActs(state).find(
+      (candidate) =>
+        candidate.subject.tag === "bonusActionSpell" &&
+        candidate.subject.invocation.spellId === "hunters_mark",
+    );
+    if (markAct === undefined) {
+      throw new Error("Expected Hunter's Mark Bonus Action spell act.");
+    }
+    const markTarget = findHole(markAct.initialHoles, "targetChoice");
+    const marked = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: markAct.subject,
+        fills: [
+          targetFill(markTarget, goblinId, [
+            {
+              kind: "spellTarget",
+              casterId: fighterId,
+              targetId: goblinId,
+              spellId: "hunters_mark",
+            },
+          ]),
+        ],
+      }),
+    );
+
+    expect(marked.state.combatants.get(fighterId)?.concentration).toEqual({
+      sourceSpellId: "hunters_mark",
+      effectKind: "spellEffect",
+    });
+    expect(marked.state.combatants.get(fighterId)?.activeEffects).toEqual([
+      expect.objectContaining({
+        kind: "spellMarkedDamageRider",
+        targetCombatantId: goblinId,
+        transferAvailable: false,
+      }),
+    ]);
+
+    const magicMissileReady = requireResolved(
+      endTurn({ state: marked.state, actorId: fighterId }),
+    ).state;
+    const magicMissileAfterGoblin = requireResolved(
+      endTurn({ state: magicMissileReady, actorId: goblinId }),
+    ).state;
+    const magicMissileTurn = requireResolved(
+      endTurn({ state: magicMissileAfterGoblin, actorId: skeletonId }),
+    ).state;
+    const magicMissileSubject = {
+      tag: "actionSpell" as const,
+      actorId: fighterId,
+      invocation: spellSlotInvocationRef(
+        "magic_missile",
+        1,
+        "repeatedDamageAllocation",
+      ),
+      mode: { tag: "cast" as const },
+    };
+    const magicMissileTargetAllocation = requireHole(
+      resolveBattleSubject({
+        state: magicMissileTurn,
+        subject: magicMissileSubject,
+        fills: [],
+      }),
+      "spellTargetAllocation",
+    );
+    const magicMissileAllocationFill: BattleFill = {
+      kind: "spellTargetAllocation",
+      holeId: magicMissileTargetAllocation.holeId,
+      value: { allocations: [{ targetId: goblinId, count: 3 }] },
+      spatialFacts: [
+        {
+          kind: "spellTarget",
+          casterId: fighterId,
+          targetId: goblinId,
+          spellId: "magic_missile",
+        },
+      ],
+    };
+    const magicMissileDamage = requireHole(
+      resolveBattleSubject({
+        state: magicMissileTurn,
+        subject: magicMissileSubject,
+        fills: [magicMissileAllocationFill],
+      }),
+      "rolledDice",
+    );
+    const magicMissileDropped = requireResolved(
+      resolveBattleSubject({
+        state: magicMissileTurn,
+        subject: magicMissileSubject,
+        fills: [
+          magicMissileAllocationFill,
+          damageRollFillWithGroups(magicMissileDamage, [[3, 3, 3]]),
+        ],
+      }),
+    );
+    expect(magicMissileDropped.state.combatants.get(goblinId)?.hp).toBe(0);
+    expect(
+      magicMissileDropped.state.combatants.get(fighterId)?.activeEffects,
+    ).toEqual([
+      expect.objectContaining({
+        kind: "spellMarkedDamageRider",
+        targetCombatantId: goblinId,
+        transferAvailable: true,
+      }),
+    ]);
+
+    const spellSubject = {
+      tag: "actionSpell" as const,
+      actorId: fighterId,
+      invocation: cantripSpellInvocationRef(
+        "ray_of_frost",
+        "spellAttackDamage",
+      ),
+      mode: { tag: "cast" as const },
+    };
+    const spellAct = findAct(marked.state, spellSubject);
+    const spellTarget = findHole(spellAct.initialHoles, "targetChoice");
+    const spellAttack = requireHole(
+      resolveBattleSubject({
+        state: marked.state,
+        subject: spellSubject,
+        fills: [
+          targetFill(spellTarget, goblinId, [
+            {
+              kind: "spellTarget",
+              casterId: fighterId,
+              targetId: goblinId,
+              spellId: "ray_of_frost",
+            },
+          ]),
+        ],
+      }),
+      "attackRoll",
+    );
+    const spellDamage = requireHole(
+      resolveBattleSubject({
+        state: marked.state,
+        subject: spellSubject,
+        fills: [
+          targetFill(spellTarget, goblinId, [
+            {
+              kind: "spellTarget",
+              casterId: fighterId,
+              targetId: goblinId,
+              spellId: "ray_of_frost",
+            },
+          ]),
+          attackRollFill(spellAttack, { total: 15, naturalD20: 10 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    expect(spellDamage).toMatchObject({
+      label: "Ray of Frost damage (1d8-cold+1d6-force)",
+      spellMarkedDamageRiders: [
+        expect.objectContaining({ targetCombatantId: goblinId }),
+      ],
+    });
+
+    const target = attackInitialTargetHole(marked.state);
+    const roll = attackRollHoleAfterTarget(
+      marked.state,
+      target,
+      undefined,
+      goblinId,
+    );
+    const damage = attackDamageHoleAfterHit(
+      marked.state,
+      target,
+      roll,
+      { total: 15, naturalD20: 10 },
+      undefined,
+      goblinId,
+    );
+
+    expect(damage).toMatchObject({
+      label: "Longsword damage (1d8+1d6+3-slashing)",
+      spellMarkedDamageRiders: [
+        expect.objectContaining({ targetCombatantId: goblinId }),
+      ],
+    });
+
+    const nicked = requireResolved(
+      resolveBattleSubject({
+        state: marked.state,
+        subject: fighterAttackSubject(),
+        fills: [
+          targetFill(target, goblinId),
+          attackRollFill(roll, { total: 15, naturalD20: 10 }),
+          damageRollFillWithGroups(damage, [[1], [1]]),
+        ],
+      }),
+    );
+    expect(nicked.state.combatants.get(goblinId)?.hp).toBe(Hp(5));
+
+    const attackFills = [
+      targetFill(target, goblinId),
+      attackRollFill(roll, { total: 15, naturalD20: 10 }),
+      damageRollFillWithGroups(damage, [[4], [6]]),
+    ];
+    const disposition = requireHole(
+      resolveBattleSubject({
+        state: marked.state,
+        subject: fighterAttackSubject(),
+        fills: attackFills,
+      }),
+      "attackDamageDisposition",
+    );
+    const dropped = requireResolved(
+      resolveBattleSubject({
+        state: marked.state,
+        subject: fighterAttackSubject(),
+        fills: [
+          ...attackFills,
+          attackDamageDispositionFill(disposition, { kind: "ordinaryDamage" }),
+        ],
+      }),
+    );
+    expect(dropped.state.combatants.get(goblinId)?.hp).toBe(0);
+    expect(dropped.state.combatants.get(fighterId)?.activeEffects).toEqual([
+      expect.objectContaining({
+        kind: "spellMarkedDamageRider",
+        targetCombatantId: goblinId,
+        transferAvailable: true,
+      }),
+    ]);
+
+    const afterFighterTurn = requireResolved(
+      endTurn({ state: dropped.state, actorId: fighterId }),
+    ).state;
+    const afterGoblinTurn = requireResolved(
+      endTurn({ state: afterFighterTurn, actorId: goblinId }),
+    ).state;
+    const nextFighterTurn = requireResolved(
+      endTurn({ state: afterGoblinTurn, actorId: skeletonId }),
+    ).state;
+    const transferAct = discoverBattleActs(nextFighterTurn).find(
+      (candidate) =>
+        candidate.subject.tag === "bonusActionSpell" &&
+        candidate.subject.invocation.tag === "spellEffect" &&
+        candidate.subject.invocation.spellId === "hunters_mark",
+    );
+    if (transferAct === undefined) {
+      throw new Error("Expected Hunter's Mark transfer act.");
+    }
+    const transferTarget = findHole(transferAct.initialHoles, "targetChoice");
+    if (transferTarget.kind !== "targetChoice") {
+      throw new Error("Expected Hunter's Mark target choice.");
+    }
+    expect(transferTarget.choices).not.toContain(goblinId);
+    expect(
+      resolveBattleSubject({
+        state: nextFighterTurn,
+        subject: transferAct.subject,
+        fills: [
+          targetFill(transferTarget, goblinId, [
+            {
+              kind: "spellTarget",
+              casterId: fighterId,
+              targetId: goblinId,
+              spellId: "hunters_mark",
+            },
+          ]),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+
+    const restrictedActor = nextFighterTurn.combatants.get(fighterId);
+    if (restrictedActor === undefined) {
+      throw new Error("Expected Hunter's Mark caster.");
+    }
+    const spellcastingRestrictedOccurrence: ActiveOngoingFeatureOccurrence = {
+      kind: "fixedDuration",
+      expiresAt: {
+        kind: "endOfTurn",
+        combatantId: fighterId,
+        round: nextFighterTurn.initiative.round,
+      },
+    };
+    const restrictedHiddenTransferState: BattleState = {
+      ...nextFighterTurn,
+      combatants: new Map(nextFighterTurn.combatants).set(fighterId, {
+        ...restrictedActor,
+        hidden: { discoveryDc: difficultyClass(17) },
+        activeOngoingFeatureOccurrences: new Map([
+          ...restrictedActor.activeOngoingFeatureOccurrences,
+          [
+            "barbarian_rage" as OngoingFeatureSourceKey,
+            spellcastingRestrictedOccurrence,
+          ],
+        ]),
+      }),
+    };
+    const restrictedTransferAct = discoverBattleActs(
+      restrictedHiddenTransferState,
+    ).find(
+      (candidate) =>
+        candidate.subject.tag === "bonusActionSpell" &&
+        candidate.subject.invocation.tag === "spellEffect" &&
+        candidate.subject.invocation.spellId === "hunters_mark",
+    );
+    if (restrictedTransferAct === undefined) {
+      throw new Error(
+        "Expected Hunter's Mark transfer act through spellcasting restriction.",
+      );
+    }
+    const restrictedTransferTarget = findHole(
+      restrictedTransferAct.initialHoles,
+      "targetChoice",
+    );
+    const restrictedTransferred = requireResolved(
+      resolveBattleSubject({
+        state: restrictedHiddenTransferState,
+        subject: restrictedTransferAct.subject,
+        fills: [
+          targetFill(restrictedTransferTarget, skeletonId, [
+            {
+              kind: "spellTarget",
+              casterId: fighterId,
+              targetId: skeletonId,
+              spellId: "hunters_mark",
+            },
+          ]),
+        ],
+      }),
+    );
+    expect(
+      restrictedTransferred.state.combatants.get(fighterId)?.hidden,
+    ).toEqual({ discoveryDc: difficultyClass(17) });
+
+    const transferred = requireResolved(
+      resolveBattleSubject({
+        state: nextFighterTurn,
+        subject: transferAct.subject,
+        fills: [
+          targetFill(transferTarget, skeletonId, [
+            {
+              kind: "spellTarget",
+              casterId: fighterId,
+              targetId: skeletonId,
+              spellId: "hunters_mark",
+            },
+          ]),
+        ],
+      }),
+    );
+
+    expect(transferred.state.combatants.get(fighterId)?.concentration).toEqual({
+      sourceSpellId: "hunters_mark",
+      effectKind: "spellEffect",
+    });
+    expect(transferred.state.combatants.get(fighterId)?.activeEffects).toEqual([
+      expect.objectContaining({
+        kind: "spellMarkedDamageRider",
+        targetCombatantId: skeletonId,
+        transferAvailable: false,
+      }),
+    ]);
+  });
+
+  test("breaking Hunter's Mark concentration clears the marked target rider", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-hunters-mark-concentration"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("hunters_mark")],
+          }),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const markAct = discoverBattleActs(state).find(
+      (candidate) =>
+        candidate.subject.tag === "bonusActionSpell" &&
+        candidate.subject.invocation.spellId === "hunters_mark",
+    );
+    if (markAct === undefined) {
+      throw new Error("Expected Hunter's Mark Bonus Action spell act.");
+    }
+    const markTarget = findHole(markAct.initialHoles, "targetChoice");
+    const marked = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: markAct.subject,
+        fills: [
+          targetFill(markTarget, goblinId, [
+            {
+              kind: "spellTarget",
+              casterId: fighterId,
+              targetId: goblinId,
+              spellId: "hunters_mark",
+            },
+          ]),
+        ],
+      }),
+    );
+
+    const broken = breakBattleConcentration(marked.state, fighterId);
+
+    expect(broken.combatants.get(fighterId)?.concentration).toBeNull();
+    expect(broken.combatants.get(fighterId)?.activeEffects).toEqual([]);
+  });
+
+  test("Hunter's Mark invocation holes reject contradictory cast and transfer shapes", () => {
+    const spell = spellRecord("hunters_mark");
+    const baseSpell = {
+      access: { tag: "prepared" },
+      procedure: "markedDamageRider",
+      spell,
+      actionCost: "bonusAction",
+      targeting: { kind: "singleCombatant" },
+      damage: { expr: { dice: 1, dieSize: 6 }, damageType: "force" },
+      rangeFeet: movementFeet(90),
+    };
+    const baseHole = {
+      kind: "rolledDice",
+      holeId: holeId("battle:test:invalid-hunters-mark-invocation"),
+      holeInstanceKey: holeInstanceKey(
+        "battle:test:invalid-hunters-mark-invocation",
+      ),
+      label: "Invalid Hunter's Mark invocation",
+      critical: false,
+      spellMarkedDamageRiders: [],
+    };
+
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleHoleSchema)({
+          ...baseHole,
+          spell: {
+            ...baseSpell,
+            action: "cast",
+            resource: { tag: "none" },
+            expiresAt: { kind: "concentration" },
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleHoleSchema)({
+          ...baseHole,
+          spell: {
+            ...baseSpell,
+            action: "transfer",
+            resource: { tag: "spellSlot", slotLevel: 1 },
+            activeEffect: {
+              kind: "spellMarkedDamageRider",
+              sourceCombatantId: fighterId,
+              sourceSpellId: "hunters_mark",
+              targetCombatantId: goblinId,
+              transferAvailable: true,
+              damage: { expr: { dice: 1, dieSize: 6 }, damageType: "force" },
+              expiresAt: { kind: "concentration" },
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+  });
+
   test("endTurn advances to a new round after the last actor acts", () => {
     const afterFighter = endTurn({
       state: fighterVsGoblinBattle(),
@@ -18717,6 +19210,7 @@ function spellRecord(
     | "color_spray"
     | "ice_knife"
     | "entangle"
+    | "hunters_mark"
     | "healing_word",
 ) {
   const unit =
