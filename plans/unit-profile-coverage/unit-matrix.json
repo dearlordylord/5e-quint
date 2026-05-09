@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 348,
-      "numerator": 85,
-      "percent": "24.4%"
+      "numerator": 87,
+      "percent": "25%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 415,
-      "numerator": 109,
-      "percent": "26.3%"
+      "numerator": 111,
+      "percent": "26.7%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,47 +59,47 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 110
+      "value": 112
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 55,
-      "numerator": 51,
-      "percent": "92.7%"
+      "denominator": 57,
+      "numerator": 53,
+      "percent": "93%"
     },
     "profileClassificationCoverage": {
-      "denominator": 110,
-      "numerator": 110,
+      "denominator": 112,
+      "numerator": 112,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 29,
-      "numerator": 29,
+      "denominator": 31,
+      "numerator": 31,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 29,
-      "numerator": 28,
-      "percent": "96.6%"
+      "denominator": 31,
+      "numerator": 30,
+      "percent": "96.8%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 29,
-      "numerator": 29,
+      "denominator": 31,
+      "numerator": 31,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 29,
-      "numerator": 29,
+      "denominator": 31,
+      "numerator": 31,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 55,
+      "denominator": 57,
       "numerator": 10,
-      "percent": "18.2%"
+      "percent": "17.5%"
     },
     "supportedProfileCoverage": {
-      "denominator": 86,
-      "numerator": 55,
-      "percent": "64%"
+      "denominator": 88,
+      "numerator": 57,
+      "percent": "64.8%"
     }
   },
   "metricSemantics": [
@@ -859,6 +859,62 @@
       ]
     },
     {
+      "id": "spell.invocation-weapon-damage-rider",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "SRDINV31A"
+      ],
+      "title": "Spell invocation creates a self-hosted weapon-hit damage rider",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/index.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-marked-damage-rider",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "SRDINV31B"
+      ],
+      "title": "Spell invocation creates a marked-target damage rider with transfer after the mark drops to 0 Hit Points",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/index.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.hit-point-restoration",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -1388,6 +1444,38 @@
         "spell.invocation-roll-modifier"
       ],
       "taskId": "SRDINV30B"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Divine Favor's self-hosted weapon-hit Radiant damage rider.",
+      "profileIds": [
+        "spell.invocation-weapon-damage-rider"
+      ],
+      "taskId": "SRDINV31A"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests for Divine Favor's self-hosted weapon-hit Radiant damage rider.",
+      "profileIds": [
+        "spell.invocation-weapon-damage-rider"
+      ],
+      "taskId": "SRDINV31A"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Hunter's Mark target marking, mark-scoped Force damage, and transfer after the marked target drops to 0 Hit Points.",
+      "profileIds": [
+        "spell.invocation-marked-damage-rider"
+      ],
+      "taskId": "SRDINV31B"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests for Hunter's Mark target marking, mark-scoped Force damage, and Bonus Action transfer.",
+      "profileIds": [
+        "spell.invocation-marked-damage-rider"
+      ],
+      "taskId": "SRDINV31B"
     },
     {
       "claimKind": "qnt-proof",
@@ -4179,6 +4267,64 @@
       },
       "claim": {
         "profileIds": [
+          "spell.invocation-weapon-damage-rider"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV31A"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-weapon-damage-rider",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV31A"
+          ],
+          "title": "Spell invocation creates a self-hosted weapon-hit damage rider",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/divine_favor.json",
+      "unitId": "divine_favor"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
           "spell.invocation-condition-save"
         ],
         "rawRequirementIds": [
@@ -4436,6 +4582,64 @@
       ],
       "sourceRecordPath": "packages/surface/content/guiding_bolt.json",
       "unitId": "guiding_bolt"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "spell.invocation-marked-damage-rider"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV31B"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-marked-damage-rider",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV31B"
+          ],
+          "title": "Spell invocation creates a marked-target damage rider with transfer after the mark drops to 0 Hit Points",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/hunters_mark.json",
+      "unitId": "hunters_mark"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -7218,24 +7422,6 @@
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [],
-      "sourceRecordPath": "packages/surface/content/divine_favor.json",
-      "unitId": "divine_favor"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
       "sourceRecordPath": "packages/surface/content/divine_smite.json",
       "unitId": "divine_smite"
     },
@@ -7891,24 +8077,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/holy_aura.json",
       "unitId": "holy_aura"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/hunters_mark.json",
-      "unitId": "hunters_mark"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

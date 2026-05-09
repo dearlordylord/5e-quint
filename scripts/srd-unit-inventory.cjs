@@ -196,10 +196,8 @@ const spellUnitExecutableFollowUpBatches = [
     nextAction:
       "Admit these authored Spell Definitions after adding spell-hosted weapon attack riders, immediate hit-trigger Bonus Action casts, retargetable marks, ongoing start-turn damage, and spellcasting-ability weapon substitution.",
     unitIds: [
-      "divine_favor",
       "divine_smite",
       "ensnaring_strike",
-      "hunters_mark",
       "searing_smite",
       "true_strike",
     ],
