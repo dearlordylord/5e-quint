@@ -71,6 +71,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "directHitPointRestoration",
   "rollModifier",
   "scalarBuff",
+  "weaponDamageRider",
   "persistentArmorEffect",
   "shieldReaction",
 ] as const;

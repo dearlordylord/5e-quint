@@ -11,6 +11,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29F3 chromatic_orb
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30A false_life longstrider shield_of_faith
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30B bane bless guidance
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31A divine_favor
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV32B produce_flame
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT25 healing_word
@@ -146,6 +147,8 @@ const iceKnifeUnitId = "ice_knife";
 const sleepUnitId = "sleep";
 const monkDeflectAttacksUnitId = "monk_deflect_attacks";
 const defenseUnitId = "defense";
+const divineFavorUnitId = "divine_favor";
+const divineFavorDurationTicks = elapsedTimeTicks(10);
 const myceliumStepUnitId = "mycelium_step";
 const archeryUnitId = "feat_archery";
 const boonOfCombatProwessUnitId = "feat_boon_of_combat_prowess";
@@ -3935,6 +3938,310 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
   });
 });
 
+describe("SRDINV31A deterministic weapon damage rider Spell Unit admission", () => {
+  test("divine_favor is admitted as a Bonus Action self weapon-hit Radiant damage rider", () => {
+    const spell = spellRecord(divineFavorUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      attack: zeroAbilityWeaponAttack("weapon_longsword"),
+    });
+    const act = bonusSpellAct({ state, spellId: divineFavorUnitId });
+
+    expect(act.subject).toEqual({
+      tag: "bonusActionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(
+        divineFavorUnitId,
+        1,
+        "weaponDamageRider",
+      ),
+      mode: { tag: "cast" },
+    });
+    expect(act.initialHoles).toEqual([]);
+
+    const cast = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [],
+    });
+
+    expect(cast).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        turn: { bonusActionAvailable: false, spellSlotExpendedThisTurn: true },
+      },
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Divine Favor to resolve.");
+    }
+    expect(
+      cast.state.combatants.get(spellCasterId)?.activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "spellWeaponDamageRider",
+        sourceSpellId: divineFavorUnitId,
+        damage: {
+          expr: { dice: 1, dieSize: 4 },
+          damageType: "radiant",
+        },
+        expiresAt: {
+          kind: "duration",
+          durationTicks: divineFavorDurationTicks,
+        },
+      }),
+    );
+  });
+
+  test("divine_favor adds Radiant dice to caster weapon hits only", () => {
+    const divineFavor = spellRecord(divineFavorUnitId);
+    const rayOfFrost = spellRecord(rayOfFrostUnitId);
+    const state = spellBattle({
+      preparedSpells: [divineFavor],
+      cantrips: [rayOfFrost],
+      attack: zeroAbilityWeaponAttack("weapon_longsword"),
+    });
+    const cast = resolveBattleSubject({
+      state,
+      subject: bonusSpellAct({ state, spellId: divineFavorUnitId }).subject,
+      fills: [],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Divine Favor to resolve.");
+    }
+
+    const subject = weaponAttackSubject("Longsword");
+    const target = requireResultHole(
+      resolveBattleSubject({ state: cast.state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const targetFill = attackTargetFill(
+      target,
+      spellCasterId,
+      spellTargetId,
+      "Longsword",
+    );
+    const roll = requireResultHole(
+      resolveBattleSubject({
+        state: cast.state,
+        subject,
+        fills: [targetFill],
+      }),
+      "attackRoll",
+    );
+    const rollFill = attackRollFill(roll, { total: 15, naturalD20: 10 });
+    const weaponDamage = requireResultHole(
+      resolveBattleSubject({
+        state: cast.state,
+        subject,
+        fills: [targetFill, rollFill],
+      }),
+      "rolledDice",
+    );
+    expect(weaponDamage).toEqual(
+      expect.objectContaining({
+        spellWeaponDamageRiders: [
+          expect.objectContaining({ sourceSpellId: divineFavorUnitId }),
+        ],
+      }),
+    );
+
+    const weaponResolved = resolveBattleSubject({
+      state: cast.state,
+      subject,
+      fills: [
+        targetFill,
+        rollFill,
+        damageRollFillWithGroups(weaponDamage, [[4], [3]]),
+      ],
+    });
+
+    expect(weaponResolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.anything(),
+          expect.objectContaining({ combatantId: spellTargetId, hp: 5 }),
+        ],
+      },
+    });
+
+    const spellAttack = spellAct({
+      state: cast.state,
+      spellId: rayOfFrostUnitId,
+    });
+    const spellTarget = requireHole(spellAttack.initialHoles, "targetChoice");
+    const spellTargetFillValue = spellTargetFill(
+      spellTarget,
+      rayOfFrostUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+    const spellRoll = requireResultHole(
+      resolveBattleSubject({
+        state: cast.state,
+        subject: spellAttack.subject,
+        fills: [spellTargetFillValue],
+      }),
+      "attackRoll",
+    );
+    const spellDamage = requireResultHole(
+      resolveBattleSubject({
+        state: cast.state,
+        subject: spellAttack.subject,
+        fills: [
+          spellTargetFillValue,
+          attackRollFill(spellRoll, { total: 15, naturalD20: 10 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    expect(spellDamage).not.toHaveProperty("spellWeaponDamageRiders");
+    expect(
+      resolveBattleSubject({
+        state: cast.state,
+        subject: spellAttack.subject,
+        fills: [
+          spellTargetFillValue,
+          attackRollFill(spellRoll, { total: 15, naturalD20: 10 }),
+          damageRollFillWithGroups(spellDamage, [[4]]),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.anything(),
+          expect.objectContaining({ combatantId: spellTargetId, hp: 8 }),
+        ],
+      },
+    });
+  });
+
+  test("divine_favor weapon damage rider expires on its timed duration", () => {
+    const divineFavor = spellRecord(divineFavorUnitId);
+    const state = spellBattle({
+      preparedSpells: [divineFavor],
+      attack: zeroAbilityWeaponAttack("weapon_longsword"),
+    });
+    const cast = resolveBattleSubject({
+      state,
+      subject: bonusSpellAct({ state, spellId: divineFavorUnitId }).subject,
+      fills: [],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Divine Favor to resolve.");
+    }
+    const caster = cast.state.combatants.get(spellCasterId);
+    if (caster === undefined) {
+      throw new Error("Expected Divine Favor caster.");
+    }
+    const expiringCaster = {
+      ...caster,
+      activeEffects: caster.activeEffects.map((effect) =>
+        effect.kind === "spellWeaponDamageRider" &&
+        effect.sourceSpellId === divineFavorUnitId
+          ? {
+              ...effect,
+              expiresAt: {
+                kind: "duration" as const,
+                durationTicks: elapsedTimeTicks(1),
+              },
+            }
+          : effect,
+      ),
+    };
+    const oneRoundRemaining = {
+      ...cast.state,
+      combatants: new Map(cast.state.combatants).set(
+        spellCasterId,
+        expiringCaster,
+      ),
+    };
+    const targetTurn = resolveBattleSubject({
+      state: oneRoundRemaining,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellCasterId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected Divine Favor caster end turn to resolve.");
+    }
+    const nextRound = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellTargetId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+    if (nextRound.tag !== "resolved") {
+      throw new Error("Expected Divine Favor duration tick to resolve.");
+    }
+    expect(
+      nextRound.state.combatants
+        .get(spellCasterId)
+        ?.activeEffects.some(
+          (effect) =>
+            effect.kind === "spellWeaponDamageRider" &&
+            effect.sourceSpellId === divineFavorUnitId,
+        ),
+    ).toBe(false);
+
+    const subject = weaponAttackSubject("Longsword");
+    const target = requireResultHole(
+      resolveBattleSubject({ state: nextRound.state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const targetFill = attackTargetFill(
+      target,
+      spellCasterId,
+      spellTargetId,
+      "Longsword",
+    );
+    const roll = requireResultHole(
+      resolveBattleSubject({
+        state: nextRound.state,
+        subject,
+        fills: [targetFill],
+      }),
+      "attackRoll",
+    );
+    const rollFill = attackRollFill(roll, { total: 15, naturalD20: 10 });
+    const weaponDamage = requireResultHole(
+      resolveBattleSubject({
+        state: nextRound.state,
+        subject,
+        fills: [targetFill, rollFill],
+      }),
+      "rolledDice",
+    );
+    expect(weaponDamage).not.toHaveProperty("spellWeaponDamageRiders");
+    expect(
+      resolveBattleSubject({
+        state: nextRound.state,
+        subject,
+        fills: [
+          targetFill,
+          rollFill,
+          damageRollFillWithGroups(weaponDamage, [[4]]),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.anything(),
+          expect.objectContaining({ combatantId: spellTargetId, hp: 8 }),
+        ],
+      },
+    });
+  });
+});
+
 describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
   test("bless is admitted as a concentration d4 bonus with slot-scaled targets", () => {
     const spell = spellRecord(blessUnitId);
@@ -5730,6 +6037,10 @@ function spellRecord(unitId: string): SpellRecord {
 function spellBattle(input: {
   readonly cantrips?: readonly SpellRecord[];
   readonly preparedSpells?: readonly SpellRecord[];
+  readonly attack?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["attack"];
   readonly spellSlots?: readonly {
     readonly spellLevel: 1 | 2 | 3 | 5 | 6;
     readonly count: number;
@@ -5766,6 +6077,7 @@ function spellBattle(input: {
           preparedSpells: input.preparedSpells ?? [],
           spellSlots: input.spellSlots ?? [{ spellLevel: 1, count: 2 }],
         },
+        ...(input.attack === undefined ? {} : { attack: input.attack }),
         ...(input.casterClassLevels === undefined
           ? {}
           : { classLevels: input.casterClassLevels }),

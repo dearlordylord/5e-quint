@@ -32,6 +32,7 @@ import chromaticOrbInput from "../../content/chromatic_orb.json";
 import clericDivineOrderInput from "../../content/cleric_divine_order.json";
 import colorSprayInput from "../../content/color_spray.json";
 import cureWoundsInput from "../../content/cure_wounds.json";
+import divineFavorInput from "../../content/divine_favor.json";
 import druidDruidicInput from "../../content/druid_druidic.json";
 import druidPrimalOrderInput from "../../content/druid_primal_order.json";
 import eldritchBlastInput from "../../content/eldritch_blast.json";
@@ -286,6 +287,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     chromaticOrbInput,
     colorSprayInput,
     cureWoundsInput,
+    divineFavorInput,
     entangleInput,
     falseLifeInput,
     fireBoltInput,

@@ -388,7 +388,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 215,
       "id": "SRDINV31A",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Divine Favor Weapon Rider Runtime"
     },
     {
@@ -555,7 +555,7 @@ Keep it synchronized with the DAG table and task details.
 | 212   | SRDINV30D - Promote Heroism Turn-Start Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Heroism](/workspace/typescript/dnd/packages/surface/content/heroism.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote Heroism's Frightened immunity plus target-turn-start Temporary Hit Points. |
 | 213   | SRDINV30E - Promote Faerie Fire Area Reveal Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Faerie Fire](/workspace/typescript/dnd/packages/surface/content/faerie_fire.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote Faerie Fire area save-gated attack Advantage and any executable reveal/invisibility subset. |
 | 214   | SRDINV30F - Promote Resistance Damage Reduction Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Resistance](/workspace/typescript/dnd/packages/surface/content/resistance.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote Resistance chosen damage type reduction with once-per-turn semantics. |
-| 215   | SRDINV31A - Promote Divine Favor Weapon Rider Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Divine Favor](/workspace/typescript/dnd/packages/surface/content/divine_favor.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote self-hosted extra Radiant damage on caster weapon hits. |
+| 215   | SRDINV31A - Promote Divine Favor Weapon Rider Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Divine Favor](/workspace/typescript/dnd/packages/surface/content/divine_favor.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promoted Divine Favor as a self-hosted timed Radiant damage rider on caster weapon hits. |
 | 216   | SRDINV31B - Promote Hunter's Mark Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Hunter's Mark](/workspace/typescript/dnd/packages/surface/content/hunters_mark.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote marked-target damage plus zero-HP Bonus Action retargeting. |
 | 217   | SRDINV31C - Promote Divine Smite After-Hit Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Divine Smite](/workspace/typescript/dnd/packages/surface/content/divine_smite.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote immediate after-hit Bonus Action smite damage without replaying the base attack. |
 | 218   | SRDINV31D - Promote Ensnaring Strike Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Ensnaring Strike](/workspace/typescript/dnd/packages/surface/content/ensnaring_strike.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote after-hit save-gated Restrained, start-turn damage, and escape lifecycle. |
@@ -2652,13 +2652,13 @@ semantics. Do not claim support if the per-turn usage cap is not executable.
 
 ### Task 215 - SRDINV31A - Promote Divine Favor Weapon Rider Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV28A-SRDINV28E
 
 Blocks: SRDINV33
 
-Scope: promote Divine Favor as self-hosted extra Radiant damage on caster
+Scope: promoted Divine Favor as self-hosted extra Radiant damage on caster
 weapon hits for the timed duration.
 
 ### Task 216 - SRDINV31B - Promote Hunter's Mark Runtime

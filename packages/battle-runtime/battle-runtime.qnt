@@ -38,6 +38,11 @@ module battleRuntime {
   //   Sneak Attack is an optional once-per-turn on-hit damage rider for an
   //   eligible Finesse/Ranged attack, and its extra damage dice are doubled on
   //   Critical Hits.
+  // - Spells/Descriptions-A-D.md lines 1588-1597, Playing-the-Game.md lines
+  //   694-703, and Rules-Glossary.md lines 297-325: Divine Favor is a
+  //   self-hosted Bonus Action spell whose timed effect adds extra Radiant
+  //   damage dice to the caster's weapon attacks on a hit; the rider is a
+  //   mandatory weapon-hit damage-roll component while active.
   // - Classes/Monk.md lines 102-106, Classes/Rogue.md lines 109-111,
   //   Classes/Bard.md lines 332-334, and Playing-the-Game.md lines 326-332:
   //   Deflect Attacks, Uncanny Dodge, and Cutting Words are Reactions that
@@ -164,7 +169,7 @@ module battleRuntime {
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Bane | Bless | Guidance | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Bane | Bless | Guidance | DivineFavor | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack
   type ChainedSpellAttackDamageInvocation =
     | ChromaticOrbChainedSpellAttack
@@ -183,7 +188,7 @@ module battleRuntime {
   type RollModifierSpell = BaneRollModifier | BlessRollModifier | GuidanceRollModifier
   type SpellActionCost = SpellMagicAction | SpellBonusAction
 
-  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | ProduceFlameHeldLight({ durationTicks: int })
+  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | DivineFavorWeaponDamageRider({ durationTicks: int }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | ProduceFlameHeldLight({ durationTicks: int })
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
 
   type ChainedSpellAttackDamageHole =
@@ -249,6 +254,11 @@ module battleRuntime {
     | AbilityCheck
     | ReactionDecision
     | StatBlockRechargeRoll
+
+  type FighterWeaponAttackDamageRoll = {
+    weaponDamageRoll: int,
+    divineFavorDamageRoll: int,
+  }
 
   type ReactionTrigger = AttackHit | AttackDamage | SpellCast | SaveFailed | AfterDamage | OpportunityAttack
 
@@ -614,10 +624,12 @@ module battleRuntime {
   pure def tickDurationActiveEffects(effects: Set[ActiveEffect]): Set[ActiveEffect] =
     effects
       .map(effect => match effect {
+        | DivineFavorWeaponDamageRider(data) => DivineFavorWeaponDamageRider({ durationTicks: data.durationTicks - 1 })
         | ProduceFlameHeldLight(data) => ProduceFlameHeldLight({ durationTicks: data.durationTicks - 1 })
         | _ => effect
       })
       .filter(effect => match effect {
+        | DivineFavorWeaponDamageRider(data) => data.durationTicks > 0
         | ProduceFlameHeldLight(data) => data.durationTicks > 0
         | _ => true
       })
@@ -688,6 +700,7 @@ module battleRuntime {
         | BaneD20RollPenalty => false
         | BlessD20RollBonus => false
         | GuidanceAbilityCheckBonus => false
+        | DivineFavorWeaponDamageRider(_) => false
         | RayOfSicknessPoisoned => false
         | ShockingGraspOpportunityAttackDenied => false
         | GuidingBoltNextAttackAdvantage => false
@@ -1065,11 +1078,20 @@ module battleRuntime {
   pure def withFighterHp(state: BattleState, hp: int, tempHp: int): BattleState =
     { ...state, fighter: { ...state.fighter, hp: hp, tempHp: tempHp } }
 
+  pure def fighterWeaponAttackDamageRoll(weaponDamageRoll: int): FighterWeaponAttackDamageRoll =
+    { weaponDamageRoll: weaponDamageRoll, divineFavorDamageRoll: 0 }
+
+  pure def fighterWeaponAttackDamageRollWithDivineFavor(
+    weaponDamageRoll: int,
+    divineFavorDamageRoll: int,
+  ): FighterWeaponAttackDamageRoll =
+    { weaponDamageRoll: weaponDamageRoll, divineFavorDamageRoll: divineFavorDamageRoll }
+
   pure def resolveAttack(
     state: BattleState,
     attackTotal: int,
     naturalD20: int,
-    damageRoll: int,
+    damageRoll: FighterWeaponAttackDamageRoll,
     concentrationSaveSucceeded: bool,
   ): BattleState =
     resolveAttackAtBarbarianLevel(state, attackTotal, naturalD20, damageRoll, concentrationSaveSucceeded, 1)
@@ -1078,7 +1100,7 @@ module battleRuntime {
     state: BattleState,
     attackTotal: int,
     naturalD20: int,
-    damageRoll: int,
+    damageRoll: FighterWeaponAttackDamageRoll,
     concentrationSaveSucceeded: bool,
   ): BattleState =
     resolveAttackWithDisposition(state, attackTotal, naturalD20, damageRoll, concentrationSaveSucceeded, KnockOut)
@@ -1087,7 +1109,7 @@ module battleRuntime {
     state: BattleState,
     attackTotal: int,
     naturalD20: int,
-    damageRoll: int,
+    damageRoll: FighterWeaponAttackDamageRoll,
     concentrationSaveSucceeded: bool,
     damageDisposition: DamageDisposition,
   ): BattleState =
@@ -1097,7 +1119,7 @@ module battleRuntime {
     state: BattleState,
     attackTotal: int,
     naturalD20: int,
-    damageRoll: int,
+    damageRoll: FighterWeaponAttackDamageRoll,
     concentrationSaveSucceeded: bool,
     barbarianLevel: int,
   ): BattleState =
@@ -1107,7 +1129,7 @@ module battleRuntime {
     state: BattleState,
     attackTotal: int,
     naturalD20: int,
-    damageRoll: int,
+    damageRoll: FighterWeaponAttackDamageRoll,
     concentrationSaveSucceeded: bool,
     barbarianLevel: int,
     damageDisposition: DamageDisposition,
@@ -1118,10 +1140,11 @@ module battleRuntime {
       val revealed = recordFighterAttackRoll(revealFighterHidden(state))
       val spent = spendFighterAttackActionOrExtraAttackSlot(revealed)
       val rageDamage = if (fighterHasRage(revealed)) fighterRageDamageBonus(barbarianLevel) else 0
+      val divineFavorDamage = fighterDivineFavorDamage(damageRoll.divineFavorDamageRoll, revealed.fighter.activeEffects)
       if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), fighterCriticalThreshold(state))))
         { ...spent, lightWeaponAttackMade: true }
       else
-        { ...spent, goblin: applyDamageWithDisposition(state.goblin, damageRoll + 3 + rageDamage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded, damageDisposition), lightWeaponAttackMade: true }
+        { ...spent, goblin: applyDamageWithDisposition(state.goblin, damageRoll.weaponDamageRoll + 3 + rageDamage + divineFavorDamage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded, damageDisposition), lightWeaponAttackMade: true }
     }
 
   pure def fighterSneakAttackEligible(
@@ -1244,7 +1267,7 @@ module battleRuntime {
     state: BattleState,
     attackTotal: int,
     naturalD20: int,
-    damageRoll: int,
+    damageRoll: FighterWeaponAttackDamageRoll,
     concentrationSaveSucceeded: bool,
   ): BattleState =
     resolveAttack(activateRecklessAttackOnFirstAttackRoll(state), attackTotal, naturalD20, damageRoll, concentrationSaveSucceeded)
@@ -1871,6 +1894,45 @@ module battleRuntime {
     }
   }
 
+  pure def resolveDivineFavor(state: BattleState): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      state.bonusActionAvailable and
+      canExpendSpellSlotThisTurn(state) and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state))
+    )
+      {
+        ...state,
+        fighter: {
+          ...state.fighter,
+          activeEffects: activeEffectsWithoutDivineFavor(state.fighter.activeEffects)
+            .union(Set(DivineFavorWeaponDamageRider({ durationTicks: favorWeaponDamageRiderDurationTicks }))),
+        },
+        bonusActionAvailable: false,
+        spellSlotExpendedThisTurn: true,
+      }
+    else
+      state
+
+  pure def favorWeaponDamageRiderDurationTicks: int = 10
+
+  pure def activeEffectsWithoutDivineFavor(effects: Set[ActiveEffect]): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | DivineFavorWeaponDamageRider(_) => false
+      | _ => true
+    })
+
+  pure def activeEffectsContainDivineFavor(effects: Set[ActiveEffect]): bool =
+    effects.exists(effect => match effect {
+      | DivineFavorWeaponDamageRider(_) => true
+      | _ => false
+    })
+
+  pure def fighterDivineFavorDamage(divineFavorDamageRoll: int, effects: Set[ActiveEffect]): int =
+    if (activeEffectsContainDivineFavor(effects)) divineFavorDamageRoll else 0
+
   pure def rollModifierMaximumTargets(invocation: RollModifierSpell, slotLevel: int): int =
     match invocation {
       | BaneRollModifier => 3 + (if (slotLevel > 1) slotLevel - 1 else 0)
@@ -2235,6 +2297,7 @@ module battleRuntime {
       | Bane => true
       | Bless => true
       | Guidance => false
+      | DivineFavor => true
       | ShockingGrasp => false
       | GuidingBolt => true
       | RayOfSickness => true
@@ -3067,7 +3130,7 @@ module battleRuntime {
 
   run test_attack_reveals_hidden_fighter = {
     val hidden = hideFighter({ ...initialState, fighterHidePrerequisite: true }, 18)
-    assert(resolveAttack({ ...hidden, actionAvailable: true }, 1, 1, 4, true).fighter.hidden == NotHidden)
+    assert(resolveAttack({ ...hidden, actionAvailable: true }, 1, 1, fighterWeaponAttackDamageRoll(4), true).fighter.hidden == NotHidden)
   }
 
   run test_attack_replay_asks_for_attack_roll_after_target = {
@@ -3151,9 +3214,9 @@ module battleRuntime {
   }
 
   run test_class_feature_extra_attack_spends_one_action_and_grants_one_slot = {
-    val first = resolveAttack(withFighterExtraAttack(initialState), 1, 1, 0, true)
-    val second = resolveAttack(first, 1, 1, 0, true)
-    val third = resolveAttack(second, 1, 1, 0, true)
+    val first = resolveAttack(withFighterExtraAttack(initialState), 1, 1, fighterWeaponAttackDamageRoll(0), true)
+    val second = resolveAttack(first, 1, 1, fighterWeaponAttackDamageRoll(0), true)
+    val third = resolveAttack(second, 1, 1, fighterWeaponAttackDamageRoll(0), true)
     all {
       assert(not(first.actionAvailable)),
       assert(first.fighterExtraAttackSlotsRemaining == 1),
@@ -3163,9 +3226,9 @@ module battleRuntime {
   }
 
   run test_class_feature_extra_attack_allows_movement_between_slots = {
-    val first = resolveAttack(withFighterExtraAttack(initialState), 1, 1, 0, true)
+    val first = resolveAttack(withFighterExtraAttack(initialState), 1, 1, fighterWeaponAttackDamageRoll(0), true)
     val moved = moveFighter(first, 5, false)
-    val second = resolveAttack(moved, 1, 1, 0, true)
+    val second = resolveAttack(moved, 1, 1, fighterWeaponAttackDamageRoll(0), true)
     all {
       assert(moved.fighterExtraAttackSlotsRemaining == 1),
       assert(moved.fighter.movementSpent == 5),
@@ -3174,7 +3237,7 @@ module battleRuntime {
   }
 
   run test_class_feature_extra_attack_end_turn_closes_unspent_slot = {
-    val first = resolveAttack(withFighterExtraAttack(initialState), 1, 1, 0, true)
+    val first = resolveAttack(withFighterExtraAttack(initialState), 1, 1, fighterWeaponAttackDamageRoll(0), true)
     val ended = endTurn(first)
     all {
       assert(first.fighterExtraAttackSlotsRemaining == 1),
@@ -3183,7 +3246,7 @@ module battleRuntime {
   }
 
   run test_attack_miss_spends_action_without_damage = {
-    val result = resolveAttack(initialState, 14, 9, 0, true)
+    val result = resolveAttack(initialState, 14, 9, fighterWeaponAttackDamageRoll(0), true)
     all {
       assert(result.actionAvailable == false),
       assert(result.goblin.hp == 10),
@@ -3192,7 +3255,7 @@ module battleRuntime {
   }
 
   run test_attack_hit_applies_damage_and_spends_action = {
-    val result = resolveAttack(initialState, 15, 10, 4, true)
+    val result = resolveAttack(initialState, 15, 10, fighterWeaponAttackDamageRoll(4), true)
     all {
       assert(result.actionAvailable == false),
       assert(result.goblin.hp == 3),
@@ -3357,8 +3420,8 @@ module battleRuntime {
 
   run test_rage_ongoing_feature_spends_bonus_action_applies_damage_and_resistance = {
     val raging = startRage(initialState, 2)
-    val hit = resolveAttack({ ...raging.state, actionAvailable: true }, 15, 10, 4, true)
-    val levelNineHit = resolveAttackAtBarbarianLevel({ ...raging.state, actionAvailable: true }, 15, 10, 4, true, 9)
+    val hit = resolveAttack({ ...raging.state, actionAvailable: true }, 15, 10, fighterWeaponAttackDamageRoll(4), true)
+    val levelNineHit = resolveAttackAtBarbarianLevel({ ...raging.state, actionAvailable: true }, 15, 10, fighterWeaponAttackDamageRoll(4), true, 9)
     val goblinTurn = endTurn(raging.state)
     val resisted = resolveGoblinAttack(goblinTurn, 15, 10, 4, true)
     all {
@@ -3505,7 +3568,7 @@ module battleRuntime {
   }
 
   run test_reckless_attack_activates_on_first_attack_roll_boundary = {
-    val reckless = resolveAttackRecklessly(initialState, 15, 10, 4, true)
+    val reckless = resolveAttackRecklessly(initialState, 15, 10, fighterWeaponAttackDamageRoll(4), true)
     val goblinTurn = endTurn(reckless)
     val fighterTurn = endTurn(goblinTurn)
     all {
@@ -3624,6 +3687,9 @@ module battleRuntime {
       assert(saveGatedDamageSuccess(ViciousMockerySaveGate) == NoDamageOnSaveSuccess),
       assert(saveGatedDamageType(ViciousMockerySaveGate) == Psychic),
       assert(spellInvocationSpendsLevelOneSlot(IceKnife)),
+      assert(spellInvocationSpendsLevelOneSlot(DivineFavor)),
+      assert(fighterDivineFavorDamage(3, Set(DivineFavorWeaponDamageRider({ durationTicks: 1 }))) == 3),
+      assert(fighterDivineFavorDamage(3, Set()) == 0),
       assert(attackBurstSaveDamageSpendsLevelOneSlot(IceKnifeAttackBurstSaveDamage)),
       assert(attackBurstSaveDamageAttackType(IceKnifeAttackBurstSaveDamage) == Piercing),
       assert(attackBurstSaveDamageBurstType(IceKnifeAttackBurstSaveDamage) == Cold),
@@ -4133,7 +4199,7 @@ module battleRuntime {
   }
 
   run test_critical_hit_applies_doubled_damage_dice = {
-    val result = resolveAttack(initialState, 20, 20, 9, true)
+    val result = resolveAttack(initialState, 20, 20, fighterWeaponAttackDamageRoll(9), true)
     all {
       assert(result.actionAvailable == false),
       assert(result.goblin.hp == 0),
@@ -4141,7 +4207,7 @@ module battleRuntime {
   }
 
   run test_authored_critical_range_19_weapon_attack_crits_on_natural_19 = {
-    val result = resolveAttack(withFighterImprovedCriticalRange19(initialState), 1, 19, 1, true)
+    val result = resolveAttack(withFighterImprovedCriticalRange19(initialState), 1, 19, fighterWeaponAttackDamageRoll(1), true)
     all {
       assert(result.actionAvailable == false),
       assert(result.goblin.hp == 6),
@@ -4149,7 +4215,7 @@ module battleRuntime {
   }
 
   run test_default_critical_range_20_weapon_attack_does_not_crit_on_natural_19 = {
-    val result = resolveAttack(initialState, 1, 19, 9, true)
+    val result = resolveAttack(initialState, 1, 19, fighterWeaponAttackDamageRoll(9), true)
     all {
       assert(result.actionAvailable == false),
       assert(result.goblin.hp == 10),
@@ -4157,7 +4223,7 @@ module battleRuntime {
   }
 
   run test_authored_critical_range_keeps_natural_1_auto_miss = {
-    val result = resolveAttack(withFighterImprovedCriticalRange19(initialState), 99, 1, 9, true)
+    val result = resolveAttack(withFighterImprovedCriticalRange19(initialState), 99, 1, fighterWeaponAttackDamageRoll(9), true)
     all {
       assert(result.actionAvailable == false),
       assert(result.goblin.hp == 10),
@@ -4165,7 +4231,7 @@ module battleRuntime {
   }
 
   run test_temporary_hp_absorbs_damage_before_hp = {
-    val result = resolveAttack(withGoblinHp(initialState, 10, 5), 15, 10, 4, true)
+    val result = resolveAttack(withGoblinHp(initialState, 10, 5), 15, 10, fighterWeaponAttackDamageRoll(4), true)
     all {
       assert(result.goblin.tempHp == 0),
       assert(result.goblin.hp == 8),
@@ -4173,7 +4239,7 @@ module battleRuntime {
   }
 
   run test_hp_clamps_to_zero_and_monster_dies = {
-    val result = resolveAttack(withGoblinHp(initialState, 3, 0), 15, 10, 8, true)
+    val result = resolveAttack(withGoblinHp(initialState, 3, 0), 15, 10, fighterWeaponAttackDamageRoll(8), true)
     all {
       assert(result.goblin.hp == 0),
       assert(result.goblin.lifecycle == DiesAtZeroHp),
@@ -4191,7 +4257,7 @@ module battleRuntime {
   }
 
   run test_melee_knock_out_leaves_stat_block_at_one_hp_unconscious = {
-    val result = resolveAttackKnockOut(withGoblinHp(initialState, 3, 0), 15, 10, 8, true)
+    val result = resolveAttackKnockOut(withGoblinHp(initialState, 3, 0), 15, 10, fighterWeaponAttackDamageRoll(8), true)
     all {
       assert(result.goblin.hp == 1),
       assert(result.goblin.unconscious),
@@ -4337,6 +4403,37 @@ module battleRuntime {
     }
   }
 
+  run test_divine_favor_adds_radiant_damage_to_fighter_weapon_hits = {
+    val favored = resolveDivineFavor(initialState)
+    val hit = resolveAttack(favored, 15, 10, fighterWeaponAttackDamageRollWithDivineFavor(4, 3), true)
+    all {
+      assert(favored.fighter.activeEffects.contains(DivineFavorWeaponDamageRider({ durationTicks: favorWeaponDamageRiderDurationTicks }))),
+      assert(not(favored.bonusActionAvailable)),
+      assert(favored.spellSlotExpendedThisTurn),
+      assert(hit.goblin.hp == 0),
+    }
+  }
+
+  run test_divine_favor_weapon_damage_rider_expires_after_one_minute = {
+    val favored = resolveDivineFavor(initialState)
+    val round1 = endTurn(endTurn(favored))
+    val round2 = endTurn(endTurn(round1))
+    val round3 = endTurn(endTurn(round2))
+    val round4 = endTurn(endTurn(round3))
+    val round5 = endTurn(endTurn(round4))
+    val round6 = endTurn(endTurn(round5))
+    val round7 = endTurn(endTurn(round6))
+    val round8 = endTurn(endTurn(round7))
+    val round9 = endTurn(endTurn(round8))
+    val round10 = endTurn(endTurn(round9))
+    val hit = resolveAttack(round10, 15, 10, fighterWeaponAttackDamageRollWithDivineFavor(4, 3), true)
+    all {
+      assert(activeEffectsContainDivineFavor(round9.fighter.activeEffects)),
+      assert(not(activeEffectsContainDivineFavor(round10.fighter.activeEffects))),
+      assert(hit.goblin.hp == 3),
+    }
+  }
+
   run test_produce_flame_held_light_spends_bonus_action_and_records_light = {
     val result = resolveProduceFlameHeldLight(initialState)
     all {
@@ -4430,7 +4527,7 @@ module battleRuntime {
 
   run test_attack_action_can_break_target_concentration = {
     val concentratingGoblin = { ...initialState, goblin: { ...initialState.goblin, concentrating: true, activeEffects: Set(MageArmor) } }
-    val result = resolveAttack(concentratingGoblin, 15, 10, 4, false)
+    val result = resolveAttack(concentratingGoblin, 15, 10, fighterWeaponAttackDamageRoll(4), false)
     all {
       assert(result.goblin.hp == 3),
       assert(not(result.goblin.concentrating)),
@@ -4581,7 +4678,7 @@ module battleRuntime {
 
   run test_off_hand_requires_prior_light_attack_and_spends_bonus_action = {
     val rejected = offHandAttackFighter(initialState, 15, 10, 4)
-    val afterAttack = resolveAttack(initialState, 1, 1, 4, false)
+    val afterAttack = resolveAttack(initialState, 1, 1, fighterWeaponAttackDamageRoll(4), false)
     val offHand = offHandAttackFighter(afterAttack, 15, 10, 4)
     all {
       assert(rejected == initialState),
