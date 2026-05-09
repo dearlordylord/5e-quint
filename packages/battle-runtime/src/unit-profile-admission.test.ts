@@ -2892,7 +2892,11 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
         effect: {
           condition: "restrained",
           expiresAt: "concentration",
-          escape: { ability: "str", skill: "athletics" },
+          escape: {
+            kind: "abilityCheck",
+            ability: "str",
+            skill: "athletics",
+          },
         },
         rangeFeet: 90,
       }),

@@ -540,7 +540,6 @@ function battleSubjectKey(subject: BattleSubject): string {
           : null,
         "targetId" in command ? command.targetId : null,
         "reactorId" in command ? command.reactorId : null,
-        "targetId" in command ? command.targetId : null,
         "invocation" in command
           ? spellInvocationRefKey(command.invocation)
           : null,

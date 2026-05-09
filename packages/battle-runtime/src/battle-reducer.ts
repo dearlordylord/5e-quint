@@ -355,10 +355,15 @@ type BattleSpellEffectBase = {
   readonly sourceSpellId: SpellRecord["id"];
   readonly sourceCombatantId: CombatantId;
 };
-type SpellConditionEscape = {
-  readonly ability: "str";
-  readonly skill: "athletics";
-};
+type SpellConditionEscape =
+  | {
+      readonly kind: "abilityCheck";
+      readonly ability: "str";
+      readonly skill: "athletics";
+    }
+  | {
+      readonly kind: "targetDamagedByCasterOrAlly";
+    };
 export type BattleActiveEffect =
   | (BattleSpellEffectBase & {
       readonly kind: "speedDelta";
@@ -2625,10 +2630,16 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
           }),
         ),
         escape: Schema.NullOr(
-          Schema.Struct({
-            ability: Schema.Literal("str"),
-            skill: Schema.Literal("athletics"),
-          }),
+          Schema.Union(
+            Schema.Struct({
+              kind: Schema.Literal("abilityCheck"),
+              ability: Schema.Literal("str"),
+              skill: Schema.Literal("athletics"),
+            }),
+            Schema.Struct({
+              kind: Schema.Literal("targetDamagedByCasterOrAlly"),
+            }),
+          ),
         ),
       }),
       rangeFeet: MovementFeet,
@@ -21133,9 +21144,17 @@ function applyAttackDamageAmount(
           priorConcentration: target.concentration,
         })
       : afterMarkDrop;
+  const afterDamageEscapes =
+    Number(damageAmount) > 0
+      ? removeSpellConditionEffectsFromTargetDamagedByCasterOrAllyAttack(
+          concentrated,
+          attackerId,
+          targetId,
+        )
+      : concentrated;
   return normalizeBattleGrapples(
     recordAttackDamageUnitsUsed(
-      concentrated,
+      afterDamageEscapes,
       attackDamageRiders.map((rider) => ({ ...rider, attackerId })),
       weaponDamageDiceRollChoice === undefined
         ? []
@@ -21203,6 +21222,50 @@ function markMarkedDamageRiderTransferAvailable(
     }
   }
   return changed ? { ...state, combatants } : state;
+}
+
+function removeSpellConditionEffectsFromTargetDamagedByCasterOrAllyAttack(
+  state: BattleState,
+  attackerId: CombatantId,
+  targetId: CombatantId,
+): BattleState {
+  const target = state.combatants.get(targetId);
+  if (target === undefined) {
+    return state;
+  }
+  const expiring = target.activeEffects.filter(
+    (
+      effect,
+    ): effect is Extract<
+      BattleActiveEffect,
+      { readonly kind: "spellCondition" }
+    > =>
+      effect.kind === "spellCondition" &&
+      effect.escape?.kind === "targetDamagedByCasterOrAlly" &&
+      combatantsAreAllies(state, attackerId, effect.sourceCombatantId),
+  );
+  if (expiring.length === 0) {
+    return state;
+  }
+  const activeEffects = target.activeEffects.filter(
+    (effect) => !expiring.includes(effect),
+  );
+  const nextCombatant: BattleCreatureState =
+    target.positiveHpUnconscious === null
+      ? {
+          ...target,
+          activeEffects,
+          conditions: conditionsAfterExpiringSpellConditionEffects(
+            target.conditions,
+            activeEffects,
+            expiring,
+          ),
+        }
+      : { ...target, activeEffects };
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(targetId, nextCombatant),
+  };
 }
 
 type BattleDamageContext = {
@@ -24404,7 +24467,7 @@ function animalFriendshipSaveGateConditionSpell(
     effect: {
       condition: "charmed",
       expiresAt: { kind: "duration", durationTicks: durationTicks.right },
-      escape: null,
+      escape: { kind: "targetDamagedByCasterOrAlly" },
     },
     rangeFeet: movementFeet(spell.mechanics.range.feet),
   };
@@ -24494,21 +24557,21 @@ function entangleSaveGateConditionSpell(
   }
   const cubeShape = phase.attachment.value.shape;
 
-  return {
-    phase,
-    targeting: () => ({
-      kind: "pointOriginCubeExcludingCaster",
-      sideFeet: movementFeet(cubeShape.sideFeet),
-    }),
-    targetCreatureTypes: null,
-    effect: {
-      condition: ENTANGLE_FAILED_SAVE_CONDITION,
-      expiresAt: "concentration",
-      escape: { ability: "str", skill: "athletics" },
-    },
-    rangeFeet: movementFeet(spell.mechanics.range.feet),
-  };
-}
+    return {
+      phase,
+      targeting: () => ({
+        kind: "pointOriginCubeExcludingCaster",
+        sideFeet: movementFeet(cubeShape.sideFeet),
+      }),
+      targetCreatureTypes: null,
+      effect: {
+        condition: ENTANGLE_FAILED_SAVE_CONDITION,
+        expiresAt: "concentration",
+        escape: { kind: "abilityCheck", ability: "str", skill: "athletics" },
+      },
+      rangeFeet: movementFeet(spell.mechanics.range.feet),
+    };
+  }
 
 function supportedSaveGateDamageProfile(
   input: {
@@ -27139,15 +27202,16 @@ function applyCreatureTypeProtectionSpellEffect(
       sourceCombatantId: actorId,
     };
     const activeEffects = [
-      ...target.activeEffects.filter(
-        (effect) =>
-          !(
-            effect.kind === "attackerTypeScopedAttackRollAgainstSelf" &&
-            effect.sourceSpellId === invocation.spell.id
-          ),
-      ),
-      nextEffect,
-    ];
+        ...target.activeEffects.filter(
+          (effect) =>
+            !(
+              effect.kind === "attackerTypeScopedAttackRollAgainstSelf" &&
+              effect.sourceSpellId === invocation.spell.id &&
+              effect.sourceCombatantId === actorId
+            ),
+        ),
+        nextEffect,
+      ];
     return {
       ...nextState,
       combatants: new Map(nextState.combatants).set(targetId, {
