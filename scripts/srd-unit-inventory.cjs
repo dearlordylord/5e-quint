@@ -2625,9 +2625,9 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
         "Promote Entangle as point-origin area Restrained application with Concentration duration and escape action.",
       rows: srdinv29CEntangleRows,
       nextAction:
-        "Model caller-supplied square area facts, save-gated Restrained ownership, Concentration ending, and the Strength (Athletics) escape action.",
+        "Model caller-supplied square area facts, save-gated Restrained ownership, caster exclusion from the affected save set, Concentration ending, and the Strength (Athletics) escape action.",
       acceptance:
-        "Entangle has promoted runtime evidence for initial area save, Restrained lifecycle, concentration cleanup, and escape action without grid/pathfinding derivation.",
+        "Entangle has promoted runtime evidence for initial area save, caster exclusion, Restrained lifecycle, concentration cleanup, and escape action without grid/pathfinding derivation; otherwise its matrix claim remains partial/unsupported.",
     }),
     makeBatch({
       id: "SRDINV29D",
@@ -2637,9 +2637,9 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
         "Promote Grease as a timed ground area with on-cast Prone and recurring enter/end-turn saves.",
       rows: srdinv29DGreaseRows,
       nextAction:
-        "Use SRD one-minute duration semantics and table-supplied area membership; add recurring trigger support only if it is executable and tested.",
+        "Use SRD one-minute duration semantics and table-supplied area membership; a stored ground-area fact is not enough unless the runtime exposes executable enter-area/end-turn save procedures.",
       acceptance:
-        "Grease has promoted runtime evidence for on-cast Prone and recurring hazard saves, or remains explicitly unsupported rather than shortened to next-turn semantics.",
+        "Grease has promoted runtime evidence for on-cast Prone and recurring hazard saves, or remains explicitly unsupported rather than shortened to next-turn semantics or claimed from inert metadata.",
     }),
     makeBatch({
       id: "SRDINV29E",
@@ -2649,9 +2649,9 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
         "Promote Ice Knife as a primary ranged spell attack followed by a mandatory burst save centered on the primary target.",
       rows: srdinv29EIceKnifeRows,
       nextAction:
-        "Model the target hole, attack roll, hit-only Piercing damage, hit-or-miss burst, primary-target anchored area facts, and Cold slot scaling.",
+        "Model the target hole, attack roll, hit-only Piercing damage, spell-attack critical hits for the Piercing dice only, hit-or-miss burst, primary-target anchored area facts, and Cold slot scaling.",
       acceptance:
-        "Ice Knife has promoted runtime evidence proving the burst always happens, includes the primary target in the save set, and stays anchored to that target.",
+        "Ice Knife has promoted runtime evidence proving the burst always happens, includes the primary target in the save set, stays anchored to that target, and doubles only the primary attack's Piercing dice on critical hits.",
     }),
     makeBatch({
       id: "SRDINV29F",
@@ -2661,9 +2661,9 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
         "Research and, only if tractable, promote Chromatic Orb chosen damage type and chained attack loop.",
       rows: srdinv29FChromaticOrbRows,
       nextAction:
-        "Treat Chromatic Orb as a state-machine research task: chosen damage type, duplicate-face damage-roll gate, one hole after each qualifying hit, target uniqueness, and slot-level maximum leaps. Use git-history restore sources from the deleted Core/prototype lanes for inspiration, especially commits 3066c771 and 1f192c9c.",
+        "Treat Chromatic Orb as a state-machine research task: chosen damage type, duplicate-face damage-roll gate, one hole after each qualifying hit, target uniqueness, and slot-level maximum leaps. Use git-history restore sources from the deleted Core/prototype lanes for inspiration, especially commits 3066c771 and 1f192c9c. Do not add chosen damage-type fields to all prepared spell invocation refs unless the exported helper API and every caller can produce them.",
       acceptance:
-        "Chromatic Orb is either split again into an implementable vertical slice with no support claim, or has promoted runtime evidence for the full chained-target loop.",
+        "Chromatic Orb is either split again into an implementable vertical slice with no support claim, or has promoted runtime evidence for the full chained-target loop; metadata-only continuation records are not support.",
     }),
     makeBatch({
       id: "SRDINV30A",

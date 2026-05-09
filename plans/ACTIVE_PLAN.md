@@ -2472,6 +2472,12 @@ Scope: promote Entangle's point-origin area save, Restrained condition,
 Concentration cleanup, and Strength (Athletics) escape action. Difficult
 Terrain may remain table/spatial agenda only if the matrix records that limit.
 
+Retry guidance from rejected attempt: Entangle must exclude the caster from the
+affected save set because RAW says "other than you." `validateSavingThrowOutcomes`
+or the Entangle-specific fill path must reject caster IDs before condition
+application. Do not mark Entangle fully supported if the escape action is absent
+or if Difficult Terrain is not either executable or explicitly matrix-limited.
+
 ### Task 206 - SRDINV29D - Promote Grease Ground Hazard Runtime
 
 Status: `ready-for-research`
@@ -2485,6 +2491,12 @@ support on-cast Prone and recurring enter-area/end-turn-in-area saves if
 claimed. If recurring hazard triggers cannot be represented, keep Grease
 unsupported; do not approximate it as a next-turn-only effect.
 
+Retry guidance from rejected attempt: storing a `spellGroundArea` or similar
+metadata on the caster is not runtime support by itself. A support claim needs
+an executable later procedure for entering the area or ending a turn there,
+with table-supplied area membership facts and tests. If that procedure is not
+implemented, Grease must remain unsupported/partial in matrix claims.
+
 ### Task 207 - SRDINV29E - Promote Ice Knife Mixed Attack Burst Runtime
 
 Status: `ready-for-research`
@@ -2497,6 +2509,10 @@ Scope: promote Ice Knife as primary ranged spell attack plus mandatory burst
 save. The burst happens on hit or miss, is anchored on the primary target, and
 must include that primary target in the save set. Cover Piercing hit damage,
 Cold burst damage, slot scaling, and concentration damage follow-up.
+
+Retry guidance from rejected attempt: the primary attack is a spell attack and
+must support critical hits. Critical hits double only the 1d10 Piercing attack
+dice on a hit; the Cold burst save damage is not part of the attack critical.
 
 ### Task 208 - SRDINV29F - Research Chromatic Orb Chained Attack Runtime
 
@@ -2518,6 +2534,15 @@ points include `git show 3066c771:packages/core/src/features/spell-evocation.ts`
 `git show 3066c771:packages/core/src/features/spell-evocation.test.ts`,
 `git show 1f192c9c:packages/surface-runtime-correction/src/runtime-holes.test.ts`,
 and `git show 1f192c9c:packages/surface-runtime-correction/MBT_TO_REDUCER_GRAPH.md`.
+
+Retry guidance from rejected attempt: metadata such as
+`continueOnDuplicateDamageFaces` is not enough. The runtime must actually detect
+duplicate d8 faces, open the next target hole, enforce the previous-target
+30-foot spatial fact, exclude already-targeted creatures, and replay attack and
+damage per leap up to the slot-level cap. Also avoid widening every prepared
+`spellAttackDamage`/`saveGatedDamage` invocation ref with `damageType` unless
+`spellSlotInvocationRef` and all exported helper callers are updated to produce
+the same ref shape; otherwise existing prepared spell subjects regress.
 
 ### Task 209 - SRDINV30A - Promote Simple Scalar Buff Spell Runtime
 
@@ -2709,6 +2734,12 @@ protocols, stateful loops, recurring triggers, object-target support, area
 geometry, reaction timing, or unrelated effect lifecycles. Chromatic Orb-style
 repeated holes and Grease-style recurring hazards must be standalone research
 or implementation slices, not bundled into generic spell-runtime tasks.
+
+Support-claim rule: matrix/unit claims must only be promoted when the SRD
+mechanic is executable. Metadata-only state, stored facts with no later
+procedure, or partial reducer support must stay checker-visible as unsupported
+or partial. Recursive reviews must inspect rejected implementation findings and
+turn them into concrete retry guidance before unblocking follow-up work.
 
 Out of scope: implementation work not captured by the newly appended batch,
 PHB/XPHB pressure, broad runtime rewrites, and treating catalog admission alone
