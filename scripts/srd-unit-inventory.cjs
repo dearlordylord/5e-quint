@@ -1152,12 +1152,13 @@ function buildOwnerEvidenceSources({
   characterSheetOwnerEvidence,
   sharedAlgebraOwnerEvidence,
 }) {
-  const supportedSrdUnitIds = new Set(
+  const admissionEvidenceEligibleSrdUnitIds = new Set(
     unitClaims
       .filter(
         (row) =>
           row.collectionId === "srd-5.2.1" &&
-          row.claim?.tag === "supported-profile",
+          (row.claim?.tag === "supported-profile" ||
+            row.claim?.tag === "profile-subset-supported"),
       )
       .map((row) => row.unitId),
   );
@@ -1171,11 +1172,11 @@ function buildOwnerEvidenceSources({
     if (row.evidence?.tag !== deterministicAdmissionProjectionEvidenceTag) {
       continue;
     }
-    if (!supportedSrdUnitIds.has(row.unitId)) continue;
+    if (!admissionEvidenceEligibleSrdUnitIds.has(row.unitId)) continue;
     deterministicEvidenceByUnitId.set(
       row.unitId,
       [
-        "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported",
+        "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported",
         `plans/unit-profile-coverage/unit-evidence.jsonl records ${deterministicAdmissionProjectionEvidenceTag} evidence`,
         `${row.evidence.taskId} at ${row.evidence.ownerPath}`,
       ].join("; "),

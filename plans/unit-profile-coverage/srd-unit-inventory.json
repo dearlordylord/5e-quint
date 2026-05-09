@@ -160,20 +160,20 @@
       "non-runtime": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 203,
+      "catalog-installed-owner-evidence-present": 215,
       "non-runtime": 12,
       "catalog-only/dead-for-now": 74,
       "needs-surface-widening": 35,
       "catalog-authored-executable-follow-up": 15,
-      "catalog-installed-owner-evidence-required": 22,
+      "catalog-installed-owner-evidence-required": 10,
       "missing-authored-record": 6
     },
     "spellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 74,
       "needs-surface-widening": 35,
       "catalog-authored-executable-follow-up": 15,
-      "catalog-installed-owner-evidence-present": 59,
-      "catalog-installed-owner-evidence-required": 22,
+      "catalog-installed-owner-evidence-present": 71,
+      "catalog-installed-owner-evidence-required": 10,
       "missing-authored-record": 6
     },
     "levelOneRowsByCategory": {
@@ -2412,7 +2412,7 @@
         },
         {
           "owner": "battle-runtime",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT8 at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT8 at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -3812,7 +3812,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV28D at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV28D at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -3844,7 +3844,7 @@
         "state": "installed",
         "unitId": "animal_friendship"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -3853,11 +3853,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30C at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_bane",
@@ -3894,7 +3894,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30B at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30B at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -3976,7 +3976,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV29B at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV29B at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -4076,7 +4076,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT32 at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT32 at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -4274,7 +4274,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT25 at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT25 at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -4432,7 +4432,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30A at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30A at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -5178,7 +5178,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30B at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30B at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -5318,7 +5318,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV28B at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV28B at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -5416,7 +5416,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30B at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30B at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -5457,7 +5457,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30B at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30B at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -5555,7 +5555,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT32 at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT32 at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -5693,7 +5693,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV28D at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV28D at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -5734,7 +5734,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT25 at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT25 at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -5775,7 +5775,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV28B at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV28B at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -5807,7 +5807,7 @@
         "state": "installed",
         "unitId": "protection_from_evil_and_good"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -5816,11 +5816,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30C at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_purify_food_and_drink",
@@ -5914,7 +5914,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30A at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30A at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -6633,7 +6633,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30B at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30B at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -6730,7 +6730,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV28B at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV28B at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -6762,7 +6762,7 @@
         "state": "installed",
         "unitId": "produce_flame"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -6771,11 +6771,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV32B at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_resistance",
@@ -6922,7 +6922,7 @@
         "state": "installed",
         "unitId": "animal_friendship"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -6931,11 +6931,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30C at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_charm_person",
@@ -7041,7 +7041,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT32 at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT32 at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -7151,7 +7151,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV29C at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV29C at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -7279,7 +7279,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT25 at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT25 at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -7320,7 +7320,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV29E at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV29E at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -7390,7 +7390,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30A at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30A at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -7422,7 +7422,7 @@
         "state": "installed",
         "unitId": "protection_from_evil_and_good"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -7431,11 +7431,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30C at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_purify_food_and_drink",
@@ -7654,7 +7654,7 @@
         },
         {
           "owner": "battle-runtime",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT7 at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT7 at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -9303,7 +9303,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30B at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30B at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -9373,7 +9373,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT32 at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT32 at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -9511,7 +9511,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV31A at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV31A at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -9603,7 +9603,7 @@
         "state": "installed",
         "unitId": "protection_from_evil_and_good"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -9612,11 +9612,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30C at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_purify_food_and_drink",
@@ -9711,7 +9711,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30A at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30A at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -10348,7 +10348,7 @@
         "state": "installed",
         "unitId": "animal_friendship"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -10357,11 +10357,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30C at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_cure_wounds",
@@ -10398,7 +10398,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT32 at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT32 at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -10538,7 +10538,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV29C at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV29C at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -10636,7 +10636,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV31B at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV31B at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -10706,7 +10706,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30A at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30A at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -10859,7 +10859,7 @@
         },
         {
           "owner": "battle-runtime",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT8 at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT8 at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -11974,7 +11974,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT14 at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT14 at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -12006,7 +12006,7 @@
         "state": "installed",
         "unitId": "chill_touch"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -12015,11 +12015,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV28C at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_dancing_lights",
@@ -12322,7 +12322,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV28B at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV28B at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -12391,7 +12391,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT14 at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT14 at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -12432,7 +12432,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV28D at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV28D at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -12532,7 +12532,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV29A at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV29A at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -12614,7 +12614,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV29F3 at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV29F3 at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -12655,7 +12655,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV29B at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV29B at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -12824,7 +12824,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30A at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30A at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -12953,7 +12953,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV29E at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV29E at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -13023,7 +13023,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT14 at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT14 at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -13064,7 +13064,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT14 at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT14 at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -13105,7 +13105,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV28D at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV28D at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -13146,7 +13146,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT22 at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT22 at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -13825,7 +13825,7 @@
         "state": "installed",
         "unitId": "chill_touch"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -13834,11 +13834,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV28C at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_eldritch_blast",
@@ -13985,7 +13985,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV28B at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV28B at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -14084,7 +14084,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30B at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30B at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -14384,7 +14384,7 @@
         "state": "installed",
         "unitId": "protection_from_evil_and_good"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -14393,11 +14393,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30C at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_speak_with_animals",
@@ -15067,7 +15067,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT14 at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT14 at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -15099,7 +15099,7 @@
         "state": "installed",
         "unitId": "chill_touch"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -15108,11 +15108,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV28C at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_dancing_lights",
@@ -15415,7 +15415,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV28B at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV28B at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -15484,7 +15484,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT14 at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT14 at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -15525,7 +15525,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV28D at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV28D at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -15626,7 +15626,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV29A at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV29A at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -15708,7 +15708,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV29F3 at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV29F3 at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -15749,7 +15749,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV29B at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV29B at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -15918,7 +15918,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30A at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30A at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -16134,7 +16134,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV29E at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV29E at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -16262,7 +16262,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30A at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30A at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -16303,7 +16303,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT14 at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT14 at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -16344,7 +16344,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT14 at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT14 at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -16376,7 +16376,7 @@
         "state": "installed",
         "unitId": "protection_from_evil_and_good"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -16385,11 +16385,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30C at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_ray_of_sickness",
@@ -16426,7 +16426,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV28D at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV28D at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -16467,7 +16467,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT22 at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT22 at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],

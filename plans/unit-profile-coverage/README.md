@@ -195,6 +195,20 @@ Selected identity MBT coverage counts supported Unit ids with evidence tagged
 this matrix; unsupported and widening rows remain closure dispositions, not
 test omissions.
 
+## Done-State Gate
+
+Any task that adds or changes `UNIT-IDENTITY-EVIDENCE`, `unit-claims.jsonl`,
+`unit-evidence.jsonl`, `profiles.jsonl`, Surface catalog admission, or profile
+owner markers must run `pnpm unit-profile-coverage:check --write` before the
+task can be marked `done`. The generated inventory and matrix artifacts in this
+directory are part of the task output and must agree with `ACTIVE_PLAN.md`.
+
+The checker-visible disposition is the source of truth for support status.
+When a Unit supports only an executable subset of the SRD text, use
+`profile-subset-supported` and list both `supportedMechanics` and
+`deferredMechanics` with follow-up task ids. Do not hide omitted SRD clauses
+behind a full `supported-profile` claim just because catalog admission passes.
+
 The generated report includes a `Metric Semantics` section, and
 `unit-matrix.json` includes the same definitions under `metricSemantics`.
 Those definitions are the local authority for each metric's planning question,
@@ -203,6 +217,35 @@ report-health count, not coverage, because the checker has no independent
 expected-inventory boundary. Passive profiles count in the executable profile
 evidence denominator when they have production runtime semantics, even though
 they do not create a player-selectable action.
+
+## SRDINV31 Attack-Rider Profile Policy
+
+`spell.invocation-weapon-damage-rider` is the Divine Favor procedure shape: a
+Bonus Action self spell creates a timed active effect on the caster, and later
+weapon-hit resolution adds the spell's damage dice. It does not cover spells
+whose casting time is immediately after a hit.
+
+`spell.invocation-marked-damage-rider` is the Hunter's Mark combat procedure
+shape: a Bonus Action Concentration spell marks one combatant target, later
+Attack Roll hits against that mark add spell damage, and a Bonus Action transfer
+is available only after the marked target drops to 0 Hit Points. Noncombat
+tracking Advantage and slot-scaled maximum duration are outside this current
+runtime profile until SRDINV33 splits follow-up work.
+
+Future SRDINV31 tasks must introduce distinct profiles when the executable
+procedure shape changes. Divine Smite is an immediate after-hit damage splice,
+Ensnaring Strike and Searing Smite are after-hit ongoing lifecycles with
+start-turn and save/end procedures, and True Strike is a spell-hosted weapon
+attack. Reusing either existing rider profile for those shapes would conflate
+different SRD triggers.
+
+Package-local QNT should be updated whenever the runtime adds or changes a
+promoted state fact, active-effect lifecycle, resource/turn sequencing rule, or
+cross-event damage calculation for these profiles. Focused reducer/admission
+tests are sufficient for deterministic catalog projection and narrow support
+gates. Add battle-runtime MBT only when the risk is sequencing or state-space
+interaction across turns, transfers, concentration breaks, recurring triggers,
+or after-hit windows.
 
 ## SRD Unit Inventory
 

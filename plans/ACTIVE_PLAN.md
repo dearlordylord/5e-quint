@@ -556,7 +556,7 @@ Keep it synchronized with the DAG table and task details.
 | 213   | SRDINV30E - Promote Faerie Fire Area Reveal Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Faerie Fire](/workspace/typescript/dnd/packages/surface/content/faerie_fire.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote Faerie Fire area save-gated attack Advantage and any executable reveal/invisibility subset. |
 | 214   | SRDINV30F - Promote Resistance Damage Reduction Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Resistance](/workspace/typescript/dnd/packages/surface/content/resistance.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote Resistance chosen damage type reduction with once-per-turn semantics. |
 | 215   | SRDINV31A - Promote Divine Favor Weapon Rider Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Divine Favor](/workspace/typescript/dnd/packages/surface/content/divine_favor.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promoted Divine Favor as a self-hosted timed Radiant damage rider on caster weapon hits. |
-| 216   | SRDINV31B - Promote Hunter's Mark Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Hunter's Mark](/workspace/typescript/dnd/packages/surface/content/hunters_mark.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote marked-target damage plus zero-HP Bonus Action retargeting. |
+| 216   | SRDINV31B - Promote Hunter's Mark Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Hunter's Mark](/workspace/typescript/dnd/packages/surface/content/hunters_mark.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [Unit profile coverage](/workspace/typescript/dnd/plans/unit-profile-coverage/README.md) | Promoted the combat subset: marked-target damage, Concentration cleanup, and zero-HP Bonus Action retargeting; SRD finding Advantage and upcast duration maxima remain checker-visible SRDINV33 follow-ups. |
 | 217   | SRDINV31C - Promote Divine Smite After-Hit Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Divine Smite](/workspace/typescript/dnd/packages/surface/content/divine_smite.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote immediate after-hit Bonus Action smite damage without replaying the base attack. |
 | 218   | SRDINV31D - Promote Ensnaring Strike Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Ensnaring Strike](/workspace/typescript/dnd/packages/surface/content/ensnaring_strike.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote after-hit save-gated Restrained, start-turn damage, and escape lifecycle. |
 | 219   | SRDINV31E - Promote Searing Smite Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Searing Smite](/workspace/typescript/dnd/packages/surface/content/searing_smite.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote after-hit Fire damage plus recurring start-turn damage and save-to-end. |
@@ -2671,7 +2671,25 @@ Blocks: SRDINV33
 
 Scope: promote Hunter's Mark as mark identity, extra Force damage on attack
 roll hits against the mark, Concentration, and Bonus Action retargeting after
-the mark drops to 0 HP.
+the mark drops to 0 HP. The matrix claim is intentionally
+`profile-subset-supported`: SRD Wisdom (Perception or Survival) Advantage to
+find the marked target and slot-scaled maximum Concentration durations remain
+deferred to SRDINV33 follow-up planning.
+
+SRDINV31 rider profile policy: keep Divine Favor and Hunter's Mark in separate
+profiles because they have different executable procedure shapes. Divine Favor
+is a timed self-hosted weapon-hit damage rider. Hunter's Mark is a combat mark
+with Attack Roll damage and zero-HP transfer. SRDINV31C-SRDINV31F must not reuse
+either profile for immediate after-hit smites, start-turn/save-to-end ongoing
+lifecycles, or spell-hosted weapon attacks; those shapes require distinct
+profile rows when promoted.
+
+QNT/MBT policy: update `packages/battle-runtime/battle-runtime.qnt` whenever an
+SRDINV31 task changes promoted state facts, active-effect lifecycles,
+resource/turn sequencing, or cross-event damage. Deterministic
+admission/projection tests are enough for catalog support gates. Add
+battle-runtime MBT only for sequencing/state-space risk such as after-hit
+windows, transfer timing, Concentration breaks, or recurring start-turn loops.
 
 ### Task 217 - SRDINV31C - Promote Divine Smite After-Hit Runtime
 
@@ -2776,6 +2794,13 @@ mechanic is executable. Metadata-only state, stored facts with no later
 procedure, or partial reducer support must stay checker-visible as unsupported
 or partial. Recursive reviews must inspect rejected implementation findings and
 turn them into concrete retry guidance before unblocking follow-up work.
+
+Coverage done-state gate: any task that changes `UNIT-IDENTITY-EVIDENCE`,
+`unit-claims.jsonl`, `unit-evidence.jsonl`, `profiles.jsonl`, profile owner
+markers, or Surface catalog admission must run
+`pnpm unit-profile-coverage:check --write`, include generated
+`plans/unit-profile-coverage/` artifacts, and keep this active plan consistent
+with `SRD_UNIT_INVENTORY.md` before the task is marked `done`.
 
 Out of scope: implementation work not captured by the newly appended batch,
 PHB/XPHB pressure, broad runtime rewrites, and treating catalog admission alone

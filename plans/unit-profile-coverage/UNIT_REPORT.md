@@ -17,13 +17,13 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Authored Surface Unit catalog admission | 113/415 | 27.2% |
 | Authored Surface executable catalog admission | 89/348 | 25.6% |
 | Installed Unit profile classification coverage | 114/114 | 100% |
-| Supported executable Unit coverage | 57/90 | 63.3% |
+| Supported executable Unit coverage | 56/90 | 62.2% |
 | QNT profile modeling coverage | 32/32 | 100% |
 | QNT proof coverage | 30/32 | 93.8% |
 | Runtime mapping coverage | 32/32 | 100% |
 | Runtime parity coverage | 32/32 | 100% |
-| Deterministic admission/projection coverage | 53/57 | 93% |
-| Selected identity MBT coverage | 10/57 | 17.5% |
+| Deterministic admission/projection coverage | 52/56 | 92.9% |
+| Selected identity MBT coverage | 10/56 | 17.9% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -86,7 +86,6 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `false_life` | srd-5.2.1 | `spell.scalar-buff` |
 | `guidance` | srd-5.2.1 | `spell.invocation-roll-modifier` |
 | `guiding_bolt` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
-| `hunters_mark` | srd-5.2.1 | `spell.invocation-marked-damage-rider` |
 | `ice_knife` | srd-5.2.1 | `spell.invocation-damage-save-or-attack` |
 | `inflict_wounds` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
 | `longstrider` | srd-5.2.1 | `spell.scalar-buff` |
@@ -111,6 +110,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | --- | --- | --- | --- | --- |
 | `animal_friendship` | srd-5.2.1 | `spell.creature-type-protection-and-charm` | Beast creature-type target filter; Wisdom save-gated Charmed condition; 24-hour spell-owned condition duration; slot-scaled target count | spell ends if caster or one of the caster's allies deals damage to the target (SRDINV33) |
 | `chill_touch` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | combatant-target melee spell attack damage; cantrip damage scaling; readied Action-time spell release | non-combatant target eligibility for the SRD generic target wording (SRDINV34); target can't regain Hit Points until the end of the caster's next turn (SRDINV28D) |
+| `hunters_mark` | srd-5.2.1 | `spell.invocation-marked-damage-rider` | Bonus Action cast with level-1 Spell Slot spend; Concentration-owned mark identity on one combatant target; extra Force damage when the caster hits the marked target with an Attack Roll; Bonus Action transfer only after the marked target drops to 0 Hit Points; Concentration cleanup removes the marked-target damage rider | Wisdom (Perception or Survival) Advantage to find the marked target (SRDINV33); slot-scaled Concentration maximum of 8 hours at slots 3-4 and 24 hours at slots 5+ (SRDINV33) |
 | `protection_from_evil_and_good` | srd-5.2.1 | `spell.creature-type-protection-and-charm` | one touched target; concentration active effect; Aberration/Celestial/Elemental/Fey/Fiend/Undead attacker creature-type filter; attack-roll Disadvantage against the protected target | target can't be possessed by scoped creatures (SRDINV33); target can't gain Charmed or Frightened from scoped creatures (SRDINV33); Advantage on new saves against already-applied possession, Charmed, or Frightened effects from scoped creatures (SRDINV33) |
 | `produce_flame` | srd-5.2.1 | `spell.invocation-damage-save-or-attack` | Bonus Action held-light state; held-state-gated later Magic action hurl; combatant-target ranged spell attack damage; Fire damage; cantrip damage scaling | object target identity, Armor Class/Hit Points, and damage disposition for the SRD creature-or-object hurl target (SRDINV34) |
 
@@ -793,7 +793,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `false_life` | `spell.scalar-buff` | SRDINV30A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `guidance` | `spell.invocation-roll-modifier` | SRDINV30B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `guiding_bolt` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28D | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `hunters_mark` | `spell.invocation-marked-damage-rider` | SRDINV31B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `ice_knife` | `spell.invocation-damage-save-or-attack` | SRDINV29E | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `inflict_wounds` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `longstrider` | `spell.scalar-buff` | SRDINV30A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
@@ -818,6 +817,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | --- | --- | --- | --- | --- |
 | `animal_friendship` | `spell.creature-type-protection-and-charm` | SRDINV30C | `packages/battle-runtime/src/unit-profile-admission.test.ts` | spell ends if caster or one of the caster's allies deals damage to the target (SRDINV33) |
 | `chill_touch` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28C | `packages/battle-runtime/src/unit-profile-admission.test.ts` | non-combatant target eligibility for the SRD generic target wording (SRDINV34); target can't regain Hit Points until the end of the caster's next turn (SRDINV28D) |
+| `hunters_mark` | `spell.invocation-marked-damage-rider` | SRDINV31B | `packages/battle-runtime/src/unit-profile-admission.test.ts` | Wisdom (Perception or Survival) Advantage to find the marked target (SRDINV33); slot-scaled Concentration maximum of 8 hours at slots 3-4 and 24 hours at slots 5+ (SRDINV33) |
 | `protection_from_evil_and_good` | `spell.creature-type-protection-and-charm` | SRDINV30C | `packages/battle-runtime/src/unit-profile-admission.test.ts` | target can't be possessed by scoped creatures (SRDINV33); target can't gain Charmed or Frightened from scoped creatures (SRDINV33); Advantage on new saves against already-applied possession, Charmed, or Frightened effects from scoped creatures (SRDINV33) |
 | `produce_flame` | `spell.invocation-damage-save-or-attack` | SRDINV32B | `packages/battle-runtime/src/unit-profile-admission.test.ts` | object target identity, Armor Class/Hit Points, and damage disposition for the SRD creature-or-object hurl target (SRDINV34) |
 
@@ -879,6 +879,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `animal_friendship` | profile-subset-supported | supported subset: Beast creature-type target filter; Wisdom save-gated Charmed condition; 24-hour spell-owned condition duration; slot-scaled target count; deferred: spell ends if caster or one of the caster's allies deals damage to the target (SRDINV33) |
 | `chill_touch` | profile-subset-supported | supported subset: combatant-target melee spell attack damage; cantrip damage scaling; readied Action-time spell release; deferred: non-combatant target eligibility for the SRD generic target wording (SRDINV34); target can't regain Hit Points until the end of the caster's next turn (SRDINV28D) |
 | `fire_bolt` | needs-surface-widening | QMBT23 keeps SRD Fire Bolt out of supported spell evidence until promoted spell invocation has an explicit object-target branch and object-ignition effect outcome; table-supplied object facts are required but are not a complete runtime boundary. |
+| `hunters_mark` | profile-subset-supported | supported subset: Bonus Action cast with level-1 Spell Slot spend; Concentration-owned mark identity on one combatant target; extra Force damage when the caster hits the marked target with an Attack Roll; Bonus Action transfer only after the marked target drops to 0 Hit Points; Concentration cleanup removes the marked-target damage rider; deferred: Wisdom (Perception or Survival) Advantage to find the marked target (SRDINV33); slot-scaled Concentration maximum of 8 hours at slots 3-4 and 24 hours at slots 5+ (SRDINV33) |
 | `light` | unsupported-profile | Object light effect is authored but not promoted as an execution profile yet. |
 | `protection_from_evil_and_good` | profile-subset-supported | supported subset: one touched target; concentration active effect; Aberration/Celestial/Elemental/Fey/Fiend/Undead attacker creature-type filter; attack-roll Disadvantage against the protected target; deferred: target can't be possessed by scoped creatures (SRDINV33); target can't gain Charmed or Frightened from scoped creatures (SRDINV33); Advantage on new saves against already-applied possession, Charmed, or Frightened effects from scoped creatures (SRDINV33) |
 | `produce_flame` | profile-subset-supported | supported subset: Bonus Action held-light state; held-state-gated later Magic action hurl; combatant-target ranged spell attack damage; Fire damage; cantrip damage scaling; deferred: object target identity, Armor Class/Hit Points, and damage disposition for the SRD creature-or-object hurl target (SRDINV34) |
@@ -905,7 +906,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
 | srd-5.2.1 | unassigned | unsupported-profile | 52 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `bard_bardic_inspiration`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `monk_martial_arts`, `ranger_favored_enemy`, `rogue_expertise`, `rogue_thieves_cant`, `sorcerer_innate_sorcery`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `mastery_sap`, `orc_darkvision`, `light`, `detect_magic`, `sleep`, `eldritch_blast`, `minor_illusion`, `charm_person`, `hellish_rebuke`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `grease` |
-| srd-5.2.1 | unassigned | profile-subset-supported | 4 | `animal_friendship`, `chill_touch`, `protection_from_evil_and_good`, `produce_flame` |
+| srd-5.2.1 | unassigned | profile-subset-supported | 5 | `animal_friendship`, `chill_touch`, `hunters_mark`, `protection_from_evil_and_good`, `produce_flame` |
 | srd-5.2.1 | QCORE10 | needs-surface-widening | 1 | `fire_bolt` |
 | srd-5.2.1 | SRDINV34 | needs-surface-widening | 1 | `starry_wisp` |
 | srd-5.2.1 | unassigned | needs-surface-widening | 1 | `thunderwave` |
