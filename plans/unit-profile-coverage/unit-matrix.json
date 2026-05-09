@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 348,
-      "numerator": 74,
-      "percent": "21.3%"
+      "numerator": 75,
+      "percent": "21.6%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 415,
-      "numerator": 98,
-      "percent": "23.6%"
+      "numerator": 99,
+      "percent": "23.9%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,47 +59,47 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 99
+      "value": 100
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 45,
-      "numerator": 41,
-      "percent": "91.1%"
+      "denominator": 46,
+      "numerator": 42,
+      "percent": "91.3%"
     },
     "profileClassificationCoverage": {
-      "denominator": 99,
-      "numerator": 99,
+      "denominator": 100,
+      "numerator": 100,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 25,
-      "numerator": 25,
+      "denominator": 26,
+      "numerator": 26,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 25,
+      "denominator": 26,
       "numerator": 25,
-      "percent": "100%"
+      "percent": "96.2%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 25,
-      "numerator": 25,
+      "denominator": 26,
+      "numerator": 26,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 25,
-      "numerator": 25,
+      "denominator": 26,
+      "numerator": 26,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 45,
+      "denominator": 46,
       "numerator": 10,
-      "percent": "22.2%"
+      "percent": "21.7%"
     },
     "supportedProfileCoverage": {
-      "denominator": 75,
-      "numerator": 45,
-      "percent": "60%"
+      "denominator": 76,
+      "numerator": 46,
+      "percent": "60.5%"
     }
   },
   "metricSemantics": [
@@ -803,6 +803,30 @@
       ]
     },
     {
+      "id": "spell.invocation-condition-save",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "SRDINV29B"
+      ],
+      "title": "Spell invocation resolves supported save-gated condition effects",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/index.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.hit-point-restoration",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -1212,6 +1236,14 @@
         "character-sheet.spellbook-ritual-invocation"
       ],
       "taskId": "SRDINV26"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime Color Spray tests for self-origin Cone Constitution save outcomes, spell-owned Blinded application, end-of-caster-next-turn expiration, and unrelated Blinded source preservation.",
+      "profileIds": [
+        "spell.invocation-condition-save"
+      ],
+      "taskId": "SRDINV29B"
     }
   ],
   "units": [
@@ -3674,6 +3706,60 @@
       },
       "claim": {
         "profileIds": [
+          "spell.invocation-condition-save"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV29B"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-condition-save",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV29B"
+          ],
+          "title": "Spell invocation resolves supported save-gated condition effects",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/color_spray.json",
+      "unitId": "color_spray"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
           "spell.hit-point-restoration"
         ],
         "rawRequirementIds": [
@@ -6103,24 +6189,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/cloudkill.json",
       "unitId": "cloudkill"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/color_spray.json",
-      "unitId": "color_spray"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

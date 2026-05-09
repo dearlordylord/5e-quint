@@ -5,6 +5,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV28C chill_touch
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV28D guiding_bolt ray_of_sickness shocking_grasp vicious_mockery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29A burning_hands
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29B color_spray
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT25 healing_word
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT32 cure_wounds mass_healing_word
@@ -22,7 +23,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT59 monk_deflect_attacks
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT62 fighter_tactical_mind
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT65 bard_cutting_words
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.invocation-condition-save
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -127,6 +128,8 @@ const rogueUncannyDodgeUnitId = "rogue_uncanny_dodge";
 const rogueSneakAttackUnitId = "rogue_sneak_attack";
 const bardCuttingWordsUnitId = "bard_cutting_words";
 const burningHandsUnitId = "burning_hands";
+const colorSprayUnitId = "color_spray";
+const sleepUnitId = "sleep";
 const monkDeflectAttacksUnitId = "monk_deflect_attacks";
 const defenseUnitId = "defense";
 const myceliumStepUnitId = "mycelium_step";
@@ -2756,6 +2759,70 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
         areaChoices: [],
       }),
     ]);
+  });
+
+  test("color_spray is admitted as a self-origin Cone save-gated slot condition spell", () => {
+    const spell = spellRecord(colorSprayUnitId);
+    const act = spellAct({
+      state: spellBattle({
+        preparedSpells: [spell],
+        spellSlots: [{ spellLevel: 1, count: 1 }],
+      }),
+      spellId: colorSprayUnitId,
+      slotLevel: 1,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(
+        "color_spray",
+        1,
+        "saveGatedCondition",
+      ),
+      mode: { tag: "cast" },
+    });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+    expect(savingThrow).toEqual(
+      expect.objectContaining({
+        label: "Color Spray self-origin Cone Saving Throw outcomes",
+        ability: "con",
+        dc: { kind: "caster_spell_save_dc" },
+      }),
+    );
+    expect(spellHoleInvocation([savingThrow])).toEqual(
+      expect.objectContaining({
+        procedure: "saveGatedCondition",
+        spell,
+        resource: { tag: "spellSlot", slotLevel: 1 },
+        ability: "con",
+        targeting: { kind: "selfOriginCone", lengthFeet: 15 },
+        effect: { condition: "blinded", expiresAt: "endOfCasterNextTurn" },
+        rangeFeet: 0,
+      }),
+    );
+    expect(act.initialHoles).toEqual([
+      expect.objectContaining({
+        kind: "savingThrowOutcome",
+        areaChoices: [],
+      }),
+    ]);
+  });
+
+  test("sleep remains unsupported by the Color Spray condition-save admission path", () => {
+    const spell = spellRecord(sleepUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+
+    expect(
+      maybeSpellAct({
+        state,
+        spellId: sleepUnitId,
+        slotLevel: 1,
+      }),
+    ).toBeUndefined();
   });
 
   test("mage_armor is admitted through catalog spell access and projected as a persistent prepared spell", () => {

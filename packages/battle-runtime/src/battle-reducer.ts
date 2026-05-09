@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell stat-block.attack-control
 import { Brand, Match, Schema } from "effect";
 import { isNonEmptyReadonlyArray } from "effect/Array";
 import * as Either from "effect/Either";
@@ -132,6 +132,7 @@ import type {
   DcSource,
   DiceAmount as SurfaceDiceAmount,
   DiceExpr,
+  ActivationPhase,
   Attachment,
   Size,
   SpellRecord,
@@ -876,6 +877,10 @@ type SpellFailedSavePostDamageRider = {
   readonly mode: "disadvantage";
   readonly expiresAt: "endOfTargetNextTurn";
 };
+type SpellFailedSaveConditionEffect = {
+  readonly condition: Condition;
+  readonly expiresAt: "endOfCasterNextTurn";
+};
 // SupportedAttackActionOption is a currently executable option for spending an
 // immediate attack made as part of the Attack action. It is narrower than all
 export type SupportedSpellInvocation =
@@ -924,6 +929,17 @@ export type SupportedSpellInvocation =
       readonly rangeFeet: MovementFeet;
       readonly failedSavePostDamageRiders: readonly SpellFailedSavePostDamageRider[];
     })
+  | {
+      readonly access: PreparedSpellAccess;
+      readonly resource: SpellSlotInvocationResource;
+      readonly procedure: "saveGatedCondition";
+      readonly spell: SpellRecord;
+      readonly ability: Ability;
+      readonly dc: DcSource;
+      readonly targeting: SpellTargeting;
+      readonly effect: SpellFailedSaveConditionEffect;
+      readonly rangeFeet: MovementFeet;
+    }
   | {
       readonly access: PreparedSpellAccess;
       readonly resource: SpellSlotInvocationResource;
@@ -978,7 +994,8 @@ type SupportedDamageSpellInvocation = Exclude<
     readonly procedure:
       | "persistentArmorEffect"
       | "directHitPointRestoration"
-      | "shieldReaction";
+      | "shieldReaction"
+      | "saveGatedCondition";
   }
 >;
 
@@ -1373,6 +1390,7 @@ function battleStateInitIssue(
 
 const SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET = movementFeet(5);
 const SUPPORTED_SELF_CONE_SAVE_GATE_LENGTH_FEET = movementFeet(15);
+const COLOR_SPRAY_FAILED_SAVE_CONDITION = "blinded" satisfies Condition;
 
 export type AvailableBattleAct = {
   readonly subject: BattleSubject;
@@ -1519,7 +1537,7 @@ export type BattleSpellSavingThrowOutcomeHole = {
   readonly label: string;
   readonly spell: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "saveGatedDamage" }
+    { readonly procedure: "saveGatedDamage" | "saveGatedCondition" }
   >;
   readonly ability: Ability;
   readonly dc: DcSource;
@@ -1905,6 +1923,32 @@ const SupportedSpellInvocationSchema = Schema.Union(
         expiresAt: Schema.Literal("endOfTargetNextTurn"),
       }),
     ),
+  }),
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("saveGatedCondition"),
+    spell: BattleRuntimeObjectSchema,
+    ability: Schema.String,
+    dc: BattleRuntimeObjectSchema,
+    targeting: Schema.Union(
+      Schema.Struct({
+        kind: Schema.Literal("singleCombatant"),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("pointOriginSphere"),
+        radiusFeet: MovementFeet,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("selfOriginCone"),
+        lengthFeet: MovementFeet,
+      }),
+    ),
+    effect: Schema.Struct({
+      condition: Schema.Literal(...ALL_CONDITIONS),
+      expiresAt: Schema.Literal("endOfCasterNextTurn"),
+    }),
+    rangeFeet: MovementFeet,
   }),
   Schema.Struct({
     access: PreparedSpellAccessSchema,
@@ -13433,7 +13477,10 @@ function discoverSupportedSpellInvocations(
       ) {
         return [];
       }
-      if (invocation.procedure === "saveGatedDamage") {
+      if (
+        invocation.procedure === "saveGatedDamage" ||
+        invocation.procedure === "saveGatedCondition"
+      ) {
         if (invocation.targeting.kind === "singleCombatant") {
           const targetHole = spellTargetHole(state, actorId, invocation);
           if (targetHole.choices.length === 0) {
@@ -13448,7 +13495,7 @@ function discoverSupportedSpellInvocations(
                 mode: { tag: "cast" as const },
               },
               label: invocation.spell.name,
-              summary: `${spellDamageInvocationCastSummary(invocation)} Table-supplied affected targets make ${invocation.ability.toUpperCase()} Saving Throws.`,
+              summary: `${spellActivationInvocationCastSummary(invocation)} Table-supplied affected targets make ${invocation.ability.toUpperCase()} Saving Throws.`,
               initialHoles: [targetHole],
             },
           ];
@@ -13468,7 +13515,7 @@ function discoverSupportedSpellInvocations(
               mode: { tag: "cast" as const },
             },
             label: invocation.spell.name,
-            summary: `${spellDamageInvocationCastSummary(invocation)} Table-supplied affected targets make ${invocation.ability.toUpperCase()} Saving Throws.`,
+            summary: `${spellActivationInvocationCastSummary(invocation)} Table-supplied affected targets make ${invocation.ability.toUpperCase()} Saving Throws.`,
             initialHoles: [initialHole],
           },
         ];
@@ -13518,18 +13565,23 @@ function spellInvocationCastSummary(
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
   if (invocation.procedure === "spellAttackDamage") {
-    return spellDamageInvocationCastSummary(invocation);
+    return spellActivationInvocationCastSummary(invocation);
   }
-  return spellDamageInvocationCastSummary(invocation);
+  return spellActivationInvocationCastSummary(invocation);
 }
 
-function spellDamageInvocationCastSummary(
+function spellActivationInvocationCastSummary(
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "spellAttackDamage" | "saveGatedDamage" }
+    {
+      readonly procedure:
+        | "spellAttackDamage"
+        | "saveGatedDamage"
+        | "saveGatedCondition";
+    }
   >,
 ): string {
-  return isPreparedDamageSpellSource(invocation)
+  return invocation.resource.tag === "spellSlot"
     ? `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`
     : `Cast ${invocation.spell.name} as a cantrip.`;
 }
@@ -13567,6 +13619,7 @@ function readiedSpellAct(
   if (
     invocation.procedure === "persistentArmorEffect" ||
     invocation.procedure === "directHitPointRestoration" ||
+    invocation.procedure === "saveGatedCondition" ||
     invocation.procedure === "shieldReaction" ||
     state.readiedSpells.has(actorId)
   ) {
@@ -13646,12 +13699,13 @@ function resolveSpellAct(
 
   if (
     subject.mode.tag === "ready" &&
-    invocation.procedure === "directHitPointRestoration"
+    (invocation.procedure === "directHitPointRestoration" ||
+      invocation.procedure === "saveGatedCondition")
   ) {
     return invalidResult(
       input.state,
       "unsupportedSubject",
-      "Hit Point restoration spells cannot be readied by this runtime lane.",
+      "This spell procedure cannot be readied by this runtime lane.",
     );
   }
 
@@ -13668,6 +13722,14 @@ function resolveSpellAct(
   }
   if (invocation.procedure === "saveGatedDamage") {
     return resolveSaveGateDamageSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "saveGatedCondition") {
+    return resolveSaveGateConditionSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
@@ -14380,6 +14442,13 @@ function resolveReadySpellAct(
       "Reaction spells cannot be readied by this runtime lane.",
     );
   }
+  if (invocation.procedure === "saveGatedCondition") {
+    return invalidResult(
+      input.state,
+      "unsupportedActOption",
+      "Save-gate condition spells cannot be readied by this runtime lane.",
+    );
+  }
   if (input.fills.length > 0) {
     return invalidResult(
       input.state,
@@ -14955,7 +15024,10 @@ function spellFillSet(
     }
 
     if (fill.kind === "savingThrowOutcome") {
-      if (invocation.procedure !== "saveGatedDamage") {
+      if (
+        invocation.procedure !== "saveGatedDamage" &&
+        invocation.procedure !== "saveGatedCondition"
+      ) {
         return {
           tag: "invalid",
           message: "Spell saving throw outcomes do not match this spell act.",
@@ -15708,6 +15780,132 @@ function resolveSaveGateDamageSpellAct(input: {
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
+}
+
+function resolveSaveGateConditionSpellAct(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "saveGatedCondition" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  const savingThrowHole = spellSavingThrowOutcomeHole(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+  );
+  if (
+    input.invocation.targeting.kind !== "singleCombatant" &&
+    input.fillSet.targetId !== undefined
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Save-gate condition spells use saving throw outcome fills, not a single-target fill.",
+    );
+  }
+  if (input.invocation.targeting.kind === "singleCombatant") {
+    if (input.fillSet.targetId === undefined) {
+      return needsHolesResult(input.input.state, input.input.subject, [
+        spellTargetHole(input.input.state, input.actorId, input.invocation),
+      ]);
+    }
+    const target = input.input.state.combatants.get(input.fillSet.targetId);
+    if (
+      target === undefined ||
+      !spellTargetIsLegal(
+        input.input.state,
+        input.actorId,
+        target.combatantId,
+        input.invocation,
+        input.fillSet.targetSpatialFacts,
+      )
+    ) {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        "Spell target must be a combatant within the selected spell's supported range.",
+      );
+    }
+  }
+  if (
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.concentrationSavingThrows.length > 0 ||
+    input.fillSet.damageDispositions.length > 0
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Save-gate condition spells do not use attack or damage fills.",
+    );
+  }
+  if (input.fillSet.savingThrowOutcomes === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      savingThrowHole,
+    ]);
+  }
+  const savingThrowOutcomes = input.fillSet.savingThrowOutcomes;
+  const savingThrowValidation = validateSavingThrowOutcomes(
+    savingThrowOutcomes,
+    savingThrowHole,
+    input.input.state,
+    input.actorId,
+    input.fillSet.targetId,
+  );
+  if (savingThrowValidation !== null) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      savingThrowValidation,
+    );
+  }
+
+  const selectedTargetIds = savingThrowOutcomes.outcomes.map(
+    (outcome) => outcome.targetId,
+  );
+  const failedTargets = savingThrowOutcomes.outcomes.flatMap((outcome) =>
+    outcome.succeeded ? [] : [outcome.targetId],
+  );
+  if (failedTargets.length > 0) {
+    const saveFailedReactionWindow = maybeOpenReactionWindow(
+      input.input.state,
+      {
+        trigger: "saveFailed",
+        targetId: failedTargets[0]!,
+        sourceSpellId: input.invocation.spell.id,
+        continuation: {
+          kind: "replay",
+          subject:
+            input.input.reactionContinuationSubject ?? input.input.subject,
+          fills: input.input.fills,
+        },
+      },
+      input.input.suppressedReactionTrigger,
+    );
+    if (saveFailedReactionWindow !== null) {
+      return saveFailedReactionWindow;
+    }
+  }
+
+  const effected = applyFailedSaveSpellConditionEffects(
+    input.input.state,
+    input.actorId,
+    failedTargets,
+    input.invocation,
+  );
+  return spendSpellCastResources({
+    state: extendSavingThrowOngoingFeatures(
+      effected,
+      input.actorId,
+      selectedTargetIds,
+    ),
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
 }
 
 function validateSavingThrowOutcomes(
@@ -16732,6 +16930,9 @@ function supportedSpellActs(
       supportedPreparedSaveGateDamageProfile(spell, spellcasting.spellSlots),
     ),
     ...spellcasting.preparedSpells.flatMap((spell) =>
+      supportedPreparedSaveGateConditionProfile(spell, spellcasting.spellSlots),
+    ),
+    ...spellcasting.preparedSpells.flatMap((spell) =>
       supportedPreparedPersistentSpellProfile(actor.combatantId, spell),
     ),
     ...spellcasting.preparedSpells.flatMap((spell) =>
@@ -17289,6 +17490,91 @@ function supportedPreparedSaveGateDamageProfile(
   });
 }
 
+function supportedPreparedSaveGateConditionProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  const colorSpray = colorSpraySaveGateConditionSpell(spell);
+  if (colorSpray === null) {
+    return [];
+  }
+
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    return [
+      {
+        access: { tag: "prepared" },
+        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        procedure: "saveGatedCondition",
+        spell,
+        ability: colorSpray.phase.ability,
+        dc: colorSpray.phase.dc,
+        targeting: colorSpray.targeting,
+        effect: {
+          condition: colorSpray.condition,
+          expiresAt: "endOfCasterNextTurn",
+        },
+        rangeFeet: colorSpray.rangeFeet,
+      },
+    ];
+  });
+}
+
+type ColorSpraySaveGateConditionSpell = {
+  readonly phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>;
+  readonly targeting: Extract<
+    SpellTargeting,
+    { readonly kind: "selfOriginCone" }
+  >;
+  readonly condition: typeof COLOR_SPRAY_FAILED_SAVE_CONDITION;
+  readonly rangeFeet: MovementFeet;
+};
+
+function colorSpraySaveGateConditionSpell(
+  spell: SpellRecord,
+): ColorSpraySaveGateConditionSpell | null {
+  if (spell.mechanics.family !== "activation") {
+    return null;
+  }
+  const phase = spell.mechanics.phases[0];
+  const failedEffect = phase?.kind === "save_gate" ? phase.onFail : undefined;
+  if (
+    spell.mechanics.level !== 1 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "self" ||
+    spell.mechanics.duration.kind !== "timed" ||
+    spell.mechanics.duration.value.unit !== "round" ||
+    spell.mechanics.duration.value.amount !== 1 ||
+    spell.mechanics.phases.length !== 1 ||
+    phase?.kind !== "save_gate" ||
+    "repeatSave" in phase ||
+    phase.ability !== "con" ||
+    phase.dc.kind !== "caster_spell_save_dc" ||
+    phase.onSuccess.kind !== "none" ||
+    phase.attachment.kind !== "area" ||
+    phase.attachment.origin.kind !== "self" ||
+    phase.attachment.shape.kind !== "cone" ||
+    phase.attachment.shape.lengthFeet !==
+      SUPPORTED_SELF_CONE_SAVE_GATE_LENGTH_FEET ||
+    failedEffect?.kind !== "apply_condition" ||
+    failedEffect.condition !== COLOR_SPRAY_FAILED_SAVE_CONDITION
+  ) {
+    return null;
+  }
+
+  return {
+    phase,
+    targeting: {
+      kind: "selfOriginCone",
+      lengthFeet: movementFeet(phase.attachment.shape.lengthFeet),
+    },
+    condition: COLOR_SPRAY_FAILED_SAVE_CONDITION,
+    rangeFeet: movementFeet(0),
+  };
+}
+
 function supportedSaveGateDamageProfile(
   input: {
     readonly spell: SpellRecord;
@@ -17302,9 +17588,7 @@ function supportedSaveGateDamageProfile(
   }
   const phase = spell.mechanics.phases[0];
   const targeting =
-    phase?.kind === "save_gate"
-      ? saveGateDamageTargeting(phase.attachment)
-      : null;
+    phase?.kind === "save_gate" ? saveGateTargeting(phase.attachment) : null;
   const rangeFeet =
     targeting?.kind === "singleCombatant"
       ? singleTargetSpellRangeFeet(spell.mechanics.range)
@@ -17361,9 +17645,7 @@ function supportedSaveGateDamageProfile(
   return [{ ...damageSpellSource(input), ...saveGatedInvocation }];
 }
 
-function saveGateDamageTargeting(
-  attachment: Attachment,
-): SpellTargeting | null {
+function saveGateTargeting(attachment: Attachment): SpellTargeting | null {
   const value = attachment.kind === "hole" ? attachment.value : attachment;
   if (
     value.kind === "target" &&
@@ -18059,6 +18341,12 @@ function supportedSpellInvocationRef(
     })),
     Match.when({ procedure: "spellAttackDamage" }, damageSpellInvocationRef),
     Match.when({ procedure: "saveGatedDamage" }, damageSpellInvocationRef),
+    Match.when({ procedure: "saveGatedCondition" }, (conditionSpell) => ({
+      tag: "spellSlot" as const,
+      spellId: spellId(conditionSpell.spell.id),
+      slotLevel: conditionSpell.resource.slotLevel,
+      procedure: "saveGatedCondition" as const,
+    })),
     Match.when({ procedure: "persistentArmorEffect" }, (persistent) => ({
       tag: "spellSlot" as const,
       spellId: spellId(persistent.spell.id),
@@ -18206,7 +18494,7 @@ function spellSavingThrowOutcomeHole(
   _actorId: CombatantId,
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "saveGatedDamage" }
+    { readonly procedure: "saveGatedDamage" | "saveGatedCondition" }
   >,
 ): BattleSpellSavingThrowOutcomeHole {
   const holeKey = `battle:spell:saving-throw-outcome:${invocation.spell.id}`;
@@ -18623,6 +18911,55 @@ function applyFailedSaveSpellActiveEffects(
   return { ...state, combatants };
 }
 
+function applyFailedSaveSpellConditionEffects(
+  state: BattleState,
+  actorId: CombatantId,
+  targetIds: readonly CombatantId[],
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "saveGatedCondition" }
+  >,
+): BattleState {
+  const combatants = new Map(state.combatants);
+  for (const targetId of targetIds) {
+    const target = combatants.get(targetId);
+    if (target === undefined) {
+      continue;
+    }
+    const replacing = target.activeEffects.filter(
+      (effect) =>
+        effect.kind === "spellCondition" &&
+        effect.sourceSpellId === invocation.spell.id &&
+        effect.sourceCombatantId === actorId &&
+        effect.condition === invocation.effect.condition,
+    );
+    const activeEffects = [
+      ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
+      {
+        kind: "spellCondition" as const,
+        sourceSpellId: invocation.spell.id,
+        sourceCombatantId: actorId,
+        condition: invocation.effect.condition,
+        conditionHadNonSpellSource: conditionHadNonSpellSourceBeforeSpellEffect(
+          target,
+          invocation.effect.condition,
+        ),
+        expiresAt: activeEffectExpirationForPostDamageRider(
+          state,
+          actorId,
+          target.combatantId,
+          invocation.effect.expiresAt,
+        ),
+      },
+    ];
+    combatants.set(
+      targetId,
+      battleCreatureWithSpellActiveEffects(target, activeEffects),
+    );
+  }
+  return { ...state, combatants };
+}
+
 function activeEffectKindForSpellPostDamageRider(
   rider: SpellPostDamageRider,
 ): BattleActiveEffect["kind"] {
@@ -18718,6 +19055,7 @@ function activeEffectExpirationForPostDamageRider(
   expiresAt:
     | SpellPostDamageRiderExpiration
     | SpellFailedSavePostDamageRider["expiresAt"]
+    | SpellFailedSaveConditionEffect["expiresAt"]
     | undefined,
 ): BattleActiveEffectExpiration {
   if (expiresAt === undefined) {

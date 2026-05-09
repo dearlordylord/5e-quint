@@ -179,9 +179,10 @@ flowchart TD
   either ask for one creature
   target first, as with `sacred_flame` and `inflict_wounds`, or use a
   table-supplied affected-target outcome hole for admitted areas such as
-  `acid_splash` and `burning_hands`; damage is requested only for targets whose
-  Saving Throw outcome and admitted replacement riders still produce damage.
-  `burning_hands` is the self-origin Cone save-for-half branch; the table
+  `acid_splash`, `burning_hands`, and `color_spray`; damage is requested only
+  for targets whose Saving Throw outcome and admitted replacement riders still
+  produce damage. `burning_hands` is the self-origin Cone save-for-half branch;
+  `color_spray` is the self-origin Cone save-gated condition branch. The table
   supplies affected targets rather than the reducer deriving grid geometry.
   `vicious_mockery` adds an attack-roll-only Disadvantage effect on failed
   saves.

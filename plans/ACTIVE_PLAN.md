@@ -322,7 +322,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 204,
       "id": "SRDINV29B",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Color Spray Cone Condition Runtime"
     },
     {
@@ -526,7 +526,7 @@ Keep it synchronized with the DAG table and task details.
 | 201   | SRDINV28D - Promote Spell Rider Timing Runtime | done | SRDINV28B-SRDINV28C | SRDINV29A-SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [battle-runtime active effects](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promoted typed runtime support for SRD spell riders in scope: Ray of Sickness spell-owned Poisoned expiration, Shocking Grasp Opportunity Attack denial, Guiding Bolt next attack against target Advantage, and Vicious Mockery next attack by target Disadvantage, with Chill Touch healing suppression still excluded from this slice. |
 | 202   | SRDINV28E - Decide Starry Wisp Object Targeting | done | SRDINV28A-SRDINV28C | SRDINV29A-SRDINV33 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [battle-runtime target facts](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer.ts), [SRD Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [SRD Chill Touch](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Closed by deferring Starry Wisp support with checker-visible `needs-surface-widening` evidence: object target identity, object AC/HP damage disposition, Dim Light emission, and Invisible benefit denial remain unpromoted, while Chill Touch stays limited to its combatant-target damage subset. |
 | 203   | SRDINV29A - Promote Burning Hands Cone Damage Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Burning Hands](/workspace/typescript/dnd/packages/surface/content/burning_hands.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promoted Burning Hands through the self-origin Cone save-for-half boundary with caller-supplied affected targets, Dexterity save outcomes, Fire damage, slot scaling, and action/slot spend evidence. |
-| 204   | SRDINV29B - Promote Color Spray Cone Condition Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Color Spray](/workspace/typescript/dnd/packages/surface/content/color_spray.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote self-origin cone Blinded application with source-owned end-of-caster-next-turn expiration. |
+| 204   | SRDINV29B - Promote Color Spray Cone Condition Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Color Spray](/workspace/typescript/dnd/packages/surface/content/color_spray.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promoted Color Spray through the self-origin Cone save-gated condition boundary with caller-supplied affected targets, Constitution save outcomes, spell-owned Blinded until the caster's next turn ends, and unrelated Blinded source preservation. |
 | 205   | SRDINV29C - Promote Entangle Area Restraint Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Entangle](/workspace/typescript/dnd/packages/surface/content/entangle.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote point-origin area Restrained application, Concentration cleanup, and escape action for Entangle. |
 | 206   | SRDINV29D - Promote Grease Ground Hazard Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Grease](/workspace/typescript/dnd/packages/surface/content/grease.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Grease as one-minute ground hazard with on-cast Prone and recurring enter/end-turn saves, or keep unsupported if recurrence is not executable. |
 | 207   | SRDINV29E - Promote Ice Knife Mixed Attack Burst Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Ice Knife](/workspace/typescript/dnd/packages/surface/content/ice_knife.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Ice Knife's primary attack plus mandatory primary-target-anchored burst save. |
@@ -2453,7 +2453,7 @@ package-local Quint facts/tests, inventory evidence, `pnpm unit-profile-coverage
 
 ### Task 204 - SRDINV29B - Promote Color Spray Cone Condition Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV28A-SRDINV28E
 
@@ -2463,6 +2463,10 @@ Scope: promote Color Spray as self-origin Cone Constitution save into
 spell-owned Blinded until the end of the caster's next turn. Reuse a cone fact
 boundary if SRDINV29A creates one, but keep condition source ownership and
 expiration tested explicitly. Do not erase unrelated Blinded sources.
+
+Closed with deterministic admission/projection, package-local runtime tests,
+package-local Quint facts/tests, inventory evidence, `pnpm unit-profile-coverage:check`,
+`pnpm quality`, and source-owned condition expiration coverage.
 
 ### Task 205 - SRDINV29C - Promote Entangle Area Restraint Runtime
 

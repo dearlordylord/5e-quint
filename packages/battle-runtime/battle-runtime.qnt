@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.invocation-condition-save
 module battleRuntime {
   // SRD traceability for this canonical battle runtime spec:
   // - Playing-the-Game.md lines 479-495: combat proceeds in rounds and turns
@@ -131,8 +131,8 @@ module battleRuntime {
   // - Spells/Descriptions-M-P.md lines 643-654, Descriptions-S-Z.md lines
   //   7-18, Descriptions-E-L.md lines 1417-1428, and
   //   Descriptions-A-D.md lines 707-720: Poison Spray, Sacred Flame, Inflict
-  //   Wounds, Burning Hands, and the damage-only slice of Chill Touch are
-  //   action-time direct damage spells with creature or table-supplied area
+  //   Wounds, Burning Hands, Color Spray, and the damage-only slice of Chill
+  //   Touch are action-time spells with creature or table-supplied area
   //   targets, cantrip/slot scaling, and the listed attack/save outcomes.
   // - Character-Origins.md lines 253-255, Playing-the-Game.md lines 788-806,
   //   Rules-Glossary.md lines 361-365, and UBIQUITOUS_LANGUAGE.md:
@@ -151,16 +151,18 @@ module battleRuntime {
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | HealingWord | CureWounds | MassHealingWord | Shield | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | ColorSpray | HealingWord | CureWounds | MassHealingWord | Shield | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack
   type SaveGatedDamageInvocation = AcidSplashSaveGate | SacredFlameSaveGate | InflictWoundsSaveGate | BurningHandsSaveGate | ViciousMockerySaveGate
-  type SaveGatedDamageTargeting = AreaSaveTargets | SingleSaveTarget
+  type SaveGatedConditionInvocation =
+    | ColorSpraySaveGate
+  type SaveGatedTargeting = AreaSaveTargets | SingleSaveTarget
   type SaveGatedDamageSuccess = NoDamageOnSaveSuccess | HalfDamageOnSaveSuccess
   type MovementSpeedKind = WalkSpeedKind | ClimbSpeedKind | SwimSpeedKind
   type DirectHitPointRestorationSpell = HealingWordRestoration | CureWoundsRestoration | MassHealingWordRestoration
   type SpellActionCost = SpellMagicAction | SpellBonusAction
 
-  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage
+  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
 
   type CreatureSize = Tiny | Small | Medium | Large | Huge | Gargantuan
@@ -598,6 +600,7 @@ module battleRuntime {
         | ShockingGraspOpportunityAttackDenied => false
         | GuidingBoltNextAttackAdvantage => false
         | ViciousMockeryNextAttackDisadvantage => false
+        | ColorSprayBlinded => false
       })) 13 + dexMod else baseAc
       if (effects.contains(ShieldArmorClassBonus)) base + 5 else base
     }
@@ -1862,6 +1865,7 @@ module battleRuntime {
       | SacredFlame => false
       | InflictWounds => true
       | BurningHands => true
+      | ColorSpray => true
       | HealingWord => true
       | CureWounds => true
       | MassHealingWord => true
@@ -1959,7 +1963,7 @@ module battleRuntime {
   ): bool =
     hit and currentActor != caster
 
-  pure def saveGatedDamageTargeting(invocation: SaveGatedDamageInvocation): SaveGatedDamageTargeting =
+  pure def saveGatedTargeting(invocation: SaveGatedDamageInvocation): SaveGatedTargeting =
     match invocation {
       | AcidSplashSaveGate => AreaSaveTargets
       | SacredFlameSaveGate => SingleSaveTarget
@@ -1995,6 +1999,31 @@ module battleRuntime {
       | ViciousMockerySaveGate => false
     }
 
+  pure def saveGatedConditionTargeting(invocation: SaveGatedConditionInvocation): SaveGatedTargeting =
+    match invocation {
+      | ColorSpraySaveGate => AreaSaveTargets
+    }
+
+  pure def saveGatedConditionFailedSaveActiveEffects(invocation: SaveGatedConditionInvocation): Set[ActiveEffect] =
+    match invocation {
+      | ColorSpraySaveGate => Set(ColorSprayBlinded)
+    }
+
+  pure def saveGatedConditionReplayHoles(
+    invocation: SaveGatedConditionInvocation,
+    canCastSpells: bool,
+    targetFilled: bool,
+    savingThrowOutcomesFilled: bool,
+  ): Set[Hole] =
+    if (not(canCastSpells))
+      Set()
+    else if (saveGatedConditionTargeting(invocation) == SingleSaveTarget and not(targetFilled))
+      Set(TargetChoice)
+    else if (not(savingThrowOutcomesFilled))
+      Set(SavingThrowOutcome)
+    else
+      Set()
+
   pure def saveGatedDamageReplayHoles(
     invocation: SaveGatedDamageInvocation,
     canCastSpells: bool,
@@ -2004,7 +2033,7 @@ module battleRuntime {
   ): Set[Hole] =
     if (not(canCastSpells))
       Set()
-    else if (saveGatedDamageTargeting(invocation) == SingleSaveTarget and not(targetFilled))
+    else if (saveGatedTargeting(invocation) == SingleSaveTarget and not(targetFilled))
       Set(TargetChoice)
     else if (not(savingThrowOutcomesFilled))
       Set(SavingThrowOutcome)
@@ -2119,6 +2148,42 @@ module battleRuntime {
         spellSlotExpendedThisTurn: true,
       }
 
+  pure def saveGatedConditionTarget(
+    invocation: SaveGatedConditionInvocation,
+    target: Combatant,
+    savingThrowSucceeded: bool,
+  ): Combatant =
+    if (savingThrowSucceeded)
+      target
+    else
+      { ...target, activeEffects: target.activeEffects.union(saveGatedConditionFailedSaveActiveEffects(invocation)) }
+
+  pure def resolveColorSpray(
+    state: BattleState,
+    fighterSavingThrowSucceeded: bool,
+    goblinSavingThrowSucceeded: bool,
+  ): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)))
+      state
+    else
+      {
+        ...state,
+        fighter: saveGatedConditionTarget(ColorSpraySaveGate, state.fighter, fighterSavingThrowSucceeded),
+        goblin: saveGatedConditionTarget(ColorSpraySaveGate, state.goblin, goblinSavingThrowSucceeded),
+        actionAvailable: false,
+        spellSlotExpendedThisTurn: true,
+      }
+
+  pure def resolveColorSprayEmptyArea(state: BattleState): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)))
+      state
+    else
+      {
+        ...state,
+        actionAvailable: false,
+        spellSlotExpendedThisTurn: true,
+      }
+
   pure def resolveSingleTargetSaveGatedDamage(
     state: BattleState,
     invocation: SaveGatedDamageInvocation,
@@ -2132,7 +2197,7 @@ module battleRuntime {
       state.fighter.unconscious or
       state.fighter.incapacitated or
       fighterHasRage(state) or
-      saveGatedDamageTargeting(invocation) != SingleSaveTarget or
+      saveGatedTargeting(invocation) != SingleSaveTarget or
       (saveGatedDamageSpendsLevelOneSlot(invocation) and not(canExpendSpellSlotThisTurn(state)))
     )
       state
@@ -2686,6 +2751,8 @@ module battleRuntime {
       assert(expendedSlotsAfterInvocation(ChillTouch, 0) == 0),
       assert(expendedSlotsAfterInvocation(SacredFlame, 0) == 0),
       assert(expendedSlotsAfterInvocation(InflictWounds, 0) == 1),
+      assert(expendedSlotsAfterInvocation(BurningHands, 0) == 1),
+      assert(expendedSlotsAfterInvocation(ColorSpray, 0) == 1),
       assert(expendedSlotsAfterInvocation(HealingWord, 0) == 1),
       assert(expendedSlotsAfterInvocation(CureWounds, 0) == 1),
       assert(expendedSlotsAfterInvocation(MassHealingWord, 0) == 1),
@@ -2747,19 +2814,21 @@ module battleRuntime {
       assert(spellAttackDamageActiveEffects(ShockingGraspSpellAttack) == Set(ShockingGraspOpportunityAttackDenied)),
       assert(spellAttackDamageActiveEffects(GuidingBoltSpellAttack) == Set(GuidingBoltNextAttackAdvantage)),
       assert(saveGatedDamageFailedSaveActiveEffects(ViciousMockerySaveGate) == Set(ViciousMockeryNextAttackDisadvantage)),
+      assert(saveGatedConditionTargeting(ColorSpraySaveGate) == AreaSaveTargets),
+      assert(saveGatedConditionFailedSaveActiveEffects(ColorSpraySaveGate) == Set(ColorSprayBlinded)),
       assert(spellAttackRollModeFromActiveEffects(Set(), Set(GuidingBoltNextAttackAdvantage)) == AdvantageSpellAttackRoll),
       assert(spellAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), Set()) == DisadvantageSpellAttackRoll),
       assert(spellAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), Set(GuidingBoltNextAttackAdvantage)) == NormalSpellAttackRoll),
-      assert(saveGatedDamageTargeting(SacredFlameSaveGate) == SingleSaveTarget),
+      assert(saveGatedTargeting(SacredFlameSaveGate) == SingleSaveTarget),
       assert(saveGatedDamageSuccess(SacredFlameSaveGate) == NoDamageOnSaveSuccess),
       assert(saveGatedDamageType(SacredFlameSaveGate) == Radiant),
-      assert(saveGatedDamageTargeting(InflictWoundsSaveGate) == SingleSaveTarget),
+      assert(saveGatedTargeting(InflictWoundsSaveGate) == SingleSaveTarget),
       assert(saveGatedDamageSuccess(InflictWoundsSaveGate) == HalfDamageOnSaveSuccess),
       assert(saveGatedDamageType(InflictWoundsSaveGate) == Necrotic),
-      assert(saveGatedDamageTargeting(BurningHandsSaveGate) == AreaSaveTargets),
+      assert(saveGatedTargeting(BurningHandsSaveGate) == AreaSaveTargets),
       assert(saveGatedDamageSuccess(BurningHandsSaveGate) == HalfDamageOnSaveSuccess),
       assert(saveGatedDamageType(BurningHandsSaveGate) == Fire),
-      assert(saveGatedDamageTargeting(ViciousMockerySaveGate) == SingleSaveTarget),
+      assert(saveGatedTargeting(ViciousMockerySaveGate) == SingleSaveTarget),
       assert(saveGatedDamageSuccess(ViciousMockerySaveGate) == NoDamageOnSaveSuccess),
       assert(saveGatedDamageType(ViciousMockerySaveGate) == Psychic),
     }
@@ -2783,6 +2852,8 @@ module battleRuntime {
       assert(saveGatedDamageReplayHoles(InflictWoundsSaveGate, true, true, true, true) == Set(DamageRoll)),
       assert(saveGatedDamageReplayHoles(BurningHandsSaveGate, true, true, false, false) == Set(SavingThrowOutcome)),
       assert(saveGatedDamageReplayHoles(BurningHandsSaveGate, true, true, true, true) == Set(DamageRoll)),
+      assert(saveGatedConditionReplayHoles(ColorSpraySaveGate, true, true, false) == Set(SavingThrowOutcome)),
+      assert(saveGatedConditionReplayHoles(ColorSpraySaveGate, true, true, true) == Set()),
     }
   }
 
@@ -2812,6 +2883,26 @@ module battleRuntime {
       assert(result.spellSlotExpendedThisTurn == true),
       assert(result.fighter.hp == 12),
       assert(result.goblin.hp == 10),
+    }
+  }
+
+  run test_color_spray_area_save_applies_blinded_and_spends_slot = {
+    val result = resolveColorSpray(initialState, false, true)
+    all {
+      assert(result.actionAvailable == false),
+      assert(result.spellSlotExpendedThisTurn == true),
+      assert(result.fighter.activeEffects.contains(ColorSprayBlinded)),
+      assert(not(result.goblin.activeEffects.contains(ColorSprayBlinded))),
+    }
+  }
+
+  run test_color_spray_empty_area_spends_slot_without_effect = {
+    val result = resolveColorSprayEmptyArea(initialState)
+    all {
+      assert(result.actionAvailable == false),
+      assert(result.spellSlotExpendedThisTurn == true),
+      assert(not(result.fighter.activeEffects.contains(ColorSprayBlinded))),
+      assert(not(result.goblin.activeEffects.contains(ColorSprayBlinded))),
     }
   }
 

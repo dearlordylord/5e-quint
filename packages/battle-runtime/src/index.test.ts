@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-condition-save
 import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
@@ -96,6 +97,7 @@ import guidingBoltInput from "../../surface/content/guiding_bolt.json";
 import rayOfSicknessInput from "../../surface/content/ray_of_sickness.json";
 import viciousMockeryInput from "../../surface/content/vicious_mockery.json";
 import burningHandsInput from "../../surface/content/burning_hands.json";
+import colorSprayInput from "../../surface/content/color_spray.json";
 import healingWordInput from "../../surface/content/healing_word.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type {
@@ -221,6 +223,7 @@ const testSpellRecords = new Map(
     rayOfSicknessInput,
     viciousMockeryInput,
     burningHandsInput,
+    colorSprayInput,
     healingWordInput,
   ]
     .map((input) => decodeUnitRecordSync(input))
@@ -14568,6 +14571,148 @@ describe("battle runtime", () => {
     ]);
   });
 
+  test("Color Spray applies spell-owned Blinded to failed self-origin Cone saves", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-color-spray"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            cantrips: [],
+            preparedSpells: [spellRecord("color_spray")],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+        statBlockCreatureInit({
+          combatantId: secondSkeletonId,
+          displayName: "Second Skeleton",
+          initiative: 8,
+          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+        }),
+      ],
+    });
+    const subject = magicSubject("color_spray");
+    const savingThrows = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "savingThrowOutcome",
+    );
+    expect(savingThrows).toMatchObject({
+      label: "Color Spray self-origin Cone Saving Throw outcomes",
+      ability: "con",
+      spell: {
+        targeting: { kind: "selfOriginCone", lengthFeet: 15 },
+        effect: { condition: "blinded", expiresAt: "endOfCasterNextTurn" },
+        rangeFeet: 0,
+      },
+    });
+
+    const result = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          savingThrowOutcomeFill(savingThrows, [
+            { targetId: skeletonId, succeeded: false },
+            { targetId: secondSkeletonId, succeeded: true },
+          ]),
+        ],
+      }),
+    );
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId, hp: 12 },
+          {
+            combatantId: skeletonId,
+            hp: 13,
+            conditions: expect.arrayContaining(["blinded"]),
+          },
+          {
+            combatantId: secondSkeletonId,
+            hp: 13,
+            conditions: expect.not.arrayContaining(["blinded"]),
+          },
+        ],
+        turn: { actionResources: [] },
+      },
+    });
+    expect(
+      result.state.combatants.get(skeletonId)?.activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "spellCondition",
+        sourceSpellId: "color_spray",
+        sourceCombatantId: wizardId,
+        condition: "blinded",
+        expiresAt: { kind: "endOfTurn", combatantId: wizardId, round: 2 },
+      }),
+    );
+    expect(expendedLevelOneSlots(result, wizardId)).toBe(1);
+  });
+
+  test("Color Spray expiration does not erase unrelated Blinded sources", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-color-spray-source-preservation"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            cantrips: [],
+            preparedSpells: [spellRecord("color_spray")],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+        }),
+        characterSeed({
+          combatantId: skeletonId,
+          displayName: "Target",
+          initiative: 10,
+          side: oppositionSide,
+          conditions: ["blinded"],
+        }),
+      ],
+    });
+    const subject = magicSubject("color_spray");
+    const savingThrows = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "savingThrowOutcome",
+    );
+    const sprayed = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          savingThrowOutcomeFill(savingThrows, [
+            { targetId: skeletonId, succeeded: false },
+          ]),
+        ],
+      }),
+    );
+
+    const skeletonTurn = requireResolved(
+      endTurn({ state: sprayed.state, actorId: wizardId }),
+    ).state;
+    const nextWizardTurn = requireResolved(
+      endTurn({ state: skeletonTurn, actorId: skeletonId }),
+    ).state;
+    const expired = requireResolved(
+      endTurn({ state: nextWizardTurn, actorId: wizardId }),
+    );
+
+    expect(expired.state.combatants.get(skeletonId)).toMatchObject({
+      conditions: expect.objectContaining({ blinded: true }),
+      activeEffects: [],
+    });
+  });
+
   test("save-damage replacement riders reduce failed half-damage saves", () => {
     const state = wizardVsRogueBattle({ evasion: true });
     const subject = magicSubject("dex_half_cantrip");
@@ -14996,7 +15141,7 @@ function runCanonicalBattleRuntimeQntSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("107 passing");
+  expect(quintOutput).toContain("109 passing");
 }
 
 function hidePrerequisites(
@@ -17498,6 +17643,7 @@ function spellRecord(
     | "ray_of_sickness"
     | "vicious_mockery"
     | "burning_hands"
+    | "color_spray"
     | "healing_word",
 ) {
   const unit = testSpellRecords.get(spellId);
@@ -17522,6 +17668,7 @@ function magicSubject(
     | "ray_of_sickness"
     | "vicious_mockery"
     | "burning_hands"
+    | "color_spray"
     | "dex_half_cantrip",
 ): BattleSubject {
   return {
@@ -17534,16 +17681,18 @@ function magicSubject(
           ? spellSlotInvocationRef(spellId, 1, "persistentArmorEffect")
           : spellId === "inflict_wounds" || spellId === "burning_hands"
             ? spellSlotInvocationRef(spellId, 1, "saveGatedDamage")
-            : spellId === "vicious_mockery"
-              ? cantripSpellInvocationRef(spellId, "saveGatedDamage")
-              : spellId === "guiding_bolt" || spellId === "ray_of_sickness"
-                ? spellSlotInvocationRef(spellId, 1, "spellAttackDamage")
-                : spellId === "ray_of_frost" ||
-                    spellId === "poison_spray" ||
-                    spellId === "chill_touch" ||
-                    spellId === "shocking_grasp"
-                  ? cantripSpellInvocationRef(spellId, "spellAttackDamage")
-                  : cantripSpellInvocationRef(spellId, "saveGatedDamage"),
+            : spellId === "color_spray"
+              ? spellSlotInvocationRef(spellId, 1, "saveGatedCondition")
+              : spellId === "vicious_mockery"
+                ? cantripSpellInvocationRef(spellId, "saveGatedDamage")
+                : spellId === "guiding_bolt" || spellId === "ray_of_sickness"
+                  ? spellSlotInvocationRef(spellId, 1, "spellAttackDamage")
+                  : spellId === "ray_of_frost" ||
+                      spellId === "poison_spray" ||
+                      spellId === "chill_touch" ||
+                      spellId === "shocking_grasp"
+                    ? cantripSpellInvocationRef(spellId, "spellAttackDamage")
+                    : cantripSpellInvocationRef(spellId, "saveGatedDamage"),
     mode: { tag: "cast" },
   };
 }

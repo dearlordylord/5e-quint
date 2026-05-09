@@ -177,7 +177,6 @@ const spellUnitExecutableFollowUpBatches = [
       "Admit these authored Spell Definitions after adding runtime support for spell-chosen damage types, chained target selection, mixed attack-plus-area resolution, area condition application, and terrain/ground effects.",
     unitIds: [
       "chromatic_orb",
-      "color_spray",
       "entangle",
       "grease",
       "ice_knife",
@@ -2112,7 +2111,7 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
   ]);
   const srdinv28StarryWispRows = spellRowsByUnitIds(["starry_wisp"]);
   const srdinv29ABurningHandsRows = spellRowsByUnitIds([]);
-  const srdinv29BColorSprayRows = spellRowsByUnitIds(["color_spray"]);
+  const srdinv29BColorSprayRows = spellRowsByUnitIds([]);
   const srdinv29CEntangleRows = spellRowsByUnitIds(["entangle"]);
   const srdinv29DGreaseRows = spellRowsByUnitIds(["grease"]);
   const srdinv29EIceKnifeRows = spellRowsByUnitIds(["ice_knife"]);
