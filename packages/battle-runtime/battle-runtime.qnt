@@ -3206,18 +3206,20 @@ module battleRuntime {
     else
       { ...target, activeEffects: target.activeEffects.union(saveGatedAttackRollAdvantageFailedSaveActiveEffects(invocation)) }
 
-  pure def breakFighterFaerieFireConcentration(state: BattleState): BattleState =
-    {
-      ...state,
-      fighter: {
-        ...state.fighter,
-        concentrating: false,
-        activeEffects: state.fighter.activeEffects.exclude(Set(FaerieFireAttackRollAdvantage)),
-      },
-      goblin: {
-        ...state.goblin,
-        activeEffects: state.goblin.activeEffects.exclude(Set(FaerieFireAttackRollAdvantage)),
-      },
+  pure def breakConcentrationSpellEffects(state: BattleState, caster: Actor): BattleState =
+    match caster {
+      | Fighter =>
+        {
+          ...state,
+          fighter: breakConcentration(state.fighter),
+          goblin: { ...state.goblin, activeEffects: activeEffectsWithoutSpellEffectConcentration(state.goblin.activeEffects) },
+        }
+      | Goblin =>
+        {
+          ...state,
+          goblin: breakConcentration(state.goblin),
+          fighter: { ...state.fighter, activeEffects: activeEffectsWithoutSpellEffectConcentration(state.fighter.activeEffects) },
+        }
     }
 
   pure def resolveFaerieFire(
@@ -3228,7 +3230,7 @@ module battleRuntime {
     if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)))
       state
     else {
-      val withoutPrior = breakFighterFaerieFireConcentration(state)
+      val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
       {
         ...withoutPrior,
         fighter: { ...saveGatedAttackRollAdvantageTarget(FaerieFireSaveGate, withoutPrior.fighter, fighterSavingThrowSucceeded), concentrating: true },
@@ -3238,20 +3240,6 @@ module battleRuntime {
       }
     }
 
-  pure def breakFighterEntangleConcentration(state: BattleState): BattleState =
-    {
-      ...state,
-      fighter: {
-        ...state.fighter,
-        concentrating: false,
-        activeEffects: state.fighter.activeEffects.exclude(Set(EntangleRestrained)),
-      },
-      goblin: {
-        ...state.goblin,
-        activeEffects: state.goblin.activeEffects.exclude(Set(EntangleRestrained)),
-      },
-    }
-
   pure def resolveEntangle(
     state: BattleState,
     fighterIncludedInArea: bool,
@@ -3259,14 +3247,16 @@ module battleRuntime {
   ): BattleState =
     if (fighterIncludedInArea or not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)))
       state
-    else
+    else {
+      val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
       {
-        ...breakFighterEntangleConcentration(state),
-        fighter: { ...breakFighterEntangleConcentration(state).fighter, concentrating: true },
-        goblin: saveGatedConditionTarget(EntangleSaveGate, breakFighterEntangleConcentration(state).goblin, goblinSavingThrowSucceeded),
+        ...withoutPrior,
+        fighter: { ...withoutPrior.fighter, concentrating: true },
+        goblin: saveGatedConditionTarget(EntangleSaveGate, withoutPrior.goblin, goblinSavingThrowSucceeded),
         actionAvailable: false,
         spellSlotExpendedThisTurn: true,
       }
+    }
 
   pure def escapeEntangle(state: BattleState, checkSucceeded: bool): BattleState =
     if (not(state.actionAvailable) or currentActor(state) != Goblin or not(state.goblin.activeEffects.contains(EntangleRestrained)))
@@ -4525,7 +4515,7 @@ module battleRuntime {
 
   run test_faerie_fire_applies_attack_roll_advantage_until_concentration_break = {
     val lit = resolveFaerieFire(initialState, true, false)
-    val broken = breakFighterFaerieFireConcentration(lit)
+    val broken = breakConcentrationSpellEffects(lit, Fighter)
     all {
       assert(lit.actionAvailable == false),
       assert(lit.spellSlotExpendedThisTurn == true),
@@ -4541,7 +4531,7 @@ module battleRuntime {
   run test_entangle_excludes_caster_and_applies_restrained_until_concentration_or_escape = {
     val rejectedCasterArea = resolveEntangle(initialState, true, false)
     val entangled = resolveEntangle(initialState, false, false)
-    val broken = breakFighterEntangleConcentration(entangled)
+    val broken = breakConcentrationSpellEffects(entangled, Fighter)
     val escaped = escapeEntangle({ ...entangled, initiative: { round: 1, alreadyActed: List(Fighter), stillToAct: List(Goblin) }, actionAvailable: true }, true)
     all {
       assert(not(rejectedCasterArea.goblin.activeEffects.contains(EntangleRestrained))),
