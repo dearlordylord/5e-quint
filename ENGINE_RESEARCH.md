@@ -1,10 +1,10 @@
 # Game Engine Research — Battle Visualizer
 
-**Goal:** Render a D&D tactical battle (tokens on grid, spell animations, VFX, overlays) driven by the existing XState battle machine. Must be testable without a browser for AI-agent development.
+**Goal:** Render a D&D tactical battle (tokens on grid, spell animations, VFX, overlays) driven by the existing combat runtime. Must be testable without a browser for AI-agent development.
 
 **Critical criteria (ordered):**
 1. **Vitest unit testable in Node.js** — no browser, no canvas, no WebGL
-2. **React integration** — declarative, state-driven from XState snapshots
+2. **React integration** — declarative, state-driven from runtime snapshots
 3. **Scene graph inspectable** — assert positions, visibility, effects programmatically
 4. **VFX capable** — particles (fire), line animations, screen dimming, text overlays
 5. **Grows to tactical game** — scales beyond 6-token demo
@@ -16,7 +16,7 @@
 ### SVG-in-React + Motion (Framer Motion successor)
 
 - **Testability: EXCELLENT** — SVG elements are DOM nodes. RTL renders, queries, snapshots them. `<circle cx={90} cy={60} data-testid="wizard-A" />` is trivially assertable.
-- **React integration: NATIVE** — it IS React. XState snapshot → props → SVG attributes. Zero glue code.
+- **React integration: NATIVE** — it IS React. runtime snapshot → props → SVG attributes. Zero glue code.
 - **Motion** (github.com/motiondivision/motion): Framer Motion successor, framework-agnostic with React adapter. `<motion.circle>` for animated SVG. Animation state driven by React state.
 - **VFX:** SVG filters for glow/blur, `<feGaussianBlur>` for dimming. Animated `<path>` for spell lines. `<text>` for overlays. No particle system — custom `<circle>` swarm or CSS particles.
 - **Bundle:** Motion ~30-40KB gzipped. SVG is free (browser-native).
@@ -79,7 +79,7 @@
 ### Kaplay (Kaboom successor)
 
 - **Testability: POOR** — Takes over the page. No React story.
-- **Why not:** Game jam tool, not embeddable component. ECS conflicts with XState event-driven model.
+- **Why not:** Game jam tool, not embeddable component. ECS conflicts with the event-driven model.
 
 ### Fabric.js
 

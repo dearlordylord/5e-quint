@@ -63,7 +63,7 @@ The repo separates pure outcome resolution from runtime state commitment across 
 
 - **Resolve layer**: `battle.qnt` computes rule consequences over immutable battle records.
 - **Commit layer**: `battle-machine.ts` commits those same outcomes as runtime state transitions for actors, UI, and tooling.
-- **Parity proof**: MBT replays Quint traces against XState and checks that the commit layer reproduces the resolve layer.
+- **Parity proof**: MBT replays Quint traces against the runtime commit layer and checks that it reproduces the resolve layer.
 
 Within the interrupt-resolution pipeline, use this vocabulary:
 

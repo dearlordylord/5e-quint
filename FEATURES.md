@@ -1,6 +1,6 @@
 # D&D 5E SRD 5.2.1 — Feature Coverage
 
-Three implementation layers: **Spec** (`creature.qnt`/`battle.qnt`), **Engine** (XState machines), **Content** (`features/*.ts`). "Done" means mechanically modeled and MBT-tested unless noted.
+Three implementation layers: **Spec** (`creature.qnt`/`battle.qnt`), **Engine** (runtime state machines), **Content** (`features/*.ts`). "Done" means mechanically modeled and MBT-tested unless noted.
 
 ---
 

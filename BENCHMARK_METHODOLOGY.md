@@ -6,8 +6,8 @@ Portable, reproducible methodology for measuring MBT tier timing across nightly 
 
 | Fuzzer | What it proves | Value | Script |
 |--------|---------------|-------|--------|
-| **Battle MBT** | Quint spec ↔ XState parity — the TS implementation matches the spec, field-by-field, step-by-step | **High — this is the primary overnight target** | `mbt-fuzz.sh` (default) → `battle-projection.mbt.test.ts` |
-| **Creature MBT** | Quint spec ↔ XState parity for single-creature mechanics only (no battle interactions) | Medium — subset of battle MBT | `MBT_TEST=creature mbt-fuzz.sh` → `creature.mbt.test.ts` |
+| **Battle MBT** | Quint spec ↔ runtime parity — the TS implementation matches the spec, field-by-field, step-by-step | **High — this is the primary overnight target** | `mbt-fuzz.sh` (default) → `battle-projection.mbt.test.ts` |
+| **Creature MBT** | Quint spec ↔ runtime parity for single-creature mechanics only (no battle interactions) | Medium — subset of battle MBT | `MBT_TEST=creature mbt-fuzz.sh` → `creature.mbt.test.ts` |
 | **Invariant fuzzer** | Quint spec internal consistency — do all 13 battle invariants hold under random exploration | Lower — tests spec against itself, no TS involvement | `invariant-fuzz.sh` → `npx quint run` directly |
 
 **Priority for overnight runs: battle MBT first.** It's the only fuzzer that validates the TS implementation against the spec. Invariant fuzzer is supplementary — run it if resources allow, but never instead of battle MBT.

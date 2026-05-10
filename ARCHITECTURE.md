@@ -59,7 +59,7 @@ Local SRD corpus + ASSUMPTIONS.md + UBIQUITOUS_LANGUAGE.md
 ```
 
 The repository also contains a legacy/broad Core lane in `@dnd/core`. Core owns
-the existing XState-based creature and battle engines, broad `battle.qnt`/MBT
+the existing creature and battle runtime path, broad `battle.qnt`/MBT
 coverage, and Core-specific feature helpers. Core details live in
 `packages/core/ARCHITECTURE.md`.
 

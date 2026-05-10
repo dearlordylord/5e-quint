@@ -102,7 +102,7 @@ The battle machine only handles the "easy" cross-creature part: routing events t
 | Component | Quint | TS | Notes |
 |-----------|-------|-----|-------|
 | Creature state machine | Yes (existing) | Yes (existing) | Already built, MBT-verified |
-| Battle state (initiative, turn tracking) | Yes | Yes | New battle spec + battle XState |
+| Battle state (initiative, turn tracking) | Yes | Yes | New battle spec + runtime battle engine |
 | Transaction routing (A attacks B) | Yes | Yes | Core value — atomicity guarantees |
 | Interrupt points / reaction windows | Yes | Yes | Reaction state machine states |
 | Reaction legality guards | Yes | Yes | "can this creature react here?" |
@@ -114,16 +114,16 @@ The battle machine only handles the "easy" cross-creature part: routing events t
 
 ### O4.1.A: Battle-level MBT (full parity)
 
-Quint battle spec generates battle traces. TS has a battle-level machine (possibly using XState actor model — parent battle actor spawns child creature actors). MBT bridge compares full battle state: all creatures' states + initiative + turn tracking.
+Quint battle spec generates battle traces. TS has a battle-level machine (possibly using actor-style composition — parent battle actor spawns child creature actors). MBT bridge compares full battle state: all creatures' states + initiative + turn tracking.
 
 **Pro:** Full parity. Verifies battle logic (atomicity, interrupt ordering, propagation).
 **Con:** Requires building a battle-level TS machine. Largest effort.
 
-**Note on XState actor model:** XState supports spawning child actors from a parent machine. The battle machine could be a parent actor that spawns creature actors, sends them events, and reads their state. This maps naturally to `Map[CreatureId, CreatureState]` in Quint. Worth investigating: https://stately.ai/docs/actor-model
+**Note on actor-style models:** Parent/child actor composition supports spawning child actors from a parent machine. The battle machine could be a parent actor that spawns creature actors, sends them events, and reads their state. This maps naturally to `Map[CreatureId, CreatureState]` in Quint. Worth investigating: https://stately.ai/docs/actor-model
 
 ### O4.1.B: Per-creature projection MBT (incremental)
 
-Quint battle spec generates battle traces. The bridge **projects** each trace per-creature: filters to events that touched creature X, replays against X's existing creature XState machine. Compares per-creature state.
+Quint battle spec generates battle traces. The bridge **projects** each trace per-creature: filters to events that touched creature X, replays against X's existing creature runtime implementation. Compares per-creature state.
 
 ```
 Battle trace: [aStartTurn(A), aAttack(A,B,...), aReact(B,Dodge), aEndTurn(A), aStartTurn(B)]
@@ -172,7 +172,7 @@ New events or extended events:
 
 ### O5.C: Creature machine gains a "pending reaction" state
 
-The creature can be in a state where it's been offered a reaction window and must decide. This is a new state in the XState machine (parallel to the existing turn states).
+The creature can be in a state where it's been offered a reaction window and must decide. This is a new state in the runtime machine (parallel to the existing turn states).
 
 **Pro:** Models the interrupt naturally. UI can show "do you want to react?"
 **Con:** Significant change to existing machine. Creature machine gains battle-awareness.

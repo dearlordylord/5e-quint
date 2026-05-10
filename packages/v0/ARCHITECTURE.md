@@ -1,6 +1,6 @@
 # @dnd/v0 Architecture
 
-Core owns the legacy XState-based combat and creature runtime path. The
+Core owns the legacy combat and creature runtime path. The
 repository is currently growing runtime reducer packages beside it; this
 document records Core-specific projection rules that should not dominate the
 top-level architecture guide.
