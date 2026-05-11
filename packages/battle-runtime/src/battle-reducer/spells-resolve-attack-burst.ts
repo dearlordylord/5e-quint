@@ -37,6 +37,7 @@ import { concentrationSavingThrowHole } from "./damage-apply.ts";
 import { activeMarkedDamageRiders } from "./damage-helpers.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
+import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import {
   applyPreparedSlotSpellDamage,
   applySpellDamage,
@@ -575,6 +576,11 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
             damageSourceId: input.actorId,
             damagedId: target.combatantId,
             damageAmount: toDamageAmount(attackDamageAmount),
+            reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
+              facts: input.fillSet.targetSpatialFacts,
+              damagedId: target.combatantId,
+              damageSourceId: input.actorId,
+            }),
           },
         ]
       : []),
@@ -587,6 +593,11 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
               damageSourceId: input.actorId,
               damagedId: targetId,
               damageAmount: toDamageAmount(damageAmount),
+              reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
+                facts: input.fillSet.targetSpatialFacts,
+                damagedId: targetId,
+                damageSourceId: input.actorId,
+              }),
             },
           ];
     }),

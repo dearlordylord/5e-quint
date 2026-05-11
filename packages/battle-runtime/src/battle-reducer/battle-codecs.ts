@@ -1247,6 +1247,13 @@ type BattleFillEncoded =
             readonly rangeFeet: number;
           }
         | {
+            readonly kind: "reactionSpellDamagerVisibleWithinRange";
+            readonly reactorId: string;
+            readonly damageSourceId: string;
+            readonly spellId: string;
+            readonly rangeFeet: number;
+          }
+        | {
             readonly kind: "grappleTargetWithinReach";
             readonly grapplerId: string;
             readonly targetId: string;
@@ -1299,12 +1306,21 @@ type BattleFillEncoded =
           readonly count: number;
         }[];
       };
-      readonly spatialFacts: readonly {
-        readonly kind: "spellTarget";
-        readonly casterId: string;
-        readonly targetId: string;
-        readonly spellId: string;
-      }[];
+      readonly spatialFacts: readonly (
+        | {
+            readonly kind: "spellTarget";
+            readonly casterId: string;
+            readonly targetId: string;
+            readonly spellId: string;
+          }
+        | {
+            readonly kind: "reactionSpellDamagerVisibleWithinRange";
+            readonly reactorId: string;
+            readonly damageSourceId: string;
+            readonly spellId: string;
+            readonly rangeFeet: number;
+          }
+      )[];
     }
   | {
       readonly kind: "spellTargetList";
@@ -1577,6 +1593,13 @@ export const BattleFillSchema: Schema.Schema<
               rangeFeet: MovementFeet,
             }),
             Schema.Struct({
+              kind: Schema.Literal("reactionSpellDamagerVisibleWithinRange"),
+              reactorId: CombatantId,
+              damageSourceId: CombatantId,
+              spellId: Schema.String,
+              rangeFeet: MovementFeet,
+            }),
+            Schema.Struct({
               kind: Schema.Literal("grappleTargetWithinReach"),
               grapplerId: CombatantId,
               targetId: CombatantId,
@@ -1627,12 +1650,21 @@ export const BattleFillSchema: Schema.Schema<
         ),
       }),
       spatialFacts: Schema.Array(
-        Schema.Struct({
-          kind: Schema.Literal("spellTarget"),
-          casterId: CombatantId,
-          targetId: CombatantId,
-          spellId: Schema.String,
-        }),
+        Schema.Union(
+          Schema.Struct({
+            kind: Schema.Literal("spellTarget"),
+            casterId: CombatantId,
+            targetId: CombatantId,
+            spellId: Schema.String,
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("reactionSpellDamagerVisibleWithinRange"),
+            reactorId: CombatantId,
+            damageSourceId: CombatantId,
+            spellId: Schema.String,
+            rangeFeet: MovementFeet,
+          }),
+        ),
       ),
     }),
     Schema.Struct({

@@ -655,6 +655,7 @@ export type BattleAfterDamageEvent = {
   readonly damageSourceId: CombatantId;
   readonly damagedId: CombatantId;
   readonly damageAmount: DamageAmount;
+  readonly reactionSpellTargetFacts: readonly BattleTargetSpatialFact[];
 };
 export type BattlePendingAttackDamageReduction = {
   readonly reactorId: CombatantId;
@@ -884,6 +885,7 @@ export type BattleReactionFrame =
       readonly damageSourceId: CombatantId;
       readonly damagedId: CombatantId;
       readonly damageAmount: DamageAmount;
+      readonly reactionSpellTargetFacts: readonly BattleTargetSpatialFact[];
     })
   | (BattleReactionFrameWithContinuationBase & {
       readonly trigger: "opportunityAttack";
@@ -1030,6 +1032,13 @@ export type BattleTargetSpatialFact =
       readonly reactorId: CombatantId;
       readonly targetId: CombatantId;
       readonly unitId: UnitRecord["id"];
+      readonly rangeFeet: MovementFeet;
+    }
+  | {
+      readonly kind: "reactionSpellDamagerVisibleWithinRange";
+      readonly reactorId: CombatantId;
+      readonly damageSourceId: CombatantId;
+      readonly spellId: SpellRecord["id"];
       readonly rangeFeet: MovementFeet;
     }
   | {
@@ -2067,6 +2076,12 @@ type BattlePointOriginSphereSpellTargetsSpatialFact = Extract<
   BattleTargetSpatialFact,
   { readonly kind: "spellTargetsInPointOriginSphere" }
 >;
+export type BattleSpellTargetAllocationSpatialFact = Extract<
+  BattleTargetSpatialFact,
+  {
+    readonly kind: "spellTarget" | "reactionSpellDamagerVisibleWithinRange";
+  }
+>;
 export type BattleSpellTargetListSpatialFact =
   | BattleSpellTargetSpatialFact
   | BattlePointOriginSphereSpellTargetsSpatialFact;
@@ -2476,10 +2491,7 @@ export type BattleFill =
       readonly value: {
         readonly allocations: readonly BattleSpellTargetAllocation[];
       };
-      readonly spatialFacts: readonly Extract<
-        BattleTargetSpatialFact,
-        { readonly kind: "spellTarget" }
-      >[];
+      readonly spatialFacts: readonly BattleSpellTargetAllocationSpatialFact[];
     }
   | {
       readonly kind: "spellTargetList";

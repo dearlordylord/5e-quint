@@ -56,6 +56,9 @@ export function discoverSupportedSpellInvocations(
       if (invocation.procedure === "shieldReaction") {
         return [];
       }
+      if (invocation.spell.mechanics.family === "triggered_reaction") {
+        return [];
+      }
       if (spellcastingPrevented && spellInvocationIsSpellcasting(invocation)) {
         return [];
       }
@@ -289,8 +292,7 @@ export function discoverSupportedSpellInvocations(
                     actorId,
                     invocation: supportedSpellInvocationRef(invocation),
                     mode: { tag: "cast" as const },
-                    componentWeaponItemId:
-                      invocation.componentWeapon.itemId,
+                    componentWeaponItemId: invocation.componentWeapon.itemId,
                   },
                   label: `${invocation.spell.name} (${invocation.componentWeapon.attack.weapon.name})`,
                   summary: spellInvocationCastSummary(invocation),

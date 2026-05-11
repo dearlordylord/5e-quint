@@ -225,6 +225,12 @@ export function supportedSpellActs(
         spellcasting.spellSlots,
       ),
     ),
+    ...spellcasting.preparedSpells.flatMap((spell) =>
+      supportedPreparedHellishRebukeReactionSpellProfile(
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
     ...spellcasting.cantrips.flatMap((spell) =>
       supportedCantripHeldLightSpellProfile(spell),
     ),
@@ -462,6 +468,78 @@ export function supportedPreparedShieldReactionSpellProfile(
           },
         ],
   );
+}
+
+export function supportedPreparedHellishRebukeReactionSpellProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  if (
+    spell.name !== "Hellish Rebuke" ||
+    spell.provenance.kind !== "srd-5.2.1" ||
+    spell.provenance.section !== "Spells/Descriptions-E-L#Hellish Rebuke" ||
+    spell.mechanics.family !== "triggered_reaction" ||
+    spell.mechanics.level !== 1 ||
+    spell.mechanics.castingTime.kind !== "reaction" ||
+    spell.mechanics.castingTime.trigger.kind !== "takes_damage_from_creature" ||
+    !spell.mechanics.castingTime.trigger.requiresVisibleCreature ||
+    spell.mechanics.castingTime.trigger.rangeFeet !== 60 ||
+    spell.mechanics.range.kind !== "point" ||
+    spell.mechanics.range.feet !== 60 ||
+    spell.mechanics.duration.kind !== "instantaneous" ||
+    spell.mechanics.interruptsTrigger ||
+    spell.mechanics.phases.length !== 1
+  ) {
+    return [];
+  }
+  const phase = spell.mechanics.phases[0];
+  if (
+    phase?.kind !== "save_gate" ||
+    "repeatSave" in phase ||
+    phase.ability !== "dex" ||
+    phase.dc.kind !== "caster_spell_save_dc" ||
+    phase.onSuccess.kind !== "half_damage" ||
+    phase.attachment.kind !== "hole" ||
+    phase.attachment.value.kind !== "target" ||
+    phase.attachment.value.selection.mode !== "one" ||
+    phase.onFail.kind !== "damage" ||
+    phase.onFail.damageType !== "fire"
+  ) {
+    return [];
+  }
+  const failedDamage = phase.onFail;
+  const rangeFeet = spell.mechanics.range.feet;
+
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    const damageExpr = supportedDamageAmountExpr({
+      amount: failedDamage.amount,
+      spellLevel: spell.mechanics.level,
+      slotLevel: slot.spellLevel,
+    });
+    return damageExpr === null
+      ? []
+      : [
+          {
+            access: { tag: "prepared" },
+            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+            procedure: "saveGatedDamage" as const,
+            spell,
+            ability: phase.ability,
+            dc: phase.dc,
+            targeting: { kind: "singleCombatant" as const },
+            damage: {
+              expr: damageExpr,
+              damageType: "fire",
+            },
+            successDamage: "half" as const,
+            rangeFeet: movementFeet(rangeFeet),
+            failedSavePostDamageRiders: [],
+          },
+        ];
+  });
 }
 
 export function reactionTriggerIncludesHitByAttackRoll(

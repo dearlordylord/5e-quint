@@ -15,7 +15,11 @@ import { initiativeOrder } from "@dnd/shared-algebras/initiative-algebra";
 
 import { type StandardActionKind } from "@dnd/shared/game-facts";
 
-import { DamageAmount, type Size } from "@dnd/shared/types";
+import {
+  damageAmount as toDamageAmount,
+  type DamageAmount,
+  type Size,
+} from "@dnd/shared/types";
 
 import type { UnitRecord } from "@dnd/surface/surface/types";
 
@@ -53,6 +57,13 @@ import {
   concentrationSavingThrowHole,
 } from "./damage-apply.ts";
 
+import {
+  damageDispositionFillFor,
+  damageDispositionFillsValidation,
+  damageDispositionForTarget,
+  zeroHitPointReplacementDispositionHole,
+} from "./attack-damage-apply.ts";
+
 import { needsHolesResult, revealHidden } from "./hole-helpers.ts";
 
 import { opportunityAttackOptionForReactor } from "./movement-speed.ts";
@@ -70,6 +81,8 @@ import {
 } from "./reaction-modifiers.ts";
 import {
   triggeredReactionSpellChoices,
+  hellishRebukeReactionSpellMatchesTrigger,
+  reactionSpellTargetFactsForAfterDamage,
   triggeredReactionSpellTurnResourceAvailable,
 } from "./reaction-triggered-spells.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -102,11 +115,16 @@ import { spellRequiresVerbal } from "./spells-discovery.ts";
 import {
   applyAfterHitTimedDamageAndSaveSpellEffect,
   applyFailedSaveSpellConditionEffects,
+  applySpellDamage,
   applyShieldReactionSpellActiveEffect,
   sameSpellInvocationRef,
+  saveGateDamageResultForOutcome,
+  spellDamageAmountForTarget,
+  spellDamageHole,
   spellSavingThrowOutcomeHole,
   supportedSpellInvocationRef,
   supportedSpellInvocationMatchesRef,
+  validateSpellDamageFill,
 } from "./spells-holes-fills.ts";
 
 import {
@@ -121,6 +139,7 @@ import {
   resolveSpellAct,
 } from "./spells-resolve.ts";
 import { spellFillSet } from "./spells-resolve-fill-set.ts";
+import { validateSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 
 import { attackActionOptionName } from "./statblock-attacks.ts";
@@ -156,9 +175,11 @@ import type {
   BattleSnapshot,
   BattleSpellSavingThrowOutcomeValue,
   BattleState,
+  BattleTargetSpatialFact,
   AttackSpellDamageAddition,
   BattleTurnResources,
   BattleTurnSnapshot,
+  SpellSlotInvocationResource,
 } from "../battle-reducer.ts";
 import {
   REACTION_DECISION_HOLE_ID,
@@ -968,7 +989,8 @@ export function resolveCastTriggeredReactionSpellCommand(
     reactor?.origin.kind === "character"
       ? supportedSpellActs(reactor).find(
           (candidate) =>
-            candidate.procedure === "shieldReaction" &&
+            (candidate.procedure === "shieldReaction" ||
+              candidate.procedure === "saveGatedDamage") &&
             supportedSpellInvocationMatchesRef(
               candidate,
               input.subject.invocation,
@@ -976,7 +998,9 @@ export function resolveCastTriggeredReactionSpellCommand(
         )
       : undefined;
   if (
-    (frame?.trigger !== "attackHit" && frame?.trigger !== "spellCast") ||
+    (frame?.trigger !== "attackHit" &&
+      frame?.trigger !== "spellCast" &&
+      frame?.trigger !== "afterDamage") ||
     activeReaction === undefined ||
     activeReaction.reactorId !== input.subject.reactorId ||
     !sameBattleSubject(activeReaction.subject, input.subject)
@@ -989,7 +1013,8 @@ export function resolveCastTriggeredReactionSpellCommand(
   }
   if (
     reactor?.origin.kind !== "character" ||
-    invocation?.procedure !== "shieldReaction"
+    (invocation?.procedure !== "shieldReaction" &&
+      invocation?.procedure !== "saveGatedDamage")
   ) {
     return invalidResult(
       input.state,
@@ -1011,13 +1036,6 @@ export function resolveCastTriggeredReactionSpellCommand(
       "Triggered Reaction spell is unavailable while an active ongoing feature prevents spellcasting.",
     );
   }
-  if (input.fills.length > 0) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Triggered Reaction Shield spell does not accept table fills.",
-    );
-  }
   if (
     !triggeredReactionSpellTurnResourceAvailable(
       input.state,
@@ -1032,7 +1050,27 @@ export function resolveCastTriggeredReactionSpellCommand(
       "This turn has already expended a Spell Slot.",
     );
   }
-
+  if (invocation.procedure === "saveGatedDamage") {
+    if (!isPreparedSlottedSaveGatedDamageInvocation(invocation)) {
+      return invalidResult(
+        input.state,
+        "unsupportedActOption",
+        "Triggered Reaction spell command requires a prepared slotted Reaction spell.",
+      );
+    }
+    return resolveHellishRebukeReactionSpellCommand({
+      ...input,
+      frame,
+      invocation,
+    });
+  }
+  if (input.fills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Triggered Reaction Shield spell does not accept table fills.",
+    );
+  }
   const castingState = spellRequiresVerbal(invocation.spell)
     ? revealHidden(input.state, input.subject.reactorId)
     : input.state;
@@ -1066,6 +1104,234 @@ export function resolveCastTriggeredReactionSpellCommand(
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
+}
+
+function isPreparedSlottedSaveGatedDamageInvocation(
+  invocation: Extract<
+    ReturnType<typeof supportedSpellActs>[number],
+    { readonly procedure: "saveGatedDamage" }
+  >,
+): invocation is Extract<
+  ReturnType<typeof supportedSpellActs>[number],
+  { readonly procedure: "saveGatedDamage" }
+> & {
+  readonly access: { readonly tag: "prepared" };
+  readonly resource: SpellSlotInvocationResource;
+} {
+  return (
+    invocation.access.tag === "prepared" &&
+    invocation.resource.tag === "spellSlot"
+  );
+}
+
+function resolveHellishRebukeReactionSpellCommand(
+  input: BattleResolutionInputForSubject<
+    Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "castTriggeredReactionSpell";
+      }
+    >
+  > & {
+    readonly frame: BattleReactionFrame;
+    readonly invocation: Extract<
+      ReturnType<typeof supportedSpellActs>[number],
+      { readonly procedure: "saveGatedDamage" }
+    > & {
+      readonly access: { readonly tag: "prepared" };
+      readonly resource: SpellSlotInvocationResource;
+    };
+  },
+): BattleResolutionResult {
+  if (
+    input.frame.trigger !== "afterDamage" ||
+    input.frame.damagedId !== input.subject.reactorId ||
+    !hellishRebukeReactionSpellMatchesTrigger(input.invocation, input.frame)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Hellish Rebuke requires a matching after-damage Reaction trigger.",
+    );
+  }
+  const fillSet = spellFillSet(input.fills, input.invocation);
+  if (fillSet.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", fillSet.message);
+  }
+  if (
+    fillSet.targetId !== undefined ||
+    fillSet.targetList !== undefined ||
+    fillSet.attackRoll !== undefined
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Hellish Rebuke targets the creature from the after-damage trigger.",
+    );
+  }
+  const savingThrowHole = spellSavingThrowOutcomeHole(
+    input.state,
+    input.subject.reactorId,
+    input.invocation,
+  );
+  if (fillSet.savingThrowOutcomes === undefined) {
+    return needsHolesResult(input.state, input.subject, [savingThrowHole]);
+  }
+  const savingThrowValidation = validateSavingThrowOutcomes(
+    fillSet.savingThrowOutcomes,
+    savingThrowHole,
+    input.state,
+    input.subject.reactorId,
+    input.frame.damageSourceId,
+  );
+  if (savingThrowValidation !== null) {
+    return invalidResult(input.state, "invalidFill", savingThrowValidation);
+  }
+  const savingThrowOutcome = fillSet.savingThrowOutcomes.outcomes[0];
+  if (savingThrowOutcome === undefined) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Hellish Rebuke requires the damaging creature's Saving Throw outcome.",
+    );
+  }
+  const saveDamageResult = saveGateDamageResultForOutcome(
+    input.state,
+    input.frame.damageSourceId,
+    input.invocation,
+    savingThrowOutcome.succeeded,
+  );
+  if (fillSet.damageRoll === undefined) {
+    return needsHolesResult(input.state, input.subject, [
+      spellDamageHole(input.invocation),
+    ]);
+  }
+  const damageValidation = validateSpellDamageFill(
+    fillSet.damageRoll,
+    input.invocation,
+    false,
+  );
+  if (damageValidation !== null) {
+    return invalidResult(input.state, "invalidFill", damageValidation);
+  }
+  const target = input.state.combatants.get(input.frame.damageSourceId);
+  if (target === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Hellish Rebuke target is no longer in the battle.",
+    );
+  }
+  const damageAmount = spellDamageAmountForTarget(
+    target,
+    input.invocation,
+    fillSet.damageRoll,
+    saveDamageResult,
+  );
+  const concentrationSave = concentrationSavingThrowHole(target, damageAmount);
+  const concentrationFill =
+    concentrationSave === null
+      ? undefined
+      : fillSet.concentrationSavingThrows.find(
+          (fill) => fill.holeId === concentrationSave.holeId,
+        );
+  if (concentrationSave !== null && concentrationFill === undefined) {
+    return needsHolesResult(input.state, input.subject, [concentrationSave]);
+  }
+  if (
+    concentrationSave === null &&
+    fillSet.concentrationSavingThrows.length > 0
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Concentration Saving Throw fill is only valid for the damaged Hellish Rebuke target.",
+    );
+  }
+  const damageDispositionHole = zeroHitPointReplacementDispositionHole({
+    damageSourceId: input.subject.reactorId,
+    target,
+    damageAmount,
+  });
+  const damageDispositionHoles =
+    damageDispositionHole === null ? [] : [damageDispositionHole];
+  const damageDispositionValidation = damageDispositionFillsValidation({
+    holes: damageDispositionHoles,
+    fills: fillSet.damageDispositions,
+  });
+  if (damageDispositionValidation !== null) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      damageDispositionValidation,
+    );
+  }
+  if (
+    damageDispositionHole !== null &&
+    damageDispositionFillFor(
+      fillSet.damageDispositions,
+      damageDispositionHole,
+    ) === undefined
+  ) {
+    return needsHolesResult(input.state, input.subject, [
+      damageDispositionHole,
+    ]);
+  }
+  const castingState = spellRequiresVerbal(input.invocation.spell)
+    ? revealHidden(input.state, input.subject.reactorId)
+    : input.state;
+  const damaged = applySpellDamage(
+    castingState,
+    input.frame.damageSourceId,
+    input.invocation,
+    fillSet.damageRoll,
+    false,
+    concentrationFill,
+    saveDamageResult,
+    damageDispositionForTarget(
+      damageDispositionHoles,
+      fillSet.damageDispositions,
+      input.frame.damageSourceId,
+    ),
+  );
+  const slotted = expendSpellSlot(
+    damaged,
+    input.subject.reactorId,
+    input.invocation.resource.slotLevel,
+  );
+  const nextTurnResources =
+    input.subject.reactorId === currentActorId(slotted)
+      ? markSpellSlotExpendedThisTurn(slotted.currentTurnResources)
+      : Either.right(slotted.currentTurnResources);
+  if (Either.isLeft(nextTurnResources)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "This turn has already expended a Spell Slot.",
+    );
+  }
+  const nextState = {
+    ...slotted,
+    currentTurnResources: nextTurnResources.right,
+  };
+  return openAfterDamageSequenceReactionWindow({
+    state: nextState,
+    subject: input.subject,
+    events: [
+      {
+        damageSourceId: input.subject.reactorId,
+        damagedId: input.frame.damageSourceId,
+        damageAmount: toDamageAmount(damageAmount),
+        reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
+          facts: input.frame.reactionSpellTargetFacts,
+          damagedId: input.frame.damageSourceId,
+          damageSourceId: input.subject.reactorId,
+        }),
+      },
+    ],
+    suppressedReactionTrigger: undefined,
+  });
 }
 
 type AttackHitBonusActionSpellCommandSubject = Extract<
@@ -1381,7 +1647,10 @@ function attackHitBonusActionSpellFillValidation(
     }
   | {
       readonly tag: "invalid";
-      readonly result: Extract<BattleResolutionResult, { readonly tag: "invalid" }>;
+      readonly result: Extract<
+        BattleResolutionResult,
+        { readonly tag: "invalid" }
+      >;
     } {
   if (invocation.procedure !== "afterHitSaveGatedCondition") {
     return input.fills.length === 0
@@ -1416,7 +1685,10 @@ function attackHitSaveGatedConditionFillSet(
     }
   | {
       readonly tag: "invalid";
-      readonly result: Extract<BattleResolutionResult, { readonly tag: "invalid" }>;
+      readonly result: Extract<
+        BattleResolutionResult,
+        { readonly tag: "invalid" }
+      >;
     } {
   const fillSet = spellFillSet(input.fills, invocation);
   if (fillSet.tag === "invalid") {
@@ -1795,7 +2067,11 @@ export function completeActiveReactionProcedure(
 
   return remainingReactors.length === 0
     ? completeResolvedActiveReactionIfPending(
-        resumeInterruptedProcedure(nextState, frame.continuation, frame.trigger),
+        resumeInterruptedProcedure(
+          nextState,
+          frame.continuation,
+          frame.trigger,
+        ),
       )
     : {
         tag: "resolved",
@@ -1911,6 +2187,11 @@ export function resumeInterruptedProcedure(
         damageSourceId: continuation.attackerId,
         damagedId: continuation.targetId,
         damageAmount,
+        reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
+          facts: attackDamageContinuationTargetSpatialFacts(continuation),
+          damagedId: continuation.targetId,
+          damageSourceId: continuation.attackerId,
+        }),
         continuation: {
           kind: "resolved",
           subject: continuation.subject,
@@ -1956,6 +2237,7 @@ export function openAfterDamageSequenceReactionWindow(input: {
       damageSourceId: event.damageSourceId,
       damagedId: event.damagedId,
       damageAmount: event.damageAmount,
+      reactionSpellTargetFacts: event.reactionSpellTargetFacts,
       continuation: {
         kind: "afterDamageSequence",
         subject: input.subject,
@@ -1970,6 +2252,20 @@ export function openAfterDamageSequenceReactionWindow(input: {
       ...input,
       events: remainingEvents,
     })
+  );
+}
+
+function attackDamageContinuationTargetSpatialFacts(
+  continuation: Extract<
+    BattleInterruptedProcedure,
+    { readonly kind: "attackDamage" }
+  >,
+): readonly BattleTargetSpatialFact[] {
+  return (
+    continuation.fills.find(
+      (fill): fill is Extract<BattleFill, { readonly kind: "targetChoice" }> =>
+        fill.kind === "targetChoice",
+    )?.spatialFacts ?? []
   );
 }
 

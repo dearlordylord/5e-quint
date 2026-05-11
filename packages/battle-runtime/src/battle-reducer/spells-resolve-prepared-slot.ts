@@ -1,54 +1,40 @@
 // Prepared-slot repeated-damage-allocation spell resolution extracted from spells-resolve.ts.
 
-import {
-spendAction
-} from "@dnd/shared-algebras/action-economy-algebra";
-import {
-damageAmount as toDamageAmount
-} from "@dnd/shared/types";
+import { spendAction } from "@dnd/shared-algebras/action-economy-algebra";
+import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import { Either } from "effect";
 import {
-maybeOpenReactionWindow,
-openAfterDamageSequenceReactionWindow,
-snapshotBattle,
-type ActionSpellBattleResolutionInput,
-type BattleAfterDamageEvent,
-type BattleHoleId,
-type BattleResolutionResult,
-type SupportedSpellInvocation
+  maybeOpenReactionWindow,
+  openAfterDamageSequenceReactionWindow,
+  snapshotBattle,
+  type ActionSpellBattleResolutionInput,
+  type BattleAfterDamageEvent,
+  type BattleHoleId,
+  type BattleResolutionResult,
+  type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
 import {
-damageDispositionFillFor,
-damageDispositionFillsValidation,
-damageDispositionForTarget,
-zeroHitPointReplacementDispositionHole
+  damageDispositionFillFor,
+  damageDispositionFillsValidation,
+  damageDispositionForTarget,
+  zeroHitPointReplacementDispositionHole,
 } from "./attack-damage-apply.ts";
-import {
-concentrationSavingThrowHole
-} from "./damage-apply.ts";
-import {
-needsHolesResult
-} from "./hole-helpers.ts";
+import { concentrationSavingThrowHole } from "./damage-apply.ts";
+import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
+import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
+import { expendSpellSlot } from "./spell-effects.ts";
 import {
-expendSpellSlot
-} from "./spell-effects.ts";
-import {
-applyPreparedSlotSpellDamage,
-repeatedDamageAllocationSpellDamageAmount,
-spellDamageHole,
-spellTargetAllocationHole,
-validatePreparedSlotSpellDamageGroups,
-validateSpellDamageFill,
-validateSpellTargetAllocation
+  applyPreparedSlotSpellDamage,
+  repeatedDamageAllocationSpellDamageAmount,
+  spellDamageHole,
+  spellTargetAllocationHole,
+  validatePreparedSlotSpellDamageGroups,
+  validateSpellDamageFill,
+  validateSpellTargetAllocation,
 } from "./spells-holes-fills.ts";
-import {
-markSpellSlotExpendedThisTurn
-} from "./spells-profiles.ts";
-
-
-
+import { markSpellSlotExpendedThisTurn } from "./spells-profiles.ts";
 
 import { type SpellFillSet } from "./spells-resolve-fill-set.ts";
 
@@ -106,12 +92,13 @@ export function resolvePreparedSlotSpellAct(input: {
       allocationHole,
     ]);
   }
+  const targetAllocation = input.fillSet.targetAllocation;
   const allocationValidation = validateSpellTargetAllocation(
     input.input.state,
     input.actorId,
     input.invocation,
-    input.fillSet.targetAllocation.allocations,
-    input.fillSet.targetAllocation.spatialFacts,
+    targetAllocation.allocations,
+    targetAllocation.spatialFacts,
   );
   if (allocationValidation !== null) {
     return invalidResult(
@@ -128,7 +115,7 @@ export function resolvePreparedSlotSpellAct(input: {
         trigger: "spellCast",
         casterId: input.actorId,
         spellId: input.invocation.spell.id,
-        targetIds: input.fillSet.targetAllocation.allocations.map(
+        targetIds: targetAllocation.allocations.map(
           (allocation) => allocation.targetId,
         ),
         continuation: {
@@ -157,13 +144,13 @@ export function resolvePreparedSlotSpellAct(input: {
     ) ??
     validatePreparedSlotSpellDamageGroups(
       input.fillSet.damageRoll,
-      input.fillSet.targetAllocation.allocations,
+      targetAllocation.allocations,
     );
   if (damageValidation !== null) {
     return invalidResult(input.input.state, "invalidFill", damageValidation);
   }
 
-  const concentrationSaves = input.fillSet.targetAllocation.allocations.flatMap(
+  const concentrationSaves = targetAllocation.allocations.flatMap(
     (allocation, allocationIndex) => {
       const target = input.input.state.combatants.get(allocation.targetId);
       if (target === undefined) {
@@ -208,28 +195,27 @@ export function resolvePreparedSlotSpellAct(input: {
       "Concentration Saving Throw fill is only valid for a concentrating damaged target.",
     );
   }
-  const damageDispositionHoles =
-    input.fillSet.targetAllocation.allocations.flatMap(
-      (allocation, allocationIndex) => {
-        const target = input.input.state.combatants.get(allocation.targetId);
-        if (target === undefined) {
-          return [];
-        }
-        const damageAmount = repeatedDamageAllocationSpellDamageAmount(
-          target,
-          input.invocation,
-          input.fillSet.damageRoll!,
-          allocationIndex,
-          allocation.count,
-        );
-        const hole = zeroHitPointReplacementDispositionHole({
-          damageSourceId: input.actorId,
-          target,
-          damageAmount,
-        });
-        return hole === null ? [] : [hole];
-      },
-    );
+  const damageDispositionHoles = targetAllocation.allocations.flatMap(
+    (allocation, allocationIndex) => {
+      const target = input.input.state.combatants.get(allocation.targetId);
+      if (target === undefined) {
+        return [];
+      }
+      const damageAmount = repeatedDamageAllocationSpellDamageAmount(
+        target,
+        input.invocation,
+        input.fillSet.damageRoll!,
+        allocationIndex,
+        allocation.count,
+      );
+      const hole = zeroHitPointReplacementDispositionHole({
+        damageSourceId: input.actorId,
+        target,
+        damageAmount,
+      });
+      return hole === null ? [] : [hole];
+    },
+  );
   const damageDispositionValidation = damageDispositionFillsValidation({
     holes: damageDispositionHoles,
     fills: input.fillSet.damageDispositions,
@@ -252,7 +238,7 @@ export function resolvePreparedSlotSpellAct(input: {
     ]);
   }
 
-  const damaged = input.fillSet.targetAllocation.allocations.reduce(
+  const damaged = targetAllocation.allocations.reduce(
     (state, allocation, allocationIndex) => {
       const target = state.combatants.get(allocation.targetId);
       if (target === undefined) {
@@ -323,29 +309,33 @@ export function resolvePreparedSlotSpellAct(input: {
   };
   if (input.opensAfterDamageReactionWindow !== false) {
     const damageRoll = input.fillSet.damageRoll;
-    const afterDamageEvents =
-      input.fillSet.targetAllocation.allocations.flatMap(
-        (allocation, allocationIndex): readonly BattleAfterDamageEvent[] => {
-          const target = input.input.state.combatants.get(allocation.targetId);
-          if (target === undefined) {
-            return [];
-          }
-          const damageAmount = repeatedDamageAllocationSpellDamageAmount(
-            target,
-            input.invocation,
-            damageRoll,
-            allocationIndex,
-            allocation.count,
-          );
-          return [
-            {
-              damageSourceId: input.actorId,
+    const afterDamageEvents = targetAllocation.allocations.flatMap(
+      (allocation, allocationIndex): readonly BattleAfterDamageEvent[] => {
+        const target = input.input.state.combatants.get(allocation.targetId);
+        if (target === undefined) {
+          return [];
+        }
+        const damageAmount = repeatedDamageAllocationSpellDamageAmount(
+          target,
+          input.invocation,
+          damageRoll,
+          allocationIndex,
+          allocation.count,
+        );
+        return [
+          {
+            damageSourceId: input.actorId,
+            damagedId: allocation.targetId,
+            damageAmount: toDamageAmount(damageAmount),
+            reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
+              facts: targetAllocation.spatialFacts,
               damagedId: allocation.targetId,
-              damageAmount: toDamageAmount(damageAmount),
-            },
-          ];
-        },
-      );
+              damageSourceId: input.actorId,
+            }),
+          },
+        ];
+      },
+    );
     const afterDamageReactionWindow = openAfterDamageSequenceReactionWindow({
       state: nextState,
       subject: input.input.subject,

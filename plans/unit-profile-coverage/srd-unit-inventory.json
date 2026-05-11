@@ -2367,7 +2367,7 @@
     {
       "id": "SRDINV36",
       "title": "Promote Hellish Rebuke Reaction Runtime",
-      "suggestedStatus": "ready-for-research",
+      "suggestedStatus": "done",
       "intent": "Promote Hellish Rebuke as a damage-triggered Reaction spell with Dexterity save and half damage on success.",
       "rowCount": 1,
       "rowIds": [

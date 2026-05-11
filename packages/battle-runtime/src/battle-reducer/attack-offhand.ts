@@ -65,6 +65,7 @@ import {
   needsHolesResult,
   revealHidden,
 } from "./hole-helpers.ts";
+import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 
 import {
   attackHitTriggerKind,
@@ -520,6 +521,11 @@ export function resolveOffHandAttack(
         damageSourceId: input.subject.actorId,
         damagedId: target.combatantId,
         damageAmount,
+        reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
+          facts: fillSet.targetSpatialFacts,
+          damagedId: target.combatantId,
+          damageSourceId: input.subject.actorId,
+        }),
         continuation: {
           kind: "resolved",
           subject: input.subject,

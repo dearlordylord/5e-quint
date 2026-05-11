@@ -47,6 +47,7 @@ import {
 import { damageAmountAfterTargetAdjustments } from "./damage-helpers.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
+import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import {
   chainedSpellAttackRollHole,
   chainedSpellAttackRollHoleId,
@@ -415,6 +416,11 @@ export function resolveChainedSpellAttackDamageAct(input: {
       damageSourceId: input.actorId,
       damagedId: target.combatantId,
       damageAmount: toDamageAmount(damageAmount),
+      reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
+        facts: step.target.spatialFacts ?? [],
+        damagedId: target.combatantId,
+        damageSourceId: input.actorId,
+      }),
     });
 
     if (

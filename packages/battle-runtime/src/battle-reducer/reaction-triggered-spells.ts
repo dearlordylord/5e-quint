@@ -3,99 +3,46 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+import { CombatantId } from "../identity.ts";
+import { currentActorId } from "./creature-state-leaves.ts";
+import { combatantCanTakeReactions } from "./creature-state.ts";
 import {
-CombatantId
-} from "../identity.ts";
-
-
-
-
-
-
-import {
-currentActorId
-} from "./creature-state-leaves.ts";
-
-import {
-combatantCanTakeReactions
-} from "./creature-state.ts";
-
-
-
-
-
-
-
-
-
-
-
-
-import {
-supportedSpellInvocationRef
-} from "./spells-holes-fills.ts";
-
-import {
-reactionTriggerIncludesHitByAttackRoll,
-reactionTriggerNamedSpellIds,
-spellHasAvailableSpend,
-supportedSpellActs
+  reactionTriggerIncludesHitByAttackRoll,
+  reactionTriggerNamedSpellIds,
+  spellHasAvailableSpend,
+  supportedSpellActs,
 } from "./spells-profiles.ts";
-
-
-
-
-
-
-import type {
-BattleReactionFrameInput,
-BattleReactionProcedureChoice,
-BattleState,
-SupportedSpellInvocation
-} from "../battle-reducer.ts";
 import {
-activeOngoingFeaturesPreventSpellcasting
+  spellDamageHole,
+  spellSavingThrowOutcomeHole,
+  supportedSpellInvocationRef,
+} from "./spells-holes-fills.ts";
+import type {
+  BattleReactionFrameInput,
+  BattleReactionProcedureChoice,
+  BattleState,
+  BattleTargetSpatialFact,
+  SupportedSpellInvocation,
 } from "../battle-reducer.ts";
+import { activeOngoingFeaturesPreventSpellcasting } from "../battle-reducer.ts";
+
 export function triggeredReactionSpellChoices(
   state: BattleState,
   frame: BattleReactionFrameInput,
 ): readonly BattleReactionProcedureChoice[] {
-  if (frame.trigger !== "attackHit" && frame.trigger !== "spellCast") {
+  if (
+    frame.trigger !== "attackHit" &&
+    frame.trigger !== "spellCast" &&
+    frame.trigger !== "afterDamage"
+  ) {
     return [];
   }
   const reactorIds =
-    frame.trigger === "attackHit" ? [frame.targetId] : frame.targetIds;
+    frame.trigger === "attackHit"
+      ? [frame.targetId]
+      : frame.trigger === "afterDamage"
+        ? [frame.damagedId]
+        : frame.targetIds;
   return reactorIds.flatMap(
     (reactorId): readonly BattleReactionProcedureChoice[] => {
       const reactor = state.combatants.get(reactorId);
@@ -109,7 +56,8 @@ export function triggeredReactionSpellChoices(
       return supportedSpellActs(reactor).flatMap(
         (invocation): readonly BattleReactionProcedureChoice[] => {
           if (
-            invocation.procedure !== "shieldReaction" ||
+            (invocation.procedure !== "shieldReaction" &&
+              invocation.procedure !== "saveGatedDamage") ||
             !spellHasAvailableSpend(reactor, invocation) ||
             !triggeredReactionSpellTurnResourceAvailable(
               state,
@@ -117,17 +65,24 @@ export function triggeredReactionSpellChoices(
               invocation,
               frame,
             ) ||
-            !shieldReactionSpellMatchesTrigger(invocation, frame)
+            !triggeredReactionSpellMatchesTrigger(invocation, frame)
           ) {
             return [];
           }
           const invocationRef = supportedSpellInvocationRef(invocation);
+          const initialHoles =
+            invocation.procedure === "saveGatedDamage"
+              ? [
+                  spellSavingThrowOutcomeHole(state, reactorId, invocation),
+                  spellDamageHole(invocation),
+                ]
+              : [];
           return [
             {
               kind: "castTriggeredReactionSpell" as const,
               reactorId,
               invocation: invocationRef,
-              initialHoles: [],
+              initialHoles,
               subject: {
                 tag: "runtimeCommand" as const,
                 actorId: currentActorId(state),
@@ -148,7 +103,7 @@ export function triggeredReactionSpellTurnResourceAvailable(
   reactorId: CombatantId,
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "shieldReaction" }
+    { readonly procedure: "shieldReaction" | "saveGatedDamage" }
   >,
   frame: BattleReactionFrameInput,
 ): boolean {
@@ -165,7 +120,7 @@ export function currentActorHasPendingSlottedSpellCast(
   state: BattleState,
   reactionInvocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "shieldReaction" }
+    { readonly procedure: "shieldReaction" | "saveGatedDamage" }
   >,
   frame: BattleReactionFrameInput,
 ): boolean {
@@ -206,5 +161,62 @@ export function shieldReactionSpellMatchesTrigger(
     frame.trigger === "spellCast" &&
     namedSpellTriggerIds.includes(frame.spellId) &&
     invocation.negatedSpellIds.includes(frame.spellId)
+  );
+}
+
+export function triggeredReactionSpellMatchesTrigger(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "shieldReaction" | "saveGatedDamage" }
+  >,
+  frame: BattleReactionFrameInput,
+): boolean {
+  return invocation.procedure === "shieldReaction"
+    ? shieldReactionSpellMatchesTrigger(invocation, frame)
+    : hellishRebukeReactionSpellMatchesTrigger(invocation, frame);
+}
+
+export function hellishRebukeReactionSpellMatchesTrigger(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "saveGatedDamage" }
+  >,
+  frame: BattleReactionFrameInput,
+): boolean {
+  const castingTime = invocation.spell.mechanics.castingTime;
+  return (
+    frame.trigger === "afterDamage" &&
+    Number(frame.damageAmount) > 0 &&
+    invocation.spell.name === "Hellish Rebuke" &&
+    invocation.spell.provenance.kind === "srd-5.2.1" &&
+    invocation.spell.provenance.section ===
+      "Spells/Descriptions-E-L#Hellish Rebuke" &&
+    invocation.spell.mechanics.family === "triggered_reaction" &&
+    castingTime.kind === "reaction" &&
+    castingTime.trigger.kind === "takes_damage_from_creature" &&
+    frame.damagedId !== frame.damageSourceId &&
+    (frame.reactionSpellTargetFacts ?? []).some(
+      (fact) =>
+        fact.kind === "reactionSpellDamagerVisibleWithinRange" &&
+        fact.reactorId === frame.damagedId &&
+        fact.damageSourceId === frame.damageSourceId &&
+        fact.spellId === invocation.spell.id &&
+        fact.rangeFeet === invocation.rangeFeet,
+    )
+  );
+}
+
+export function reactionSpellTargetFactsForAfterDamage(input: {
+  readonly facts: readonly BattleTargetSpatialFact[];
+  readonly damagedId: CombatantId;
+  readonly damageSourceId: CombatantId;
+}): readonly BattleTargetSpatialFact[] {
+  return input.facts.filter(
+    (fact) =>
+      fact.kind === "reactionSpellDamagerVisibleWithinRange" &&
+      ((fact.reactorId === input.damagedId &&
+        fact.damageSourceId === input.damageSourceId) ||
+        (fact.reactorId === input.damageSourceId &&
+          fact.damageSourceId === input.damagedId)),
   );
 }

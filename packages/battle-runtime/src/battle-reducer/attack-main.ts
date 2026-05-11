@@ -65,6 +65,7 @@ import {
   needsHolesResult,
   revealHidden,
 } from "./hole-helpers.ts";
+import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 
 import {
   attackHitTriggerKind,
@@ -606,6 +607,11 @@ export function resolveSelectedAttackProcedure(
         damageSourceId: input.subject.actorId,
         damagedId: target.combatantId,
         damageAmount: toDamageAmount(reducedFixedDamageAmount),
+        reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
+          facts: fillSet.targetSpatialFacts,
+          damagedId: target.combatantId,
+          damageSourceId: input.subject.actorId,
+        }),
         continuation: {
           kind: "resolved",
           subject: input.subject,
@@ -865,6 +871,11 @@ export function resolveSelectedAttackProcedure(
         damageSourceId: input.subject.actorId,
         damagedId: target.combatantId,
         damageAmount: toDamageAmount(reducedDamageAmount),
+        reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
+          facts: fillSet.targetSpatialFacts,
+          damagedId: target.combatantId,
+          damageSourceId: input.subject.actorId,
+        }),
         continuation: {
           kind: "resolved",
           subject: input.subject,

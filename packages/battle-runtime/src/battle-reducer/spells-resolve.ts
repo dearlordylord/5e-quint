@@ -176,6 +176,7 @@ import {
   resolveSaveGateConditionSpellAct,
   resolveSaveGateDamageSpellAct,
 } from "./spells-resolve-save-gates.ts";
+import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 
 import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
 
@@ -264,6 +265,13 @@ export function resolveSpellAct(
     );
   }
   if (invocation.procedure === "shieldReaction") {
+    return invalidResult(
+      input.state,
+      "unsupportedSubject",
+      "Triggered Reaction spells must use the pending Reaction decision.",
+    );
+  }
+  if (invocation.spell.mechanics.family === "triggered_reaction") {
     return invalidResult(
       input.state,
       "unsupportedSubject",
@@ -868,6 +876,11 @@ export function resolveSpellAct(
       damageSourceId: subject.actorId,
       damagedId: target.combatantId,
       damageAmount: toDamageAmount(spellDamageAmount),
+      reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
+        facts: fillSet.targetSpatialFacts,
+        damagedId: target.combatantId,
+        damageSourceId: subject.actorId,
+      }),
       continuation: {
         kind: "resolved",
         subject: input.subject,

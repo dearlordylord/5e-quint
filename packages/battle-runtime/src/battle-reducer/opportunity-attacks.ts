@@ -55,6 +55,7 @@ import {
   attackKindForDeflectRedirect,
   opportunityAttackOptionForReactor,
 } from "./movement-speed.ts";
+import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
   attackActionOptionName,
@@ -419,6 +420,11 @@ export function resolveOpportunityAttackCommand(
         damageSourceId: subject.reactorId,
         damagedId: subject.targetId,
         damageAmount: reducedFixedDamageAmount,
+        reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
+          facts: fillSet.targetSpatialFacts,
+          damagedId: subject.targetId,
+          damageSourceId: subject.reactorId,
+        }),
         continuation: {
           kind: "resolved",
           subject: input.subject,
@@ -610,6 +616,11 @@ export function resolveOpportunityAttackCommand(
       damageSourceId: subject.reactorId,
       damagedId: subject.targetId,
       damageAmount: reducedDamageAmount,
+      reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
+        facts: fillSet.targetSpatialFacts,
+        damagedId: subject.targetId,
+        damageSourceId: subject.reactorId,
+      }),
       continuation: {
         kind: "resolved",
         subject: input.subject,

@@ -12,6 +12,7 @@ import {
   type BattleFill,
   type BattleSpellSavingThrowOutcomeValue,
   type BattleSpellTargetAllocation,
+  type BattleSpellTargetAllocationSpatialFact,
   type BattleSpellTargetListSpatialFact,
   type BattleTargetSpatialFact,
   type SpellTargeting,
@@ -47,10 +48,7 @@ export type SpellFillSet =
       readonly targetAllocation:
         | {
             readonly allocations: readonly BattleSpellTargetAllocation[];
-            readonly spatialFacts: readonly Extract<
-              BattleTargetSpatialFact,
-              { readonly kind: "spellTarget" }
-            >[];
+            readonly spatialFacts: readonly BattleSpellTargetAllocationSpatialFact[];
           }
         | undefined;
       readonly targetList:
@@ -109,10 +107,7 @@ export function spellFillSet(
   let targetAllocation:
     | {
         readonly allocations: readonly BattleSpellTargetAllocation[];
-        readonly spatialFacts: readonly Extract<
-          BattleTargetSpatialFact,
-          { readonly kind: "spellTarget" }
-        >[];
+        readonly spatialFacts: readonly BattleSpellTargetAllocationSpatialFact[];
       }
     | undefined;
   let targetList:

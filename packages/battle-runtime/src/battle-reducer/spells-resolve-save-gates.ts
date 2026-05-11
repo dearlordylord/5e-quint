@@ -1,59 +1,50 @@
 // Save-gated spell resolution extracted from spells-resolve.ts.
 // Owns save-gated damage, condition, and attack-roll-advantage procedures.
 
+import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import {
-damageAmount as toDamageAmount
-} from "@dnd/shared/types";
-import {
-isTargetListSpellInvocation,
-maybeOpenReactionWindow,
-snapshotBattle,
-type ActionSpellBattleResolutionInput,
-type BattleHoleId,
-type BattleResolutionResult,
-type BattleSpellSavingThrowOutcomeHole,
-type BattleSpellSavingThrowOutcomeValue,
-type BattleState,
-type SaveDamageResult,
-type SupportedSpellInvocation
+  isTargetListSpellInvocation,
+  maybeOpenReactionWindow,
+  snapshotBattle,
+  type ActionSpellBattleResolutionInput,
+  type BattleHoleId,
+  type BattleResolutionResult,
+  type BattleSpellSavingThrowOutcomeHole,
+  type BattleSpellSavingThrowOutcomeValue,
+  type BattleState,
+  type SaveDamageResult,
+  type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
 import {
-damageDispositionFillFor,
-damageDispositionFillsValidation,
-damageDispositionForTarget,
-zeroHitPointReplacementDispositionHole
+  damageDispositionFillFor,
+  damageDispositionFillsValidation,
+  damageDispositionForTarget,
+  zeroHitPointReplacementDispositionHole,
 } from "./attack-damage-apply.ts";
-import {
-extendSavingThrowOngoingFeatures
-} from "./attack-roll.ts";
-import {
-concentrationSavingThrowHole
-} from "./damage-apply.ts";
-import {
-needsHolesResult
-} from "./hole-helpers.ts";
+import { extendSavingThrowOngoingFeatures } from "./attack-roll.ts";
+import { concentrationSavingThrowHole } from "./damage-apply.ts";
+import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
+import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import {
-applyFailedSaveAttackRollAdvantageEffects,
-applyFailedSaveSpellActiveEffects,
-applyFailedSaveSpellConditionEffects,
-applySpellDamage,
-saveGateDamageResultForOutcome,
-spellDamageAmountForTarget,
-spellDamageHole,
-spellSavingThrowOutcomeHole,
-spellSavingThrowTargeting,
-spellTargetHole,
-spellTargetIsLegal,
-spellTargetListHole,
-validateSpellDamageFill,
-validateSpellTargetList
+  applyFailedSaveAttackRollAdvantageEffects,
+  applyFailedSaveSpellActiveEffects,
+  applyFailedSaveSpellConditionEffects,
+  applySpellDamage,
+  saveGateDamageResultForOutcome,
+  spellDamageAmountForTarget,
+  spellDamageHole,
+  spellSavingThrowOutcomeHole,
+  spellSavingThrowTargeting,
+  spellTargetHole,
+  spellTargetIsLegal,
+  spellTargetListHole,
+  validateSpellDamageFill,
+  validateSpellTargetList,
 } from "./spells-holes-fills.ts";
 
-import {
-spendSpellCastResources
-} from "./spells-resolve-resources.ts";
+import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 
 import { type SpellFillSet } from "./spells-resolve-fill-set.ts";
 
@@ -394,6 +385,11 @@ export function resolveSaveGateDamageSpellAct(input: {
           saveDamageResultForTarget(damageTargets[0]!),
         ),
       ),
+      reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
+        facts: input.fillSet.targetSpatialFacts,
+        damagedId: damageTargets[0]!,
+        damageSourceId: input.actorId,
+      }),
       continuation: {
         kind: "resolved",
         subject: input.input.subject,
