@@ -163,14 +163,14 @@
       "catalog-installed-owner-evidence-present": 241,
       "non-runtime": 12,
       "catalog-only/dead-for-now": 80,
-      "catalog-installed-owner-evidence-required": 4,
-      "needs-surface-widening": 30
+      "catalog-installed-owner-evidence-required": 5,
+      "needs-surface-widening": 29
     },
     "spellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 80,
       "catalog-installed-owner-evidence-present": 97,
-      "catalog-installed-owner-evidence-required": 4,
-      "needs-surface-widening": 30
+      "catalog-installed-owner-evidence-required": 5,
+      "needs-surface-widening": 29
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -518,7 +518,7 @@
       "title": "Classify Installed Cantrip and Level-1 Spell Units",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Classify installed SRD cantrip and level-1 Spell Unit owner evidence separately from missing and catalog-only spell rows.",
-      "rowCount": 129,
+      "rowCount": 130,
       "rowIds": [
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_light",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_minor_illusion",
@@ -532,6 +532,7 @@
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_command",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_cure_wounds",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_detect_magic",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_dissonant_whispers",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_faerie_fire",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_healing_word",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_heroism",
@@ -749,9 +750,8 @@
       "title": "Review Catalog-Only and Surface-Widening Rows",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Preserve catalog-only/dead-for-now rows and name missing Surface constructs for nonspell and spell Surface-widening blockers.",
-      "rowCount": 30,
+      "rowCount": 29,
       "rowIds": [
-        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_dissonant_whispers",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_feather_fall",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_hideous_laughter",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_thunderwave",
@@ -2665,7 +2665,7 @@
     {
       "id": "SRDINV43",
       "title": "Widen Dissonant Whispers Forced Reaction Movement Surface",
-      "suggestedStatus": "ready-for-research",
+      "suggestedStatus": "done",
       "intent": "Widen Surface for Dissonant Whispers' save-gated damage plus forced Reaction movement.",
       "rowCount": 1,
       "rowIds": [
@@ -4819,19 +4819,31 @@
       "detail": "Dissonant Whispers (Enchantment; —)",
       "candidateUnitId": "dissonant_whispers",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "Spell Definition failed-save forced Reaction movement using the safest route, including no-reaction fallback and half-damage success outcome"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "dissonant_whispers",
+        "sourceRecordPath": "packages/surface/content/dissonant_whispers.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "dissonant_whispers"
       },
-      "finalDisposition": "needs-surface-widening",
-      "ownerEvidence": [],
-      "nextAction": "Widen Surface: Spell Definition failed-save forced Reaction movement using the safest route, including no-reaction fallback and half-damage success outcome."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit dissonant_whispers is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Unit matrix records unsupported-profile: Spell Definition is installed with typed save-gated Psychic damage and failed-save forced Reaction movement facts; runtime execution of forced Reaction movement, route choice, and Opportunity Attack derivation is not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Unit matrix records unsupported-profile: Spell Definition is installed with typed save-gated Psychic damage and failed-save forced Reaction movement facts; runtime execution of forced Reaction movement, route choice, and Opportunity Attack derivation is not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_faerie_fire",

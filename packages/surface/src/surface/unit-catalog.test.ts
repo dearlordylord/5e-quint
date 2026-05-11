@@ -91,6 +91,7 @@ const requiredFirstVerticalUnitIds = [
   "minor_illusion",
   "charm_person",
   "command",
+  "dissonant_whispers",
   "hellish_rebuke",
   "armor_chain_mail",
   "equipment_shield",
@@ -185,6 +186,51 @@ describe("SRD Unit catalog boundary", () => {
           },
           targetKinds: ["creature"],
         },
+      });
+    }
+  });
+
+  test("decodes Dissonant Whispers as damage plus forced Reaction movement", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const dissonantWhispers =
+        result.catalog.requireUnit("dissonant_whispers");
+      expect(dissonantWhispers.kind).toBe("spell");
+      if (dissonantWhispers.kind !== "spell") return;
+      expect(dissonantWhispers.mechanics.family).toBe("activation");
+      if (dissonantWhispers.mechanics.family !== "activation") return;
+
+      const phase = dissonantWhispers.mechanics.phases[0];
+      expect(phase?.kind).toBe("save_gate");
+      if (phase?.kind !== "save_gate") return;
+
+      expect(phase.ability).toBe("wis");
+      expect(phase.onSuccess).toEqual({ kind: "half_damage" });
+      expect(phase.onFail).toEqual({
+        kind: "composite",
+        effects: [
+          {
+            kind: "damage",
+            damageType: "psychic",
+            amount: {
+              kind: "linear_per_level",
+              axis: "slot",
+              base: { dice: 3, dieSize: 6 },
+              perLevel: { dice: 1 },
+              startingAtLevel: 1,
+            },
+          },
+          {
+            kind: "forced_reaction_movement",
+            cost: "target_reaction_if_available",
+            unavailable: "no_movement",
+            distance: "as_far_as_possible",
+            direction: "away_from_caster",
+            route: "safest_available",
+          },
+        ],
       });
     }
   });

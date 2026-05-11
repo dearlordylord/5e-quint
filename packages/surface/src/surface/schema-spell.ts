@@ -190,6 +190,15 @@ export const CommandTargetNextTurnOptionsSchema = strictStruct({
   }),
 });
 
+export const ForcedReactionMovementSchema = strictStruct({
+  kind: Schema.Literal("forced_reaction_movement"),
+  cost: Schema.Literal("target_reaction_if_available"),
+  unavailable: Schema.Literal("no_movement"),
+  distance: Schema.Literal("as_far_as_possible"),
+  direction: Schema.Literal("away_from_caster"),
+  route: Schema.Literal("safest_available"),
+});
+
 type DamageTypeRef = Schema.Schema.Type<typeof DamageTypeRefSchema>;
 type DiceAmount = Schema.Schema.Type<typeof DiceAmountSchema>;
 type DiceDelta = Schema.Schema.Type<typeof DiceDeltaSchema>;
@@ -252,6 +261,9 @@ type PolymorphActionRestriction = Schema.Schema.Type<
 >;
 type CommandTargetNextTurnOptions = Schema.Schema.Type<
   typeof CommandTargetNextTurnOptionsSchema
+>;
+type ForcedReactionMovement = Schema.Schema.Type<
+  typeof ForcedReactionMovementSchema
 >;
 type PolymorphRevertTrigger = Schema.Schema.Type<
   typeof PolymorphRevertTriggerSchema
@@ -413,6 +425,7 @@ type EffectAtom =
       readonly execution: "target_next_turn";
       readonly options: CommandTargetNextTurnOptions;
     }
+  | ForcedReactionMovement
   | {
       readonly kind: "remove_condition";
       readonly condition:
@@ -1686,6 +1699,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         execution: Schema.Literal("target_next_turn"),
         options: CommandTargetNextTurnOptionsSchema,
       }),
+      ForcedReactionMovementSchema,
       Schema.Struct({
         kind: Schema.Literal("remove_condition"),
         condition: Schema.Union(

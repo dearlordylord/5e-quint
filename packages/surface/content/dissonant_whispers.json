@@ -1,0 +1,83 @@
+{
+  "description": "One creature of your choice that you can see within range hears a discordant melody in its mind. The target makes a Wisdom saving throw. On a failed save, it takes 3d6 Psychic damage and must immediately use its Reaction, if available, to move as far away from you as it can, using the safest route. On a successful save, the target takes half as much damage only. Using a Higher-Level Spell Slot. The damage increases by 1d6 for each spell slot level above 1.",
+  "id": "dissonant_whispers",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": false,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 1,
+    "phases": [
+      {
+        "ability": "wis",
+        "attachment": {
+          "holeId": "dissonant_whispers_target",
+          "kind": "hole",
+          "label": "target",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "mode": "one",
+              "targetKinds": ["creature"]
+            }
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "effects": [
+            {
+              "amount": {
+                "axis": "slot",
+                "base": {
+                  "dice": 3,
+                  "dieSize": 6
+                },
+                "kind": "linear_per_level",
+                "perLevel": {
+                  "dice": 1
+                },
+                "startingAtLevel": 1
+              },
+              "damageType": "psychic",
+              "kind": "damage"
+            },
+            {
+              "cost": "target_reaction_if_available",
+              "direction": "away_from_caster",
+              "distance": "as_far_as_possible",
+              "kind": "forced_reaction_movement",
+              "route": "safest_available",
+              "unavailable": "no_movement"
+            }
+          ],
+          "kind": "composite"
+        },
+        "onSuccess": {
+          "kind": "half_damage"
+        }
+      }
+    ],
+    "range": {
+      "feet": 60,
+      "kind": "point"
+    },
+    "school": "enchantment"
+  },
+  "name": "Dissonant Whispers",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Dissonant Whispers"
+  }
+}

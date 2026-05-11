@@ -517,6 +517,22 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "forced_reaction_movement": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "forced_reaction_movement",
+        label: [
+          "forced_reaction_movement",
+          `cost: ${e.cost}`,
+          `unavailable: ${e.unavailable}`,
+          `${e.distance} ${e.direction}`,
+          `route: ${e.route}`,
+        ].join("\n"),
+      });
+      return id;
+    }
     case "remove_condition": {
       const id = ids("eff");
       const label = `remove_condition\n${describeConditionChoice(e.condition)}`;
@@ -2063,6 +2079,7 @@ function traceEffectAtomScaling(
     case "apply_condition":
     case "restrict_action_usage":
     case "command_target_next_turn":
+    case "forced_reaction_movement":
     case "remove_condition":
     case "grant_resistance":
     case "kill_target":

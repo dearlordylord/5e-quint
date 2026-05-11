@@ -249,6 +249,7 @@ export const STAGE_3_EXTENSIONS = [
   "grant_damage_immunity", // §A16 — Mind Blank (Psychic), future Holy Aura.
   "block_max_hp_reduction", // §A16 — Aura of Life "HP maxes can't be reduced".
   "set_speed_ratio", // Spirit Guardians / Slow — halve speed inside area / on target.
+  "forced_reaction_movement", // Dissonant Whispers: failed-save target uses its Reaction, if available, to move away by safest route.
   "negate_triggering_spell", // §C1 Counterspell — negate whatever spell fired the reaction.
   "reflect_triggering_spell", // Ring of Spell Turning / Staff of Charming — turn the triggering spell back on its caster.
   "end_ongoing_spells", // §C3 Dispel Magic — end ongoing spells on target up to a level bound.

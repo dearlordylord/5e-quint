@@ -196,14 +196,6 @@ const spellUnitMissingClassifications = new Map([
     },
   ],
   [
-    "dissonant_whispers",
-    {
-      kind: "needs-surface-widening",
-      missingConstruct:
-        "Spell Definition failed-save forced Reaction movement using the safest route, including no-reaction fallback and half-damage success outcome",
-    },
-  ],
-  [
     "druidcraft",
     {
       kind: "catalog-only-closure",

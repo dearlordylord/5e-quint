@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 351,
-      "numerator": 101,
-      "percent": "28.8%"
+      "denominator": 352,
+      "numerator": 102,
+      "percent": "29%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 418,
-      "numerator": 125,
-      "percent": "29.9%"
+      "denominator": 419,
+      "numerator": 126,
+      "percent": "30.1%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 126
+      "value": 127
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 63,
@@ -67,8 +67,8 @@
       "percent": "93.7%"
     },
     "profileClassificationCoverage": {
-      "denominator": 126,
-      "numerator": 126,
+      "denominator": 127,
+      "numerator": 127,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -97,9 +97,9 @@
       "percent": "15.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 102,
+      "denominator": 103,
       "numerator": 63,
-      "percent": "61.8%"
+      "percent": "61.2%"
     }
   },
   "metricSemantics": [
@@ -4832,6 +4832,24 @@
       ],
       "sourceRecordPath": "packages/surface/content/cure_wounds.json",
       "unitId": "cure_wounds"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Spell Definition is installed with typed save-gated Psychic damage and failed-save forced Reaction movement facts; runtime execution of forced Reaction movement, route choice, and Opportunity Attack derivation is not promoted yet.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/dissonant_whispers.json",
+      "unitId": "dissonant_whispers"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

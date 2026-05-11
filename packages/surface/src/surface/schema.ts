@@ -49,6 +49,7 @@ export {
   DurationEndTriggerSchema,
   DurationSchema,
   EffectAtomSchema,
+  ForcedReactionMovementSchema,
   IllusionSensoryChannelSchema,
   MarkTransferCostSchema,
   MarkTransferEventSchema,

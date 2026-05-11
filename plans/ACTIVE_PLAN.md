@@ -166,7 +166,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 236,
       "id": "SRDINV43",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Widen Dissonant Whispers Forced Reaction Movement Surface"
     },
     {
@@ -254,7 +254,7 @@ Keep it synchronized with the DAG table and task details.
 | 234   | SRDINV38C - Promote Sleep Wake-Up Cleanup Runtime | done | SRDINV38B | SRDINV41 | [Sleep research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV38_SLEEP_SAVE_LOOP_RESEARCH.md), [condition helpers](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer/spell-condition-effects-helpers.ts), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Sleep cleanup is promoted for damage from any source, action-spent adjacent shake-awake with caller-supplied adjacency, caster Concentration cleanup, and Prone preservation after Sleep-owned Unconscious ends. |
 | 231   | SRDINV41 - Recursive SRD Inventory Planning Review | done | SRDINV34-SRDINV40, SRDINV38A-SRDINV38C | SRDINV42-SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed: refreshed spell Unit metrics, kept Hellish Rebuke QNT/parity support unpromoted, rejected Charm Person social memory and Grease automatic geometry as battle-runtime state, and appended SRDINV42-SRDINV48 movement/action Surface batch. |
 | 235   | SRDINV42 - Widen Command Option Surface | done | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Command is installed with typed next-turn option facts for Approach, Drop, Flee, Grovel, Halt, turn-ending clauses, and slot-scaled target count; named-option runtime execution remains unpromoted and visible in the Unit matrix as owner-evidence-required work. |
-| 236   | SRDINV43 - Widen Dissonant Whispers Forced Reaction Movement Surface | ready-for-research | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Dissonant Whispers](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface for save-gated Psychic damage plus failed-save forced Reaction movement away by safest route, including no-Reaction fallback and slot-scaled damage. |
+| 236   | SRDINV43 - Widen Dissonant Whispers Forced Reaction Movement Surface | done | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Dissonant Whispers](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Dissonant Whispers is installed with typed save-gated Psychic damage, half-damage success, slot-scaled damage, and failed-save forced Reaction movement facts; runtime execution of forced Reaction movement, route choice, and Opportunity Attack derivation remains unpromoted and visible in the Unit matrix as owner-evidence-required work. |
 | 237   | SRDINV44 - Widen Thunderwave Push Surface | ready-for-research | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Thunderwave](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface for self-origin Cube save damage plus failed-save creature push, unsecured-object push, audible boom, and slot-scaled Thunder damage. |
 | 238   | SRDINV45 - Widen Expeditious Retreat Dash Surface | ready-for-research | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Expeditious Retreat](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface for immediate Dash on Bonus Action casting and ongoing Concentration-granted Bonus Action Dash without duplicating Movement state. |
 | 239   | SRDINV46 - Widen Jump Movement Replacement Surface | ready-for-research | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Jump](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface for once-per-turn jump movement up to 30 feet by spending 10 feet of movement, touched willing targets, timed duration, and slot-scaled additional targets. |
@@ -840,7 +840,7 @@ with `--write` and `pnpm quality` passed.
 
 ### Task 236 - SRDINV43 - Widen Dissonant Whispers Forced Reaction Movement Surface
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV41
 
@@ -851,19 +851,18 @@ Research / plan:
 [Dissonant Whispers](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md),
 [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
 
-Scope: widen Surface for save-gated Psychic damage plus failed-save forced
-Reaction movement away by safest route, including no-Reaction fallback and
-slot-scaled damage.
+Scope: completed Surface widening for save-gated Psychic damage plus
+failed-save forced Reaction movement away by safest route, including
+no-Reaction fallback and slot-scaled damage.
 
 Out of scope: route/pathfinding derivation, Opportunity Attack derivation, and
 runtime execution of the widened spell.
 
-Verification: RAW/source review for Dissonant Whispers, Reaction, Movement,
-Opportunity Attack, Saving Throw, and damage terms plus
-`UBIQUITOUS_LANGUAGE.md` check, confirming all modeled rules trace to specific
-SRD text; Surface parser/schema tests; generated content refresh if Dhall/JSON
-content changes; `pnpm unit-profile-coverage:check --write`; `/simplify`
-convergence, minimum two rounds unless the final changeset is trivial.
+Verification: RAW/source review completed for Dissonant Whispers, Reaction,
+Movement, Opportunity Attack, Saving Throw, and damage terms plus
+`UBIQUITOUS_LANGUAGE.md`; Surface parser/schema tests and generated
+Dissonant Whispers content refresh completed; `pnpm unit-profile-coverage:check`
+with `--write` and `pnpm quality` passed.
 
 ### Task 237 - SRDINV44 - Widen Thunderwave Push Surface
 
