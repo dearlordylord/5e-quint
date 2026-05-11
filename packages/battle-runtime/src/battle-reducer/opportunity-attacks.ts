@@ -14,8 +14,6 @@ import {
   attackRollHitsWithCriticalThreshold,
   attackRollIsCriticalHit,
   criticalThresholdForAttack,
-  fixedAttackDamageAmount,
-  fixedAttackDamageByTypeEntries,
   validateAttackDamageFill,
 } from "./attack-resolution.ts";
 import {
@@ -37,6 +35,8 @@ import {
   attackDamageByTypeEntries,
   damageAmountByTypeEntriesToMap,
   damageAmountByTypeMapEntries,
+  fixedAttackDamageAmount,
+  fixedAttackDamageByTypeEntries,
   ongoingFeatureDamageModifier,
 } from "./damage-helpers.ts";
 import {
@@ -51,6 +51,7 @@ import {
 } from "./dispatcher.ts";
 import { needsHolesResult, revealHidden } from "./hole-helpers.ts";
 import {
+  attackHitTriggerKind,
   attackKindForDeflectRedirect,
   opportunityAttackOptionForReactor,
 } from "./movement-speed.ts";
@@ -222,6 +223,7 @@ export function resolveOpportunityAttackCommand(
         targetId: subject.targetId,
         attackRoll: fillSet.attackRoll,
         attackKind: attackKindForDeflectRedirect(attack),
+        attackHitTriggerKind: attackHitTriggerKind(attack),
         damageTypes: attackPotentialDamageTypes(
           attack,
           critical,
@@ -257,7 +259,7 @@ export function resolveOpportunityAttackCommand(
     };
   }
   const fixedDamageAmount =
-    spellMarkedDamageRiders.length > 0
+    spellMarkedDamageRiders.length > 0 || spellWeaponDamageRiders.length > 0
       ? null
       : fixedAttackDamageAmount(
           attackRolledState.combatants.get(subject.reactorId),

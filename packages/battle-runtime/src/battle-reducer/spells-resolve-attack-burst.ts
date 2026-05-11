@@ -3,75 +3,61 @@
 
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import {
-attackRollHits,
-attackRollResultIsValid,
+  attackRollHits,
+  attackRollResultIsValid,
 } from "@dnd/shared-algebras/attack-roll-algebra";
+import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import {
-damageAmount as toDamageAmount
-} from "@dnd/shared/types";
-import {
-attackRollIsCriticalHit,
-maybeOpenReactionWindow,
-openAfterDamageSequenceReactionWindow,
-snapshotBattle,
-type ActionSpellBattleResolutionInput,
-type BattleAfterDamageEvent,
-type BattleHoleId,
-type BattleResolutionResult,
-type SupportedSpellInvocation
+  attackRollIsCriticalHit,
+  maybeOpenReactionWindow,
+  openAfterDamageSequenceReactionWindow,
+  snapshotBattle,
+  type ActionSpellBattleResolutionInput,
+  type BattleAfterDamageEvent,
+  type BattleHoleId,
+  type BattleResolutionResult,
+  type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
 import {
-damageDispositionFillFor,
-damageDispositionFillsValidation,
-damageDispositionForTarget,
-iceKnifeDamageDispositionHoleKey,
-zeroHitPointReplacementDispositionHole
+  damageDispositionFillFor,
+  damageDispositionFillsValidation,
+  damageDispositionForTarget,
+  iceKnifeDamageDispositionHoleKey,
+  zeroHitPointReplacementDispositionHole,
 } from "./attack-damage-apply.ts";
 import {
-attackRollModeMatches,
-consumeHelpAttackForAttackRoll,
-recordAttackRollOngoingFeatures,
-requiredAttackRollMode
+  attackRollModeMatches,
+  consumeHelpAttackForAttackRoll,
+  recordAttackRollOngoingFeatures,
+  requiredAttackRollMode,
 } from "./attack-roll.ts";
-import {
-activeEffectArmorClass
-} from "./creature-state.ts";
-import {
-concentrationSavingThrowHole
-} from "./damage-apply.ts";
-import {
-activeMarkedDamageRiders
-} from "./damage-helpers.ts";
-import {
-needsHolesResult
-} from "./hole-helpers.ts";
+import { activeEffectArmorClass } from "./creature-state.ts";
+import { concentrationSavingThrowHole } from "./damage-apply.ts";
+import { activeMarkedDamageRiders } from "./damage-helpers.ts";
+import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
-applyPreparedSlotSpellDamage,
-applySpellDamage,
-spellAttackRollHole,
-spellBurstDamageAmountForTarget,
-spellBurstDamageHole,
-spellDamageAmountForTarget,
-spellDamageHole,
-spellSavingThrowOutcomeHole,
-spellTargetHole,
-spellTargetIsLegal,
-validateSpellBurstDamageFill,
-validateSpellDamageFill
+  applyPreparedSlotSpellDamage,
+  applySpellDamage,
+  spellAttackRollHole,
+  spellBurstDamageAmountForTarget,
+  spellBurstDamageHole,
+  spellDamageAmountForTarget,
+  spellDamageHole,
+  spellSavingThrowOutcomeHole,
+  spellTargetHole,
+  spellTargetIsLegal,
+  validateSpellBurstDamageFill,
+  validateSpellDamageFill,
 } from "./spells-holes-fills.ts";
+import { spellAttackKindForRedirect } from "./spells-profiles.ts";
 import {
-spellAttackKindForRedirect
-} from "./spells-profiles.ts";
-import {
-recordAttackRollMissToHitReplacementUsed,
-selectedAttackRollMissToHitReplacement
+  recordAttackRollMissToHitReplacementUsed,
+  selectedAttackRollMissToHitReplacement,
 } from "./statblock-attacks.ts";
 
-import {
-spendSpellCastResources
-} from "./spells-resolve-resources.ts";
+import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 
 import { validateSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
 
@@ -220,6 +206,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
         targetId: target.combatantId,
         attackRoll: input.fillSet.attackRoll,
         attackKind: spellAttackKindForRedirect(input.invocation.attackKind),
+        attackHitTriggerKind: "otherAttack",
         damageTypes: [
           ...new Set([
             input.invocation.damage.damageType,

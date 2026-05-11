@@ -28,7 +28,7 @@ import {
   type BattleHoleId,
   type BattleState,
   type SpellMarkedDamageRider,
-  type SpellWeaponDamageRider,
+  type SpellAttackDamageComponent,
   type StatBlockMultiattackActionResource,
 } from "../battle-reducer.ts";
 import {
@@ -52,7 +52,7 @@ export function attackDamageHole(
   critical = false,
   attackRoll?: AttackRollResult,
   attackDamageRiders: readonly AttackDamageRider[] = [],
-  spellWeaponDamageRiders: readonly SpellWeaponDamageRider[] = [],
+  spellWeaponDamageRiders: readonly SpellAttackDamageComponent[] = [],
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
   ongoingDamageModifier = 0,
   weaponDamageDiceRollChoiceUnitIds: readonly UnitRecord["id"][] = [],
@@ -286,7 +286,7 @@ export function attackDamageHoleId(
   attack: SupportedAttackActionOption,
   critical = false,
   attackRoll?: AttackRollResult,
-  spellWeaponDamageRiders: readonly SpellWeaponDamageRider[] = [],
+  spellWeaponDamageRiders: readonly SpellAttackDamageComponent[] = [],
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
   ongoingDamageModifier = 0,
 ): BattleHoleId {

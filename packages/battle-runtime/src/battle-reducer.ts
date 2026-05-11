@@ -1,182 +1,365 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 import type {
-ActionEconomyState,
-RuntimeActionResource,
+  ActionEconomyState,
+  RuntimeActionResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
 import type {
-ArmorClass,
-ArmorClassState,
+  ArmorClass,
+  ArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import type { ConditionState } from "@dnd/shared-algebras/conditions-algebra";
 import type {
-DeathSaveRuntimeState,
-DeathSaves,
+  DeathSaveRuntimeState,
+  DeathSaves,
 } from "@dnd/shared-algebras/death-saves-algebra";
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { InitiativeStack } from "@dnd/shared-algebras/initiative-algebra";
 import type {
-HoleId,
-HoleInstanceKey,
+  HoleId,
+  HoleInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
-type AttackRollMode,
-type AttackRollResult,
-type RolledDiceGroup,
-type RuntimeHole
+  type AttackRollMode,
+  type AttackRollResult,
+  type RolledDiceGroup,
+  type RuntimeHole,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
+import { type CreatureType } from "@dnd/shared/game-facts";
 import {
-type CreatureType
-} from "@dnd/shared/game-facts";
-import {
-AbilityModifier,
-AttackBonus,
-DamageAmount,
-DieRollResult,
-DifficultyClass,
-Hp,
-MovementDeltaFeet,
-MovementFeet,
-SpellSlotLevel,
-movementFeet,
-type Condition,
-type DamageDieSize,
-type Round as RoundType
+  AbilityModifier,
+  AttackBonus,
+  DamageAmount,
+  DieRollResult,
+  DifficultyClass,
+  Hp,
+  MovementDeltaFeet,
+  MovementFeet,
+  SpellSlotLevel,
+  movementFeet,
+  type Condition,
+  type DamageDieSize,
+  type Round as RoundType,
 } from "@dnd/shared/types";
 import type {
-Ability,
-DamageType,
-DcSource,
-DiceExpr,
-EffectAtom,
-Size,
-Skill,
-SpellRecord,
-StatBlockRecord,
-UnitRecord
+  Ability,
+  DamageType,
+  DcSource,
+  DiceExpr,
+  EffectAtom,
+  Size,
+  Skill,
+  SpellRecord,
+  StatBlockRecord,
+  UnitRecord,
 } from "@dnd/surface/surface/types";
 import { Brand } from "effect";
 import type {
-CharacterUnarmedStrikeActionOption,
-CharacterWeaponAttackActionOption,
-StatBlockMutableResourceState,
-StatBlockPartKey,
-StatBlockResourceSnapshot,
-SupportedAttackActionOption
+  CharacterUnarmedStrikeActionOption,
+  CharacterWeaponAttackActionOption,
+  StatBlockMutableResourceState,
+  StatBlockPartKey,
+  StatBlockResourceSnapshot,
+  SupportedAttackActionOption,
 } from "./battle-action-options.ts";
 import type {
-BattlePositiveHpUnconscious,
-BattleUnitRef,
-BattleWalkSpeed,
-CharacterBattleLoadoutRef
+  BattlePositiveHpUnconscious,
+  BattleUnitRef,
+  BattleWalkSpeed,
+  CharacterBattleLoadoutRef,
 } from "./battle-init.ts";
 import {
-type BattleReactionTrigger,
-type BattleReadiedSpellTrigger
+  type BattleReactionTrigger,
+  type BattleReadiedSpellTrigger,
 } from "./battle-reaction-triggers.ts";
 import {
-type ActionHideSubject,
-type ActionSearchSubject,
-type BattleMovementSpeedKind,
-type BattleSubject,
-type BonusActionStandardActionSubject,
-type SpellInvocationRef
+  type ActionHideSubject,
+  type ActionSearchSubject,
+  type BattleMovementSpeedKind,
+  type BattleSubject,
+  type BonusActionStandardActionSubject,
+  type SpellInvocationRef,
 } from "./battle-subjects.ts";
 import {
-type CharacterBattleResourceState,
-type CharacterBattleSpellcastingState
+  type CharacterBattleResourceState,
+  type CharacterBattleSpellcastingState,
 } from "./character-battle-resources.ts";
 import type { CharacterBattleClassLevel } from "./character-class-level.ts";
-import type { CharacterId,InitiativeScore } from "./identity.ts";
+import type { CharacterId, InitiativeScore } from "./identity.ts";
 import {
-BattleCombatantSide,
-BattleId,
-BattleReplayStackDepth,
-CombatantId
+  BattleCombatantSide,
+  BattleId,
+  BattleReplayStackDepth,
+  CombatantId,
 } from "./identity.ts";
 import {
-type BattlePassiveSpeedBonusSupportProfile,
-type BattlePassiveSpeedKindGrantsSupportProfile,
-type ReactionReductionResourceDie,
-type ReactionReductionResourceSpend,
-type ReactionRollOrDamageReductionProfile,
-type SupportedUnitFeatureProfile
+  type BattlePassiveSpeedBonusSupportProfile,
+  type BattlePassiveSpeedKindGrantsSupportProfile,
+  type ReactionReductionResourceDie,
+  type ReactionReductionResourceSpend,
+  type ReactionRollOrDamageReductionProfile,
+  type SupportedUnitFeatureProfile,
 } from "./unit-feature-support.ts";
 import type { ZeroHpLifecycle } from "./zero-hp-lifecycle.ts";
 
+import { type DamageAmountByTypeEntry } from "./battle-reducer/damage-helpers.ts";
 import {
-type DamageAmountByTypeEntry
-} from "./battle-reducer/damage-helpers.ts";
-import {
-BATTLE_ATTACK_RANGE_BANDS,
-CRITICAL_HIT_THRESHOLDS
+  BATTLE_ATTACK_RANGE_BANDS,
+  CRITICAL_HIT_THRESHOLDS,
 } from "./battle-reducer/domain-constants.ts";
 export {
-addBattleCombatant,
-removeBattleCombatants,startBattle
+  addBattleCombatant,
+  removeBattleCombatants,
+  startBattle,
 } from "./battle-reducer/api-lifecycle.ts";
 
 export {
-actorHasClassFeatureExtraAttackActionResource,actorHasStatBlockMultiattackActionResource,canSpendEscapeGrappleActionResource,currentActorHasOpenStatBlockMultiattackDispatch,dashActsForActor,
-dashSubjectForSpeedKind,discoverBattleActs,hasTurnActionResource,isClassFeatureExtraAttackActionResource,isStatBlockBattleCreatureState,isStatBlockMultiattackActionResource,isSupportedLiteralMultiattackDispatch,movementActs,releaseGrappleActs,spendTurnAction,standardActionLabel,statBlockBonusActionOptionActs,statBlockMultiattackActs,subjectAllowedDuringStatBlockMultiattackDispatch,supportedLiteralMultiattackDispatches,supportedStatBlockBonusActionOptions,
-supportedStatBlockBonusActionStandardAction,supportedStatBlockMultiattacks
+  actorHasClassFeatureExtraAttackActionResource,
+  actorHasStatBlockMultiattackActionResource,
+  canSpendEscapeGrappleActionResource,
+  currentActorHasOpenStatBlockMultiattackDispatch,
+  dashActsForActor,
+  dashSubjectForSpeedKind,
+  discoverBattleActs,
+  hasTurnActionResource,
+  isClassFeatureExtraAttackActionResource,
+  isStatBlockBattleCreatureState,
+  isStatBlockMultiattackActionResource,
+  isSupportedLiteralMultiattackDispatch,
+  movementActs,
+  releaseGrappleActs,
+  spendTurnAction,
+  standardActionLabel,
+  statBlockBonusActionOptionActs,
+  statBlockMultiattackActs,
+  subjectAllowedDuringStatBlockMultiattackDispatch,
+  supportedLiteralMultiattackDispatches,
+  supportedStatBlockBonusActionOptions,
+  supportedStatBlockBonusActionStandardAction,
+  supportedStatBlockMultiattacks,
 } from "./battle-reducer/battle-discovery.ts";
 
 export {
-discoverLegendaryActionActs,hasReactionRollOrDamageReductionRangeFact,ongoingFeatureIsAvailable,resolveExtraActionGrantUnitFeature,resolveFailedAbilityCheckResourceBoost,resolveOngoingFeatureUnitFeature,resolveSelfBonusActionHealingUnitFeature,resolveSuccessfulAbilityCheckReactionReduction,resolveUnitFeature,selfBonusActionHealingAmount,selfBonusActionHealingRollFill,
-selfBonusActionHealingRollHole,selfBonusActionHealingRollHoleId,
-selfBonusActionHealingRollHoleInstanceKey,selfBonusActionHealingRollProtocolId,selfBonusActionHealingStaleMessage,supportedUnitFeatureActs,supportedUnitFeatureProfileForResource
+  discoverLegendaryActionActs,
+  hasReactionRollOrDamageReductionRangeFact,
+  ongoingFeatureIsAvailable,
+  resolveExtraActionGrantUnitFeature,
+  resolveFailedAbilityCheckResourceBoost,
+  resolveOngoingFeatureUnitFeature,
+  resolveSelfBonusActionHealingUnitFeature,
+  resolveSuccessfulAbilityCheckReactionReduction,
+  resolveUnitFeature,
+  selfBonusActionHealingAmount,
+  selfBonusActionHealingRollFill,
+  selfBonusActionHealingRollHole,
+  selfBonusActionHealingRollHoleId,
+  selfBonusActionHealingRollHoleInstanceKey,
+  selfBonusActionHealingRollProtocolId,
+  selfBonusActionHealingStaleMessage,
+  supportedUnitFeatureActs,
+  supportedUnitFeatureProfileForResource,
 } from "./battle-reducer/unit-features.ts";
 
 export {
-applyBattleMovement,applyStartOfTurnActiveEffects,expireActiveEffects,expireEndOfTurnEffects,expireEndOfTurnOngoingFeatures,
-expireOngoingFeatures,expireStartOfTurnEffects,expireStartOfTurnOngoingFeatures,movementHole,movementHoleWithBudget,parseBattleMovement,readiedMovementBudgetForActor,readiedMovementHole,readiedMovementInitialHoles,readiedSpellInitialHoles,resetBattleTurnResources,resetPerTurnCharacterResources,resetSpellDamageReductionsForNewTurn,resetStartOfTurnCombatant,resolveEndTurn,resolveEndTurnCommand,resolveMoveCommand,resolveOpportunityAttackCommand,resolveReleaseReadiedMovementCommand,resolveReleaseReadiedSpellCommand,resolveStandFromProneCommand,
-standFromProneCostFeet,statBlockRechargeRollFillMatchesHole,tickDurationEffects
+  applyBattleMovement,
+  applyStartOfTurnActiveEffects,
+  expireActiveEffects,
+  expireEndOfTurnEffects,
+  expireEndOfTurnOngoingFeatures,
+  expireOngoingFeatures,
+  expireStartOfTurnEffects,
+  expireStartOfTurnOngoingFeatures,
+  movementHole,
+  movementHoleWithBudget,
+  parseBattleMovement,
+  readiedMovementBudgetForActor,
+  readiedMovementHole,
+  readiedMovementInitialHoles,
+  readiedSpellInitialHoles,
+  resetBattleTurnResources,
+  resetPerTurnCharacterResources,
+  resetSpellDamageReductionsForNewTurn,
+  resetStartOfTurnCombatant,
+  resolveEndTurn,
+  resolveEndTurnCommand,
+  resolveMoveCommand,
+  resolveOpportunityAttackCommand,
+  resolveReleaseReadiedMovementCommand,
+  resolveReleaseReadiedSpellCommand,
+  resolveStandFromProneCommand,
+  standFromProneCostFeet,
+  statBlockRechargeRollFillMatchesHole,
+  tickDurationEffects,
 } from "./battle-reducer/turn-end-movement.ts";
 
 export {
-abilityCheckFill,applyDashToActor,applyDisengage,attackRollHitsWithCriticalThreshold,
-attackRollIsCriticalHit,attackUsesWeaponOrUnarmedStrikeCriticalRange,battleCreatureInitFromStatBlock,classFeatureExtraAttackForActor,compatibleAttackActionResource,criticalThresholdForAttack,fixedAttackDamageAmount,
-fixedAttackDamageByTypeEntries,grappleFillSet,hasHelpAttackTargetSpatialFact,helpAttackAllyChoices,helpAttackAllyHole,helpAttackTargetChoices,helpAttackTargetHole,needsAttackDamageConcentrationResult,openClassFeatureExtraAttackResource,resolveBonusActionDash,
-resolveBonusActionDashTemporaryHitPoints,
-resolveBonusActionDisengage,resolveBonusActionStandardAction,resolveDash,resolveDisengage,resolveDodge,resolveEscapeGrapple,
-resolveEscapeSpellRestraint,resolveGrapple,resolveHelpAttack,
-resolveHide,
-resolveMultiattack,resolveReady,resolveReleaseGrappleCommand,resolveSearch,resolveStatBlockBonusActionDisengage,
-resolveStatBlockBonusActionHide,resolveStatBlockBonusActionOption,spellSaveDcForCaster,spendAttackAction,spendAttackActionResource,validateAttackDamageFill,
-validateRolledDiceForWeaponAttack
+  abilityCheckFill,
+  applyDashToActor,
+  applyDisengage,
+  attackRollHitsWithCriticalThreshold,
+  attackRollIsCriticalHit,
+  attackUsesWeaponOrUnarmedStrikeCriticalRange,
+  battleCreatureInitFromStatBlock,
+  classFeatureExtraAttackForActor,
+  compatibleAttackActionResource,
+  criticalThresholdForAttack,
+  grappleFillSet,
+  hasHelpAttackTargetSpatialFact,
+  helpAttackAllyChoices,
+  helpAttackAllyHole,
+  helpAttackTargetChoices,
+  helpAttackTargetHole,
+  needsAttackDamageConcentrationResult,
+  openClassFeatureExtraAttackResource,
+  resolveBonusActionDash,
+  resolveBonusActionDashTemporaryHitPoints,
+  resolveBonusActionDisengage,
+  resolveBonusActionStandardAction,
+  resolveDash,
+  resolveDisengage,
+  resolveDodge,
+  resolveEscapeGrapple,
+  resolveEscapeSpellRestraint,
+  resolveGrapple,
+  resolveHelpAttack,
+  resolveHide,
+  resolveMultiattack,
+  resolveReady,
+  resolveReleaseGrappleCommand,
+  resolveSearch,
+  resolveStatBlockBonusActionDisengage,
+  resolveStatBlockBonusActionHide,
+  resolveStatBlockBonusActionOption,
+  spellSaveDcForCaster,
+  spendAttackAction,
+  spendAttackActionResource,
+  validateAttackDamageFill,
+  validateRolledDiceForWeaponAttack,
 } from "./battle-reducer/attack-resolution.ts";
 
 export {
-actionHideSubject,
-actionSearchSubject,activeReactionWithReplayContinuationAttackDamageReductions,admittedReactionChoice,attackDamageContinuationAmount,attackDamageContinuationConcentrationFill,attackDamageContinuationConcentrationFrame,attackDamageContinuationConcentrationHole,attackDamageEventAfterPendingReduction,attackDamageEventAfterPendingReductions,attackDamageEventAmountBeforeTargetAdjustments,attackDamageEventAmountForTarget,attackDamageEventEntries,attackDamageEventWithEntries,attackDamagePrefixFills,attackDamageReductionRedirectResource,attackDamageReductionRedirectResourceAvailable,attackDamageReductionZeroDamageRedirectHoles,attackDamageReductionZeroDamageRedirectSelection,attackDamageReductionZeroDamageRedirectTargetChoices,attackDamageRiderSelectionsEqual,attackFillsThroughAttackRoll,battleFillEquals,battleTurnSnapshot,completeActiveReactionProcedure,completeResolvedActiveReactionIfPending,consumeOrCloseLegendaryActionWindow,currentInterruptFrame,
-currentReactionFrame,damageAmountByTypeEntriesAfterScalarReduction,endTurn,hasAttackDamageReductionRedirectTargetSpatialFact,isReleaseGrappleSubject,maybeOpenReactionWindow,openAfterDamageSequenceReactionWindow,openBattleReactionWindow,opportunityAttackReactionChoices,pendingReactionSnapshot,reactionChoices,reactionDecisionHole,reactionFrameAfterModifier,reactionInterruptFrame,reactionModifiedAttackRollFills,
+  fixedAttackDamageAmount,
+  fixedAttackDamageByTypeEntries,
+} from "./battle-reducer/damage-helpers.ts";
 
-reactionTriggerLabel,readiedMovementReactionChoices,readiedSpellReactionChoices,replayContinuationFrame,resolveAttackDamageContinuationConcentration,resolveAttackDamageReductionZeroDamageRedirectAfterReduction,resolveBattleReaction,resolveBattleSubject,
-resolveBattleSubjectInternal,resolveCastTriggeredReactionSpellCommand,resolveReactionRollOrDamageReduction,resolveReplayContinuation,
-resolveReplayContinuationFromState,resumeInterruptedProcedure,rolledDiceGroupsEqual,sameReactionProcedureChoice,snapshotBattle,spendAttackDamageReductionRedirectResource,spendReaction,
-standardActionKindForSubject,suppressReactionTriggerForActiveReaction,
-unofferedEligibleReactors
+export {
+  actionHideSubject,
+  actionSearchSubject,
+  activeReactionWithReplayContinuationAttackDamageChanges,
+  admittedReactionChoice,
+  attackDamageContinuationAmount,
+  attackDamageContinuationConcentrationFill,
+  attackDamageContinuationConcentrationFrame,
+  attackDamageContinuationConcentrationHole,
+  attackDamageEventAfterPendingReduction,
+  attackDamageEventAfterPendingReductions,
+  attackDamageEventAmountBeforeTargetAdjustments,
+  attackDamageEventAmountForTarget,
+  attackDamageEventEntries,
+  attackDamageEventWithEntries,
+  attackDamagePrefixFills,
+  attackDamageReductionRedirectResource,
+  attackDamageReductionRedirectResourceAvailable,
+  attackDamageReductionZeroDamageRedirectHoles,
+  attackDamageReductionZeroDamageRedirectSelection,
+  attackDamageReductionZeroDamageRedirectTargetChoices,
+  attackDamageRiderSelectionsEqual,
+  attackFillsThroughAttackRoll,
+  battleFillEquals,
+  battleTurnSnapshot,
+  completeActiveReactionProcedure,
+  completeResolvedActiveReactionIfPending,
+  consumeOrCloseLegendaryActionWindow,
+  currentInterruptFrame,
+  currentReactionFrame,
+  damageAmountByTypeEntriesAfterScalarReduction,
+  endTurn,
+  hasAttackDamageReductionRedirectTargetSpatialFact,
+  isReleaseGrappleSubject,
+  maybeOpenReactionWindow,
+  openAfterDamageSequenceReactionWindow,
+  openBattleReactionWindow,
+  opportunityAttackReactionChoices,
+  pendingReactionSnapshot,
+  reactionChoices,
+  reactionDecisionHole,
+  reactionFrameAfterModifier,
+  reactionInterruptFrame,
+  reactionModifiedAttackRollFills,
+  reactionTriggerLabel,
+  readiedMovementReactionChoices,
+  readiedSpellReactionChoices,
+  replayContinuationFrame,
+  resolveAttackDamageContinuationConcentration,
+  resolveAttackDamageReductionZeroDamageRedirectAfterReduction,
+  resolveBattleReaction,
+  resolveBattleSubject,
+  resolveBattleSubjectInternal,
+  resolveCastTriggeredReactionSpellCommand,
+  resolveReactionRollOrDamageReduction,
+  resolveReplayContinuation,
+  resolveReplayContinuationFromState,
+  resumeInterruptedProcedure,
+  rolledDiceGroupsEqual,
+  sameReactionProcedureChoice,
+  snapshotBattle,
+  spendAttackDamageReductionRedirectResource,
+  spendReaction,
+  standardActionKindForSubject,
+  suppressReactionTriggerForActiveReaction,
+  unofferedEligibleReactors,
 } from "./battle-reducer/dispatcher.ts";
 
 export { zeroHpLifecycleIsTerminal } from "./battle-reducer/creature-state-leaves.ts";
 export { combatantKnockedOutUnconscious } from "./battle-reducer/creature-state.ts";
 
-export { attackFillSet,validateUniqueAttackTargetRangeFacts } from "./battle-reducer/attack-fill-set.ts";
-export { resolveAttack } from "./battle-reducer/attack-main.ts";
-export { resolveOffHandAttack,spendOffHandBonusAction } from "./battle-reducer/attack-offhand.ts";
 export {
-breakBattleConcentration,
-resolveBattleConcentrationDamage
+  attackFillSet,
+  validateUniqueAttackTargetRangeFacts,
+} from "./battle-reducer/attack-fill-set.ts";
+export { resolveAttack } from "./battle-reducer/attack-main.ts";
+export {
+  resolveOffHandAttack,
+  spendOffHandBonusAction,
+} from "./battle-reducer/attack-offhand.ts";
+export {
+  breakBattleConcentration,
+  resolveBattleConcentrationDamage,
 } from "./battle-reducer/damage-apply.ts";
 export {
-concentrationSavingThrowDc,
-scoreModifier
+  concentrationSavingThrowDc,
+  scoreModifier,
 } from "./battle-reducer/domain-helpers.ts";
-export { abilityProficiencyDifficultyClass,attackDamageReductionOriginalDamageType,characterAbilityModifier,isBattleRolledDiceFill,reactionModifierReductionRoll,reactionModifierReductionTotal,reactionModifierResourceAvailable,reactionModifierResourceSpend,reactionModifierResourceUnitId,reactionModifierRollHole,reactionReductionResourceDieLabel,reactionReductionResourceDieRollTotal,reactionRollOrDamageReductionChoiceForProfile,reactionRollOrDamageReductionChoices,rolledDiceFillTotal,spendReactionModifierResource } from "./battle-reducer/reaction-modifiers.ts";
-export { currentActorHasPendingSlottedSpellCast,shieldReactionSpellMatchesTrigger,triggeredReactionSpellChoices,triggeredReactionSpellTurnResourceAvailable } from "./battle-reducer/reaction-triggered-spells.ts";
 export {
-activeOngoingFeaturesPreventSpellcasting,damageSpellSource,isPreparedDamageSpellSource,isScalarBuffTargetListInvocation,isTargetListSpellInvocation
+  abilityProficiencyDifficultyClass,
+  attackDamageReductionOriginalDamageType,
+  characterAbilityModifier,
+  isBattleRolledDiceFill,
+  reactionModifierReductionRoll,
+  reactionModifierReductionTotal,
+  reactionModifierResourceAvailable,
+  reactionModifierResourceSpend,
+  reactionModifierResourceUnitId,
+  reactionModifierRollHole,
+  reactionReductionResourceDieLabel,
+  reactionReductionResourceDieRollTotal,
+  reactionRollOrDamageReductionChoiceForProfile,
+  reactionRollOrDamageReductionChoices,
+  rolledDiceFillTotal,
+  spendReactionModifierResource,
+} from "./battle-reducer/reaction-modifiers.ts";
+export {
+  currentActorHasPendingSlottedSpellCast,
+  shieldReactionSpellMatchesTrigger,
+  triggeredReactionSpellChoices,
+  triggeredReactionSpellTurnResourceAvailable,
+} from "./battle-reducer/reaction-triggered-spells.ts";
+export {
+  activeOngoingFeaturesPreventSpellcasting,
+  damageSpellSource,
+  isPreparedDamageSpellSource,
+  isScalarBuffTargetListInvocation,
+  isTargetListSpellInvocation,
 } from "./battle-reducer/spells-invocation-guards.ts";
 export const BATTLE_SPECIAL_SPEED_KINDS = [
   "climb",
@@ -193,8 +376,7 @@ export const KNOWN_WILLING_TARGET_ROLL_MODIFIER_SPELL_IDS: ReadonlyArray<
 export const KNOWN_WILLING_TARGET_DAMAGE_REDUCTION_SPELL_IDS: ReadonlyArray<
   SpellRecord["id"]
 > = ["resistance"];
-export 
-type CriticalHitThreshold = (typeof CRITICAL_HIT_THRESHOLDS)[number];
+export type CriticalHitThreshold = (typeof CRITICAL_HIT_THRESHOLDS)[number];
 export type BattleD20RollModifierKind = Extract<
   Extract<EffectAtom, { readonly kind: "modify_roll_numeric" }>["on"][number],
   "ability_check" | "attack_roll" | "saving_throw"
@@ -386,6 +568,7 @@ export type BattleInterruptedProcedure =
       readonly subject: BattleSubject;
       readonly fills: readonly BattleFill[];
       readonly attackDamageReductions?: readonly BattlePendingAttackDamageReduction[];
+      readonly attackDamageAdditions?: readonly AttackSpellDamageAddition[];
     }
   | {
       readonly kind: "resolved";
@@ -416,8 +599,8 @@ export type BattleInterruptedProcedure =
       readonly damageDisposition: BattleAttackDamageDisposition;
       readonly attackDamageRiders: readonly AttackDamageRider[];
       readonly weaponDamageDiceRollChoice?: WeaponDamageDiceRollChoiceFill;
-    };export 
-type BattleAttackHostSubject =
+    };
+export type BattleAttackHostSubject =
   | Extract<
       BattleSubject,
       { readonly tag: "action"; readonly action: "attack" }
@@ -429,8 +612,8 @@ type BattleAttackHostSubject =
   | Extract<
       BattleSubject,
       { readonly tag: "runtimeCommand"; readonly command: "opportunityAttack" }
-    >;export 
-type BattleAttackDamagePrefixFill = Extract<
+    >;
+export type BattleAttackDamagePrefixFill = Extract<
   BattleFill,
   {
     readonly kind:
@@ -444,8 +627,8 @@ export type BattleAfterDamageEvent = {
   readonly damageSourceId: CombatantId;
   readonly damagedId: CombatantId;
   readonly damageAmount: DamageAmount;
-};export 
-type BattlePendingAttackDamageReduction = {
+};
+export type BattlePendingAttackDamageReduction = {
   readonly reactorId: CombatantId;
   readonly unitId: UnitRecord["id"];
   readonly label: string;
@@ -455,21 +638,24 @@ type BattlePendingAttackDamageReduction = {
   >["reduction"];
   readonly reductionAmount: number;
   readonly zeroDamageRedirect?: AttackDamageReductionZeroDamageRedirectOffer;
-};export 
-type AttackDamageReductionZeroDamageRedirectAvailableOffer = {
+};
+export type AttackDamageReductionZeroDamageRedirectAvailableOffer = {
   readonly reactorId: CombatantId;
   readonly unitId: UnitRecord["id"];
   readonly label: string;
   readonly redirect: AttackDamageReductionZeroDamageRedirectOffer;
 };
-export type BattleAttackKindForRedirect = "melee" | "ranged";export 
-type AttackDamageReductionRedirectTargetGate = NonNullable<
+export type BattleAttackKindForRedirect = "melee" | "ranged";
+export type BattleAttackHitTriggerKind =
+  | "meleeWeaponOrUnarmedStrike"
+  | "otherAttack";
+export type AttackDamageReductionRedirectTargetGate = NonNullable<
   Extract<
     ReactionRollOrDamageReductionProfile,
     { readonly kind: "attackDamageReduction" }
   >["zeroDamageRedirect"]
->["targetGate"];export 
-type AttackDamageReductionZeroDamageRedirectOffer = {
+>["targetGate"];
+export type AttackDamageReductionZeroDamageRedirectOffer = {
   readonly spends: ReactionReductionResourceSpend;
   readonly saveAbility: "dex";
   readonly saveDc: DifficultyClass;
@@ -481,8 +667,8 @@ type AttackDamageReductionZeroDamageRedirectOffer = {
   readonly targetGate: AttackDamageReductionRedirectTargetGate;
   readonly damageAbilityModifier: AbilityModifier;
   readonly originalDamageType: DamageType;
-};export 
-type AttackDamageReductionZeroDamageRedirectSelection = {
+};
+export type AttackDamageReductionZeroDamageRedirectSelection = {
   readonly targetId: CombatantId;
   readonly savingThrowSucceeded: boolean;
   readonly redirectedDamageRoll: number;
@@ -505,20 +691,24 @@ type BattleReactionProcedureChoiceWithSubject = {
       readonly invocation: SpellInvocationRef;
     }
   | {
+      readonly kind: "castAttackHitBonusActionSpell";
+      readonly invocation: SpellInvocationRef;
+    }
+  | {
       readonly kind: "opportunityAttack";
     }
 );
 type BattleAttackDamageContinuation = Extract<
   BattleInterruptedProcedure,
   { readonly kind: "attackDamage" }
->;export 
-type BattleAttackDamageContinuationWithoutConcentration = Omit<
+>;
+export type BattleAttackDamageContinuationWithoutConcentration = Omit<
   BattleAttackDamageContinuation,
   "concentrationSavingThrow"
 > & {
   readonly concentrationSavingThrow?: never;
-};export 
-type BattleReactionModifierChoice =
+};
+export type BattleReactionModifierChoice =
   | {
       readonly kind:
         | "attackRollReduction"
@@ -558,8 +748,8 @@ type BattleReactionRolledResourceReduction = Omit<
   "kind"
 > & {
   readonly kind: "rolled";
-};export 
-type BattleAttackDamageEvent =
+};
+export type BattleAttackDamageEvent =
   | {
       readonly kind: "aggregateDamage";
       readonly damageByTypeBeforeTargetAdjustments: readonly DamageAmountByTypeEntry[];
@@ -574,8 +764,8 @@ export type BattleAttackDamageDisposition =
   | {
       readonly kind: "zeroHitPointReplacement";
       readonly unitId: UnitRecord["id"];
-    };export 
-type BattleReactionProcedureModifierChoice = {
+    };
+export type BattleReactionProcedureModifierChoice = {
   readonly kind: "reactionRollOrDamageReduction";
   readonly reactorId: CombatantId;
   readonly choice: BattleReactionModifierChoice;
@@ -600,6 +790,10 @@ export type BattleReactionProcedureSelection = {
       readonly invocation: SpellInvocationRef;
     }
   | {
+      readonly kind: "castAttackHitBonusActionSpell";
+      readonly invocation: SpellInvocationRef;
+    }
+  | {
       readonly kind: "opportunityAttack";
       readonly reactorId: CombatantId;
     }
@@ -616,6 +810,9 @@ type BattleActiveReactionProcedure = {
   readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
   readonly pendingAttackDamageReductions?:
     | readonly BattlePendingAttackDamageReduction[]
+    | undefined;
+  readonly pendingAttackDamageAdditions?:
+    | readonly AttackSpellDamageAddition[]
     | undefined;
 };
 type BattleReactionFrameBase = {
@@ -634,6 +831,7 @@ export type BattleReactionFrame =
       readonly targetId: CombatantId;
       readonly attackRoll: AttackRollResult;
       readonly attackKind: BattleAttackKindForRedirect;
+      readonly attackHitTriggerKind: BattleAttackHitTriggerKind;
       readonly damageTypes: readonly DamageType[];
     })
   | (BattleReactionFrameBase & {
@@ -661,29 +859,29 @@ export type BattleReactionFrame =
       readonly trigger: "opportunityAttack";
       readonly moverId: CombatantId;
       readonly threats: readonly BattleOpportunityAttackThreat[];
-    });export 
-type BattleInterruptFrame =
+    });
+export type BattleInterruptFrame =
   | { readonly kind: "reaction"; readonly frame: BattleReactionFrame }
   | BattleReplayContinuationFrame
-  | BattleAttackDamageContinuationConcentrationFrame;export 
-type BattleReactionInterruptFrame = Extract<
+  | BattleAttackDamageContinuationConcentrationFrame;
+export type BattleReactionInterruptFrame = Extract<
   BattleInterruptFrame,
   { readonly kind: "reaction" }
->;export 
-type BattleReplayContinuationFrame = {
+>;
+export type BattleReplayContinuationFrame = {
   readonly kind: "replayContinuation";
   readonly continuation: Extract<
     BattleInterruptedProcedure,
     { readonly kind: "replay" }
   >;
   readonly suppressedReactionTrigger: BattleReactionTrigger;
-};export 
-type BattleAttackDamageContinuationConcentrationFrame = {
+};
+export type BattleAttackDamageContinuationConcentrationFrame = {
   readonly kind: "attackDamageContinuationConcentration";
   readonly continuation: BattleAttackDamageContinuationWithoutConcentration;
   readonly suppressedReactionTrigger: BattleReactionTrigger;
-};export 
-type BattleReactionFrameInput = BattleReactionFrame extends infer T
+};
+export type BattleReactionFrameInput = BattleReactionFrame extends infer T
   ? T extends BattleReactionFrame
     ? Omit<
         T,
@@ -1050,6 +1248,22 @@ export type WeaponDamageRiderSpellInvocation = {
     { readonly kind: "spellWeaponDamageRider" }
   >;
 };
+export type AfterHitDamageSpellInvocation = {
+  readonly access: PreparedSpellAccess;
+  readonly resource: SpellSlotInvocationResource;
+  readonly procedure: "afterHitDamage";
+  readonly spell: SpellRecord;
+  readonly actionCost: "bonusAction";
+  readonly damage: {
+    readonly expr: DiceExpr;
+    readonly damageType: DamageType;
+  };
+  readonly conditionalBonusDamage: {
+    readonly targetCreatureTypes: readonly CreatureType[];
+    readonly expr: DiceExpr;
+    readonly damageType: DamageType;
+  };
+};
 export type MarkedDamageRiderSpellInvocation =
   | {
       readonly access: PreparedSpellAccess;
@@ -1245,6 +1459,7 @@ export type SupportedSpellInvocation =
   | CreatureTypeProtectionSpellInvocation
   | ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation
   | WeaponDamageRiderSpellInvocation
+  | AfterHitDamageSpellInvocation
   | MarkedDamageRiderSpellInvocation
   | {
       readonly access: PreparedSpellAccess;
@@ -1306,6 +1521,7 @@ export type SupportedDamageSpellInvocation = Exclude<
       | "conditionImmunityAndTurnStartTemporaryHitPoints"
       | "scalarBuff"
       | "weaponDamageRider"
+      | "afterHitDamage"
       | "markedDamageRider"
       | "heldLight"
       | "shieldReaction"
@@ -1391,6 +1607,13 @@ export type SpellWeaponDamageRider = Extract<
   BattleActiveEffect,
   { readonly kind: "spellWeaponDamageRider" }
 >;
+export type SpellAttackDamageComponent = Omit<
+  SpellWeaponDamageRider,
+  "kind" | "expiresAt"
+>;
+export type AttackSpellDamageAddition = SpellAttackDamageComponent & {
+  readonly kind: "attackSpellDamageAddition";
+};
 export type SpellMarkedDamageRider = Extract<
   BattleActiveEffect,
   { readonly kind: "spellMarkedDamageRider" }
@@ -1467,12 +1690,12 @@ export type ActiveOngoingFeatureOccurrenceSnapshotEncoded =
       readonly source: OngoingFeatureSourceEncoded;
     };
 
-
 export type KnockedOutOneHp = Hp & Brand.Brand<"KnockedOutOneHp">;
 export const KnockedOutOneHp = Brand.nominal<KnockedOutOneHp>();
 export type KnockedOutConditionState = ConditionState &
   Brand.Brand<"KnockedOutConditionState">;
-export const KnockedOutConditionState = Brand.nominal<KnockedOutConditionState>();
+export const KnockedOutConditionState =
+  Brand.nominal<KnockedOutConditionState>();
 type KnockOutEligibleZeroHpLifecycle =
   | Extract<ZeroHpLifecycle, { readonly policy: "diesAtZeroHp" }>
   | (Extract<ZeroHpLifecycle, { readonly policy: "usesDeathSavingThrows" }> & {
@@ -1766,7 +1989,7 @@ export type BattleDamageRollHole = Extract<
   readonly attack: SupportedAttackActionOption;
   readonly critical: boolean;
   readonly attackDamageRiders?: readonly AttackDamageRider[];
-  readonly spellWeaponDamageRiders?: readonly SpellWeaponDamageRider[];
+  readonly spellWeaponDamageRiders?: readonly SpellAttackDamageComponent[];
   readonly spellMarkedDamageRiders?: readonly SpellMarkedDamageRider[];
   readonly weaponDamageDiceRollChoiceUnitIds?: readonly UnitRecord["id"][];
 };
@@ -2013,7 +2236,10 @@ export type SpellDamageReductionFill = {
   readonly damageType: DamageType;
   readonly roll: DieRollResult;
 };
-export type SpellDamageReductionRoll = Omit<SpellDamageReductionFill, "roll"> & {
+export type SpellDamageReductionRoll = Omit<
+  SpellDamageReductionFill,
+  "roll"
+> & {
   readonly amount: {
     readonly dice: 1;
     readonly dieSize: 4;
@@ -2118,13 +2344,11 @@ export type BattleResolutionInput = {
   readonly subject: BattleSubject;
   readonly fills: readonly BattleFill[];
 };
-export type BattleResolutionInputForSubject<TSubject extends BattleSubject> = Omit<
-  BattleResolutionInput,
-  "subject"
-> & {
-  readonly subject: TSubject;
-};export 
-type AttackBattleResolutionInput = BattleResolutionInputForSubject<
+export type BattleResolutionInputForSubject<TSubject extends BattleSubject> =
+  Omit<BattleResolutionInput, "subject"> & {
+    readonly subject: TSubject;
+  };
+export type AttackBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<BattleSubject, { readonly tag: "action"; readonly action: "attack" }>
 > & {
   readonly replayingInterruptedProcedure?: boolean;
@@ -2132,26 +2356,33 @@ type AttackBattleResolutionInput = BattleResolutionInputForSubject<
   readonly pendingAttackDamageReductions?:
     | readonly BattlePendingAttackDamageReduction[]
     | undefined;
-};export 
-type MultiattackBattleResolutionInput = BattleResolutionInputForSubject<
+  readonly pendingAttackDamageAdditions?:
+    | readonly AttackSpellDamageAddition[]
+    | undefined;
+};
+export type MultiattackBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<
     BattleSubject,
     { readonly tag: "action"; readonly action: "multiattack" }
   >
->;export 
-type OffHandAttackBattleResolutionInput = BattleResolutionInputForSubject<
-  Extract<
-    BattleSubject,
-    { readonly tag: "bonusAction"; readonly action: "offHandAttack" }
-  >
-> & {
-  readonly replayingInterruptedProcedure?: boolean;
-  readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
-  readonly pendingAttackDamageReductions?:
-    | readonly BattlePendingAttackDamageReduction[]
-    | undefined;
-};export 
-type StatBlockBonusActionOptionBattleResolutionInput =
+>;
+export type OffHandAttackBattleResolutionInput =
+  BattleResolutionInputForSubject<
+    Extract<
+      BattleSubject,
+      { readonly tag: "bonusAction"; readonly action: "offHandAttack" }
+    >
+  > & {
+    readonly replayingInterruptedProcedure?: boolean;
+    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+    readonly pendingAttackDamageReductions?:
+      | readonly BattlePendingAttackDamageReduction[]
+      | undefined;
+    readonly pendingAttackDamageAdditions?:
+      | readonly AttackSpellDamageAddition[]
+      | undefined;
+  };
+export type StatBlockBonusActionOptionBattleResolutionInput =
   BattleResolutionInputForSubject<
     Extract<
       BattleSubject,
@@ -2160,25 +2391,26 @@ type StatBlockBonusActionOptionBattleResolutionInput =
         readonly action: "statBlockActionOption";
       }
     >
-  >;export 
-type HideBattleResolutionInput = BattleResolutionInputForSubject<
+  >;
+export type HideBattleResolutionInput = BattleResolutionInputForSubject<
   | ActionHideSubject
   | (BonusActionStandardActionSubject & { readonly action: "hide" })
->;export 
-type BonusActionStandardActionBattleResolutionInput =
-  BattleResolutionInputForSubject<BonusActionStandardActionSubject>;export 
-type SearchBattleResolutionInput =
-  BattleResolutionInputForSubject<ActionSearchSubject>;export 
-type GrappleBattleResolutionInput = BattleResolutionInputForSubject<
+>;
+export type BonusActionStandardActionBattleResolutionInput =
+  BattleResolutionInputForSubject<BonusActionStandardActionSubject>;
+export type SearchBattleResolutionInput =
+  BattleResolutionInputForSubject<ActionSearchSubject>;
+export type GrappleBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<BattleSubject, { readonly tag: "action"; readonly action: "grapple" }>
->;export 
-type EscapeGrappleBattleResolutionInput = BattleResolutionInputForSubject<
-  Extract<
-    BattleSubject,
-    { readonly tag: "action"; readonly action: "escapeGrapple" }
-  >
->;export 
-type EscapeSpellRestraintBattleResolutionInput =
+>;
+export type EscapeGrappleBattleResolutionInput =
+  BattleResolutionInputForSubject<
+    Extract<
+      BattleSubject,
+      { readonly tag: "action"; readonly action: "escapeGrapple" }
+    >
+  >;
+export type EscapeSpellRestraintBattleResolutionInput =
   BattleResolutionInputForSubject<
     Extract<
       BattleSubject,
@@ -2191,12 +2423,13 @@ export type ActionSpellBattleResolutionInput = BattleResolutionInputForSubject<
   readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
   readonly reactionContinuationSubject?: BattleSubject | undefined;
 };
-export type BonusActionSpellBattleResolutionInput = BattleResolutionInputForSubject<
-  Extract<BattleSubject, { readonly tag: "bonusActionSpell" }>
-> & {
-  readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
-};export 
-type UnitFeatureBattleResolutionInput = BattleResolutionInputForSubject<
+export type BonusActionSpellBattleResolutionInput =
+  BattleResolutionInputForSubject<
+    Extract<BattleSubject, { readonly tag: "bonusActionSpell" }>
+  > & {
+    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+  };
+export type UnitFeatureBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<BattleSubject, { readonly tag: "unitFeature" }>
 >;
 
@@ -2357,7 +2590,61 @@ export type BattleCreatureZeroHpLifecycleSnapshot =
     };
 
 export {
-ATTACK_DAMAGE_DISPOSITION_HOLE_ID,ATTACK_DAMAGE_DISPOSITION_HOLE_INSTANCE,ATTACK_ONLY_ACTION_RESOURCE_EXCLUDED_ACTIONS,ATTACK_ROLL_HOLE_ID,ATTACK_ROLL_HOLE_INSTANCE,ATTACK_TARGET_HOLE_ID,ATTACK_TARGET_HOLE_INSTANCE,CONCENTRATION_SAVING_THROW_HOLE_INSTANCE_PREFIX,DEATH_SAVING_THROW_HOLE_ID,DEATH_SAVING_THROW_HOLE_INSTANCE,ESCAPE_GRAPPLE_OUTCOME_HOLE_ID,ESCAPE_GRAPPLE_OUTCOME_HOLE_INSTANCE,ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_ID,ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_INSTANCE,GRAPPLE_OUTCOME_HOLE_ID,GRAPPLE_OUTCOME_HOLE_INSTANCE,GRAPPLE_TARGET_HOLE_ID,GRAPPLE_TARGET_HOLE_INSTANCE,HELP_ATTACK_ALLY_HOLE_ID,HELP_ATTACK_ALLY_HOLE_INSTANCE,HELP_ATTACK_TARGET_HOLE_ID,HELP_ATTACK_TARGET_HOLE_INSTANCE,HIDE_ABILITY_CHECK_HOLE_ID,HIDE_ABILITY_CHECK_HOLE_INSTANCE,HIDE_DC,INITIAL_ROUND,INITIAL_TURN_RESOURCES,MOVEMENT_HOLE_ID,MOVEMENT_HOLE_INSTANCE,REACTION_DECISION_HOLE_ID,REACTION_DECISION_HOLE_INSTANCE,REACTION_MODIFIER_ROLL_HOLE_ID,REACTION_MODIFIER_ROLL_HOLE_INSTANCE,SEARCH_ABILITY_CHECK_HOLE_ID,SEARCH_ABILITY_CHECK_HOLE_INSTANCE,SEARCH_TARGET_HOLE_ID,SEARCH_TARGET_HOLE_INSTANCE,STAT_BLOCK_RECHARGE_ROLL_HOLE_ID,STAT_BLOCK_RECHARGE_ROLL_HOLE_INSTANCE,SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS,type AttackFillSet,type ClassFeatureExtraAttackActionResource,type GrappleFillSet,type HpDamageProjection,type StatBlockMultiattackActionResource,type SupportedLiteralMultiattackDispatch,type SupportedStatBlockBonusActionOption,type SupportedStatBlockBonusActionStandardAction,type SupportedStatBlockMultiattack,type UnitFeatureRolledDiceFill
+  ATTACK_DAMAGE_DISPOSITION_HOLE_ID,
+  ATTACK_DAMAGE_DISPOSITION_HOLE_INSTANCE,
+  ATTACK_ONLY_ACTION_RESOURCE_EXCLUDED_ACTIONS,
+  ATTACK_ROLL_HOLE_ID,
+  ATTACK_ROLL_HOLE_INSTANCE,
+  ATTACK_TARGET_HOLE_ID,
+  ATTACK_TARGET_HOLE_INSTANCE,
+  CONCENTRATION_SAVING_THROW_HOLE_INSTANCE_PREFIX,
+  DEATH_SAVING_THROW_HOLE_ID,
+  DEATH_SAVING_THROW_HOLE_INSTANCE,
+  ESCAPE_GRAPPLE_OUTCOME_HOLE_ID,
+  ESCAPE_GRAPPLE_OUTCOME_HOLE_INSTANCE,
+  ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_ID,
+  ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_INSTANCE,
+  GRAPPLE_OUTCOME_HOLE_ID,
+  GRAPPLE_OUTCOME_HOLE_INSTANCE,
+  GRAPPLE_TARGET_HOLE_ID,
+  GRAPPLE_TARGET_HOLE_INSTANCE,
+  HELP_ATTACK_ALLY_HOLE_ID,
+  HELP_ATTACK_ALLY_HOLE_INSTANCE,
+  HELP_ATTACK_TARGET_HOLE_ID,
+  HELP_ATTACK_TARGET_HOLE_INSTANCE,
+  HIDE_ABILITY_CHECK_HOLE_ID,
+  HIDE_ABILITY_CHECK_HOLE_INSTANCE,
+  HIDE_DC,
+  INITIAL_ROUND,
+  INITIAL_TURN_RESOURCES,
+  MOVEMENT_HOLE_ID,
+  MOVEMENT_HOLE_INSTANCE,
+  REACTION_DECISION_HOLE_ID,
+  REACTION_DECISION_HOLE_INSTANCE,
+  REACTION_MODIFIER_ROLL_HOLE_ID,
+  REACTION_MODIFIER_ROLL_HOLE_INSTANCE,
+  SEARCH_ABILITY_CHECK_HOLE_ID,
+  SEARCH_ABILITY_CHECK_HOLE_INSTANCE,
+  SEARCH_TARGET_HOLE_ID,
+  SEARCH_TARGET_HOLE_INSTANCE,
+  STAT_BLOCK_RECHARGE_ROLL_HOLE_ID,
+  STAT_BLOCK_RECHARGE_ROLL_HOLE_INSTANCE,
+  SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS,
+  type AttackFillSet,
+  type ClassFeatureExtraAttackActionResource,
+  type GrappleFillSet,
+  type HpDamageProjection,
+  type StatBlockMultiattackActionResource,
+  type SupportedLiteralMultiattackDispatch,
+  type SupportedStatBlockBonusActionOption,
+  type SupportedStatBlockBonusActionStandardAction,
+  type SupportedStatBlockMultiattack,
+  type UnitFeatureRolledDiceFill,
 } from "./battle-reducer/battle-runtime-protocol.ts";
 
-export { ActiveOngoingFeatureOccurrenceSnapshotSchema,BattleFillSchema,BattleHoleSchema,BattleSnapshotSchema } from "./battle-reducer/battle-codecs.ts";
+export {
+  ActiveOngoingFeatureOccurrenceSnapshotSchema,
+  BattleFillSchema,
+  BattleHoleSchema,
+  BattleSnapshotSchema,
+} from "./battle-reducer/battle-codecs.ts";

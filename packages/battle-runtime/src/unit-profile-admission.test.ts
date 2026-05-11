@@ -14,8 +14,9 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30C animal_friendship protection_from_evil_and_good
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30E faerie_fire
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30F resistance
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-damage-reduction
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage spell.invocation-damage-reduction
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31A divine_favor
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31C divine_smite
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31B hunters_mark
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV32B produce_flame
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield
@@ -165,6 +166,7 @@ const sleepUnitId = "sleep";
 const monkDeflectAttacksUnitId = "monk_deflect_attacks";
 const defenseUnitId = "defense";
 const divineFavorUnitId = "divine_favor";
+const divineSmiteUnitId = "divine_smite";
 const divineFavorDurationTicks = elapsedTimeTicks(10);
 const myceliumStepUnitId = "mycelium_step";
 const archeryUnitId = "feat_archery";
@@ -4779,6 +4781,527 @@ describe("SRDINV31A deterministic weapon damage rider Spell Unit admission", () 
         ],
       },
     });
+  });
+});
+
+describe("SRDINV31C deterministic after-hit damage Spell Unit admission", () => {
+  test("divine_smite is not offered as an ordinary Spell act", () => {
+    const spell = spellRecord(divineSmiteUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      attack: zeroAbilityWeaponAttack("weapon_longsword"),
+    });
+
+    expect(
+      discoverBattleActs(state).some(
+        (act) =>
+          (act.subject.tag === "actionSpell" ||
+            act.subject.tag === "bonusActionSpell") &&
+          act.subject.invocation.spellId === divineSmiteUnitId,
+      ),
+    ).toBe(false);
+  });
+
+  test("divine_smite cannot be manually readied through the ordinary Spell resolver path", () => {
+    const spell = spellRecord(divineSmiteUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      attack: zeroAbilityWeaponAttack("weapon_longsword"),
+    });
+
+    const readied = resolveBattleSubject({
+      state,
+      subject: {
+        tag: "actionSpell",
+        actorId: spellCasterId,
+        invocation: spellSlotInvocationRef(
+          divineSmiteUnitId,
+          1,
+          "afterHitDamage",
+        ),
+        mode: { tag: "ready", trigger: "attackHit" },
+      },
+      fills: [],
+    });
+
+    expect(readied).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedSubject",
+    });
+    expect(state.readiedSpells.has(spellCasterId)).toBe(false);
+  });
+
+  test("divine_smite is admitted after an Unarmed Strike hit", () => {
+    const spell = spellRecord(divineSmiteUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      attack: null,
+    });
+    const subject: Extract<BattleSubject, { readonly tag: "action" }> = {
+      tag: "action",
+      actorId: spellCasterId,
+      action: "attack",
+      attackName: "Unarmed Strike",
+    };
+    const target = requireResultHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const targetFill = attackTargetFill(
+      target,
+      spellCasterId,
+      spellTargetId,
+      "Unarmed Strike",
+    );
+    const roll = requireResultHole(
+      resolveBattleSubject({ state, subject, fills: [targetFill] }),
+      "attackRoll",
+    );
+    const awaitingReaction = resolveBattleSubject({
+      state,
+      subject,
+      fills: [targetFill, attackRollFill(roll, { total: 15, naturalD20: 10 })],
+    });
+
+    expect(awaitingReaction).toMatchObject({
+      tag: "needsHoles",
+      snapshot: { pendingReaction: { trigger: "attackHit" } },
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error(
+        "Expected Divine Smite Unarmed Strike hit to open an attack-hit window.",
+      );
+    }
+    expect(awaitingReaction.snapshot.pendingReaction?.choices).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "castAttackHitBonusActionSpell",
+          reactorId: spellCasterId,
+        }),
+      ]),
+    );
+  });
+
+  test("divine_smite on a base Unarmed Strike keeps the strike Bludgeoning and adds Radiant dice", () => {
+    const skeletonTargetId = combatantId("unit-profile-divine-smite-skeleton");
+    const spell = spellRecord(divineSmiteUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      attack: null,
+      statBlockTargets: [
+        {
+          combatantId: skeletonTargetId,
+          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          initiative: 9,
+        },
+      ],
+    });
+    const subject: Extract<BattleSubject, { readonly tag: "action" }> = {
+      tag: "action",
+      actorId: spellCasterId,
+      action: "attack",
+      attackName: "Unarmed Strike",
+    };
+    const target = requireResultHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const targetFill = attackTargetFill(
+      target,
+      spellCasterId,
+      skeletonTargetId,
+      "Unarmed Strike",
+    );
+    const roll = requireResultHole(
+      resolveBattleSubject({ state, subject, fills: [targetFill] }),
+      "attackRoll",
+    );
+    const rollFill = attackRollFill(roll, { total: 15, naturalD20: 10 });
+    const awaitingReaction = resolveBattleSubject({
+      state,
+      subject,
+      fills: [targetFill, rollFill],
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error(
+        "Expected Divine Smite Unarmed Strike hit to open an attack-hit window.",
+      );
+    }
+    const smiteChoice = awaitingReaction.snapshot.pendingReaction?.choices.find(
+      (choice) =>
+        choice.kind === "castAttackHitBonusActionSpell" &&
+        choice.reactorId === spellCasterId,
+    );
+    if (
+      smiteChoice === undefined ||
+      smiteChoice.kind !== "castAttackHitBonusActionSpell"
+    ) {
+      throw new Error("Expected Divine Smite after-hit choice.");
+    }
+
+    const afterSmite = resolveBattleReaction({
+      state: awaitingReaction.state,
+      fill: reactionDecisionFill(
+        requireHole(awaitingReaction.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId: spellCasterId,
+          choice: {
+            kind: "castAttackHitBonusActionSpell",
+            invocation: smiteChoice.invocation,
+            fills: [],
+          },
+        },
+      ),
+    });
+
+    if (afterSmite.tag !== "needsHoles") {
+      throw new Error("Expected Divine Smite replay to need attack damage.");
+    }
+    const damage = requireHole(afterSmite.holes, "rolledDice");
+    expect(damage).toEqual(
+      expect.objectContaining({
+        spellWeaponDamageRiders: [
+          expect.objectContaining({
+            sourceSpellId: divineSmiteUnitId,
+            damage: {
+              expr: { dice: 3, dieSize: 8 },
+              damageType: "radiant",
+            },
+          }),
+        ],
+      }),
+    );
+
+    const resolved = resolveBattleSubject({
+      state: afterSmite.state,
+      subject,
+      fills: [
+        targetFill,
+        rollFill,
+        damageRollFillWithGroups(damage, [[1, 1, 1]]),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Divine Smite Unarmed Strike to resolve.");
+    }
+    expect(requireCombatant(resolved.state, skeletonTargetId).hp).toBe(Hp(8));
+  });
+
+  test("divine_smite is not admitted after a ranged weapon hit", () => {
+    const spell = spellRecord(divineSmiteUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      attack: zeroAbilityWeaponAttack("weapon_shortbow"),
+    });
+    const subject = weaponAttackSubject("Shortbow");
+    const target = requireResultHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const targetFill = attackTargetFill(
+      target,
+      spellCasterId,
+      spellTargetId,
+      "Shortbow",
+    );
+    const roll = requireResultHole(
+      resolveBattleSubject({ state, subject, fills: [targetFill] }),
+      "attackRoll",
+    );
+    const afterHit = resolveBattleSubject({
+      state,
+      subject,
+      fills: [targetFill, attackRollFill(roll, { total: 15, naturalD20: 10 })],
+    });
+
+    expect(afterHit).toMatchObject({
+      tag: "needsHoles",
+      snapshot: { pendingReaction: null },
+    });
+  });
+
+  test("divine_smite is admitted after a melee weapon hit and adds Radiant damage without replaying the base attack", () => {
+    const spell = spellRecord(divineSmiteUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      attack: zeroAbilityWeaponAttack("weapon_longsword"),
+    });
+    const subject = weaponAttackSubject("Longsword");
+    const target = requireResultHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const targetFill = attackTargetFill(
+      target,
+      spellCasterId,
+      spellTargetId,
+      "Longsword",
+    );
+    const roll = requireResultHole(
+      resolveBattleSubject({ state, subject, fills: [targetFill] }),
+      "attackRoll",
+    );
+    const rollFill = attackRollFill(roll, { total: 15, naturalD20: 10 });
+    const awaitingReaction = resolveBattleSubject({
+      state,
+      subject,
+      fills: [targetFill, rollFill],
+    });
+
+    expect(awaitingReaction).toMatchObject({
+      tag: "needsHoles",
+      snapshot: { pendingReaction: { trigger: "attackHit" } },
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error(
+        "Expected Divine Smite hit to open an attack-hit window.",
+      );
+    }
+    const smiteChoice = awaitingReaction.snapshot.pendingReaction?.choices.find(
+      (choice) =>
+        choice.kind === "castAttackHitBonusActionSpell" &&
+        choice.reactorId === spellCasterId,
+    );
+    if (
+      smiteChoice === undefined ||
+      smiteChoice.kind !== "castAttackHitBonusActionSpell"
+    ) {
+      throw new Error("Expected Divine Smite after-hit choice.");
+    }
+
+    const afterSmite = resolveBattleReaction({
+      state: awaitingReaction.state,
+      fill: reactionDecisionFill(
+        requireHole(awaitingReaction.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId: spellCasterId,
+          choice: {
+            kind: "castAttackHitBonusActionSpell",
+            invocation: smiteChoice.invocation,
+            fills: [],
+          },
+        },
+      ),
+    });
+
+    expect(afterSmite).toMatchObject({
+      tag: "needsHoles",
+      snapshot: {
+        pendingReaction: null,
+        turn: { bonusActionAvailable: false, spellSlotExpendedThisTurn: true },
+      },
+    });
+    if (afterSmite.tag !== "needsHoles") {
+      throw new Error("Expected Divine Smite replay to need attack damage.");
+    }
+    const damage = requireHole(afterSmite.holes, "rolledDice");
+    expect(damage).toEqual(
+      expect.objectContaining({
+        spellWeaponDamageRiders: [
+          expect.objectContaining({
+            sourceSpellId: divineSmiteUnitId,
+            damage: {
+              expr: { dice: 2, dieSize: 8 },
+              damageType: "radiant",
+            },
+          }),
+        ],
+      }),
+    );
+
+    const resolved = resolveBattleSubject({
+      state: afterSmite.state,
+      subject,
+      fills: [
+        targetFill,
+        rollFill,
+        damageRollFillWithGroups(damage, [[4], [3, 4]]),
+      ],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Divine Smite damage to resolve.");
+    }
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.anything(),
+          expect.objectContaining({ combatantId: spellTargetId, hp: 1 }),
+        ],
+      },
+    });
+  });
+
+  test("divine_smite scales by slot level and doubles smite dice on critical hits", () => {
+    const spell = spellRecord(divineSmiteUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+      attack: zeroAbilityWeaponAttack("weapon_longsword"),
+    });
+    const subject = weaponAttackSubject("Longsword");
+    const target = requireResultHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const targetFill = attackTargetFill(
+      target,
+      spellCasterId,
+      spellTargetId,
+      "Longsword",
+    );
+    const roll = requireResultHole(
+      resolveBattleSubject({ state, subject, fills: [targetFill] }),
+      "attackRoll",
+    );
+    const rollFill = attackRollFill(roll, { total: 25, naturalD20: 20 });
+    const awaitingReaction = resolveBattleSubject({
+      state,
+      subject,
+      fills: [targetFill, rollFill],
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error(
+        "Expected Divine Smite critical hit to open an attack-hit window.",
+      );
+    }
+    const smiteChoice = awaitingReaction.snapshot.pendingReaction?.choices.find(
+      (choice) =>
+        choice.kind === "castAttackHitBonusActionSpell" &&
+        choice.reactorId === spellCasterId,
+    );
+    if (
+      smiteChoice === undefined ||
+      smiteChoice.kind !== "castAttackHitBonusActionSpell"
+    ) {
+      throw new Error("Expected Divine Smite after-hit choice.");
+    }
+
+    const afterSmite = resolveBattleReaction({
+      state: awaitingReaction.state,
+      fill: reactionDecisionFill(
+        requireHole(awaitingReaction.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId: spellCasterId,
+          choice: {
+            kind: "castAttackHitBonusActionSpell",
+            invocation: smiteChoice.invocation,
+            fills: [],
+          },
+        },
+      ),
+    });
+
+    if (afterSmite.tag !== "needsHoles") {
+      throw new Error("Expected critical Divine Smite to need attack damage.");
+    }
+    expect(requireHole(afterSmite.holes, "rolledDice")).toEqual(
+      expect.objectContaining({
+        critical: true,
+        label: expect.stringContaining("8d8"),
+        spellWeaponDamageRiders: [
+          expect.objectContaining({
+            sourceSpellId: divineSmiteUnitId,
+            damage: {
+              expr: { dice: 4, dieSize: 8 },
+              damageType: "radiant",
+            },
+          }),
+        ],
+      }),
+    );
+  });
+
+  test("divine_smite adds the SRD Fiend or Undead bonus die", () => {
+    const undeadId = combatantId("unit-profile-divine-smite-undead");
+    const spell = spellRecord(divineSmiteUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      attack: zeroAbilityWeaponAttack("weapon_longsword"),
+      statBlockTargets: [
+        {
+          combatantId: undeadId,
+          statBlock: statBlockWithCreatureType("undead"),
+          initiative: 9,
+        },
+      ],
+    });
+    const subject = weaponAttackSubject("Longsword");
+    const target = requireResultHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const targetFill = attackTargetFill(
+      target,
+      spellCasterId,
+      undeadId,
+      "Longsword",
+    );
+    const roll = requireResultHole(
+      resolveBattleSubject({ state, subject, fills: [targetFill] }),
+      "attackRoll",
+    );
+    const rollFill = attackRollFill(roll, { total: 15, naturalD20: 10 });
+    const awaitingReaction = resolveBattleSubject({
+      state,
+      subject,
+      fills: [targetFill, rollFill],
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error(
+        "Expected Divine Smite hit to open an attack-hit window.",
+      );
+    }
+    const smiteChoice = awaitingReaction.snapshot.pendingReaction?.choices.find(
+      (choice) =>
+        choice.kind === "castAttackHitBonusActionSpell" &&
+        choice.reactorId === spellCasterId,
+    );
+    if (
+      smiteChoice === undefined ||
+      smiteChoice.kind !== "castAttackHitBonusActionSpell"
+    ) {
+      throw new Error("Expected Divine Smite after-hit choice.");
+    }
+
+    const afterSmite = resolveBattleReaction({
+      state: awaitingReaction.state,
+      fill: reactionDecisionFill(
+        requireHole(awaitingReaction.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId: spellCasterId,
+          choice: {
+            kind: "castAttackHitBonusActionSpell",
+            invocation: smiteChoice.invocation,
+            fills: [],
+          },
+        },
+      ),
+    });
+
+    if (afterSmite.tag !== "needsHoles") {
+      throw new Error("Expected Divine Smite replay to need attack damage.");
+    }
+    expect(requireHole(afterSmite.holes, "rolledDice")).toEqual(
+      expect.objectContaining({
+        spellWeaponDamageRiders: [
+          expect.objectContaining({
+            sourceSpellId: divineSmiteUnitId,
+            damage: {
+              expr: { dice: 3, dieSize: 8 },
+              damageType: "radiant",
+            },
+          }),
+        ],
+      }),
+    );
   });
 });
 

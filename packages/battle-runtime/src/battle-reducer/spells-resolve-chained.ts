@@ -3,84 +3,68 @@
 
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import {
-attackRollHits,
-attackRollResultIsValid,
+  attackRollHits,
+  attackRollResultIsValid,
 } from "@dnd/shared-algebras/attack-roll-algebra";
+import { validateRolledDiceForDiceExpr } from "@dnd/shared-algebras/runtime-dice-algebra";
+import { damageAmount as toDamageAmount } from "@dnd/shared/types";
+import type { DamageType } from "@dnd/surface/surface/types";
 import {
-validateRolledDiceForDiceExpr
-} from "@dnd/shared-algebras/runtime-dice-algebra";
-import {
-damageAmount as toDamageAmount
-} from "@dnd/shared/types";
-import type {
-DamageType
-} from "@dnd/surface/surface/types";
-import {
-attackRollIsCriticalHit,
-maybeOpenReactionWindow,
-openAfterDamageSequenceReactionWindow,
-type ActionSpellBattleResolutionInput,
-type BattleAfterDamageEvent,
-type BattleAttackDamageDisposition,
-type BattleAttackDamageDispositionHole,
-type BattleConcentrationSavingThrowHole,
-type BattleCreatureState,
-type BattleFill,
-type BattleResolutionResult,
-type BattleState,
-type SupportedSpellInvocation
+  attackRollIsCriticalHit,
+  maybeOpenReactionWindow,
+  openAfterDamageSequenceReactionWindow,
+  type ActionSpellBattleResolutionInput,
+  type BattleAfterDamageEvent,
+  type BattleAttackDamageDisposition,
+  type BattleAttackDamageDispositionHole,
+  type BattleConcentrationSavingThrowHole,
+  type BattleCreatureState,
+  type BattleFill,
+  type BattleResolutionResult,
+  type BattleState,
+  type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
 import {
-damageDispositionFillFor,
-damageDispositionFillsValidation,
-damageDispositionForTarget,
-zeroHitPointReplacementDispositionHole
+  damageDispositionFillFor,
+  damageDispositionFillsValidation,
+  damageDispositionForTarget,
+  zeroHitPointReplacementDispositionHole,
 } from "./attack-damage-apply.ts";
 import {
-attackRollModeMatches,
-consumeHelpAttackForAttackRoll,
-recordAttackRollOngoingFeatures,
-requiredAttackRollMode
+  attackRollModeMatches,
+  consumeHelpAttackForAttackRoll,
+  recordAttackRollOngoingFeatures,
+  requiredAttackRollMode,
 } from "./attack-roll.ts";
+import { activeEffectArmorClass } from "./creature-state.ts";
 import {
-activeEffectArmorClass
-} from "./creature-state.ts";
-import {
-applyHpDamage,
-breakBattleConcentrationAfterDamage,
-concentrationSavingThrowHole,
-markMarkedDamageRiderTransferAvailable
+  applyHpDamage,
+  breakBattleConcentrationAfterDamage,
+  concentrationSavingThrowHole,
+  markMarkedDamageRiderTransferAvailable,
 } from "./damage-apply.ts";
-import {
-damageAmountAfterTargetAdjustments
-} from "./damage-helpers.ts";
-import {
-needsHolesResult
-} from "./hole-helpers.ts";
+import { damageAmountAfterTargetAdjustments } from "./damage-helpers.ts";
+import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
-chainedSpellAttackRollHole,
-chainedSpellAttackRollHoleId,
-chainedSpellDamageRollHole,
-chainedSpellDamageRollHoleId,
-chainedSpellLeapTargetIsLegal,
-chainedSpellTargetHole,
-chainedSpellTargetHoleId,
-spellDamageTypeChoiceHole,
-spellTargetIsLegal
+  chainedSpellAttackRollHole,
+  chainedSpellAttackRollHoleId,
+  chainedSpellDamageRollHole,
+  chainedSpellDamageRollHoleId,
+  chainedSpellLeapTargetIsLegal,
+  chainedSpellTargetHole,
+  chainedSpellTargetHoleId,
+  spellDamageTypeChoiceHole,
+  spellTargetIsLegal,
 } from "./spells-holes-fills.ts";
+import { spellAttackKindForRedirect } from "./spells-profiles.ts";
 import {
-spellAttackKindForRedirect
-} from "./spells-profiles.ts";
-import {
-recordAttackRollMissToHitReplacementUsed,
-selectedAttackRollMissToHitReplacement
+  recordAttackRollMissToHitReplacementUsed,
+  selectedAttackRollMissToHitReplacement,
 } from "./statblock-attacks.ts";
 
-import {
-spendSpellCastResources
-} from "./spells-resolve-resources.ts";
+import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 export type ChainedSpellStepFills = {
@@ -336,6 +320,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
         targetId: target.combatantId,
         attackRoll: step.attackRoll.value,
         attackKind: spellAttackKindForRedirect(input.invocation.attackKind),
+        attackHitTriggerKind: "otherAttack",
         damageTypes: [selectedDamageType],
         continuation: {
           kind: "replay",

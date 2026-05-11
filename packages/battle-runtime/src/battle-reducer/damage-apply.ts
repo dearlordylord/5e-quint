@@ -54,7 +54,7 @@ type BattleStatBlockRechargeRollHole,
 type BattleStatBlockRechargeRollResult,
 type BattleState,
 type SpellMarkedDamageRider,
-type SpellWeaponDamageRider,
+type SpellAttackDamageComponent,
 type WeaponDamageDiceRollChoiceFill,
 type WeaponDamageDiceRollChoiceUsage,
 } from "../battle-reducer.ts";
@@ -174,7 +174,7 @@ export function applyAttackDamage(
   fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>,
   critical: boolean,
   attackDamageRiders: readonly AttackDamageRider[] = [],
-  spellWeaponDamageRiders: readonly SpellWeaponDamageRider[] = [],
+  spellWeaponDamageRiders: readonly SpellAttackDamageComponent[] = [],
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
 ): BattleState {
   if (fillSet.damageRoll == null) {

@@ -5,36 +5,47 @@
 import { ATTACK_ROLL_MODES } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
 import {
-CONDITIONS as ALL_CONDITIONS,
-AbilityModifier,
-AttackBonus,
-DamageAmount,
-DamageDieSizeSchema,
-DifficultyClass,
-MovementDeltaFeet,
-MovementFeet,
-SpellSlotLevel
+  CONDITIONS as ALL_CONDITIONS,
+  AbilityModifier,
+  AttackBonus,
+  DamageAmount,
+  DamageDieSizeSchema,
+  DifficultyClass,
+  MovementDeltaFeet,
+  MovementFeet,
+  SpellSlotLevel,
 } from "@dnd/shared/types";
-import { AbilitySchema,DamageTypeSchema,DcSourceSchema } from "@dnd/surface/surface/schema";
-import { SKILLS as SURFACE_SKILLS,type DamageType,type Skill } from "@dnd/surface/surface/types";
+import {
+  AbilitySchema,
+  DamageTypeSchema,
+  DcSourceSchema,
+} from "@dnd/surface/surface/schema";
+import {
+  SKILLS as SURFACE_SKILLS,
+  type DamageType,
+  type Skill,
+} from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 import type { StatBlockPartSection } from "../battle-action-options.ts";
-import { BATTLE_REACTION_TRIGGERS,BATTLE_READIED_SPELL_TRIGGERS } from "../battle-reaction-triggers.ts";
+import {
+  BATTLE_REACTION_TRIGGERS,
+  BATTLE_READIED_SPELL_TRIGGERS,
+} from "../battle-reaction-triggers.ts";
 import type {
-ActiveOngoingFeatureOccurrenceSnapshotEncoded,
-BattleAttackRangeBand,
-BattleFill,
-SupportedSpellInvocation
+  ActiveOngoingFeatureOccurrenceSnapshotEncoded,
+  BattleAttackRangeBand,
+  BattleFill,
+  SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import {
-BATTLE_MOVEMENT_SPEED_KINDS,
-BattleSubjectSchema,
-BattleSubjectTextSchema,
-SpellInvocationRefSchema,
-type BattleMovementSpeedKind,
-type SpellInvocationRefEncoded,
+  BATTLE_MOVEMENT_SPEED_KINDS,
+  BattleSubjectSchema,
+  BattleSubjectTextSchema,
+  SpellInvocationRefSchema,
+  type BattleMovementSpeedKind,
+  type SpellInvocationRefEncoded,
 } from "../battle-subjects.ts";
-import { BattleCombatantSide,BattleId,CombatantId } from "../identity.ts";
+import { BattleCombatantSide, BattleId, CombatantId } from "../identity.ts";
 import { BATTLE_ATTACK_RANGE_BANDS } from "./domain-constants.ts";
 
 const BATTLE_SURFACE_SKILLS = SURFACE_SKILLS;
@@ -659,6 +670,22 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("afterHitDamage"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      damage: Schema.Struct({
+        expr: BattleRuntimeObjectSchema,
+        damageType: DamageTypeSchema,
+      }),
+      conditionalBonusDamage: Schema.Struct({
+        targetCreatureTypes: Schema.Array(Schema.String),
+        expr: BattleRuntimeObjectSchema,
+        damageType: DamageTypeSchema,
+      }),
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("markedDamageRider"),
       action: Schema.Literal("cast"),
       spell: BattleRuntimeObjectSchema,
@@ -1220,6 +1247,11 @@ type BattleFillEncoded =
                   readonly fills: readonly BattleFillEncoded[];
                 }
               | {
+                  readonly kind: "castAttackHitBonusActionSpell";
+                  readonly invocation: SpellInvocationRefEncoded;
+                  readonly fills: readonly BattleFillEncoded[];
+                }
+              | {
                   readonly kind: "opportunityAttack";
                   readonly reactorId: string;
                   readonly fills: readonly BattleFillEncoded[];
@@ -1524,6 +1556,11 @@ export const BattleFillSchema: Schema.Schema<
             }),
             Schema.Struct({
               kind: Schema.Literal("castTriggeredReactionSpell"),
+              invocation: SpellInvocationRefSchema,
+              fills: Schema.Array(BattleFillSchema),
+            }),
+            Schema.Struct({
+              kind: Schema.Literal("castAttackHitBonusActionSpell"),
               invocation: SpellInvocationRefSchema,
               fills: Schema.Array(BattleFillSchema),
             }),
@@ -1871,6 +1908,13 @@ const BattleReactionProcedureChoiceSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("castTriggeredReactionSpell"),
+    reactorId: CombatantId,
+    subject: BattleSubjectSchema,
+    initialHoles: Schema.Array(BattleHoleSchema),
+    invocation: SpellInvocationRefSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("castAttackHitBonusActionSpell"),
     reactorId: CombatantId,
     subject: BattleSubjectSchema,
     initialHoles: Schema.Array(BattleHoleSchema),

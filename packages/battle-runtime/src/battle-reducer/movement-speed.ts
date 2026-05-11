@@ -35,6 +35,7 @@ import {
 import {
   zeroHpLifecycleIsTerminal,
   BATTLE_SPECIAL_SPEED_KINDS,
+  type BattleAttackHitTriggerKind,
   type BattleAttackKindForRedirect,
   type BattleAttackRangeBand,
   type BattleCreatureState,
@@ -131,7 +132,9 @@ export function battleMovementBudgetForActor(
   );
 }
 
-export function movementHoleHasRemainingBudget(hole: BattleMovementHole): boolean {
+export function movementHoleHasRemainingBudget(
+  hole: BattleMovementHole,
+): boolean {
   return hole.speedKinds.some(
     (speedKind) => Number(speedKind.movementBudgetFeet) > 0,
   );
@@ -310,7 +313,9 @@ export function speedBonusDeltaForProfile(
     : [];
 }
 
-export function profileSpeedBonusCondition(profile: BattlePassiveSpeedProfile): {
+export function profileSpeedBonusCondition(
+  profile: BattlePassiveSpeedProfile,
+): {
   readonly kind: "notWearingArmor";
   readonly categories: readonly ["heavy"];
 } {
@@ -429,6 +434,15 @@ export function attackKindForDeflectRedirect(
     : "ranged";
 }
 
+export function attackHitTriggerKind(
+  attack: SupportedAttackActionOption,
+): BattleAttackHitTriggerKind {
+  return (attack.kind === "weapon" || attack.kind === "unarmedStrike") &&
+    attackTargetConstraint(attack).kind === "meleeReach"
+    ? "meleeWeaponOrUnarmedStrike"
+    : "otherAttack";
+}
+
 export function attackTargetRangeBand(
   facts: readonly BattleTargetSpatialFact[],
   actorId: CombatantId,
@@ -524,7 +538,9 @@ export function firstFreeHand(
   return undefined;
 }
 
-export function grappleEscapeDc(grappler: BattleCreatureState): DifficultyClass {
+export function grappleEscapeDc(
+  grappler: BattleCreatureState,
+): DifficultyClass {
   return difficultyClass(
     8 + strengthModifier(grappler) + combatantProficiencyBonus(grappler),
   );
@@ -539,7 +555,9 @@ export function strengthModifier(combatant: BattleCreatureState): number {
   return Number(combatant.armorClass.abilityModifiers.str);
 }
 
-export function combatantProficiencyBonus(combatant: BattleCreatureState): number {
+export function combatantProficiencyBonus(
+  combatant: BattleCreatureState,
+): number {
   if (combatant.origin.kind === "statBlock") return 2;
   const level = combatant.origin.classLevels.reduce(
     (total, classLevel) => total + Number(classLevel.level),

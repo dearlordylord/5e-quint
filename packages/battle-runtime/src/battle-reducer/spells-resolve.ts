@@ -16,125 +16,167 @@
 // `snapshotBattle`, `discoverBattleActs`, etc.) round-trip through
 // `../battle-reducer.ts` until Pass 19 merges the dispatcher.
 
-import {
-spendAction,
-} from "@dnd/shared-algebras/action-economy-algebra";
+import { spendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import {
-attackRollHits,
-attackRollResultIsValid,
+  attackRollHits,
+  attackRollResultIsValid,
 } from "@dnd/shared-algebras/attack-roll-algebra";
-import {
-damageAmount as toDamageAmount
-} from "@dnd/shared/types";
+import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import { Either } from "effect";
 import {
-activeOngoingFeaturesPreventSpellcasting,
-attackRollIsCriticalHit,
-maybeOpenReactionWindow,
-snapshotBattle,
-type ActionSpellBattleResolutionInput,
-type BattleResolutionResult,
-type BonusActionSpellBattleResolutionInput,
-type SpellMarkedDamageRider,
+  activeOngoingFeaturesPreventSpellcasting,
+  attackRollIsCriticalHit,
+  maybeOpenReactionWindow,
+  snapshotBattle,
+  type ActionSpellBattleResolutionInput,
+  type BattleResolutionResult,
+  type BonusActionSpellBattleResolutionInput,
+  type SpellMarkedDamageRider,
 } from "../battle-reducer.ts";
 import {
-damageDispositionFillFor,
-damageDispositionFillsValidation,
-damageDispositionForTarget,
-zeroHitPointReplacementDispositionHole
+  damageDispositionFillFor,
+  damageDispositionFillsValidation,
+  damageDispositionForTarget,
+  zeroHitPointReplacementDispositionHole,
 } from "./attack-damage-apply.ts";
 import {
-attackRollModeMatches,
-consumeHelpAttackForAttackRoll,
-recordAttackRollOngoingFeatures,
-requiredAttackRollMode
+  attackRollModeMatches,
+  consumeHelpAttackForAttackRoll,
+  recordAttackRollOngoingFeatures,
+  requiredAttackRollMode,
 } from "./attack-roll.ts";
+import { activeEffectArmorClass } from "./creature-state.ts";
+import { concentrationSavingThrowHole } from "./damage-apply.ts";
 import {
-activeEffectArmorClass
-} from "./creature-state.ts";
-import {
-concentrationSavingThrowHole
-} from "./damage-apply.ts";
-import {
-activeMarkedDamageRiders,
-applyAvailableSpellDamageReduction,
-damageAmountByTypeAfterTargetAdjustments,
-spellDamageReductionRollForTarget
+  activeMarkedDamageRiders,
+  applyAvailableSpellDamageReduction,
+  damageAmountByTypeAfterTargetAdjustments,
+  spellDamageReductionRollForTarget,
 } from "./damage-helpers.ts";
-import {
-needsHolesResult,
-revealHidden,
-} from "./hole-helpers.ts";
+import { needsHolesResult, revealHidden } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
+import { expendSpellSlot } from "./spell-effects.ts";
 import {
-expendSpellSlot
-} from "./spell-effects.ts";
-import {
-isReadiedSpellInvocation,
-spellInvocationCasterPrerequisiteIsMet,
-spellInvocationIsSpellcasting,
-spellRequiresVerbal
+  isReadiedSpellInvocation,
+  spellInvocationCasterPrerequisiteIsMet,
+  spellInvocationIsSpellcasting,
+  spellRequiresVerbal,
 } from "./spells-discovery.ts";
 import {
-applyPersistentSpellActiveEffect,
-applySpellActiveEffects,
-applySpellDamage,
-spellAttackRollHole,
-spellDamageByTypeForTarget,
-spellDamageHole,
-spellDamageTypes,
-spellTargetHole,
-spellTargetIsLegal,
-supportedSpellInvocationMatchesRef,
-validateSpellDamageFill
+  applyPersistentSpellActiveEffect,
+  applySpellActiveEffects,
+  applySpellDamage,
+  spellAttackRollHole,
+  spellDamageByTypeForTarget,
+  spellDamageHole,
+  spellDamageTypes,
+  spellTargetHole,
+  spellTargetIsLegal,
+  supportedSpellInvocationMatchesRef,
+  validateSpellDamageFill,
 } from "./spells-holes-fills.ts";
 import {
-markSpellSlotExpendedThisTurn,
-spellActTurnResourceAvailable,
-spellAttackKindForRedirect,
-spellHasAvailableSpend,
-supportedSpellActs
+  markSpellSlotExpendedThisTurn,
+  spellActTurnResourceAvailable,
+  spellAttackKindForRedirect,
+  spellHasAvailableSpend,
+  supportedSpellActs,
 } from "./spells-profiles.ts";
 import {
-recordAttackRollMissToHitReplacementUsed,
-selectedAttackRollMissToHitReplacement
+  recordAttackRollMissToHitReplacementUsed,
+  selectedAttackRollMissToHitReplacement,
 } from "./statblock-attacks.ts";
 
-import {
-spendSpellCastResources,
-} from "./spells-resolve-resources.ts";
+import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 
 import { resolveChainedSpellAttackDamageAct } from "./spells-resolve-chained.ts";
 export { resolveAttackBurstSaveDamageSpellAct } from "./spells-resolve-attack-burst.ts";
-export { applyChainedSpellDamage,chainedSpellDamageAmountForTarget,chainedSpellFillSet,chainedSpellLaterStepsAreEmpty,chainedSpellStepIndexForFill,damageRollHasDuplicateD8Face,emptyChainedSpellStepFills,resolveChainedSpellAttackDamageAct,resolveCompletedChainedSpell,validateChainedSpellDamageFill,validateChainedSpellFollowUpFills,type ChainedSpellFillSet,type ChainedSpellStepFills } from "./spells-resolve-chained.ts";
+export {
+  applyChainedSpellDamage,
+  chainedSpellDamageAmountForTarget,
+  chainedSpellFillSet,
+  chainedSpellLaterStepsAreEmpty,
+  chainedSpellStepIndexForFill,
+  damageRollHasDuplicateD8Face,
+  emptyChainedSpellStepFills,
+  resolveChainedSpellAttackDamageAct,
+  resolveCompletedChainedSpell,
+  validateChainedSpellDamageFill,
+  validateChainedSpellFollowUpFills,
+  type ChainedSpellFillSet,
+  type ChainedSpellStepFills,
+} from "./spells-resolve-chained.ts";
 export { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
-export { spellFillSet,spellFillSetSavingThrowTargeting,type SpellFillSet } from "./spells-resolve-fill-set.ts";
+export {
+  spellFillSet,
+  spellFillSetSavingThrowTargeting,
+  type SpellFillSet,
+} from "./spells-resolve-fill-set.ts";
 export { resolvePreparedSlotSpellAct } from "./spells-resolve-prepared-slot.ts";
 export {
-spellRequiresConcentration,spendSpellCastResources,startSpellEffectConcentration
+  spellRequiresConcentration,
+  spendSpellCastResources,
+  startSpellEffectConcentration,
 } from "./spells-resolve-resources.ts";
-export { resolveSaveGateAttackRollAdvantageSpellAct,resolveSaveGateConditionSpellAct,resolveSaveGateDamageSpellAct,validateSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
-export { resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,resolveCreatureTypeProtectionSpellAct,resolveDamageReductionSpellAct,resolvePreparedHealingSpellAct,resolveRollModifierSpellAct,resolveScalarBuffSpellAct } from "./spells-resolve-support-effects.ts";
-export { conditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection,creatureTypeProtectionSpellTargetSelection,healingSpellTargetSelection,rollModifierSpellAffectedTargets,rollModifierSpellSkillSelection,rollModifierSpellTargetSelection,scalarBuffSpellTargetSelection,type ConditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection,type CreatureTypeProtectionSpellTargetSelection,type HealingSpellTargetSelection,type RollModifierSpellAffectedTargets,type RollModifierSpellSkillSelection,type RollModifierSpellTargetSelection,type ScalarBuffSpellTargetSelection } from "./spells-resolve-target-selection.ts";
+export {
+  resolveSaveGateAttackRollAdvantageSpellAct,
+  resolveSaveGateConditionSpellAct,
+  resolveSaveGateDamageSpellAct,
+  validateSavingThrowOutcomes,
+} from "./spells-resolve-save-gates.ts";
+export {
+  resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
+  resolveCreatureTypeProtectionSpellAct,
+  resolveDamageReductionSpellAct,
+  resolvePreparedHealingSpellAct,
+  resolveRollModifierSpellAct,
+  resolveScalarBuffSpellAct,
+} from "./spells-resolve-support-effects.ts";
+export {
+  conditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection,
+  creatureTypeProtectionSpellTargetSelection,
+  healingSpellTargetSelection,
+  rollModifierSpellAffectedTargets,
+  rollModifierSpellSkillSelection,
+  rollModifierSpellTargetSelection,
+  scalarBuffSpellTargetSelection,
+  type ConditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection,
+  type CreatureTypeProtectionSpellTargetSelection,
+  type HealingSpellTargetSelection,
+  type RollModifierSpellAffectedTargets,
+  type RollModifierSpellSkillSelection,
+  type RollModifierSpellTargetSelection,
+  type ScalarBuffSpellTargetSelection,
+} from "./spells-resolve-target-selection.ts";
 
-import { resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,resolveCreatureTypeProtectionSpellAct,resolveDamageReductionSpellAct,resolvePreparedHealingSpellAct,resolveRollModifierSpellAct,resolveScalarBuffSpellAct } from "./spells-resolve-support-effects.ts";
+import {
+  resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
+  resolveCreatureTypeProtectionSpellAct,
+  resolveDamageReductionSpellAct,
+  resolvePreparedHealingSpellAct,
+  resolveRollModifierSpellAct,
+  resolveScalarBuffSpellAct,
+} from "./spells-resolve-support-effects.ts";
 
 import { resolvePreparedSlotSpellAct } from "./spells-resolve-prepared-slot.ts";
 
-
 import { resolveAttackBurstSaveDamageSpellAct } from "./spells-resolve-attack-burst.ts";
 
-import { resolveSaveGateAttackRollAdvantageSpellAct,resolveSaveGateConditionSpellAct,resolveSaveGateDamageSpellAct } from "./spells-resolve-save-gates.ts";
+import {
+  resolveSaveGateAttackRollAdvantageSpellAct,
+  resolveSaveGateConditionSpellAct,
+  resolveSaveGateDamageSpellAct,
+} from "./spells-resolve-save-gates.ts";
 
 import { spellFillSet } from "./spells-resolve-fill-set.ts";
 
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import {
-resolveHeldLightSpellAct,
-resolveMarkedDamageRiderSpellAct,
-resolveReadySpellAct,
-resolveWeaponDamageRiderSpellAct,
+  resolveHeldLightSpellAct,
+  resolveMarkedDamageRiderSpellAct,
+  resolveReadySpellAct,
+  resolveWeaponDamageRiderSpellAct,
 } from "./spells-resolve-release.ts";
 export * from "./spells-resolve-release.ts";
 
@@ -177,6 +219,26 @@ export function resolveSpellAct(
       "Action-time spell act is unavailable while an active ongoing feature prevents spellcasting.",
     );
   }
+  if (
+    subject.mode.tag === "ready" &&
+    (invocation.procedure === "directHitPointRestoration" ||
+      invocation.procedure === "heldLightHurl" ||
+      invocation.procedure === "damageReduction" ||
+      invocation.procedure === "scalarBuff" ||
+      invocation.procedure === "rollModifier" ||
+      invocation.procedure === "creatureTypeProtection" ||
+      invocation.procedure ===
+        "conditionImmunityAndTurnStartTemporaryHitPoints" ||
+      invocation.procedure === "afterHitDamage" ||
+      invocation.procedure === "saveGatedCondition" ||
+      invocation.procedure === "saveGatedAttackRollAdvantage")
+  ) {
+    return invalidResult(
+      input.state,
+      "unsupportedSubject",
+      "This spell procedure cannot be readied by this runtime lane.",
+    );
+  }
   if ("actionCost" in invocation && invocation.actionCost === "bonusAction") {
     return invalidResult(
       input.state,
@@ -198,26 +260,6 @@ export function resolveSpellAct(
       input.state,
       "staleSubject",
       "This turn has already expended a Spell Slot.",
-    );
-  }
-
-  if (
-    subject.mode.tag === "ready" &&
-    (invocation.procedure === "directHitPointRestoration" ||
-      invocation.procedure === "heldLightHurl" ||
-      invocation.procedure === "damageReduction" ||
-      invocation.procedure === "scalarBuff" ||
-      invocation.procedure === "rollModifier" ||
-      invocation.procedure === "creatureTypeProtection" ||
-      invocation.procedure ===
-        "conditionImmunityAndTurnStartTemporaryHitPoints" ||
-      invocation.procedure === "saveGatedCondition" ||
-      invocation.procedure === "saveGatedAttackRollAdvantage")
-  ) {
-    return invalidResult(
-      input.state,
-      "unsupportedSubject",
-      "This spell procedure cannot be readied by this runtime lane.",
     );
   }
 
@@ -524,6 +566,7 @@ export function resolveSpellAct(
           targetId: target.combatantId,
           attackRoll: fillSet.attackRoll,
           attackKind: spellAttackKindForRedirect(invocation.attackKind),
+          attackHitTriggerKind: "otherAttack",
           damageTypes: [
             ...new Set([
               ...spellDamageTypes(invocation),

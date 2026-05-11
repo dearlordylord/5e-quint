@@ -6,237 +6,189 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 import type {
-ActionEconomyState,
-RuntimeActionResource,
+  ActionEconomyState,
+  RuntimeActionResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
 
 import {
-actionRestrictionAllows,
-spendAction,
-spendActivationResource,
-spendMatchingActionResource
+  actionRestrictionAllows,
+  spendAction,
+  spendActivationResource,
+  spendMatchingActionResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
 
-
-
-
-
-
-
-
-
-
-
+import { validateRolledDiceForDiceExpr } from "@dnd/shared-algebras/runtime-dice-algebra";
 
 import {
-validateRolledDiceForDiceExpr
-} from "@dnd/shared-algebras/runtime-dice-algebra";
-
-
-import {
-type AttackRollResult,
-type RolledDiceGroup
+  type AttackRollResult,
+  type RolledDiceGroup,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 
-
 import {
-DifficultyClass,
-Hp,
-difficultyClass,
-movementFeet
+  DifficultyClass,
+  Hp,
+  difficultyClass,
+  movementFeet,
 } from "@dnd/shared/types";
 
-
-import type {
-UnitRecord
-} from "@dnd/surface/surface/types";
-
+import type { UnitRecord } from "@dnd/surface/surface/types";
 
 import { Match } from "effect";
 
-
 import * as Either from "effect/Either";
 
-
 import type {
-StatBlockPartKey,
-SupportedAttackActionOption
+  StatBlockPartKey,
+  SupportedAttackActionOption,
 } from "../battle-action-options.ts";
 
 import type {
-BattleCreatureInit,
-StatBlockBattleInitInput
+  BattleCreatureInit,
+  StatBlockBattleInitInput,
 } from "../battle-init.ts";
 
-
 import {
-type BattleMovementSpeedKind,
-type BattleSubject
+  type BattleMovementSpeedKind,
+  type BattleSubject,
 } from "../battle-subjects.ts";
 
-import {
-spendCharacterResourceUse
-} from "../character-battle-resources.ts";
+import { spendCharacterResourceUse } from "../character-battle-resources.ts";
 
-
+import { CombatantId } from "../identity.ts";
 
 import {
-CombatantId
-} from "../identity.ts";
-
-import {
-ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
-WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE
+  ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
+  WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
 } from "../unit-feature-support.ts";
 
-
-
 import {
-attackDamageHoleId,
-heldWeaponItemIdForAttack,
-isLightMeleeWeapon
+  attackDamageHoleId,
+  heldWeaponItemIdForAttack,
+  isLightMeleeWeapon,
 } from "./attack-damage-apply.ts";
 
-import {
-extendSavingThrowOngoingFeatures
-} from "./attack-roll.ts";
+import { extendSavingThrowOngoingFeatures } from "./attack-roll.ts";
 
 import {
-combatantsAreAllies,
-combatantsAreEnemies,
-grappledBy,
-normalizeBattleGrapples
+  combatantsAreAllies,
+  combatantsAreEnemies,
+  grappledBy,
+  normalizeBattleGrapples,
 } from "./creature-state-leaves.ts";
 
 import {
-combatantCanTakeActions,
-isCharacterBattleCreatureState,
-literalStatBlockNumber
+  combatantCanTakeActions,
+  isCharacterBattleCreatureState,
+  literalStatBlockNumber,
 } from "./creature-state.ts";
 
-import {
-applyTemporaryHitPoints
-} from "./damage-apply.ts";
+import { applyTemporaryHitPoints } from "./damage-apply.ts";
 
 import {
-damageAmountByTypeAfterTargetAdjustments,
-damageAmountByTypeEntriesToMap,
-ongoingFeatureDamageModifier,
-type DamageAmountByTypeEntry
-} from "./damage-helpers.ts";
-
-import {
-attackDamageContinuationConcentrationFrame,
-snapshotBattle
+  attackDamageContinuationConcentrationFrame,
+  snapshotBattle,
 } from "./dispatcher.ts";
 
-
-
 import {
-actorHasAlternateActionCost,
-bonusActionDashTemporaryHitPointsForActor,
-canHideInCurrentCircumstances,
-escapeGrappleOutcomeHole,
-escapeSpellRestraintAbilityCheckHole,
-grappleOutcomeHole,
-grappleTargetHole,
-hideAbilityCheckHole,
-needsHolesResult,
-searchAbilityCheckHole,
-searchTargetHole
+  actorHasAlternateActionCost,
+  bonusActionDashTemporaryHitPointsForActor,
+  canHideInCurrentCircumstances,
+  escapeGrappleOutcomeHole,
+  escapeSpellRestraintAbilityCheckHole,
+  grappleOutcomeHole,
+  grappleTargetHole,
+  hideAbilityCheckHole,
+  needsHolesResult,
+  searchAbilityCheckHole,
+  searchTargetHole,
 } from "./hole-helpers.ts";
 
 import {
-combatantProficiencyBonus,
-effectiveMovementSpeed,
-grappleLinkForTarget,
-representedMovementSpeedKinds
+  combatantProficiencyBonus,
+  effectiveMovementSpeed,
+  grappleLinkForTarget,
+  representedMovementSpeedKinds,
 } from "./movement-speed.ts";
-
 
 import { invalidResult } from "./result-helpers.ts";
 
 import {
-removeSpellConditionEffect,
-spellRestraintEffectFor
+  removeSpellConditionEffect,
+  spellRestraintEffectFor,
 } from "./spell-condition-effects-helpers.ts";
 
-
-
-
 import {
-attackDamageComponents,
-attackDamageModifier,
-clearPendingAttackRollMissToHitReplacementSelection,
-selectedAttackDamageRiders,
-selectedWeaponDamageDiceRollChoice,
-weaponDamageComponent
+  attackDamageComponents,
+  clearPendingAttackRollMissToHitReplacementSelection,
+  selectedAttackDamageRiders,
+  selectedWeaponDamageDiceRollChoice,
+  weaponDamageComponent,
 } from "./statblock-attacks.ts";
 
 import {
-spendStatBlockAttackResources,
-statBlockAttackResourceAvailable,
-statBlockPartLimitedUseAvailable,
-updateStatBlockActorResources
+  spendStatBlockAttackResources,
+  statBlockAttackResourceAvailable,
+  statBlockPartLimitedUseAvailable,
+  updateStatBlockActorResources,
 } from "./statblock.ts";
 
 import type {
-AttackDamageRider,
-BattleAttackDamageContinuationWithoutConcentration,
-BattleAttackHostSubject,
-BattleConcentrationSavingThrowHole,
-BattleCreatureState,
-BattleFill,
-BattleHoleId,
-BattleResolutionInput,
-BattleResolutionInputForSubject,
-BattleResolutionResult,
-BattleRolledDiceFill,
-BattleState,
-BattleTargetChoiceHole,
-BattleTargetSpatialFact,
-BattleTurnResources,
-BonusActionStandardActionBattleResolutionInput,
-CharacterBattleCreatureState,
-CriticalHitThreshold,
-EscapeGrappleBattleResolutionInput,
-EscapeSpellRestraintBattleResolutionInput,
-GrappleBattleResolutionInput,
-GrappleFillSet,
-HideBattleResolutionInput,
-MultiattackBattleResolutionInput,
-SearchBattleResolutionInput,
-SpellMarkedDamageRider,
-SpellWeaponDamageRider,
-StatBlockBattleCreatureState,
-StatBlockBonusActionOptionBattleResolutionInput,
-StatBlockMultiattackActionResource,
-WeaponDamageDiceRollChoiceFill
+  AttackDamageRider,
+  BattleAttackDamageContinuationWithoutConcentration,
+  BattleAttackHostSubject,
+  BattleConcentrationSavingThrowHole,
+  BattleCreatureState,
+  BattleFill,
+  BattleHoleId,
+  BattleResolutionInput,
+  BattleResolutionInputForSubject,
+  BattleResolutionResult,
+  BattleRolledDiceFill,
+  BattleState,
+  BattleTargetChoiceHole,
+  BattleTargetSpatialFact,
+  BattleTurnResources,
+  BonusActionStandardActionBattleResolutionInput,
+  CharacterBattleCreatureState,
+  CriticalHitThreshold,
+  EscapeGrappleBattleResolutionInput,
+  EscapeSpellRestraintBattleResolutionInput,
+  GrappleBattleResolutionInput,
+  GrappleFillSet,
+  HideBattleResolutionInput,
+  MultiattackBattleResolutionInput,
+  SearchBattleResolutionInput,
+  SpellMarkedDamageRider,
+  SpellAttackDamageComponent,
+  StatBlockBattleCreatureState,
+  StatBlockBonusActionOptionBattleResolutionInput,
+  StatBlockMultiattackActionResource,
+  WeaponDamageDiceRollChoiceFill,
 } from "../battle-reducer.ts";
 import {
-ATTACK_ONLY_ACTION_RESOURCE_EXCLUDED_ACTIONS,
-ESCAPE_GRAPPLE_OUTCOME_HOLE_ID,
-ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_ID,
-GRAPPLE_OUTCOME_HOLE_ID,
-GRAPPLE_TARGET_HOLE_ID,
-HELP_ATTACK_ALLY_HOLE_ID,
-HELP_ATTACK_ALLY_HOLE_INSTANCE,
-HELP_ATTACK_TARGET_HOLE_ID,
-HELP_ATTACK_TARGET_HOLE_INSTANCE,
-HIDE_ABILITY_CHECK_HOLE_ID,
-HIDE_DC,
-SEARCH_ABILITY_CHECK_HOLE_ID,
-SEARCH_TARGET_HOLE_ID,
-actorHasClassFeatureExtraAttackActionResource,
-actorHasStatBlockMultiattackActionResource,
-isClassFeatureExtraAttackActionResource,
-isStatBlockBattleCreatureState,
-isStatBlockMultiattackActionResource,
-spendTurnAction,
-supportedStatBlockBonusActionOptions,
-supportedStatBlockBonusActionStandardAction,
-supportedStatBlockMultiattacks,
-zeroHpLifecycleIsTerminal
+  ATTACK_ONLY_ACTION_RESOURCE_EXCLUDED_ACTIONS,
+  ESCAPE_GRAPPLE_OUTCOME_HOLE_ID,
+  ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_ID,
+  GRAPPLE_OUTCOME_HOLE_ID,
+  GRAPPLE_TARGET_HOLE_ID,
+  HELP_ATTACK_ALLY_HOLE_ID,
+  HELP_ATTACK_ALLY_HOLE_INSTANCE,
+  HELP_ATTACK_TARGET_HOLE_ID,
+  HELP_ATTACK_TARGET_HOLE_INSTANCE,
+  HIDE_ABILITY_CHECK_HOLE_ID,
+  HIDE_DC,
+  SEARCH_ABILITY_CHECK_HOLE_ID,
+  SEARCH_TARGET_HOLE_ID,
+  actorHasClassFeatureExtraAttackActionResource,
+  actorHasStatBlockMultiattackActionResource,
+  isClassFeatureExtraAttackActionResource,
+  isStatBlockBattleCreatureState,
+  isStatBlockMultiattackActionResource,
+  spendTurnAction,
+  supportedStatBlockBonusActionOptions,
+  supportedStatBlockBonusActionStandardAction,
+  supportedStatBlockMultiattacks,
+  zeroHpLifecycleIsTerminal,
 } from "../battle-reducer.ts";
 export function battleCreatureInitFromStatBlock(
   input: StatBlockBattleInitInput,
@@ -256,8 +208,6 @@ export function battleCreatureInitFromStatBlock(
     },
   };
 }
-
-
 
 export function needsAttackDamageConcentrationResult(input: {
   readonly state: BattleState;
@@ -286,9 +236,9 @@ export function needsAttackDamageConcentrationResult(input: {
     : needsHolesResult(spent.state, input.subject, [input.concentrationSave]);
 }
 
-export 
-
-function resolveDash(input: BattleResolutionInput): BattleResolutionResult {
+export function resolveDash(
+  input: BattleResolutionInput,
+): BattleResolutionResult {
   if (input.fills.length > 0) {
     return invalidResult(input.state, "invalidFill", "Dash accepts no fills.");
   }
@@ -332,8 +282,6 @@ function resolveDash(input: BattleResolutionInput): BattleResolutionResult {
   };
 }
 
-
-
 export function applyDashToActor(
   state: BattleState,
   actor: BattleCreatureState,
@@ -356,9 +304,7 @@ export function applyDashToActor(
   };
 }
 
-export 
-
-function resolveDisengage(
+export function resolveDisengage(
   input: BattleResolutionInput,
 ): BattleResolutionResult {
   if (input.fills.length > 0) {
@@ -384,9 +330,7 @@ function resolveDisengage(
   };
 }
 
-export 
-
-function resolveBonusActionStandardAction(
+export function resolveBonusActionStandardAction(
   input: BonusActionStandardActionBattleResolutionInput,
 ): BattleResolutionResult {
   const actor = input.state.combatants.get(input.subject.actorId);
@@ -421,8 +365,6 @@ function resolveBonusActionStandardAction(
     Match.exhaustive,
   );
 }
-
-
 
 export function resolveBonusActionDash(
   input: BonusActionStandardActionBattleResolutionInput,
@@ -488,8 +430,6 @@ export function resolveBonusActionDash(
   };
 }
 
-
-
 export function resolveBonusActionDashTemporaryHitPoints(
   dashedState: BattleState,
   actor: CharacterBattleCreatureState,
@@ -523,9 +463,6 @@ export function resolveBonusActionDashTemporaryHitPoints(
   };
 }
 
-
-
-
 export function resolveBonusActionDisengage(
   input: BonusActionStandardActionBattleResolutionInput,
 ): BattleResolutionResult {
@@ -554,8 +491,6 @@ export function resolveBonusActionDisengage(
   };
 }
 
-
-
 export function applyDisengage(
   state: BattleState,
   spentResources: BattleTurnResources,
@@ -566,9 +501,9 @@ export function applyDisengage(
   };
 }
 
-export 
-
-function resolveDodge(input: BattleResolutionInput): BattleResolutionResult {
+export function resolveDodge(
+  input: BattleResolutionInput,
+): BattleResolutionResult {
   if (input.fills.length > 0) {
     return invalidResult(input.state, "invalidFill", "Dodge accepts no fills.");
   }
@@ -604,9 +539,7 @@ function resolveDodge(input: BattleResolutionInput): BattleResolutionResult {
   };
 }
 
-export 
-
-function resolveReady(
+export function resolveReady(
   input: BattleResolutionInputForSubject<
     Extract<BattleSubject, { readonly tag: "action"; readonly action: "ready" }>
   >,
@@ -643,9 +576,7 @@ function resolveReady(
   };
 }
 
-export 
-
-function resolveHelpAttack(
+export function resolveHelpAttack(
   input: BattleResolutionInputForSubject<
     Extract<
       BattleSubject,
@@ -745,9 +676,9 @@ function resolveHelpAttack(
   };
 }
 
-export 
-
-function resolveHide(input: HideBattleResolutionInput): BattleResolutionResult {
+export function resolveHide(
+  input: HideBattleResolutionInput,
+): BattleResolutionResult {
   const actor = input.state.combatants.get(input.subject.actorId);
   if (actor === undefined || !combatantCanTakeActions(actor)) {
     return invalidResult(
@@ -824,9 +755,7 @@ function resolveHide(input: HideBattleResolutionInput): BattleResolutionResult {
   };
 }
 
-export 
-
-function resolveMultiattack(
+export function resolveMultiattack(
   input: MultiattackBattleResolutionInput,
 ): BattleResolutionResult {
   if (input.fills.length > 0) {
@@ -916,9 +845,7 @@ function resolveMultiattack(
   };
 }
 
-export 
-
-function resolveSearch(
+export function resolveSearch(
   input: SearchBattleResolutionInput,
 ): BattleResolutionResult {
   const targetFill = input.fills.find((fill) => fill.kind === "targetChoice");
@@ -984,8 +911,6 @@ function resolveSearch(
   };
 }
 
-
-
 export function helpAttackAllyHole(
   state: BattleState,
   helperId: CombatantId,
@@ -998,8 +923,6 @@ export function helpAttackAllyHole(
     choices: helpAttackAllyChoices(state, helperId),
   };
 }
-
-
 
 export function helpAttackTargetHole(
   state: BattleState,
@@ -1016,8 +939,6 @@ export function helpAttackTargetHole(
   };
 }
 
-
-
 export function helpAttackAllyChoices(
   state: BattleState,
   helperId: CombatantId,
@@ -1031,8 +952,6 @@ export function helpAttackAllyChoices(
     )
     .map(([id]) => id);
 }
-
-
 
 export function helpAttackTargetChoices(
   state: BattleState,
@@ -1051,8 +970,6 @@ export function helpAttackTargetChoices(
     .map(([id]) => id);
 }
 
-
-
 export function hasHelpAttackTargetSpatialFact(
   facts: readonly BattleTargetSpatialFact[],
   helperId: CombatantId,
@@ -1066,9 +983,7 @@ export function hasHelpAttackTargetSpatialFact(
   );
 }
 
-export 
-
-function resolveStatBlockBonusActionOption(
+export function resolveStatBlockBonusActionOption(
   input: StatBlockBonusActionOptionBattleResolutionInput,
 ): BattleResolutionResult {
   const actor = input.state.combatants.get(input.subject.actorId);
@@ -1133,8 +1048,6 @@ function resolveStatBlockBonusActionOption(
   );
 }
 
-
-
 export function resolveStatBlockBonusActionDisengage(
   input: StatBlockBonusActionOptionBattleResolutionInput,
   actor: StatBlockBattleCreatureState,
@@ -1171,8 +1084,6 @@ export function resolveStatBlockBonusActionDisengage(
     snapshot: snapshotBattle(nextState),
   };
 }
-
-
 
 export function resolveStatBlockBonusActionHide(
   input: StatBlockBonusActionOptionBattleResolutionInput,
@@ -1232,9 +1143,7 @@ export function resolveStatBlockBonusActionHide(
   };
 }
 
-export 
-
-function resolveGrapple(
+export function resolveGrapple(
   input: GrappleBattleResolutionInput,
 ): BattleResolutionResult {
   const fillSet = grappleFillSet(input.fills);
@@ -1314,9 +1223,7 @@ function resolveGrapple(
   };
 }
 
-export 
-
-function resolveEscapeGrapple(
+export function resolveEscapeGrapple(
   input: EscapeGrappleBattleResolutionInput,
 ): BattleResolutionResult {
   const grapple = grappledBy(input.state, input.subject.actorId);
@@ -1389,9 +1296,7 @@ function resolveEscapeGrapple(
   };
 }
 
-export 
-
-function resolveEscapeSpellRestraint(
+export function resolveEscapeSpellRestraint(
   input: EscapeSpellRestraintBattleResolutionInput,
 ): BattleResolutionResult {
   const effect = spellRestraintEffectFor(
@@ -1469,9 +1374,7 @@ function resolveEscapeSpellRestraint(
   };
 }
 
-export 
-
-function resolveReleaseGrappleCommand(
+export function resolveReleaseGrappleCommand(
   input: BattleResolutionInputForSubject<
     Extract<
       BattleSubject,
@@ -1503,8 +1406,6 @@ function resolveReleaseGrappleCommand(
   };
 }
 
-
-
 export function abilityCheckFill(
   fills: readonly BattleFill[],
   holeId: BattleHoleId,
@@ -1534,8 +1435,6 @@ export function abilityCheckFill(
   return { tag: "ok", value: check };
 }
 
-
-
 export function spellSaveDcForCaster(
   state: BattleState,
   casterId: CombatantId,
@@ -1554,8 +1453,6 @@ export function spellSaveDcForCaster(
       spellcasting.proficiencyBonus,
   );
 }
-
-
 
 export function grappleFillSet(fills: readonly BattleFill[]): GrappleFillSet {
   let targetId: CombatantId | undefined;
@@ -1590,15 +1487,13 @@ export function grappleFillSet(fills: readonly BattleFill[]): GrappleFillSet {
   return { tag: "ok", targetId, targetSpatialFacts, outcome };
 }
 
-
-
 export function validateAttackDamageFill(
   fill: BattleRolledDiceFill,
   attack: SupportedAttackActionOption,
   critical: boolean,
   attackRoll: AttackRollResult,
   eligibleAttackDamageRiders: readonly AttackDamageRider[],
-  spellWeaponDamageRiders: readonly SpellWeaponDamageRider[] = [],
+  spellWeaponDamageRiders: readonly SpellAttackDamageComponent[] = [],
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
   ongoingDamageModifier = 0,
   eligibleWeaponDamageDiceRollChoiceUnitIds: readonly UnitRecord["id"][] = [],
@@ -1649,15 +1544,13 @@ export function validateAttackDamageFill(
   );
 }
 
-
-
 export function validateRolledDiceForWeaponAttack(
   groups: ReadonlyArray<RolledDiceGroup>,
   attack: SupportedAttackActionOption,
   critical: boolean,
   attackRoll: AttackRollResult,
   attackDamageRiders: readonly AttackDamageRider[],
-  spellWeaponDamageRiders: readonly SpellWeaponDamageRider[],
+  spellWeaponDamageRiders: readonly SpellAttackDamageComponent[],
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[],
   weaponDamageDiceRollChoice?: WeaponDamageDiceRollChoiceFill,
 ): string | null {
@@ -1714,52 +1607,6 @@ export function validateRolledDiceForWeaponAttack(
   return null;
 }
 
-
-
-export function fixedAttackDamageAmount(
-  attacker: BattleCreatureState | undefined,
-  target: BattleCreatureState,
-  attack: SupportedAttackActionOption,
-): number | null {
-  const entries = fixedAttackDamageByTypeEntries(attacker, attack);
-  return entries === null
-    ? null
-    : damageAmountByTypeAfterTargetAdjustments(
-        target,
-        damageAmountByTypeEntriesToMap(entries),
-      );
-}
-
-
-
-export function fixedAttackDamageByTypeEntries(
-  attacker: BattleCreatureState | undefined,
-  attack: SupportedAttackActionOption,
-): readonly DamageAmountByTypeEntry[] | null {
-  return Match.value(attack).pipe(
-    Match.when({ kind: "unarmedStrike" }, (unarmedStrike) => {
-      if (unarmedStrike.effect.damage.kind !== "base") {
-        return null;
-      }
-      return [
-        {
-          damageType: unarmedStrike.effect.damage.damageType,
-          amount: Math.max(
-            0,
-            attackDamageModifier(attack) +
-              ongoingFeatureDamageModifier(attacker, attack),
-          ),
-        },
-      ];
-    }),
-    Match.when({ kind: "weapon" }, () => null),
-    Match.when({ kind: "statBlockAttack" }, () => null),
-    Match.exhaustive,
-  );
-}
-
-
-
 export function attackRollHitsWithCriticalThreshold(
   roll: AttackRollResult,
   armorClass: number,
@@ -1776,16 +1623,12 @@ export function attackRollHitsWithCriticalThreshold(
   return roll.total >= armorClass;
 }
 
-
-
 export function attackRollIsCriticalHit(
   roll: AttackRollResult,
   criticalThreshold: CriticalHitThreshold = 20,
 ): boolean {
   return Number(roll.naturalD20) >= criticalThreshold;
 }
-
-
 
 export function criticalThresholdForAttack(
   attacker: BattleCreatureState | undefined,
@@ -1809,8 +1652,6 @@ export function criticalThresholdForAttack(
     : 20;
 }
 
-
-
 export function attackUsesWeaponOrUnarmedStrikeCriticalRange(
   attack: SupportedAttackActionOption,
 ): boolean {
@@ -1821,8 +1662,6 @@ export function attackUsesWeaponOrUnarmedStrikeCriticalRange(
     Match.exhaustive,
   );
 }
-
-
 
 export function compatibleAttackActionResource(
   resources: readonly RuntimeActionResource[],
@@ -1844,8 +1683,6 @@ export function compatibleAttackActionResource(
   return restricted ?? compatible[0] ?? null;
 }
 
-
-
 export function spendAttackActionResource<T extends ActionEconomyState>(
   state: T,
 ): Either.Either<
@@ -1866,8 +1703,6 @@ export function spendAttackActionResource<T extends ActionEconomyState>(
     spentResource: actionResource.resource,
   });
 }
-
-
 
 export function classFeatureExtraAttackForActor(
   actor: BattleCreatureState | undefined,
@@ -1891,8 +1726,6 @@ export function classFeatureExtraAttackForActor(
   }
   return null;
 }
-
-
 
 export function openClassFeatureExtraAttackResource(input: {
   readonly state: BattleState;
@@ -1928,8 +1761,6 @@ export function openClassFeatureExtraAttackResource(input: {
     ],
   };
 }
-
-
 
 export function spendAttackAction(
   state: BattleState,

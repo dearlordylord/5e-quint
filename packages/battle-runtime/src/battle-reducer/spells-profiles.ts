@@ -11,87 +11,82 @@
 
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import {
-elapsedTimeTicksFromHours,
-elapsedTimeTicksFromTimeSpanDuration,
+  elapsedTimeTicksFromHours,
+  elapsedTimeTicksFromTimeSpanDuration,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
-AbilityModifier,
-attackBonus,
-movementFeet,
-spellSlotLevel,
-type ProficiencyBonus as ProficiencyBonusType,
+  AbilityModifier,
+  attackBonus,
+  movementFeet,
+  spellSlotLevel,
+  type ProficiencyBonus as ProficiencyBonusType,
 } from "@dnd/shared/types";
-import type {
-SpellRecord,
-} from "@dnd/surface/surface/types";
-import { Either,Match } from "effect";
+import type { SpellRecord } from "@dnd/surface/surface/types";
+import { Either, Match } from "effect";
 import {
-type BattleCreatureState,
-type BattleTurnResources,
-type SupportedSpellInvocation
+  type BattleCreatureState,
+  type BattleTurnResources,
+  type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import type { CharacterBattleSpellcastingState } from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
-import {
-SHIELD_MAGIC_MISSILE_SPELL_ID,
-} from "./domain-constants.ts";
+import { SHIELD_MAGIC_MISSILE_SPELL_ID } from "./domain-constants.ts";
 
 import {
-supportedCantripSaveGateDamageProfile,
-supportedDamageAmountExpr,
-supportedPreparedSaveGateAttackRollAdvantageProfile,
-supportedPreparedSaveGateConditionProfile,
-supportedPreparedSaveGateDamageProfile,
+  supportedCantripSaveGateDamageProfile,
+  supportedDamageAmountExpr,
+  supportedPreparedSaveGateAttackRollAdvantageProfile,
+  supportedPreparedSaveGateConditionProfile,
+  supportedPreparedSaveGateDamageProfile,
 } from "./spells-profiles-save-gates.ts";
+import { sameStringSet } from "./spells-profile-shared.ts";
 import {
-sameStringSet,
-} from "./spells-profile-shared.ts";
-import {
-supportedCantripSpellAttackProfile,
-supportedPreparedAttackBurstSaveDamageProfile,
-supportedPreparedChainedSpellAttackDamageProfile,
-supportedPreparedSpellAttackProfile,
+  supportedCantripSpellAttackProfile,
+  supportedPreparedAttackBurstSaveDamageProfile,
+  supportedPreparedChainedSpellAttackDamageProfile,
+  supportedPreparedSpellAttackProfile,
 } from "./spells-profiles-attack-damage.ts";
 export * from "./spells-profiles-attack-damage.ts";
 import {
-supportedCantripDamageReductionSpellProfile,
-supportedCantripRollModifierSpellProfile,
-supportedPreparedConditionImmunityAndTurnStartTemporaryHitPointsSpellProfile,
-supportedPreparedCreatureTypeProtectionSpellProfile,
-supportedPreparedHealingSpellProfile,
-supportedPreparedMarkedDamageRiderSpellProfile,
-supportedPreparedRollModifierSpellProfile,
-supportedPreparedScalarBuffSpellProfile,
-supportedPreparedSlotSpellProfile,
-supportedPreparedWeaponDamageRiderSpellProfile,
+  supportedCantripDamageReductionSpellProfile,
+  supportedCantripRollModifierSpellProfile,
+  supportedPreparedConditionImmunityAndTurnStartTemporaryHitPointsSpellProfile,
+  supportedPreparedAfterHitDamageSpellProfile,
+  supportedPreparedCreatureTypeProtectionSpellProfile,
+  supportedPreparedHealingSpellProfile,
+  supportedPreparedMarkedDamageRiderSpellProfile,
+  supportedPreparedRollModifierSpellProfile,
+  supportedPreparedScalarBuffSpellProfile,
+  supportedPreparedSlotSpellProfile,
+  supportedPreparedWeaponDamageRiderSpellProfile,
 } from "./spells-profiles-support.ts";
 export * from "./spells-profiles-support.ts";
 export {
-animalFriendshipSaveGateConditionSpell,
-areaSaveGateSpellRangeFeet,
-colorSpraySaveGateConditionSpell,
-diceExprWithDelta,
-entangleSaveGateConditionSpell,
-faerieFireSaveGateAttackRollAdvantageSpell,
-isGuidingBoltNextAttackRiderShape,
-isRayOfSicknessPoisonedRiderShape,
-isShockingGraspOpportunityAttackRiderShape,
-isViciousMockeryNextAttackRiderShape,
-saveGateTargeting,
-singleTargetSpellRangeFeet,
-spellAttackKindForRedirect,
-supportedCantripSaveGateDamageProfile,
-supportedDamageAmountExpr,
-supportedFailedSavePostDamageRiders,
-supportedPreparedSaveGateAttackRollAdvantageProfile,
-supportedPreparedSaveGateConditionProfile,
-supportedPreparedSaveGateDamageProfile,
-supportedRepeatedEffectCount,
-supportedSaveGateConditionSpell,
-supportedSaveGateDamageProfile,
-supportedSaveGateFailedSaveEffects,
-supportedSpellAttackKind,
-supportedSpellPostDamageRiders
+  animalFriendshipSaveGateConditionSpell,
+  areaSaveGateSpellRangeFeet,
+  colorSpraySaveGateConditionSpell,
+  diceExprWithDelta,
+  entangleSaveGateConditionSpell,
+  faerieFireSaveGateAttackRollAdvantageSpell,
+  isGuidingBoltNextAttackRiderShape,
+  isRayOfSicknessPoisonedRiderShape,
+  isShockingGraspOpportunityAttackRiderShape,
+  isViciousMockeryNextAttackRiderShape,
+  saveGateTargeting,
+  singleTargetSpellRangeFeet,
+  spellAttackKindForRedirect,
+  supportedCantripSaveGateDamageProfile,
+  supportedDamageAmountExpr,
+  supportedFailedSavePostDamageRiders,
+  supportedPreparedSaveGateAttackRollAdvantageProfile,
+  supportedPreparedSaveGateConditionProfile,
+  supportedPreparedSaveGateDamageProfile,
+  supportedRepeatedEffectCount,
+  supportedSaveGateConditionSpell,
+  supportedSaveGateDamageProfile,
+  supportedSaveGateFailedSaveEffects,
+  supportedSpellAttackKind,
+  supportedSpellPostDamageRiders,
 } from "./spells-profiles-save-gates.ts";
 export function supportedSpellActs(
   actor: BattleCreatureState,
@@ -181,6 +176,12 @@ export function supportedSpellActs(
     ...spellcasting.preparedSpells.flatMap((spell) =>
       supportedPreparedWeaponDamageRiderSpellProfile(
         actor.combatantId,
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...spellcasting.preparedSpells.flatMap((spell) =>
+      supportedPreparedAfterHitDamageSpellProfile(
         spell,
         spellcasting.spellSlots,
       ),

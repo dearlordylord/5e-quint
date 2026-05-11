@@ -50,7 +50,7 @@ import {
   type BattleTurnResources,
   type PendingAttackRollMissToHitReplacementContext,
   type SpellMarkedDamageRider,
-  type SpellWeaponDamageRider,
+  type SpellAttackDamageComponent,
   type WeaponDamageDiceRollChoiceFill,
 } from "../battle-reducer.ts";
 import {
@@ -460,7 +460,7 @@ export function attackDamageComponents(
   critical: boolean,
   attackRoll?: AttackRollResult,
   attackDamageRiders: readonly AttackDamageRider[] = [],
-  spellWeaponDamageRiders: readonly SpellWeaponDamageRider[] = [],
+  spellWeaponDamageRiders: readonly SpellAttackDamageComponent[] = [],
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
 ): readonly AttackDamageComponent[] {
   const riderComponents = attackDamageRiders.map((rider) => ({
@@ -571,7 +571,7 @@ export function attackPotentialDamageTypes(
   critical: boolean,
   attackRoll: AttackRollResult,
   eligibleAttackDamageRiders: readonly AttackDamageRider[],
-  spellWeaponDamageRiders: readonly SpellWeaponDamageRider[] = [],
+  spellWeaponDamageRiders: readonly SpellAttackDamageComponent[] = [],
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
 ): readonly DamageType[] {
   return [
@@ -882,7 +882,7 @@ export function weaponAttackDamageExpression(
   critical = false,
   attackRoll?: AttackRollResult,
   attackDamageRiders: readonly AttackDamageRider[] = [],
-  spellWeaponDamageRiders: readonly SpellWeaponDamageRider[] = [],
+  spellWeaponDamageRiders: readonly SpellAttackDamageComponent[] = [],
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
   ongoingDamageModifier = 0,
 ): string {

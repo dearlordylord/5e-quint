@@ -3,155 +3,106 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
-import {
-spendActivationResource
-} from "@dnd/shared-algebras/action-economy-algebra";
+import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
 
+import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 
-import {
-currentArmorClass,
-} from "@dnd/shared-algebras/armor-class-algebra";
-
-import {
-attackRollResultIsValid
-} from "@dnd/shared-algebras/attack-roll-algebra";
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+import { attackRollResultIsValid } from "@dnd/shared-algebras/attack-roll-algebra";
 
 import * as Either from "effect/Either";
 
-
-
-
-
-
-
-
-
-
-
-
-
 import {
-attackDamageDispositionHole,
-attackDamageHole,
-damageDispositionFillValidation,
-offHandAttackActionOptionForActor,
-offHandAttackPrerequisiteMet
+  attackDamageDispositionHole,
+  attackDamageHole,
+  damageDispositionFillValidation,
+  offHandAttackActionOptionForActor,
+  offHandAttackPrerequisiteMet,
 } from "./attack-damage-apply.ts";
 
 import {
-attackRollHole,
-attackRollModeMatches,
-attackRollModeWithOptionalOngoingFeature,
-attackRollOngoingFeatureActivationProfile,
-attackRollOngoingFeatureActivations,
-consumeHelpAttackForAttackRoll,
-recordAttackRollOngoingFeatures,
-requiredAttackRollMode
+  attackRollHole,
+  attackRollModeMatches,
+  attackRollModeWithOptionalOngoingFeature,
+  attackRollOngoingFeatureActivationProfile,
+  attackRollOngoingFeatureActivations,
+  consumeHelpAttackForAttackRoll,
+  recordAttackRollOngoingFeatures,
+  requiredAttackRollMode,
 } from "./attack-roll.ts";
 
-import {
-normalizeBattleGrapples
-} from "./creature-state-leaves.ts";
+import { normalizeBattleGrapples } from "./creature-state-leaves.ts";
+
+import { activeEffectArmorClass } from "./creature-state.ts";
 
 import {
-activeEffectArmorClass
-} from "./creature-state.ts";
-
-import {
-applyAttackDamageAmount,
-concentrationSavingThrowHole
+  applyAttackDamageAmount,
+  concentrationSavingThrowHole,
 } from "./damage-apply.ts";
 
 import {
-activeMarkedDamageRiders,
-activeSpellWeaponDamageRiders,
-applyAvailableSpellDamageReduction,
-attackDamageByTypeEntries,
-damageAmountByTypeEntriesToMap,
-damageAmountByTypeMapEntries,
-ongoingFeatureDamageModifier
+  activeMarkedDamageRiders,
+  activeSpellWeaponDamageRiders,
+  applyAvailableSpellDamageReduction,
+  attackDamageByTypeEntries,
+  damageAmountByTypeEntriesToMap,
+  damageAmountByTypeMapEntries,
+  ongoingFeatureDamageModifier,
 } from "./damage-helpers.ts";
 
 import {
-attackDamageEventAfterPendingReductions,
-attackDamageEventAmountForTarget,
-attackDamageEventEntries,
-attackDamageEventWithEntries,
-attackDamagePrefixFills,
-attackFillsThroughAttackRoll,
-maybeOpenReactionWindow,
-snapshotBattle
+  attackDamageEventAfterPendingReductions,
+  attackDamageEventAmountForTarget,
+  attackDamageEventEntries,
+  attackDamageEventWithEntries,
+  attackDamagePrefixFills,
+  attackFillsThroughAttackRoll,
+  maybeOpenReactionWindow,
+  snapshotBattle,
 } from "./dispatcher.ts";
 
-
-
 import {
-attackTargetHole,
-needsHolesResult,
-revealHidden
+  attackTargetHole,
+  needsHolesResult,
+  revealHidden,
 } from "./hole-helpers.ts";
 
 import {
-attackKindForDeflectRedirect,
-attackTargetIsLegal
+  attackHitTriggerKind,
+  attackKindForDeflectRedirect,
+  attackTargetIsLegal,
 } from "./movement-speed.ts";
-
 
 import { attackFillSet } from "./attack-fill-set.ts";
 import { invalidResult } from "./result-helpers.ts";
 
-
-
-
-
 import {
-attackActionOptionName,
-attackPotentialDamageTypes,
-eligibleAttackDamageRiders,
-eligibleWeaponDamageDiceRollChoiceUnitIds,
-selectedAttackDamageRiders,
-selectedWeaponDamageDiceRollChoice
+  attackActionOptionName,
+  attackPotentialDamageTypes,
+  eligibleAttackDamageRiders,
+  eligibleWeaponDamageDiceRollChoiceUnitIds,
+  selectedAttackDamageRiders,
+  selectedWeaponDamageDiceRollChoice,
 } from "./statblock-attacks.ts";
 
-
 import type {
-BattleAttackDamageEvent,
-BattleResolutionResult,
-BattleState,
-OffHandAttackBattleResolutionInput
+  BattleAttackDamageEvent,
+  BattleResolutionResult,
+  BattleState,
+  OffHandAttackBattleResolutionInput,
 } from "../battle-reducer.ts";
 import {
-attackRollHitsWithCriticalThreshold,
-attackRollIsCriticalHit,
-criticalThresholdForAttack,
-validateAttackDamageFill,
+  attackRollHitsWithCriticalThreshold,
+  attackRollIsCriticalHit,
+  criticalThresholdForAttack,
+  validateAttackDamageFill,
 } from "./attack-resolution.ts";
 
-export 
-
-function resolveOffHandAttack(
+export function resolveOffHandAttack(
   input: OffHandAttackBattleResolutionInput,
 ): BattleResolutionResult {
   const pendingAttackDamageReductions =
     input.pendingAttackDamageReductions ?? [];
+  const pendingAttackDamageAdditions = input.pendingAttackDamageAdditions ?? [];
   const attack = offHandAttackActionOptionForActor(
     input.state,
     input.subject.actorId,
@@ -313,10 +264,13 @@ function resolveOffHandAttack(
       )
     : [];
   const spellWeaponDamageRiders = hit
-    ? activeSpellWeaponDamageRiders(
-        attackRolledState.combatants.get(input.subject.actorId),
-        attack,
-      )
+    ? [
+        ...activeSpellWeaponDamageRiders(
+          attackRolledState.combatants.get(input.subject.actorId),
+          attack,
+        ),
+        ...pendingAttackDamageAdditions,
+      ]
     : [];
   const spellMarkedDamageRiders = hit
     ? activeMarkedDamageRiders(
@@ -340,6 +294,7 @@ function resolveOffHandAttack(
         targetId: target.combatantId,
         attackRoll: fillSet.attackRoll,
         attackKind: attackKindForDeflectRedirect(attack),
+        attackHitTriggerKind: attackHitTriggerKind(attack),
         damageTypes: attackPotentialDamageTypes(
           attack,
           critical,

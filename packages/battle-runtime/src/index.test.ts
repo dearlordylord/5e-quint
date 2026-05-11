@@ -16667,6 +16667,7 @@ function subjectName(
   | "releaseReadiedSpell"
   | "releaseReadiedMovement"
   | "castTriggeredReactionSpell"
+  | "castAttackHitBonusActionSpell"
   | "opportunityAttack" {
   if (subject.tag === "action") {
     return subject.action;
@@ -16704,7 +16705,7 @@ function runCanonicalBattleRuntimeQntSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("137 passing");
+  expect(quintOutput).toContain("138 passing");
 }
 
 function hidePrerequisites(

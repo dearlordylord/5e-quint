@@ -1,8 +1,6 @@
 // Support, defensive, and rider spell profile projections extracted from spells-profiles.ts.
 
-import {
-  elapsedTimeTicksFromTimeSpanDuration,
-} from "@dnd/shared-algebras/elapsed-time-algebra";
+import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { CreatureType } from "@dnd/shared/game-facts";
 import {
   movementDeltaFeet,
@@ -45,12 +43,8 @@ import {
 import type { CharacterBattleSpellcastingState } from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
 import { activeMarkedDamageRiderEffect } from "./damage-helpers.ts";
-import {
-  PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES,
-} from "./domain-constants.ts";
-import {
-  supportedDamageAmountExpr,
-} from "./spells-profiles-save-gates.ts";
+import { PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES } from "./domain-constants.ts";
+import { supportedDamageAmountExpr } from "./spells-profiles-save-gates.ts";
 import { scalarBuffSpellTargetCount } from "./spells-profile-shared.ts";
 export * from "./spells-profiles-healing.ts";
 export * from "./spells-profiles-repeated-damage.ts";
@@ -438,6 +432,102 @@ export function supportedPreparedWeaponDamageRiderSpellProfile(
           },
         ],
   );
+}
+
+export function supportedPreparedAfterHitDamageSpellProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  const projection = afterHitDamageSpellProjection(spell);
+  if (projection === null) {
+    return [];
+  }
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    const damageExpr = supportedDamageAmountExpr({
+      amount: projection.damageAmount,
+      spellLevel: spell.mechanics.level,
+      slotLevel: slot.spellLevel,
+    });
+    if (damageExpr === null) {
+      return [];
+    }
+    return [
+      {
+        access: { tag: "prepared" },
+        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        procedure: "afterHitDamage",
+        spell,
+        actionCost: "bonusAction",
+        damage: {
+          expr: damageExpr,
+          damageType: projection.damageType,
+        },
+        conditionalBonusDamage: {
+          targetCreatureTypes: projection.conditionalBonusTargetTypes,
+          expr: projection.conditionalBonusExpr,
+          damageType: projection.conditionalBonusDamageType,
+        },
+      },
+    ];
+  });
+}
+
+export function afterHitDamageSpellProjection(spell: SpellRecord): {
+  readonly damageAmount: SurfaceDiceAmount;
+  readonly damageType: DamageType;
+  readonly conditionalBonusTargetTypes: readonly CreatureType[];
+  readonly conditionalBonusExpr: DiceExpr;
+  readonly conditionalBonusDamageType: DamageType;
+} | null {
+  if (
+    spell.name !== "Divine Smite" ||
+    spell.provenance.kind !== "srd-5.2.1" ||
+    spell.provenance.section !== "Spells/Descriptions-A-D#Divine Smite" ||
+    spell.mechanics.family !== "activation" ||
+    spell.mechanics.level !== 1 ||
+    spell.mechanics.castingTime.kind !== "bonus_action" ||
+    spell.mechanics.castingTime.trigger?.kind !== "after_hit_with" ||
+    spell.mechanics.castingTime.trigger.attack !==
+      "melee_weapon_or_unarmed_strike" ||
+    spell.mechanics.range.kind !== "self" ||
+    spell.mechanics.duration.kind !== "instantaneous" ||
+    spell.mechanics.phases.length !== 1
+  ) {
+    return null;
+  }
+  const phase = spell.mechanics.phases[0];
+  const effects = phase?.kind === "direct" ? (phase.effects ?? []) : [];
+  const baseDamage = effects[0];
+  const conditionalBonus = effects[1];
+  if (
+    phase?.kind !== "direct" ||
+    phase.attachment.kind !== "hole" ||
+    phase.attachment.value.kind !== "target" ||
+    phase.attachment.value.selection.mode !== "one" ||
+    effects.length !== 2 ||
+    baseDamage?.kind !== "damage" ||
+    baseDamage.damageType !== "radiant" ||
+    conditionalBonus?.kind !== "conditional_bonus_damage" ||
+    conditionalBonus.damageType !== "radiant" ||
+    conditionalBonus.when?.kind !== "target_creature_type" ||
+    !sameCreatureTypeSet(conditionalBonus.when.types, ["fiend", "undead"]) ||
+    conditionalBonus.amount.kind !== "fixed" ||
+    conditionalBonus.amount.expr.dice !== 1 ||
+    conditionalBonus.amount.expr.dieSize !== 8 ||
+    (conditionalBonus.amount.expr.flat ?? 0) !== 0
+  ) {
+    return null;
+  }
+  return {
+    damageAmount: baseDamage.amount,
+    damageType: "radiant",
+    conditionalBonusTargetTypes: conditionalBonus.when.types,
+    conditionalBonusExpr: conditionalBonus.amount.expr,
+    conditionalBonusDamageType: "radiant",
+  };
 }
 
 export function supportedPreparedMarkedDamageRiderSpellProfile(

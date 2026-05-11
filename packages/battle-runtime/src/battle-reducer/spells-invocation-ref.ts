@@ -2,7 +2,10 @@
 
 import { Match } from "effect";
 import { spellId } from "../identity.ts";
-import { type SpellInvocationRef, spellEffectInvocationRef } from "../battle-subjects.ts";
+import {
+  type SpellInvocationRef,
+  spellEffectInvocationRef,
+} from "../battle-subjects.ts";
 import {
   isPreparedDamageSpellSource,
   type SupportedSpellInvocation,
@@ -11,6 +14,14 @@ import {
 export function supportedSpellInvocationRef(
   invocation: SupportedSpellInvocation,
 ): SpellInvocationRef {
+  if (invocation.procedure === "afterHitDamage") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "afterHitDamage",
+    };
+  }
   return Match.value(invocation).pipe(
     Match.when({ procedure: "heldLight" }, (cantrip) => ({
       tag: "cantrip" as const,

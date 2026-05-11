@@ -228,8 +228,10 @@ flowchart TD
   options spend the same Bonus Action resource while reusing package-owned
   procedures. Slot-spent
   spell procedures also share a turn-resource fact for the SRD one-Spell-Slot
-  per-turn rule. Off-Hand Attack uses the shared attack host Reaction windows
-  before the Bonus Action resource is committed for damage replay.
+  per-turn rule. Divine Smite is admitted from an already-hit melee weapon or
+  Unarmed Strike window and threads its added damage through the interrupted
+  attack continuation. Off-Hand Attack uses the shared attack host Reaction
+  windows before the Bonus Action resource is committed for damage replay.
   Broader generic Bonus Action subjects remain future width.
 - The package-local `battle-runtime.qnt` spec constrains this implemented
   subset. Old root `battle.qnt` remains broad legacy/Core proof and restore

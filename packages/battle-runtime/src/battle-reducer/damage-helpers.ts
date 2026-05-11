@@ -2,10 +2,7 @@
 // Cluster N (damage_helpers). Mechanical extraction — no behavior change.
 // Consumes only G (creature_state) and W (statblock_attacks).
 
-import {
-  DieRollResult,
-  type DamageType,
-} from "@dnd/shared/types";
+import { DieRollResult, type DamageType } from "@dnd/shared/types";
 import {
   holeId,
   holeInstanceKey,
@@ -16,6 +13,7 @@ import {
   validateRolledDiceForDiceExpr,
 } from "@dnd/shared-algebras/runtime-dice-algebra";
 import type { SpellRecord } from "@dnd/surface/surface/types";
+import { Match } from "effect";
 import type { CombatantId } from "../identity.ts";
 import type {
   CharacterWeaponAttackActionOption,
@@ -32,6 +30,7 @@ import {
   type SpellDamageReductionFill,
   type SpellDamageReductionRoll,
   type SpellMarkedDamageRider,
+  type SpellAttackDamageComponent,
   type SpellWeaponDamageRider,
 } from "../battle-reducer.ts";
 import {
@@ -49,6 +48,46 @@ export type DamageAmountByTypeEntry = {
   readonly amount: number;
 };
 
+export function fixedAttackDamageAmount(
+  attacker: BattleCreatureState | undefined,
+  target: BattleCreatureState,
+  attack: SupportedAttackActionOption,
+): number | null {
+  const entries = fixedAttackDamageByTypeEntries(attacker, attack);
+  return entries === null
+    ? null
+    : damageAmountByTypeAfterTargetAdjustments(
+        target,
+        damageAmountByTypeEntriesToMap(entries),
+      );
+}
+
+export function fixedAttackDamageByTypeEntries(
+  attacker: BattleCreatureState | undefined,
+  attack: SupportedAttackActionOption,
+): readonly DamageAmountByTypeEntry[] | null {
+  return Match.value(attack).pipe(
+    Match.when({ kind: "unarmedStrike" }, (unarmedStrike) => {
+      if (unarmedStrike.effect.damage.kind !== "base") {
+        return null;
+      }
+      return [
+        {
+          damageType: unarmedStrike.effect.damage.damageType,
+          amount: Math.max(
+            0,
+            attackDamageModifier(attack) +
+              ongoingFeatureDamageModifier(attacker, attack),
+          ),
+        },
+      ];
+    }),
+    Match.when({ kind: "weapon" }, () => null),
+    Match.when({ kind: "statBlockAttack" }, () => null),
+    Match.exhaustive,
+  );
+}
+
 export function attackDamageByTypeEntries(
   attacker: BattleCreatureState | undefined,
   attack: SupportedAttackActionOption,
@@ -56,7 +95,7 @@ export function attackDamageByTypeEntries(
   critical: boolean,
   attackRoll?: AttackRollResult,
   attackDamageRiders: readonly AttackDamageRider[] = [],
-  spellWeaponDamageRiders: readonly SpellWeaponDamageRider[] = [],
+  spellWeaponDamageRiders: readonly SpellAttackDamageComponent[] = [],
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
 ): readonly DamageAmountByTypeEntry[] {
   return [
@@ -80,7 +119,7 @@ export function attackDamageByType(
   critical: boolean,
   attackRoll?: AttackRollResult,
   attackDamageRiders: readonly AttackDamageRider[] = [],
-  spellWeaponDamageRiders: readonly SpellWeaponDamageRider[] = [],
+  spellWeaponDamageRiders: readonly SpellAttackDamageComponent[] = [],
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
 ): ReadonlyMap<DamageType, number> {
   const components = attackDamageComponents(
@@ -90,6 +129,10 @@ export function attackDamageByType(
     attackDamageRiders,
     spellWeaponDamageRiders,
     spellMarkedDamageRiders,
+  );
+  const fixedBaseDamageEntries = fixedAttackDamageByTypeEntries(
+    attacker,
+    attack,
   );
   const damageByType = damageRoll.value.reduce<ReadonlyMap<DamageType, number>>(
     (totals, group, index) => {
@@ -101,15 +144,15 @@ export function attackDamageByType(
         (groupTotal, dieResult) => groupTotal + Number(dieResult),
         0,
       );
-      const unadjusted =
-        diceTotal +
-        (index === 0
+      const modifier =
+        fixedBaseDamageEntries === null && index === 0
           ? attackDamageModifier(attack) +
             ongoingFeatureDamageModifier(attacker, attack)
-          : 0);
+          : 0;
+      const unadjusted = diceTotal + modifier;
       return addDamageAmountForType(totals, component.damageType, unadjusted);
     },
-    new Map(),
+    damageAmountByTypeEntriesToMap(fixedBaseDamageEntries ?? []),
   );
   return damageByType;
 }

@@ -1,10 +1,10 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-chained-attack-damage
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-weapon-damage-rider
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-damage spell.invocation-weapon-damage-rider
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-marked-damage-rider
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-attack-roll-advantage-save
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-damage-reduction
@@ -47,6 +47,12 @@ module battleRuntime {
   //   self-hosted Bonus Action spell whose timed effect adds extra Radiant
   //   damage dice to the caster's weapon attacks on a hit; the rider is a
   //   mandatory weapon-hit damage-roll component while active.
+  // - Spells/Descriptions-A-D.md lines 1599-1609, Playing-the-Game.md lines
+  //   694-703, Spells/Gaining-and-Casting.md lines 33-65, and
+  //   UBIQUITOUS_LANGUAGE.md: Divine Smite is a Bonus Action spell cast
+  //   immediately after a melee weapon or Unarmed Strike hit. It spends a Spell
+  //   Slot, adds Radiant damage to that already-hit attack, scales by slot
+  //   level, and adds one die against Fiends or Undead.
   // - Spells/Descriptions-E-L.md lines 1275-1288, Playing-the-Game.md lines
   //   582-589 and 694-703, Rules-Glossary.md lines 138-140 and 239-247,
   //   and UBIQUITOUS_LANGUAGE.md: Hunter's Mark is a Bonus Action
@@ -192,7 +198,7 @@ module battleRuntime {
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | FaerieFire | AnimalFriendship | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | FaerieFire | AnimalFriendship | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack
   type ChainedSpellAttackDamageInvocation =
     | ChromaticOrbChainedSpellAttack
@@ -285,6 +291,7 @@ module battleRuntime {
   type FighterWeaponAttackDamageRoll = {
     weaponDamageRoll: int,
     divineFavorDamageRoll: int,
+    divineSmiteDamageRoll: int,
     huntersMarkDamageRoll: int,
   }
   type FighterSpellAttackDamageRoll = {
@@ -1156,19 +1163,25 @@ module battleRuntime {
     { ...state, fighter: { ...state.fighter, hp: hp, tempHp: tempHp } }
 
   pure def fighterWeaponAttackDamageRoll(weaponDamageRoll: int): FighterWeaponAttackDamageRoll =
-    { weaponDamageRoll: weaponDamageRoll, divineFavorDamageRoll: 0, huntersMarkDamageRoll: 0 }
+    { weaponDamageRoll: weaponDamageRoll, divineFavorDamageRoll: 0, divineSmiteDamageRoll: 0, huntersMarkDamageRoll: 0 }
 
   pure def fighterWeaponAttackDamageRollWithDivineFavor(
     weaponDamageRoll: int,
     divineFavorDamageRoll: int,
   ): FighterWeaponAttackDamageRoll =
-    { weaponDamageRoll: weaponDamageRoll, divineFavorDamageRoll: divineFavorDamageRoll, huntersMarkDamageRoll: 0 }
+    { weaponDamageRoll: weaponDamageRoll, divineFavorDamageRoll: divineFavorDamageRoll, divineSmiteDamageRoll: 0, huntersMarkDamageRoll: 0 }
+
+  pure def fighterWeaponAttackDamageRollWithDivineSmite(
+    weaponDamageRoll: int,
+    divineSmiteDamageRoll: int,
+  ): FighterWeaponAttackDamageRoll =
+    { weaponDamageRoll: weaponDamageRoll, divineFavorDamageRoll: 0, divineSmiteDamageRoll: divineSmiteDamageRoll, huntersMarkDamageRoll: 0 }
 
   pure def fighterWeaponAttackDamageRollWithHuntersMark(
     weaponDamageRoll: int,
     huntersMarkDamageRoll: int,
   ): FighterWeaponAttackDamageRoll =
-    { weaponDamageRoll: weaponDamageRoll, divineFavorDamageRoll: 0, huntersMarkDamageRoll: huntersMarkDamageRoll }
+    { weaponDamageRoll: weaponDamageRoll, divineFavorDamageRoll: 0, divineSmiteDamageRoll: 0, huntersMarkDamageRoll: huntersMarkDamageRoll }
 
   pure def fighterSpellAttackDamageRoll(spellDamageRoll: int): FighterSpellAttackDamageRoll =
     { spellDamageRoll: spellDamageRoll, huntersMarkDamageRoll: 0 }
@@ -1233,11 +1246,12 @@ module battleRuntime {
       val spent = spendFighterAttackActionOrExtraAttackSlot(revealed)
       val rageDamage = if (fighterHasRage(revealed)) fighterRageDamageBonus(barbarianLevel) else 0
       val divineFavorDamage = fighterDivineFavorDamage(damageRoll.divineFavorDamageRoll, revealed.fighter.activeEffects)
+      val divineSmiteDamage = damageRoll.divineSmiteDamageRoll
       val huntersMarkDamage = fighterHuntersMarkDamage(damageRoll.huntersMarkDamageRoll, revealed.fighter.activeEffects, Goblin)
       if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), fighterCriticalThreshold(state))))
         { ...spent, lightWeaponAttackMade: true }
       else
-        { ...spent, goblin: applyDamageWithDisposition(state.goblin, damageRoll.weaponDamageRoll + 3 + rageDamage + divineFavorDamage + huntersMarkDamage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded, damageDisposition), lightWeaponAttackMade: true }
+        { ...spent, goblin: applyDamageWithDisposition(state.goblin, damageRoll.weaponDamageRoll + 3 + rageDamage + divineFavorDamage + divineSmiteDamage + huntersMarkDamage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded, damageDisposition), lightWeaponAttackMade: true }
     }
 
   pure def fighterSneakAttackEligible(
@@ -2079,6 +2093,37 @@ module battleRuntime {
   pure def fighterDivineFavorDamage(divineFavorDamageRoll: int, effects: Set[ActiveEffect]): int =
     if (activeEffectsContainDivineFavor(effects)) divineFavorDamageRoll else 0
 
+  pure def divineSmiteDamageDice(slotLevel: int, targetCreatureType: RuntimeCreatureType): int =
+    2 +
+    (if (slotLevel > 1) slotLevel - 1 else 0) +
+    (if (targetCreatureType == FiendCreature or targetCreatureType == UndeadCreature) 1 else 0)
+
+  pure def resolveDivineSmiteAfterMeleeHit(
+    state: BattleState,
+    slotLevel: int,
+    smiteDamageRoll: int,
+    targetCreatureType: RuntimeCreatureType,
+    attackCritical: bool,
+    concentrationSaveSucceeded: bool,
+  ): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      slotLevel >= 1 and
+      state.bonusActionAvailable and
+      canExpendSpellSlotThisTurn(state) and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state))
+    )
+      {
+        ...state,
+        bonusActionAvailable: false,
+        spellSlotExpendedThisTurn: true,
+        goblin: applyDamage(state.goblin, smiteDamageRoll * (if (attackCritical) 2 else 1), 1, concentrationSaveSucceeded),
+      }
+    else
+      state
+
   pure def resolveHuntersMark(state: BattleState, target: Actor): BattleState =
     if (
       currentActor(state) == Fighter and
@@ -2541,6 +2586,7 @@ module battleRuntime {
       | Bless => true
       | Guidance => false
       | DivineFavor => true
+      | DivineSmite => true
       | HuntersMark => true
       | ShockingGrasp => false
       | GuidingBolt => true
@@ -4068,9 +4114,13 @@ module battleRuntime {
       assert(spellInvocationSpendsLevelOneSlot(AnimalFriendship)),
       assert(spellInvocationSpendsLevelOneSlot(ProtectionFromEvilAndGood)),
       assert(spellInvocationSpendsLevelOneSlot(DivineFavor)),
+      assert(spellInvocationSpendsLevelOneSlot(DivineSmite)),
       assert(spellInvocationSpendsLevelOneSlot(HuntersMark)),
       assert(fighterDivineFavorDamage(3, Set(DivineFavorWeaponDamageRider({ durationTicks: 1 }))) == 3),
       assert(fighterDivineFavorDamage(3, Set()) == 0),
+      assert(divineSmiteDamageDice(1, HumanoidCreature) == 2),
+      assert(divineSmiteDamageDice(1, UndeadCreature) == 3),
+      assert(divineSmiteDamageDice(3, FiendCreature) == 5),
       assert(fighterHuntersMarkDamage(4, Set(HuntersMarkDamageRider({ target: Goblin, transferAvailable: false })), Goblin) == 4),
       assert(fighterHuntersMarkDamage(4, Set(HuntersMarkDamageRider({ target: Fighter, transferAvailable: false })), Goblin) == 0),
       assert(resolveRayOfFrostWithDamageRoll({ ...initialState, fighter: { ...initialState.fighter, activeEffects: Set(HuntersMarkDamageRider({ target: Goblin, transferAvailable: false })) }, goblin: { ...initialState.goblin, reactionAvailable: false } }, 15, 10, fighterSpellAttackDamageRollWithHuntersMark(4, 6), true).goblin.hp == 0),
@@ -4863,6 +4913,19 @@ module battleRuntime {
       assert(activeEffectsContainDivineFavor(round9.fighter.activeEffects)),
       assert(not(activeEffectsContainDivineFavor(round10.fighter.activeEffects))),
       assert(hit.goblin.hp == 3),
+    }
+  }
+
+  run test_divine_smite_after_hit_spends_bonus_action_and_slot_without_base_attack_replay = {
+    val smote = resolveDivineSmiteAfterMeleeHit(initialState, 1, 5, HumanoidCreature, false, true)
+    val alreadySpent = resolveDivineSmiteAfterMeleeHit({ ...initialState, spellSlotExpendedThisTurn: true }, 1, 5, HumanoidCreature, false, true)
+    val critical = resolveDivineSmiteAfterMeleeHit(initialState, 1, 5, HumanoidCreature, true, true)
+    all {
+      assert(smote.goblin.hp == 5),
+      assert(not(smote.bonusActionAvailable)),
+      assert(smote.spellSlotExpendedThisTurn),
+      assert(alreadySpent.goblin.hp == initialState.goblin.hp),
+      assert(critical.goblin.hp == 0),
     }
   }
 

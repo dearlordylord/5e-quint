@@ -64,7 +64,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 217,
       "id": "SRDINV31C",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Divine Smite After-Hit Runtime"
     },
     {
@@ -135,7 +135,7 @@ Keep it synchronized with the DAG table and task details.
 | Order | Task                                                      | Status             | Depends on | Blocks | Research / plan | Next action |
 | ----- | --------------------------------------------------------- | ------------------ | ---------- | ------ | --------------- | ----------- |
 | 164   | QMBT69 - Recursive Unit Profile Planning Review | deferred | QMBT68 | none | [QMBT66 review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT66_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Still parked by the SRD inventory frontier instruction; QMBT68 is complete, but the older QMBT queue remains deferred until that frontier resumes it. |
-| 217   | SRDINV31C - Promote Divine Smite After-Hit Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Divine Smite](/workspace/typescript/dnd/packages/surface/content/divine_smite.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote immediate after-hit Bonus Action smite damage without replaying the base attack. |
+| 217   | SRDINV31C - Promote Divine Smite After-Hit Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Divine Smite](/workspace/typescript/dnd/packages/surface/content/divine_smite.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Completed: Divine Smite is promoted as an immediate after-hit Bonus Action damage splice without replaying the base attack. |
 | 218   | SRDINV31D - Promote Ensnaring Strike Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Ensnaring Strike](/workspace/typescript/dnd/packages/surface/content/ensnaring_strike.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote after-hit save-gated Restrained, start-turn damage, and escape lifecycle. |
 | 219   | SRDINV31E - Promote Searing Smite Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Searing Smite](/workspace/typescript/dnd/packages/surface/content/searing_smite.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote after-hit Fire damage plus recurring start-turn damage and save-to-end. |
 | 220   | SRDINV31F - Promote True Strike Weapon Spell Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [True Strike](/workspace/typescript/dnd/packages/surface/content/true_strike.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote spell-hosted weapon attack with spellcasting ability and damage type choice. |
@@ -174,7 +174,7 @@ changeset is trivial.
 
 ### Task 217 - SRDINV31C - Promote Divine Smite After-Hit Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV28A-SRDINV28E
 
@@ -183,6 +183,13 @@ Blocks: SRDINV33
 Scope: promote Divine Smite as an already-hit melee weapon/unarmed trigger,
 Bonus Action and slot spend, Radiant damage scaling, and Fiend/Undead bonus.
 Do not replay or duplicate the base attack.
+
+Verification: RAW checked in
+`.references/srd-5.2.1/Spells/Descriptions-A-D.md`,
+`.references/srd-5.2.1/Playing-the-Game.md`,
+`.references/srd-5.2.1/Spells/Gaining-and-Casting.md`, and
+`UBIQUITOUS_LANGUAGE.md`; package-local focused admission/runtime tests passed;
+`pnpm quality` passed; Tier 1 battle-runtime MBT passed.
 
 ### Task 218 - SRDINV31D - Promote Ensnaring Strike Runtime
 
@@ -305,4 +312,3 @@ focused tests for object target discovery/fill validation, range fact
 rejection, attack hit/miss, object damage disposition, and any supported rider
 subset; `pnpm unit-profile-coverage:check`; `pnpm quality`; MBT only if
 promoted battle-runtime behavior changes.
-

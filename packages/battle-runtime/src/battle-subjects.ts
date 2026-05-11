@@ -37,6 +37,7 @@ export const BATTLE_RUNTIME_COMMANDS = [
   "releaseReadiedSpell",
   "releaseReadiedMovement",
   "castTriggeredReactionSpell",
+  "castAttackHitBonusActionSpell",
   "releaseGrapple",
   "opportunityAttack",
 ] as const;
@@ -76,6 +77,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "conditionImmunityAndTurnStartTemporaryHitPoints",
   "creatureTypeProtection",
   "weaponDamageRider",
+  "afterHitDamage",
   "markedDamageRider",
   "persistentArmorEffect",
   "shieldReaction",
@@ -328,6 +330,13 @@ export const BattleSubjectSchema = Schema.Union(
     actorId: CombatantId,
     command: Schema.Literal("castTriggeredReactionSpell"),
     reactorId: CombatantId,
+    invocation: SpellInvocationRefSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("castAttackHitBonusActionSpell"),
+    casterId: CombatantId,
     invocation: SpellInvocationRefSchema,
   }),
   Schema.Struct({

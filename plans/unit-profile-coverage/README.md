@@ -232,12 +232,17 @@ is available only after the marked target drops to 0 Hit Points. Noncombat
 tracking Advantage and slot-scaled maximum duration are outside this current
 runtime profile until SRDINV33 splits follow-up work.
 
+`spell.invocation-after-hit-damage` is the Divine Smite procedure shape: the
+spell is not an ordinary turn spell act; it is offered only from an eligible
+already-hit melee weapon or Unarmed Strike window, spends the current turn Bonus
+Action and Spell Slot, and splices its damage dice into the interrupted attack
+damage roll.
+
 Future SRDINV31 tasks must introduce distinct profiles when the executable
-procedure shape changes. Divine Smite is an immediate after-hit damage splice,
-Ensnaring Strike and Searing Smite are after-hit ongoing lifecycles with
-start-turn and save/end procedures, and True Strike is a spell-hosted weapon
-attack. Reusing either existing rider profile for those shapes would conflate
-different SRD triggers.
+procedure shape changes. Ensnaring Strike and Searing Smite are after-hit
+ongoing lifecycles with start-turn and save/end procedures, and True Strike is a
+spell-hosted weapon attack. Reusing existing rider profiles for those shapes
+would conflate different SRD triggers.
 
 Package-local QNT should be updated whenever the runtime adds or changes a
 promoted state fact, active-effect lifecycle, resource/turn sequencing rule, or

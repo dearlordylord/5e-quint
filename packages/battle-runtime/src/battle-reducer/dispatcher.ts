@@ -7,240 +7,183 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
 import {
-canSpendAction
+  canSpendAction,
+  spendActivationResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
 
+import { initiativeOrder } from "@dnd/shared-algebras/initiative-algebra";
 
+import { type StandardActionKind } from "@dnd/shared/game-facts";
 
+import { DamageAmount } from "@dnd/shared/types";
 
-
-
-
-
-
-
-import {
-initiativeOrder
-} from "@dnd/shared-algebras/initiative-algebra";
-
-
-
-
-
-import {
-type StandardActionKind
-} from "@dnd/shared/game-facts";
-
-import {
-DamageAmount
-} from "@dnd/shared/types";
-
-
-import type {
-UnitRecord
-} from "@dnd/surface/surface/types";
-
+import type { UnitRecord } from "@dnd/surface/surface/types";
 
 import { Match } from "effect";
 
-
 import * as Either from "effect/Either";
 
-
-
-
-import {
-type BattleReactionTrigger
-} from "../battle-reaction-triggers.ts";
+import { type BattleReactionTrigger } from "../battle-reaction-triggers.ts";
 
 import {
-sameBattleSubject,
-type ActionHideSubject,
-type ActionSearchSubject,
-type BattleSubject
+  sameBattleSubject,
+  type ActionHideSubject,
+  type ActionSearchSubject,
+  type BattleSubject,
 } from "../battle-subjects.ts";
 
+import { CombatantId, battleReplayStackDepth } from "../identity.ts";
 
-
-
-import {
-CombatantId,
-battleReplayStackDepth
-} from "../identity.ts";
-
-
-
-
-
+import { currentActorId } from "./creature-state-leaves.ts";
 
 import {
-currentActorId
-} from "./creature-state-leaves.ts";
-
-import {
-battleSubjectActorId,
-closeLegendaryActionWindow,
-combatantCanTakeActions,
-combatantCanTakeReactions,
-combatantSnapshot,
-consumeLegendaryActionWindow,
-isLegendaryAttackSubject,
-normalizeEarlyEndedOngoingFeatures,
-statBlockLegendaryActionWindowIsOpen
+  battleSubjectActorId,
+  closeLegendaryActionWindow,
+  combatantCanTakeActions,
+  combatantCanTakeReactions,
+  combatantSnapshot,
+  consumeLegendaryActionWindow,
+  isLegendaryAttackSubject,
+  normalizeEarlyEndedOngoingFeatures,
+  statBlockLegendaryActionWindowIsOpen,
 } from "./creature-state.ts";
 
 import {
-applyAttackDamageAmount,
-concentrationSavingThrowHole
+  applyAttackDamageAmount,
+  concentrationSavingThrowHole,
 } from "./damage-apply.ts";
 
+import { needsHolesResult, revealHidden } from "./hole-helpers.ts";
 
-
-
-import {
-needsHolesResult,
-revealHidden
-} from "./hole-helpers.ts";
+import { opportunityAttackOptionForReactor } from "./movement-speed.ts";
 
 import {
-opportunityAttackOptionForReactor
-} from "./movement-speed.ts";
-
-
-import {
-attackDamageEventAmountForTarget,
-attackDamageEventEntries,
-damageAmountByTypeEntriesAfterScalarReduction
+  attackDamageEventAmountForTarget,
+  attackDamageEventEntries,
+  damageAmountByTypeEntriesAfterScalarReduction,
 } from "./attack-damage-events.ts";
+import { battleCreatureType } from "./attack-roll.ts";
 import {
-reactionModifierReductionRoll,
-reactionRollOrDamageReductionChoices,
-spendReactionModifierResource
+  reactionModifierReductionRoll,
+  reactionRollOrDamageReductionChoices,
+  spendReactionModifierResource,
 } from "./reaction-modifiers.ts";
 import {
-triggeredReactionSpellChoices,
-triggeredReactionSpellTurnResourceAvailable
+  triggeredReactionSpellChoices,
+  triggeredReactionSpellTurnResourceAvailable,
 } from "./reaction-triggered-spells.ts";
 import { invalidResult } from "./result-helpers.ts";
 export {
-attackDamageEventAfterPendingReduction,
-attackDamageEventAfterPendingReductions,
-attackDamageEventAmountBeforeTargetAdjustments,
-attackDamageEventAmountForTarget,
-attackDamageEventEntries,
-attackDamageEventWithEntries,
-attackDamagePrefixFills,
-attackFillsThroughAttackRoll,
-damageAmountByTypeEntriesAfterScalarReduction
+  attackDamageEventAfterPendingReduction,
+  attackDamageEventAfterPendingReductions,
+  attackDamageEventAmountBeforeTargetAdjustments,
+  attackDamageEventAmountForTarget,
+  attackDamageEventEntries,
+  attackDamageEventWithEntries,
+  attackDamagePrefixFills,
+  attackFillsThroughAttackRoll,
+  damageAmountByTypeEntriesAfterScalarReduction,
 } from "./attack-damage-events.ts";
 export {
-attackDamageReductionRedirectResource,
-attackDamageReductionRedirectResourceAvailable,
-attackDamageReductionZeroDamageRedirectHoles,
-attackDamageReductionZeroDamageRedirectSelection,
-attackDamageReductionZeroDamageRedirectTargetChoices,
-hasAttackDamageReductionRedirectTargetSpatialFact,
-resolveAttackDamageReductionZeroDamageRedirectAfterReduction,
-spendAttackDamageReductionRedirectResource
+  attackDamageReductionRedirectResource,
+  attackDamageReductionRedirectResourceAvailable,
+  attackDamageReductionZeroDamageRedirectHoles,
+  attackDamageReductionZeroDamageRedirectSelection,
+  attackDamageReductionZeroDamageRedirectTargetChoices,
+  hasAttackDamageReductionRedirectTargetSpatialFact,
+  resolveAttackDamageReductionZeroDamageRedirectAfterReduction,
+  spendAttackDamageReductionRedirectResource,
 } from "./attack-damage-redirect.ts";
 
+import { expendSpellSlot } from "./spell-effects.ts";
+
+import { spellRequiresVerbal } from "./spells-discovery.ts";
 
 import {
-expendSpellSlot
-} from "./spell-effects.ts";
-
-import {
-spellRequiresVerbal
-} from "./spells-discovery.ts";
-
-import {
-applyShieldReactionSpellActiveEffect,
-sameSpellInvocationRef,
-supportedSpellInvocationMatchesRef
+  applyShieldReactionSpellActiveEffect,
+  sameSpellInvocationRef,
+  supportedSpellInvocationRef,
+  supportedSpellInvocationMatchesRef,
 } from "./spells-holes-fills.ts";
 
 import {
-markSpellSlotExpendedThisTurn,
-spellHasAvailableSpend,
-supportedSpellActs
+  markSpellSlotExpendedThisTurn,
+  spellHasAvailableSpend,
+  supportedSpellActs,
 } from "./spells-profiles.ts";
 
 import {
-resolveBonusActionSpellAct,
-resolveSpellAct
+  resolveBonusActionSpellAct,
+  resolveSpellAct,
 } from "./spells-resolve.ts";
 
-import {
-attackActionOptionName
-} from "./statblock-attacks.ts";
-
-
-
+import { attackActionOptionName } from "./statblock-attacks.ts";
 
 import type {
-BattleAfterDamageEvent,
-BattleAttackDamageContinuationConcentrationFrame,
-BattleAttackDamageContinuationWithoutConcentration,
-BattleAttackDamageEvent,
-BattleAttackDamagePrefixFill,
-BattleConcentrationSavingThrowHole,
-BattleFill,
-BattleInterruptFrame,
-BattleInterruptedProcedure,
-BattleOpportunityAttackThreat,
-BattlePendingAttackDamageReduction,
-BattleReactionDecision,
-BattleReactionDecisionHole,
-BattleReactionFrame,
-BattleReactionFrameInput,
-BattleReactionInterruptFrame,
-BattleReactionModifierChoice,
-BattleReactionProcedureChoice,
-BattleReactionProcedureModifierChoice,
-BattleReactionProcedureSelection,
-BattleReplayContinuationFrame,
-BattleResolutionInput,
-BattleResolutionInputForSubject,
-BattleResolutionResult,
-BattleRolledDiceFill,
-BattleSnapshot,
-BattleState,
-BattleTurnResources,
-BattleTurnSnapshot
+  BattleAfterDamageEvent,
+  BattleAttackDamageContinuationConcentrationFrame,
+  BattleAttackDamageContinuationWithoutConcentration,
+  BattleAttackDamageEvent,
+  BattleAttackDamagePrefixFill,
+  BattleConcentrationSavingThrowHole,
+  BattleFill,
+  BattleInterruptFrame,
+  BattleInterruptedProcedure,
+  BattleOpportunityAttackThreat,
+  BattlePendingAttackDamageReduction,
+  BattleReactionDecision,
+  BattleReactionDecisionHole,
+  BattleReactionFrame,
+  BattleReactionFrameInput,
+  BattleReactionInterruptFrame,
+  BattleReactionModifierChoice,
+  BattleReactionProcedureChoice,
+  BattleReactionProcedureModifierChoice,
+  BattleReactionProcedureSelection,
+  BattleReplayContinuationFrame,
+  BattleResolutionInput,
+  BattleResolutionInputForSubject,
+  BattleResolutionResult,
+  BattleRolledDiceFill,
+  BattleSnapshot,
+  BattleState,
+  AttackSpellDamageAddition,
+  BattleTurnResources,
+  BattleTurnSnapshot,
 } from "../battle-reducer.ts";
 import {
-REACTION_DECISION_HOLE_ID,
-REACTION_DECISION_HOLE_INSTANCE,
-activeOngoingFeaturesPreventSpellcasting,
-applyBattleMovement,
-currentActorHasOpenStatBlockMultiattackDispatch,
-discoverBattleActs,
-readiedMovementInitialHoles,
-readiedSpellInitialHoles,
-resolveAttack,
-resolveBonusActionStandardAction,
-resolveDash,
-resolveDisengage,
-resolveDodge,
-resolveEndTurnCommand,
-resolveEscapeGrapple,
-resolveEscapeSpellRestraint,
-resolveGrapple,
-resolveHelpAttack,
-resolveHide,
-resolveMoveCommand,
-resolveMultiattack,
-resolveOffHandAttack,
-resolveOpportunityAttackCommand,
-resolveReady,
-resolveReleaseGrappleCommand,
-resolveReleaseReadiedMovementCommand,
-resolveReleaseReadiedSpellCommand,
-resolveSearch,
-resolveStandFromProneCommand,
-resolveStatBlockBonusActionOption,
-resolveUnitFeature,
-subjectAllowedDuringStatBlockMultiattackDispatch
+  REACTION_DECISION_HOLE_ID,
+  REACTION_DECISION_HOLE_INSTANCE,
+  activeOngoingFeaturesPreventSpellcasting,
+  applyBattleMovement,
+  currentActorHasOpenStatBlockMultiattackDispatch,
+  discoverBattleActs,
+  readiedMovementInitialHoles,
+  readiedSpellInitialHoles,
+  resolveAttack,
+  resolveBonusActionStandardAction,
+  resolveDash,
+  resolveDisengage,
+  resolveDodge,
+  resolveEndTurnCommand,
+  resolveEscapeGrapple,
+  resolveEscapeSpellRestraint,
+  resolveGrapple,
+  resolveHelpAttack,
+  resolveHide,
+  resolveMoveCommand,
+  resolveMultiattack,
+  resolveOffHandAttack,
+  resolveOpportunityAttackCommand,
+  resolveReady,
+  resolveReleaseGrappleCommand,
+  resolveReleaseReadiedMovementCommand,
+  resolveReleaseReadiedSpellCommand,
+  resolveSearch,
+  resolveStandFromProneCommand,
+  resolveStatBlockBonusActionOption,
+  resolveUnitFeature,
+  subjectAllowedDuringStatBlockMultiattackDispatch,
 } from "../battle-reducer.ts";
 export function resolveBattleSubject(
   input: BattleResolutionInput,
@@ -248,14 +191,13 @@ export function resolveBattleSubject(
   return resolveBattleSubjectInternal(input, {});
 }
 
-
-
 export function resolveBattleSubjectInternal(
   input: BattleResolutionInput,
   options: {
     readonly replayingInterruptedProcedure?: boolean;
     readonly suppressedReactionTrigger?: BattleReactionTrigger;
     readonly pendingAttackDamageReductions?: readonly BattlePendingAttackDamageReduction[];
+    readonly pendingAttackDamageAdditions?: readonly AttackSpellDamageAddition[];
   },
 ): BattleResolutionResult {
   if (
@@ -316,6 +258,12 @@ export function resolveBattleSubjectInternal(
             : {
                 pendingAttackDamageReductions:
                   activeReaction.pendingAttackDamageReductions,
+              }),
+          ...(activeReaction.pendingAttackDamageAdditions === undefined
+            ? {}
+            : {
+                pendingAttackDamageAdditions:
+                  activeReaction.pendingAttackDamageAdditions,
               }),
         });
         return reactionResult.tag === "resolved"
@@ -485,6 +433,12 @@ export function resolveBattleSubjectInternal(
               pendingAttackDamageReductions:
                 options.pendingAttackDamageReductions,
             }),
+        ...(options.pendingAttackDamageAdditions === undefined
+          ? {}
+          : {
+              pendingAttackDamageAdditions:
+                options.pendingAttackDamageAdditions,
+            }),
       });
     }
     if (subject.tag === "action" && subject.action === "dash") {
@@ -538,6 +492,12 @@ export function resolveBattleSubjectInternal(
           : {
               pendingAttackDamageReductions:
                 options.pendingAttackDamageReductions,
+            }),
+        ...(options.pendingAttackDamageAdditions === undefined
+          ? {}
+          : {
+              pendingAttackDamageAdditions:
+                options.pendingAttackDamageAdditions,
             }),
       });
     }
@@ -601,6 +561,15 @@ export function resolveBattleSubjectInternal(
     }
     if (
       subject.tag === "runtimeCommand" &&
+      subject.command === "castAttackHitBonusActionSpell"
+    ) {
+      return resolveCastAttackHitBonusActionSpellCommand({
+        ...input,
+        subject,
+      });
+    }
+    if (
+      subject.tag === "runtimeCommand" &&
       subject.command === "releaseGrapple"
     ) {
       return resolveReleaseGrappleCommand({ ...input, subject });
@@ -622,8 +591,6 @@ export function resolveBattleSubjectInternal(
   return consumeOrCloseLegendaryActionWindow(input.subject, result);
 }
 
-
-
 export function actionHideSubject(subject: {
   readonly tag: "action";
   readonly actorId: CombatantId;
@@ -635,8 +602,6 @@ export function actionHideSubject(subject: {
     action: "hide",
   };
 }
-
-
 
 export function actionSearchSubject(subject: {
   readonly tag: "action";
@@ -650,8 +615,6 @@ export function actionSearchSubject(subject: {
   };
 }
 
-
-
 export function isReleaseGrappleSubject(
   subject: BattleSubject,
 ): subject is Extract<
@@ -662,8 +625,6 @@ export function isReleaseGrappleSubject(
     subject.tag === "runtimeCommand" && subject.command === "releaseGrapple"
   );
 }
-
-
 
 export function standardActionKindForSubject(
   subject: BattleSubject,
@@ -688,8 +649,6 @@ export function standardActionKindForSubject(
   );
 }
 
-
-
 export function consumeOrCloseLegendaryActionWindow(
   subject: BattleSubject,
   result: BattleResolutionResult,
@@ -710,8 +669,6 @@ export function consumeOrCloseLegendaryActionWindow(
     : { ...result, state, snapshot: snapshotBattle(state) };
 }
 
-
-
 export function openBattleReactionWindow(input: {
   readonly state: BattleState;
   readonly frame: BattleReactionFrame;
@@ -725,15 +682,11 @@ export function openBattleReactionWindow(input: {
   };
 }
 
-
-
 export function reactionInterruptFrame(
   frame: BattleReactionFrame,
 ): BattleReactionInterruptFrame {
   return { kind: "reaction", frame };
 }
-
-
 
 export function resolveBattleReaction(input: {
   readonly state: BattleState;
@@ -767,17 +720,6 @@ export function resolveBattleReaction(input: {
     );
   }
 
-  if (
-    input.fill.value.kind === "resolve" &&
-    !combatantCanTakeReactions(reactor)
-  ) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Selected reactor has no Reaction available.",
-    );
-  }
-
   if (input.fill.value.kind === "resolve") {
     const choice = admittedReactionChoice(frame, input.fill.value);
     if (choice === null) {
@@ -795,6 +737,16 @@ export function resolveBattleReaction(input: {
         selection: input.fill.value.choice,
       });
     }
+    if (
+      choice.kind !== "castAttackHitBonusActionSpell" &&
+      !combatantCanTakeReactions(reactor)
+    ) {
+      return invalidResult(
+        input.state,
+        "staleSubject",
+        "Selected reactor has no Reaction available.",
+      );
+    }
     const activeFrame = {
       ...frame,
       activeReaction: {
@@ -804,16 +756,17 @@ export function resolveBattleReaction(input: {
       },
     };
     const stackWithoutCurrent = input.state.interruptStack.slice(0, -1);
-    const activeState = spendReaction(
-      {
-        ...input.state,
-        interruptStack: [
-          ...stackWithoutCurrent,
-          reactionInterruptFrame(activeFrame),
-        ],
-      },
-      input.fill.value.reactorId,
-    );
+    const stateWithActiveReaction = {
+      ...input.state,
+      interruptStack: [
+        ...stackWithoutCurrent,
+        reactionInterruptFrame(activeFrame),
+      ],
+    };
+    const activeState =
+      choice.kind === "castAttackHitBonusActionSpell"
+        ? stateWithActiveReaction
+        : spendReaction(stateWithActiveReaction, input.fill.value.reactorId);
     const reactionResult = resolveBattleSubjectInternal(
       {
         state: activeState,
@@ -866,8 +819,6 @@ export function resolveBattleReaction(input: {
       };
 }
 
-
-
 export function spendReaction(
   state: BattleState,
   reactorId: CombatantId,
@@ -884,8 +835,6 @@ export function spendReaction(
     }),
   };
 }
-
-
 
 export function resolveReactionRollOrDamageReduction(input: {
   readonly state: BattleState;
@@ -987,8 +936,6 @@ export function resolveReactionRollOrDamageReduction(input: {
         snapshot: snapshotBattle(nextState),
       };
 }
-
-
 
 export function resolveCastTriggeredReactionSpellCommand(
   input: BattleResolutionInputForSubject<
@@ -1108,7 +1055,172 @@ export function resolveCastTriggeredReactionSpellCommand(
   };
 }
 
-
+export function resolveCastAttackHitBonusActionSpellCommand(
+  input: BattleResolutionInputForSubject<
+    Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "castAttackHitBonusActionSpell";
+      }
+    >
+  >,
+): BattleResolutionResult {
+  const frame = currentReactionFrame(input.state);
+  const activeReaction = frame?.activeReaction;
+  const actor = input.state.combatants.get(input.subject.casterId);
+  const target =
+    frame?.trigger === "attackHit"
+      ? input.state.combatants.get(frame.targetId)
+      : undefined;
+  const invocation =
+    actor?.origin.kind === "character"
+      ? supportedSpellActs(actor).find(
+          (candidate) =>
+            candidate.procedure === "afterHitDamage" &&
+            supportedSpellInvocationMatchesRef(
+              candidate,
+              input.subject.invocation,
+            ),
+        )
+      : undefined;
+  if (
+    frame?.trigger !== "attackHit" ||
+    frame.continuation.kind !== "replay" ||
+    activeReaction === undefined ||
+    activeReaction.reactorId !== input.subject.casterId ||
+    !sameBattleSubject(activeReaction.subject, input.subject)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Attack-hit Bonus Action spell casting requires an active matching attack-hit window.",
+    );
+  }
+  if (
+    actor?.origin.kind !== "character" ||
+    invocation?.procedure !== "afterHitDamage"
+  ) {
+    return invalidResult(
+      input.state,
+      "unsupportedActOption",
+      "Attack-hit Bonus Action spell command requires a supported prepared after-hit spell.",
+    );
+  }
+  if (target === undefined) {
+    return invalidResult(
+      input.state,
+      "missingCombatant",
+      "Attack-hit Bonus Action spell target is not in this battle.",
+    );
+  }
+  if (
+    frame.attackerId !== input.subject.casterId ||
+    currentActorId(input.state) !== input.subject.casterId ||
+    frame.continuation.subject.tag === "bonusAction" ||
+    frame.attackHitTriggerKind !== "meleeWeaponOrUnarmedStrike"
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Attack-hit Bonus Action spell is not available for this hit.",
+    );
+  }
+  if (activeOngoingFeaturesPreventSpellcasting(actor)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Attack-hit Bonus Action spell is unavailable while an active ongoing feature prevents spellcasting.",
+    );
+  }
+  if (!spellHasAvailableSpend(actor, invocation)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Attack-hit Bonus Action spell no longer has its required runtime spell resource.",
+    );
+  }
+  if (input.fills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Attack-hit Bonus Action spell does not accept table fills.",
+    );
+  }
+  const spentBonusAction = spendActivationResource(
+    input.state.currentTurnResources,
+    { kind: "bonusAction" },
+  );
+  if (Either.isLeft(spentBonusAction)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Bonus Action spell is no longer available for the current actor.",
+    );
+  }
+  const nextTurnResources = markSpellSlotExpendedThisTurn(
+    spentBonusAction.right,
+  );
+  if (Either.isLeft(nextTurnResources)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "This turn has already expended a Spell Slot.",
+    );
+  }
+  const slotted = expendSpellSlot(
+    {
+      ...input.state,
+      currentTurnResources: nextTurnResources.right,
+    },
+    input.subject.casterId,
+    invocation.resource.slotLevel,
+  );
+  const targetCreatureType = battleCreatureType(target);
+  const conditionalBonusApplies =
+    targetCreatureType !== null &&
+    invocation.conditionalBonusDamage.targetCreatureTypes.includes(
+      targetCreatureType,
+    );
+  const damageAddition: AttackSpellDamageAddition = {
+    kind: "attackSpellDamageAddition",
+    sourceSpellId: invocation.spell.id,
+    sourceCombatantId: input.subject.casterId,
+    damage: {
+      expr: {
+        ...invocation.damage.expr,
+        dice:
+          invocation.damage.expr.dice +
+          (conditionalBonusApplies
+            ? invocation.conditionalBonusDamage.expr.dice
+            : 0),
+      },
+      damageType: invocation.damage.damageType,
+    },
+  };
+  const nextFrame = {
+    ...frame,
+    continuation: {
+      ...frame.continuation,
+      attackDamageAdditions: [
+        ...(frame.continuation.attackDamageAdditions ?? []),
+        damageAddition,
+      ],
+    },
+  };
+  const nextState = {
+    ...slotted,
+    interruptStack: [
+      ...slotted.interruptStack.slice(0, -1),
+      reactionInterruptFrame(nextFrame),
+    ],
+  };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
 
 export function completeResolvedActiveReactionIfPending(
   result: BattleResolutionResult,
@@ -1120,8 +1232,6 @@ export function completeResolvedActiveReactionIfPending(
     ? result
     : completeActiveReactionProcedure(result.state);
 }
-
-
 
 export function reactionFrameAfterModifier(
   frame: BattleReactionFrame,
@@ -1203,8 +1313,6 @@ export function reactionFrameAfterModifier(
   return frame;
 }
 
-
-
 export function reactionModifiedAttackRollFills(
   fills: readonly BattleFill[],
   total: number,
@@ -1220,8 +1328,6 @@ export function reactionModifiedAttackRollFills(
   });
 }
 
-
-
 export function admittedReactionChoice(
   frame: BattleReactionFrame,
   decision: Extract<BattleReactionDecision, { readonly kind: "resolve" }>,
@@ -1235,8 +1341,6 @@ export function admittedReactionChoice(
     ) ?? null
   );
 }
-
-
 
 export function sameReactionProcedureChoice(
   choice: BattleReactionProcedureChoice,
@@ -1271,14 +1375,18 @@ export function sameReactionProcedureChoice(
   ) {
     return sameSpellInvocationRef(choice.invocation, decisionChoice.invocation);
   }
+  if (
+    choice.kind === "castAttackHitBonusActionSpell" &&
+    decisionChoice.kind === "castAttackHitBonusActionSpell"
+  ) {
+    return sameSpellInvocationRef(choice.invocation, decisionChoice.invocation);
+  }
   return (
     choice.kind === "opportunityAttack" &&
     decisionChoice.kind === "opportunityAttack" &&
     choice.reactorId === decisionChoice.reactorId
   );
 }
-
-
 
 export function completeActiveReactionProcedure(
   state: BattleState,
@@ -1323,8 +1431,6 @@ export function completeActiveReactionProcedure(
       };
 }
 
-
-
 export function suppressReactionTriggerForActiveReaction(
   state: BattleState,
   suppressedReactionTrigger: BattleReactionTrigger,
@@ -1347,8 +1453,6 @@ export function suppressReactionTriggerForActiveReaction(
     ],
   };
 }
-
-
 
 export function resumeInterruptedProcedure(
   state: BattleState,
@@ -1458,8 +1562,6 @@ export function resumeInterruptedProcedure(
   );
 }
 
-
-
 export function openAfterDamageSequenceReactionWindow(input: {
   readonly state: BattleState;
   readonly subject: BattleSubject;
@@ -1498,8 +1600,6 @@ export function openAfterDamageSequenceReactionWindow(input: {
   );
 }
 
-
-
 export function replayContinuationFrame(
   continuation: Extract<
     BattleInterruptedProcedure,
@@ -1513,8 +1613,6 @@ export function replayContinuationFrame(
     suppressedReactionTrigger,
   };
 }
-
-
 
 export function resolveReplayContinuation(input: {
   readonly state: BattleState;
@@ -1533,8 +1631,6 @@ export function resolveReplayContinuation(input: {
     input.fills,
   );
 }
-
-
 
 export function resolveReplayContinuationFromState(
   state: BattleState,
@@ -1559,6 +1655,11 @@ export function resolveReplayContinuationFromState(
         : {
             pendingAttackDamageReductions: continuation.attackDamageReductions,
           }),
+      ...(continuation.attackDamageAdditions === undefined
+        ? {}
+        : {
+            pendingAttackDamageAdditions: continuation.attackDamageAdditions,
+          }),
     },
   );
   if (
@@ -1573,7 +1674,7 @@ export function resolveReplayContinuationFromState(
     sameBattleSubject(activeReaction.subject, continuation.subject)
   ) {
     const pendingState =
-      activeReactionWithReplayContinuationAttackDamageReductions(
+      activeReactionWithReplayContinuationAttackDamageChanges(
         result.state,
         continuation,
       );
@@ -1597,16 +1698,17 @@ export function resolveReplayContinuationFromState(
   };
 }
 
-
-
-export function activeReactionWithReplayContinuationAttackDamageReductions(
+export function activeReactionWithReplayContinuationAttackDamageChanges(
   state: BattleState,
   continuation: Extract<
     BattleInterruptedProcedure,
     { readonly kind: "replay" }
   >,
 ): BattleState {
-  if (continuation.attackDamageReductions === undefined) {
+  if (
+    continuation.attackDamageReductions === undefined &&
+    continuation.attackDamageAdditions === undefined
+  ) {
     return state;
   }
   const frame = currentReactionFrame(state);
@@ -1621,14 +1723,23 @@ export function activeReactionWithReplayContinuationAttackDamageReductions(
         ...frame,
         activeReaction: {
           ...frame.activeReaction,
-          pendingAttackDamageReductions: continuation.attackDamageReductions,
+          ...(continuation.attackDamageReductions === undefined
+            ? {}
+            : {
+                pendingAttackDamageReductions:
+                  continuation.attackDamageReductions,
+              }),
+          ...(continuation.attackDamageAdditions === undefined
+            ? {}
+            : {
+                pendingAttackDamageAdditions:
+                  continuation.attackDamageAdditions,
+              }),
         },
       }),
     ],
   };
 }
-
-
 
 export function attackDamageContinuationConcentrationFrame(
   continuation: BattleAttackDamageContinuationWithoutConcentration,
@@ -1640,8 +1751,6 @@ export function attackDamageContinuationConcentrationFrame(
     suppressedReactionTrigger,
   };
 }
-
-
 
 export function attackDamageContinuationAmount(
   state: BattleState,
@@ -1655,8 +1764,6 @@ export function attackDamageContinuationAmount(
     ? null
     : attackDamageEventAmountForTarget(target, continuation.damageEvent);
 }
-
-
 
 export function attackDamageContinuationConcentrationHole(
   state: BattleState,
@@ -1675,8 +1782,6 @@ export function attackDamageContinuationConcentrationHole(
         ),
       );
 }
-
-
 
 export function resolveAttackDamageContinuationConcentration(input: {
   readonly state: BattleState;
@@ -1726,8 +1831,6 @@ export function resolveAttackDamageContinuationConcentration(input: {
   );
 }
 
-
-
 export function attackDamageContinuationConcentrationFill(
   continuation: BattleAttackDamageContinuationWithoutConcentration,
   fills: readonly BattleFill[],
@@ -1759,8 +1862,6 @@ export function attackDamageContinuationConcentrationFill(
   }
   return { tag: "ok", value: remaining[0] };
 }
-
-
 
 export function battleFillEquals(
   a: BattleAttackDamagePrefixFill,
@@ -1799,8 +1900,6 @@ export function battleFillEquals(
   return false;
 }
 
-
-
 export function rolledDiceGroupsEqual(
   a: BattleRolledDiceFill["value"],
   b: BattleRolledDiceFill["value"],
@@ -1817,8 +1916,6 @@ export function rolledDiceGroupsEqual(
   );
 }
 
-
-
 export function attackDamageRiderSelectionsEqual(
   a: readonly UnitRecord["id"][] | undefined,
   b: readonly UnitRecord["id"][] | undefined,
@@ -1828,8 +1925,6 @@ export function attackDamageRiderSelectionsEqual(
     (a ?? []).every((unitId, index) => unitId === (b ?? [])[index])
   );
 }
-
-
 
 export function endTurn(input: {
   readonly state: BattleState;
@@ -1847,8 +1942,6 @@ export function endTurn(input: {
 
   return result;
 }
-
-
 
 export function snapshotBattle(state: BattleState): BattleSnapshot {
   const turnOrder = [...initiativeOrder(state.initiative)];
@@ -1881,8 +1974,6 @@ export function snapshotBattle(state: BattleState): BattleSnapshot {
   };
 }
 
-
-
 export function battleTurnSnapshot(
   resources: BattleTurnResources,
 ): BattleTurnSnapshot {
@@ -1902,8 +1993,6 @@ export function battleTurnSnapshot(
   };
 }
 
-
-
 export function pendingReactionSnapshot(
   state: BattleState,
 ): BattleSnapshot["pendingReaction"] {
@@ -1918,22 +2007,18 @@ export function pendingReactionSnapshot(
       };
 }
 
-
-
 export function currentInterruptFrame(
   state: BattleState,
 ): BattleInterruptFrame | null {
   return state.interruptStack[state.interruptStack.length - 1] ?? null;
 }
 
-
-
-export function currentReactionFrame(state: BattleState): BattleReactionFrame | null {
+export function currentReactionFrame(
+  state: BattleState,
+): BattleReactionFrame | null {
   const frame = currentInterruptFrame(state);
   return frame?.kind === "reaction" ? frame.frame : null;
 }
-
-
 
 export function reactionDecisionHole(
   frame: BattleReactionFrame,
@@ -1948,8 +2033,6 @@ export function reactionDecisionHole(
   };
 }
 
-
-
 export function reactionTriggerLabel(trigger: BattleReactionTrigger): string {
   return Match.value(trigger).pipe(
     Match.when("attackHit", () => "Attack hit"),
@@ -1962,16 +2045,12 @@ export function reactionTriggerLabel(trigger: BattleReactionTrigger): string {
   );
 }
 
-
-
 export function unofferedEligibleReactors(
   frame: BattleReactionFrame,
 ): readonly CombatantId[] {
   const offered = new Set(frame.offeredReactors);
   return frame.eligibleReactors.filter((reactorId) => !offered.has(reactorId));
 }
-
-
 
 export function maybeOpenReactionWindow(
   state: BattleState,
@@ -2034,8 +2113,6 @@ export function maybeOpenReactionWindow(
   };
 }
 
-
-
 export function readiedSpellReactionChoices(
   state: BattleState,
   trigger: BattleReactionTrigger,
@@ -2068,8 +2145,6 @@ export function readiedSpellReactionChoices(
   );
   return readiedChoices;
 }
-
-
 
 export function readiedMovementReactionChoices(
   state: BattleState,
@@ -2108,8 +2183,6 @@ export function readiedMovementReactionChoices(
   );
 }
 
-
-
 export function reactionChoices(
   state: BattleState,
   frame: BattleReactionFrameInput,
@@ -2118,6 +2191,8 @@ export function reactionChoices(
     ...readiedSpellReactionChoices(state, frame.trigger),
     ...readiedMovementReactionChoices(state, frame.trigger),
   ];
+  const attackHitBonusActionSpellChoices =
+    attackHitBonusActionSpellReactionChoices(state, frame);
   const triggeredSpellChoices = triggeredReactionSpellChoices(state, frame);
   const modifierChoices = reactionRollOrDamageReductionChoices(state, frame);
   return frame.trigger === "opportunityAttack"
@@ -2131,10 +2206,63 @@ export function reactionChoices(
           frame.threats,
         ),
       ]
-    : [...readiedChoices, ...triggeredSpellChoices, ...modifierChoices];
+    : [
+        ...readiedChoices,
+        ...attackHitBonusActionSpellChoices,
+        ...triggeredSpellChoices,
+        ...modifierChoices,
+      ];
 }
 
-
+export function attackHitBonusActionSpellReactionChoices(
+  state: BattleState,
+  frame: BattleReactionFrameInput,
+): readonly BattleReactionProcedureChoice[] {
+  if (
+    frame.trigger !== "attackHit" ||
+    frame.continuation.subject.tag === "bonusAction" ||
+    frame.attackerId !== currentActorId(state) ||
+    frame.attackHitTriggerKind !== "meleeWeaponOrUnarmedStrike"
+  ) {
+    return [];
+  }
+  const actor = state.combatants.get(frame.attackerId);
+  if (
+    actor?.origin.kind !== "character" ||
+    !combatantCanTakeActions(actor) ||
+    !state.currentTurnResources.currentHasBonusAction ||
+    activeOngoingFeaturesPreventSpellcasting(actor)
+  ) {
+    return [];
+  }
+  return supportedSpellActs(actor).flatMap(
+    (invocation): readonly BattleReactionProcedureChoice[] => {
+      if (
+        invocation.procedure !== "afterHitDamage" ||
+        !spellHasAvailableSpend(actor, invocation) ||
+        state.currentTurnResources.spellSlotExpendedThisTurn
+      ) {
+        return [];
+      }
+      const invocationRef = supportedSpellInvocationRef(invocation);
+      return [
+        {
+          kind: "castAttackHitBonusActionSpell" as const,
+          reactorId: frame.attackerId,
+          invocation: invocationRef,
+          initialHoles: [],
+          subject: {
+            tag: "runtimeCommand" as const,
+            actorId: currentActorId(state),
+            command: "castAttackHitBonusActionSpell" as const,
+            casterId: frame.attackerId,
+            invocation: invocationRef,
+          },
+        },
+      ];
+    },
+  );
+}
 
 export function opportunityAttackReactionChoices(
   state: BattleState,
