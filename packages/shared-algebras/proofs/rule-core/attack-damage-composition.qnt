@@ -88,6 +88,12 @@ module attackDamageComposition {
   ): bool =
     filledDiceCount == criticalDamageDiceCount(baseDice, critical)
 
+  pure def lightPropertyExtraAttackDamageModifier(abilityModifier: int): int =
+    if (abilityModifier < 0) abilityModifier else 0
+
+  pure def lightPropertyExtraAttackDamageAmount(rolledDamage: int, abilityModifier: int): int =
+    adjustedDamageRollAmount(rolledDamage, lightPropertyExtraAttackDamageModifier(abilityModifier))
+
   pure def spendActionQuota(quota: ActionQuota): ActionQuota =
     ActionSpent
 
@@ -213,6 +219,16 @@ module attackDamageComposition {
       assert(damageDiceCountMatchesCritical(1, 1, false)),
       assert(damageDiceCountMatchesCritical(1, 2, true)),
       assert(not(damageDiceCountMatchesCritical(1, 1, true))),
+    }
+  }
+
+  run test_light_property_extra_attack_damage_modifier_omits_positive_modifier = {
+    all {
+      assert(lightPropertyExtraAttackDamageModifier(3) == 0),
+      assert(lightPropertyExtraAttackDamageModifier(0) == 0),
+      assert(lightPropertyExtraAttackDamageModifier(-1) == -1),
+      assert(lightPropertyExtraAttackDamageAmount(4, 3) == 4),
+      assert(lightPropertyExtraAttackDamageAmount(4, -1) == 3),
     }
   }
 

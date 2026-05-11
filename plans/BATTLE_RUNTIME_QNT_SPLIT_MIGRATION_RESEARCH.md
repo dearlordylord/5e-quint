@@ -262,12 +262,23 @@ surface while this research note remains temporary context.
 - Champion Improved Critical threshold projection also routes through the
   feature bridge; broad battle keeps only the package-local flag that says the
   representative Fighter has the improved range.
+- Extra Attack slot lifecycle now routes through the feature bridge as well:
+  the broad spec delegates slot-open after the Attack action, slot spend, and
+  end-turn close to `unit-feature-procedure-profiles`; attack mutation and the
+  focused runtime MBT lane remain package-owned.
 - The spell tracer introduced `battle-runtime-spell-bridge.qnt` for direct
   hit-point restoration profile facts. Broad battle now delegates Healing
   Word/Cure Wounds/Mass Healing Word action profile, target-count, and healing
   amount facts to the spell bridge. The broad helper does not carry selected
   slot level, so slot-level dice legality remains out of that projection;
   scalar buff active-effect projection remains package-local.
+- The Light-property tracer moved Off-Hand Attack admission out of broad battle:
+  `action-turn-procedures.qnt` owns the prior Light Attack action plus different
+  Light weapon Bonus Action spend rule, while `attack-damage-composition.qnt`
+  owns the rule that the extra attack omits a positive ability modifier but
+  keeps a negative one. Broad battle still owns the representative off-hand
+  replay and delegates admission, spend, and damage amount through
+  `battle-runtime-movement-bridge.qnt`.
 - The same movement/action bridge now carries the projected start-turn resource
   reset for action, Bonus Action, Reaction, Dash movement bonus, movement spent,
   Dodge, Disengage, Help, and Ready Movement facts. Broad battle still owns

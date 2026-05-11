@@ -32,6 +32,42 @@ module battleRuntimeFeatureBridge {
         StandardAttackCriticalThresholdProfile
     )
 
+  pure def battleRuntimeAttackCountState(
+    actionAvailable: bool,
+    extraAttackSlotsRemaining: int
+  ): AttackActionAttackCountState = {
+    actionAvailable: actionAvailable,
+    extraAttackSlotOpen: extraAttackSlotsRemaining > 0,
+    attacksResolved: 0,
+    movementSegmentsTaken: 0,
+    turnEnded: false,
+  }
+
+  pure def battleRuntimeExtraAttackSlotsAfterAttackAction(
+    actionAvailable: bool,
+    extraAttackSupported: bool
+  ): int = {
+    val result = takeAttackActionWithAttackCountScaling(
+      battleRuntimeAttackCountState(actionAvailable, 0),
+      { additionalAttacks: if (extraAttackSupported) 1 else 0 },
+    )
+    if (result.state.extraAttackSlotOpen) 1 else 0
+  }
+
+  pure def battleRuntimeExtraAttackSlotsAfterExtraAttack(
+    extraAttackSlotsRemaining: int
+  ): int = {
+    val result = resolveExtraAttackSlot(battleRuntimeAttackCountState(false, extraAttackSlotsRemaining))
+    if (result.state.extraAttackSlotOpen) 1 else 0
+  }
+
+  pure def battleRuntimeExtraAttackSlotsAfterEndTurn(
+    extraAttackSlotsRemaining: int
+  ): int = {
+    val ended = endTurnDuringAttackActionAttackCount(battleRuntimeAttackCountState(false, extraAttackSlotsRemaining))
+    if (ended.extraAttackSlotOpen) 1 else 0
+  }
+
   pure def battleRuntimeRagePreventsSpellcasting(active: bool): bool =
     ragePreventsConcentrationOrSpellcasting(battleRuntimeRageState(active))
 
@@ -210,6 +246,10 @@ module battleRuntimeFeatureBridge {
       assert(battleRuntimeRageDamageBonus(16) == 4),
       assert(battleRuntimeChampionCriticalThreshold(false) == 20),
       assert(battleRuntimeChampionCriticalThreshold(true) == 19),
+      assert(battleRuntimeExtraAttackSlotsAfterAttackAction(true, true) == 1),
+      assert(battleRuntimeExtraAttackSlotsAfterAttackAction(true, false) == 0),
+      assert(battleRuntimeExtraAttackSlotsAfterExtraAttack(1) == 0),
+      assert(battleRuntimeExtraAttackSlotsAfterEndTurn(1) == 0),
       assert(battleRuntimeRagePreventsSpellcasting(true)),
       assert(not(battleRuntimeRagePreventsSpellcasting(false))),
       assert(battleRuntimeRageGrantsResistance(true, RageBludgeoningDamage)),

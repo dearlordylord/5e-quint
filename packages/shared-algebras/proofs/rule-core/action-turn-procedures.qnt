@@ -44,6 +44,16 @@ module actionTurnProcedures {
     dc: int,
   }
 
+  type LightPropertyExtraAttackFacts = {
+    priorAttackActionLightWeaponAttack: bool,
+    differentLightWeapon: bool,
+  }
+
+  type LightPropertyExtraAttackResult = {
+    turn: TurnProcedureState,
+    admitted: bool,
+  }
+
   pure def initialTurnProcedureState: TurnProcedureState = {
     actionQuota: ActionAvailable,
     bonusActionAvailable: true,
@@ -231,6 +241,46 @@ module actionTurnProcedures {
       startOfTurnHookActive: spent.startOfTurnHookActive,
       endOfTurnHookActive: spent.endOfTurnHookActive,
       currentActorOwnsTurn: spent.currentActorOwnsTurn,
+    }
+  }
+
+  pure def resolveLightPropertyExtraAttack(
+    state: TurnProcedureState,
+    facts: LightPropertyExtraAttackFacts
+  ): LightPropertyExtraAttackResult = {
+    val admitted = all {
+      legalTurnProcedureState(state),
+      canSpendBonusAction(state),
+      facts.priorAttackActionLightWeaponAttack,
+      facts.differentLightWeapon,
+    }
+    {
+      turn: if (admitted) spendActionCost(state, BonusActionCost) else state,
+      admitted: admitted,
+    }
+  }
+
+  run test_light_property_extra_attack_requires_prior_attack_and_spends_bonus_action = {
+    val admitted = resolveLightPropertyExtraAttack(
+      initialTurnProcedureState,
+      {
+        priorAttackActionLightWeaponAttack: true,
+        differentLightWeapon: true,
+      },
+    )
+    val rejected = resolveLightPropertyExtraAttack(
+      initialTurnProcedureState,
+      {
+        priorAttackActionLightWeaponAttack: false,
+        differentLightWeapon: true,
+      },
+    )
+    all {
+      assert(admitted.admitted),
+      assert(admitted.turn.actionQuota == ActionAvailable),
+      assert(not(admitted.turn.bonusActionAvailable)),
+      assert(not(rejected.admitted)),
+      assert(rejected.turn == initialTurnProcedureState),
     }
   }
 

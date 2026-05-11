@@ -162,6 +162,50 @@ module battleRuntimeMovementBridge {
       spendActionCost(battleRuntimeTurnProjection(projection), BonusActionCost),
     )
 
+  pure def battleRuntimeLightPropertyExtraAttackResult(
+    projection: BattleRuntimeMovementProjection,
+    priorAttackActionLightWeaponAttack: bool,
+    differentLightWeapon: bool
+  ): LightPropertyExtraAttackResult =
+    resolveLightPropertyExtraAttack(
+      battleRuntimeTurnProjection(projection),
+      {
+        priorAttackActionLightWeaponAttack: priorAttackActionLightWeaponAttack,
+        differentLightWeapon: differentLightWeapon,
+      },
+    )
+
+  pure def battleRuntimeLightPropertyExtraAttack(
+    projection: BattleRuntimeMovementProjection,
+    priorAttackActionLightWeaponAttack: bool,
+    differentLightWeapon: bool
+  ): BattleRuntimeMovementStep =
+    battleRuntimeStepFromTurn(
+      projection,
+      battleRuntimeLightPropertyExtraAttackResult(
+        projection,
+        priorAttackActionLightWeaponAttack,
+        differentLightWeapon,
+      ).turn,
+    )
+
+  pure def battleRuntimeLightPropertyExtraAttackAdmitted(
+    projection: BattleRuntimeMovementProjection,
+    priorAttackActionLightWeaponAttack: bool,
+    differentLightWeapon: bool
+  ): bool =
+    battleRuntimeLightPropertyExtraAttackResult(
+      projection,
+      priorAttackActionLightWeaponAttack,
+      differentLightWeapon,
+    ).admitted
+
+  pure def battleRuntimeLightPropertyExtraAttackDamageAmount(
+    rolledDamage: int,
+    abilityModifier: int
+  ): int =
+    lightPropertyExtraAttackDamageAmount(rolledDamage, abilityModifier)
+
   pure def battleRuntimeDisengage(projection: BattleRuntimeMovementProjection): BattleRuntimeMovementStep =
     battleRuntimeStepFromTurn(
       projection,

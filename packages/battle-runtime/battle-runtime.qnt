@@ -1064,7 +1064,7 @@ module battleRuntime {
       lastTurnActor: if (currentActor(featureChecked) == Fighter) LastTurnFighter else LastTurnGoblin,
       legendaryActionWindowConsumed: false,
       fighterSneakAttackUsedThisTurn: false,
-      fighterExtraAttackSlotsRemaining: 0,
+      fighterExtraAttackSlotsRemaining: battleRuntimeExtraAttackSlotsAfterEndTurn(spellDurationAdvanced.fighterExtraAttackSlotsRemaining),
     }
   }
 
@@ -1311,7 +1311,10 @@ module battleRuntime {
 
   pure def spendFighterAttackActionOrExtraAttackSlot(state: BattleState): BattleState =
     if (state.fighterExtraAttackSlotsRemaining > 0)
-      { ...state, fighterExtraAttackSlotsRemaining: state.fighterExtraAttackSlotsRemaining - 1 }
+      {
+        ...state,
+        fighterExtraAttackSlotsRemaining: battleRuntimeExtraAttackSlotsAfterExtraAttack(state.fighterExtraAttackSlotsRemaining),
+      }
     else {
       val spent = stateWithFighterMovementStep(
         state,
@@ -1320,7 +1323,10 @@ module battleRuntime {
       if (spent != state)
       {
         ...spent,
-        fighterExtraAttackSlotsRemaining: if (state.fighterExtraAttackSupported) 1 else 0,
+        fighterExtraAttackSlotsRemaining: battleRuntimeExtraAttackSlotsAfterAttackAction(
+          state.actionAvailable,
+          state.fighterExtraAttackSupported,
+        ),
       }
       else
         state
@@ -2261,23 +2267,67 @@ module battleRuntime {
   pure def goblinAttackRequiresDisadvantage(state: BattleState, targetIsFighter: bool): bool =
     battleRuntimeGrappledAttackRollHasDisadvantage(fighterGoblinGrappleExists(state), targetIsFighter)
 
+  pure def fighterCanLightPropertyExtraAttack(state: BattleState): bool =
+    currentActor(state) == Fighter and
+      battleRuntimeLightPropertyExtraAttackAdmitted(
+        movementProjectionForFighter(state, WalkSpeedKind),
+        state.lightWeaponAttackMade,
+        true,
+      )
+
+  pure def spendFighterLightPropertyExtraAttackBonusAction(state: BattleState): BattleState =
+    stateWithFighterMovementStep(
+      state,
+      battleRuntimeLightPropertyExtraAttack(
+        movementProjectionForFighter(state, WalkSpeedKind),
+        state.lightWeaponAttackMade,
+        true,
+      ),
+    )
+
   pure def offHandAttackFighter(state: BattleState, attackTotal: int, naturalD20: int, damageRoll: int): BattleState =
-    if (currentActor(state) == Fighter and state.bonusActionAvailable and state.lightWeaponAttackMade)
+    offHandAttackFighterWithAbilityModifier(state, attackTotal, naturalD20, damageRoll, 3)
+
+  pure def offHandAttackFighterWithAbilityModifier(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: int,
+    abilityModifier: int
+  ): BattleState =
+    if (fighterCanLightPropertyExtraAttack(state))
       if (attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), fighterCriticalThreshold(state)))
-        { ...state, goblin: applyDamageFromSource(state.goblin, damageRoll, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, false, OrdinaryDamage, Fighter), bonusActionAvailable: false }
+        {
+          ...spendFighterLightPropertyExtraAttackBonusAction(state),
+          goblin: applyDamageFromSource(state.goblin, battleRuntimeLightPropertyExtraAttackDamageAmount(damageRoll, abilityModifier), if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, false, OrdinaryDamage, Fighter),
+        }
       else
-        { ...state, bonusActionAvailable: false }
+        spendFighterLightPropertyExtraAttackBonusAction(state)
     else
       state
 
   pure def offHandAttackFighterWithDamageReduction(state: BattleState, attackTotal: int, naturalD20: int, damageRoll: int, reduction: int): BattleState =
-    if (currentActor(state) == Fighter and state.bonusActionAvailable and state.lightWeaponAttackMade)
+    offHandAttackFighterWithDamageReductionAndAbilityModifier(state, attackTotal, naturalD20, damageRoll, reduction, 3)
+
+  pure def offHandAttackFighterWithDamageReductionAndAbilityModifier(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: int,
+    reduction: int,
+    abilityModifier: int
+  ): BattleState =
+    if (fighterCanLightPropertyExtraAttack(state))
       if (attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), fighterCriticalThreshold(state))) {
-        val reducedDamage = if (damageRoll - reduction < 0) 0 else damageRoll - reduction
-        { ...state, goblin: applyDamageFromSource(state.goblin, reducedDamage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, false, OrdinaryDamage, Fighter), bonusActionAvailable: false }
+        val baseDamage = battleRuntimeLightPropertyExtraAttackDamageAmount(damageRoll, abilityModifier)
+        val reducedDamage = if (baseDamage - reduction < 0) 0 else baseDamage - reduction
+        {
+          ...spendFighterLightPropertyExtraAttackBonusAction(state),
+          goblin: applyDamageFromSource(state.goblin, reducedDamage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, false, OrdinaryDamage, Fighter),
+        }
       }
       else
-        { ...state, bonusActionAvailable: false }
+        spendFighterLightPropertyExtraAttackBonusAction(state)
     else
       state
 
@@ -4593,6 +4643,17 @@ module battleRuntime {
     all {
       assert(result.bonusActionAvailable == false),
       assert(result.goblin.hp == 7),
+    }
+  }
+
+  run test_off_hand_light_property_damage_omits_positive_modifier_and_keeps_negative = {
+    val afterAttack = { ...initialState, lightWeaponAttackMade: true }
+    val positive = offHandAttackFighterWithAbilityModifier(afterAttack, 15, 10, 4, 3)
+    val negative = offHandAttackFighterWithAbilityModifier(afterAttack, 15, 10, 4, -1)
+    all {
+      assert(positive.goblin.hp == 6),
+      assert(negative.goblin.hp == 7),
+      assert(not(negative.bonusActionAvailable)),
     }
   }
 
