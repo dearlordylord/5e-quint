@@ -61,6 +61,18 @@ module battleRuntimeSpellBridge {
     | BattleRuntimeCharmPersonCharmedEffect({ durationTicks: int })
     | BattleRuntimeFaerieFireAttackRollAdvantageEffect
 
+  type BattleRuntimeScalarBuffProfile =
+    | BattleRuntimeFalseLifeScalarBuff
+    | BattleRuntimeLongstriderScalarBuff
+    | BattleRuntimeShieldOfFaithScalarBuff
+    | BattleRuntimeHeroismScalarBuff
+
+  type BattleRuntimeScalarBuffEffect =
+    | BattleRuntimeLongstriderSpeedIncreaseEffect
+    | BattleRuntimeShieldOfFaithArmorClassBonusEffect
+    | BattleRuntimeHeroismFrightenedImmunityEffect
+    | BattleRuntimeHeroismTurnStartTemporaryHitPointsEffect({ amount: int })
+
   pure def battleRuntimeDirectHitPointRestorationSpellProfile(
     profile: BattleRuntimeDirectHitPointRestorationProfile
   ): SpellDefinitionProfile =
@@ -245,6 +257,47 @@ module battleRuntimeSpellBridge {
       targetIsHostile,
     )
 
+  pure def battleRuntimeScalarBuffProfile(
+    profile: BattleRuntimeScalarBuffProfile
+  ): ScalarBuffSpellProfile =
+    match profile {
+      | BattleRuntimeFalseLifeScalarBuff => FalseLifeScalarBuffProfile
+      | BattleRuntimeLongstriderScalarBuff => LongstriderScalarBuffProfile
+      | BattleRuntimeShieldOfFaithScalarBuff => ShieldOfFaithScalarBuffProfile
+      | BattleRuntimeHeroismScalarBuff => HeroismScalarBuffProfile
+    }
+
+  pure def battleRuntimeScalarBuffUsesBonusAction(profile: BattleRuntimeScalarBuffProfile): bool =
+    scalarBuffSpellAction(battleRuntimeScalarBuffProfile(profile)) == BonusActionSpellInvocation
+
+  pure def battleRuntimeScalarBuffMaximumTargets(profile: BattleRuntimeScalarBuffProfile, slotLevel: int): int =
+    scalarBuffMaximumTargets(battleRuntimeScalarBuffProfile(profile), slotLevel)
+
+  pure def battleRuntimeScalarBuffTemporaryHitPoints(
+    profile: BattleRuntimeScalarBuffProfile,
+    slotLevel: int,
+    rolledDice: int
+  ): int =
+    scalarBuffTemporaryHitPoints(battleRuntimeScalarBuffProfile(profile), slotLevel, rolledDice)
+
+  pure def battleRuntimeScalarBuffEffect(effect: ScalarBuffEffect): BattleRuntimeScalarBuffEffect =
+    match effect {
+      | LongstriderSpeedIncreaseEffect => BattleRuntimeLongstriderSpeedIncreaseEffect
+      | ShieldOfFaithArmorClassBonusEffect => BattleRuntimeShieldOfFaithArmorClassBonusEffect
+      | HeroismFrightenedImmunityEffect => BattleRuntimeHeroismFrightenedImmunityEffect
+      | HeroismTurnStartTemporaryHitPointsEffect(data) => BattleRuntimeHeroismTurnStartTemporaryHitPointsEffect(data)
+    }
+
+  pure def battleRuntimeScalarBuffEffects(
+    profile: BattleRuntimeScalarBuffProfile,
+    spellcastingAbilityModifier: int
+  ): Set[BattleRuntimeScalarBuffEffect] =
+    scalarBuffEffects(battleRuntimeScalarBuffProfile(profile), spellcastingAbilityModifier)
+      .map(battleRuntimeScalarBuffEffect)
+
+  pure def battleRuntimeScalarBuffRequiresConcentration(profile: BattleRuntimeScalarBuffProfile): bool =
+    scalarBuffRequiresConcentration(battleRuntimeScalarBuffProfile(profile))
+
   run test_direct_hit_point_restoration_profile_projection = {
     all {
       assert(battleRuntimeDirectHitPointRestorationUsesBonusAction(BattleRuntimeHealingWordRestoration)),
@@ -283,6 +336,17 @@ module battleRuntimeSpellBridge {
       assert(battleRuntimeSaveGatedConditionTargetCreatureTypeIsLegal(BattleRuntimeAnimalFriendshipSaveCondition, true, false)),
       assert(not(battleRuntimeSaveGatedConditionTargetCreatureTypeIsLegal(BattleRuntimeAnimalFriendshipSaveCondition, false, true))),
       assert(battleRuntimeSaveGatedConditionSavingThrowHasAdvantage(BattleRuntimeCharmPersonSaveCondition, true)),
+    }
+  }
+
+  run test_scalar_buff_profile_projection = {
+    all {
+      assert(battleRuntimeScalarBuffUsesBonusAction(BattleRuntimeShieldOfFaithScalarBuff)),
+      assert(not(battleRuntimeScalarBuffUsesBonusAction(BattleRuntimeLongstriderScalarBuff))),
+      assert(battleRuntimeScalarBuffMaximumTargets(BattleRuntimeLongstriderScalarBuff, 3) == 3),
+      assert(battleRuntimeScalarBuffTemporaryHitPoints(BattleRuntimeFalseLifeScalarBuff, 3, 4) == 18),
+      assert(battleRuntimeScalarBuffEffects(BattleRuntimeHeroismScalarBuff, 3) == Set(BattleRuntimeHeroismFrightenedImmunityEffect, BattleRuntimeHeroismTurnStartTemporaryHitPointsEffect({ amount: 3 }))),
+      assert(battleRuntimeScalarBuffRequiresConcentration(BattleRuntimeHeroismScalarBuff)),
     }
   }
 }

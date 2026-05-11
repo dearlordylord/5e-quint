@@ -292,6 +292,12 @@ surface while this research note remains temporary context.
   admissibility for Animal Friendship/Charm Person, and Charm Person's hostile
   target save Advantage. Broad battle still owns replay holes, concrete target
   mutation, source-actor projection, and concentration cleanup.
+- The scalar-buff tracer extended `spell-procedure-profiles.qnt` and
+  `battle-runtime-spell-bridge.qnt` for False Life, Longstrider, Shield of
+  Faith, and Heroism profile facts: action cost, maximum targets, temporary HP
+  scaling, active-effect identity, and concentration requirement. Broad battle
+  keeps target mutation, temporary-HP replacement, and caster concentration
+  cleanup.
 - The same movement/action bridge now carries the projected start-turn resource
   reset for action, Bonus Action, Reaction, Dash movement bonus, movement spent,
   Dodge, Disengage, Help, and Ready Movement facts. Broad battle still owns

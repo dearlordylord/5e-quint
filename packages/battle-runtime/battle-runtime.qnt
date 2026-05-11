@@ -2446,21 +2446,25 @@ module battleRuntime {
   }
 
   pure def scalarBuffActionCost(invocation: ScalarBuffSpell): SpellActionCost =
-    if (invocation == ShieldOfFaithScalarBuff) SpellBonusAction
+    if (battleRuntimeScalarBuffUsesBonusAction(battleRuntimeScalarBuffProfileForInvocation(invocation))) SpellBonusAction
     else SpellMagicAction
 
   pure def scalarBuffMaximumTargets(invocation: ScalarBuffSpell, slotLevel: int): int =
-    if (invocation == LongstriderScalarBuff) slotLevel else 1
+    battleRuntimeScalarBuffMaximumTargets(battleRuntimeScalarBuffProfileForInvocation(invocation), slotLevel)
 
   pure def scalarBuffTemporaryHitPoints(invocation: ScalarBuffSpell, slotLevel: int, rolledDice: int): int =
-    if (invocation == FalseLifeScalarBuff) rolledDice + 4 + ((if (slotLevel > 1) slotLevel - 1 else 0) * 5)
-    else 0
+    battleRuntimeScalarBuffTemporaryHitPoints(battleRuntimeScalarBuffProfileForInvocation(invocation), slotLevel, rolledDice)
 
   pure def scalarBuffActiveEffects(invocation: ScalarBuffSpell): Set[ActiveEffect] =
-    match invocation {
-      | FalseLifeScalarBuff => Set()
-      | LongstriderScalarBuff => Set(LongstriderSpeedDelta)
-      | ShieldOfFaithScalarBuff => Set(ShieldOfFaithArmorClassBonus)
+    battleRuntimeScalarBuffEffects(battleRuntimeScalarBuffProfileForInvocation(invocation), 0)
+      .map(scalarBuffActiveEffect)
+
+  pure def scalarBuffActiveEffect(effect: BattleRuntimeScalarBuffEffect): ActiveEffect =
+    match effect {
+      | BattleRuntimeLongstriderSpeedIncreaseEffect => LongstriderSpeedDelta
+      | BattleRuntimeShieldOfFaithArmorClassBonusEffect => ShieldOfFaithArmorClassBonus
+      | BattleRuntimeHeroismFrightenedImmunityEffect => HeroismFrightenedImmunity
+      | BattleRuntimeHeroismTurnStartTemporaryHitPointsEffect(data) => HeroismTurnStartTemporaryHitPoints(data)
     }
 
   pure def scalarBuffCombatant(
@@ -2508,7 +2512,7 @@ module battleRuntime {
       not(fighterHasRage(state))
     ) {
       val concentrationBase =
-        if (invocation == ShieldOfFaithScalarBuff)
+        if (battleRuntimeScalarBuffRequiresConcentration(battleRuntimeScalarBuffProfileForInvocation(invocation)))
           {
             ...state,
             fighter: breakConcentration(state.fighter),
@@ -2520,7 +2524,7 @@ module battleRuntime {
       val spent = spendFighterSpellActionCost(effected, actionCost)
       {
         ...spent,
-        fighter: { ...spent.fighter, concentrating: if (invocation == ShieldOfFaithScalarBuff) true else spent.fighter.concentrating },
+        fighter: { ...spent.fighter, concentrating: if (battleRuntimeScalarBuffRequiresConcentration(battleRuntimeScalarBuffProfileForInvocation(invocation))) true else spent.fighter.concentrating },
         spellSlotExpendedThisTurn: true,
       }
     } else {
@@ -2552,7 +2556,8 @@ module battleRuntime {
         fighter: breakConcentration(state.fighter),
         goblin: { ...state.goblin, activeEffects: activeEffectsWithoutSpellEffectConcentration(state.goblin.activeEffects) },
       }
-      val heroismEffects = Set(HeroismFrightenedImmunity, HeroismTurnStartTemporaryHitPoints({ amount: spellcastingAbilityModifier }))
+      val heroismEffects = battleRuntimeScalarBuffEffects(BattleRuntimeHeroismScalarBuff, spellcastingAbilityModifier)
+        .map(scalarBuffActiveEffect)
       val spent = spendFighterSpellActionCost(concentrationBase, SpellMagicAction)
       {
         ...spent,
@@ -3410,6 +3415,13 @@ module battleRuntime {
       | EntangleSaveGate => BattleRuntimeEntangleSaveCondition
       | AnimalFriendshipSaveGate => BattleRuntimeAnimalFriendshipSaveCondition
       | CharmPersonSaveGate => BattleRuntimeCharmPersonSaveCondition
+    }
+
+  pure def battleRuntimeScalarBuffProfileForInvocation(invocation: ScalarBuffSpell): BattleRuntimeScalarBuffProfile =
+    match invocation {
+      | FalseLifeScalarBuff => BattleRuntimeFalseLifeScalarBuff
+      | LongstriderScalarBuff => BattleRuntimeLongstriderScalarBuff
+      | ShieldOfFaithScalarBuff => BattleRuntimeShieldOfFaithScalarBuff
     }
 
   pure def magicMissileDartCount(slotLevel: int): int =

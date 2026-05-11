@@ -92,6 +92,18 @@ module spellProcedureProfiles {
     | CharmPersonCharmedEffect({ durationMinutes: int })
     | FaerieFireAttackRollAdvantageEffect
 
+  type ScalarBuffSpellProfile =
+    | FalseLifeScalarBuffProfile
+    | LongstriderScalarBuffProfile
+    | ShieldOfFaithScalarBuffProfile
+    | HeroismScalarBuffProfile
+
+  type ScalarBuffEffect =
+    | LongstriderSpeedIncreaseEffect
+    | ShieldOfFaithArmorClassBonusEffect
+    | HeroismFrightenedImmunityEffect
+    | HeroismTurnStartTemporaryHitPointsEffect({ amount: int })
+
   type SpellAreaProfile =
     | NoSpellAreaProfile
     | MassCureWoundsPointOriginSphereArea
@@ -390,6 +402,33 @@ module spellProcedureProfiles {
     targetIsHostile: bool
   ): bool =
     profile == CharmPersonSaveConditionProfile and targetIsHostile
+
+  pure def scalarBuffSpellAction(profile: ScalarBuffSpellProfile): SpellInvocationAction =
+    if (profile == ShieldOfFaithScalarBuffProfile) BonusActionSpellInvocation else ActionTimeSpellInvocation
+
+  pure def scalarBuffMaximumTargets(profile: ScalarBuffSpellProfile, slotLevel: int): int =
+    if (profile == LongstriderScalarBuffProfile) slotLevel else 1
+
+  pure def scalarBuffTemporaryHitPoints(profile: ScalarBuffSpellProfile, slotLevel: int, rolledDice: int): int =
+    if (profile == FalseLifeScalarBuffProfile) rolledDice + 4 + ((if (slotLevel > 1) slotLevel - 1 else 0) * 5)
+    else 0
+
+  pure def scalarBuffEffects(
+    profile: ScalarBuffSpellProfile,
+    spellcastingAbilityModifier: int
+  ): Set[ScalarBuffEffect] =
+    match profile {
+      | FalseLifeScalarBuffProfile => Set()
+      | LongstriderScalarBuffProfile => Set(LongstriderSpeedIncreaseEffect)
+      | ShieldOfFaithScalarBuffProfile => Set(ShieldOfFaithArmorClassBonusEffect)
+      | HeroismScalarBuffProfile => Set(
+          HeroismFrightenedImmunityEffect,
+          HeroismTurnStartTemporaryHitPointsEffect({ amount: spellcastingAbilityModifier }),
+        )
+    }
+
+  pure def scalarBuffRequiresConcentration(profile: ScalarBuffSpellProfile): bool =
+    profile == ShieldOfFaithScalarBuffProfile or profile == HeroismScalarBuffProfile
 
   pure def spellActionCost(invocationAction: SpellInvocationAction): ActionCost =
     if (invocationAction == BonusActionSpellInvocation) BonusActionCost
@@ -809,6 +848,23 @@ module spellProcedureProfiles {
       assert(not(spellSaveGatedConditionTargetCreatureTypeIsLegal(CharmPersonSaveConditionProfile, true, false))),
       assert(spellSaveGatedConditionSavingThrowHasAdvantage(CharmPersonSaveConditionProfile, true)),
       assert(not(spellSaveGatedConditionSavingThrowHasAdvantage(CharmPersonSaveConditionProfile, false))),
+    }
+  }
+
+  run test_scalar_buff_profiles_project_action_targets_effects_and_temporary_hit_points = {
+    all {
+      assert(scalarBuffSpellAction(ShieldOfFaithScalarBuffProfile) == BonusActionSpellInvocation),
+      assert(scalarBuffSpellAction(LongstriderScalarBuffProfile) == ActionTimeSpellInvocation),
+      assert(scalarBuffMaximumTargets(LongstriderScalarBuffProfile, 3) == 3),
+      assert(scalarBuffMaximumTargets(FalseLifeScalarBuffProfile, 3) == 1),
+      assert(scalarBuffTemporaryHitPoints(FalseLifeScalarBuffProfile, 1, 4) == 8),
+      assert(scalarBuffTemporaryHitPoints(FalseLifeScalarBuffProfile, 3, 4) == 18),
+      assert(scalarBuffEffects(LongstriderScalarBuffProfile, 3) == Set(LongstriderSpeedIncreaseEffect)),
+      assert(scalarBuffEffects(ShieldOfFaithScalarBuffProfile, 3) == Set(ShieldOfFaithArmorClassBonusEffect)),
+      assert(scalarBuffEffects(HeroismScalarBuffProfile, 3) == Set(HeroismFrightenedImmunityEffect, HeroismTurnStartTemporaryHitPointsEffect({ amount: 3 }))),
+      assert(scalarBuffRequiresConcentration(ShieldOfFaithScalarBuffProfile)),
+      assert(scalarBuffRequiresConcentration(HeroismScalarBuffProfile)),
+      assert(not(scalarBuffRequiresConcentration(LongstriderScalarBuffProfile))),
     }
   }
 
