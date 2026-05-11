@@ -180,14 +180,6 @@ const spellAccessSurfaceBlockers = new Map();
 
 const spellUnitMissingClassifications = new Map([
   [
-    "command",
-    {
-      kind: "needs-surface-widening",
-      missingConstruct:
-        "Spell Definition command-option save outcomes: target-turn movement commands, forced item drop, Prone plus turn-ending, and slot-scaled additional targets",
-    },
-  ],
-  [
     "create_or_destroy_water",
     {
       kind: "catalog-only-closure",

@@ -32,6 +32,7 @@ import chillTouchInput from "../../content/chill_touch.json";
 import chromaticOrbInput from "../../content/chromatic_orb.json";
 import clericDivineOrderInput from "../../content/cleric_divine_order.json";
 import colorSprayInput from "../../content/color_spray.json";
+import commandInput from "../../content/command.json";
 import cureWoundsInput from "../../content/cure_wounds.json";
 import divineFavorInput from "../../content/divine_favor.json";
 import divineSmiteInput from "../../content/divine_smite.json";
@@ -301,6 +302,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     chillTouchInput,
     chromaticOrbInput,
     colorSprayInput,
+    commandInput,
     cureWoundsInput,
     divineFavorInput,
     divineSmiteInput,

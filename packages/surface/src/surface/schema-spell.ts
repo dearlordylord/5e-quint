@@ -164,6 +164,32 @@ export const ActionRestrictionSchema = Schema.Union(
   }),
 );
 
+export const CommandTargetNextTurnOptionsSchema = strictStruct({
+  approach: strictStruct({
+    route: Schema.Literal("shortest_direct_to_caster"),
+    endsTurnWhenWithinFeet: Schema.Literal(5),
+  }),
+  drop: strictStruct({
+    objectSet: Schema.Literal("held_objects"),
+    afterward: Schema.Literal("end_turn"),
+  }),
+  flee: strictStruct({
+    direction: Schema.Literal("away_from_caster"),
+    means: Schema.Literal("fastest_available"),
+    duration: Schema.Literal("target_turn"),
+  }),
+  grovel: strictStruct({
+    condition: Schema.Literal("prone"),
+    afterward: Schema.Literal("end_turn"),
+  }),
+  halt: strictStruct({
+    movement: Schema.Literal("none"),
+    action: Schema.Literal("none"),
+    bonusAction: Schema.Literal("none"),
+    duration: Schema.Literal("target_turn"),
+  }),
+});
+
 type DamageTypeRef = Schema.Schema.Type<typeof DamageTypeRefSchema>;
 type DiceAmount = Schema.Schema.Type<typeof DiceAmountSchema>;
 type DiceDelta = Schema.Schema.Type<typeof DiceDeltaSchema>;
@@ -223,6 +249,9 @@ type PolymorphRetainedField = Schema.Schema.Type<
 >;
 type PolymorphActionRestriction = Schema.Schema.Type<
   typeof PolymorphActionRestrictionSchema
+>;
+type CommandTargetNextTurnOptions = Schema.Schema.Type<
+  typeof CommandTargetNextTurnOptionsSchema
 >;
 type PolymorphRevertTrigger = Schema.Schema.Type<
   typeof PolymorphRevertTriggerSchema
@@ -378,6 +407,11 @@ type EffectAtom =
       readonly actions: ReadonlyNonEmptyArray<ActionEconomyKind>;
       readonly whileCondition?: Condition;
       readonly duration?: "current_turn" | "spell_duration";
+    }
+  | {
+      readonly kind: "command_target_next_turn";
+      readonly execution: "target_next_turn";
+      readonly options: CommandTargetNextTurnOptions;
     }
   | {
       readonly kind: "remove_condition";
@@ -1646,6 +1680,11 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         duration: optionalExact(
           Schema.Literal("current_turn", "spell_duration"),
         ),
+      }),
+      strictStruct({
+        kind: Schema.Literal("command_target_next_turn"),
+        execution: Schema.Literal("target_next_turn"),
+        options: CommandTargetNextTurnOptionsSchema,
       }),
       Schema.Struct({
         kind: Schema.Literal("remove_condition"),

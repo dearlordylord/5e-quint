@@ -20,6 +20,7 @@ export {
   CastTimeChoiceDamageTypeSchema,
   CastTimeChoiceSizeSchema,
   CastingTimeSchema,
+  CommandTargetNextTurnOptionsSchema,
   ComponentsSchema,
   CreatureActionsSchema,
   CreatureLegendaryActionsSchema,

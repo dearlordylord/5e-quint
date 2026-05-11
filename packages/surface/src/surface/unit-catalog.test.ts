@@ -90,6 +90,7 @@ const requiredFirstVerticalUnitIds = [
   "eldritch_blast",
   "minor_illusion",
   "charm_person",
+  "command",
   "hellish_rebuke",
   "armor_chain_mail",
   "equipment_shield",
@@ -128,6 +129,63 @@ describe("SRD Unit catalog boundary", () => {
         "sap",
         "sap",
       ]);
+    }
+  });
+
+  test("decodes Command as a closed next-turn option surface", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const command = result.catalog.requireUnit("command");
+      expect(command.kind).toBe("spell");
+      if (command.kind !== "spell") return;
+      expect(command.mechanics.family).toBe("activation");
+      if (command.mechanics.family !== "activation") return;
+
+      const phase = command.mechanics.phases[0];
+      expect(phase?.kind).toBe("save_gate");
+      if (phase?.kind !== "save_gate") return;
+
+      expect(phase.onFail).toEqual({
+        kind: "command_target_next_turn",
+        execution: "target_next_turn",
+        options: {
+          approach: {
+            route: "shortest_direct_to_caster",
+            endsTurnWhenWithinFeet: 5,
+          },
+          drop: { objectSet: "held_objects", afterward: "end_turn" },
+          flee: {
+            direction: "away_from_caster",
+            means: "fastest_available",
+            duration: "target_turn",
+          },
+          grovel: { condition: "prone", afterward: "end_turn" },
+          halt: {
+            movement: "none",
+            action: "none",
+            bonusAction: "none",
+            duration: "target_turn",
+          },
+        },
+      });
+      expect(phase.attachment.kind).toBe("hole");
+      if (phase.attachment.kind !== "hole") return;
+
+      expect(phase.attachment.value).toEqual({
+        kind: "target",
+        selection: {
+          mode: "choose_up_to",
+          count: {
+            kind: "linear",
+            base: 1,
+            perSlotAboveBase: 1,
+            baseLevel: 1,
+          },
+          targetKinds: ["creature"],
+        },
+      });
     }
   });
 

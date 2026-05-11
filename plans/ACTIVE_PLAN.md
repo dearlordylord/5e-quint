@@ -160,7 +160,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 235,
       "id": "SRDINV42",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Widen Command Option Surface"
     },
     {
@@ -253,7 +253,7 @@ Keep it synchronized with the DAG table and task details.
 | 233   | SRDINV38B - Promote Sleep Repeat Save Lifecycle | done | SRDINV38A | SRDINV38C, SRDINV41 | [Sleep research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV38_SLEEP_SAVE_LOOP_RESEARCH.md), [turn-end reducer](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer/turn-end-movement.ts), [condition helpers](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer/spell-condition-effects-helpers.ts), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Sleep failed-save targets now carry a typed pending repeat-save lifecycle, ask for the second Wisdom save at that target's next end turn, and either end Sleep or escalate to spell-owned Unconscious. |
 | 234   | SRDINV38C - Promote Sleep Wake-Up Cleanup Runtime | done | SRDINV38B | SRDINV41 | [Sleep research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV38_SLEEP_SAVE_LOOP_RESEARCH.md), [condition helpers](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer/spell-condition-effects-helpers.ts), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Sleep cleanup is promoted for damage from any source, action-spent adjacent shake-awake with caller-supplied adjacency, caster Concentration cleanup, and Prone preservation after Sleep-owned Unconscious ends. |
 | 231   | SRDINV41 - Recursive SRD Inventory Planning Review | done | SRDINV34-SRDINV40, SRDINV38A-SRDINV38C | SRDINV42-SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed: refreshed spell Unit metrics, kept Hellish Rebuke QNT/parity support unpromoted, rejected Charm Person social memory and Grease automatic geometry as battle-runtime state, and appended SRDINV42-SRDINV48 movement/action Surface batch. |
-| 235   | SRDINV42 - Widen Command Option Surface | ready-for-research | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface to represent Command's named options: Approach, Drop, Flee, Grovel, Halt, next-turn execution, turn-ending clauses, and slot-scaled additional targets. |
+| 235   | SRDINV42 - Widen Command Option Surface | done | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Command is installed with typed next-turn option facts for Approach, Drop, Flee, Grovel, Halt, turn-ending clauses, and slot-scaled target count; named-option runtime execution remains unpromoted and visible in the Unit matrix as owner-evidence-required work. |
 | 236   | SRDINV43 - Widen Dissonant Whispers Forced Reaction Movement Surface | ready-for-research | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Dissonant Whispers](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface for save-gated Psychic damage plus failed-save forced Reaction movement away by safest route, including no-Reaction fallback and slot-scaled damage. |
 | 237   | SRDINV44 - Widen Thunderwave Push Surface | ready-for-research | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Thunderwave](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface for self-origin Cube save damage plus failed-save creature push, unsecured-object push, audible boom, and slot-scaled Thunder damage. |
 | 238   | SRDINV45 - Widen Expeditious Retreat Dash Surface | ready-for-research | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Expeditious Retreat](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface for immediate Dash on Bonus Action casting and ongoing Concentration-granted Bonus Action Dash without duplicating Movement state. |
@@ -815,7 +815,7 @@ and appended the movement/action Surface blocker batch.
 
 ### Task 235 - SRDINV42 - Widen Command Option Surface
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV41
 
@@ -826,19 +826,17 @@ Research / plan:
 [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md),
 [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
 
-Scope: widen Surface to represent Command's named options: Approach, Drop,
+Scope: completed Surface widening for Command's named options: Approach, Drop,
 Flee, Grovel, Halt, next-turn execution, turn-ending clauses, and slot-scaled
 additional targets.
 
 Out of scope: runtime execution of the widened Command options and generic
 forced movement/pathfinding beyond the authored option facts.
 
-Verification: RAW/source review for Command, Movement, Prone, and turn/action
-terms plus `UBIQUITOUS_LANGUAGE.md` check, confirming all modeled rules trace to
-specific SRD text; Surface parser/schema tests; generated content refresh if
-Dhall/JSON content changes; `pnpm unit-profile-coverage:check --write`;
-`/simplify` convergence, minimum two rounds unless the final changeset is
-trivial.
+Verification: RAW/source review completed for Command, Movement, Prone, and
+turn/action terms plus `UBIQUITOUS_LANGUAGE.md`; Surface parser/schema tests and
+generated Command content refresh completed; `pnpm unit-profile-coverage:check`
+with `--write` and `pnpm quality` passed.
 
 ### Task 236 - SRDINV43 - Widen Dissonant Whispers Forced Reaction Movement Surface
 

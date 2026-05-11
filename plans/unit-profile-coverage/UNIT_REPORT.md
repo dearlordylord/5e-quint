@@ -8,16 +8,16 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Metric | Value |
 | --- | ---: |
-| Installed collection inventory count | 125 Units |
+| Installed collection inventory count | 126 Units |
 
 ## Coverage Metrics
 
 | Metric | Covered | Percent |
 | --- | ---: | ---: |
-| Authored Surface Unit catalog admission | 124/417 | 29.7% |
-| Authored Surface executable catalog admission | 100/350 | 28.6% |
-| Installed Unit profile classification coverage | 125/125 | 100% |
-| Supported executable Unit coverage | 63/101 | 62.4% |
+| Authored Surface Unit catalog admission | 125/418 | 29.9% |
+| Authored Surface executable catalog admission | 101/351 | 28.8% |
+| Installed Unit profile classification coverage | 126/126 | 100% |
+| Supported executable Unit coverage | 63/102 | 61.8% |
 | QNT profile modeling coverage | 42/42 | 100% |
 | QNT proof coverage | 40/42 | 95.2% |
 | Runtime mapping coverage | 42/42 | 100% |
@@ -884,6 +884,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `orc_darkvision` | unsupported-profile | Sense grant is authored data with no promoted execution profile. |
 | `animal_friendship` | profile-subset-supported | supported subset: Beast creature-type target filter; Wisdom save-gated Charmed condition; 24-hour spell-owned condition duration; slot-scaled target count; deferred: spell ends if caster or one of the caster's allies deals damage to the target (SRDINV33) |
 | `chill_touch` | profile-subset-supported | supported subset: combatant-target melee spell attack damage; cantrip damage scaling; readied Action-time spell release; deferred: non-combatant target eligibility for the SRD generic target wording (SRDINV34); target can't regain Hit Points until the end of the caster's next turn (SRDINV28D) |
+| `command` | unsupported-profile | Spell Definition is installed with typed next-turn Command option facts; runtime execution of the named options, route choice, held-item drop, and turn-ending clauses is not promoted yet. |
 | `faerie_fire` | profile-subset-supported | supported subset: 20-foot point-origin Cube affected-creature boundary with table-supplied area membership; Dexterity save-gated affected creatures; Concentration-owned attack-roll Advantage against failed-save affected creatures when the attacker can see them; deferred: object outline and object attack-roll Advantage (SRDINV33); Dim Light emitted by affected creatures and objects (SRDINV33); affected creatures and objects can't benefit from the Invisible condition (SRDINV33) |
 | `fire_bolt` | needs-surface-widening | QMBT23 keeps SRD Fire Bolt out of supported spell evidence until promoted spell invocation has an explicit object-target branch and object-ignition effect outcome; table-supplied object facts are required but are not a complete runtime boundary. |
 | `grease` | profile-subset-supported | supported subset: one-minute Grease ground hazard lifecycle keyed by caller-supplied ground-area id; on-cast Dexterity Saving Throw for caller-supplied affected creatures; Prone application on failed Grease saves; table-triggered enter-area and end-turn-in-area Dexterity save procedures; deferred: automatic Difficult Terrain movement-cost derivation, pathfinding, and grid geometry; movement cost remains caller-authored at the Movement boundary (SRDINV41) |
@@ -913,7 +914,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
-| srd-5.2.1 | unassigned | unsupported-profile | 50 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `bard_bardic_inspiration`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `monk_martial_arts`, `ranger_favored_enemy`, `rogue_expertise`, `rogue_thieves_cant`, `sorcerer_innate_sorcery`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `mastery_sap`, `orc_darkvision`, `light`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `minor_illusion`, `hellish_rebuke`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
+| srd-5.2.1 | unassigned | unsupported-profile | 51 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `bard_bardic_inspiration`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `monk_martial_arts`, `ranger_favored_enemy`, `rogue_expertise`, `rogue_thieves_cant`, `sorcerer_innate_sorcery`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `mastery_sap`, `orc_darkvision`, `command`, `light`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `minor_illusion`, `hellish_rebuke`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
 | srd-5.2.1 | unassigned | profile-subset-supported | 10 | `animal_friendship`, `chill_touch`, `faerie_fire`, `grease`, `hunters_mark`, `protection_from_evil_and_good`, `produce_flame`, `starry_wisp`, `sleep`, `charm_person` |
 | srd-5.2.1 | QCORE10 | needs-surface-widening | 1 | `fire_bolt` |
 | srd-5.2.1 | unassigned | needs-surface-widening | 1 | `thunderwave` |

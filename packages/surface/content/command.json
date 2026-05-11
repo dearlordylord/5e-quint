@@ -1,0 +1,91 @@
+{
+  "description": "You speak a one-word command to a creature you can see within range. The target must succeed on a Wisdom saving throw or follow the command on its next turn. Choose the command from these options: Approach, Drop, Flee, Grovel, or Halt. Using a Higher-Level Spell Slot. You can affect one additional creature for each spell slot level above 1.",
+  "id": "command",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": false,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 1,
+    "phases": [
+      {
+        "ability": "wis",
+        "attachment": {
+          "holeId": "command_target",
+          "kind": "hole",
+          "label": "target",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "count": {
+                "base": 1,
+                "baseLevel": 1,
+                "kind": "linear",
+                "perSlotAboveBase": 1
+              },
+              "mode": "choose_up_to",
+              "targetKinds": [
+                "creature"
+              ]
+            }
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "execution": "target_next_turn",
+          "kind": "command_target_next_turn",
+          "options": {
+            "approach": {
+              "endsTurnWhenWithinFeet": 5,
+              "route": "shortest_direct_to_caster"
+            },
+            "drop": {
+              "afterward": "end_turn",
+              "objectSet": "held_objects"
+            },
+            "flee": {
+              "direction": "away_from_caster",
+              "duration": "target_turn",
+              "means": "fastest_available"
+            },
+            "grovel": {
+              "afterward": "end_turn",
+              "condition": "prone"
+            },
+            "halt": {
+              "action": "none",
+              "bonusAction": "none",
+              "duration": "target_turn",
+              "movement": "none"
+            }
+          }
+        },
+        "onSuccess": {
+          "kind": "none"
+        }
+      }
+    ],
+    "range": {
+      "feet": 60,
+      "kind": "point"
+    },
+    "school": "enchantment"
+  },
+  "name": "Command",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Command"
+  }
+}

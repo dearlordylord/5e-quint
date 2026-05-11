@@ -235,6 +235,9 @@ export type GrantedSpellTargetRestriction = Schema.Schema.Type<
 export type GrantedSpellDurationOverride = Schema.Schema.Type<
   typeof SurfaceSchema.GrantedSpellDurationOverrideSchema
 >;
+export type CommandTargetNextTurnOptions = Schema.Schema.Type<
+  typeof SurfaceSchema.CommandTargetNextTurnOptionsSchema
+>;
 export type EffectAtom = Schema.Schema.Type<
   typeof SurfaceSchema.EffectAtomSchema
 >;

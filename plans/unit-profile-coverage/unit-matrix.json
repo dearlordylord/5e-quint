@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 350,
-      "numerator": 100,
-      "percent": "28.6%"
+      "denominator": 351,
+      "numerator": 101,
+      "percent": "28.8%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 417,
-      "numerator": 124,
-      "percent": "29.7%"
+      "denominator": 418,
+      "numerator": 125,
+      "percent": "29.9%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 125
+      "value": 126
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 63,
@@ -67,8 +67,8 @@
       "percent": "93.7%"
     },
     "profileClassificationCoverage": {
-      "denominator": 125,
-      "numerator": 125,
+      "denominator": 126,
+      "numerator": 126,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -97,9 +97,9 @@
       "percent": "15.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 101,
+      "denominator": 102,
       "numerator": 63,
-      "percent": "62.4%"
+      "percent": "61.8%"
     }
   },
   "metricSemantics": [
@@ -4757,6 +4757,24 @@
       ],
       "sourceRecordPath": "packages/surface/content/color_spray.json",
       "unitId": "color_spray"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Spell Definition is installed with typed next-turn Command option facts; runtime execution of the named options, route choice, held-item drop, and turn-ending clauses is not promoted yet.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/command.json",
+      "unitId": "command"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
