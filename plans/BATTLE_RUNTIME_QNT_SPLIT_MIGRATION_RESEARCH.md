@@ -2,6 +2,11 @@
 
 Date: 2026-05-11
 
+Status: historical migration note. The vertical inventory requested by this
+note has been completed and retired. Current guidance lives in
+`plans/BATTLE_RUNTIME_QNT_TS_CONNECTIVITY.md` and
+`packages/battle-runtime/ARCHITECTURE_GRAPH.md`.
+
 This is a temporary research and migration-orientation note. It is not the
 steady-state architecture document. It records the current evidence around
 `packages/battle-runtime/battle-runtime.qnt`, the likely split direction, and
@@ -101,14 +106,13 @@ Useful references:
 - TLA+ model vs finite TLC model instance:
   https://lamport.azurewebsites.net/tla/model-popup.html
 
-## Migration Posture
+## Historical Migration Posture
 
-This work probably wants a temporary split-migration plan before architecture
-docs are rewritten. The plan can be deleted or archived once the code shape is
-settled. The steady-state docs should then describe what is actually
-implemented.
+This was the pre-inventory posture used to guide the split. Do not use this
+section as current architecture policy; use the connectivity and architecture
+docs named in the status block above.
 
-A useful migration posture could be:
+The migration posture was:
 
 1. Inventory `battle-runtime.qnt` by procedure family.
 2. For each family, identify whether rule-core already owns a stateless
@@ -125,9 +129,10 @@ question is which behavior belongs there after the split: likely selected
 verticals that exercise replay, holes, interrupt windows, action resources, and
 snapshots together, not every authored procedure's local semantics.
 
-## Candidate Inventory Axes
+## Historical Inventory Axes
 
-During inventory, classify each `battle-runtime.qnt` section along these axes:
+During inventory, each `battle-runtime.qnt` section was classified along these
+axes:
 
 - procedure family: HP lifecycle, death saves, attack damage, save-gate damage,
   spell attack damage, healing, action economy, movement, grapples, reactions,
@@ -141,14 +146,13 @@ During inventory, classify each `battle-runtime.qnt` section along these axes:
 - deletion confidence: can remove from broad battle now, can narrow after a
   focused parity bridge, or must remain until more facts are discovered.
 
-The inventory should not assume that every section splits cleanly. Some broad
-state may reveal missing procedure facts, duplicated projections, or places
-where the TypeScript reducer has not yet been shaped around the smaller QNT
-contract.
+The inventory did not assume that every section splits cleanly. Some broad
+state revealed missing procedure facts, duplicated projections, or places where
+the TypeScript reducer had not yet been shaped around the smaller QNT contract.
 
-## Candidate First Splits
+## Historical Candidate First Splits
 
-These are plausible candidates, not commitments:
+These were plausible candidates before implementation:
 
 - Hit Point / zero-HP / healing lifecycle. Rule-core files already exist, and
   the invariants are deep enough to be useful. The migration work would confirm
@@ -162,13 +166,12 @@ These are plausible candidates, not commitments:
   battle integration may still be needed for dispatch replay and stale-subject
   behavior.
 
-Spells are likely a later migration candidate. The recent commit history shows
-many spell promotions landing directly in broad battle QNT, so the split may
-need a better spell procedure inventory before it can be done without guessing.
+Spells later received the dedicated `battle-runtime-spell-bridge.qnt` path
+described in the findings below.
 
-## Documentation Strategy
+## Historical Documentation Strategy
 
-Documentation changes should probably happen in two layers.
+Documentation changes were planned in two layers.
 
 First, add only a factual warning to active architecture docs if needed:
 
@@ -190,19 +193,11 @@ Avoid writing target-state language as if it is already true. That would make
 review harder, because reviewers would need to infer whether a future PR is
 violating policy or simply exposing that the policy was aspirational.
 
-## Open Questions For The Split
+## Closed Split Questions
 
-- Which `battle-runtime.qnt` procedures are pure duplicate semantics of existing
-  rule-core proofs?
-- Which ones are still the only Quint authority for production behavior?
-- Are focused MBT lanes comparing the right observable facts, or do they miss
-  state that broad battle currently protects?
-- Where does broad battle QNT still catch composition bugs that smaller proofs
-  cannot see?
-- Which broad-spec sections can be narrowed to fixtures around selected
-  high-risk verticals instead of general procedure semantics?
-- Does character creation need a similar migration before its MBT file becomes a
-  broad scenario accumulator?
+The open questions from the original research pass were answered by the
+inventory and tracer work summarized below. Current open planning work should be
+tracked in `plans/ACTIVE_PLAN.md`, not by reopening this temporary note.
 
 ## 2026-05-11 First-Pass Findings
 
@@ -351,14 +346,12 @@ violating policy or simply exposing that the policy was aspirational.
   Shield/readied-spell effects, Opportunity Attack resolution, and continuation
   resume remain package-local integration responsibilities.
 
-## Suggested Completion Shape
+## Completion Status
 
-This temporary note has served its purpose when the migration has produced a
-factual replacement in active docs. A good end state would be:
+This temporary note has served its purpose. The durable outcome is:
 
 - `battle-runtime.qnt` no longer grows by default for every promoted procedure;
 - new procedure semantics land first in a smaller QNT authority or an explicit
   reason is recorded for broad ownership;
 - broad battle QNT has an explicit, limited integration role;
-- architecture docs describe the implemented state, not the desired future;
-- this research note can be deleted or moved to an archive.
+- architecture docs describe the implemented state, not the desired future.

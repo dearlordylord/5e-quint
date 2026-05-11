@@ -214,9 +214,11 @@ Battle QNT should model only the first MCP/runtime vertical:
 - HP damage with Temporary HP absorption and clamp;
 - minimal death policy.
 
-These QNT specs are temporary seeds, not throwaways. The battle spec must
-eventually become, merge into, or replace old `battle.qnt`, and documentation
-must be updated so the repo has one battle authority again.
+Historical note: these QNT specs began as seeds. That target has been resolved
+by promoting `packages/battle-runtime/battle-runtime.qnt` as the package-local
+canonical spec for Unit/StatBlock-backed battle behavior. It should not merge
+into or replace old root `battle.qnt`; root `battle.qnt` remains legacy/Core
+broad proof and restore source material.
 
 During Phase 1/2, promoted `@dnd/battle-runtime` is the active semantic
 authority for new Unit/StatBlock-backed battle work. BA8 promoted

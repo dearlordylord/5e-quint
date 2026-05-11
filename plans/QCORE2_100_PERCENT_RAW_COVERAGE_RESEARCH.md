@@ -2,6 +2,11 @@
 
 Date: 2026-05-06
 
+Status: historical pre-QCORE2 research. QCORE2-QCORE11 have since landed, and
+the current battle QNT split/connectivity guidance lives in
+`plans/BATTLE_RUNTIME_QNT_TS_CONNECTIVITY.md`,
+`packages/battle-runtime/ARCHITECTURE_GRAPH.md`, and `plans/ACTIVE_PLAN.md`.
+
 ## Decision
 
 The long-term target is QNT authority for every production-executable reducer
@@ -116,9 +121,9 @@ A production mechanic is QNT-covered only when all of these are true:
 
 ## Research Findings
 
-`packages/battle-runtime/battle-runtime.qnt` is broad and valuable restore
-source, but it is already representative rather than a scalable 100-percent
-composition shape. Its own comments show many procedures in one model:
+`packages/battle-runtime/battle-runtime.qnt` was already broad and
+representative rather than a scalable 100-percent composition shape. Its own
+comments showed many procedures in one model:
 Hit Points, Death Saving Throws, Action Surge, Second Wind, Sneak Attack,
 reaction windows, spell procedures, movement, opportunity attacks, Multiattack,
 monster resources, Grapple, Hide/Search, and generic actions.
@@ -127,19 +132,16 @@ That breadth is exactly why QCORE should not widen first. The scalable path is
 to split those procedures into rule-core modules and use battle-level QNT only
 for selected verticals where composition risk is high.
 
-The reducer tests in `packages/battle-runtime/src/index.test.ts` are currently
-the best inventory of production behavior. They cover the semantic surface far
-beyond QCORE1, including zero-HP lifecycle, damage adjustments, stat-block
-controls, class features, reactions, concentration, spell procedures, and
-movement/spatial facts.
+At the time, reducer tests in `packages/battle-runtime/src/index.test.ts` were
+the best inventory of production behavior. Current inventory and task status
+now live in `plans/ACTIVE_PLAN.md` and the unit-profile coverage reports.
 
 Forward docs should stop presenting "support gates" as the desired architecture.
 The durable boundary is typed projection parsers: authored content either parses
 into an executable procedure fact or fails with a typed projection issue. QNT
 then proves procedure facts, not parser internals or authored catalog width.
 
-## Next Step
+## Historical Next Step
 
-Implement QCORE2 before widening. The smallest useful next proof is the missing
-neighbor of QCORE1: damage at 0 HP and Death Saving Throw counter resolution.
-That validates lifecycle composition while keeping the state space manageable.
+The original next step was to implement QCORE2 before widening. That work is no
+longer pending; use `plans/ACTIVE_PLAN.md` for current task order.
