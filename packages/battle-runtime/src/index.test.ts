@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-condition-save spell.invocation-marked-damage-rider spell.invocation-weapon-damage-rider
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-condition-save spell.invocation-marked-damage-rider spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider
 import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
@@ -16278,6 +16278,191 @@ describe("battle runtime", () => {
     expect(expendedLevelOneSlots(recast, wizardId)).toBe(2);
   });
 
+  test("Sleep asks only non-automatic selected Sphere targets for Wisdom saves and spends cast resources", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-sleep-admission"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            cantrips: [],
+            preparedSpells: [spellRecord("sleep")],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+        skeletonCreatureInit({ initiative: 8 }),
+      ],
+    });
+    const subject = magicSubject("sleep");
+    const savingThrows = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "savingThrowOutcome",
+    );
+    expect(savingThrows).toMatchObject({
+      label: "Sleep point-origin Sphere Saving Throw outcomes",
+      ability: "wis",
+      spell: {
+        procedure: "sleepTargetAdmission",
+        targeting: { kind: "pointOriginSphere", radiusFeet: 5 },
+        rangeFeet: 60,
+      },
+    });
+
+    const result = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          {
+            kind: "savingThrowOutcome",
+            holeId: savingThrows.holeId,
+            value: {
+              area: {
+                originAnchorId: wizardId,
+                affectedTargetIds: [goblinId, skeletonId],
+              },
+              outcomes: [{ targetId: goblinId, succeeded: false }],
+            },
+          },
+        ],
+      }),
+    );
+
+    expect(result).toMatchObject({
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId, concentrating: true },
+          { combatantId: goblinId },
+          { combatantId: skeletonId },
+        ],
+        turn: { actionResources: [] },
+      },
+    });
+    expect(result.state.combatants.get(goblinId)).toMatchObject({
+      conditions: expect.not.objectContaining({ incapacitated: true }),
+      activeEffects: [],
+    });
+    expect(expendedLevelOneSlots(result, wizardId)).toBe(1);
+  });
+
+  test("Sleep rejects rolled outcomes for Exhaustion-immune targets and unsupported non-sleeper facts", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-sleep-auto-success"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            cantrips: [],
+            preparedSpells: [spellRecord("sleep")],
+            spellSlots: [{ spellLevel: 1, count: 2 }],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject = magicSubject("sleep");
+    const savingThrows = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "savingThrowOutcome",
+    );
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          {
+            kind: "savingThrowOutcome",
+            holeId: savingThrows.holeId,
+            value: {
+              area: {
+                originAnchorId: wizardId,
+                affectedTargetIds: [skeletonId],
+              },
+              outcomes: [{ targetId: skeletonId, succeeded: true }],
+            },
+          },
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Sleep targets with Exhaustion Immunity automatically succeed and must not receive a rolled Saving Throw outcome.",
+    });
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          {
+            kind: "savingThrowOutcome",
+            holeId: savingThrows.holeId,
+            value: {
+              area: {
+                originAnchorId: wizardId,
+                affectedTargetIds: [skeletonId],
+                sleepNonSleeperFacts: [
+                  { kind: "doesNotSleep", targetId: skeletonId },
+                ],
+              },
+              outcomes: [],
+            },
+          },
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Sleep non-sleeper automatic-success facts are not supported yet.",
+    });
+  });
+
+  test("Sleep cannot be readied through direct reducer input", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-sleep-ready-rejected"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            cantrips: [],
+            preparedSpells: [spellRecord("sleep")],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: {
+          tag: "actionSpell",
+          actorId: wizardId,
+          invocation: spellSlotInvocationRef("sleep", 1, "sleepTargetAdmission"),
+          mode: { tag: "ready", trigger: "spellCast" },
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedSubject",
+      message: "This spell procedure cannot be readied by this runtime lane.",
+    });
+    expect(state.readiedSpells.has(wizardId)).toBe(false);
+  });
+
   test("save-damage replacement riders reduce failed half-damage saves", () => {
     const state = wizardVsRogueBattle({ evasion: true });
     const subject = magicSubject("dex_half_cantrip");
@@ -19746,11 +19931,12 @@ function spellRecord(
     | "color_spray"
     | "ice_knife"
     | "entangle"
+    | "sleep"
     | "hunters_mark"
     | "healing_word",
 ) {
   const unit =
-    spellId === "entangle"
+    spellId === "entangle" || spellId === "sleep"
       ? unitLibrary.requireUnit(spellId)
       : testSpellRecords.get(spellId);
   if (unit === undefined) {
@@ -19781,6 +19967,7 @@ function magicSubject(
     | "color_spray"
     | "ice_knife"
     | "entangle"
+    | "sleep"
     | "dex_half_cantrip",
 ): BattleSubject {
   return {
@@ -19795,19 +19982,25 @@ function magicSubject(
             ? spellSlotInvocationRef(spellId, 1, "saveGatedDamage")
             : spellId === "color_spray" || spellId === "entangle"
               ? spellSlotInvocationRef(spellId, 1, "saveGatedCondition")
-              : spellId === "ice_knife"
-                ? spellSlotInvocationRef(spellId, 1, "attackBurstSaveDamage")
-                : spellId === "vicious_mockery"
-                  ? cantripSpellInvocationRef(spellId, "saveGatedDamage")
-                  : spellId === "guiding_bolt" || spellId === "ray_of_sickness"
-                    ? spellSlotInvocationRef(spellId, 1, "spellAttackDamage")
-                    : spellId === "ray_of_frost" ||
-                        spellId === "poison_spray" ||
-                        spellId === "chill_touch" ||
-                        spellId === "shocking_grasp" ||
-                        spellId === "starry_wisp"
-                      ? cantripSpellInvocationRef(spellId, "spellAttackDamage")
-                      : cantripSpellInvocationRef(spellId, "saveGatedDamage"),
+              : spellId === "sleep"
+                ? spellSlotInvocationRef(spellId, 1, "sleepTargetAdmission")
+                : spellId === "ice_knife"
+                  ? spellSlotInvocationRef(spellId, 1, "attackBurstSaveDamage")
+                  : spellId === "vicious_mockery"
+                    ? cantripSpellInvocationRef(spellId, "saveGatedDamage")
+                    : spellId === "guiding_bolt" ||
+                        spellId === "ray_of_sickness"
+                      ? spellSlotInvocationRef(spellId, 1, "spellAttackDamage")
+                      : spellId === "ray_of_frost" ||
+                          spellId === "poison_spray" ||
+                          spellId === "chill_touch" ||
+                          spellId === "shocking_grasp" ||
+                          spellId === "starry_wisp"
+                        ? cantripSpellInvocationRef(
+                            spellId,
+                            "spellAttackDamage",
+                          )
+                        : cantripSpellInvocationRef(spellId, "saveGatedDamage"),
     mode: { tag: "cast" },
   };
 }

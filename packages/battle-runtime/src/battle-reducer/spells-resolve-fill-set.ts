@@ -274,6 +274,7 @@ export function spellFillSet(
         invocation.procedure !== "saveGatedCondition" &&
         invocation.procedure !== "afterHitSaveGatedCondition" &&
         invocation.procedure !== "saveGatedAttackRollAdvantage" &&
+        invocation.procedure !== "sleepTargetAdmission" &&
         !(
           invocation.procedure === "rollModifier" &&
           invocation.saveGate !== null
@@ -509,7 +510,8 @@ export function spellFillSetSavingThrowTargeting(
     : invocation.procedure === "saveGatedDamage" ||
         invocation.procedure === "saveGatedCondition" ||
         invocation.procedure === "afterHitSaveGatedCondition" ||
-        invocation.procedure === "saveGatedAttackRollAdvantage"
+        invocation.procedure === "saveGatedAttackRollAdvantage" ||
+        invocation.procedure === "sleepTargetAdmission"
       ? invocation.targeting
       : { kind: "singleCombatant" };
 }

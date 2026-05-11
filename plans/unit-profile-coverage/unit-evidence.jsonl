@@ -74,3 +74,4 @@
 {"unitId":"hunters_mark","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV31B","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"produce_flame","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV32B","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"starry_wisp","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV34","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
+{"unitId":"sleep","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV38A","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}

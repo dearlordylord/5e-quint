@@ -9,6 +9,7 @@ import {
   type ActionSpellBattleResolutionInput,
   type BattleHoleId,
   type BattleResolutionResult,
+  type BattleSpellAreaChoice,
   type BattleSpellSavingThrowOutcomeHole,
   type BattleSpellSavingThrowOutcomeValue,
   type BattleState,
@@ -49,6 +50,99 @@ import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 import { type SpellFillSet } from "./spells-resolve-fill-set.ts";
 
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
+export function resolveSleepTargetAdmissionSpellAct(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "sleepTargetAdmission" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  const savingThrowHole = spellSavingThrowOutcomeHole(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+  );
+  if (
+    input.fillSet.targetId !== undefined ||
+    input.fillSet.targetList !== undefined
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Sleep target admission uses one point-origin Sphere Saving Throw fill.",
+    );
+  }
+  if (
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.concentrationSavingThrows.length > 0 ||
+    input.fillSet.damageDispositions.length > 0
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Sleep target admission does not use attack or damage fills.",
+    );
+  }
+  if (input.fillSet.savingThrowOutcomes === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      savingThrowHole,
+    ]);
+  }
+  const savingThrowValidation = validateSavingThrowOutcomes(
+    input.fillSet.savingThrowOutcomes,
+    savingThrowHole,
+    input.input.state,
+    input.actorId,
+    undefined,
+  );
+  if (savingThrowValidation !== null) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      savingThrowValidation,
+    );
+  }
+  const selectedTargetIds =
+    "area" in input.fillSet.savingThrowOutcomes
+      ? input.fillSet.savingThrowOutcomes.area.affectedTargetIds
+      : [];
+  const failedTargets = input.fillSet.savingThrowOutcomes.outcomes.flatMap(
+    (outcome) => (outcome.succeeded ? [] : [outcome.targetId]),
+  );
+  if (failedTargets.length > 0) {
+    const saveFailedReactionWindow = maybeOpenReactionWindow(
+      input.input.state,
+      {
+        trigger: "saveFailed",
+        targetId: failedTargets[0]!,
+        sourceSpellId: input.invocation.spell.id,
+        continuation: {
+          kind: "replay",
+          subject:
+            input.input.reactionContinuationSubject ?? input.input.subject,
+          fills: input.input.fills,
+        },
+      },
+      input.input.suppressedReactionTrigger,
+    );
+    if (saveFailedReactionWindow !== null) {
+      return saveFailedReactionWindow;
+    }
+  }
+  return spendSpellCastResources({
+    state: extendSavingThrowOngoingFeatures(
+      input.input.state,
+      input.actorId,
+      selectedTargetIds,
+    ),
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
+}
 export function resolveSaveGateDamageSpellRelease(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
@@ -334,23 +428,16 @@ export function resolveSaveGateDamageSpellAct(input: {
   }
   const damaged = damageTargets.reduce(
     (state, targetId) =>
-      applySpellDamage(
-        state,
-        targetId,
-        input.invocation,
-        damageRoll,
-        false,
-        {
-          concentrationSavingThrow: concentrationSaveByTargetId.get(targetId),
-          saveDamageResult: saveDamageResultForTarget(targetId),
-          damageDisposition: damageDispositionForTarget(
-            damageDispositionHoles,
-            input.fillSet.damageDispositions,
-            targetId,
-          ),
-          damageSourceId: input.actorId,
-        },
-      ),
+      applySpellDamage(state, targetId, input.invocation, damageRoll, false, {
+        concentrationSavingThrow: concentrationSaveByTargetId.get(targetId),
+        saveDamageResult: saveDamageResultForTarget(targetId),
+        damageDisposition: damageDispositionForTarget(
+          damageDispositionHoles,
+          input.fillSet.damageDispositions,
+          targetId,
+        ),
+        damageSourceId: input.actorId,
+      }),
     input.input.state,
   );
   const effected = applyFailedSaveSpellActiveEffects(
@@ -722,6 +809,13 @@ export function validateSavingThrowOutcomes(
       : "Save-gated roll modifier spell Saving Throw outcomes exceed the selected spell's target count.";
   }
   const targeting = spellSavingThrowTargeting(hole.spell);
+  if (hole.spell.procedure === "sleepTargetAdmission") {
+    return validateSleepTargetAdmissionSavingThrowOutcomes({
+      value,
+      area: "area" in value ? value.area : undefined,
+      state,
+    });
+  }
   if (targeting.kind === "singleCombatant") {
     if (outcomes.length === 0) {
       return "Save-gate spell must include at least one affected target Saving Throw outcome.";
@@ -777,6 +871,9 @@ export function validateSavingThrowOutcomes(
   if (!("area" in value)) {
     return `Save-gate spell Saving Throw outcomes require area facts for ${targeting.kind}.`;
   }
+  if ("sleepNonSleeperFacts" in value.area) {
+    return "Sleep non-sleeper facts are only valid for Sleep target admission.";
+  }
   if (!state.combatants.has(value.area.originAnchorId)) {
     return "Save-gate spell area origin anchor must be a combatant in this battle.";
   }
@@ -829,4 +926,74 @@ export function validateSavingThrowOutcomes(
     return "Save-gate spell Saving Throw outcomes must cover every table-supplied area affected target.";
   }
   return null;
+}
+
+function validateSleepTargetAdmissionSavingThrowOutcomes(input: {
+  readonly value: BattleSpellSavingThrowOutcomeValue;
+  readonly area: BattleSpellAreaChoice | undefined;
+  readonly state: BattleState;
+}): string | null {
+  if (input.area === undefined) {
+    return "Sleep Saving Throw outcomes require point-origin Sphere target facts.";
+  }
+  if ("sleepNonSleeperFacts" in input.area) {
+    return "Sleep non-sleeper automatic-success facts are not supported yet.";
+  }
+  if (!input.state.combatants.has(input.area.originAnchorId)) {
+    return "Sleep point-origin Sphere origin anchor must be a combatant in this battle.";
+  }
+  const selectedTargets = new Set(input.area.affectedTargetIds);
+  if (selectedTargets.size !== input.area.affectedTargetIds.length) {
+    return "Sleep point-origin Sphere targets must not duplicate targets.";
+  }
+  if (input.area.affectedTargetIds.length === 0) {
+    return "Sleep must target at least one selected creature.";
+  }
+  for (const targetId of selectedTargets) {
+    if (!input.state.combatants.has(targetId)) {
+      return "Sleep point-origin Sphere target must be a combatant in this battle.";
+    }
+  }
+  const autoSuccessTargetIds = new Set(
+    input.area.affectedTargetIds.filter((targetId) =>
+      sleepTargetHasExhaustionImmunity(input.state, targetId),
+    ),
+  );
+  const nonAutomaticTargetIds = input.area.affectedTargetIds.filter(
+    (targetId) => !autoSuccessTargetIds.has(targetId),
+  );
+  const outcomeTargetIds = new Set<CombatantId>();
+  for (const outcome of input.value.outcomes) {
+    if (!selectedTargets.has(outcome.targetId)) {
+      return "Sleep Saving Throw outcomes must match selected Sphere targets.";
+    }
+    if (autoSuccessTargetIds.has(outcome.targetId)) {
+      return "Sleep targets with Exhaustion Immunity automatically succeed and must not receive a rolled Saving Throw outcome.";
+    }
+    if (outcomeTargetIds.has(outcome.targetId)) {
+      return "Sleep Saving Throw outcomes must not duplicate targets.";
+    }
+    outcomeTargetIds.add(outcome.targetId);
+  }
+  if (outcomeTargetIds.size !== nonAutomaticTargetIds.length) {
+    return "Sleep Saving Throw outcomes must cover every selected target that is not an automatic success.";
+  }
+  return nonAutomaticTargetIds.every((targetId) =>
+    outcomeTargetIds.has(targetId),
+  )
+    ? null
+    : "Sleep Saving Throw outcomes must cover every selected target that is not an automatic success.";
+}
+
+function sleepTargetHasExhaustionImmunity(
+  state: BattleState,
+  targetId: CombatantId,
+): boolean {
+  const target = state.combatants.get(targetId);
+  return (
+    target?.origin.kind === "statBlock" &&
+    target.origin.statBlock.statBlock.immunities?.conditions?.includes(
+      "exhaustion",
+    ) === true
+  );
 }

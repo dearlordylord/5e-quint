@@ -25,6 +25,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31B hunters_mark
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV32B produce_flame
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV34 starry_wisp
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV38A sleep
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT25 healing_word
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT32 cure_wounds mass_healing_word
@@ -42,7 +43,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT59 monk_deflect_attacks
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT62 fighter_tactical_mind
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT65 bard_cutting_words
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider spell.scalar-buff
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -2929,20 +2930,64 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
     ]);
   });
 
-  test("sleep remains unsupported by the Color Spray condition-save admission path", () => {
+  test("sleep is admitted as point-origin Sphere target admission", () => {
+    const spell = spellRecord(sleepUnitId);
+    const act = spellAct({
+      state: spellBattle({
+        preparedSpells: [spell],
+        spellSlots: [{ spellLevel: 1, count: 1 }],
+      }),
+      spellId: sleepUnitId,
+      slotLevel: 1,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef("sleep", 1, "sleepTargetAdmission"),
+      mode: { tag: "cast" },
+    });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+    expect(savingThrow).toEqual(
+      expect.objectContaining({
+        label: "Sleep point-origin Sphere Saving Throw outcomes",
+        ability: "wis",
+        dc: { kind: "caster_spell_save_dc" },
+      }),
+    );
+    expect(spellHoleInvocation([savingThrow])).toEqual(
+      expect.objectContaining({
+        procedure: "sleepTargetAdmission",
+        spell,
+        resource: { tag: "spellSlot", slotLevel: 1 },
+        ability: "wis",
+        targeting: { kind: "pointOriginSphere", radiusFeet: 5 },
+        rangeFeet: 60,
+      }),
+    );
+    expect(act.initialHoles).toEqual([
+      expect.objectContaining({
+        kind: "savingThrowOutcome",
+        areaChoices: [],
+      }),
+    ]);
+  });
+
+  test("sleep is not admitted through the generic save-gated condition projection", () => {
     const spell = spellRecord(sleepUnitId);
     const state = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 1, count: 1 }],
     });
 
-    expect(
-      maybeSpellAct({
-        state,
-        spellId: sleepUnitId,
-        slotLevel: 1,
-      }),
-    ).toBeUndefined();
+    const invocation = spellAct({
+      state,
+      spellId: sleepUnitId,
+      slotLevel: 1,
+    }).subject.invocation;
+    expect(invocation).toEqual(
+      spellSlotInvocationRef("sleep", 1, "sleepTargetAdmission"),
+    );
   });
 
   test("ice_knife is admitted as a mixed spell attack plus primary-target burst save", () => {
@@ -7872,7 +7917,9 @@ describe("SRDINV30C deterministic protection and charm Spell Unit admission", ()
 
   test("charm person scales target count by slot level", () => {
     const spell = spellRecord(charmPersonUnitId);
-    const secondHumanoidId = combatantId("unit-profile-charm-person-humanoid-2");
+    const secondHumanoidId = combatantId(
+      "unit-profile-charm-person-humanoid-2",
+    );
     const state = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],

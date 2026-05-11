@@ -217,6 +217,12 @@ The support-profile parser surface should cover these profile families:
   action-cast save-gate damage profile for either single creature targets or
   admitted caller-supplied area target sets, currently point-origin Spheres and
   self-origin Cones.
+- `SpellProfile.sleepTargetAdmission`: an action-cast, slot-spent Sleep
+  admission profile for caller-supplied point-origin 5-foot-radius Sphere target
+  sets. It produces Wisdom Saving Throw holes only for selected creatures that
+  are not automatic successes; Exhaustion Immunity is derived from retained
+  Stat Block condition-immunity facts, while non-sleeper facts are explicitly
+  shaped but rejected until executable support lands.
 - `SpellProfile.creatureTypeProtectionAndCharm`: an action-cast, slot-spent
   profile for creature-type-scoped condition/protection clauses. Animal
   Friendship admits Beast targets and applies spell-owned Charmed on failed
@@ -631,6 +637,12 @@ Feature and spell resources:
   `inflict_wounds` and `burning_hands`. `color_spray` applies spell-owned
   Blinded to failed self-origin Cone Constitution saves until the caster's next
   turn ends without deleting unrelated Blinded sources when it expires.
+- `sleep` uses a Sleep-specific admission profile: the caller supplies selected
+  creatures in a point-origin 5-foot-radius Sphere, the runtime asks for Wisdom
+  saves only for selected targets that are not automatic successes, derives
+  Exhaustion-immunity automatic success from retained Stat Block condition
+  immunities, rejects non-sleeper facts until executable support lands, and
+  spends the Magic action plus Spell Slot without applying the pending lifecycle.
 - Prepared `hellish_rebuke` is admitted as an after-damage triggered-Reaction
   spell: a damaging visible creature within 60 feet makes a Dexterity save,
   takes Fire damage on a failed save and half as much on success, and the spell

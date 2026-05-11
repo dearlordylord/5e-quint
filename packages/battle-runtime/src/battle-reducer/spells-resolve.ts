@@ -131,6 +131,7 @@ export {
   resolveSaveGateAttackRollAdvantageSpellAct,
   resolveSaveGateConditionSpellAct,
   resolveSaveGateDamageSpellAct,
+  resolveSleepTargetAdmissionSpellAct,
   validateSavingThrowOutcomes,
 } from "./spells-resolve-save-gates.ts";
 export {
@@ -175,6 +176,7 @@ import {
   resolveSaveGateAttackRollAdvantageSpellAct,
   resolveSaveGateConditionSpellAct,
   resolveSaveGateDamageSpellAct,
+  resolveSleepTargetAdmissionSpellAct,
 } from "./spells-resolve-save-gates.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 
@@ -348,6 +350,14 @@ export function resolveSpellAct(
   }
   if (invocation.procedure === "saveGatedAttackRollAdvantage") {
     return resolveSaveGateAttackRollAdvantageSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "sleepTargetAdmission") {
+    return resolveSleepTargetAdmissionSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

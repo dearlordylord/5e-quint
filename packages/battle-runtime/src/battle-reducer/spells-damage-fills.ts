@@ -486,7 +486,8 @@ export function spellSavingThrowOutcomeHole(
         | "rollModifier"
         | "saveGatedDamage"
         | "saveGatedCondition"
-        | "saveGatedAttackRollAdvantage";
+        | "saveGatedAttackRollAdvantage"
+        | "sleepTargetAdmission";
     }
   >,
 ): BattleSpellSavingThrowOutcomeHole {
@@ -544,7 +545,8 @@ export function spellSavingThrowAbility(
         | "rollModifier"
         | "saveGatedDamage"
         | "saveGatedCondition"
-        | "saveGatedAttackRollAdvantage";
+        | "saveGatedAttackRollAdvantage"
+        | "sleepTargetAdmission";
     }
   >,
 ): Ability {
@@ -566,7 +568,8 @@ export function spellSavingThrowTargeting(
         | "afterHitSaveGatedCondition"
         | "saveGatedDamage"
         | "saveGatedCondition"
-        | "saveGatedAttackRollAdvantage";
+        | "saveGatedAttackRollAdvantage"
+        | "sleepTargetAdmission";
     }
   >,
 ): SpellTargeting {
@@ -781,19 +784,17 @@ export function validatePreparedSlotSpellDamageGroups(
 }
 
 type SpellDamageContext = {
-  readonly concentrationSavingThrow?: Extract<
-    BattleFill,
-    { readonly kind: "concentrationSavingThrow" }
-  > | undefined;
+  readonly concentrationSavingThrow?:
+    | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
+    | undefined;
   readonly saveDamageResult?: SaveDamageResult | undefined;
   readonly damageDisposition?: BattleAttackDamageDisposition | undefined;
   readonly spellMarkedDamageRiders?:
     | readonly SpellMarkedDamageRider[]
     | undefined;
-  readonly spellDamageReductionRoll?: Extract<
-    BattleFill,
-    { readonly kind: "rolledDice" }
-  > | undefined;
+  readonly spellDamageReductionRoll?:
+    | Extract<BattleFill, { readonly kind: "rolledDice" }>
+    | undefined;
   readonly damageSourceId?: CombatantId | undefined;
 };
 
@@ -836,11 +837,10 @@ export function applySpellDamage(
     reduction.target,
     reduction.damageByType,
   );
-  const damaged = applyHpDamage(
-    reduction.target,
-    effectiveDamage,
-    { deathFailuresAtZeroHp: critical ? 2 : 1, damageDisposition },
-  );
+  const damaged = applyHpDamage(reduction.target, effectiveDamage, {
+    deathFailuresAtZeroHp: critical ? 2 : 1,
+    damageDisposition,
+  });
   const nextState = {
     ...state,
     combatants: new Map(state.combatants).set(targetId, damaged),
@@ -851,14 +851,15 @@ export function applySpellDamage(
     target.hp,
     damaged.hp,
   );
-  const concentrated = concentrationSavingThrow?.value.succeeded === false ||
+  const concentrated =
+    concentrationSavingThrow?.value.succeeded === false ||
     (target.concentration !== null && damaged.concentration === null)
-    ? breakBattleConcentrationAfterDamage({
-        state: afterMarkDrop,
-        combatantId: targetId,
-        priorConcentration: target.concentration,
-      })
-    : afterMarkDrop;
+      ? breakBattleConcentrationAfterDamage({
+          state: afterMarkDrop,
+          combatantId: targetId,
+          priorConcentration: target.concentration,
+        })
+      : afterMarkDrop;
   return effectiveDamage > 0 && damageSourceId !== undefined
     ? removeSpellConditionEffectsFromTargetDamagedByCasterOrAlly(
         concentrated,
@@ -869,10 +870,9 @@ export function applySpellDamage(
 }
 
 type PreparedSlotSpellDamageContext = {
-  readonly concentrationSavingThrow?: Extract<
-    BattleFill,
-    { readonly kind: "concentrationSavingThrow" }
-  > | undefined;
+  readonly concentrationSavingThrow?:
+    | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
+    | undefined;
   readonly damageDisposition?: BattleAttackDamageDisposition | undefined;
   readonly damageSourceId?: CombatantId | undefined;
 };
@@ -906,14 +906,15 @@ export function applyPreparedSlotSpellDamage(
     target.hp,
     damaged.hp,
   );
-  const concentrated = concentrationSavingThrow?.value.succeeded === false ||
+  const concentrated =
+    concentrationSavingThrow?.value.succeeded === false ||
     (target.concentration !== null && damaged.concentration === null)
-    ? breakBattleConcentrationAfterDamage({
-        state: afterMarkDrop,
-        combatantId: targetId,
-        priorConcentration: target.concentration,
-      })
-    : afterMarkDrop;
+      ? breakBattleConcentrationAfterDamage({
+          state: afterMarkDrop,
+          combatantId: targetId,
+          priorConcentration: target.concentration,
+        })
+      : afterMarkDrop;
   return damageAmount > 0 && damageSourceId !== undefined
     ? removeSpellConditionEffectsFromTargetDamagedByCasterOrAlly(
         concentrated,

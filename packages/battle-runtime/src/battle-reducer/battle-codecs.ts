@@ -649,6 +649,19 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       rangeFeet: MovementFeet,
     }),
     Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("sleepTargetAdmission"),
+      spell: BattleRuntimeObjectSchema,
+      ability: Schema.Literal("wis"),
+      dc: DcSourceSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("pointOriginSphere"),
+        radiusFeet: MovementFeet,
+      }),
+      rangeFeet: MovementFeet,
+    }),
+    Schema.Struct({
       access: ClassCantripSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
       procedure: Schema.Literal("damageReduction"),
@@ -1042,6 +1055,15 @@ export const BattleHoleSchema = Schema.Union(
       Schema.Struct({
         originAnchorId: CombatantId,
         affectedTargetIds: Schema.Array(CombatantId),
+        sleepNonSleeperFacts: Schema.optionalWith(
+          Schema.Array(
+            Schema.Struct({
+              kind: Schema.Literal("doesNotSleep"),
+              targetId: CombatantId,
+            }),
+          ),
+          { exact: true },
+        ),
       }),
     ),
     targetRollModes: Schema.Array(
@@ -1375,6 +1397,10 @@ type BattleFillEncoded =
             readonly area: {
               readonly originAnchorId: string;
               readonly affectedTargetIds: readonly string[];
+              readonly sleepNonSleeperFacts?: readonly {
+                readonly kind: "doesNotSleep";
+                readonly targetId: string;
+              }[];
             };
             readonly outcomes: readonly {
               readonly targetId: string;
@@ -1722,6 +1748,15 @@ export const BattleFillSchema: Schema.Schema<
           area: Schema.Struct({
             originAnchorId: CombatantId,
             affectedTargetIds: Schema.Array(CombatantId),
+            sleepNonSleeperFacts: Schema.optionalWith(
+              Schema.Array(
+                Schema.Struct({
+                  kind: Schema.Literal("doesNotSleep"),
+                  targetId: CombatantId,
+                }),
+              ),
+              { exact: true },
+            ),
           }),
           outcomes: Schema.Array(
             Schema.Struct({

@@ -45,6 +45,14 @@ export function supportedSpellInvocationRef(
       procedure: "spellHostedWeaponAttack",
     };
   }
+  if (invocation.procedure === "sleepTargetAdmission") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "sleepTargetAdmission",
+    };
+  }
   return Match.value(invocation).pipe(
     Match.when({ procedure: "heldLight" }, (cantrip) => ({
       tag: "cantrip" as const,

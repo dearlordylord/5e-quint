@@ -76,7 +76,8 @@ export function discoverSupportedSpellInvocations(
       if (
         invocation.procedure === "saveGatedDamage" ||
         invocation.procedure === "saveGatedCondition" ||
-        invocation.procedure === "saveGatedAttackRollAdvantage"
+        invocation.procedure === "saveGatedAttackRollAdvantage" ||
+        invocation.procedure === "sleepTargetAdmission"
       ) {
         if (
           invocation.targeting.kind === "singleCombatant" ||
@@ -507,7 +508,8 @@ export function spellActivationInvocationCastSummary(
         | "creatureTypeProtection"
         | "saveGatedDamage"
         | "saveGatedCondition"
-        | "saveGatedAttackRollAdvantage";
+        | "saveGatedAttackRollAdvantage"
+        | "sleepTargetAdmission";
     }
   >,
 ): string {
@@ -597,6 +599,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "markedDamageRider" &&
     invocation.procedure !== "saveGatedCondition" &&
     invocation.procedure !== "saveGatedAttackRollAdvantage" &&
+    invocation.procedure !== "sleepTargetAdmission" &&
     invocation.procedure !== "shieldReaction"
   );
 }
@@ -624,6 +627,7 @@ export function readiedSpellAct(
     invocation.procedure === "attackBurstSaveDamage" ||
     invocation.procedure === "saveGatedCondition" ||
     invocation.procedure === "saveGatedAttackRollAdvantage" ||
+    invocation.procedure === "sleepTargetAdmission" ||
     invocation.procedure === "shieldReaction" ||
     state.readiedSpells.has(actorId)
   ) {

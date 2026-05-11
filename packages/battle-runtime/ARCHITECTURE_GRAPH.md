@@ -194,6 +194,13 @@ flowchart TD
   duplicate-d8 leap gating, target uniqueness, and previous-target range facts.
   `vicious_mockery` adds an attack-roll-only Disadvantage effect on failed
   saves.
+  `sleep` has a separate admission profile for caller-supplied point-origin
+  5-foot-radius Sphere targets. It asks for Wisdom Saving Throw outcomes only
+  for selected creatures that are not automatic successes, derives
+  Exhaustion-immunity automatic success from retained Stat Block condition
+  immunities, rejects non-sleeper facts until executable support lands, and
+  spends the Magic action plus Spell Slot without applying the pending
+  repeat-save lifecycle.
   `animal_friendship` and `charm_person` add the same save-gated condition
   procedure for Beast-target and Humanoid-target Charmed effects. Charm Person
   annotates hostile targets' Wisdom saves with Advantage, and both Charmed

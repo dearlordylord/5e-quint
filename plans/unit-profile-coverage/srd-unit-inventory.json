@@ -160,19 +160,19 @@
       "non-runtime": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 235,
+      "catalog-installed-owner-evidence-present": 238,
       "non-runtime": 12,
       "catalog-only/dead-for-now": 80,
       "needs-surface-widening": 33,
-      "catalog-installed-owner-evidence-required": 5,
-      "catalog-authored-executable-follow-up": 2
+      "catalog-authored-executable-follow-up": 2,
+      "catalog-installed-owner-evidence-required": 2
     },
     "spellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 80,
-      "catalog-installed-owner-evidence-present": 91,
+      "catalog-installed-owner-evidence-present": 94,
       "needs-surface-widening": 33,
-      "catalog-installed-owner-evidence-required": 5,
-      "catalog-authored-executable-follow-up": 2
+      "catalog-authored-executable-follow-up": 2,
+      "catalog-installed-owner-evidence-required": 2
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -2395,7 +2395,7 @@
     {
       "id": "SRDINV38",
       "title": "Research Sleep Save Loop Runtime",
-      "suggestedStatus": "ready-for-research",
+      "suggestedStatus": "done",
       "intent": "Research and split Sleep's save loop and Incapacitated/Unconscious lifecycle before claiming installed support.",
       "rowCount": 3,
       "rowIds": [
@@ -4856,7 +4856,7 @@
         "state": "installed",
         "unitId": "sleep"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -4865,11 +4865,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Unit matrix records unsupported-profile: Hit Point ordered target allocation and Incapacitated/Unconscious application are not a stable Unit profile row. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV38A at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Unit matrix records unsupported-profile: Hit Point ordered target allocation and Incapacitated/Unconscious application are not a stable Unit profile row. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_speak_with_animals",
@@ -13746,7 +13746,7 @@
         "state": "installed",
         "unitId": "sleep"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -13755,11 +13755,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Unit matrix records unsupported-profile: Hit Point ordered target allocation and Incapacitated/Unconscious application are not a stable Unit profile row. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV38A at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Unit matrix records unsupported-profile: Hit Point ordered target allocation and Incapacitated/Unconscious application are not a stable Unit profile row. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_thunderwave",
@@ -17089,7 +17089,7 @@
         "state": "installed",
         "unitId": "sleep"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -17098,11 +17098,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Unit matrix records unsupported-profile: Hit Point ordered target allocation and Incapacitated/Unconscious application are not a stable Unit profile row. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV38A at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Unit matrix records unsupported-profile: Hit Point ordered target allocation and Incapacitated/Unconscious application are not a stable Unit profile row. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_thunderwave",

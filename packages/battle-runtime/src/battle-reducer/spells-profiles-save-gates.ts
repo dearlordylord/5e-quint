@@ -63,6 +63,25 @@ export type SaveGateAttackRollAdvantageSpell = {
   readonly effect: SpellFailedSaveAttackRollEffect;
   readonly rangeFeet: MovementFeet;
 };
+
+type SleepTargetAdmissionPhase = Extract<
+  ActivationPhase,
+  { readonly kind: "save_gate" }
+> & {
+  readonly ability: "wis";
+  readonly attachment: {
+    readonly kind: "hole";
+    readonly value: {
+      readonly kind: "area";
+      readonly origin: { readonly kind: "point_within_range" };
+      readonly shape: {
+        readonly kind: "sphere";
+        readonly radiusFeet: number;
+      };
+    };
+  };
+};
+
 export function supportedCantripSaveGateDamageProfile(
   spell: SpellRecord,
   characterLevel: number,
@@ -165,6 +184,109 @@ export function supportedPreparedSaveGateAttackRollAdvantageProfile(
       },
     ];
   });
+}
+
+export function supportedPreparedSleepTargetAdmissionProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  const sleep = sleepTargetAdmissionSpell(spell);
+  if (sleep === null) {
+    return [];
+  }
+
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    return [
+      {
+        access: { tag: "prepared" },
+        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        procedure: "sleepTargetAdmission",
+        spell,
+        ability: sleep.phase.ability,
+        dc: sleep.phase.dc,
+        targeting: sleep.targeting,
+        rangeFeet: sleep.rangeFeet,
+      },
+    ];
+  });
+}
+
+function sleepTargetAdmissionSpell(spell: SpellRecord): {
+  readonly phase: SleepTargetAdmissionPhase;
+  readonly targeting: Extract<
+    SpellTargeting,
+    { readonly kind: "pointOriginSphere" }
+  >;
+  readonly rangeFeet: MovementFeet;
+} | null {
+  if (spell.mechanics.family !== "activation") {
+    return null;
+  }
+  const phase = spell.mechanics.phases[0];
+  const earlyEnd =
+    spell.mechanics.duration.kind === "concentration"
+      ? (spell.mechanics.duration.earlyEnd ?? [])
+      : [];
+  if (
+    spell.name !== "Sleep" ||
+    spell.provenance.kind !== "srd-5.2.1" ||
+    spell.provenance.section !== "Spells/Descriptions-S-Z#Sleep" ||
+    spell.mechanics.level !== 1 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "point" ||
+    spell.mechanics.range.feet !== 60 ||
+    spell.mechanics.duration.kind !== "concentration" ||
+    spell.mechanics.duration.upTo.unit !== "minute" ||
+    spell.mechanics.duration.upTo.amount !== 1 ||
+    earlyEnd.length !== 1 ||
+    earlyEnd[0]?.kind !== "target_takes_damage" ||
+    spell.mechanics.phases.length !== 1 ||
+    !isSleepTargetAdmissionPhase(phase)
+  ) {
+    return null;
+  }
+
+  return {
+    phase,
+    targeting: {
+      kind: "pointOriginSphere",
+      radiusFeet: movementFeet(phase.attachment.value.shape.radiusFeet),
+    },
+    rangeFeet: movementFeet(spell.mechanics.range.feet),
+  };
+}
+
+function isSleepTargetAdmissionPhase(
+  phase: ActivationPhase | undefined,
+): phase is SleepTargetAdmissionPhase {
+  const repeatSave =
+    phase?.kind === "save_gate" && "repeatSave" in phase
+      ? phase.repeatSave
+      : undefined;
+  const repeatFailure =
+    repeatSave !== undefined ? repeatSave.onFailAgain : undefined;
+  return (
+    phase?.kind === "save_gate" &&
+    phase.ability === "wis" &&
+    phase.dc.kind === "caster_spell_save_dc" &&
+    phase.onSuccess.kind === "none" &&
+    phase.attachment.kind === "hole" &&
+    phase.attachment.value.kind === "area" &&
+    phase.attachment.value.origin.kind === "point_within_range" &&
+    phase.attachment.value.shape.kind === "sphere" &&
+    phase.attachment.value.shape.radiusFeet ===
+      SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET &&
+    phase.onFail.kind === "apply_condition" &&
+    phase.onFail.condition === "incapacitated" &&
+    repeatSave !== undefined &&
+    repeatSave.cadence === "end_of_target_turn" &&
+    repeatSave.onSuccess === "ends_on_target" &&
+    repeatFailure?.kind === "apply_condition" &&
+    repeatFailure.condition === "unconscious"
+  );
 }
 
 export function faerieFireSaveGateAttackRollAdvantageSpell(

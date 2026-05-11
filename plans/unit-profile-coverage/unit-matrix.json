@@ -860,6 +860,29 @@
       ]
     },
     {
+      "id": "spell.invocation-sleep-target-admission",
+      "profileKind": "table-caller",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "Caller-supplied Sleep Sphere membership plus retained Stat Block Exhaustion Immunity facts",
+      "taskRefs": [
+        "SRDINV38A"
+      ],
+      "title": "Spell invocation admits Sleep's point-origin target set and automatic-save boundary",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/index.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.invocation-damage-reduction",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -1569,6 +1592,14 @@
         "spell.invocation-condition-save"
       ],
       "taskId": "SRDINV29B"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime Sleep tests for point-origin 5-foot Sphere target admission, Wisdom Saving Throw holes, Exhaustion-immunity automatic success, resource spend, unsupported non-sleeper facts, and ready-mode rejection.",
+      "profileIds": [
+        "spell.invocation-sleep-target-admission"
+      ],
+      "taskId": "SRDINV38A"
     },
     {
       "claimKind": "completed-runtime-parity",
@@ -6861,14 +6892,73 @@
         "status": "installed"
       },
       "claim": {
-        "reason": "Hit Point ordered target allocation and Incapacitated/Unconscious application are not a stable Unit profile row.",
-        "tag": "unsupported-profile"
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "SRDINV41",
+            "mechanic": "creatures that do not sleep automatically succeed only when an executable non-sleeper fact is supported"
+          },
+          {
+            "followUpTaskId": "SRDINV38B",
+            "mechanic": "failed initial save applies Incapacitated until the end of the target's next turn with a repeat Wisdom save"
+          },
+          {
+            "followUpTaskId": "SRDINV38B",
+            "mechanic": "failed repeat save escalates to spell-owned Unconscious for the duration"
+          },
+          {
+            "followUpTaskId": "SRDINV38C",
+            "mechanic": "damage-from-any-source and adjacent shake-awake cleanup"
+          }
+        ],
+        "profileIds": [
+          "spell.invocation-sleep-target-admission"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "point-origin 5-foot-radius Sphere target admission",
+          "Wisdom Saving Throw holes for selected targets that are not automatic successes",
+          "Exhaustion-immunity automatic success derived from retained Stat Block condition-immunity facts",
+          "Magic action and Spell Slot spend"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV38A"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-sleep-target-admission",
+          "profileKind": "table-caller",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "Caller-supplied Sleep Sphere membership plus retained Stat Block Exhaustion Immunity facts",
+          "taskRefs": [
+            "SRDINV38A"
+          ],
+          "title": "Spell invocation admits Sleep's point-origin target set and automatic-save boundary",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/sleep.json",
       "unitId": "sleep"
     },

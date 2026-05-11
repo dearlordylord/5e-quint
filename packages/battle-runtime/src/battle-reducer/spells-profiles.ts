@@ -38,6 +38,7 @@ import {
   supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedSaveGateConditionProfile,
   supportedPreparedSaveGateDamageProfile,
+  supportedPreparedSleepTargetAdmissionProfile,
 } from "./spells-profiles-save-gates.ts";
 import { sameStringSet } from "./spells-profile-shared.ts";
 import {
@@ -85,6 +86,7 @@ export {
   supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedSaveGateConditionProfile,
   supportedPreparedSaveGateDamageProfile,
+  supportedPreparedSleepTargetAdmissionProfile,
   supportedRepeatedEffectCount,
   supportedSaveGateConditionSpell,
   supportedSaveGateDamageProfile,
@@ -144,6 +146,12 @@ export function supportedSpellActs(
     ...spellcasting.preparedSpells.flatMap((spell) =>
       supportedPreparedSaveGateAttackRollAdvantageProfile(
         actor.combatantId,
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...spellcasting.preparedSpells.flatMap((spell) =>
+      supportedPreparedSleepTargetAdmissionProfile(
         spell,
         spellcasting.spellSlots,
       ),
