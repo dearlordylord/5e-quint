@@ -31,6 +31,8 @@ import {
 import {
   scalarBuffInitialHoles,
   spellDamageTypeChoiceHole,
+  spellBeamObjectTargetHole,
+  spellBeamTargetHole,
   spellObjectTargetHole,
   spellRollModifierSkillChoiceHole,
   spellSavingThrowAbility,
@@ -305,6 +307,28 @@ export function discoverSupportedSpellInvocations(
               ];
         return castActs;
       }
+      if (invocation.procedure === "spellAttackBeamSequence") {
+        const initialHoles = Array.from(
+          { length: invocation.targeting.beamCount },
+          (_, beamIndex) => [
+            spellBeamTargetHole(state, actorId, invocation, beamIndex),
+            spellBeamObjectTargetHole(invocation, beamIndex),
+          ],
+        ).flat();
+        return [
+          {
+            subject: {
+              tag: "actionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: invocation.spell.name,
+            summary: spellInvocationCastSummary(invocation),
+            initialHoles,
+          },
+        ];
+      }
       if (
         invocation.procedure === "scalarBuff" &&
         invocation.targeting.kind === "self"
@@ -491,6 +515,9 @@ export function spellInvocationCastSummary(
   if (invocation.procedure === "spellAttackDamage") {
     return spellActivationInvocationCastSummary(invocation);
   }
+  if (invocation.procedure === "spellAttackBeamSequence") {
+    return `Cast ${invocation.spell.name} as a cantrip, resolving ${invocation.targeting.beamCount} beams.`;
+  }
   if (invocation.procedure === "chainedSpellAttackDamage") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
@@ -600,6 +627,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "saveGatedCondition" &&
     invocation.procedure !== "saveGatedAttackRollAdvantage" &&
     invocation.procedure !== "sleepTargetAdmission" &&
+    invocation.procedure !== "spellAttackBeamSequence" &&
     invocation.procedure !== "shieldReaction"
   );
 }
@@ -618,6 +646,7 @@ export function readiedSpellAct(
     invocation.procedure === "weaponDamageRider" ||
     invocation.procedure === "markedDamageRider" ||
     invocation.procedure === "afterHitDamage" ||
+    invocation.procedure === "spellAttackBeamSequence" ||
     invocation.procedure === "afterHitSaveGatedCondition" ||
     invocation.procedure === "afterHitTimedDamageAndSave" ||
     invocation.procedure === "heldLight" ||

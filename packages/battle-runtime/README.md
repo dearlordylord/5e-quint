@@ -213,6 +213,9 @@ The support-profile parser surface should cover these profile families:
   cantrips such as Poison Spray carry an empty rider list. Creature-or-object
   spell attacks may expose either a combatant target fill or a caller-supplied
   object target fact with range, Armor Class, and object damage disposition.
+  Eldritch Blast uses a beam-sequence variant of this profile: one Magic action
+  creates the character-level beam count, each beam has its own creature-or-object
+  target choice and attack roll, and each hit deals Force damage.
 - `SpellProfile.cantripSaveGateDamage` / prepared save-gate damage: an
   action-cast save-gate damage profile for either single creature targets or
   admitted caller-supplied area target sets, currently point-origin Spheres and

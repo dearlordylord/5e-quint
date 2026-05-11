@@ -11,6 +11,7 @@ import type {
   Attachment,
   DamageType,
   SpellRecord,
+  TargetSelection,
   WeaponProficiency,
   WeaponRecord,
 } from "@dnd/surface/surface/types";
@@ -22,6 +23,7 @@ import {
   type DamageSpellSource,
   type PreparedDamageSpellSource,
   type SpellActivationPhase,
+  type SpellAttackBeamSequenceTargeting,
   type SpellAttackDamageTargeting,
   type SpellAttackHitEffect,
   type SpellTargeting,
@@ -32,6 +34,8 @@ import {
   CHROMATIC_ORB_CONTINUATION_LIMIT_KINDS,
   CHROMATIC_ORB_DAMAGE_TYPES,
   CHROMATIC_ORB_LEAP_RANGE_FEET,
+  ELDRITCH_BLAST_BEAM_COUNT_TIERS,
+  type EldritchBlastBeamCount,
 } from "./domain-constants.ts";
 import { sameDiceExpr, sameStringSet } from "./spells-profile-shared.ts";
 import {
@@ -47,14 +51,22 @@ export function supportedCantripSpellAttackProfile(
   proficiencyBonus: ProficiencyBonusType,
   characterLevel: number,
 ): readonly SupportedSpellInvocation[] {
-  return supportedSpellAttackDamageProfile({
-    spell,
-    access: { tag: "classCantrip" },
-    resource: { tag: "none" },
-    spellcastingAbilityModifier,
-    proficiencyBonus,
-    characterLevel,
-  });
+  return [
+    ...supportedCantripSpellAttackBeamSequenceProfile(
+      spell,
+      spellcastingAbilityModifier,
+      proficiencyBonus,
+      characterLevel,
+    ),
+    ...supportedSpellAttackDamageProfile({
+      spell,
+      access: { tag: "classCantrip" },
+      resource: { tag: "none" },
+      spellcastingAbilityModifier,
+      proficiencyBonus,
+      characterLevel,
+    }),
+  ];
 }
 
 const TRUE_STRIKE_DAMAGE_TYPE_CHOICES = [
@@ -565,6 +577,139 @@ export function supportedSpellAttackDamageProfile(
   };
 
   return [{ ...damageSpellSource(input), ...attackDamageInvocation }];
+}
+
+export function supportedCantripSpellAttackBeamSequenceProfile(
+  spell: SpellRecord,
+  spellcastingAbilityModifier: AbilityModifier,
+  proficiencyBonus: ProficiencyBonusType,
+  characterLevel: number,
+): readonly SupportedSpellInvocation[] {
+  if (!isCanonicalSrdEldritchBlastSpellDefinition(spell)) {
+    return [];
+  }
+  const phase =
+    spell.mechanics.family === "activation"
+      ? spell.mechanics.phases[0]
+      : undefined;
+  const targeting =
+    phase?.kind === "attack_roll"
+      ? spellAttackBeamSequenceTargeting(phase.attachment, characterLevel)
+      : null;
+  const damageEffect = phase?.kind === "attack_roll" ? phase.onHit[0] : null;
+  if (
+    spell.mechanics.family !== "activation" ||
+    spell.mechanics.level !== 0 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.duration.kind !== "instantaneous" ||
+    spell.mechanics.range.kind !== "point" ||
+    spell.mechanics.range.feet !== 120 ||
+    spell.mechanics.phases.length !== 1 ||
+    phase?.kind !== "attack_roll" ||
+    phase.attackKind !== "ranged_spell_attack" ||
+    targeting === null ||
+    phase.onHit.length !== 1 ||
+    damageEffect?.kind !== "damage" ||
+    damageEffect.damageType !== "force" ||
+    phase.onMiss.length !== 1 ||
+    phase.onMiss[0]?.kind !== "none"
+  ) {
+    return [];
+  }
+  const damageExpr = supportedDamageAmountExpr({
+    amount: damageEffect.amount,
+    spellLevel: spell.mechanics.level,
+    characterLevel,
+  });
+  if (damageExpr === null) {
+    return [];
+  }
+  return [
+    {
+      access: { tag: "classCantrip" },
+      resource: { tag: "none" },
+      procedure: "spellAttackBeamSequence",
+      spell,
+      targeting,
+      damage: {
+        expr: damageExpr,
+        damageType: damageEffect.damageType,
+      },
+      rangeFeet: movementFeet(spell.mechanics.range.feet),
+      attackKind: phase.attackKind,
+      attackBonus: attackBonus(
+        Number(spellcastingAbilityModifier) + Number(proficiencyBonus),
+      ),
+    },
+  ];
+}
+
+export function isCanonicalSrdEldritchBlastSpellDefinition(
+  spell: SpellRecord,
+): boolean {
+  return (
+    spell.name === "Eldritch Blast" &&
+    spell.provenance.kind === "srd-5.2.1" &&
+    spell.provenance.section === "Spells/Descriptions-E-L#Eldritch Blast"
+  );
+}
+
+function spellAttackBeamSequenceTargeting(
+  attachment: Attachment,
+  characterLevel: number,
+): SpellAttackBeamSequenceTargeting | null {
+  if (
+    attachment.kind !== "hole" ||
+    attachment.value.kind !== "target" ||
+    !sameStringSet(attachment.value.selection.targetKinds ?? [], [
+      "creature",
+      "object",
+    ])
+  ) {
+    return null;
+  }
+  const beamCount = eldritchBlastBeamCount(
+    attachment.value.selection,
+    characterLevel,
+  );
+  return beamCount === null
+    ? null
+    : { kind: "beamSequenceCreatureOrObject", beamCount };
+}
+
+function eldritchBlastBeamCount(
+  selection: TargetSelection,
+  characterLevel: number,
+): EldritchBlastBeamCount | null {
+  if (selection.mode !== "choose_up_to" || selection.repeatsAllowed !== true) {
+    return null;
+  }
+  const count = selection.count;
+  if (
+    typeof count !== "object" ||
+    count.kind !== "threshold_tiers" ||
+    count.axis !== "character"
+  ) {
+    return null;
+  }
+  if (
+    count.base !== 1 ||
+    count.tiers.length !== ELDRITCH_BLAST_BEAM_COUNT_TIERS.length ||
+    !count.tiers.every((tier, index) => {
+      const expected = ELDRITCH_BLAST_BEAM_COUNT_TIERS[index];
+      return (
+        expected !== undefined &&
+        tier.atLevel === expected.atLevel &&
+        tier.value === expected.value
+      );
+    })
+  ) {
+    return null;
+  }
+  return ELDRITCH_BLAST_BEAM_COUNT_TIERS.reduce<EldritchBlastBeamCount>(
+    (current, tier) => (characterLevel >= tier.atLevel ? tier.value : current),
+    count.base,
+  );
 }
 
 function spellAttackDamageHasUnprojectedObjectHitEffect(input: {

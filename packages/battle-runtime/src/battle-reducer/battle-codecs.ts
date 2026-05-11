@@ -56,6 +56,7 @@ import {
 } from "../identity.ts";
 import {
   BATTLE_ATTACK_RANGE_BANDS,
+  ELDRITCH_BLAST_BEAM_COUNTS,
   SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS,
 } from "./domain-constants.ts";
 
@@ -336,6 +337,23 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
           damageType: DamageTypeSchema,
         }),
       ),
+    }),
+    Schema.Struct({
+      access: ClassCantripSpellAccessSchema,
+      resource: NoSpellInvocationResourceSchema,
+      procedure: Schema.Literal("spellAttackBeamSequence"),
+      spell: BattleRuntimeObjectSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("beamSequenceCreatureOrObject"),
+        beamCount: Schema.Literal(...ELDRITCH_BLAST_BEAM_COUNTS),
+      }),
+      damage: Schema.Struct({
+        expr: BattleRuntimeObjectSchema,
+        damageType: DamageTypeSchema,
+      }),
+      rangeFeet: MovementFeet,
+      attackKind: Schema.Literal("ranged_spell_attack"),
+      attackBonus: AttackBonus,
     }),
     Schema.Struct({
       access: PreparedSpellAccessSchema,

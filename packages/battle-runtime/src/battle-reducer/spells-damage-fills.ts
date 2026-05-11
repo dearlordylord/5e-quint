@@ -91,6 +91,46 @@ export function spellAttackRollHole(
   };
 }
 
+export function spellBeamAttackRollHole(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spellAttackBeamSequence" }
+  >,
+  beamIndex: number,
+  rollMode?: AttackRollMode,
+): BattleSpellAttackRollHole {
+  const protocolId = spellBeamAttackRollProtocolId(invocation, beamIndex);
+  return {
+    kind: "attackRoll",
+    holeId: holeId(protocolId),
+    holeInstanceKey: holeInstanceKey(protocolId),
+    label: `${invocation.spell.name} beam ${beamIndex + 1} spell attack roll`,
+    spell: invocation,
+    attackBonus: invocation.attackBonus,
+    ...(rollMode === undefined ? {} : { rollMode }),
+  };
+}
+
+export function spellBeamAttackRollHoleId(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spellAttackBeamSequence" }
+  >,
+  beamIndex: number,
+): BattleHoleId {
+  return holeId(spellBeamAttackRollProtocolId(invocation, beamIndex));
+}
+
+function spellBeamAttackRollProtocolId(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spellAttackBeamSequence" }
+  >,
+  beamIndex: number,
+): string {
+  return `battle:spell:beam-attack-roll:${invocation.spell.id}:${beamIndex}`;
+}
+
 export function spellObjectAttackRollHole(
   invocation: Extract<
     SupportedSpellInvocation,
@@ -339,7 +379,12 @@ export function chainedSpellLeapTargetIsLegal(
 export function spellDamageTypes(
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "heldLightHurl" | "spellAttackDamage" }
+    {
+      readonly procedure:
+        | "heldLightHurl"
+        | "spellAttackBeamSequence"
+        | "spellAttackDamage";
+    }
   >,
 ): readonly DamageType[] {
   return [invocation.damage.damageType];
@@ -368,6 +413,56 @@ export function spellDamageHole(
       ? {}
       : { spellMarkedDamageRiders }),
   };
+}
+
+export function spellBeamDamageHole(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spellAttackBeamSequence" }
+  >,
+  beamIndex: number,
+  critical = false,
+  spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
+): BattleSpellDamageRollHole {
+  const expr = spellDamageExpression(
+    invocation,
+    critical,
+    spellMarkedDamageRiders,
+  );
+  const protocolId = spellBeamDamageProtocolId(invocation, beamIndex, critical);
+  return {
+    kind: "rolledDice",
+    holeId: holeId(protocolId),
+    holeInstanceKey: holeInstanceKey(protocolId),
+    label: `${invocation.spell.name} beam ${beamIndex + 1} damage (${expr})`,
+    spell: invocation,
+    critical,
+    ...(spellMarkedDamageRiders.length === 0
+      ? {}
+      : { spellMarkedDamageRiders }),
+  };
+}
+
+export function spellBeamDamageHoleId(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spellAttackBeamSequence" }
+  >,
+  beamIndex: number,
+  critical: boolean,
+): BattleHoleId {
+  return holeId(spellBeamDamageProtocolId(invocation, beamIndex, critical));
+}
+
+function spellBeamDamageProtocolId(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spellAttackBeamSequence" }
+  >,
+  beamIndex: number,
+  critical: boolean,
+): string {
+  return `battle:spell:beam-damage:${invocation.spell.id}:${beamIndex}:${critical ? "critical" : "normal"}`;
 }
 
 export function spellBurstDamageHole(
@@ -704,11 +799,63 @@ export function validateSpellDamageFill(
         ? invocation.damage.expr.dice * invocation.targeting.repeatedEffectCount
         : invocation.damage.expr.dice *
           ((invocation.procedure === "heldLightHurl" ||
+            invocation.procedure === "spellAttackBeamSequence" ||
             invocation.procedure === "spellAttackDamage" ||
             invocation.procedure === "attackBurstSaveDamage") &&
           critical
             ? 2
             : 1),
+    dieSize: invocation.damage.expr.dieSize,
+  });
+  return validation?.reason ?? null;
+}
+
+export function validateSpellBeamDamageFill(
+  fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spellAttackBeamSequence" }
+  >,
+  beamIndex: number,
+  critical: boolean,
+  spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
+): string | null {
+  if (
+    fill.holeId !==
+    spellBeamDamageHole(
+      invocation,
+      beamIndex,
+      critical,
+      spellMarkedDamageRiders,
+    ).holeId
+  ) {
+    return critical
+      ? "Critical hit spell beam damage must use the critical beam damage hole."
+      : "Spell beam damage must use the selected beam damage hole.";
+  }
+  if (spellMarkedDamageRiders.length > 0) {
+    const components = spellDamageComponents(
+      invocation,
+      critical,
+      spellMarkedDamageRiders,
+    );
+    if (fill.value.length !== components.length) {
+      return "filled spell damage groups do not match current spell damage";
+    }
+    for (const [index, component] of components.entries()) {
+      const group = fill.value[index];
+      if (group === undefined) {
+        return "filled spell damage groups do not match current spell damage";
+      }
+      const validation = validateRolledDiceForDiceExpr([group], component.expr);
+      if (validation !== null) {
+        return validation.reason;
+      }
+    }
+    return null;
+  }
+  const validation = validateRolledDiceForDiceExpr(fill.value, {
+    dice: invocation.damage.expr.dice * (critical ? 2 : 1),
     dieSize: invocation.damage.expr.dieSize,
   });
   return validation?.reason ?? null;
@@ -796,6 +943,9 @@ type SpellDamageContext = {
   readonly spellDamageReductionRoll?:
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
     | undefined;
+  readonly spellDamageReductionRollHoleForReduction?:
+    | Parameters<typeof applyAvailableSpellDamageReduction>[3]
+    | undefined;
   readonly damageSourceId?: CombatantId | undefined;
 };
 
@@ -817,6 +967,7 @@ export function applySpellDamage(
     damageDisposition = { kind: "ordinaryDamage" },
     spellMarkedDamageRiders = [],
     spellDamageReductionRoll,
+    spellDamageReductionRollHoleForReduction,
     damageSourceId,
   } = context;
   const reduction = applyAvailableSpellDamageReduction(
@@ -830,6 +981,7 @@ export function applySpellDamage(
       critical,
     ),
     spellDamageReductionRoll,
+    spellDamageReductionRollHoleForReduction,
   );
   if (reduction.tag !== "ok") {
     return state;
@@ -1013,7 +1165,7 @@ export function spellObjectDamageOutcome(input: {
   readonly objectId: BattleObjectId;
   readonly invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "spellAttackDamage" }
+    { readonly procedure: "spellAttackBeamSequence" | "spellAttackDamage" }
   >;
   readonly damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>;
   readonly critical: boolean;
@@ -1056,7 +1208,7 @@ export function spellObjectDamageOutcome(input: {
 export function spellObjectRolledDamage(
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "spellAttackDamage" }
+    { readonly procedure: "spellAttackBeamSequence" | "spellAttackDamage" }
   >,
   damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
   _critical: boolean,

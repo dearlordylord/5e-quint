@@ -62,9 +62,9 @@
       "value": 124
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 62,
-      "numerator": 58,
-      "percent": "93.5%"
+      "denominator": 63,
+      "numerator": 59,
+      "percent": "93.7%"
     },
     "profileClassificationCoverage": {
       "denominator": 124,
@@ -72,34 +72,34 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 40,
-      "numerator": 40,
+      "denominator": 41,
+      "numerator": 41,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 40,
-      "numerator": 38,
-      "percent": "95%"
+      "denominator": 41,
+      "numerator": 39,
+      "percent": "95.1%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 40,
-      "numerator": 40,
+      "denominator": 41,
+      "numerator": 41,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 40,
-      "numerator": 40,
+      "denominator": 41,
+      "numerator": 41,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 62,
+      "denominator": 63,
       "numerator": 10,
-      "percent": "16.1%"
+      "percent": "15.9%"
     },
     "supportedProfileCoverage": {
       "denominator": 100,
-      "numerator": 62,
-      "percent": "62%"
+      "numerator": 63,
+      "percent": "63%"
     }
   },
   "metricSemantics": [
@@ -1059,6 +1059,38 @@
       ]
     },
     {
+      "id": "spell.invocation-beam-sequence",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "SRDINV39"
+      ],
+      "title": "Spell invocation resolves independent creature-or-object ranged spell attack beams",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/index.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.invocation-marked-damage-rider",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -1892,6 +1924,22 @@
         "spell.invocation-damage-save-or-attack"
       ],
       "taskId": "SRDINV34"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Eldritch Blast beam count scaling, Force damage, creature-or-object beam targeting holes, and cantrip slot behavior.",
+      "profileIds": [
+        "spell.invocation-beam-sequence"
+      ],
+      "taskId": "SRDINV39"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime reducer tests and MBT cover Eldritch Blast beam target/attack/damage sequencing, creature and object targets, Concentration saves, spell damage reduction, zero-HP replacement, and attack-hit/after-damage reaction windows.",
+      "profileIds": [
+        "spell.invocation-beam-sequence"
+      ],
+      "taskId": "SRDINV39"
     }
   ],
   "units": [
@@ -7109,14 +7157,58 @@
         "status": "installed"
       },
       "claim": {
-        "reason": "Spell Definition is installed for Warlock Spell Access validation; promoted invocation/projectile runtime evidence is not present yet.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "spell.invocation-beam-sequence"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV39"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-beam-sequence",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV39"
+          ],
+          "title": "Spell invocation resolves independent creature-or-object ranged spell attack beams",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/eldritch_blast.json",
       "unitId": "eldritch_blast"
     },

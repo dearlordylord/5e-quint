@@ -306,9 +306,9 @@ function battleResolutionResultPayload(result: BattleResolutionResult) {
     return {
       tag: result.tag,
       snapshot: result.snapshot,
-      ...(result.objectDamage === undefined
+      ...(result.objectDamages === undefined
         ? {}
-        : { objectDamage: result.objectDamage }),
+        : { objectDamages: result.objectDamages }),
     };
   }
   if (result.tag === "needsHoles") {

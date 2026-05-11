@@ -3980,16 +3980,18 @@ describe("MCP server route", () => {
 
     expect(afterDamage.result).toMatchObject({
       tag: "resolved",
-      objectDamage: {
-        kind: "hitPoints",
-        objectId: "training-crystal",
-        damageType: "radiant",
-        rolledDamage: 6,
-        effectiveDamage: 6,
-        priorHitPoints: 5,
-        nextHitPoints: 0,
-        destroyed: true,
-      },
+      objectDamages: [
+        {
+          kind: "hitPoints",
+          objectId: "training-crystal",
+          damageType: "radiant",
+          rolledDamage: 6,
+          effectiveDamage: 6,
+          priorHitPoints: 5,
+          nextHitPoints: 0,
+          destroyed: true,
+        },
+      ],
     });
     expect(root.sessionStore.transientBattleFills).toBeNull();
   });

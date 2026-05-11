@@ -17,13 +17,13 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Authored Surface Unit catalog admission | 123/417 | 29.5% |
 | Authored Surface executable catalog admission | 99/350 | 28.3% |
 | Installed Unit profile classification coverage | 124/124 | 100% |
-| Supported executable Unit coverage | 62/100 | 62% |
-| QNT profile modeling coverage | 40/40 | 100% |
-| QNT proof coverage | 38/40 | 95% |
-| Runtime mapping coverage | 40/40 | 100% |
-| Runtime parity coverage | 40/40 | 100% |
-| Deterministic admission/projection coverage | 58/62 | 93.5% |
-| Selected identity MBT coverage | 10/62 | 16.1% |
+| Supported executable Unit coverage | 63/100 | 63% |
+| QNT profile modeling coverage | 41/41 | 100% |
+| QNT proof coverage | 39/41 | 95.1% |
+| Runtime mapping coverage | 41/41 | 100% |
+| Runtime parity coverage | 41/41 | 100% |
+| Deterministic admission/projection coverage | 59/63 | 93.7% |
+| Selected identity MBT coverage | 10/63 | 15.9% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -108,6 +108,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `shield` | srd-5.2.1 | `spell.reaction-shield` |
 | `shield_of_faith` | srd-5.2.1 | `spell.scalar-buff` |
 | `true_strike` | srd-5.2.1 | `spell.invocation-spell-hosted-weapon-attack` |
+| `eldritch_blast` | srd-5.2.1 | `spell.invocation-beam-sequence` |
 | `mycelium_step` | classic-2024-non-srd-mechanics | `unit-feature.alternate-action-cost` |
 
 ## Profile Subset Supported Unit Claims
@@ -809,6 +810,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `shield` | `spell.reaction-shield` | QMBT22 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `shield_of_faith` | `spell.scalar-buff` | SRDINV30A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `true_strike` | `spell.invocation-spell-hosted-weapon-attack` | SRDINV31F | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `eldritch_blast` | `spell.invocation-beam-sequence` | SRDINV39 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `mycelium_step` | `unit-feature.alternate-action-cost` | QMBT21 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 
 ## Profile Subset Deterministic Admission/Projection Evidence
@@ -894,7 +896,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `detect_poison_and_disease` | unsupported-profile | Detection/occlusion search semantics and poison/disease identification are not promoted as battle Unit profiles. |
 | `sleep` | profile-subset-supported | supported subset: point-origin 5-foot-radius Sphere target admission; Wisdom Saving Throw holes for selected targets that are not automatic successes; Exhaustion-immunity automatic success derived from retained Stat Block condition-immunity facts; Magic action and Spell Slot spend; failed initial save applies Sleep-owned Incapacitated until the end of the target's next turn with a repeat Wisdom save; repeat success ends that target's Sleep effect; failed repeat save escalates to spell-owned Unconscious for the remaining Concentration duration; deferred: creatures that do not sleep automatically succeed only when an executable non-sleeper fact is supported (SRDINV41); damage-from-any-source and adjacent shake-awake cleanup (SRDINV38C) |
 | `thunderwave` | needs-surface-widening | Save-gated damage plus push movement requires a combined spell effect profile not present in this matrix slice. |
-| `eldritch_blast` | unsupported-profile | Spell Definition is installed for Warlock Spell Access validation; promoted invocation/projectile runtime evidence is not present yet. |
 | `minor_illusion` | unsupported-profile | Sound/image illusion creation, physical-interaction reveal, faint rendering after Study, and recast expiry are illusion/exploration state outside promoted runtime owners. |
 | `charm_person` | profile-subset-supported | supported subset: Humanoid creature-type target filter; Wisdom save-gated Charmed condition; hostile-target Wisdom save Advantage; 1-hour spell-owned condition duration; spell ends if caster or one of the caster's allies deals damage to the target; slot-scaled target count; deferred: Friendly disposition, social interaction effects, and target knowledge when the spell ends are not represented in battle runtime state (SRDINV41) |
 | `hellish_rebuke` | unsupported-profile | Spell Definition is installed for Warlock Spell Access validation; promoted Reaction casting-window runtime evidence is not present yet. |
@@ -912,7 +913,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
-| srd-5.2.1 | unassigned | unsupported-profile | 52 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `bard_bardic_inspiration`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `monk_martial_arts`, `ranger_favored_enemy`, `rogue_expertise`, `rogue_thieves_cant`, `sorcerer_innate_sorcery`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `mastery_sap`, `orc_darkvision`, `light`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `eldritch_blast`, `minor_illusion`, `hellish_rebuke`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `grease` |
+| srd-5.2.1 | unassigned | unsupported-profile | 51 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `bard_bardic_inspiration`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `monk_martial_arts`, `ranger_favored_enemy`, `rogue_expertise`, `rogue_thieves_cant`, `sorcerer_innate_sorcery`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `mastery_sap`, `orc_darkvision`, `light`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `minor_illusion`, `hellish_rebuke`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `grease` |
 | srd-5.2.1 | unassigned | profile-subset-supported | 9 | `animal_friendship`, `chill_touch`, `faerie_fire`, `hunters_mark`, `protection_from_evil_and_good`, `produce_flame`, `starry_wisp`, `sleep`, `charm_person` |
 | srd-5.2.1 | QCORE10 | needs-surface-widening | 1 | `fire_bolt` |
 | srd-5.2.1 | unassigned | needs-surface-widening | 1 | `thunderwave` |
@@ -987,6 +988,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 | SRDINV32B | completed-runtime-parity | `spell.invocation-damage-save-or-attack` |
 | SRDINV34 | qnt-proof | `spell.invocation-damage-save-or-attack` |
 | SRDINV34 | completed-runtime-parity | `spell.invocation-damage-save-or-attack` |
+| SRDINV39 | qnt-proof | `spell.invocation-beam-sequence` |
+| SRDINV39 | completed-runtime-parity | `spell.invocation-beam-sequence` |
 
 ## Supported Profiles Lacking Runtime Parity
 

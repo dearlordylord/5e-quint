@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points spell.invocation-sleep-repeat-save-lifecycle spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points spell.invocation-beam-sequence spell.invocation-sleep-repeat-save-lifecycle spell.scalar-buff
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -25,6 +25,7 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
+import eldritchBlastInput from "../../surface/content/eldritch_blast.json";
 import magicMissileInput from "../../surface/content/magic_missile.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type {
@@ -152,6 +153,14 @@ type StarryWispObjectMbtProjection = {
   readonly lastInvalidReason: MbtLastInvalidReason;
 };
 
+type EldritchBlastMbtProjection = {
+  readonly actionAvailable: boolean;
+  readonly targetHp: number;
+  readonly holes: readonly MbtHole[];
+  readonly lastResult: MbtLastResult;
+  readonly lastInvalidReason: MbtLastInvalidReason;
+};
+
 type SleepRepeatSaveMbtTurnRole = "caster" | "target";
 
 type SleepRepeatSaveMbtProjection = {
@@ -266,6 +275,19 @@ const starryWispObjectDriverSchema = {
   doFillObjectAttackRollHit: {},
   doFillObjectDamageLow: {},
   doFillObjectDamageHigh: {},
+  doRejectStaleAfterResolved: {},
+  step: {},
+} as const;
+
+const eldritchBlastDriverSchema = {
+  init: {},
+  doFillTwoCreatureTargets: {},
+  doFillFirstAttackMiss: {},
+  doFillFirstAttackHit: {},
+  doFillFirstDamageLow: {},
+  doFillSecondAttackMiss: {},
+  doFillSecondAttackHit: {},
+  doFillSecondDamageLow: {},
   doRejectStaleAfterResolved: {},
   step: {},
 } as const;
@@ -665,7 +687,7 @@ function createStarryWispObjectDriver() {
       if (result.tag === "resolved") {
         state = result.state;
         holes = [];
-        objectDamage = projectObjectDamage(result.objectDamage);
+        objectDamage = projectObjectDamage(result.objectDamages?.[0]);
         lastInvalidReason = "";
         return;
       }
@@ -729,6 +751,111 @@ function createStarryWispObjectDriver() {
           lastResult,
           lastInvalidReason,
         }),
+    };
+  });
+}
+
+function createEldritchBlastDriver() {
+  return defineDriver(eldritchBlastDriverSchema, () => {
+    let state = eldritchBlastBattle();
+    const subject = eldritchBlastSubject();
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = discoverSpellHoles(state, subject);
+    let lastResult: EldritchBlastMbtProjection["lastResult"] = "init";
+    let lastInvalidReason: EldritchBlastMbtProjection["lastInvalidReason"] =
+      "";
+
+    function reset(): void {
+      state = eldritchBlastBattle();
+      fills = [];
+      holes = discoverSpellHoles(state, subject);
+      lastResult = "init";
+      lastInvalidReason = "";
+    }
+
+    function recordResult(result: BattleResolutionResult): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        holes = [];
+        lastInvalidReason = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        holes = result.holes;
+        lastInvalidReason = "";
+        return;
+      }
+      lastInvalidReason = mbtInvalidReason(result.reason);
+    }
+
+    function submit(nextFills: readonly BattleFill[]): void {
+      fills = nextFills;
+      recordResult(resolveBattleSubject({ state, subject, fills }));
+    }
+
+    return {
+      init: reset,
+      doFillTwoCreatureTargets: () => {
+        const targets = holes.filter(
+          (
+            hole,
+          ): hole is Extract<BattleHole, { readonly kind: "targetChoice" }> =>
+            hole.kind === "targetChoice",
+        );
+        submit([
+          spellTargetChoiceFill(targets[0]!, skeletonId, "eldritch_blast"),
+          spellTargetChoiceFill(targets[1]!, skeletonId, "eldritch_blast"),
+        ]);
+      },
+      doFillFirstAttackMiss: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        submit([
+          ...fills,
+          attackRollFill(attackRoll, { total: 1, naturalD20: 1 }),
+        ]);
+      },
+      doFillFirstAttackHit: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        submit([
+          ...fills,
+          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        ]);
+      },
+      doFillFirstDamageLow: () => {
+        const damage = requireHole(holes, "rolledDice");
+        submit([...fills, damageRollFillWithGroups(damage, [[4]])]);
+      },
+      doFillSecondAttackMiss: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        submit([
+          ...fills,
+          attackRollFill(attackRoll, { total: 1, naturalD20: 1 }),
+        ]);
+      },
+      doFillSecondAttackHit: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        submit([
+          ...fills,
+          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        ]);
+      },
+      doFillSecondDamageLow: () => {
+        const damage = requireHole(holes, "rolledDice");
+        submit([...fills, damageRollFillWithGroups(damage, [[4]])]);
+      },
+      doRejectStaleAfterResolved: () => {
+        recordResult(resolveBattleSubject({ state, subject, fills }));
+      },
+      step: () => {},
+      getState: () =>
+        projectEldritchBlastMbtState(
+          state,
+          holes,
+          lastResult,
+          lastInvalidReason,
+        ),
     };
   });
 }
@@ -1077,6 +1204,20 @@ function normalizeStarryWispObjectQuintState(
   };
 }
 
+function normalizeEldritchBlastQuintState(
+  raw: unknown,
+): EldritchBlastMbtProjection {
+  const state = quintStateRecord(raw);
+
+  return {
+    actionAvailable: booleanField(state, "qActionAvailable"),
+    targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
+    holes: quintHoleSet(state["qHoles"]).map(holeName).sort(),
+    lastResult: mbtLastResult(state["qLastResult"]),
+    lastInvalidReason: mbtLastInvalidReason(state["qLastInvalidReason"]),
+  };
+}
+
 function normalizeSleepRepeatSaveQuintState(
   raw: unknown,
 ): SleepRepeatSaveMbtProjection {
@@ -1160,6 +1301,13 @@ const starryWispObjectStateCheck = stateCheck(
     spec: StarryWispObjectMbtProjection,
     impl: StarryWispObjectMbtProjection,
   ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+const eldritchBlastStateCheck = stateCheck(
+  normalizeEldritchBlastQuintState,
+  (spec: EldritchBlastMbtProjection, impl: EldritchBlastMbtProjection) => {
     expect(impl).toEqual(spec);
     return true;
   },
@@ -1263,6 +1411,22 @@ describe("battle-runtime MBT", () => {
       nTraces: Number(process.env["MBT_TRACES"] ?? 1),
       maxSteps: Number(process.env["MBT_STEPS"] ?? 4),
       stateCheck: starryWispObjectStateCheck,
+    });
+  }, 120_000);
+
+  it("replays Eldritch Blast beam sequencing", async () => {
+    await run({
+      spec: path.resolve(
+        import.meta.dirname,
+        "../battle-runtime-eldritch-blast.mbt.qnt",
+      ),
+      init: "init",
+      step: "step",
+      driver: createEldritchBlastDriver(),
+      backend: "typescript",
+      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
+      maxSteps: Number(process.env["MBT_STEPS"] ?? 4),
+      stateCheck: eldritchBlastStateCheck,
     });
   }, 120_000);
 
@@ -1472,6 +1636,30 @@ function projectStarryWispObjectMbtState(input: {
   };
 }
 
+function projectEldritchBlastMbtState(
+  state: BattleState,
+  holes: readonly BattleHole[],
+  lastResult: EldritchBlastMbtProjection["lastResult"],
+  lastInvalidReason: EldritchBlastMbtProjection["lastInvalidReason"],
+): EldritchBlastMbtProjection {
+  const snapshot = snapshotBattle(state);
+  const target = snapshot.combatants.find(
+    (combatant) => combatant.combatantId === skeletonId,
+  );
+  if (target === undefined) {
+    throw new Error("Expected Eldritch Blast target.");
+  }
+  return {
+    actionAvailable: snapshot.turn.actionResources.some(
+      (resource) => resource.source === "turn",
+    ),
+    targetHp: target.hp,
+    holes: [...new Set(holes.map(projectHole))].sort(),
+    lastResult,
+    lastInvalidReason,
+  };
+}
+
 function projectSleepRepeatSaveMbtState(input: {
   readonly state: BattleState;
   readonly holes: readonly BattleHole[];
@@ -1579,6 +1767,14 @@ function discoverStarryWispHoles(
   state: BattleState,
   subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
 ): readonly BattleHole[] {
+  return discoverSpellHoles(state, subject, "Expected Starry Wisp spell act.");
+}
+
+function discoverSpellHoles(
+  state: BattleState,
+  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
+  errorMessage = "Expected spell act.",
+): readonly BattleHole[] {
   const act = discoverBattleActs(state).find(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
@@ -1586,7 +1782,7 @@ function discoverStarryWispHoles(
       candidate.subject.invocation.spellId === subject.invocation.spellId,
   );
   if (act == null) {
-    throw new Error("Expected Starry Wisp spell act.");
+    throw new Error(errorMessage);
   }
 
   return act.initialHoles;
@@ -1685,6 +1881,21 @@ function starryWispSubject(): Extract<
   };
 }
 
+function eldritchBlastSubject(): Extract<
+  BattleSubject,
+  { readonly tag: "actionSpell" }
+> {
+  return {
+    tag: "actionSpell",
+    actorId: fighterId,
+    invocation: cantripSpellInvocationRef(
+      "eldritch_blast",
+      "spellAttackBeamSequence",
+    ),
+    mode: { tag: "cast" },
+  };
+}
+
 function sleepSubject(): Extract<
   BattleSubject,
   { readonly tag: "actionSpell" }
@@ -1761,6 +1972,16 @@ function starryWispObjectBattle(): BattleState {
     battleId: battleId("battle-runtime-mbt-starry-wisp-object"),
     combatants: [
       starryWispCasterCreatureInit({ initiative: 20 }),
+      skeletonCreatureInit({ initiative: 10 }),
+    ],
+  });
+}
+
+function eldritchBlastBattle(): BattleState {
+  return startBattleRight({
+    battleId: battleId("battle-runtime-mbt-eldritch-blast"),
+    combatants: [
+      eldritchBlastCasterCreatureInit({ initiative: 20 }),
       skeletonCreatureInit({ initiative: 10 }),
     ],
   });
@@ -2030,6 +2251,44 @@ function starryWispCasterCreatureInit(input: {
     creatureInit: {
       kind: "character",
       characterId: characterId("starry-wisp-caster-character"),
+      characterUnitRefs: [],
+      classLevels: [{ className: "fighter", level: 5 }],
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(12),
+      maxHp: Hp(12),
+      tempHp: Hp(0),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: baseUnarmedStrike(),
+      spellcasting: {
+        spellcastingAbilityModifier: 3,
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [unit],
+        preparedSpells: [],
+        spellSlots: [],
+      },
+    },
+  };
+}
+
+function eldritchBlastCasterCreatureInit(input: {
+  readonly initiative: number;
+}): BattleCreatureInit {
+  const unit = decodeUnitRecordSync(eldritchBlastInput);
+  if (unit.kind !== "spell") {
+    throw new Error("Expected Eldritch Blast spell Unit.");
+  }
+  return {
+    combatantId: fighterId,
+    displayName: "Eldritch Blast Caster",
+    initiative: initiativeScore(input.initiative),
+    side: partySide,
+    creatureInit: {
+      kind: "character",
+      characterId: characterId("eldritch-blast-caster-character"),
       characterUnitRefs: [],
       classLevels: [{ className: "fighter", level: 5 }],
       armorClass: defaultArmorClassState(),
@@ -2479,9 +2738,16 @@ function rolledDiceGroup(
 
 function projectObjectDamage(
   damage: Extract<
-    BattleResolutionResult,
-    { readonly tag: "resolved" }
-  >["objectDamage"],
+    NonNullable<
+      Extract<
+        BattleResolutionResult,
+        { readonly tag: "resolved" }
+      >["objectDamages"]
+    >,
+    readonly unknown[]
+  > extends readonly (infer ObjectDamage)[]
+    ? ObjectDamage | undefined
+    : undefined,
 ): ObjectDamageMbtProjection {
   if (damage === undefined) {
     return { tag: "none" };

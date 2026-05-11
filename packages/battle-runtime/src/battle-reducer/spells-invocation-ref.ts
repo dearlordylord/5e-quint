@@ -53,6 +53,13 @@ export function supportedSpellInvocationRef(
       procedure: "sleepTargetAdmission",
     };
   }
+  if (invocation.procedure === "spellAttackBeamSequence") {
+    return {
+      tag: "cantrip",
+      spellId: spellId(invocation.spell.id),
+      procedure: "spellAttackBeamSequence",
+    };
+  }
   return Match.value(invocation).pipe(
     Match.when({ procedure: "heldLight" }, (cantrip) => ({
       tag: "cantrip" as const,
@@ -183,6 +190,7 @@ export function damageSpellInvocationRef(
     {
       readonly procedure:
         | "heldLightHurl"
+        | "spellAttackBeamSequence"
         | "spellAttackDamage"
         | "saveGatedDamage";
     }

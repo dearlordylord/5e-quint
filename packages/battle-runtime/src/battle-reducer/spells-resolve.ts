@@ -99,6 +99,7 @@ import {
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 
 import { resolveChainedSpellAttackDamageAct } from "./spells-resolve-chained.ts";
+import { resolveSpellAttackBeamSequenceAct } from "./spells-resolve-beam-sequence.ts";
 export { resolveAttackBurstSaveDamageSpellAct } from "./spells-resolve-attack-burst.ts";
 export {
   applyChainedSpellDamage,
@@ -251,7 +252,8 @@ export function resolveSpellAct(
       invocation.procedure === "afterHitSaveGatedCondition" ||
       invocation.procedure === "afterHitTimedDamageAndSave" ||
       invocation.procedure === "saveGatedCondition" ||
-      invocation.procedure === "saveGatedAttackRollAdvantage")
+      invocation.procedure === "saveGatedAttackRollAdvantage" ||
+      invocation.procedure === "spellAttackBeamSequence")
   ) {
     return invalidResult(
       input.state,
@@ -315,6 +317,14 @@ export function resolveSpellAct(
   const fillSet = spellFillSet(input.fills, invocation);
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
+  }
+  if (invocation.procedure === "spellAttackBeamSequence") {
+    return resolveSpellAttackBeamSequenceAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
   }
   if (invocation.procedure === "attackBurstSaveDamage") {
     return resolveAttackBurstSaveDamageSpellAct({
@@ -1068,7 +1078,7 @@ function resolveSpellAttackDamageObjectTarget(input: {
     tag: "resolved",
     state: spentResources.state,
     snapshot: snapshotBattle(spentResources.state),
-    objectDamage,
+    objectDamages: [objectDamage],
   };
 }
 

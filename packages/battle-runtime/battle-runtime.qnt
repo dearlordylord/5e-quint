@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points
@@ -8,6 +8,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-damage spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-marked-damage-rider
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-attack-roll-advantage-save
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-beam-sequence
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-damage-reduction
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-sleep-repeat-save-lifecycle
 module battleRuntime {
@@ -166,6 +167,10 @@ module battleRuntime {
   //   Wounds, Burning Hands, Color Spray, Entangle, and the damage-only slice
   //   of Chill Touch are action-time spells with creature or table-supplied
   //   area targets, cantrip/slot scaling, and the listed attack/save outcomes.
+  //   Spells/Descriptions-E-L.md lines 30-41: Eldritch Blast creates ranged
+  //   spell attack beams that can target creatures or objects, deal Force
+  //   damage on a hit, scale to two/three/four beams at character levels
+  //   5/11/17, and use a separate attack roll for each beam.
   //   Spells/Descriptions-S-Z.md lines 529-540: Starry Wisp targets one
   //   creature or object within range, makes a ranged spell attack, and deals
   //   Radiant damage on a hit. This object-target slice models caller-supplied
@@ -214,8 +219,10 @@ module battleRuntime {
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | TrueStrike
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | EldritchBlast | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | TrueStrike
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | StarryWispSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack
+  type SpellAttackBeamSequenceInvocation =
+    | EldritchBlastBeamSequence
   type ChainedSpellAttackDamageInvocation =
     | ChromaticOrbChainedSpellAttack
   type ChromaticOrbDamageTypeChoice = ChromaticOrbAcid | ChromaticOrbCold | ChromaticOrbFire | ChromaticOrbLightning | ChromaticOrbPoison | ChromaticOrbThunder
@@ -245,6 +252,7 @@ module battleRuntime {
   type RuntimeCreatureType = HumanoidCreature | BeastCreature | AberrationCreature | CelestialCreature | ElementalCreature | FeyCreature | FiendCreature | UndeadCreature
   type ObjectTarget =
     | StarryWispObjectTarget
+    | EldritchBlastObjectTarget
   type ObjectDamageDisposition =
     | ObjectHitPoints({ hitPoints: int })
     | ObjectHitPointsWithDamageThreshold({ hitPoints: int, damageThreshold: int })
@@ -1697,6 +1705,40 @@ module battleRuntime {
       { ...rolled, goblin: damaged, actionAvailable: false }
     }
 
+  pure def resolveEldritchBlastBeamAgainstGoblin(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+  ): BattleState =
+    if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), 20)))
+      recordFighterAttackRoll(state)
+    else {
+      val adjustedDamage = damageAfterAdjustments(damageRoll, Force, Set(), Set(), Set())
+      val damaged = applyDamageFromSource(state.goblin, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter)
+      { ...recordFighterAttackRoll(state), goblin: damaged }
+    }
+
+  pure def resolveEldritchBlastTwoBeams(
+    state: BattleState,
+    firstAttackTotal: int,
+    firstNaturalD20: int,
+    firstDamageRoll: int,
+    firstConcentrationSaveSucceeded: bool,
+    secondAttackTotal: int,
+    secondNaturalD20: int,
+    secondDamageRoll: int,
+    secondConcentrationSaveSucceeded: bool,
+  ): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state))
+      state
+    else {
+      val firstResolved = resolveEldritchBlastBeamAgainstGoblin(revealFighterHidden(state), firstAttackTotal, firstNaturalD20, firstDamageRoll, firstConcentrationSaveSucceeded)
+      val secondResolved = resolveEldritchBlastBeamAgainstGoblin(firstResolved, secondAttackTotal, secondNaturalD20, secondDamageRoll, secondConcentrationSaveSucceeded)
+      { ...secondResolved, actionAvailable: false }
+    }
+
   pure def concentrationSavingThrowDc(damage: int): int = {
     val halfDamage = damage / 2
     val floor = if (halfDamage < 10) 10 else halfDamage
@@ -2973,6 +3015,7 @@ module battleRuntime {
       | PoisonSpray => false
       | ChillTouch => false
       | StarryWisp => false
+      | EldritchBlast => false
       | SacredFlame => false
       | InflictWounds => true
       | BurningHands => true
@@ -3081,6 +3124,37 @@ module battleRuntime {
       | ProduceFlameHurlSpellAttack => false
     }
 
+  pure def spellAttackBeamSequenceDamageType(invocation: SpellAttackBeamSequenceInvocation): DamageType =
+    match invocation {
+      | EldritchBlastBeamSequence => Force
+    }
+
+  pure def eldritchBlastBeamCount(characterLevel: int): int =
+    if (characterLevel >= 17) 4
+    else if (characterLevel >= 11) 3
+    else if (characterLevel >= 5) 2
+    else 1
+
+  pure def spellAttackBeamSequenceReplayHoles(
+    invocation: SpellAttackBeamSequenceInvocation,
+    canCastSpells: bool,
+    beamCount: int,
+    beamTargetsFilled: int,
+    beamAttackRollsFilled: int,
+    beamHits: int,
+    beamDamageRollsFilled: int,
+  ): Set[Hole] =
+    if (not(canCastSpells) or beamCount <= 0)
+      Set()
+    else if (beamTargetsFilled < beamCount)
+      Set(TargetChoice, ObjectTargetChoice)
+    else if (beamAttackRollsFilled < beamCount)
+      Set(AttackRoll)
+    else if (beamDamageRollsFilled < beamHits)
+      Set(SpellDamageRoll)
+    else
+      Set()
+
   pure def objectHitPointDamageOutcome(
     object: ObjectTarget,
     damageType: DamageType,
@@ -3127,6 +3201,37 @@ module battleRuntime {
           objectHitPointDamageOutcome(
             object,
             spellAttackDamageType(invocation),
+            damageRoll,
+            fill.hitPoints,
+            fill.damageThreshold,
+          )
+    }
+
+  pure def spellAttackBeamSequenceObjectDamageOutcome(
+    invocation: SpellAttackBeamSequenceInvocation,
+    object: ObjectTarget,
+    damageRoll: int,
+    disposition: ObjectDamageDisposition,
+  ): ObjectDamageOutcome =
+    match disposition {
+      | ObjectTableResolved =>
+          ObjectTableResolvedDamage({
+            object: object,
+            damageType: spellAttackBeamSequenceDamageType(invocation),
+            rolledDamage: damageRoll,
+          })
+      | ObjectHitPoints(fill) =>
+          objectHitPointDamageOutcome(
+            object,
+            spellAttackBeamSequenceDamageType(invocation),
+            damageRoll,
+            fill.hitPoints,
+            0,
+          )
+      | ObjectHitPointsWithDamageThreshold(fill) =>
+          objectHitPointDamageOutcome(
+            object,
+            spellAttackBeamSequenceDamageType(invocation),
             damageRoll,
             fill.hitPoints,
             fill.damageThreshold,
@@ -4815,6 +4920,15 @@ module battleRuntime {
       assert(spellAttackDamageActiveEffects(StarryWispSpellAttack) == Set()),
       assert(spellAttackDamageSupportsObjectTarget(StarryWispSpellAttack)),
       assert(not(spellAttackDamageSupportsObjectTarget(ChillTouchSpellAttack))),
+      assert(spellAttackBeamSequenceDamageType(EldritchBlastBeamSequence) == Force),
+      assert(eldritchBlastBeamCount(1) == 1),
+      assert(eldritchBlastBeamCount(5) == 2),
+      assert(eldritchBlastBeamCount(11) == 3),
+      assert(eldritchBlastBeamCount(17) == 4),
+      assert(spellAttackBeamSequenceReplayHoles(EldritchBlastBeamSequence, true, 2, 0, 0, 0, 0) == Set(TargetChoice, ObjectTargetChoice)),
+      assert(spellAttackBeamSequenceReplayHoles(EldritchBlastBeamSequence, true, 2, 2, 1, 0, 0) == Set(AttackRoll)),
+      assert(spellAttackBeamSequenceReplayHoles(EldritchBlastBeamSequence, true, 2, 2, 2, 2, 1) == Set(SpellDamageRoll)),
+      assert(spellAttackBeamSequenceReplayHoles(EldritchBlastBeamSequence, true, 2, 2, 2, 1, 1) == Set()),
       assert(spellAttackDamageObjectReplayHoles(StarryWispSpellAttack, true, false, false, false, false) == Set(ObjectTargetChoice)),
       assert(spellAttackDamageObjectReplayHoles(StarryWispSpellAttack, true, true, false, false, false) == Set(AttackRoll)),
       assert(spellAttackDamageObjectReplayHoles(StarryWispSpellAttack, true, true, true, true, false) == Set(SpellDamageRoll)),
@@ -4835,6 +4949,15 @@ module battleRuntime {
         effectiveDamage: 0,
         priorHitPoints: 10,
         nextHitPoints: 10,
+        destroyed: false,
+      })),
+      assert(spellAttackBeamSequenceObjectDamageOutcome(EldritchBlastBeamSequence, EldritchBlastObjectTarget, 6, ObjectHitPoints({ hitPoints: 10 })) == ObjectHitPointDamage({
+        object: EldritchBlastObjectTarget,
+        damageType: Force,
+        rolledDamage: 6,
+        effectiveDamage: 6,
+        priorHitPoints: 10,
+        nextHitPoints: 4,
         destroyed: false,
       })),
       assert(spellAttackDamageActiveEffects(ShockingGraspSpellAttack) == Set(ShockingGraspOpportunityAttackDenied)),
@@ -5566,6 +5689,19 @@ module battleRuntime {
       assert(result.actionAvailable == false),
       assert(result.goblin.hp == 4),
       assert(not(result.spellSlotExpendedThisTurn)),
+    }
+  }
+
+  run test_eldritch_blast_resolves_two_independent_force_beams = {
+    val result = resolveEldritchBlastTwoBeams(initialState, 15, 10, 4, true, 1, 1, 6, true)
+    val twoHits = resolveEldritchBlastTwoBeams(initialState, 15, 10, 4, true, 16, 11, 6, true)
+    all {
+      assert(result.actionAvailable == false),
+      assert(result.goblin.hp == 6),
+      assert(not(result.spellSlotExpendedThisTurn)),
+      assert(twoHits.actionAvailable == false),
+      assert(twoHits.goblin.hp == 0),
+      assert(not(twoHits.spellSlotExpendedThisTurn)),
     }
   }
 
