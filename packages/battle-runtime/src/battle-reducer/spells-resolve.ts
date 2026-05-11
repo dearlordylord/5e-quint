@@ -129,6 +129,7 @@ export {
   startSpellEffectConcentration,
 } from "./spells-resolve-resources.ts";
 export {
+  resolveGreaseGroundHazardSpellAct,
   resolveSaveGateAttackRollAdvantageSpellAct,
   resolveSaveGateConditionSpellAct,
   resolveSaveGateDamageSpellAct,
@@ -174,6 +175,7 @@ import { resolvePreparedSlotSpellAct } from "./spells-resolve-prepared-slot.ts";
 import { resolveAttackBurstSaveDamageSpellAct } from "./spells-resolve-attack-burst.ts";
 
 import {
+  resolveGreaseGroundHazardSpellAct,
   resolveSaveGateAttackRollAdvantageSpellAct,
   resolveSaveGateConditionSpellAct,
   resolveSaveGateDamageSpellAct,
@@ -368,6 +370,14 @@ export function resolveSpellAct(
   }
   if (invocation.procedure === "sleepTargetAdmission") {
     return resolveSleepTargetAdmissionSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "greaseGroundHazard") {
+    return resolveGreaseGroundHazardSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

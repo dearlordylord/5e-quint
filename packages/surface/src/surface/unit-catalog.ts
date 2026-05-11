@@ -32,6 +32,7 @@ import chillTouchInput from "../../content/chill_touch.json";
 import chromaticOrbInput from "../../content/chromatic_orb.json";
 import clericDivineOrderInput from "../../content/cleric_divine_order.json";
 import colorSprayInput from "../../content/color_spray.json";
+import commandInput from "../../content/command.json";
 import cureWoundsInput from "../../content/cure_wounds.json";
 import divineFavorInput from "../../content/divine_favor.json";
 import divineSmiteInput from "../../content/divine_smite.json";
@@ -57,9 +58,11 @@ import fighterWeaponMasteryInput from "../../content/fighter_weapon_mastery.json
 import detectEvilAndGoodInput from "../../content/detect_evil_and_good.json";
 import detectMagicInput from "../../content/detect_magic.json";
 import detectPoisonAndDiseaseInput from "../../content/detect_poison_and_disease.json";
+import dissonantWhispersInput from "../../content/dissonant_whispers.json";
 import falseLifeInput from "../../content/false_life.json";
 import fireBoltInput from "../../content/fire_bolt.json";
 import guidanceInput from "../../content/guidance.json";
+import greaseInput from "../../content/grease.json";
 import guidingBoltInput from "../../content/guiding_bolt.json";
 import healingWordInput from "../../content/healing_word.json";
 import hellishRebukeInput from "../../content/hellish_rebuke.json";
@@ -300,7 +303,9 @@ export const srdUnitCollection = defineSrdUnitCollection({
     chillTouchInput,
     chromaticOrbInput,
     colorSprayInput,
+    commandInput,
     cureWoundsInput,
+    dissonantWhispersInput,
     divineFavorInput,
     divineSmiteInput,
     ensnaringStrikeInput,
@@ -309,6 +314,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     falseLifeInput,
     fireBoltInput,
     guidanceInput,
+    greaseInput,
     guidingBoltInput,
     heroismInput,
     huntersMarkInput,

@@ -196,6 +196,7 @@ import {
   resolveDisengage,
   resolveDodge,
   resolveEndTurnCommand,
+  resolveGreaseGroundHazardSaveCommand,
   resolveEscapeGrapple,
   resolveEscapeSpellRestraint,
   resolveGrapple,
@@ -570,6 +571,16 @@ export function resolveBattleSubjectInternal(
     }
     if (subject.tag === "runtimeCommand" && subject.command === "move") {
       return resolveMoveCommand(input);
+    }
+    if (
+      subject.tag === "runtimeCommand" &&
+      subject.command === "greaseGroundHazardSave"
+    ) {
+      return resolveGreaseGroundHazardSaveCommand({
+        ...input,
+        subject,
+        suppressedReactionTrigger: options.suppressedReactionTrigger,
+      });
     }
     if (
       subject.tag === "runtimeCommand" &&

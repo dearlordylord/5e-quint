@@ -41,6 +41,7 @@ export const BATTLE_RUNTIME_COMMANDS = [
   "castAttackHitBonusActionSpell",
   "releaseGrapple",
   "opportunityAttack",
+  "greaseGroundHazardSave",
 ] as const;
 export type BattleRuntimeCommand = (typeof BATTLE_RUNTIME_COMMANDS)[number];
 export const BATTLE_MOVEMENT_SPEED_KINDS = ["walk", "climb", "swim"] as const;
@@ -74,6 +75,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "saveGatedCondition",
   "saveGatedAttackRollAdvantage",
   "sleepTargetAdmission",
+  "greaseGroundHazard",
   "repeatedDamageAllocation",
   "directHitPointRestoration",
   "rollModifier",
@@ -368,6 +370,15 @@ export const BattleSubjectSchema = Schema.Union(
     targetId: CombatantId,
     attackName: BattleSubjectTextSchema,
   }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("greaseGroundHazardSave"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
+    areaId: BattleSubjectTextSchema,
+    trigger: Schema.Literal("entersArea", "endsTurnInArea"),
+  }),
 );
 export type BattleSubject = typeof BattleSubjectSchema.Type;
 
@@ -573,6 +584,10 @@ function battleSubjectKey(subject: BattleSubject): string {
           ? spellInvocationRefKey(command.invocation)
           : null,
         "attackName" in command ? command.attackName : null,
+        "sourceCombatantId" in command ? command.sourceCombatantId : null,
+        "sourceSpellId" in command ? command.sourceSpellId : null,
+        "areaId" in command ? command.areaId : null,
+        "trigger" in command ? command.trigger : null,
       ]),
     ),
     Match.exhaustive,

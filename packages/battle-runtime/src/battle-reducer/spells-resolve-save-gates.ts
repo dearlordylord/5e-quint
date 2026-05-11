@@ -30,6 +30,7 @@ import { invalidResult } from "./result-helpers.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import {
   applyFailedSaveAttackRollAdvantageEffects,
+  applyGreaseGroundHazardCastEffects,
   applySleepPendingRepeatSaveEffects,
   applyFailedSaveSpellActiveEffects,
   applyFailedSaveSpellConditionEffects,
@@ -51,6 +52,127 @@ import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 import { type SpellFillSet } from "./spells-resolve-fill-set.ts";
 
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
+
+export function resolveGreaseGroundHazardSpellAct(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "greaseGroundHazard" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  const savingThrowHole = spellSavingThrowOutcomeHole(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+  );
+  if (
+    input.fillSet.targetId !== undefined ||
+    input.fillSet.targetList !== undefined
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Grease uses one ground-area Saving Throw fill.",
+    );
+  }
+  if (
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.concentrationSavingThrows.length > 0 ||
+    input.fillSet.damageDispositions.length > 0
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Grease does not use attack, damage, or Concentration fills.",
+    );
+  }
+  if (input.fillSet.savingThrowOutcomes === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      savingThrowHole,
+    ]);
+  }
+  const savingThrowOutcomes = input.fillSet.savingThrowOutcomes;
+  const savingThrowValidation = validateSavingThrowOutcomes(
+    savingThrowOutcomes,
+    savingThrowHole,
+    input.input.state,
+    input.actorId,
+    undefined,
+    undefined,
+  );
+  if (savingThrowValidation !== null) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      savingThrowValidation,
+    );
+  }
+  if (!("area" in savingThrowOutcomes)) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Grease requires ground-area facts.",
+    );
+  }
+  const area = savingThrowOutcomes.area;
+  if (area.kind !== "greaseGroundArea") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Grease requires a ground-area id.",
+    );
+  }
+
+  const failedTargets = savingThrowOutcomes.outcomes.flatMap((outcome) =>
+    outcome.succeeded ? [] : [outcome.targetId],
+  );
+  if (failedTargets.length > 0) {
+    const saveFailedReactionWindow = maybeOpenReactionWindow(
+      input.input.state,
+      {
+        trigger: "saveFailed",
+        targetId: failedTargets[0]!,
+        sourceSpellId: input.invocation.spell.id,
+        continuation: {
+          kind: "replay",
+          subject:
+            input.input.reactionContinuationSubject ?? input.input.subject,
+          fills: input.input.fills,
+        },
+      },
+      input.input.suppressedReactionTrigger,
+    );
+    if (saveFailedReactionWindow !== null) {
+      return saveFailedReactionWindow;
+    }
+  }
+
+  const resourced = spendSpellCastResources({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
+  if (resourced.tag === "invalid") {
+    return resourced;
+  }
+  const nextState = applyGreaseGroundHazardCastEffects({
+    state: resourced.state,
+    actorId: input.actorId,
+    area,
+    failedTargetIds: failedTargets,
+    invocation: input.invocation,
+  });
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
 export function resolveSleepTargetAdmissionSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
@@ -830,6 +952,13 @@ export function validateSavingThrowOutcomes(
       state,
     });
   }
+  if (hole.spell.procedure === "greaseGroundHazard") {
+    return validateGreaseGroundHazardSavingThrowOutcomes({
+      value,
+      area: "area" in value ? value.area : undefined,
+      state,
+    });
+  }
   if (targeting.kind === "singleCombatant") {
     if (outcomes.length === 0) {
       return "Save-gate spell must include at least one affected target Saving Throw outcome.";
@@ -884,6 +1013,9 @@ export function validateSavingThrowOutcomes(
   }
   if (!("area" in value)) {
     return `Save-gate spell Saving Throw outcomes require area facts for ${targeting.kind}.`;
+  }
+  if ("kind" in value.area && value.area.kind === "greaseGroundArea") {
+    return "Grease ground-area facts are only valid for Grease.";
   }
   if ("sleepNonSleeperFacts" in value.area) {
     return "Sleep non-sleeper facts are only valid for Sleep target admission.";
@@ -997,6 +1129,50 @@ function validateSleepTargetAdmissionSavingThrowOutcomes(input: {
   )
     ? null
     : "Sleep Saving Throw outcomes must cover every selected target that is not an automatic success.";
+}
+
+function validateGreaseGroundHazardSavingThrowOutcomes(input: {
+  readonly value: BattleSpellSavingThrowOutcomeValue;
+  readonly area: BattleSpellAreaChoice | undefined;
+  readonly state: BattleState;
+}): string | null {
+  if (input.area === undefined) {
+    return "Grease Saving Throw outcomes require ground-area facts.";
+  }
+  if (input.area.kind !== "greaseGroundArea") {
+    return "Grease requires a ground-area id.";
+  }
+  if (input.area.areaId.length === 0) {
+    return "Grease ground-area id must not be empty.";
+  }
+  if ("sleepNonSleeperFacts" in input.area) {
+    return "Sleep non-sleeper facts are only valid for Sleep target admission.";
+  }
+  if (!input.state.combatants.has(input.area.originAnchorId)) {
+    return "Grease ground-area origin anchor must be a combatant in this battle.";
+  }
+  const selectedTargets = new Set(input.area.affectedTargetIds);
+  if (selectedTargets.size !== input.area.affectedTargetIds.length) {
+    return "Grease ground-area affected targets must not duplicate targets.";
+  }
+  for (const targetId of selectedTargets) {
+    if (!input.state.combatants.has(targetId)) {
+      return "Grease ground-area affected target must be a combatant in this battle.";
+    }
+  }
+  const outcomeTargetIds = new Set<CombatantId>();
+  for (const outcome of input.value.outcomes) {
+    if (!selectedTargets.has(outcome.targetId)) {
+      return "Grease Saving Throw outcomes must match the table-supplied ground-area affected targets.";
+    }
+    if (outcomeTargetIds.has(outcome.targetId)) {
+      return "Grease Saving Throw outcomes must not duplicate targets.";
+    }
+    outcomeTargetIds.add(outcome.targetId);
+  }
+  return outcomeTargetIds.size === selectedTargets.size
+    ? null
+    : "Grease Saving Throw outcomes must cover every table-supplied ground-area affected target.";
 }
 
 function sleepTargetHasExhaustionImmunity(

@@ -583,7 +583,8 @@ export function spellSavingThrowOutcomeHole(
         | "saveGatedDamage"
         | "saveGatedCondition"
         | "saveGatedAttackRollAdvantage"
-        | "sleepTargetAdmission";
+        | "sleepTargetAdmission"
+        | "greaseGroundHazard";
     }
   >,
 ): BattleSpellSavingThrowOutcomeHole {
@@ -642,7 +643,8 @@ export function spellSavingThrowAbility(
         | "saveGatedDamage"
         | "saveGatedCondition"
         | "saveGatedAttackRollAdvantage"
-        | "sleepTargetAdmission";
+        | "sleepTargetAdmission"
+        | "greaseGroundHazard";
     }
   >,
 ): Ability {
@@ -665,7 +667,8 @@ export function spellSavingThrowTargeting(
         | "saveGatedDamage"
         | "saveGatedCondition"
         | "saveGatedAttackRollAdvantage"
-        | "sleepTargetAdmission";
+        | "sleepTargetAdmission"
+        | "greaseGroundHazard";
     }
   >,
 ): SpellTargeting {

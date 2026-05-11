@@ -79,7 +79,8 @@ export function discoverSupportedSpellInvocations(
         invocation.procedure === "saveGatedDamage" ||
         invocation.procedure === "saveGatedCondition" ||
         invocation.procedure === "saveGatedAttackRollAdvantage" ||
-        invocation.procedure === "sleepTargetAdmission"
+        invocation.procedure === "sleepTargetAdmission" ||
+        invocation.procedure === "greaseGroundHazard"
       ) {
         if (
           invocation.targeting.kind === "singleCombatant" ||
@@ -111,7 +112,9 @@ export function discoverSupportedSpellInvocations(
               initialHoles: [targetHole],
             },
           ];
-          return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
+          return invocation.procedure === "greaseGroundHazard"
+            ? castActs
+            : [...castActs, ...readiedSpellAct(state, actorId, invocation)];
         }
         const initialHole = spellSavingThrowOutcomeHole(
           state,
@@ -131,7 +134,9 @@ export function discoverSupportedSpellInvocations(
             initialHoles: [initialHole],
           },
         ];
-        return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
+        return invocation.procedure === "greaseGroundHazard"
+          ? castActs
+          : [...castActs, ...readiedSpellAct(state, actorId, invocation)];
       }
       if (invocation.procedure === "rollModifier") {
         const targetHole =
@@ -536,7 +541,8 @@ export function spellActivationInvocationCastSummary(
         | "saveGatedDamage"
         | "saveGatedCondition"
         | "saveGatedAttackRollAdvantage"
-        | "sleepTargetAdmission";
+        | "sleepTargetAdmission"
+        | "greaseGroundHazard";
     }
   >,
 ): string {
@@ -627,6 +633,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "saveGatedCondition" &&
     invocation.procedure !== "saveGatedAttackRollAdvantage" &&
     invocation.procedure !== "sleepTargetAdmission" &&
+    invocation.procedure !== "greaseGroundHazard" &&
     invocation.procedure !== "spellAttackBeamSequence" &&
     invocation.procedure !== "shieldReaction"
   );
@@ -657,6 +664,7 @@ export function readiedSpellAct(
     invocation.procedure === "saveGatedCondition" ||
     invocation.procedure === "saveGatedAttackRollAdvantage" ||
     invocation.procedure === "sleepTargetAdmission" ||
+    invocation.procedure === "greaseGroundHazard" ||
     invocation.procedure === "shieldReaction" ||
     state.readiedSpells.has(actorId)
   ) {

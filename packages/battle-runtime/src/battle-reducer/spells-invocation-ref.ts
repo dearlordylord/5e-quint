@@ -53,6 +53,14 @@ export function supportedSpellInvocationRef(
       procedure: "sleepTargetAdmission",
     };
   }
+  if (invocation.procedure === "greaseGroundHazard") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "greaseGroundHazard",
+    };
+  }
   if (invocation.procedure === "spellAttackBeamSequence") {
     return {
       tag: "cantrip",

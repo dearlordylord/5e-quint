@@ -499,6 +499,40 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "command_target_next_turn": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "command_target_next_turn",
+        label: [
+          "command_target_next_turn",
+          e.execution,
+          `approach: ${e.options.approach.route}, end within ${e.options.approach.endsTurnWhenWithinFeet} ft`,
+          `drop: ${e.options.drop.objectSet}, then ${e.options.drop.afterward}`,
+          `flee: ${e.options.flee.means} ${e.options.flee.direction}`,
+          `grovel: ${e.options.grovel.condition}, then ${e.options.grovel.afterward}`,
+          "halt: no movement/action/bonus action",
+        ].join("\n"),
+      });
+      return id;
+    }
+    case "forced_reaction_movement": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "forced_reaction_movement",
+        label: [
+          "forced_reaction_movement",
+          `cost: ${e.cost}`,
+          `unavailable: ${e.unavailable}`,
+          `${e.distance} ${e.direction}`,
+          `route: ${e.route}`,
+        ].join("\n"),
+      });
+      return id;
+    }
     case "remove_condition": {
       const id = ids("eff");
       const label = `remove_condition\n${describeConditionChoice(e.condition)}`;
@@ -2044,6 +2078,8 @@ function traceEffectAtomScaling(
     case "modify_save_dc":
     case "apply_condition":
     case "restrict_action_usage":
+    case "command_target_next_turn":
+    case "forced_reaction_movement":
     case "remove_condition":
     case "grant_resistance":
     case "kill_target":
