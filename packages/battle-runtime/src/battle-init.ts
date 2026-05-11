@@ -4,6 +4,7 @@ import type {
   Size,
   StatBlockRecord,
   UnitRecord,
+  WeaponProficiency,
 } from "@dnd/surface/surface/types";
 import type {
   CharacterUnarmedStrikeActionOption,
@@ -64,6 +65,7 @@ export type CharacterBattleCreatureInit = {
   readonly characterId: CharacterId;
   readonly characterUnitRefs: readonly BattleUnitRef[];
   readonly classLevels: readonly CharacterBattleClassLevelInit[];
+  readonly weaponProficiencies?: readonly WeaponProficiency[];
   readonly armorClass: ArmorClassState;
   readonly size: Size;
   readonly speed: BattleWalkSpeed;

@@ -7,10 +7,18 @@ import {
   type ProficiencyBonus as ProficiencyBonusType,
   type SpellSlotLevel,
 } from "@dnd/shared/types";
-import type { Attachment, SpellRecord } from "@dnd/surface/surface/types";
+import type {
+  Attachment,
+  DamageType,
+  SpellRecord,
+  WeaponProficiency,
+  WeaponRecord,
+} from "@dnd/surface/surface/types";
+import { Match } from "effect";
 import {
   SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET,
   damageSpellSource,
+  type BattleCreatureState,
   type DamageSpellSource,
   type PreparedDamageSpellSource,
   type SpellTargeting,
@@ -44,6 +52,143 @@ export function supportedCantripSpellAttackProfile(
     proficiencyBonus,
     characterLevel,
   });
+}
+
+const TRUE_STRIKE_DAMAGE_TYPE_CHOICES = [
+  "radiant",
+  "weapon_normal",
+] as const satisfies readonly string[];
+
+export function supportedCantripSpellHostedWeaponAttackProfile(
+  actor: BattleCreatureState,
+  spell: SpellRecord,
+  spellcastingAbilityModifier: AbilityModifier,
+  proficiencyBonus: ProficiencyBonusType,
+  characterLevel: number,
+): readonly SupportedSpellInvocation[] {
+  if (actor.origin.kind !== "character" || !isCanonicalSrdTrueStrike(spell)) {
+    return [];
+  }
+  const origin = actor.origin;
+  if (
+    spell.mechanics.family !== "activation" ||
+    spell.mechanics.level !== 0 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "self" ||
+    spell.mechanics.duration.kind !== "instantaneous" ||
+    spell.mechanics.phases.length !== 1
+  ) {
+    return [];
+  }
+  const phase = spell.mechanics.phases[0];
+  const effects = phase?.kind === "direct" ? phase.effects : undefined;
+  const effect = effects?.[0];
+  const bonusDamage =
+    effect?.kind === "make_weapon_attack" ? effect.bonusDamage : undefined;
+  if (
+    phase?.kind !== "direct" ||
+    effects === undefined ||
+    effects.length !== 1 ||
+    effect?.kind !== "make_weapon_attack" ||
+    effect.damageTypeChoice === undefined ||
+    bonusDamage === undefined ||
+    typeof bonusDamage.damageType !== "string" ||
+    effect.weapon !== "material_component" ||
+    effect.abilityOverride !== "spellcasting" ||
+    !sameStringSet(effect.damageTypeChoice, [
+      ...TRUE_STRIKE_DAMAGE_TYPE_CHOICES,
+    ])
+  ) {
+    return [];
+  }
+  const bonusDamageExpr = supportedDamageAmountExpr({
+    amount: bonusDamage.amount,
+    spellLevel: spell.mechanics.level,
+    characterLevel,
+  });
+  if (bonusDamageExpr === null) {
+    return [];
+  }
+  const bonusDamageType: DamageType = bonusDamage.damageType;
+  const attacks = [
+    ...(origin.attack === null
+      ? []
+      : [
+          {
+            itemId:
+              origin.selectedLoadout.weapon?.itemId ?? origin.attack.weapon.id,
+            attack: origin.attack,
+          },
+        ]),
+    ...(origin.offHandAttack === undefined
+      ? []
+      : [
+          {
+            itemId:
+              origin.selectedLoadout.offHandWeapon?.itemId ??
+              origin.offHandAttack.weapon.id,
+            attack: origin.offHandAttack,
+          },
+        ]),
+  ];
+  return attacks
+    .filter(
+      ({ attack }) =>
+        attack.weapon.costGp >= 0.01 &&
+        origin.weaponProficiencies.some((proficiency) =>
+          weaponMatchesProficiency(attack.weapon, proficiency),
+        ),
+    )
+    .map(({ itemId, attack }) => ({
+      access: { tag: "classCantrip" as const },
+      resource: { tag: "none" as const },
+      procedure: "spellHostedWeaponAttack" as const,
+      spell,
+      actionCost: "magicAction" as const,
+      componentWeapon: { itemId, attack },
+      spellcastingAbilityModifier,
+      attackBonus: attackBonus(
+        Number(spellcastingAbilityModifier) + Number(proficiencyBonus),
+      ),
+      damageTypeChoices: [
+        ...new Set<DamageType>(["radiant", attack.weapon.damage.damageType]),
+      ],
+      bonusDamage: {
+        expr: bonusDamageExpr,
+        damageType: bonusDamageType,
+      },
+    }));
+}
+
+export function isCanonicalSrdTrueStrike(spell: SpellRecord): boolean {
+  return (
+    spell.name === "True Strike" &&
+    spell.provenance.kind === "srd-5.2.1" &&
+    spell.provenance.section === "Spells/Descriptions-S-Z#True Strike"
+  );
+}
+
+const byKind = Match.discriminator("kind");
+
+function weaponMatchesProficiency(
+  weapon: WeaponRecord,
+  proficiency: WeaponProficiency,
+): boolean {
+  return Match.value(proficiency).pipe(
+    byKind(
+      "weapon_category",
+      (categoryProficiency) => weapon.category === categoryProficiency.category,
+    ),
+    byKind(
+      "weapon_category_with_properties",
+      (propertyProficiency) =>
+        weapon.category === propertyProficiency.category &&
+        weapon.properties?.some((property) =>
+          propertyProficiency.anyOfProperties.includes(property.kind),
+        ) === true,
+    ),
+    Match.exhaustive,
+  );
 }
 
 export function supportedPreparedSpellAttackProfile(

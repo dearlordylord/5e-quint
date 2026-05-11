@@ -180,6 +180,7 @@ export function battleCreatureStateFromInit(
         characterId: creatureInit.characterId,
         characterUnitRefs: creatureInit.characterUnitRefs,
         classLevels,
+        weaponProficiencies: creatureInit.weaponProficiencies ?? [],
         selectedLoadout: creatureInit.selectedLoadout,
         speed: creatureInit.speed,
         attack: creatureInit.attack,

@@ -4,8 +4,10 @@ import type {
 } from "@dnd/battle-runtime";
 import {
   battleCombatantSide,
+  battleId,
   characterId,
   combatantId,
+  discoverBattleActs,
   initiativeScore,
 } from "@dnd/battle-runtime";
 import {
@@ -36,6 +38,10 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
+import {
+  buildStatBlockCatalog,
+  srdStatBlockCollection,
+} from "@dnd/surface/surface/stat-block-catalog";
 import { Either } from "effect";
 import { describe, expect, test } from "vitest";
 
@@ -43,6 +49,7 @@ import {
   applyBattleHandoffToCharacterSheet,
   battleCreatureInitFromCharacterBuild,
   characterArmorClassState,
+  startBattleFromCharacterBuildAndStatBlock,
 } from "./index.ts";
 
 const build = defenseBuild({ wearingArmor: false });
@@ -50,10 +57,14 @@ const build = defenseBuild({ wearingArmor: false });
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
 });
-if (unitCatalogResult.tag !== "ok") {
+const statBlockCatalogResult = buildStatBlockCatalog({
+  collections: [srdStatBlockCollection],
+});
+if (unitCatalogResult.tag !== "ok" || statBlockCatalogResult.tag !== "ok") {
   throw new Error("Character battle runtime test Unit catalog must build.");
 }
 const unitLibrary = unitCatalogResult.catalog;
+const statBlockCatalog = statBlockCatalogResult.catalog;
 
 function createFreshCharacterSheet(
   input: Omit<CharacterSheetInput, "conditions"> &
@@ -376,6 +387,47 @@ describe("Character Build battle projection", () => {
       (init.creatureInit.resources ?? []).map((resource) => resource.unit.id),
     ).not.toContain("paladin_lay_on_hands");
   });
+
+  test("threads build weapon proficiencies into True Strike discovery", () => {
+    const casterId = combatantId("true-strike-wizard");
+    const targetId = combatantId("true-strike-target");
+    const state = expectRight(
+      startBattleFromCharacterBuildAndStatBlock({
+        battleId: battleId("character-battle-true-strike"),
+        character: {
+          combatantId: casterId,
+          characterId: characterId("character:true-strike-wizard"),
+          displayName: "True Strike Wizard",
+          build: trueStrikeWizardBuild(),
+          initiative: initiativeScore(20),
+          side: battleCombatantSide("party"),
+        },
+        statBlockBattleInput: {
+          combatantId: targetId,
+          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          initiative: initiativeScore(10),
+          side: battleCombatantSide("monsters"),
+        },
+        unitLibrary,
+      }),
+    );
+
+    const trueStrike = discoverBattleActs(state).find(
+      (act) => act.label === "True Strike (Dagger)",
+    );
+
+    expect(trueStrike?.subject).toMatchObject({
+      tag: "actionSpell",
+      actorId: casterId,
+      componentWeaponItemId: trueStrikeDaggerItemId(),
+    });
+    expect(trueStrike?.summary).toBe(
+      "Cast True Strike as a cantrip using Dagger.",
+    );
+    expect(
+      trueStrike?.initialHoles.find((hole) => hole.kind === "targetChoice"),
+    ).toMatchObject({ choices: [targetId] });
+  });
 });
 
 function multiclassUnarmoredDefenseBuild(): CharacterBuild {
@@ -452,6 +504,62 @@ function defenseBuild(input: {
       loadout: input.wearingArmor ? { armor: armorItemId } : {},
     },
   };
+}
+
+function trueStrikeWizardBuild(): CharacterBuild {
+  const daggerItemId = trueStrikeDaggerItemId();
+
+  return {
+    progression: {
+      startingClass: classUnitId("class_wizard"),
+      advancements: [],
+    },
+    background: "background_soldier",
+    species: "species_orc",
+    originLanguages: ["Common", "Dwarvish", "Goblin"],
+    alignment: { order: "lawful", morality: "good" },
+    abilityScores: expectRight(
+      abilityScoreAssignment({
+        str: 8,
+        dex: 14,
+        con: 13,
+        int: 16,
+        wis: 10,
+        cha: 12,
+      }),
+    ),
+    proficiencyChoices: [],
+    features: [],
+    equipment: {
+      owned: [{ itemId: daggerItemId, unitId: "weapon_dagger" }],
+      loadout: {
+        weapon: {
+          itemId: daggerItemId,
+          grip: "one_handed",
+        },
+      },
+    },
+    spellcasting: {
+      sources: [
+        {
+          sourceUnitId: "class_wizard",
+          spellcastingAbility: "int",
+          cantrips: ["true_strike"],
+          spellbook: [],
+          preparedSpells: [],
+          spellcastingFocuses: ["arcane_focus"],
+        },
+      ],
+      slotPools: {},
+    },
+  };
+}
+
+function trueStrikeDaggerItemId() {
+  return characterEquipmentItemId({
+    slot: "main",
+    unitId: expectRight(characterEquipmentItemUnitId("weapon_dagger")),
+  });
 }
 
 function handoffSpellcastingState(): CharacterBattleSpellcastingState {

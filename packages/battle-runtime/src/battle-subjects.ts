@@ -52,6 +52,7 @@ export const CANTRIP_SPELL_PROCEDURES = [
   "heldLight",
   "heldLightHurl",
   "damageReduction",
+  "spellHostedWeaponAttack",
   "spellAttackDamage",
   "saveGatedDamage",
   "rollModifier",
@@ -287,6 +288,9 @@ export const BattleSubjectSchema = Schema.Union(
     actorId: CombatantId,
     invocation: SpellInvocationRefSchema,
     mode: SpellSubjectModeSchema,
+    componentWeaponItemId: Schema.optionalWith(BattleSubjectTextSchema, {
+      exact: true,
+    }),
   }),
   Schema.Struct({
     tag: Schema.Literal("bonusActionSpell"),
@@ -529,6 +533,7 @@ function battleSubjectKey(subject: BattleSubject): string {
         spell.actorId,
         spellInvocationRefKey(spell.invocation),
         spellSubjectModeKey(spell.mode),
+        spell.componentWeaponItemId ?? null,
       ]),
     ),
     Match.when({ tag: "bonusActionSpell" }, (spell) =>

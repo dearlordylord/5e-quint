@@ -178,6 +178,7 @@ import {
   resolveReadySpellAct,
   resolveWeaponDamageRiderSpellAct,
 } from "./spells-resolve-release.ts";
+import { resolveSpellHostedWeaponAttackSpellAct } from "./spells-resolve-weapon-attack.ts";
 export * from "./spells-resolve-release.ts";
 
 export function resolveSpellAct(
@@ -188,7 +189,10 @@ export function resolveSpellAct(
   const invocation =
     actor?.origin.kind === "character"
       ? supportedSpellActs(actor).find((candidate) =>
-          supportedSpellInvocationMatchesRef(candidate, subject.invocation),
+          supportedSpellInvocationMatchesRef(candidate, subject.invocation) &&
+          (candidate.procedure !== "spellHostedWeaponAttack" ||
+            (subject.componentWeaponItemId !== undefined &&
+              candidate.componentWeapon.itemId === subject.componentWeaponItemId)),
         )
       : undefined;
   if (actor?.origin.kind !== "character" || invocation == null) {
@@ -223,6 +227,7 @@ export function resolveSpellAct(
     subject.mode.tag === "ready" &&
     (invocation.procedure === "directHitPointRestoration" ||
       invocation.procedure === "heldLightHurl" ||
+      invocation.procedure === "spellHostedWeaponAttack" ||
       invocation.procedure === "damageReduction" ||
       invocation.procedure === "scalarBuff" ||
       invocation.procedure === "rollModifier" ||
@@ -293,6 +298,14 @@ export function resolveSpellAct(
   }
   if (invocation.procedure === "attackBurstSaveDamage") {
     return resolveAttackBurstSaveDamageSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "spellHostedWeaponAttack") {
+    return resolveSpellHostedWeaponAttackSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

@@ -20,6 +20,7 @@ import {
 import {
   characterBuildFeatureUnitIds,
   characterBuildHitPoints,
+  characterBuildProficiencies,
   characterBuildResources,
   progressionClassLevels,
   type CharacterBuild,
@@ -159,6 +160,15 @@ export function battleCreatureInitFromCharacterBuild(
   if (Either.isLeft(classLevels)) {
     return battleCreatureInitIssue(classLevels.left.message);
   }
+  const proficiencies = characterBuildProficiencies(
+    input.build,
+    input.unitLibrary,
+  );
+  if (Either.isLeft(proficiencies)) {
+    return battleCreatureInitIssue(
+      proficiencies.left.map((issue) => issue.message).join("; "),
+    );
+  }
   const spellcasting =
     input.build.spellcasting === undefined
       ? undefined
@@ -183,6 +193,13 @@ export function battleCreatureInitFromCharacterBuild(
       characterId: input.characterId,
       characterUnitRefs: characterUnitRefs.right,
       classLevels: classLevels.right,
+      weaponProficiencies: [
+        ...proficiencies.right.weapon.map((category) => ({
+          kind: "weapon_category" as const,
+          category,
+        })),
+        ...proficiencies.right.weaponPropertyFilters,
+      ],
       armorClass: armorClass.right,
       size: species.right.size.size,
       speed: { walkFeet: movementFeet(species.right.speed.walkFeet) },

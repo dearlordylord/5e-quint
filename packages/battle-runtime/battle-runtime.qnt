@@ -1,11 +1,11 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-timed-damage-save
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-chained-attack-damage
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-damage spell.invocation-weapon-damage-rider
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-damage spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-marked-damage-rider
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-attack-roll-advantage-save
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-damage-reduction
@@ -169,6 +169,12 @@ module battleRuntime {
   //   Action spell with a primary ranged spell attack, hit-only Piercing
   //   damage, and an unconditional primary-target-anchored burst Dexterity
   //   Saving Throw that deals Cold damage only on a failed save.
+  //   Spells/Descriptions-S-Z.md lines 1024-1035: True Strike is an Action
+  //   cantrip whose material component is a proficient weapon worth at least
+  //   1 CP, immediately makes one attack with that weapon, uses the
+  //   spellcasting ability for attack and damage rolls instead of Strength or
+  //   Dexterity, lets the weapon damage type be Radiant or normal, and adds
+  //   Radiant cantrip-scaling damage at levels 5, 11, and 17.
   // - Character-Origins.md lines 253-255, Playing-the-Game.md lines 788-806,
   //   Rules-Glossary.md lines 361-365, and UBIQUITOUS_LANGUAGE.md:
   //   Orc Adrenaline Rush spends a limited-use Bonus Action Dash, grants
@@ -199,7 +205,7 @@ module battleRuntime {
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | TrueStrike
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack
   type ChainedSpellAttackDamageInvocation =
     | ChromaticOrbChainedSpellAttack
@@ -313,6 +319,7 @@ module battleRuntime {
     | ResumeRayOfFrost
     | ResumePoisonSpray
     | ResumeChillTouch
+    | ResumeTrueStrikeWeaponAttack
     | ResumeProduceFlameHurl
     | ResumeIceKnife
     | ResumeSaveGateDamage
@@ -1107,6 +1114,7 @@ module battleRuntime {
       | ResumeRayOfFrost => resolveRayOfFrost(state, 15, 10, 4, true)
       | ResumePoisonSpray => resolvePoisonSpray(state, 15, 10, 7, true)
       | ResumeChillTouch => resolveChillTouch(state, 15, 10, 6, true)
+      | ResumeTrueStrikeWeaponAttack => resolveTrueStrikeWeaponAttack(state, 15, 10, 4, 5, 3, 5, Radiant, Slashing, true)
       | ResumeProduceFlameHurl => resolveProduceFlameHurl(state, 15, 10, 5, true)
       | ResumeIceKnife => resolveIceKnife(state, 15, 10, 4, false, true, false, 6, true, true)
       | ResumeSaveGateDamage => resolveAcidSplash(state, false, true, 4, true, true)
@@ -1257,6 +1265,88 @@ module battleRuntime {
         { ...spent, lightWeaponAttackMade: true }
       else
         { ...spent, goblin: applyDamageWithDisposition(state.goblin, damageRoll.weaponDamageRoll + 3 + rageDamage + divineFavorDamage + divineSmiteDamage + huntersMarkDamage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded, damageDisposition), lightWeaponAttackMade: true }
+    }
+
+  pure def trueStrikeBonusDamageDice(characterLevel: int): int =
+    if (characterLevel >= 17) 3
+    else if (characterLevel >= 11) 2
+    else if (characterLevel >= 5) 1
+    else 0
+
+  pure def trueStrikeDamageTypeChoiceIsLegal(selectedDamageType: DamageType, weaponDamageType: DamageType): bool =
+    selectedDamageType == Radiant or selectedDamageType == weaponDamageType
+
+  pure def trueStrikeWeaponAttackModifier(spellcastingAbilityModifier: int, proficiencyBonus: int): int =
+    spellcastingAbilityModifier + proficiencyBonus
+
+  pure def trueStrikeBonusDamage(bonusDamageRoll: int, characterLevel: int): int =
+    if (trueStrikeBonusDamageDice(characterLevel) > 0) bonusDamageRoll else 0
+
+  pure def trueStrikeDamageAfterAdjustments(
+    weaponDamageRoll: int,
+    bonusDamageRoll: int,
+    spellcastingAbilityModifier: int,
+    characterLevel: int,
+    selectedDamageType: DamageType,
+  ): int =
+    damageAfterAdjustments(
+      weaponDamageRoll + spellcastingAbilityModifier,
+      selectedDamageType,
+      Set(),
+      Set(),
+      Set(),
+    ) +
+    damageAfterAdjustments(
+      trueStrikeBonusDamage(bonusDamageRoll, characterLevel),
+      Radiant,
+      Set(),
+      Set(),
+      Set(),
+    )
+
+  pure def resolveTrueStrikeWeaponAttack(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    weaponDamageRoll: int,
+    bonusDamageRoll: int,
+    spellcastingAbilityModifier: int,
+    characterLevel: int,
+    selectedDamageType: DamageType,
+    weaponDamageType: DamageType,
+    concentrationSaveSucceeded: bool,
+  ): BattleState =
+    if (
+      not(state.actionAvailable) or
+      currentActor(state) != Fighter or
+      state.fighter.unconscious or
+      state.fighter.incapacitated or
+      fighterHasRage(state) or
+      not(trueStrikeDamageTypeChoiceIsLegal(selectedDamageType, weaponDamageType))
+    )
+      state
+    else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), fighterCriticalThreshold(state)))) {
+      val rolled = recordFighterAttackRoll(revealFighterHidden(state))
+      { ...rolled, actionAvailable: false }
+    }
+    else if (state.goblin.reactionAvailable and not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
+      openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
+        trigger: AttackHit,
+        eligibleReactors: Set(Goblin),
+        offeredReactors: Set(),
+        continuation: ResumeTrueStrikeWeaponAttack,
+      })
+    }
+    else {
+      val rolled = recordFighterAttackRoll(revealFighterHidden(state))
+      val damage = trueStrikeDamageAfterAdjustments(
+        weaponDamageRoll,
+        bonusDamageRoll,
+        spellcastingAbilityModifier,
+        characterLevel,
+        selectedDamageType,
+      )
+      { ...rolled, goblin: applyDamage(state.goblin, damage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded), actionAvailable: false }
     }
 
   pure def fighterSneakAttackEligible(
@@ -2774,6 +2864,7 @@ module battleRuntime {
       | RayOfSickness => true
       | ViciousMockery => false
       | ProduceFlame => false
+      | TrueStrike => false
     }
 
   pure def canExpendSpellSlotThisTurn(state: BattleState): bool =
@@ -5167,6 +5258,41 @@ module battleRuntime {
     all {
       assert(activeEffectsContainSearingSmite(stillSameRound.goblin.activeEffects)),
       assert(not(activeEffectsContainSearingSmite(nextRound.goblin.activeEffects))),
+    }
+  }
+
+  run test_true_strike_weapon_attack_uses_spellcasting_ability_and_cantrip_scaling = {
+    val hit = resolveTrueStrikeWeaponAttack(
+      { ...initialState, goblin: { ...initialState.goblin, reactionAvailable: false } },
+      15,
+      10,
+      4,
+      5,
+      3,
+      5,
+      Radiant,
+      Slashing,
+      true,
+    )
+    all {
+      assert(hit.goblin.hp == 0),
+      assert(not(hit.actionAvailable)),
+      assert(not(hit.spellSlotExpendedThisTurn)),
+      assert(spellInvocationSpendsLevelOneSlot(TrueStrike) == false),
+      assert(trueStrikeWeaponAttackModifier(3, 3) == 6),
+      assert(trueStrikeDamageAfterAdjustments(4, 5, 3, 5, Radiant) == 12),
+    }
+  }
+
+  run test_true_strike_damage_choice_and_bonus_dice_are_level_gated = {
+    all {
+      assert(trueStrikeDamageTypeChoiceIsLegal(Radiant, Slashing)),
+      assert(trueStrikeDamageTypeChoiceIsLegal(Slashing, Slashing)),
+      assert(not(trueStrikeDamageTypeChoiceIsLegal(Fire, Slashing))),
+      assert(trueStrikeBonusDamageDice(1) == 0),
+      assert(trueStrikeBonusDamageDice(5) == 1),
+      assert(trueStrikeBonusDamageDice(11) == 2),
+      assert(trueStrikeBonusDamageDice(17) == 3),
     }
   }
 

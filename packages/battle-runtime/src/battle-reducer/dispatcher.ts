@@ -523,6 +523,9 @@ export function resolveBattleSubjectInternal(
         ...input,
         subject,
         suppressedReactionTrigger: options.suppressedReactionTrigger,
+        replayingInterruptedProcedure: options.replayingInterruptedProcedure,
+        pendingAttackDamageReductions: options.pendingAttackDamageReductions,
+        pendingAttackDamageAdditions: options.pendingAttackDamageAdditions,
       });
     }
     if (subject.tag === "bonusActionSpell") {

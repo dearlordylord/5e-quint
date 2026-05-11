@@ -125,16 +125,21 @@ const BattleRuntimeObjectSchema = Schema.Record({
   value: Schema.Any,
 });
 
-const SupportedAttackActionOptionSchema = Schema.Union(
-  Schema.Struct({
-    kind: Schema.Literal("weapon"),
-    weapon: BattleRuntimeObjectSchema,
-    ability: Schema.String,
-    abilityModifier: AbilityModifier,
-    damageAbilityModifier: Schema.optionalWith(AbilityModifier, {
-      exact: true,
-    }),
+const CharacterWeaponAttackActionOptionSchema = Schema.Struct({
+  kind: Schema.Literal("weapon"),
+  weapon: BattleRuntimeObjectSchema,
+  ability: Schema.String,
+  abilityModifier: AbilityModifier,
+  attackBonus: Schema.optionalWith(AttackBonus, {
+    exact: true,
   }),
+  damageAbilityModifier: Schema.optionalWith(AbilityModifier, {
+    exact: true,
+  }),
+});
+
+const SupportedAttackActionOptionSchema = Schema.Union(
+  CharacterWeaponAttackActionOptionSchema,
   Schema.Struct({
     kind: Schema.Literal("unarmedStrike"),
     effect: Schema.Struct({
@@ -245,6 +250,26 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       rangeFeet: MovementFeet,
       attackKind: Schema.Literal("ranged_spell_attack"),
       attackBonus: AttackBonus,
+    }),
+    Schema.Struct({
+      access: ClassCantripSpellAccessSchema,
+      resource: NoSpellInvocationResourceSchema,
+      procedure: Schema.Literal("spellHostedWeaponAttack"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      componentWeapon: Schema.Struct({
+        itemId: Schema.String,
+        attack: CharacterWeaponAttackActionOptionSchema,
+      }),
+      spellcastingAbilityModifier: AbilityModifier,
+      attackBonus: AttackBonus,
+      damageTypeChoices: Schema.Array(DamageTypeSchema),
+      bonusDamage: Schema.NullOr(
+        Schema.Struct({
+          expr: BattleRuntimeObjectSchema,
+          damageType: DamageTypeSchema,
+        }),
+      ),
     }),
     Schema.Struct({
       access: PreparedSpellAccessSchema,

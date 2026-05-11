@@ -616,7 +616,7 @@ export function attackDamageModifier(attack: SupportedAttackActionOption): numbe
 export function attackActionBonus(attack: SupportedAttackActionOption): AttackBonus {
   return Match.value(attack).pipe(
     Match.when({ kind: "weapon" }, (weaponAttack) =>
-      attackBonus(weaponAttack.abilityModifier),
+      weaponAttack.attackBonus ?? attackBonus(weaponAttack.abilityModifier),
     ),
     Match.when(
       { kind: "unarmedStrike" },
@@ -911,4 +911,3 @@ export function signedModifier(modifier: number): string {
 
   return modifier > 0 ? `+${modifier}` : `${modifier}`;
 }
-

@@ -42,6 +42,7 @@ import {
 import { sameStringSet } from "./spells-profile-shared.ts";
 import {
   supportedCantripSpellAttackProfile,
+  supportedCantripSpellHostedWeaponAttackProfile,
   supportedPreparedAttackBurstSaveDamageProfile,
   supportedPreparedChainedSpellAttackDamageProfile,
   supportedPreparedSpellAttackProfile,
@@ -229,6 +230,15 @@ export function supportedSpellActs(
     ),
     ...spellcasting.cantrips.flatMap((spell) =>
       supportedCantripHeldLightHurlSpellProfile(
+        spell,
+        spellcasting.spellcastingAbilityModifier,
+        spellcasting.proficiencyBonus,
+        characterLevel,
+      ),
+    ),
+    ...spellcasting.cantrips.flatMap((spell) =>
+      supportedCantripSpellHostedWeaponAttackProfile(
+        actor,
         spell,
         spellcasting.spellcastingAbilityModifier,
         spellcasting.proficiencyBonus,

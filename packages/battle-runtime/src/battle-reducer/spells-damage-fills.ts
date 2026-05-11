@@ -94,10 +94,18 @@ export function spellAttackRollHole(
 export function spellDamageTypeChoiceHole(
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "chainedSpellAttackDamage" | "damageReduction" }
+    {
+      readonly procedure:
+        | "chainedSpellAttackDamage"
+        | "damageReduction"
+        | "spellHostedWeaponAttack";
+    }
   >,
 ): BattleSpellDamageTypeChoiceHole {
-  const protocolId = `battle:spell:damage-type:${invocation.spell.id}`;
+  const protocolId =
+    invocation.procedure === "spellHostedWeaponAttack"
+      ? `battle:spell:damage-type:${invocation.spell.id}:${invocation.componentWeapon.itemId}`
+      : `battle:spell:damage-type:${invocation.spell.id}`;
   return {
     kind: "damageTypeChoice",
     holeId: holeId(protocolId),

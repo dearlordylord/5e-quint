@@ -38,6 +38,13 @@ export function supportedSpellInvocationRef(
       procedure: "afterHitTimedDamageAndSave",
     };
   }
+  if (invocation.procedure === "spellHostedWeaponAttack") {
+    return {
+      tag: "cantrip",
+      spellId: spellId(invocation.spell.id),
+      procedure: "spellHostedWeaponAttack",
+    };
+  }
   return Match.value(invocation).pipe(
     Match.when({ procedure: "heldLight" }, (cantrip) => ({
       tag: "cantrip" as const,

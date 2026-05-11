@@ -12987,6 +12987,49 @@ describe("battle runtime", () => {
     ).toBe(true);
   });
 
+  test("spell-hosted weapon invocation holes reject non-weapon component attacks", () => {
+    const baseHole = {
+      kind: "attackRoll",
+      holeId: holeId("battle:test:invalid-true-strike-component"),
+      holeInstanceKey: holeInstanceKey(
+        "battle:test:invalid-true-strike-component",
+      ),
+      label: "Invalid True Strike component attack",
+      attackBonus: attackBonus(3),
+      spell: {
+        access: { tag: "classCantrip" },
+        resource: { tag: "none" },
+        procedure: "spellHostedWeaponAttack",
+        spell: { id: "true_strike" },
+        actionCost: "magicAction",
+        componentWeapon: {
+          itemId: "main:unarmed",
+          attack: {
+            kind: "unarmedStrike",
+            effect: {
+              kind: "damage",
+              damage: { kind: "base", damageType: "bludgeoning", flat: 1 },
+            },
+            attackAbility: "str",
+            attackAbilityModifier: 0,
+            attackBonus: 2,
+            damageAbilityModifier: 0,
+          },
+        },
+        spellcastingAbilityModifier: 3,
+        damageTypeChoices: ["radiant", "bludgeoning"],
+        bonusDamage: {
+          expr: { dice: 1, dieSize: 6 },
+          damageType: "radiant",
+        },
+      },
+    };
+
+    expect(
+      Either.isLeft(Schema.decodeUnknownEither(BattleHoleSchema)(baseHole)),
+    ).toBe(true);
+  });
+
   test("prepared spell-slot damage supports only slot-axis linear scaling", () => {
     const state = startBattleRight({
       battleId: battleId("battle-prepared-damage-axis"),
@@ -16709,7 +16752,7 @@ function runCanonicalBattleRuntimeQntSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("139 passing");
+  expect(quintOutput).toContain("143 passing");
 }
 
 function hidePrerequisites(

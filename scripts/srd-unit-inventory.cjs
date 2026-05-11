@@ -189,7 +189,7 @@ const spellUnitExecutableFollowUpBatches = [
     label: "Attack-rider and smite spell runtime",
     nextAction:
       "Admit these authored Spell Definitions after adding spell-hosted weapon attack riders, immediate hit-trigger Bonus Action casts, retargetable marks, ongoing start-turn damage, and spellcasting-ability weapon substitution.",
-    unitIds: ["ensnaring_strike", "true_strike"],
+    unitIds: ["ensnaring_strike"],
   },
 ];
 

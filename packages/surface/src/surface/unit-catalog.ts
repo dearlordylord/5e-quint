@@ -110,6 +110,7 @@ import sacredFlameInput from "../../content/sacred_flame.json";
 import searingSmiteInput from "../../content/searing_smite.json";
 import sorcererInnateSorceryInput from "../../content/sorcerer_innate_sorcery.json";
 import thunderwaveInput from "../../content/thunderwave.json";
+import trueStrikeInput from "../../content/true_strike.json";
 import warlockEldritchInvocationsInput from "../../content/warlock_eldritch_invocations.json";
 import viciousMockeryInput from "../../content/vicious_mockery.json";
 import weaponDaggerInput from "../../content/weapon_dagger.json";
@@ -332,6 +333,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     shieldOfFaithInput,
     sleepInput,
     thunderwaveInput,
+    trueStrikeInput,
     eldritchBlastInput,
     minorIllusionInput,
     charmPersonInput,

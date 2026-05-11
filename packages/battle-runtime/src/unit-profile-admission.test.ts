@@ -14,11 +14,12 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30C animal_friendship protection_from_evil_and_good
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30E faerie_fire
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30F resistance
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage spell.invocation-damage-reduction
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage spell.invocation-damage-reduction spell.invocation-spell-hosted-weapon-attack
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31A divine_favor
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31C divine_smite
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31D ensnaring_strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31E searing_smite
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31F true_strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31B hunters_mark
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV32B produce_flame
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield
@@ -44,6 +45,7 @@ import { describe, expect, test } from "vitest";
 
 import myceliumStepInput from "../../../plans/unit-profile-coverage/fixtures/classic-non-srd/mycelium_step.json";
 import starryWispInput from "../../surface/content/starry_wisp.json";
+import trueStrikeInput from "../../surface/content/true_strike.json";
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import {
   abilityModifier,
@@ -62,6 +64,7 @@ import {
   movementDeltaFeet,
   movementFeet,
   proficiencyBonus,
+  type ProficiencyBonus,
 } from "@dnd/shared/types";
 import {
   buildUnitCatalog,
@@ -78,6 +81,7 @@ import type {
   SpellRecord,
   StatBlockRecord,
   UnitRecord,
+  WeaponProficiency,
 } from "@dnd/surface/surface/types";
 
 import {
@@ -165,6 +169,7 @@ const colorSprayUnitId = "color_spray";
 const entangleUnitId = "entangle";
 const ensnaringStrikeUnitId = "ensnaring_strike";
 const searingSmiteUnitId = "searing_smite";
+const trueStrikeUnitId = "true_strike";
 const iceKnifeUnitId = "ice_knife";
 const sleepUnitId = "sleep";
 const monkDeflectAttacksUnitId = "monk_deflect_attacks";
@@ -4793,6 +4798,150 @@ describe("SRDINV31A deterministic weapon damage rider Spell Unit admission", () 
 });
 
 describe("SRDINV31 deterministic after-hit Spell Unit admission", () => {
+  test("true_strike casts through its material weapon using spellcasting ability and cantrip Radiant scaling", () => {
+    const unit = decodeUnitRecordSync(trueStrikeInput);
+    expect(unit.kind).toBe("spell");
+    if (unit.kind !== "spell") return;
+    const spell = unit;
+    const state = spellBattle({
+      cantrips: [spell],
+      spellSlots: [],
+      attack: zeroAbilityWeaponAttack("weapon_dagger"),
+      casterClassLevels: [{ className: "wizard", level: classLevel(5) }],
+      casterProficiencyBonus: proficiencyBonus(3),
+      casterWeaponProficiencies: [
+        { kind: "weapon_category", category: "simple" },
+      ],
+      targetHp: 20,
+      targetMaxHp: 20,
+    });
+    const act = spellAct({ state, spellId: trueStrikeUnitId });
+    const damageType = requireHole(act.initialHoles, "damageTypeChoice");
+    const target = requireHole(act.initialHoles, "targetChoice");
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: cantripSpellInvocationRef(
+        trueStrikeUnitId,
+        "spellHostedWeaponAttack",
+      ),
+      mode: { tag: "cast" },
+      componentWeaponItemId: "main:weapon_dagger",
+    });
+    expect(damageType.choices).toEqual(["radiant", "piercing"]);
+
+    const targetFill = attackTargetFill(
+      target,
+      spellCasterId,
+      spellTargetId,
+      "Dagger",
+    );
+    const targetFirstDamageType = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill],
+      }),
+      "damageTypeChoice",
+    );
+    expect(targetFirstDamageType.choices).toEqual(["radiant", "piercing"]);
+
+    const attack = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          {
+            kind: "damageTypeChoice",
+            holeId: damageType.holeId,
+            value: "radiant",
+          },
+          targetFill,
+        ],
+      }),
+      "attackRoll",
+    );
+    expect(attack.attackBonus).toBe(attackBonus(6));
+
+    const attackFill: Extract<BattleFill, { readonly kind: "attackRoll" }> = {
+      kind: "attackRoll",
+      holeId: attack.holeId,
+      value: { total: 15, naturalD20: DieRollResult(12) },
+    };
+    const awaitingDamage = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        {
+          kind: "damageTypeChoice",
+          holeId: damageType.holeId,
+          value: "radiant",
+        },
+        targetFill,
+        attackFill,
+      ],
+    });
+    const damage = requireResultHole(awaitingDamage, "rolledDice");
+    if (!("attack" in damage)) {
+      throw new Error("Expected True Strike weapon attack damage hole.");
+    }
+    expect(damage.spellWeaponDamageRiders).toEqual([
+      {
+        kind: "attackSpellDamageAddition",
+        sourceSpellId: trueStrikeUnitId,
+        sourceCombatantId: spellCasterId,
+        damage: {
+          expr: { dice: 1, dieSize: 6 },
+          damageType: "radiant",
+        },
+      },
+    ]);
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        {
+          kind: "damageTypeChoice",
+          holeId: damageType.holeId,
+          value: "radiant",
+        },
+        targetFill,
+        attackFill,
+        damageRollFillWithGroups(damage, [[4], [5]]),
+      ],
+    });
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected True Strike to resolve.");
+    }
+    expect(requireCombatant(resolved.state, spellTargetId).hp).toBe(Hp(8));
+  });
+
+  test("true_strike is not offered for a non-proficient material weapon", () => {
+    const unit = decodeUnitRecordSync(trueStrikeInput);
+    expect(unit.kind).toBe("spell");
+    if (unit.kind !== "spell") return;
+    const state = spellBattle({
+      cantrips: [unit],
+      spellSlots: [],
+      attack: zeroAbilityWeaponAttack("weapon_longsword"),
+      casterClassLevels: [{ className: "wizard", level: classLevel(5) }],
+      casterWeaponProficiencies: [
+        { kind: "weapon_category", category: "simple" },
+      ],
+    });
+
+    expect(
+      discoverBattleActs(state).some(
+        (act) =>
+          act.subject.tag === "actionSpell" &&
+          act.subject.invocation.spellId === trueStrikeUnitId,
+      ),
+    ).toBe(false);
+  });
+
   test("divine_smite is not offered as an ordinary Spell act", () => {
     const spell = spellRecord(divineSmiteUnitId);
     const state = spellBattle({
@@ -5416,10 +5565,7 @@ describe("SRDINV31 deterministic after-hit Spell Unit admission", () => {
       state: oneRoundBurning,
       actorId: spellCasterId,
     });
-    const expiringDamage = requireResultHole(
-      expiringTurnStart,
-      "rolledDice",
-    );
+    const expiringDamage = requireResultHole(expiringTurnStart, "rolledDice");
     const expiringSave = requireResultHole(
       expiringTurnStart,
       "savingThrowOutcome",
@@ -8285,6 +8431,8 @@ function spellBattle(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["classLevels"];
+  readonly casterProficiencyBonus?: ProficiencyBonus;
+  readonly casterWeaponProficiencies?: readonly WeaponProficiency[];
   readonly statBlockTargets?: readonly {
     readonly combatantId: CombatantId;
     readonly statBlock: StatBlockRecord;
@@ -8301,7 +8449,7 @@ function spellBattle(input: {
         side: partySide,
         spellcasting: {
           spellcastingAbilityModifier: abilityModifier(3),
-          proficiencyBonus: proficiencyBonus(2),
+          proficiencyBonus: input.casterProficiencyBonus ?? proficiencyBonus(2),
           canCastSpells: true,
           cantrips: input.cantrips ?? [],
           preparedSpells: input.preparedSpells ?? [],
@@ -8311,6 +8459,9 @@ function spellBattle(input: {
         ...(input.casterClassLevels === undefined
           ? {}
           : { classLevels: input.casterClassLevels }),
+        ...(input.casterWeaponProficiencies === undefined
+          ? {}
+          : { weaponProficiencies: input.casterWeaponProficiencies }),
       }),
       characterCreature({
         combatantId: spellTargetId,
@@ -9182,6 +9333,7 @@ function characterCreature(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["classLevels"];
+  readonly weaponProficiencies?: readonly WeaponProficiency[];
   readonly currentHp?: number;
   readonly maxHp?: number;
   readonly tempHp?: number;
@@ -9209,6 +9361,9 @@ function characterCreature(input: {
       characterId: characterId(`${input.combatantId}-character`),
       characterUnitRefs: input.characterUnitRefs ?? [],
       classLevels: input.classLevels ?? [{ className: "wizard", level: 1 }],
+      ...(input.weaponProficiencies === undefined
+        ? {}
+        : { weaponProficiencies: input.weaponProficiencies }),
       armorClass:
         input.armorClass !== undefined
           ? input.armorClass
@@ -9328,7 +9483,7 @@ function statBlockAttackAct(
 }
 
 function zeroAbilityWeaponAttack(
-  unitId: "weapon_longsword" | "weapon_shortbow",
+  unitId: "weapon_longsword" | "weapon_shortbow" | "weapon_dagger",
 ): NonNullable<
   Extract<
     BattleCreatureInit["creatureInit"],

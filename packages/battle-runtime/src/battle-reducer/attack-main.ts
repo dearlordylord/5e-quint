@@ -88,9 +88,11 @@ import {
 
 import type {
   AttackBattleResolutionInput,
+  BattleAttackHostSubject,
   BattleAttackDamageEvent,
   BattleResolutionResult,
 } from "../battle-reducer.ts";
+import type { SupportedAttackActionOption } from "../battle-action-options.ts";
 import {
   attackRollHitsWithCriticalThreshold,
   attackRollIsCriticalHit,
@@ -103,12 +105,7 @@ import {
 export function resolveAttack(
   input: AttackBattleResolutionInput,
 ): BattleResolutionResult {
-  const subject = input.subject;
-  const pendingAttackDamageReductions =
-    input.pendingAttackDamageReductions ?? [];
-  const pendingAttackDamageAdditions = input.pendingAttackDamageAdditions ?? [];
-
-  const attack = attackActionOptionForSubject(input.state, subject);
+  const attack = attackActionOptionForSubject(input.state, input.subject);
   if (attack == null) {
     return invalidResult(
       input.state,
@@ -116,6 +113,30 @@ export function resolveAttack(
       "Attack resolution requires a supported Attack action option.",
     );
   }
+  return resolveSelectedAttackProcedure(input, attack, spendAttackAction);
+}
+
+type AttackProcedureResolutionInput = Omit<
+  AttackBattleResolutionInput,
+  "subject"
+> & {
+  readonly subject: BattleAttackHostSubject;
+};
+
+type SpendAttackProcedure = (
+  state: Parameters<typeof spendAttackAction>[0],
+  actorId: Parameters<typeof spendAttackAction>[1],
+  attack: SupportedAttackActionOption,
+) => ReturnType<typeof spendAttackAction>;
+
+export function resolveSelectedAttackProcedure(
+  input: AttackProcedureResolutionInput,
+  attack: SupportedAttackActionOption,
+  spendAttackProcedure: SpendAttackProcedure,
+): BattleResolutionResult {
+  const pendingAttackDamageReductions =
+    input.pendingAttackDamageReductions ?? [];
+  const pendingAttackDamageAdditions = input.pendingAttackDamageAdditions ?? [];
 
   const fillSet = attackFillSet(input.fills);
   if (fillSet.tag === "invalid") {
@@ -507,7 +528,7 @@ export function resolveAttack(
       input.suppressedReactionTrigger,
     );
     if (attackDamageReactionWindow !== null) {
-      const spent = spendAttackAction(
+      const spent = spendAttackProcedure(
         attackDamageReactionWindow.state,
         input.subject.actorId,
         attack,
@@ -560,7 +581,7 @@ export function resolveAttack(
         "Concentration Saving Throw fill is only valid for a concentrating damaged target.",
       );
     }
-    const spent = spendAttackAction(
+    const spent = spendAttackProcedure(
       applyAttackDamageAmount(
         redirectState.state,
         input.subject.actorId,
@@ -763,7 +784,7 @@ export function resolveAttack(
       input.suppressedReactionTrigger,
     );
     if (attackDamageReactionWindow !== null) {
-      const spent = spendAttackAction(
+      const spent = spendAttackProcedure(
         attackDamageReactionWindow.state,
         input.subject.actorId,
         attack,
@@ -819,7 +840,7 @@ export function resolveAttack(
         "Concentration Saving Throw fill is only valid for a concentrating damaged target.",
       );
     }
-    const spent = spendAttackAction(
+    const spent = spendAttackProcedure(
       applyAttackDamageAmount(
         redirectState.state,
         input.subject.actorId,
@@ -857,7 +878,7 @@ export function resolveAttack(
     return spent;
   }
 
-  return spendAttackAction(
+  return spendAttackProcedure(
     hit
       ? applyAttackDamage(
           attackRolledState,

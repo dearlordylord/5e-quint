@@ -25,6 +25,7 @@ export type CharacterWeaponAttackActionOption = {
   readonly weapon: WeaponRecord;
   readonly ability: Ability;
   readonly abilityModifier: AbilityModifier;
+  readonly attackBonus?: AttackBonus;
   readonly damageAbilityModifier?: AbilityModifier;
 };
 

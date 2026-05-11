@@ -39,6 +39,7 @@ import {
   spellTargetListHole,
   supportedSpellInvocationRef,
 } from "./spells-holes-fills.ts";
+import { attackTargetHole } from "./hole-helpers.ts";
 
 export function discoverSupportedSpellInvocations(
   state: BattleState,
@@ -271,6 +272,35 @@ export function discoverSupportedSpellInvocations(
         ];
         return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
       }
+      if (invocation.procedure === "spellHostedWeaponAttack") {
+        const targetHole = attackTargetHole(
+          state,
+          actorId,
+          invocation.componentWeapon.attack,
+        );
+        const castActs =
+          targetHole.choices.length === 0
+            ? []
+            : [
+                {
+                  subject: {
+                    tag: "actionSpell" as const,
+                    actorId,
+                    invocation: supportedSpellInvocationRef(invocation),
+                    mode: { tag: "cast" as const },
+                    componentWeaponItemId:
+                      invocation.componentWeapon.itemId,
+                  },
+                  label: `${invocation.spell.name} (${invocation.componentWeapon.attack.weapon.name})`,
+                  summary: spellInvocationCastSummary(invocation),
+                  initialHoles: [
+                    spellDamageTypeChoiceHole(invocation),
+                    targetHole,
+                  ],
+                },
+              ];
+        return castActs;
+      }
       if (
         invocation.procedure === "scalarBuff" &&
         invocation.targeting.kind === "self"
@@ -399,6 +429,9 @@ export function spellInvocationCastSummary(
   if (invocation.procedure === "damageReduction") {
     return `Cast ${invocation.spell.name} as a cantrip.`;
   }
+  if (invocation.procedure === "spellHostedWeaponAttack") {
+    return `Cast ${invocation.spell.name} as a cantrip using ${invocation.componentWeapon.attack.weapon.name}.`;
+  }
   if (
     invocation.procedure === "conditionImmunityAndTurnStartTemporaryHitPoints"
   ) {
@@ -524,6 +557,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "directHitPointRestoration" &&
     invocation.procedure !== "heldLight" &&
     invocation.procedure !== "heldLightHurl" &&
+    invocation.procedure !== "spellHostedWeaponAttack" &&
     invocation.procedure !== "damageReduction" &&
     invocation.procedure !== "persistentArmorEffect" &&
     invocation.procedure !== "rollModifier" &&
@@ -549,6 +583,7 @@ export function readiedSpellAct(
     invocation.procedure === "persistentArmorEffect" ||
     invocation.procedure === "directHitPointRestoration" ||
     invocation.procedure === "damageReduction" ||
+    invocation.procedure === "spellHostedWeaponAttack" ||
     invocation.procedure === "scalarBuff" ||
     invocation.procedure === "weaponDamageRider" ||
     invocation.procedure === "markedDamageRider" ||

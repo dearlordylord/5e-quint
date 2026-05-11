@@ -82,7 +82,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 220,
       "id": "SRDINV31F",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote True Strike Weapon Spell Runtime"
     },
     {
@@ -138,7 +138,7 @@ Keep it synchronized with the DAG table and task details.
 | 217   | SRDINV31C - Promote Divine Smite After-Hit Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Divine Smite](/workspace/typescript/dnd/packages/surface/content/divine_smite.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Completed: Divine Smite is promoted as an immediate after-hit Bonus Action damage splice without replaying the base attack. |
 | 218   | SRDINV31D - Promote Ensnaring Strike Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Ensnaring Strike](/workspace/typescript/dnd/packages/surface/content/ensnaring_strike.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Completed: Ensnaring Strike is promoted as an after-hit weapon spell with Strength save, Restrained, start-turn Piercing damage, helper escape by table reach fact, and spell-ending concentration cleanup. |
 | 219   | SRDINV31E - Promote Searing Smite Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Searing Smite](/workspace/typescript/dnd/packages/surface/content/searing_smite.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Completed: Searing Smite is promoted as an after-hit melee weapon or Unarmed Strike spell with immediate Fire damage, timed start-turn Fire damage, Constitution save-to-end, and slot scaling. |
-| 220   | SRDINV31F - Promote True Strike Weapon Spell Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [True Strike](/workspace/typescript/dnd/packages/surface/content/true_strike.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote spell-hosted weapon attack with spellcasting ability and damage type choice. |
+| 220   | SRDINV31F - Promote True Strike Weapon Spell Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [True Strike](/workspace/typescript/dnd/packages/surface/content/true_strike.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Completed: True Strike is promoted as a spell-hosted proficient material-weapon attack with spellcasting ability attack/damage replacement, Radiant-or-normal damage choice, and Radiant cantrip scaling. |
 | 223   | SRDINV33 - Recursive SRD Inventory Planning Review | blocked | SRDINV28A-SRDINV28E, SRDINV29A-SRDINV29E, SRDINV29F3, SRDINV30A-SRDINV32B | SRDINV34 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review the split spell-runtime closure, refresh spell Unit metrics, and append Ralph-sized follow-up tasks only after checking execution-invariant granularity. |
 | 224   | SRDINV34 - Promote Starry Wisp Object Target Runtime | blocked | SRDINV33 | none | [SRDINV28E decision](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV28E_STARRY_WISP_OBJECT_TARGET_DECISION.md), [battle-runtime target facts](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer/spells-targeting.ts), [Starry Wisp](/workspace/typescript/dnd/packages/surface/content/starry_wisp.dhall), [Chill Touch](/workspace/typescript/dnd/packages/surface/content/chill_touch.dhall), [SRD Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [SRD Chill Touch](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote the Starry Wisp creature-or-object target boundary only after SRDINV33 orders it against the remaining spell-runtime frontier. |
 
@@ -228,7 +228,7 @@ passed in candidate verification.
 
 ### Task 220 - SRDINV31F - Promote True Strike Weapon Spell Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV28A-SRDINV28E
 
@@ -237,6 +237,14 @@ Blocks: SRDINV33
 Scope: promote True Strike as a spell-hosted weapon attack with material
 component weapon eligibility, spellcasting ability override, Radiant-or-normal
 damage choice, and cantrip scaling.
+
+Verification: RAW checked in
+`.references/srd-5.2.1/Spells/Descriptions-S-Z.md`,
+`.references/srd-5.2.1/Playing-the-Game.md`, and
+`UBIQUITOUS_LANGUAGE.md`; decider simplification review completed in two
+passes; package-local focused admission/runtime tests passed; focused True
+Strike Quint self-tests passed; `pnpm quality` passed; Tier 1 battle-runtime
+MBT passed.
 
 ### Task 223 - SRDINV33 - Recursive SRD Inventory Planning Review
 
