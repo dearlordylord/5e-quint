@@ -316,6 +316,18 @@ surface while this research note remains temporary context.
   dice, and no-damage-on-success burst policy. Broad battle keeps the combined
   attack/save resolver, hit reaction ordering, primary-target inclusion, and
   single concentration check composition.
+- The object-damage tracer moved object HP damage threshold, clamped next HP,
+  and destruction arithmetic into `spell-procedure-profiles.qnt` with a
+  projection through `battle-runtime-spell-bridge.qnt`. Broad battle keeps the
+  object identity, spell damage type wrapping, and table/disposition protocol.
+- The active-effect hook tracer moved reusable Heroism turn-start Temporary Hit
+  Points replacement, Resistance once-per-turn reset, Shield start-of-next-turn
+  expiry, and timed duration decrement/removal facts into the spell bridge.
+  Broad battle still schedules concrete `ActiveEffect` variants.
+- The public trace tracer added `battle-runtime-public-trace-contract.qnt` and
+  `battle-trace-contract.ts` for weapon Attack hit/miss checkpoint projection.
+  QNT owns the representative semantic checkpoint order; TypeScript owns public
+  reducer fill payload width and concrete snapshots.
 - The same movement/action bridge now carries the projected start-turn resource
   reset for action, Bonus Action, Reaction, Dash movement bonus, movement spent,
   Dodge, Disengage, Help, and Ready Movement facts. Broad battle still owns

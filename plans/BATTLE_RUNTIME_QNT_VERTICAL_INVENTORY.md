@@ -55,8 +55,8 @@ This makes a pure "facade imports every child module" split insufficient.
 
 | Vertical | Broad QNT area | Existing smaller authority | Policy | Integration pressure | First migration step | Done means |
 | --- | --- | --- | --- | --- | --- | --- |
-| Domain vocabulary and runtime fixtures | `Actor`, `DamageType`, `SpellInvocation`, `ActiveEffect`, `Combatant`, `BattleState`, `initialState` near the top of `battle-runtime.qnt` | None as a shared package-local module; some generic types exist in rule-core | `battle-integration-owned` | High: almost every package-local helper depends on these names | Extract only after deciding wrapper/import strategy; avoid a mechanically broad "types" module if it forces wrapper churn | A package-local domain module exists or remains intentionally inline, and moved names have focused direct imports or wrappers |
-| Public holes and replay vocabulary | `Hole`, `AttackReplay`, chained replay types | TypeScript public reducer schemas and tests | `battle-integration-owned` plus `ts-contract-owned` | High: public reducer protocol and MBT bridge depend on shape | Inventory which holes are semantic versus UI/session protocol | QNT only owns semantic hole order/checkpoints; TS owns concrete public fill payload width |
+| Domain vocabulary and runtime fixtures | `Actor`, `DamageType`, `SpellInvocation`, `ActiveEffect`, `Combatant`, `BattleState`, `initialState` near the top of `battle-runtime.qnt` | Intentional inline package-local domain vocabulary; generic procedure types exist in rule-core | `battle-integration-owned` | High: almost every package-local helper depends on these names | Completion decision: keep broad runtime state vocabulary inline until a focused lane can direct-import a smaller package-local module; do not extract a mechanical `types.qnt` that requires facade wrappers for every promoted name | Package-local state vocabulary remains intentionally inline; generic semantics move to rule-core bridges without duplicating battle state |
+| Public holes and replay vocabulary | `Hole`, `AttackReplay`, chained replay types | `battle-runtime-public-trace-contract.qnt`; `battle-trace-contract.ts`; TypeScript public reducer schemas and tests | `battle-integration-owned` plus `ts-contract-owned` | High: public reducer protocol and MBT bridge depend on shape | Tracer complete for semantic Attack hit/miss hole order through public trace checkpoints; TS owns concrete fill payload width and session protocol details | QNT owns semantic hole order/checkpoints; TS owns concrete public fill payload width |
 | Initiative and turn rotation | `currentActor`, `nextInitiative`, `endTurn`, recharge/death-save wrappers | `action-turn-procedures.qnt`; `battle-runtime-movement-bridge.qnt` owns projected generic start-turn reset | `battle-integration-owned` | High: start/end turn touches effects, reactions, features, death saves, recharge, movement reset | Tracer complete for projected start-turn action/bonus/reaction/movement/Dodge/Disengage/Help/Ready reset; initiative order, spell slots, readied spell expiry, feature/effect hooks, Death Saving Throw and recharge wrappers remain package-local | Local turn module has narrow imports; generic action economy uses rule-core projection |
 | Action economy and standard actions | `dashFighter`, `disengageFighter`, `dodgeFighter`, `readyFighter`, `helpFighterAttack`, action/bonus gates | `action-turn-procedures.qnt`; `battle-runtime-movement-bridge.qnt`; `rule-core-movement.mbt.qnt` and TS reducer tests | `rule-core-owned` for generic costs, `battle-integration-owned` for actor/projection | Medium | Tracer complete for Dash/Bonus Action Dash/Attack action/Magic action/Bonus Action/Disengage/Dodge/Ready Movement/Help Attack: broad battle projects turn facts through `BattleRuntimeMovementProjection` and keeps actor/source gating local | Broad QNT no longer hand-owns those basic action-spend semantics; remaining action gates with spell/resource/reaction coupling should move only with their verticals |
 | Hidden, Hide, Search, reveal | `HiddenDiscoveryDc`, `hideFighter`, `searchGoblinForFighter`, `revealFighterHidden` | `action-turn-procedures.qnt` has Hide/Search facts; `battle-runtime-movement-bridge.qnt`; TS protocol owns prerequisites | `rule-core-owned` plus `battle-integration-owned` | Medium: reveal occurs from attacks and verbal spell casting | Tracer complete for Hide/Search action spend and check-vs-DC semantics; battle still records concrete discovery DC and reveal triggers | Hide/Search generic procedure facts route through rule-core; broad QNT keeps battle-owned DC projection and attack/verbal-spell reveal integration |
@@ -153,6 +153,17 @@ The first hybrid trace contract now exists:
   exposing internal state diffs.
 - `battle-trace-contract.test.ts` rolls real public reducer Attack hit/miss
   traces and compares only the checkpoint sequence.
+
+The runtime-domain vocabulary row is intentionally closed without extraction:
+
+- The facade/import probe showed that moving broad `battle-runtime.qnt` names
+  into a child module would not re-export them to existing focused specs.
+- `Actor`, `Combatant`, `BattleState`, `ActiveEffect`, `Hole`, and replay
+  variants are high-connascence package-local integration vocabulary, not
+  reusable SRD procedure semantics.
+- Moving them now would create compatibility wrappers or parallel state names
+  without reducing state space. Rule-core bridges should continue to receive
+  projections from these inline types instead.
 
 ## Verification Policy
 
