@@ -1287,13 +1287,16 @@ function resolveHellishRebukeReactionSpellCommand(
     input.invocation,
     fillSet.damageRoll,
     false,
-    concentrationFill,
-    saveDamageResult,
-    damageDispositionForTarget(
-      damageDispositionHoles,
-      fillSet.damageDispositions,
-      input.frame.damageSourceId,
-    ),
+    {
+      concentrationSavingThrow: concentrationFill,
+      saveDamageResult,
+      damageDisposition: damageDispositionForTarget(
+        damageDispositionHoles,
+        fillSet.damageDispositions,
+        input.frame.damageSourceId,
+      ),
+      damageSourceId: input.subject.reactorId,
+    },
   );
   const slotted = expendSpellSlot(
     damaged,

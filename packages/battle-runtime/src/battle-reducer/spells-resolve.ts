@@ -843,15 +843,17 @@ export function resolveSpellAct(
     invocation,
     fillSet.damageRoll,
     critical,
-    concentrationFill,
-    "full",
-    damageDispositionForTarget(
-      damageDispositionHole === null ? [] : [damageDispositionHole],
-      fillSet.damageDispositions,
-      target.combatantId,
-    ),
-    spellMarkedDamageRiders,
-    spellReductionRoll,
+    {
+      concentrationSavingThrow: concentrationFill,
+      damageDisposition: damageDispositionForTarget(
+        damageDispositionHole === null ? [] : [damageDispositionHole],
+        fillSet.damageDispositions,
+        target.combatantId,
+      ),
+      spellMarkedDamageRiders,
+      spellDamageReductionRoll: spellReductionRoll,
+      damageSourceId: subject.actorId,
+    },
   );
   const effected = applySpellActiveEffects(
     damaged,

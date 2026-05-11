@@ -112,7 +112,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 227,
       "id": "SRDINV37",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Charm Person Runtime"
     },
     {
@@ -185,11 +185,11 @@ Keep it synchronized with the DAG table and task details.
 | 224   | SRDINV34 - Promote Starry Wisp Object Target Runtime | done | SRDINV33 | SRDINV41 | [SRDINV28E decision](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV28E_STARRY_WISP_OBJECT_TARGET_DECISION.md), [battle-runtime target facts](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer/spells-targeting.ts), [Starry Wisp](/workspace/typescript/dnd/packages/surface/content/starry_wisp.dhall), [Chill Touch](/workspace/typescript/dnd/packages/surface/content/chill_touch.dhall), [SRD Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [SRD Chill Touch](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Starry Wisp is promoted over the creature-or-object target subset with typed object target facts, object attack resolution, and object damage disposition; Dim Light and Invisible-benefit riders remain visible for SRDINV41. |
 | 225   | SRDINV35 - Author Missing Detect Spell Records | done | SRDINV33 | SRDINV41 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Detect Evil and Good](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Detect Poison and Disease](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Detect Evil and Good and Detect Poison and Disease have SRD-provenance Spell Definition records installed in the SRD Unit catalog; detection, occlusion, Hallow discovery, and poison/disease identification remain unsupported runtime behavior. |
 | 226   | SRDINV36 - Promote Hellish Rebuke Reaction Runtime | done | SRDINV33 | SRDINV41 | [Hellish Rebuke](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [battle reactions](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reaction-triggers.ts), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Hellish Rebuke is promoted as an after-damage Reaction spell with caller-supplied visible-within-60-feet facts, Dexterity save, Fire damage, half damage on success, slot scaling, and Reaction plus Spell Slot spend. |
-| 227   | SRDINV37 - Promote Charm Person Runtime | ready-for-research | SRDINV33 | SRDINV41 | [Charm Person](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Animal Friendship evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/unit-claims.jsonl), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Humanoid-target charm with hostile-target save Advantage, damage-break cleanup, one-hour duration, and slot-scaled target count without reusing Beast-specific Animal Friendship logic. |
+| 227   | SRDINV37 - Promote Charm Person Runtime | done | SRDINV33 | SRDINV41 | [Charm Person](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Animal Friendship evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/unit-claims.jsonl), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Charm Person is promoted as Humanoid-target Wisdom-save Charmed with hostile-target save Advantage projection, one-hour spell-owned duration, caster-or-ally damage break, slot-scaled target count, QNT parity coverage, and deterministic admission evidence; Friendly disposition/social effects and target knowledge remain visible for SRDINV41. |
 | 228   | SRDINV38 - Research Sleep Save Loop Runtime | ready-for-research | SRDINV33 | SRDINV41 | [Sleep](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [condition helpers](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer/spell-condition-effects-helpers.ts), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Research the Sleep save loop and Incapacitated/Unconscious lifecycle; split before implementation if repeat-save or wake-up procedures exceed one execution invariant. |
 | 229   | SRDINV39 - Promote Eldritch Blast Beam Runtime | ready-for-research | SRDINV33 | SRDINV41 | [Eldritch Blast](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [spell attack runtime](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote per-beam ranged spell attack resolution with cantrip beam scaling, independent targets, independent attack rolls, Force damage, and one Magic action spend. |
 | 230   | SRDINV40 - Research Grease Ground Hazard Runtime Retry | ready-for-research | SRDINV33 | SRDINV41 | [Grease](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Retry Grease only as a standalone recurring ground-hazard lifecycle with table-supplied area membership for cast-time, enter-area, and end-turn saves. |
-| 231   | SRDINV41 - Recursive SRD Inventory Planning Review | blocked | SRDINV34-SRDINV40 | none | [SRDINV33 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV33_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review SRDINV34-SRDINV40 results, refresh spell Unit metrics, inspect rejected partial-support findings, and append the next concrete Surface-blocker batch. |
+| 231   | SRDINV41 - Recursive SRD Inventory Planning Review | blocked | SRDINV34-SRDINV40 | none | [SRDINV33 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV33_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review SRDINV34-SRDINV40 results, refresh spell Unit metrics, inspect rejected partial-support findings including Charm Person Friendly disposition/social effects and target knowledge, and append the next concrete Surface-blocker batch. |
 
 ## Task Details
 ### Task 164 - QMBT69 - Recursive Unit Profile Planning Review
@@ -444,7 +444,7 @@ exercised the after-damage reaction sequencing change.
 
 ### Task 227 - SRDINV37 - Promote Charm Person Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV33
 
@@ -456,10 +456,9 @@ Research / plan:
 [Animal Friendship evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/unit-claims.jsonl),
 [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
 
-Scope: promote Charm Person as Humanoid-target Charmed application with
-hostile-target save Advantage, one-hour spell-owned duration, early ending when
-the caster or allies damage the target, Friendly disposition if executable at
-the current boundary, and slot-scaled target count.
+Scope: completed Humanoid-target Charmed application with hostile-target save
+Advantage, one-hour spell-owned duration, early ending when the caster or allies
+damage the target, and slot-scaled target count.
 
 Out of scope: social encounter simulation beyond the executable Friendly
 subset, Beast-only Animal Friendship target reuse, broad condition-immunity
@@ -469,6 +468,12 @@ Verification: RAW/source review for Charm Person and Charmed terminology;
 focused admission/runtime tests for target filtering, save Advantage, damage
 break, duration, and slot scaling; `pnpm unit-profile-coverage:check`; `pnpm
 quality`; MBT only if cross-turn condition cleanup sequencing changes.
+
+Result: promoted Charm Person as a profile-subset-supported Unit with
+package-local QNT parity, deterministic admission evidence, and spell-owned
+damage-break cleanup shared with Animal Friendship. Friendly disposition/social
+effects and target knowledge when the spell ends are not represented in battle
+runtime state and remain checker-visible for SRDINV41.
 
 ### Task 228 - SRDINV38 - Research Sleep Save Loop Runtime
 
@@ -572,8 +577,9 @@ Research / plan:
 [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
 
 Scope: review SRDINV34-SRDINV40, refresh spell Unit metrics, inspect rejected
-partial-support findings, and append the next concrete Surface-blocker batch by
-execution invariant.
+partial-support findings including Charm Person Friendly disposition/social
+effects and target knowledge, and append the next concrete Surface-blocker
+batch by execution invariant.
 
 Out of scope: implementation work not captured by the newly appended batch and
 treating catalog admission alone as behavior support.

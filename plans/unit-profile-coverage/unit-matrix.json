@@ -6987,14 +6987,60 @@
         "status": "installed"
       },
       "claim": {
-        "reason": "Spell Definition is installed for class Spell Access validation; promoted charm/condition runtime evidence is not present yet.",
-        "tag": "unsupported-profile"
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "SRDINV41",
+            "mechanic": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are not represented in battle runtime state"
+          }
+        ],
+        "profileIds": [
+          "spell.creature-type-protection-and-charm"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Humanoid creature-type target filter",
+          "Wisdom save-gated Charmed condition",
+          "hostile-target Wisdom save Advantage",
+          "1-hour spell-owned condition duration",
+          "spell ends if caster or one of the caster's allies deals damage to the target",
+          "slot-scaled target count"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV37"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.creature-type-protection-and-charm",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV30C"
+          ],
+          "title": "Spell invocation applies creature-type-scoped Charmed or attack-roll protection active effects",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/charm_person.json",
       "unitId": "charm_person"
     },

@@ -67,6 +67,7 @@ export * from "./spells-profiles-support.ts";
 export {
   animalFriendshipSaveGateConditionSpell,
   areaSaveGateSpellRangeFeet,
+  charmPersonSaveGateConditionSpell,
   colorSpraySaveGateConditionSpell,
   diceExprWithDelta,
   entangleSaveGateConditionSpell,

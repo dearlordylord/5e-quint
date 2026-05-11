@@ -12,6 +12,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30A false_life longstrider shield_of_faith
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30B bane bless guidance
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30C animal_friendship protection_from_evil_and_good
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV37 charm_person
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30D heroism
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30E faerie_fire
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30F resistance
@@ -185,6 +186,7 @@ const boonOfCombatProwessUnitId = "feat_boon_of_combat_prowess";
 const savageAttackerUnitId = "feat_savage_attacker";
 const acidSplashUnitId = "acid_splash";
 const animalFriendshipUnitId = "animal_friendship";
+const charmPersonUnitId = "charm_person";
 const chillTouchUnitId = "chill_touch";
 const fireBoltUnitId = "fire_bolt";
 const falseLifeUnitId = "false_life";
@@ -7464,6 +7466,439 @@ describe("SRDINV30C deterministic protection and charm Spell Unit admission", ()
     );
   });
 
+  test("animal friendship ends when the caster damages the target with a spell", () => {
+    const animalFriendship = spellRecord(animalFriendshipUnitId);
+    const sacredFlame = spellRecord(sacredFlameUnitId);
+    const beastId = combatantId("unit-profile-animal-friendship-spell-damage");
+    const state = spellBattle({
+      preparedSpells: [animalFriendship],
+      cantrips: [sacredFlame],
+      statBlockTargets: [
+        {
+          combatantId: beastId,
+          statBlock: statBlockWithCreatureType("beast"),
+          initiative: 9,
+        },
+      ],
+    });
+    const act = spellAct({ state, spellId: animalFriendshipUnitId });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    const targetFill = spellTargetListFill(
+      targetHole,
+      spellCasterId,
+      animalFriendshipUnitId,
+      [beastId],
+    );
+    const saveHole = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill],
+      }),
+      "savingThrowOutcome",
+    );
+    const charmed = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        savingThrowOutcomeFill(saveHole, [
+          { targetId: beastId, succeeded: false },
+        ]),
+      ],
+    });
+    if (charmed.tag !== "resolved") {
+      throw new Error("Expected Animal Friendship to resolve.");
+    }
+    const defaultTargetTurn = endTurn({
+      state: charmed.state,
+      actorId: spellCasterId,
+    });
+    if (defaultTargetTurn.tag !== "resolved") {
+      throw new Error("Expected Animal Friendship caster turn to end.");
+    }
+    const beastTurn = endTurn({
+      state: defaultTargetTurn.state,
+      actorId: spellTargetId,
+    });
+    if (beastTurn.tag !== "resolved") {
+      throw new Error("Expected default target turn to end.");
+    }
+    const casterTurn = endTurn({
+      state: beastTurn.state,
+      actorId: beastId,
+    });
+    if (casterTurn.tag !== "resolved") {
+      throw new Error("Expected beast target turn to end.");
+    }
+
+    const damageAct = spellAct({
+      state: casterTurn.state,
+      spellId: sacredFlameUnitId,
+    });
+    const damageTarget = requireHole(damageAct.initialHoles, "targetChoice");
+    const damageTargetFill = spellTargetFill(
+      damageTarget,
+      sacredFlameUnitId,
+      spellCasterId,
+      beastId,
+    );
+    const damageSave = requireResultHole(
+      resolveBattleSubject({
+        state: casterTurn.state,
+        subject: damageAct.subject,
+        fills: [damageTargetFill],
+      }),
+      "savingThrowOutcome",
+    );
+    const damage = requireResultHole(
+      resolveBattleSubject({
+        state: casterTurn.state,
+        subject: damageAct.subject,
+        fills: [
+          damageTargetFill,
+          savingThrowOutcomeFill(damageSave, [
+            { targetId: beastId, succeeded: false },
+          ]),
+        ],
+      }),
+      "rolledDice",
+    );
+    const damaged = resolveBattleSubject({
+      state: casterTurn.state,
+      subject: damageAct.subject,
+      fills: [
+        damageTargetFill,
+        savingThrowOutcomeFill(damageSave, [
+          { targetId: beastId, succeeded: false },
+        ]),
+        damageRollFillWithGroups(damage, [[4]]),
+      ],
+    });
+    expect(damaged).toMatchObject({ tag: "resolved" });
+    if (damaged.tag !== "resolved") {
+      throw new Error("Expected Sacred Flame damage to resolve.");
+    }
+    expect(damaged.state.combatants.get(beastId)).toMatchObject({
+      conditions: expect.not.objectContaining({ charmed: true }),
+      activeEffects: expect.not.arrayContaining([
+        expect.objectContaining({
+          kind: "spellCondition",
+          sourceSpellId: animalFriendshipUnitId,
+        }),
+      ]),
+    });
+  });
+
+  test("charm person only admits Humanoid targets and gives hostile targets Advantage on the Wisdom save", () => {
+    const spell = spellRecord(charmPersonUnitId);
+    const beastId = combatantId("unit-profile-charm-person-beast");
+    const humanoidId = combatantId("unit-profile-charm-person-humanoid");
+    const friendlyHumanoidId = combatantId(
+      "unit-profile-charm-person-friendly-humanoid",
+    );
+    const state = spellBattle({
+      preparedSpells: [spell],
+      statBlockTargets: [
+        {
+          combatantId: beastId,
+          statBlock: statBlockWithCreatureType("beast"),
+          initiative: 9,
+        },
+        {
+          combatantId: humanoidId,
+          statBlock: statBlockWithCreatureType("humanoid"),
+          initiative: 8,
+        },
+        {
+          combatantId: friendlyHumanoidId,
+          statBlock: statBlockWithCreatureType("humanoid"),
+          initiative: 7,
+          side: partySide,
+        },
+      ],
+    });
+    const act = spellAct({ state, spellId: charmPersonUnitId });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+
+    expect(targetHole.choices).toEqual(
+      expect.arrayContaining([spellTargetId, humanoidId, friendlyHumanoidId]),
+    );
+    expect(targetHole.choices).not.toContain(beastId);
+    expect(targetHole).toEqual(
+      expect.objectContaining({ minTargets: 1, maxTargets: 1 }),
+    );
+
+    const targetFill = spellTargetListFill(
+      targetHole,
+      spellCasterId,
+      charmPersonUnitId,
+      [spellTargetId],
+    );
+    const saveHole = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill],
+      }),
+      "savingThrowOutcome",
+    );
+
+    expect(saveHole).toMatchObject({
+      ability: "wis",
+      targetRollModes: expect.arrayContaining([
+        { targetId: spellTargetId, rollMode: "advantage" },
+        { targetId: humanoidId, rollMode: "advantage" },
+      ]),
+    });
+    expect(saveHole.targetRollModes).not.toContainEqual({
+      targetId: friendlyHumanoidId,
+      rollMode: "advantage",
+    });
+  });
+
+  test("charm person applies one-hour spell-owned Charmed and ends when the caster damages the target", () => {
+    const spell = spellRecord(charmPersonUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      attack: zeroAbilityWeaponAttack("weapon_longsword"),
+    });
+    const act = spellAct({ state, spellId: charmPersonUnitId });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    const targetFill = spellTargetListFill(
+      targetHole,
+      spellCasterId,
+      charmPersonUnitId,
+      [spellTargetId],
+    );
+    const saveHole = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill],
+      }),
+      "savingThrowOutcome",
+    );
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        savingThrowOutcomeFill(saveHole, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Charm Person to resolve.");
+    }
+    expect(
+      resolved.state.combatants.get(spellTargetId)?.activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "spellCondition",
+        sourceSpellId: charmPersonUnitId,
+        sourceCombatantId: spellCasterId,
+        condition: "charmed",
+        escape: { kind: "targetDamagedByCasterOrAlly" },
+        expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(600) },
+      }),
+    );
+    expect(resolved.state.combatants.get(spellTargetId)?.conditions).toEqual(
+      expect.objectContaining({ charmed: true }),
+    );
+
+    const afterCasterTurn = resolveBattleSubject({
+      state: resolved.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellCasterId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+    if (afterCasterTurn.tag !== "resolved") {
+      throw new Error("Expected Charm Person caster end turn to resolve.");
+    }
+    const afterTargetTurn = resolveBattleSubject({
+      state: afterCasterTurn.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellTargetId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+    if (afterTargetTurn.tag !== "resolved") {
+      throw new Error("Expected Charm Person target end turn to resolve.");
+    }
+
+    const damaged = resolveWeaponAttack(afterTargetTurn.state, "Longsword");
+    expect(damaged).toMatchObject({ tag: "resolved" });
+    if (damaged.tag !== "resolved") {
+      throw new Error("Expected caster weapon attack to resolve.");
+    }
+    expect(damaged.state.combatants.get(spellTargetId)).toMatchObject({
+      conditions: expect.not.objectContaining({ charmed: true }),
+      activeEffects: expect.not.arrayContaining([
+        expect.objectContaining({
+          kind: "spellCondition",
+          sourceSpellId: charmPersonUnitId,
+        }),
+      ]),
+    });
+  });
+
+  test("charm person ends when the caster damages the target with a spell", () => {
+    const charmPerson = spellRecord(charmPersonUnitId);
+    const sacredFlame = spellRecord(sacredFlameUnitId);
+    const state = spellBattle({
+      preparedSpells: [charmPerson],
+      cantrips: [sacredFlame],
+    });
+    const act = spellAct({ state, spellId: charmPersonUnitId });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    const targetFill = spellTargetListFill(
+      targetHole,
+      spellCasterId,
+      charmPersonUnitId,
+      [spellTargetId],
+    );
+    const saveHole = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill],
+      }),
+      "savingThrowOutcome",
+    );
+    const charmed = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        savingThrowOutcomeFill(saveHole, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    if (charmed.tag !== "resolved") {
+      throw new Error("Expected Charm Person to resolve.");
+    }
+    const afterCasterTurn = resolveBattleSubject({
+      state: charmed.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellCasterId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+    if (afterCasterTurn.tag !== "resolved") {
+      throw new Error("Expected Charm Person caster end turn to resolve.");
+    }
+    const afterTargetTurn = resolveBattleSubject({
+      state: afterCasterTurn.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellTargetId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+    if (afterTargetTurn.tag !== "resolved") {
+      throw new Error("Expected Charm Person target end turn to resolve.");
+    }
+
+    const damageAct = spellAct({
+      state: afterTargetTurn.state,
+      spellId: sacredFlameUnitId,
+    });
+    const damageTarget = requireHole(damageAct.initialHoles, "targetChoice");
+    const damageTargetFill = spellTargetFill(
+      damageTarget,
+      sacredFlameUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+    const damageSave = requireResultHole(
+      resolveBattleSubject({
+        state: afterTargetTurn.state,
+        subject: damageAct.subject,
+        fills: [damageTargetFill],
+      }),
+      "savingThrowOutcome",
+    );
+    const damage = requireResultHole(
+      resolveBattleSubject({
+        state: afterTargetTurn.state,
+        subject: damageAct.subject,
+        fills: [
+          damageTargetFill,
+          savingThrowOutcomeFill(damageSave, [
+            { targetId: spellTargetId, succeeded: false },
+          ]),
+        ],
+      }),
+      "rolledDice",
+    );
+    const damaged = resolveBattleSubject({
+      state: afterTargetTurn.state,
+      subject: damageAct.subject,
+      fills: [
+        damageTargetFill,
+        savingThrowOutcomeFill(damageSave, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+        damageRollFillWithGroups(damage, [[4]]),
+      ],
+    });
+    expect(damaged).toMatchObject({ tag: "resolved" });
+    if (damaged.tag !== "resolved") {
+      throw new Error("Expected Sacred Flame damage to resolve.");
+    }
+    expect(damaged.state.combatants.get(spellTargetId)).toMatchObject({
+      conditions: expect.not.objectContaining({ charmed: true }),
+      activeEffects: expect.not.arrayContaining([
+        expect.objectContaining({
+          kind: "spellCondition",
+          sourceSpellId: charmPersonUnitId,
+        }),
+      ]),
+    });
+  });
+
+  test("charm person scales target count by slot level", () => {
+    const spell = spellRecord(charmPersonUnitId);
+    const secondHumanoidId = combatantId("unit-profile-charm-person-humanoid-2");
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      statBlockTargets: [
+        {
+          combatantId: secondHumanoidId,
+          statBlock: statBlockWithCreatureType("humanoid"),
+          initiative: 9,
+        },
+      ],
+    });
+    const act = spellAct({
+      state,
+      spellId: charmPersonUnitId,
+      slotLevel: 2,
+    });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+
+    expect(targetHole).toEqual(
+      expect.objectContaining({ minTargets: 1, maxTargets: 2 }),
+    );
+    expect(targetHole.choices).toEqual(
+      expect.arrayContaining([spellTargetId, secondHumanoidId]),
+    );
+  });
+
   test("protection from evil and good imposes attack Disadvantage only for scoped creature types", () => {
     const spell = spellRecord(protectionFromEvilAndGoodUnitId);
     const undeadId = combatantId("unit-profile-protection-undead");
@@ -9131,6 +9566,7 @@ function spellBattle(input: {
     readonly combatantId: CombatantId;
     readonly statBlock: StatBlockRecord;
     readonly initiative: number;
+    readonly side?: typeof partySide | typeof oppositionSide;
   }[];
 }): BattleState {
   const result = startBattle({
@@ -9189,6 +9625,7 @@ function spellBattle(input: {
           combatantId: target.combatantId,
           statBlock: target.statBlock,
           initiative: target.initiative,
+          ...(target.side === undefined ? {} : { side: target.side }),
         }),
       ),
     ],

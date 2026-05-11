@@ -773,14 +773,16 @@ export function resolveSpellRelease(
     invocation,
     fillSet.damageRoll,
     critical,
-    concentrationFill,
-    "full",
-    damageDispositionForTarget(
-      damageDispositionHole === null ? [] : [damageDispositionHole],
-      fillSet.damageDispositions,
-      target.combatantId,
-    ),
-    spellMarkedDamageRiders,
+    {
+      concentrationSavingThrow: concentrationFill,
+      damageDisposition: damageDispositionForTarget(
+        damageDispositionHole === null ? [] : [damageDispositionHole],
+        fillSet.damageDispositions,
+        target.combatantId,
+      ),
+      spellMarkedDamageRiders,
+      damageSourceId: input.subject.actorId,
+    },
   );
   const effected = applySpellActiveEffects(
     damaged,

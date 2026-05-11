@@ -340,13 +340,16 @@ export function resolveSaveGateDamageSpellAct(input: {
         input.invocation,
         damageRoll,
         false,
-        concentrationSaveByTargetId.get(targetId),
-        saveDamageResultForTarget(targetId),
-        damageDispositionForTarget(
-          damageDispositionHoles,
-          input.fillSet.damageDispositions,
-          targetId,
-        ),
+        {
+          concentrationSavingThrow: concentrationSaveByTargetId.get(targetId),
+          saveDamageResult: saveDamageResultForTarget(targetId),
+          damageDisposition: damageDispositionForTarget(
+            damageDispositionHoles,
+            input.fillSet.damageDispositions,
+            targetId,
+          ),
+          damageSourceId: input.actorId,
+        },
       ),
     input.input.state,
   );

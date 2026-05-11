@@ -193,12 +193,14 @@ module battleRuntime {
   //   equal to the caster's spellcasting ability modifier at the start of each
   //   affected target's turns. The current runtime model only has a
   //   table-executable known-willing fact for self targets.
-  // - Spells/Descriptions-A-D.md lines 86-97,
+  // - Spells/Descriptions-A-D.md lines 85-97 and 692-703,
   //   Spells/Descriptions-M-P.md lines 907-918, and
   //   UBIQUITOUS_LANGUAGE.md: Animal Friendship is a Beast-only Wisdom-save
-  //   spell whose failed save grants Charmed for 24 hours, and Protection
-  //   from Evil and Good applies a Concentration protection whose scoped
-  //   creature types have Disadvantage on attack rolls against the target.
+  //   spell whose failed save grants Charmed for 24 hours, Charm Person is a
+  //   Humanoid-only Wisdom-save spell whose failed save grants Charmed for 1
+  //   hour with hostile-target save Advantage, and Protection from Evil and
+  //   Good applies a Concentration protection whose scoped creature types have
+  //   Disadvantage on attack rolls against the target.
   //
   // This is the canonical package-local spec for implemented
   // @dnd/battle-runtime behavior. Old root battle.qnt is legacy/Core broad
@@ -211,7 +213,7 @@ module battleRuntime {
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | TrueStrike
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | TrueStrike
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | StarryWispSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack
   type ChainedSpellAttackDamageInvocation =
     | ChromaticOrbChainedSpellAttack
@@ -223,9 +225,13 @@ module battleRuntime {
     | ColorSpraySaveGate
     | EntangleSaveGate
     | AnimalFriendshipSaveGate
+    | CharmPersonSaveGate
   type SaveGatedAttackRollAdvantageInvocation =
     | FaerieFireSaveGate
-  type SaveGatedTargeting = AreaSaveTargets | SingleSaveTarget
+  type SaveGatedTargeting =
+    | AreaSaveTargets
+    | SingleSaveTarget
+    | TargetListSaveTargets({ minTargets: int, baseSlotLevel: int, baseTargets: int, additionalTargetsPerSlotLevel: int })
   type SaveGatedDamageSuccess = NoDamageOnSaveSuccess | HalfDamageOnSaveSuccess
   type MovementSpeedKind = WalkSpeedKind | ClimbSpeedKind | SwimSpeedKind
   type DirectHitPointRestorationSpell = HealingWordRestoration | CureWoundsRestoration | MassHealingWordRestoration
@@ -233,7 +239,7 @@ module battleRuntime {
   type RollModifierSpell = BaneRollModifier | BlessRollModifier | GuidanceRollModifier
   type SpellActionCost = SpellMagicAction | SpellBonusAction
 
-  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireAttackRollAdvantage | AnimalFriendshipCharmed({ durationTicks: int }) | ProtectionFromEvilAndGoodAttackDisadvantage | ProduceFlameHeldLight({ durationTicks: int })
+  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireAttackRollAdvantage | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodAttackDisadvantage | ProduceFlameHeldLight({ durationTicks: int })
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
   type RuntimeCreatureType = HumanoidCreature | BeastCreature | AberrationCreature | CelestialCreature | ElementalCreature | FeyCreature | FiendCreature | UndeadCreature
   type ObjectTarget =
@@ -312,6 +318,7 @@ module battleRuntime {
     | TargetChoice
     | ObjectTargetChoice
     | SpellTargetAllocation
+    | SpellTargetList
     | AttackRoll
     | DamageRoll
     | SpellDamageRoll
@@ -736,7 +743,8 @@ module battleRuntime {
         | DivineFavorWeaponDamageRider(data) => DivineFavorWeaponDamageRider({ durationTicks: data.durationTicks - 1 })
         | HuntersMarkDamageRider(data) => HuntersMarkDamageRider(data)
         | SearingSmiteBurning(data) => SearingSmiteBurning({ damageDice: data.damageDice, durationTicks: data.durationTicks - 1 })
-        | AnimalFriendshipCharmed(data) => AnimalFriendshipCharmed({ durationTicks: data.durationTicks - 1 })
+        | AnimalFriendshipCharmed(data) => AnimalFriendshipCharmed({ source: data.source, durationTicks: data.durationTicks - 1 })
+        | CharmPersonCharmed(data) => CharmPersonCharmed({ source: data.source, durationTicks: data.durationTicks - 1 })
         | ProduceFlameHeldLight(data) => ProduceFlameHeldLight({ durationTicks: data.durationTicks - 1 })
         | _ => effect
       })
@@ -745,6 +753,7 @@ module battleRuntime {
         | HuntersMarkDamageRider(_) => true
         | SearingSmiteBurning(data) => data.durationTicks > 0
         | AnimalFriendshipCharmed(data) => data.durationTicks > 0
+        | CharmPersonCharmed(data) => data.durationTicks > 0
         | ProduceFlameHeldLight(data) => data.durationTicks > 0
         | _ => true
       })
@@ -830,6 +839,7 @@ module battleRuntime {
         | SearingSmiteBurning(_) => false
         | FaerieFireAttackRollAdvantage => false
         | AnimalFriendshipCharmed(_) => false
+        | CharmPersonCharmed(_) => false
         | ProtectionFromEvilAndGoodAttackDisadvantage => false
         | ProduceFlameHeldLight(_) => false
       })) 13 + dexMod else baseAc
@@ -1125,7 +1135,7 @@ module battleRuntime {
         | PendingAttackDamageConcentration(frame) => {
             val rest = { ...state, interruptStack: state.interruptStack.slice(0, state.interruptStack.length() - 1) }
             match frame.continuation {
-              | ResumeAttackDamageToGoblin => { ...rest, goblin: applyDamage(rest.goblin, frame.damage, 1, concentrationSaveSucceeded), actionAvailable: false }
+              | ResumeAttackDamageToGoblin => { ...rest, goblin: applyDamageFromSource(rest.goblin, frame.damage, 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter), actionAvailable: false }
             }
           }
         | _ => state
@@ -1138,7 +1148,7 @@ module battleRuntime {
           if (state.goblin.concentrating and attack.damage > 0)
             openAttackDamageConcentration(state, ResumeAttackDamageToGoblin, attack.damage)
           else
-            { ...state, goblin: applyDamage(state.goblin, attack.damage, 1, true), actionAvailable: false }
+            { ...state, goblin: applyDamageFromSource(state.goblin, attack.damage, 1, true, OrdinaryDamage, Fighter), actionAvailable: false }
       | ResumeRayOfFrost => resolveRayOfFrost(state, 15, 10, 4, true)
       | ResumePoisonSpray => resolvePoisonSpray(state, 15, 10, 7, true)
       | ResumeChillTouch => resolveChillTouch(state, 15, 10, 6, true)
@@ -1292,7 +1302,7 @@ module battleRuntime {
       if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), fighterCriticalThreshold(state))))
         { ...spent, lightWeaponAttackMade: true }
       else
-        { ...spent, goblin: applyDamageWithDisposition(state.goblin, damageRoll.weaponDamageRoll + 3 + rageDamage + divineFavorDamage + divineSmiteDamage + huntersMarkDamage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded, damageDisposition), lightWeaponAttackMade: true }
+        { ...spent, goblin: applyDamageFromSource(state.goblin, damageRoll.weaponDamageRoll + 3 + rageDamage + divineFavorDamage + divineSmiteDamage + huntersMarkDamage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded, damageDisposition, Fighter), lightWeaponAttackMade: true }
     }
 
   pure def trueStrikeBonusDamageDice(characterLevel: int): int =
@@ -1374,7 +1384,7 @@ module battleRuntime {
         characterLevel,
         selectedDamageType,
       )
-      { ...rolled, goblin: applyDamage(state.goblin, damage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded), actionAvailable: false }
+      { ...rolled, goblin: applyDamageFromSource(state.goblin, damage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter), actionAvailable: false }
     }
 
   pure def fighterSneakAttackEligible(
@@ -1413,7 +1423,7 @@ module battleRuntime {
         val damage = weaponDamageRoll + 3 + (if (sneakSelectedAndEligible) sneakAttackDamageRoll else 0)
         {
           ...spent,
-          goblin: applyDamage(state.goblin, damage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded),
+          goblin: applyDamageFromSource(state.goblin, damage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter),
           lightWeaponAttackMade: true,
           fighterSneakAttackUsedThisTurn: sneakSelectedAndEligible or revealed.fighterSneakAttackUsedThisTurn,
         }
@@ -1516,7 +1526,7 @@ module battleRuntime {
     else {
       val adjustedDamage = damageAfterAdjustments(damageRoll + 2, Slashing, fighterRageResistances(state), Set(), Set())
       {
-        ...stateWithFighterDamage(state, applyDamage(state.fighter, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded)),
+        ...stateWithFighterDamage(state, applyDamageFromSource(state.fighter, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Goblin)),
         actionAvailable: false,
       }
     }
@@ -1544,7 +1554,7 @@ module battleRuntime {
     else {
       val adjustedDamage = damageAfterAdjustments(damageRoll + 2, Slashing, fighterRageResistances(state), Set(), Set())
       {
-        ...stateWithFighterDamage(state, applyDamage(state.fighter, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded)),
+        ...stateWithFighterDamage(state, applyDamageFromSource(state.fighter, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Goblin)),
         goblinMultiattackDispatchesRemaining: state.goblinMultiattackDispatchesRemaining - 1,
       }
     }
@@ -1572,7 +1582,7 @@ module battleRuntime {
       state
     else {
       val adjustedDamage = damageAfterAdjustments(damageRoll + 2, Slashing, fighterRageResistances(state), Set(), Set())
-      stateWithFighterDamage(state, applyDamageWithDisposition(state.fighter, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, damageDisposition))
+      stateWithFighterDamage(state, applyDamageFromSource(state.fighter, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, damageDisposition, Goblin))
     }
 
   pure def resolveGoblinOpportunityAttackWithUncannyDodge(
@@ -1588,7 +1598,7 @@ module battleRuntime {
       state
     else {
       val adjustedDamage = damageAfterAdjustments(uncannyDodgeDamage(damageRoll + 2), Slashing, fighterRageResistances(state), Set(), Set())
-      stateWithFighterDamage(state, applyDamage(state.fighter, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded))
+      stateWithFighterDamage(state, applyDamageFromSource(state.fighter, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Goblin))
     }
 
   pure def resolveRayOfFrost(
@@ -1624,7 +1634,7 @@ module battleRuntime {
     else {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
       val huntersMarkDamage = fighterHuntersMarkDamage(damageRoll.huntersMarkDamageRoll, rolled.fighter.activeEffects, Goblin)
-      val damaged = applyDamage(state.goblin, damageRoll.spellDamageRoll + huntersMarkDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded)
+      val damaged = applyDamageFromSource(state.goblin, damageRoll.spellDamageRoll + huntersMarkDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter)
       { ...rolled, goblin: { ...damaged, activeEffects: damaged.activeEffects.union(Set(RayOfFrostSpeedDelta)) }, actionAvailable: false }
     }
 
@@ -1652,7 +1662,7 @@ module battleRuntime {
     else {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
       val adjustedDamage = damageAfterAdjustments(damageRoll, Poison, Set(), Set(), Set())
-      val damaged = applyDamage(state.goblin, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded)
+      val damaged = applyDamageFromSource(state.goblin, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter)
       { ...rolled, goblin: damaged, actionAvailable: false }
     }
 
@@ -1680,7 +1690,7 @@ module battleRuntime {
     else {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
       val adjustedDamage = damageAfterAdjustments(damageRoll, Necrotic, Set(), Set(), Set())
-      val damaged = applyDamage(state.goblin, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded)
+      val damaged = applyDamageFromSource(state.goblin, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter)
       { ...rolled, goblin: damaged, actionAvailable: false }
     }
 
@@ -1719,6 +1729,28 @@ module battleRuntime {
 
   pure def applyDamage(target: Combatant, damage: int, deathFailuresAtZeroHp: int, concentrationSaveSucceeded: bool): Combatant =
     applyDamageWithDisposition(target, damage, deathFailuresAtZeroHp, concentrationSaveSucceeded, OrdinaryDamage)
+
+  pure def activeEffectsAfterTargetDamagedByCasterOrAlly(effects: Set[ActiveEffect], damageSource: Actor): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | AnimalFriendshipCharmed(data) => data.source != damageSource
+      | CharmPersonCharmed(data) => data.source != damageSource
+      | _ => true
+    })
+
+  pure def applyDamageFromSource(
+    target: Combatant,
+    damage: int,
+    deathFailuresAtZeroHp: int,
+    concentrationSaveSucceeded: bool,
+    damageDisposition: DamageDisposition,
+    damageSource: Actor,
+  ): Combatant = {
+    val damaged = applyDamageWithDisposition(target, damage, deathFailuresAtZeroHp, concentrationSaveSucceeded, damageDisposition)
+    if (damage > 0)
+      { ...damaged, activeEffects: activeEffectsAfterTargetDamagedByCasterOrAlly(damaged.activeEffects, damageSource) }
+    else
+      damaged
+  }
 
   pure def applyDamageWithDisposition(target: Combatant, damage: int, deathFailuresAtZeroHp: int, concentrationSaveSucceeded: bool, damageDisposition: DamageDisposition): Combatant = {
     val effectiveDamage = if (damage < 0) 0 else damage
@@ -1932,7 +1964,7 @@ module battleRuntime {
   pure def offHandAttackFighter(state: BattleState, attackTotal: int, naturalD20: int, damageRoll: int): BattleState =
     if (currentActor(state) == Fighter and state.bonusActionAvailable and state.lightWeaponAttackMade)
       if (attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), fighterCriticalThreshold(state)))
-        { ...state, goblin: applyDamage(state.goblin, damageRoll, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, false), bonusActionAvailable: false }
+        { ...state, goblin: applyDamageFromSource(state.goblin, damageRoll, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, false, OrdinaryDamage, Fighter), bonusActionAvailable: false }
       else
         { ...state, bonusActionAvailable: false }
     else
@@ -1942,7 +1974,7 @@ module battleRuntime {
     if (currentActor(state) == Fighter and state.bonusActionAvailable and state.lightWeaponAttackMade)
       if (attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), fighterCriticalThreshold(state))) {
         val reducedDamage = if (damageRoll - reduction < 0) 0 else damageRoll - reduction
-        { ...state, goblin: applyDamage(state.goblin, reducedDamage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, false), bonusActionAvailable: false }
+        { ...state, goblin: applyDamageFromSource(state.goblin, reducedDamage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, false, OrdinaryDamage, Fighter), bonusActionAvailable: false }
       }
       else
         { ...state, bonusActionAvailable: false }
@@ -2244,7 +2276,7 @@ module battleRuntime {
         ...state,
         bonusActionAvailable: false,
         spellSlotExpendedThisTurn: true,
-        goblin: applyDamage(state.goblin, smiteDamageRoll * (if (attackCritical) 2 else 1), 1, concentrationSaveSucceeded),
+        goblin: applyDamageFromSource(state.goblin, smiteDamageRoll * (if (attackCritical) 2 else 1), 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter),
       }
     else
       state
@@ -2317,7 +2349,7 @@ module battleRuntime {
     val advanced = endTurn(state)
     val damageDice = ensnaringStrikeDamageDice(advanced.goblin.activeEffects)
     if (currentActor(advanced) == Goblin and damageDice > 0)
-      { ...advanced, goblin: applyDamage(advanced.goblin, damageRoll, 1, concentrationSaveSucceeded) }
+      { ...advanced, goblin: applyDamageFromSource(advanced.goblin, damageRoll, 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter) }
     else
       advanced
   }
@@ -2366,7 +2398,7 @@ module battleRuntime {
       {
         ...state,
         goblin: {
-          ...applyDamage(state.goblin, smiteDamageRoll * (if (attackCritical) 2 else 1), 1, concentrationSaveSucceeded),
+          ...applyDamageFromSource(state.goblin, smiteDamageRoll * (if (attackCritical) 2 else 1), 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter),
           activeEffects: activeEffectsWithoutSearingSmite(state.goblin.activeEffects)
             .union(Set(SearingSmiteBurning({
               damageDice: searingSmiteDamageDiceForSlot(slotLevel),
@@ -2389,7 +2421,7 @@ module battleRuntime {
     val damageDice = searingSmiteDamageDice(advanced.goblin.activeEffects)
     if (currentActor(advanced) == Goblin and damageDice > 0)
       {
-        val damagedGoblin = applyDamage(advanced.goblin, damageRoll, 1, concentrationSaveSucceeded)
+        val damagedGoblin = applyDamageFromSource(advanced.goblin, damageRoll, 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter)
         {
           ...advanced,
           goblin: if (saveSucceeded)
@@ -2628,7 +2660,7 @@ module battleRuntime {
     else {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
       val adjustedDamage = damageAfterAdjustments(damageRoll, Fire, Set(), Set(), Set())
-      val damaged = applyDamage(state.goblin, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded)
+      val damaged = applyDamageFromSource(state.goblin, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter)
       { ...rolled, goblin: damaged, actionAvailable: false }
     }
 
@@ -2872,6 +2904,7 @@ module battleRuntime {
       | SearingSmite => true
       | FaerieFire => true
       | AnimalFriendship => true
+      | CharmPerson => true
       | ProtectionFromEvilAndGood => true
       | IceKnife => true
       | HealingWord => true
@@ -3411,15 +3444,30 @@ module battleRuntime {
     match invocation {
       | ColorSpraySaveGate => AreaSaveTargets
       | EntangleSaveGate => AreaSaveTargets
-      | AnimalFriendshipSaveGate => SingleSaveTarget
+      | AnimalFriendshipSaveGate => TargetListSaveTargets({ minTargets: 1, baseSlotLevel: 1, baseTargets: 1, additionalTargetsPerSlotLevel: 1 })
+      | CharmPersonSaveGate => TargetListSaveTargets({ minTargets: 1, baseSlotLevel: 1, baseTargets: 1, additionalTargetsPerSlotLevel: 1 })
     }
 
-  pure def saveGatedConditionFailedSaveActiveEffects(invocation: SaveGatedConditionInvocation): Set[ActiveEffect] =
+  pure def saveGatedTargetMaxTargets(targeting: SaveGatedTargeting, slotLevel: int): int =
+    match targeting {
+      | TargetListSaveTargets(data) =>
+        data.baseTargets +
+          (if (slotLevel > data.baseSlotLevel)
+            (slotLevel - data.baseSlotLevel) * data.additionalTargetsPerSlotLevel
+          else
+            0)
+      | _ => 1
+    }
+
+  pure def saveGatedConditionFailedSaveActiveEffects(invocation: SaveGatedConditionInvocation, source: Actor): Set[ActiveEffect] =
     match invocation {
       | ColorSpraySaveGate => Set(ColorSprayBlinded)
       | EntangleSaveGate => Set(EntangleRestrained)
-      | AnimalFriendshipSaveGate => Set(AnimalFriendshipCharmed({ durationTicks: 24 * 60 }))
+      | AnimalFriendshipSaveGate => Set(AnimalFriendshipCharmed({ source: source, durationTicks: 24 * 60 }))
+      | CharmPersonSaveGate => Set(CharmPersonCharmed({ source: source, durationTicks: charmPersonCharmedDurationTicks }))
     }
+
+  pure def charmPersonCharmedDurationTicks: int = 60 * 10
 
   pure def saveGatedConditionTargetCreatureTypeIsLegal(
     invocation: SaveGatedConditionInvocation,
@@ -3429,6 +3477,16 @@ module battleRuntime {
       | ColorSpraySaveGate => true
       | EntangleSaveGate => true
       | AnimalFriendshipSaveGate => targetCreatureType == BeastCreature
+      | CharmPersonSaveGate => targetCreatureType == HumanoidCreature
+    }
+
+  pure def saveGatedConditionSavingThrowHasAdvantage(
+    invocation: SaveGatedConditionInvocation,
+    targetIsHostile: bool,
+  ): bool =
+    match invocation {
+      | CharmPersonSaveGate => targetIsHostile
+      | _ => false
     }
 
   pure def saveGatedConditionReplayHoles(
@@ -3441,6 +3499,8 @@ module battleRuntime {
       Set()
     else if (saveGatedConditionTargeting(invocation) == SingleSaveTarget and not(targetFilled))
       Set(TargetChoice)
+    else if (match saveGatedConditionTargeting(invocation) { | TargetListSaveTargets(_) => true | _ => false } and not(targetFilled))
+      Set(SpellTargetList)
     else if (not(savingThrowOutcomesFilled))
       Set(SavingThrowOutcome)
     else
@@ -3511,11 +3571,12 @@ module battleRuntime {
     savingThrowSucceeded: bool,
     damageRoll: int,
     concentrationSaveSucceeded: bool,
+    damageSource: Actor,
   ): Combatant =
     if (saveGatedDamageAmount(invocation, damageRoll, savingThrowSucceeded) == 0)
       target
     else
-      applyDamage(
+      applyDamageFromSource(
         target,
         damageAfterAdjustments(
           saveGatedDamageAmount(invocation, damageRoll, savingThrowSucceeded),
@@ -3525,7 +3586,9 @@ module battleRuntime {
           Set()
         ),
         1,
-        concentrationSaveSucceeded
+        concentrationSaveSucceeded,
+        OrdinaryDamage,
+        damageSource,
       )
 
   pure def acidSplashDamageTarget(
@@ -3534,7 +3597,7 @@ module battleRuntime {
     damageRoll: int,
     concentrationSaveSucceeded: bool,
   ): Combatant =
-    saveGatedDamageTarget(AcidSplashSaveGate, target, not(failedSavingThrow), damageRoll, concentrationSaveSucceeded)
+    saveGatedDamageTarget(AcidSplashSaveGate, target, not(failedSavingThrow), damageRoll, concentrationSaveSucceeded, Fighter)
 
   pure def dexHalfSaveDamageAfterReplacement(
     damageRoll: int,
@@ -3576,8 +3639,8 @@ module battleRuntime {
     else
       {
         ...state,
-        fighter: saveGatedDamageTarget(BurningHandsSaveGate, state.fighter, fighterSavingThrowSucceeded, damageRoll, fighterConcentrationSaveSucceeded),
-        goblin: saveGatedDamageTarget(BurningHandsSaveGate, state.goblin, goblinSavingThrowSucceeded, damageRoll, goblinConcentrationSaveSucceeded),
+        fighter: saveGatedDamageTarget(BurningHandsSaveGate, state.fighter, fighterSavingThrowSucceeded, damageRoll, fighterConcentrationSaveSucceeded, Fighter),
+        goblin: saveGatedDamageTarget(BurningHandsSaveGate, state.goblin, goblinSavingThrowSucceeded, damageRoll, goblinConcentrationSaveSucceeded, Fighter),
         actionAvailable: false,
         spellSlotExpendedThisTurn: true,
       }
@@ -3596,11 +3659,65 @@ module battleRuntime {
     invocation: SaveGatedConditionInvocation,
     target: Combatant,
     savingThrowSucceeded: bool,
+    source: Actor,
   ): Combatant =
     if (savingThrowSucceeded)
       target
     else
-      { ...target, activeEffects: target.activeEffects.union(saveGatedConditionFailedSaveActiveEffects(invocation)) }
+      { ...target, activeEffects: target.activeEffects.union(saveGatedConditionFailedSaveActiveEffects(invocation, source)) }
+
+  pure def selectedTargetCount(fighterTargeted: bool, goblinTargeted: bool): int =
+    (if (fighterTargeted) 1 else 0) + (if (goblinTargeted) 1 else 0)
+
+  pure def saveGatedConditionTargetCountIsLegal(
+    invocation: SaveGatedConditionInvocation,
+    slotLevel: int,
+    fighterTargeted: bool,
+    goblinTargeted: bool,
+  ): bool = {
+    val count = selectedTargetCount(fighterTargeted, goblinTargeted)
+    val targeting = saveGatedConditionTargeting(invocation)
+    val minTargets = match targeting {
+      | TargetListSaveTargets(data) => data.minTargets
+      | _ => 1
+    }
+    count >= 1 and
+      count >= minTargets and
+      count <= saveGatedTargetMaxTargets(targeting, slotLevel)
+  }
+
+  pure def resolveTargetListSaveGatedCondition(
+    state: BattleState,
+    invocation: SaveGatedConditionInvocation,
+    slotLevel: int,
+    fighterTargeted: bool,
+    fighterCreatureType: RuntimeCreatureType,
+    fighterSavingThrowSucceeded: bool,
+    goblinTargeted: bool,
+    goblinCreatureType: RuntimeCreatureType,
+    goblinSavingThrowSucceeded: bool,
+  ): BattleState =
+    if (
+      not(state.actionAvailable) or
+      currentActor(state) != Fighter or
+      state.fighter.unconscious or
+      state.fighter.incapacitated or
+      fighterHasRage(state) or
+      not(canExpendSpellSlotThisTurn(state)) or
+      not(match saveGatedConditionTargeting(invocation) { | TargetListSaveTargets(_) => true | _ => false }) or
+      not(saveGatedConditionTargetCountIsLegal(invocation, slotLevel, fighterTargeted, goblinTargeted)) or
+      (fighterTargeted and not(saveGatedConditionTargetCreatureTypeIsLegal(invocation, fighterCreatureType))) or
+      (goblinTargeted and not(saveGatedConditionTargetCreatureTypeIsLegal(invocation, goblinCreatureType)))
+    )
+      state
+    else
+      {
+        ...state,
+        fighter: if (fighterTargeted) saveGatedConditionTarget(invocation, state.fighter, fighterSavingThrowSucceeded, Fighter) else state.fighter,
+        goblin: if (goblinTargeted) saveGatedConditionTarget(invocation, state.goblin, goblinSavingThrowSucceeded, Fighter) else state.goblin,
+        actionAvailable: false,
+        spellSlotExpendedThisTurn: true,
+      }
 
   pure def resolveColorSpray(
     state: BattleState,
@@ -3612,8 +3729,8 @@ module battleRuntime {
     else
       {
         ...state,
-        fighter: saveGatedConditionTarget(ColorSpraySaveGate, state.fighter, fighterSavingThrowSucceeded),
-        goblin: saveGatedConditionTarget(ColorSpraySaveGate, state.goblin, goblinSavingThrowSucceeded),
+        fighter: saveGatedConditionTarget(ColorSpraySaveGate, state.fighter, fighterSavingThrowSucceeded, Fighter),
+        goblin: saveGatedConditionTarget(ColorSpraySaveGate, state.goblin, goblinSavingThrowSucceeded, Fighter),
         actionAvailable: false,
         spellSlotExpendedThisTurn: true,
       }
@@ -3684,7 +3801,7 @@ module battleRuntime {
       {
         ...withoutPrior,
         fighter: { ...withoutPrior.fighter, concentrating: true },
-        goblin: saveGatedConditionTarget(EntangleSaveGate, withoutPrior.goblin, goblinSavingThrowSucceeded),
+        goblin: saveGatedConditionTarget(EntangleSaveGate, withoutPrior.goblin, goblinSavingThrowSucceeded, Fighter),
         actionAvailable: false,
         spellSlotExpendedThisTurn: true,
       }
@@ -3718,7 +3835,7 @@ module battleRuntime {
     )
       state
     else {
-      val damaged = saveGatedDamageTarget(invocation, state.goblin, savingThrowSucceeded, damageRoll, concentrationSaveSucceeded)
+      val damaged = saveGatedDamageTarget(invocation, state.goblin, savingThrowSucceeded, damageRoll, concentrationSaveSucceeded, Fighter)
       {
         ...state,
         goblin: damaged,
@@ -3757,8 +3874,8 @@ module battleRuntime {
     concentrationSaveSucceeded: bool,
   ): Combatant = {
     val totalDamage = attackDamage + burstDamage
-    val afterAttack = applyDamage(target, attackDamage, 1, true)
-    val afterBurst = applyDamage(afterAttack, burstDamage, 1, true)
+    val afterAttack = applyDamageFromSource(target, attackDamage, 1, true, OrdinaryDamage, Fighter)
+    val afterBurst = applyDamageFromSource(afterAttack, burstDamage, 1, true, OrdinaryDamage, Fighter)
     if (target.concentrating and totalDamage > 0 and not(concentrationSaveSucceeded))
       breakConcentration(afterBurst)
     else
@@ -4491,15 +4608,25 @@ module battleRuntime {
       assert(chainedSpellAttackDamageDice(ChromaticOrbChainedSpellAttack, 3) == 5),
       assert(saveGatedDamageFailedSaveActiveEffects(ViciousMockerySaveGate) == Set(ViciousMockeryNextAttackDisadvantage)),
       assert(saveGatedConditionTargeting(ColorSpraySaveGate) == AreaSaveTargets),
-      assert(saveGatedConditionFailedSaveActiveEffects(ColorSpraySaveGate) == Set(ColorSprayBlinded)),
+      assert(saveGatedConditionFailedSaveActiveEffects(ColorSpraySaveGate, Fighter) == Set(ColorSprayBlinded)),
       assert(saveGatedConditionTargeting(EntangleSaveGate) == AreaSaveTargets),
-      assert(saveGatedConditionFailedSaveActiveEffects(EntangleSaveGate) == Set(EntangleRestrained)),
+      assert(saveGatedConditionFailedSaveActiveEffects(EntangleSaveGate, Fighter) == Set(EntangleRestrained)),
       assert(saveGatedAttackRollAdvantageTargeting(FaerieFireSaveGate) == AreaSaveTargets),
       assert(saveGatedAttackRollAdvantageFailedSaveActiveEffects(FaerieFireSaveGate) == Set(FaerieFireAttackRollAdvantage)),
-      assert(saveGatedConditionTargeting(AnimalFriendshipSaveGate) == SingleSaveTarget),
+      assert(saveGatedConditionTargeting(AnimalFriendshipSaveGate) == TargetListSaveTargets({ minTargets: 1, baseSlotLevel: 1, baseTargets: 1, additionalTargetsPerSlotLevel: 1 })),
+      assert(saveGatedTargetMaxTargets(saveGatedConditionTargeting(AnimalFriendshipSaveGate), 1) == 1),
+      assert(saveGatedTargetMaxTargets(saveGatedConditionTargeting(AnimalFriendshipSaveGate), 2) == 2),
       assert(saveGatedConditionTargetCreatureTypeIsLegal(AnimalFriendshipSaveGate, BeastCreature)),
       assert(not(saveGatedConditionTargetCreatureTypeIsLegal(AnimalFriendshipSaveGate, HumanoidCreature))),
-      assert(saveGatedConditionFailedSaveActiveEffects(AnimalFriendshipSaveGate) == Set(AnimalFriendshipCharmed({ durationTicks: 24 * 60 }))),
+      assert(saveGatedConditionFailedSaveActiveEffects(AnimalFriendshipSaveGate, Fighter) == Set(AnimalFriendshipCharmed({ source: Fighter, durationTicks: 24 * 60 }))),
+      assert(saveGatedConditionTargeting(CharmPersonSaveGate) == TargetListSaveTargets({ minTargets: 1, baseSlotLevel: 1, baseTargets: 1, additionalTargetsPerSlotLevel: 1 })),
+      assert(saveGatedTargetMaxTargets(saveGatedConditionTargeting(CharmPersonSaveGate), 1) == 1),
+      assert(saveGatedTargetMaxTargets(saveGatedConditionTargeting(CharmPersonSaveGate), 2) == 2),
+      assert(saveGatedConditionTargetCreatureTypeIsLegal(CharmPersonSaveGate, HumanoidCreature)),
+      assert(not(saveGatedConditionTargetCreatureTypeIsLegal(CharmPersonSaveGate, BeastCreature))),
+      assert(saveGatedConditionFailedSaveActiveEffects(CharmPersonSaveGate, Fighter) == Set(CharmPersonCharmed({ source: Fighter, durationTicks: charmPersonCharmedDurationTicks }))),
+      assert(saveGatedConditionSavingThrowHasAdvantage(CharmPersonSaveGate, true)),
+      assert(not(saveGatedConditionSavingThrowHasAdvantage(CharmPersonSaveGate, false))),
       assert(spellAttackRollModeFromActiveEffects(Set(), Set(GuidingBoltNextAttackAdvantage), false) == AdvantageSpellAttackRoll),
       assert(spellAttackRollModeFromActiveEffects(Set(), Set(FaerieFireAttackRollAdvantage), true) == AdvantageSpellAttackRoll),
       assert(spellAttackRollModeFromActiveEffects(Set(), Set(FaerieFireAttackRollAdvantage), false) == NormalSpellAttackRoll),
@@ -4525,6 +4652,7 @@ module battleRuntime {
       assert(saveGatedDamageType(ViciousMockerySaveGate) == Psychic),
       assert(spellInvocationSpendsLevelOneSlot(IceKnife)),
       assert(spellInvocationSpendsLevelOneSlot(AnimalFriendship)),
+      assert(spellInvocationSpendsLevelOneSlot(CharmPerson)),
       assert(spellInvocationSpendsLevelOneSlot(ProtectionFromEvilAndGood)),
       assert(spellInvocationSpendsLevelOneSlot(DivineFavor)),
       assert(spellInvocationSpendsLevelOneSlot(DivineSmite)),
@@ -4847,8 +4975,12 @@ module battleRuntime {
       assert(saveGatedDamageReplayHoles(BurningHandsSaveGate, true, true, true, true) == Set(DamageRoll)),
       assert(saveGatedConditionReplayHoles(ColorSpraySaveGate, true, true, false) == Set(SavingThrowOutcome)),
       assert(saveGatedConditionReplayHoles(ColorSpraySaveGate, true, true, true) == Set()),
+      assert(saveGatedConditionReplayHoles(ColorSpraySaveGate, true, false, true) == Set()),
       assert(saveGatedConditionReplayHoles(EntangleSaveGate, true, true, false) == Set(SavingThrowOutcome)),
       assert(saveGatedConditionReplayHoles(EntangleSaveGate, true, true, true) == Set()),
+      assert(saveGatedConditionReplayHoles(CharmPersonSaveGate, true, false, false) == Set(SpellTargetList)),
+      assert(saveGatedConditionReplayHoles(CharmPersonSaveGate, true, true, false) == Set(SavingThrowOutcome)),
+      assert(saveGatedConditionReplayHoles(CharmPersonSaveGate, true, true, true) == Set()),
       assert(saveGatedAttackRollAdvantageReplayHoles(FaerieFireSaveGate, true, false) == Set(SavingThrowOutcome)),
       assert(saveGatedAttackRollAdvantageReplayHoles(FaerieFireSaveGate, true, true) == Set()),
     }
@@ -5002,6 +5134,50 @@ module battleRuntime {
       assert(entangled.goblin.activeEffects.contains(EntangleRestrained)),
       assert(not(broken.goblin.activeEffects.contains(EntangleRestrained))),
       assert(not(escaped.goblin.activeEffects.contains(EntangleRestrained))),
+    }
+  }
+
+  run test_charm_person_target_list_slot_scaling_and_damage_break = {
+    val failed = resolveTargetListSaveGatedCondition(
+      initialState,
+      CharmPersonSaveGate,
+      1,
+      false,
+      HumanoidCreature,
+      true,
+      true,
+      HumanoidCreature,
+      false,
+    )
+    val damaged = resolveAttack({ ...failed, actionAvailable: true }, 15, 10, fighterWeaponAttackDamageRoll(1), true)
+    val twoTargets = resolveTargetListSaveGatedCondition(
+      initialState,
+      CharmPersonSaveGate,
+      2,
+      true,
+      HumanoidCreature,
+      false,
+      true,
+      HumanoidCreature,
+      false,
+    )
+    val illegalTwoTargets = resolveTargetListSaveGatedCondition(
+      initialState,
+      CharmPersonSaveGate,
+      1,
+      true,
+      HumanoidCreature,
+      false,
+      true,
+      HumanoidCreature,
+      false,
+    )
+    all {
+      assert(failed.goblin.activeEffects.contains(CharmPersonCharmed({ source: Fighter, durationTicks: charmPersonCharmedDurationTicks }))),
+      assert(not(damaged.goblin.activeEffects.contains(CharmPersonCharmed({ source: Fighter, durationTicks: charmPersonCharmedDurationTicks })))),
+      assert(twoTargets.fighter.activeEffects.contains(CharmPersonCharmed({ source: Fighter, durationTicks: charmPersonCharmedDurationTicks }))),
+      assert(twoTargets.goblin.activeEffects.contains(CharmPersonCharmed({ source: Fighter, durationTicks: charmPersonCharmedDurationTicks }))),
+      assert(illegalTwoTargets == initialState),
     }
   }
 

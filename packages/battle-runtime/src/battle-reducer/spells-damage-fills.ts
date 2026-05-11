@@ -33,6 +33,7 @@ import {
   applyHpDamage,
   breakBattleConcentrationAfterDamage,
   markMarkedDamageRiderTransferAvailable,
+  removeSpellConditionEffectsFromTargetDamagedByCasterOrAlly,
 } from "./damage-apply.ts";
 import {
   attackRollMissToHitReplacementHolePayload,
@@ -40,6 +41,7 @@ import {
 } from "./statblock-attacks.ts";
 import { hasDodgeBenefit } from "./attack-roll.ts";
 import { spellTargetHasNonSpatialPrerequisites } from "./spells-targeting.ts";
+import { combatantsAreEnemies } from "./creature-state-leaves.ts";
 import {
   ATTACK_ROLL_HOLE_ID,
   ATTACK_ROLL_HOLE_INSTANCE,
@@ -474,7 +476,7 @@ export function spellSavingThrowOutcomeHoleId(
 
 export function spellSavingThrowOutcomeHole(
   state: BattleState,
-  _actorId: CombatantId,
+  actorId: CombatantId,
   invocation: Extract<
     SupportedSpellInvocation,
     {
@@ -525,6 +527,9 @@ export function spellSavingThrowOutcomeHole(
         : invocation.procedure === "rollModifier"
           ? (invocation.saveGate?.ability ?? "cha")
           : invocation.ability,
+      invocation.procedure === "saveGatedCondition"
+        ? { actorId, invocation }
+        : undefined,
     ),
   };
 }
@@ -596,16 +601,62 @@ export function spellAreaTargetingLabel(
 export function savingThrowRollModeProjections(
   state: BattleState,
   ability: Ability,
+  spellSaveRollMode?: {
+    readonly actorId: CombatantId;
+    readonly invocation: Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "saveGatedCondition" }
+    >;
+  },
 ): readonly BattleSavingThrowRollModeProjection[] {
-  if (ability !== "dex") {
-    return [];
+  const dodgeProjections =
+    ability === "dex"
+      ? [...state.combatants]
+          .filter(([, target]) => hasDodgeBenefit(state, target))
+          .map(([targetId]) => ({
+            targetId,
+            rollMode: "advantage" as const,
+          }))
+      : [];
+  const saveRollModeRule = spellSaveRollMode?.invocation.saveRollModeRule;
+  if (
+    spellSaveRollMode !== undefined &&
+    saveRollModeRule?.kind === "hostileTarget"
+  ) {
+    const { actorId, invocation } = spellSaveRollMode;
+    return uniqueSavingThrowRollModeProjections([
+      ...dodgeProjections,
+      ...[...state.combatants]
+        .filter(
+          ([targetId]) =>
+            combatantsAreEnemies(state, actorId, targetId) &&
+            spellTargetHasNonSpatialPrerequisites(
+              state,
+              actorId,
+              targetId,
+              invocation,
+            ),
+        )
+        .map(([targetId]) => ({
+          targetId,
+          rollMode: saveRollModeRule.mode,
+        })),
+    ]);
   }
-  return [...state.combatants]
-    .filter(([, target]) => hasDodgeBenefit(state, target))
-    .map(([targetId]) => ({
-      targetId,
-      rollMode: "advantage" as const,
-    }));
+  return uniqueSavingThrowRollModeProjections(dodgeProjections);
+}
+
+function uniqueSavingThrowRollModeProjections(
+  projections: readonly BattleSavingThrowRollModeProjection[],
+): readonly BattleSavingThrowRollModeProjection[] {
+  const seen = new Set<CombatantId>();
+  return projections.filter((projection) => {
+    if (seen.has(projection.targetId)) {
+      return false;
+    }
+    seen.add(projection.targetId);
+    return true;
+  });
 }
 
 export function validateSpellDamageFill(
@@ -729,30 +780,43 @@ export function validatePreparedSlotSpellDamageGroups(
     : "Each repeated spell damage dice group must match that target's allocated effect count.";
 }
 
+type SpellDamageContext = {
+  readonly concentrationSavingThrow?: Extract<
+    BattleFill,
+    { readonly kind: "concentrationSavingThrow" }
+  > | undefined;
+  readonly saveDamageResult?: SaveDamageResult | undefined;
+  readonly damageDisposition?: BattleAttackDamageDisposition | undefined;
+  readonly spellMarkedDamageRiders?:
+    | readonly SpellMarkedDamageRider[]
+    | undefined;
+  readonly spellDamageReductionRoll?: Extract<
+    BattleFill,
+    { readonly kind: "rolledDice" }
+  > | undefined;
+  readonly damageSourceId?: CombatantId | undefined;
+};
+
 export function applySpellDamage(
   state: BattleState,
   targetId: CombatantId,
   invocation: SupportedDamageSpellInvocation,
   damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
   critical: boolean,
-  concentrationSavingThrow?: Extract<
-    BattleFill,
-    { readonly kind: "concentrationSavingThrow" }
-  >,
-  saveDamageResult: SaveDamageResult = "full",
-  damageDisposition: BattleAttackDamageDisposition = {
-    kind: "ordinaryDamage",
-  },
-  spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
-  spellDamageReductionRoll?: Extract<
-    BattleFill,
-    { readonly kind: "rolledDice" }
-  >,
+  context: SpellDamageContext = {},
 ): BattleState {
   const target = state.combatants.get(targetId);
   if (target == null) {
     return state;
   }
+  const {
+    concentrationSavingThrow,
+    saveDamageResult = "full",
+    damageDisposition = { kind: "ordinaryDamage" },
+    spellMarkedDamageRiders = [],
+    spellDamageReductionRoll,
+    damageSourceId,
+  } = context;
   const reduction = applyAvailableSpellDamageReduction(
     target,
     spellDamageByTypeForTarget(
@@ -768,12 +832,13 @@ export function applySpellDamage(
   if (reduction.tag !== "ok") {
     return state;
   }
+  const effectiveDamage = damageAmountByTypeAfterTargetAdjustments(
+    reduction.target,
+    reduction.damageByType,
+  );
   const damaged = applyHpDamage(
     reduction.target,
-    damageAmountByTypeAfterTargetAdjustments(
-      reduction.target,
-      reduction.damageByType,
-    ),
+    effectiveDamage,
     { deathFailuresAtZeroHp: critical ? 2 : 1, damageDisposition },
   );
   const nextState = {
@@ -786,7 +851,7 @@ export function applySpellDamage(
     target.hp,
     damaged.hp,
   );
-  return concentrationSavingThrow?.value.succeeded === false ||
+  const concentrated = concentrationSavingThrow?.value.succeeded === false ||
     (target.concentration !== null && damaged.concentration === null)
     ? breakBattleConcentrationAfterDamage({
         state: afterMarkDrop,
@@ -794,24 +859,39 @@ export function applySpellDamage(
         priorConcentration: target.concentration,
       })
     : afterMarkDrop;
+  return effectiveDamage > 0 && damageSourceId !== undefined
+    ? removeSpellConditionEffectsFromTargetDamagedByCasterOrAlly(
+        concentrated,
+        damageSourceId,
+        targetId,
+      )
+    : concentrated;
 }
+
+type PreparedSlotSpellDamageContext = {
+  readonly concentrationSavingThrow?: Extract<
+    BattleFill,
+    { readonly kind: "concentrationSavingThrow" }
+  > | undefined;
+  readonly damageDisposition?: BattleAttackDamageDisposition | undefined;
+  readonly damageSourceId?: CombatantId | undefined;
+};
 
 export function applyPreparedSlotSpellDamage(
   state: BattleState,
   targetId: CombatantId,
   damageAmount: number,
-  concentrationSavingThrow?: Extract<
-    BattleFill,
-    { readonly kind: "concentrationSavingThrow" }
-  >,
-  damageDisposition: BattleAttackDamageDisposition = {
-    kind: "ordinaryDamage",
-  },
+  context: PreparedSlotSpellDamageContext = {},
 ): BattleState {
   const target = state.combatants.get(targetId);
   if (target == null) {
     return state;
   }
+  const {
+    concentrationSavingThrow,
+    damageDisposition = { kind: "ordinaryDamage" },
+    damageSourceId,
+  } = context;
   const damaged = applyHpDamage(target, damageAmount, {
     deathFailuresAtZeroHp: 1,
     damageDisposition,
@@ -826,7 +906,7 @@ export function applyPreparedSlotSpellDamage(
     target.hp,
     damaged.hp,
   );
-  return concentrationSavingThrow?.value.succeeded === false ||
+  const concentrated = concentrationSavingThrow?.value.succeeded === false ||
     (target.concentration !== null && damaged.concentration === null)
     ? breakBattleConcentrationAfterDamage({
         state: afterMarkDrop,
@@ -834,6 +914,13 @@ export function applyPreparedSlotSpellDamage(
         priorConcentration: target.concentration,
       })
     : afterMarkDrop;
+  return damageAmount > 0 && damageSourceId !== undefined
+    ? removeSpellConditionEffectsFromTargetDamagedByCasterOrAlly(
+        concentrated,
+        damageSourceId,
+        targetId,
+      )
+    : concentrated;
 }
 
 export function spellDamageAmountForTarget(

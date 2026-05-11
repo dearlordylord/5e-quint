@@ -282,7 +282,7 @@ export function applyAttackDamageAmount(
       : afterMarkDrop;
   const afterDamageEscapes =
     Number(damageAmount) > 0
-      ? removeSpellConditionEffectsFromTargetDamagedByCasterOrAllyAttack(
+      ? removeSpellConditionEffectsFromTargetDamagedByCasterOrAlly(
           concentrated,
           attackerId,
           targetId,
@@ -360,9 +360,9 @@ export function markMarkedDamageRiderTransferAvailable(
   return changed ? { ...state, combatants } : state;
 }
 
-export function removeSpellConditionEffectsFromTargetDamagedByCasterOrAllyAttack(
+export function removeSpellConditionEffectsFromTargetDamagedByCasterOrAlly(
   state: BattleState,
-  attackerId: CombatantId,
+  damageSourceId: CombatantId,
   targetId: CombatantId,
 ): BattleState {
   const target = state.combatants.get(targetId);
@@ -378,7 +378,7 @@ export function removeSpellConditionEffectsFromTargetDamagedByCasterOrAllyAttack
     > =>
       effect.kind === "spellCondition" &&
       effect.escape?.kind === "targetDamagedByCasterOrAlly" &&
-      combatantsAreAllies(state, attackerId, effect.sourceCombatantId),
+      combatantsAreAllies(state, damageSourceId, effect.sourceCombatantId),
   );
   if (expiring.length === 0) {
     return state;

@@ -439,8 +439,11 @@ function applySpellTurnStartDamage(
     state,
     targetId,
     spellTurnStartDamageAmount(target, effect, roll),
-    concentrationSavingThrow,
-    damageDisposition,
+    {
+      concentrationSavingThrow,
+      damageDisposition,
+      damageSourceId: effect.sourceCombatantId,
+    },
   );
 }
 

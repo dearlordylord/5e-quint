@@ -194,12 +194,14 @@ flowchart TD
   duplicate-d8 leap gating, target uniqueness, and previous-target range facts.
   `vicious_mockery` adds an attack-roll-only Disadvantage effect on failed
   saves.
-  `animal_friendship` adds the same save-gated condition procedure for
-  Beast-target Charmed effects, while keeping its damage-break clause outside
-  this active-effect lifecycle. `protection_from_evil_and_good` adds a
-  concentration protection active effect whose attacker creature-type filter
-  feeds attack-roll Disadvantage; possession, condition-immunity, and
-  already-applied-effect save-Advantage clauses stay unsupported.
+  `animal_friendship` and `charm_person` add the same save-gated condition
+  procedure for Beast-target and Humanoid-target Charmed effects. Charm Person
+  annotates hostile targets' Wisdom saves with Advantage, and both Charmed
+  effects end when the caster or an ally damages the target.
+  `protection_from_evil_and_good` adds a concentration protection active effect
+  whose attacker creature-type filter feeds attack-roll Disadvantage;
+  possession, condition-immunity, and already-applied-effect save-Advantage
+  clauses stay unsupported.
 - Stat Block damage vulnerabilities, resistances, and immunities are read from
   the retained `StatBlockRecord` at the HP mutation boundary.
 - Optional attack damage riders are retained feature profiles, not named

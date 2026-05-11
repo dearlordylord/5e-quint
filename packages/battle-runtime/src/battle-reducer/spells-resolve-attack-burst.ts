@@ -319,14 +319,15 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
           input.invocation,
           input.fillSet.attackBurstDamageRoll,
           critical,
-          undefined,
-          "full",
-          damageDispositionForTarget(
-            attackDamageDispositionHoles,
-            input.fillSet.damageDispositions,
-            target.combatantId,
-          ),
-          spellMarkedDamageRiders,
+          {
+            damageDisposition: damageDispositionForTarget(
+              attackDamageDispositionHoles,
+              input.fillSet.damageDispositions,
+              target.combatantId,
+            ),
+            spellMarkedDamageRiders,
+            damageSourceId: input.actorId,
+          },
         )
       : attackRolledState;
 
@@ -529,14 +530,18 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
           input.invocation,
           input.fillSet.attackBurstDamageRoll,
           critical,
-          concentrationSaveByTargetId.get(target.combatantId),
-          "full",
-          damageDispositionForTarget(
-            attackDamageDispositionHoles,
-            input.fillSet.damageDispositions,
-            target.combatantId,
-          ),
-          spellMarkedDamageRiders,
+          {
+            concentrationSavingThrow: concentrationSaveByTargetId.get(
+              target.combatantId,
+            ),
+            damageDisposition: damageDispositionForTarget(
+              attackDamageDispositionHoles,
+              input.fillSet.damageDispositions,
+              target.combatantId,
+            ),
+            spellMarkedDamageRiders,
+            damageSourceId: input.actorId,
+          },
         )
       : attackRolledState;
   const damagedByBurst =
@@ -550,12 +555,16 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
                 state,
                 targetId,
                 damageAmount,
-                concentrationSaveByTargetId.get(targetId),
-                damageDispositionForTarget(
-                  burstDamageDispositionHoles,
-                  input.fillSet.damageDispositions,
-                  targetId,
-                ),
+                {
+                  concentrationSavingThrow:
+                    concentrationSaveByTargetId.get(targetId),
+                  damageDisposition: damageDispositionForTarget(
+                    burstDamageDispositionHoles,
+                    input.fillSet.damageDispositions,
+                    targetId,
+                  ),
+                  damageSourceId: input.actorId,
+                },
               );
         }, damagedByAttackWithConcentration);
 

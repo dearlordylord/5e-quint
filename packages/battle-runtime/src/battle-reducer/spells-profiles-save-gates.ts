@@ -34,6 +34,7 @@ import {
   type SpellFailedSaveConditionEffect,
   type SpellFailedSavePostDamageRider,
   type SpellPostDamageRider,
+  type SpellSavingThrowRollModeRule,
   type SpellTargeting,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
@@ -49,6 +50,7 @@ export type SaveGateConditionSpell = {
   readonly targeting: (slotLevel: SpellSlotLevel) => SpellTargeting;
   readonly targetCreatureTypes: readonly CreatureType[] | null;
   readonly effect: SpellFailedSaveConditionEffect;
+  readonly saveRollModeRule: SpellSavingThrowRollModeRule | null;
   readonly rangeFeet: MovementFeet;
 };
 
@@ -114,6 +116,7 @@ export function supportedPreparedSaveGateConditionProfile(
         targeting: conditionSpell.targeting(slot.spellLevel),
         targetCreatureTypes: conditionSpell.targetCreatureTypes,
         effect: conditionSpell.effect,
+        saveRollModeRule: conditionSpell.saveRollModeRule,
         rangeFeet: conditionSpell.rangeFeet,
       },
     ];
@@ -125,6 +128,7 @@ export function supportedSaveGateConditionSpell(
 ): SaveGateConditionSpell | null {
   return (
     animalFriendshipSaveGateConditionSpell(spell) ??
+    charmPersonSaveGateConditionSpell(spell) ??
     colorSpraySaveGateConditionSpell(spell) ??
     entangleSaveGateConditionSpell(spell)
   );
@@ -222,6 +226,38 @@ export function faerieFireSaveGateAttackRollAdvantageSpell(
 export function animalFriendshipSaveGateConditionSpell(
   spell: SpellRecord,
 ): SaveGateConditionSpell | null {
+  return creatureTypeCharmedSaveGateConditionSpell({
+    spell,
+    name: "Animal Friendship",
+    provenanceSection: "Spells/Descriptions-A-D#Animal Friendship",
+    duration: { unit: "hour", amount: 24 },
+    targetCreatureType: "beast",
+    saveRollModeRule: null,
+  });
+}
+
+export function charmPersonSaveGateConditionSpell(
+  spell: SpellRecord,
+): SaveGateConditionSpell | null {
+  return creatureTypeCharmedSaveGateConditionSpell({
+    spell,
+    name: "Charm Person",
+    provenanceSection: "Spells/Descriptions-A-D#Charm Person",
+    duration: { unit: "hour", amount: 1 },
+    targetCreatureType: "humanoid",
+    saveRollModeRule: { kind: "hostileTarget", mode: "advantage" },
+  });
+}
+
+function creatureTypeCharmedSaveGateConditionSpell(input: {
+  readonly spell: SpellRecord;
+  readonly name: string;
+  readonly provenanceSection: string;
+  readonly duration: { readonly unit: "hour"; readonly amount: 1 | 24 };
+  readonly targetCreatureType: CreatureType;
+  readonly saveRollModeRule: SpellSavingThrowRollModeRule | null;
+}): SaveGateConditionSpell | null {
+  const spell = input.spell;
   if (spell.mechanics.family !== "activation") {
     return null;
   }
@@ -238,16 +274,16 @@ export function animalFriendshipSaveGateConditionSpell(
       ? (spell.mechanics.duration.earlyEnd ?? [])
       : [];
   if (
-    spell.name !== "Animal Friendship" ||
+    spell.name !== input.name ||
     spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-A-D#Animal Friendship" ||
+    spell.provenance.section !== input.provenanceSection ||
     spell.mechanics.level !== 1 ||
     spell.mechanics.castingTime.kind !== "action" ||
     spell.mechanics.range.kind !== "point" ||
     spell.mechanics.range.feet !== 30 ||
     spell.mechanics.duration.kind !== "timed" ||
-    spell.mechanics.duration.value.unit !== "hour" ||
-    spell.mechanics.duration.value.amount !== 24 ||
+    spell.mechanics.duration.value.unit !== input.duration.unit ||
+    spell.mechanics.duration.value.amount !== input.duration.amount ||
     earlyEnd.length !== 1 ||
     earlyEnd[0]?.kind !== "target_damaged_by_caster_or_ally" ||
     spell.mechanics.phases.length !== 1 ||
@@ -260,7 +296,7 @@ export function animalFriendshipSaveGateConditionSpell(
     targetSelection.mode !== "choose_up_to" ||
     targetSelection.count === undefined ||
     targetSelection.typeFilter?.length !== 1 ||
-    targetSelection.typeFilter[0] !== "beast" ||
+    targetSelection.typeFilter[0] !== input.targetCreatureType ||
     failedEffect?.kind !== "apply_condition" ||
     failedEffect.condition !== "charmed"
   ) {
@@ -287,13 +323,14 @@ export function animalFriendshipSaveGateConditionSpell(
         maxTargets: targetCount ?? 1,
       };
     },
-    targetCreatureTypes: ["beast"],
+    targetCreatureTypes: [input.targetCreatureType],
     effect: {
       condition: "charmed",
       expiresAt: { kind: "duration", durationTicks: durationTicks.right },
       escape: { kind: "targetDamagedByCasterOrAlly" },
       turnStartDamage: null,
     },
+    saveRollModeRule: input.saveRollModeRule,
     rangeFeet: movementFeet(spell.mechanics.range.feet),
   };
 }
@@ -344,6 +381,7 @@ export function colorSpraySaveGateConditionSpell(
       escape: null,
       turnStartDamage: null,
     },
+    saveRollModeRule: null,
     rangeFeet: movementFeet(0),
   };
 }
@@ -401,6 +439,7 @@ export function entangleSaveGateConditionSpell(
       },
       turnStartDamage: null,
     },
+    saveRollModeRule: null,
     rangeFeet: movementFeet(spell.mechanics.range.feet),
   };
 }

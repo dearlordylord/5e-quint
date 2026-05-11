@@ -220,7 +220,10 @@ The support-profile parser surface should cover these profile families:
 - `SpellProfile.creatureTypeProtectionAndCharm`: an action-cast, slot-spent
   profile for creature-type-scoped condition/protection clauses. Animal
   Friendship admits Beast targets and applies spell-owned Charmed on failed
-  Wisdom saves. Protection from Evil and Good applies a concentration active
+  Wisdom saves. Charm Person admits Humanoid targets, projects Advantage for
+  hostile targets' Wisdom saves, and applies one-hour spell-owned Charmed on
+  failed saves. Both Charmed profiles end when the caster or an ally damages
+  the target. Protection from Evil and Good applies a concentration active
   effect that gives scoped attacker creature types Disadvantage on attack rolls
   against the protected target.
 - `SpellProfile.preparedPersistentSpell`: a prepared persistent effect profile,
@@ -638,12 +641,13 @@ Feature and spell resources:
   against them when the attacker can see the affected creature. Object
   outline/Advantage, Dim Light emission, and Invisible benefit denial remain
   explicit planning follow-ups.
-- creature-type-scoped spell effects admit `animal_friendship` and
-  `protection_from_evil_and_good` from retained Spell Records. Animal
-  Friendship filters targets by Beast creature type, asks for Wisdom saves, and
-  applies spell-owned Charmed on failed saves. Its damage-break clause is
-  deferred because ally/source-scoped damage-to-target early ending is not yet
-  an executable active-effect lifecycle. Protection from Evil and Good stores
+- creature-type-scoped spell effects admit `animal_friendship`,
+  `charm_person`, and `protection_from_evil_and_good` from retained Spell
+  Records. Animal Friendship filters targets by Beast creature type. Charm
+  Person filters targets by Humanoid creature type and annotates hostile
+  targets' Wisdom saves with Advantage. Both spells apply spell-owned Charmed
+  on failed saves and remove that spell-owned condition when the caster or an
+  ally damages the target. Protection from Evil and Good stores
   the SRD attacker creature-type list on a concentration active effect and feeds
   attack-roll Disadvantage when those creature types attack the protected
   target. Possession prevention, scoped Charmed/Frightened immunity, and

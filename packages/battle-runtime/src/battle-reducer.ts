@@ -1175,6 +1175,10 @@ export type SpellFailedSaveConditionEffect = {
   readonly escape: SpellConditionEscape | null;
   readonly turnStartDamage: SpellTurnStartDamage | null;
 };
+export type SpellSavingThrowRollModeRule = {
+  readonly kind: "hostileTarget";
+  readonly mode: "advantage";
+};
 export type SpellFailedSaveAttackRollEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "visibleAttackRollAgainstSelf" }
@@ -1542,6 +1546,7 @@ export type SupportedSpellInvocation =
       readonly targeting: SpellTargeting;
       readonly targetCreatureTypes: readonly CreatureType[] | null;
       readonly effect: SpellFailedSaveConditionEffect;
+      readonly saveRollModeRule: SpellSavingThrowRollModeRule | null;
       readonly rangeFeet: MovementFeet;
     }
   | {

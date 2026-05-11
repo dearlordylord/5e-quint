@@ -259,17 +259,21 @@ export function resolvePreparedSlotSpellAct(input: {
         state,
         allocation.targetId,
         damageAmount,
-        concentrationSave === null
-          ? undefined
-          : concentrationSavingThrowFillFor(
-              input.fillSet.concentrationSavingThrows,
-              concentrationSave,
-            ),
-        damageDispositionForTarget(
-          damageDispositionHoles,
-          input.fillSet.damageDispositions,
-          allocation.targetId,
-        ),
+        {
+          concentrationSavingThrow:
+            concentrationSave === null
+              ? undefined
+              : concentrationSavingThrowFillFor(
+                  input.fillSet.concentrationSavingThrows,
+                  concentrationSave,
+                ),
+          damageDisposition: damageDispositionForTarget(
+            damageDispositionHoles,
+            input.fillSet.damageDispositions,
+            allocation.targetId,
+          ),
+          damageSourceId: input.actorId,
+        },
       );
     },
     input.input.state,

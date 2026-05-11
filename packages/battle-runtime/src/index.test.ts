@@ -12992,6 +12992,50 @@ describe("battle runtime", () => {
     ).toBe(true);
   });
 
+  test("spell saving throw outcome codec preserves target roll modes", () => {
+    const hole = {
+      kind: "savingThrowOutcome",
+      holeId: holeId("battle:test:charm-person-save"),
+      holeInstanceKey: holeInstanceKey("battle:test:charm-person-save"),
+      label: "Charm Person Saving Throw outcomes",
+      spell: {
+        access: { tag: "prepared" },
+        resource: { tag: "spellSlot", slotLevel: 1 },
+        procedure: "saveGatedCondition",
+        spell: { id: "charm_person" },
+        ability: "wis",
+        dc: { kind: "caster_spell_save_dc" },
+        targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
+        targetCreatureTypes: ["humanoid"],
+        effect: {
+          condition: "charmed",
+          expiresAt: {
+            kind: "duration",
+            durationTicks: { amount: 600 },
+          },
+          escape: { kind: "targetDamagedByCasterOrAlly" },
+          turnStartDamage: null,
+        },
+        saveRollModeRule: { kind: "hostileTarget", mode: "advantage" },
+        rangeFeet: movementFeet(30),
+      },
+      ability: "wis",
+      dc: { kind: "caster_spell_save_dc" },
+      areaChoices: [],
+      targetRollModes: [{ targetId: goblinId, rollMode: "advantage" }],
+    };
+
+    const decoded = Schema.decodeUnknownEither(BattleHoleSchema)(hole);
+
+    if (Either.isLeft(decoded)) {
+      throw new Error(String(decoded.left));
+    }
+    expect(decoded.right).toMatchObject({
+      kind: "savingThrowOutcome",
+      targetRollModes: [{ targetId: goblinId, rollMode: "advantage" }],
+    });
+  });
+
   test("spell-hosted weapon invocation holes reject non-weapon component attacks", () => {
     const baseHole = {
       kind: "attackRoll",
@@ -17153,7 +17197,7 @@ function runCanonicalBattleRuntimeQntSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("143 passing");
+  expect(quintOutput).toContain("144 passing");
 }
 
 function hidePrerequisites(

@@ -624,6 +624,12 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
         ),
         turnStartDamage: Schema.NullOr(BattleRuntimeObjectSchema),
       }),
+      saveRollModeRule: Schema.NullOr(
+        Schema.Struct({
+          kind: Schema.Literal("hostileTarget"),
+          mode: Schema.Literal("advantage"),
+        }),
+      ),
       rangeFeet: MovementFeet,
     }),
     Schema.Struct({
@@ -1036,6 +1042,12 @@ export const BattleHoleSchema = Schema.Union(
       Schema.Struct({
         originAnchorId: CombatantId,
         affectedTargetIds: Schema.Array(CombatantId),
+      }),
+    ),
+    targetRollModes: Schema.Array(
+      Schema.Struct({
+        targetId: CombatantId,
+        rollMode: Schema.Literal(...ATTACK_ROLL_MODES),
       }),
     ),
   }),
