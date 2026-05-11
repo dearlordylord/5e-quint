@@ -222,7 +222,11 @@ The support-profile parser surface should cover these profile families:
   sets. It produces Wisdom Saving Throw holes only for selected creatures that
   are not automatic successes; Exhaustion Immunity is derived from retained
   Stat Block condition-immunity facts, while non-sleeper facts are explicitly
-  shaped but rejected until executable support lands.
+  shaped but rejected until executable support lands. Failed initial saves
+  record a concentration-owned Sleep pending repeat-save lifecycle:
+  Incapacitated until that target's next end turn, then success ends that
+  target's Sleep effect and failure escalates it to concentration-owned
+  Unconscious.
 - `SpellProfile.creatureTypeProtectionAndCharm`: an action-cast, slot-spent
   profile for creature-type-scoped condition/protection clauses. Animal
   Friendship admits Beast targets and applies spell-owned Charmed on failed
@@ -642,7 +646,10 @@ Feature and spell resources:
   saves only for selected targets that are not automatic successes, derives
   Exhaustion-immunity automatic success from retained Stat Block condition
   immunities, rejects non-sleeper facts until executable support lands, and
-  spends the Magic action plus Spell Slot without applying the pending lifecycle.
+  spends the Magic action plus Spell Slot. Failed saves apply pending
+  concentration-owned Sleep Incapacitated until the target's next end turn,
+  where the runtime asks for the second Wisdom save and either removes that
+  target's Sleep effect or replaces it with concentration-owned Unconscious.
 - Prepared `hellish_rebuke` is admitted as an after-damage triggered-Reaction
   spell: a damaging visible creature within 60 feet makes a Dexterity save,
   takes Fire damage on a failed save and half as much on success, and the spell

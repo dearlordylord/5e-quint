@@ -72,23 +72,23 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 39,
-      "numerator": 39,
+      "denominator": 40,
+      "numerator": 40,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 39,
-      "numerator": 37,
-      "percent": "94.9%"
+      "denominator": 40,
+      "numerator": 38,
+      "percent": "95%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 39,
-      "numerator": 39,
+      "denominator": 40,
+      "numerator": 40,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 39,
-      "numerator": 39,
+      "denominator": 40,
+      "numerator": 40,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -883,6 +883,34 @@
       ]
     },
     {
+      "id": "spell.invocation-sleep-repeat-save-lifecycle",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "SRDINV38B"
+      ],
+      "title": "Spell invocation resolves Sleep's pending repeat-save lifecycle",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/index.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.invocation-damage-reduction",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -1600,6 +1628,22 @@
         "spell.invocation-sleep-target-admission"
       ],
       "taskId": "SRDINV38A"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Sleep's pending Incapacitated repeat-save lifecycle, repeat success cleanup, repeat failure escalation to Unconscious, and Concentration cleanup.",
+      "profileIds": [
+        "spell.invocation-sleep-repeat-save-lifecycle"
+      ],
+      "taskId": "SRDINV38B"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests and MBT cover Sleep failed-save pending Incapacitated, target end-turn repeat Wisdom save holes, repeat success cleanup, repeat failure escalation to spell-owned Unconscious, target Concentration breaks, and preservation of unrelated condition sources.",
+      "profileIds": [
+        "spell.invocation-sleep-repeat-save-lifecycle"
+      ],
+      "taskId": "SRDINV38B"
     },
     {
       "claimKind": "completed-runtime-parity",
@@ -6898,20 +6942,13 @@
             "mechanic": "creatures that do not sleep automatically succeed only when an executable non-sleeper fact is supported"
           },
           {
-            "followUpTaskId": "SRDINV38B",
-            "mechanic": "failed initial save applies Incapacitated until the end of the target's next turn with a repeat Wisdom save"
-          },
-          {
-            "followUpTaskId": "SRDINV38B",
-            "mechanic": "failed repeat save escalates to spell-owned Unconscious for the duration"
-          },
-          {
             "followUpTaskId": "SRDINV38C",
             "mechanic": "damage-from-any-source and adjacent shake-awake cleanup"
           }
         ],
         "profileIds": [
-          "spell.invocation-sleep-target-admission"
+          "spell.invocation-sleep-target-admission",
+          "spell.invocation-sleep-repeat-save-lifecycle"
         ],
         "rawRequirementIds": [
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
@@ -6920,7 +6957,10 @@
           "point-origin 5-foot-radius Sphere target admission",
           "Wisdom Saving Throw holes for selected targets that are not automatic successes",
           "Exhaustion-immunity automatic success derived from retained Stat Block condition-immunity facts",
-          "Magic action and Spell Slot spend"
+          "Magic action and Spell Slot spend",
+          "failed initial save applies Sleep-owned Incapacitated until the end of the target's next turn with a repeat Wisdom save",
+          "repeat success ends that target's Sleep effect",
+          "failed repeat save escalates to spell-owned Unconscious for the remaining Concentration duration"
         ],
         "tag": "profile-subset-supported"
       },
@@ -6955,6 +6995,34 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "spell.invocation-sleep-repeat-save-lifecycle",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV38B"
+          ],
+          "title": "Spell invocation resolves Sleep's pending repeat-save lifecycle",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts"
             }
           ]
         }

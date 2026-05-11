@@ -30,6 +30,7 @@ import { invalidResult } from "./result-helpers.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import {
   applyFailedSaveAttackRollAdvantageEffects,
+  applySleepPendingRepeatSaveEffects,
   applyFailedSaveSpellActiveEffects,
   applyFailedSaveSpellConditionEffects,
   applySpellDamage,
@@ -132,16 +133,29 @@ export function resolveSleepTargetAdmissionSpellAct(input: {
       return saveFailedReactionWindow;
     }
   }
-  return spendSpellCastResources({
-    state: extendSavingThrowOngoingFeatures(
-      input.input.state,
-      input.actorId,
-      selectedTargetIds,
-    ),
+  const resourced = spendSpellCastResources({
+    state: input.input.state,
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
   });
+  if (resourced.tag === "invalid") {
+    return resourced;
+  }
+  const effected = applySleepPendingRepeatSaveEffects(
+    resourced.state,
+    input.actorId,
+    failedTargets,
+    input.invocation,
+  );
+  const nextState = extendSavingThrowOngoingFeatures(effected, input.actorId, [
+    ...selectedTargetIds,
+  ]);
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
 }
 export function resolveSaveGateDamageSpellRelease(input: {
   readonly input: ActionSpellBattleResolutionInput;

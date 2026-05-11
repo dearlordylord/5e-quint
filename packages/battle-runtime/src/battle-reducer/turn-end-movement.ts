@@ -90,7 +90,11 @@ import {
 
 import { invalidResult } from "./result-helpers.ts";
 
-import { conditionsAfterExpiringSpellConditionEffects } from "./spell-condition-effects-helpers.ts";
+import {
+  conditionsAfterApplyingSpellConditionEffects,
+  conditionsAfterExpiringSpellConditionEffects,
+  conditionHadNonSpellSourceBeforeSpellEffect,
+} from "./spell-condition-effects-helpers.ts";
 
 import { damageAmountAfterTargetAdjustments } from "./damage-helpers.ts";
 
@@ -111,6 +115,7 @@ import {
 import type {
   ActiveOngoingFeatureOccurrence,
   BattleActiveEffect,
+  BattleActiveEffectExpiration,
   BattleAttackDamageDispositionHole,
   BattleCreatureState,
   BattleFill,
@@ -120,6 +125,7 @@ import type {
   BattleResolutionInput,
   BattleResolutionResult,
   BattleResolvedMovement,
+  BattleSleepRepeatSavingThrowOutcomeHole,
   BattleSpellTurnStartDamageRollHole,
   BattleSpellTurnStartSavingThrowOutcomeHole,
   BattleStatBlockRechargeRollHole,
@@ -139,6 +145,10 @@ export function resolveEndTurn(
   state: BattleState,
   deathSavingThrowRoll?: DieRollResult,
   statBlockRechargeRolls?: readonly BattleStatBlockRechargeRollResult[],
+  sleepRepeatSaves: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[] = [],
   spellTurnStartDamageRolls: readonly Extract<
     BattleFill,
     { readonly kind: "rolledDice" }
@@ -205,8 +215,14 @@ export function resolveEndTurn(
     currentActorId(state),
     state.initiative.round,
   );
-  const combatantsAfterEndEffects = expireEndOfTurnEffects(
+  const combatantsAfterSleepRepeatSaves = applySleepRepeatSaveFills(
     combatantsAfterEndTurnOngoingFeatures,
+    currentActorId(state),
+    state.initiative.round,
+    sleepRepeatSaves,
+  );
+  const combatantsAfterEndEffects = expireEndOfTurnEffects(
+    combatantsAfterSleepRepeatSaves,
     currentActorId(state),
     state.initiative.round,
   );
@@ -495,6 +511,186 @@ function validateSpellTurnStartSavingThrowOutcome(
     : "Turn-start spell Saving Throw outcome must match the starting-turn target.";
 }
 
+type SleepPendingRepeatSaveEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "sleepPendingRepeatSave" }
+>;
+type DurationActiveEffect = Extract<
+  Exclude<
+    BattleActiveEffect,
+    Extract<BattleActiveEffect, { readonly kind: "sleepPendingRepeatSave" }>
+  >,
+  { readonly expiresAt: BattleActiveEffectExpiration }
+> & {
+  readonly expiresAt: Extract<
+    BattleActiveEffectExpiration,
+    { readonly kind: "duration" }
+  >;
+};
+
+function sleepPendingRepeatSaveEffects(
+  combatant: BattleCreatureState | undefined,
+  actorId: CombatantId,
+  round: RoundType,
+): readonly SleepPendingRepeatSaveEffect[] {
+  if (combatant === undefined) {
+    return [];
+  }
+  return combatant.activeEffects.filter(
+    (effect): effect is SleepPendingRepeatSaveEffect =>
+      effect.kind === "sleepPendingRepeatSave" &&
+      effect.repeatAt.combatantId === actorId &&
+      effect.repeatAt.round === round,
+  );
+}
+
+function sleepRepeatSavingThrowOutcomeHole(
+  targetId: CombatantId,
+  effect: SleepPendingRepeatSaveEffect,
+): BattleSleepRepeatSavingThrowOutcomeHole {
+  const key = `battle:sleep-repeat-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}`;
+  return {
+    kind: "savingThrowOutcome",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${effect.sourceSpellId} repeat WIS save`,
+    sleepRepeatSave: {
+      targetId,
+      sourceSpellId: effect.sourceSpellId,
+      sourceCombatantId: effect.sourceCombatantId,
+      save: effect.save,
+    },
+    ability: effect.save.ability,
+    dc: effect.save.dc,
+    areaChoices: [],
+    targetRollModes: [],
+  };
+}
+
+function sleepRepeatSavingThrowOutcomeFor(
+  fills: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[],
+  hole: BattleSleepRepeatSavingThrowOutcomeHole,
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
+  return fills.find((fill) => fill.holeId === hole.holeId);
+}
+
+function validateSleepRepeatSavingThrowOutcome(
+  value: BattleSavingThrowOutcomeValue,
+  targetId: CombatantId,
+): string | null {
+  if ("area" in value) {
+    return "Sleep repeat Saving Throw outcome must not include area facts.";
+  }
+  return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
+    ? null
+    : "Sleep repeat Saving Throw outcome must match the ending-turn target.";
+}
+
+function applySleepRepeatSaveFills(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  actorId: CombatantId,
+  round: RoundType,
+  saves: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[],
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  const actor = combatants.get(actorId);
+  const effects = sleepPendingRepeatSaveEffects(actor, actorId, round);
+  if (actor === undefined || effects.length === 0) {
+    return combatants;
+  }
+  return effects.reduce((nextCombatants, effect) => {
+    const target = nextCombatants.get(actorId);
+    if (target === undefined) {
+      return nextCombatants;
+    }
+    const hole = sleepRepeatSavingThrowOutcomeHole(actorId, effect);
+    const save = sleepRepeatSavingThrowOutcomeFor(saves, hole);
+    if (save === undefined) {
+      return nextCombatants;
+    }
+    const activeEffectsWithoutPending = target.activeEffects.filter(
+      (candidate) => candidate !== effect,
+    );
+    const conditionsWithoutPending =
+      conditionsAfterExpiringSpellConditionEffects(
+        target.conditions,
+        activeEffectsWithoutPending,
+        [effect],
+      );
+    const succeeded = save.value.outcomes[0]?.succeeded === true;
+    if (succeeded) {
+      return new Map(nextCombatants).set(
+        actorId,
+        battleCreatureWithActiveEffectsAndConditions(
+          target,
+          activeEffectsWithoutPending,
+          conditionsWithoutPending,
+        ),
+      );
+    }
+    const targetWithoutPending: BattleCreatureState =
+      target.positiveHpUnconscious === null
+        ? {
+            ...target,
+            activeEffects: activeEffectsWithoutPending,
+            conditions: conditionsWithoutPending,
+          }
+        : {
+            ...target,
+            activeEffects: activeEffectsWithoutPending,
+          };
+    const unconsciousEffect: Extract<
+      BattleActiveEffect,
+      { readonly kind: "spellCondition" }
+    > = {
+      kind: "spellCondition" as const,
+      sourceSpellId: effect.sourceSpellId,
+      sourceCombatantId: effect.sourceCombatantId,
+      condition: "unconscious" as const,
+      conditionHadNonSpellSource: conditionHadNonSpellSourceBeforeSpellEffect(
+        targetWithoutPending,
+        "unconscious",
+      ),
+      escape: null,
+      turnStartDamage: null,
+      expiresAt: {
+        kind: "concentration" as const,
+        combatantId: effect.sourceCombatantId,
+      },
+    };
+    const activeEffects = [...activeEffectsWithoutPending, unconsciousEffect];
+    return breakCombatantConcentration(
+      new Map(nextCombatants).set(
+        actorId,
+        battleCreatureWithActiveEffectsAndConditions(
+          target,
+          activeEffects,
+          conditionsAfterApplyingSpellConditionEffects(
+            conditionsWithoutPending,
+            activeEffects,
+          ),
+        ),
+      ),
+      actorId,
+    );
+  }, combatants);
+}
+
+function battleCreatureWithActiveEffectsAndConditions(
+  combatant: BattleCreatureState,
+  activeEffects: readonly BattleActiveEffect[],
+  conditions: BattleCreatureState["conditions"],
+): BattleCreatureState {
+  return combatant.positiveHpUnconscious === null
+    ? { ...combatant, activeEffects, conditions }
+    : { ...combatant, activeEffects };
+}
+
 function removeSpellTurnStartDamageAndSaveEffect(
   state: BattleState,
   targetId: CombatantId,
@@ -623,7 +819,7 @@ export function tickDurationEffects(
     [...combatants].map(([id, combatant]) => {
       const expiring: BattleActiveEffect[] = [];
       const activeEffects = combatant.activeEffects.flatMap((effect) => {
-        if (!("expiresAt" in effect) || effect.expiresAt.kind !== "duration") {
+        if (!isDurationActiveEffect(effect)) {
           return [effect];
         }
         const remainingTicks = Number(effect.expiresAt.durationTicks) - 1;
@@ -655,6 +851,16 @@ export function tickDurationEffects(
           : { ...combatant, activeEffects };
       return [id, nextCombatant];
     }),
+  );
+}
+
+function isDurationActiveEffect(
+  effect: BattleActiveEffect,
+): effect is DurationActiveEffect {
+  return (
+    effect.kind !== "sleepPendingRepeatSave" &&
+    "expiresAt" in effect &&
+    effect.expiresAt.kind === "duration"
   );
 }
 
@@ -763,6 +969,19 @@ export function resolveEndTurnCommand(
   const initiative = nextInitiative(input.state.initiative);
   const nextActorId = currentActing(initiative);
   const nextActor = input.state.combatants.get(nextActorId);
+  const actorId = currentActorId(input.state);
+  const actor = input.state.combatants.get(actorId);
+  const sleepRepeatSaveRequests = sleepPendingRepeatSaveEffects(
+    actor,
+    actorId,
+    input.state.initiative.round,
+  ).map((effect) => ({
+    effect,
+    hole: sleepRepeatSavingThrowOutcomeHole(actorId, effect),
+  }));
+  const sleepRepeatSaveHoles = sleepRepeatSaveRequests.map(
+    (request) => request.hole,
+  );
   const needsDeathSavingThrow = startTurnDeathSavingThrowRequired(nextActor);
   const rechargeHole = statBlockRechargeRollHole(nextActor);
   const startTurnDamageEffects = spellTurnStartDamageEffects(nextActor);
@@ -787,6 +1006,7 @@ export function resolveEndTurnCommand(
     (request) => request.hole,
   );
   const initialHoles = [
+    ...sleepRepeatSaveHoles,
     ...(needsDeathSavingThrow ? [deathSavingThrowHole(nextActorId)] : []),
     ...(rechargeHole === null ? [] : [rechargeHole]),
     ...startTurnDamageHoles,
@@ -840,6 +1060,27 @@ export function resolveEndTurnCommand(
       "invalidFill",
       "End Turn received duplicate fills for a single requested hole.",
     );
+  }
+  const sleepRepeatSaves = sleepRepeatSaveRequests.flatMap((request) => {
+    const fill = sleepRepeatSavingThrowOutcomeFor(
+      savingThrowOutcomeFills,
+      request.hole,
+    );
+    return fill === undefined ? [] : [fill];
+  });
+  const missingSleepRepeatSaveHoles = sleepRepeatSaveRequests.flatMap(
+    (request) =>
+      sleepRepeatSavingThrowOutcomeFor(
+        savingThrowOutcomeFills,
+        request.hole,
+      ) === undefined
+        ? [request.hole]
+        : [],
+  );
+  if (missingSleepRepeatSaveHoles.length > 0) {
+    return needsHolesResult(input.state, input.subject, [
+      ...missingSleepRepeatSaveHoles,
+    ]);
   }
   const startTurnDamageRolls = startTurnDamageRequests.flatMap((request) => {
     const fill = spellTurnStartDamageRollFor(input.fills, request.hole);
@@ -907,28 +1148,47 @@ export function resolveEndTurnCommand(
       ...missingStartTurnSaveHoles,
     ]);
   }
-  const startTurnSaveHoleIds = new Set<BattleHoleId>(
-    startTurnSaveHoles.map((hole) => hole.holeId),
+  const savingThrowOutcomeHoleIds = new Set<BattleHoleId>(
+    [...sleepRepeatSaveHoles, ...startTurnSaveHoles].map((hole) => hole.holeId),
   );
   if (
     input.fills.some(
       (fill) =>
         fill.kind === "savingThrowOutcome" &&
-        !startTurnSaveHoleIds.has(fill.holeId),
+        !savingThrowOutcomeHoleIds.has(fill.holeId),
     )
   ) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "End Turn Saving Throw outcome fills must match a requested turn-start spell save hole.",
+      "End Turn Saving Throw outcome fills must match a requested end-turn or turn-start spell save hole.",
     );
   }
-  if (savingThrowOutcomeFills.length !== startTurnSaves.length) {
+  if (
+    savingThrowOutcomeFills.length !==
+    sleepRepeatSaves.length + startTurnSaves.length
+  ) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "End Turn received duplicate Saving Throw outcome fills for turn-start spell saves.",
+      "End Turn received duplicate Saving Throw outcome fills.",
     );
+  }
+  for (const request of sleepRepeatSaveRequests) {
+    const fill = sleepRepeatSavingThrowOutcomeFor(
+      savingThrowOutcomeFills,
+      request.hole,
+    );
+    if (fill === undefined) {
+      continue;
+    }
+    const validation = validateSleepRepeatSavingThrowOutcome(
+      fill.value,
+      actorId,
+    );
+    if (validation !== null) {
+      return invalidResult(input.state, "invalidFill", validation);
+    }
   }
   for (const request of startTurnSaveRequests) {
     const fill = spellTurnStartSavingThrowOutcomeFor(
@@ -1097,6 +1357,7 @@ export function resolveEndTurnCommand(
     rechargeRollFill?.kind === "statBlockRechargeRoll"
       ? rechargeRollFill.value
       : undefined,
+    sleepRepeatSaves,
     startTurnDamageRolls,
     startTurnSaves,
     concentrationSavingThrowFills,
