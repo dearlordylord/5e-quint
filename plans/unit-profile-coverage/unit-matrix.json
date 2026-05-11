@@ -7413,7 +7413,7 @@
         "status": "installed"
       },
       "claim": {
-        "reason": "Spell Definition is installed for Warlock Spell Access validation; promoted Reaction casting-window runtime evidence is not present yet.",
+        "reason": "Spell Definition is installed for Warlock Spell Access validation; promoted QNT-backed Reaction casting-window runtime parity is not present yet.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",

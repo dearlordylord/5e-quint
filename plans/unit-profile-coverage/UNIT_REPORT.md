@@ -899,7 +899,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `thunderwave` | needs-surface-widening | Save-gated damage plus push movement requires a combined spell effect profile not present in this matrix slice. |
 | `minor_illusion` | unsupported-profile | Sound/image illusion creation, physical-interaction reveal, faint rendering after Study, and recast expiry are illusion/exploration state outside promoted runtime owners. |
 | `charm_person` | profile-subset-supported | supported subset: Humanoid creature-type target filter; Wisdom save-gated Charmed condition; hostile-target Wisdom save Advantage; 1-hour spell-owned condition duration; spell ends if caster or one of the caster's allies deals damage to the target; slot-scaled target count; deferred: Friendly disposition, social interaction effects, and target knowledge when the spell ends are not represented in battle runtime state (SRDINV41) |
-| `hellish_rebuke` | unsupported-profile | Spell Definition is installed for Warlock Spell Access validation; promoted Reaction casting-window runtime evidence is not present yet. |
+| `hellish_rebuke` | unsupported-profile | Spell Definition is installed for Warlock Spell Access validation; promoted QNT-backed Reaction casting-window runtime parity is not present yet. |
 | `armor_chain_mail` | unsupported-profile | Equipment AC data is authored but not represented as an executable Unit profile row. |
 | `equipment_shield` | unsupported-profile | Shield equipment AC data is authored but not represented as an executable Unit profile row. |
 | `weapon_dagger` | unsupported-profile | Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix. |

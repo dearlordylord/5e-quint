@@ -154,6 +154,48 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 231,
       "id": "SRDINV41",
+      "status": "done",
+      "title": "Recursive SRD Inventory Planning Review"
+    },
+    {
+      "number": 235,
+      "id": "SRDINV42",
+      "status": "ready-for-research",
+      "title": "Widen Command Option Surface"
+    },
+    {
+      "number": 236,
+      "id": "SRDINV43",
+      "status": "ready-for-research",
+      "title": "Widen Dissonant Whispers Forced Reaction Movement Surface"
+    },
+    {
+      "number": 237,
+      "id": "SRDINV44",
+      "status": "ready-for-research",
+      "title": "Widen Thunderwave Push Surface"
+    },
+    {
+      "number": 238,
+      "id": "SRDINV45",
+      "status": "ready-for-research",
+      "title": "Widen Expeditious Retreat Dash Surface"
+    },
+    {
+      "number": 239,
+      "id": "SRDINV46",
+      "status": "ready-for-research",
+      "title": "Widen Jump Movement Replacement Surface"
+    },
+    {
+      "number": 240,
+      "id": "SRDINV47",
+      "status": "ready-for-research",
+      "title": "Widen Feather Fall Falling Reaction Surface"
+    },
+    {
+      "number": 241,
+      "id": "SRDINV48",
       "status": "ready-for-research",
       "title": "Recursive SRD Inventory Planning Review"
     }
@@ -202,7 +244,7 @@ Keep it synchronized with the DAG table and task details.
 | 223   | SRDINV33 - Recursive SRD Inventory Planning Review | done | SRDINV28A-SRDINV28E, SRDINV29A-SRDINV29E, SRDINV29F3, SRDINV30A-SRDINV32B | SRDINV34-SRDINV40 | [SRDINV33 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV33_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed: refreshed spell Unit metrics, closed missing Heroism/Ensnaring Strike evidence, and appended SRDINV34-SRDINV40 plus SRDINV41 review. |
 | 224   | SRDINV34 - Promote Starry Wisp Object Target Runtime | done | SRDINV33 | SRDINV41 | [SRDINV28E decision](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV28E_STARRY_WISP_OBJECT_TARGET_DECISION.md), [battle-runtime target facts](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer/spells-targeting.ts), [Starry Wisp](/workspace/typescript/dnd/packages/surface/content/starry_wisp.dhall), [Chill Touch](/workspace/typescript/dnd/packages/surface/content/chill_touch.dhall), [SRD Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [SRD Chill Touch](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Starry Wisp is promoted over the creature-or-object target subset with typed object target facts, object attack resolution, and object damage disposition; Dim Light and Invisible-benefit riders remain visible for SRDINV41. |
 | 225   | SRDINV35 - Author Missing Detect Spell Records | done | SRDINV33 | SRDINV41 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Detect Evil and Good](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Detect Poison and Disease](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Detect Evil and Good and Detect Poison and Disease have SRD-provenance Spell Definition records installed in the SRD Unit catalog; detection, occlusion, Hallow discovery, and poison/disease identification remain unsupported runtime behavior. |
-| 226   | SRDINV36 - Promote Hellish Rebuke Reaction Runtime | done | SRDINV33 | SRDINV41 | [Hellish Rebuke](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [battle reactions](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reaction-triggers.ts), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Hellish Rebuke is promoted as an after-damage Reaction spell with caller-supplied visible-within-60-feet facts, Dexterity save, Fire damage, half damage on success, slot scaling, and Reaction plus Spell Slot spend. |
+| 226   | SRDINV36 - Promote Hellish Rebuke Reaction Runtime | done | SRDINV33 | SRDINV41 | [Hellish Rebuke](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [battle reactions](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reaction-triggers.ts), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: focused runtime tests cover Hellish Rebuke after-damage Reaction behavior, but SRDINV41 keeps Unit profile support unpromoted until the authoritative QNT model owns the behavior. |
 | 227   | SRDINV37 - Promote Charm Person Runtime | done | SRDINV33 | SRDINV41 | [Charm Person](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Animal Friendship evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/unit-claims.jsonl), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Charm Person is promoted as Humanoid-target Wisdom-save Charmed with hostile-target save Advantage projection, one-hour spell-owned duration, caster-or-ally damage break, slot-scaled target count, QNT parity coverage, and deterministic admission evidence; Friendly disposition/social effects and target knowledge remain visible for SRDINV41. |
 | 228   | SRDINV38 - Research Sleep Save Loop Runtime | done | SRDINV33 | SRDINV38A-SRDINV38C, SRDINV41 | [Sleep research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV38_SLEEP_SAVE_LOOP_RESEARCH.md), [Sleep](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [condition helpers](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer/spell-condition-effects-helpers.ts), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Sleep must split into target admission and automatic-save boundary, pending repeat-save lifecycle, and wake-up/concentration cleanup tasks. |
 | 229   | SRDINV39 - Promote Eldritch Blast Beam Runtime | done | SRDINV33 | SRDINV41 | [Eldritch Blast](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [spell attack runtime](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Eldritch Blast is promoted as beam-indexed creature-or-object ranged spell attacks with cantrip beam scaling, independent targets, independent attack/damage/lifecycle fills, Force damage, and one Magic action spend. |
@@ -210,7 +252,14 @@ Keep it synchronized with the DAG table and task details.
 | 232   | SRDINV38A - Promote Sleep Target Admission Runtime | done | SRDINV38 | SRDINV38B, SRDINV41 | [Sleep research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV38_SLEEP_SAVE_LOOP_RESEARCH.md), [Sleep](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [save gate runtime](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer/spells-profiles-save-gates.ts), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Sleep target admission is promoted with caller-supplied point-origin Sphere targets, Wisdom save holes, Exhaustion-immunity auto-success, explicit rejected non-sleeper facts, and Magic action plus Spell Slot spend. |
 | 233   | SRDINV38B - Promote Sleep Repeat Save Lifecycle | done | SRDINV38A | SRDINV38C, SRDINV41 | [Sleep research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV38_SLEEP_SAVE_LOOP_RESEARCH.md), [turn-end reducer](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer/turn-end-movement.ts), [condition helpers](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer/spell-condition-effects-helpers.ts), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Sleep failed-save targets now carry a typed pending repeat-save lifecycle, ask for the second Wisdom save at that target's next end turn, and either end Sleep or escalate to spell-owned Unconscious. |
 | 234   | SRDINV38C - Promote Sleep Wake-Up Cleanup Runtime | done | SRDINV38B | SRDINV41 | [Sleep research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV38_SLEEP_SAVE_LOOP_RESEARCH.md), [condition helpers](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer/spell-condition-effects-helpers.ts), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Sleep cleanup is promoted for damage from any source, action-spent adjacent shake-awake with caller-supplied adjacency, caster Concentration cleanup, and Prone preservation after Sleep-owned Unconscious ends. |
-| 231   | SRDINV41 - Recursive SRD Inventory Planning Review | ready-for-research | SRDINV34-SRDINV40, SRDINV38A-SRDINV38C | none | [SRDINV33 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV33_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review SRDINV34-SRDINV40 plus SRDINV38A-SRDINV38C results, refresh spell Unit metrics, inspect rejected partial-support findings including Charm Person Friendly disposition/social effects, target knowledge, and Grease automatic Difficult Terrain geometry, and append the next concrete Surface-blocker batch. |
+| 231   | SRDINV41 - Recursive SRD Inventory Planning Review | done | SRDINV34-SRDINV40, SRDINV38A-SRDINV38C | SRDINV42-SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed: refreshed spell Unit metrics, kept Hellish Rebuke QNT/parity support unpromoted, rejected Charm Person social memory and Grease automatic geometry as battle-runtime state, and appended SRDINV42-SRDINV48 movement/action Surface batch. |
+| 235   | SRDINV42 - Widen Command Option Surface | ready-for-research | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface to represent Command's named options: Approach, Drop, Flee, Grovel, Halt, next-turn execution, turn-ending clauses, and slot-scaled additional targets. |
+| 236   | SRDINV43 - Widen Dissonant Whispers Forced Reaction Movement Surface | ready-for-research | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Dissonant Whispers](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface for save-gated Psychic damage plus failed-save forced Reaction movement away by safest route, including no-Reaction fallback and slot-scaled damage. |
+| 237   | SRDINV44 - Widen Thunderwave Push Surface | ready-for-research | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Thunderwave](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface for self-origin Cube save damage plus failed-save creature push, unsecured-object push, audible boom, and slot-scaled Thunder damage. |
+| 238   | SRDINV45 - Widen Expeditious Retreat Dash Surface | ready-for-research | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Expeditious Retreat](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface for immediate Dash on Bonus Action casting and ongoing Concentration-granted Bonus Action Dash without duplicating Movement state. |
+| 239   | SRDINV46 - Widen Jump Movement Replacement Surface | ready-for-research | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Jump](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface for once-per-turn jump movement up to 30 feet by spending 10 feet of movement, touched willing targets, timed duration, and slot-scaled additional targets. |
+| 240   | SRDINV47 - Widen Feather Fall Falling Reaction Surface | ready-for-research | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Feather Fall](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface for falling Reaction trigger, up-to-five falling creature targets, fall-rate cap, fall-damage prevention, and per-target landing cleanup. |
+| 241   | SRDINV48 - Recursive SRD Inventory Planning Review | ready-for-research | SRDINV42-SRDINV47 | none | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Review SRDINV42-SRDINV47 movement/action Surface widening results, refresh spell Unit metrics, and append the next concrete spell Surface or runtime batch. |
 
 ## Task Details
 ### Task 164 - QMBT69 - Recursive Unit Profile Planning Review
@@ -461,7 +510,9 @@ facts.
 Verification: RAW/source review for Hellish Rebuke and Reaction timing; focused
 reaction-window and reducer tests passed; `pnpm unit-profile-coverage:check`
 passed; `pnpm quality` passed. MBT was not run because focused reducer coverage
-exercised the after-damage reaction sequencing change.
+exercised the after-damage reaction sequencing change. SRDINV41 later kept the
+Unit profile unsupported because the authoritative QNT model does not yet own
+Hellish Rebuke save-gated after-damage Reaction damage.
 
 ### Task 227 - SRDINV37 - Promote Charm Person Runtime
 
@@ -723,14 +774,14 @@ Quint coverage directly cover the completed behavior.
 
 ### Task 231 - SRDINV41 - Recursive SRD Inventory Planning Review
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV34-SRDINV40, SRDINV38A-SRDINV38C
 
-Blocks: none
+Blocks: SRDINV42-SRDINV48
 
 Research / plan:
-[SRDINV33_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV33_RECURSIVE_PLANNING_REVIEW.md),
+[SRDINV41_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md),
 [SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
 [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
 
@@ -743,9 +794,209 @@ by execution invariant.
 Out of scope: implementation work not captured by the newly appended batch and
 treating catalog admission alone as behavior support.
 
-Verification: RAW/source review for any appended rule slices; active-plan
-consistency across Ralph index, DAG table, and task details; regenerated
-inventory with `pnpm unit-profile-coverage:check --write` when evidence or
-inventory artifacts change; confirm the appended result is Ralph-sized concrete
-work; `/simplify` convergence, minimum two rounds unless the final changeset is
+Verification: RAW checked in `.references/srd-5.2.1/Spells/Descriptions-A-D.md`
+for Command and Dissonant Whispers,
+`.references/srd-5.2.1/Spells/Descriptions-E-L.md` for Expeditious Retreat,
+Feather Fall, Grease, and Jump,
+`.references/srd-5.2.1/Spells/Descriptions-S-Z.md` for Thunderwave,
+`.references/srd-5.2.1/Playing-the-Game.md`, and
+`.references/srd-5.2.1/Rules-Glossary.md`; `UBIQUITOUS_LANGUAGE.md` checked
+for Movement, Reaction, Spell Definition, Spell Invocation, Spell Effect,
+Spell Slot, Difficult Terrain, Falling, Prone, Speed, and Area of Effect.
+`pnpm unit-profile-coverage:check --write` passed and regenerated the inventory.
+Active plan Ralph index, DAG table, and task details are synchronized. The
+appended SRDINV42-SRDINV48 batch is split by execution invariant and recorded in
+`SRDINV41_RECURSIVE_PLANNING_REVIEW.md`; `/simplify` converged in three rounds.
+
+Result: refreshed spell Unit metrics, kept Hellish Rebuke as
+owner-evidence-required until QNT-backed runtime parity exists, kept Charm
+Person social memory and Grease automatic geometry out of battle runtime state,
+and appended the movement/action Surface blocker batch.
+
+### Task 235 - SRDINV42 - Widen Command Option Surface
+
+Status: `ready-for-research`
+
+Depends on: SRDINV41
+
+Blocks: SRDINV48
+
+Research / plan:
+[SRDINV41_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md),
+[Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: widen Surface to represent Command's named options: Approach, Drop,
+Flee, Grovel, Halt, next-turn execution, turn-ending clauses, and slot-scaled
+additional targets.
+
+Out of scope: runtime execution of the widened Command options and generic
+forced movement/pathfinding beyond the authored option facts.
+
+Verification: RAW/source review for Command, Movement, Prone, and turn/action
+terms plus `UBIQUITOUS_LANGUAGE.md` check, confirming all modeled rules trace to
+specific SRD text; Surface parser/schema tests; generated content refresh if
+Dhall/JSON content changes; `pnpm unit-profile-coverage:check --write`;
+`/simplify` convergence, minimum two rounds unless the final changeset is
 trivial.
+
+### Task 236 - SRDINV43 - Widen Dissonant Whispers Forced Reaction Movement Surface
+
+Status: `ready-for-research`
+
+Depends on: SRDINV41
+
+Blocks: SRDINV48
+
+Research / plan:
+[SRDINV41_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md),
+[Dissonant Whispers](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: widen Surface for save-gated Psychic damage plus failed-save forced
+Reaction movement away by safest route, including no-Reaction fallback and
+slot-scaled damage.
+
+Out of scope: route/pathfinding derivation, Opportunity Attack derivation, and
+runtime execution of the widened spell.
+
+Verification: RAW/source review for Dissonant Whispers, Reaction, Movement,
+Opportunity Attack, Saving Throw, and damage terms plus
+`UBIQUITOUS_LANGUAGE.md` check, confirming all modeled rules trace to specific
+SRD text; Surface parser/schema tests; generated content refresh if Dhall/JSON
+content changes; `pnpm unit-profile-coverage:check --write`; `/simplify`
+convergence, minimum two rounds unless the final changeset is trivial.
+
+### Task 237 - SRDINV44 - Widen Thunderwave Push Surface
+
+Status: `ready-for-research`
+
+Depends on: SRDINV41
+
+Blocks: SRDINV48
+
+Research / plan:
+[SRDINV41_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md),
+[Thunderwave](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: widen Surface for self-origin Cube save damage plus failed-save creature
+push, unsecured-object push, audible boom, and slot-scaled Thunder damage.
+
+Out of scope: runtime push resolution, collision/pathfinding, object inventory
+simulation, and sound propagation beyond the authored audible-boom fact.
+
+Verification: RAW/source review for Thunderwave, Area of Effect, Object,
+Movement, Saving Throw, and damage terms plus `UBIQUITOUS_LANGUAGE.md` check,
+confirming all modeled rules trace to specific SRD text; Surface parser/schema
+tests; generated content refresh if Dhall/JSON content changes;
+`pnpm unit-profile-coverage:check --write`; `/simplify` convergence, minimum
+two rounds unless the final changeset is trivial.
+
+### Task 238 - SRDINV45 - Widen Expeditious Retreat Dash Surface
+
+Status: `ready-for-research`
+
+Depends on: SRDINV41
+
+Blocks: SRDINV48
+
+Research / plan:
+[SRDINV41_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md),
+[Expeditious Retreat](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: widen Surface for immediate Dash on Bonus Action casting and ongoing
+Concentration-granted Bonus Action Dash.
+
+Out of scope: runtime Dash execution and duplicating Movement budget state in
+the Spell Definition.
+
+Verification: RAW/source review for Expeditious Retreat, Dash, Bonus Action,
+Movement, Speed, and Concentration terms plus `UBIQUITOUS_LANGUAGE.md` check,
+confirming all modeled rules trace to specific SRD text; Surface parser/schema
+tests; generated content refresh if Dhall/JSON content changes;
+`pnpm unit-profile-coverage:check --write`; `/simplify` convergence, minimum
+two rounds unless the final changeset is trivial.
+
+### Task 239 - SRDINV46 - Widen Jump Movement Replacement Surface
+
+Status: `ready-for-research`
+
+Depends on: SRDINV41
+
+Blocks: SRDINV48
+
+Research / plan:
+[SRDINV41_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md),
+[Jump](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: widen Surface for once-per-turn jump movement up to 30 feet by spending
+10 feet of movement, touched willing targets, timed duration, and slot-scaled
+additional targets.
+
+Out of scope: runtime movement execution, jump arc geometry, and automatic
+Difficult Terrain or landing checks.
+
+Verification: RAW/source review for Jump, Jumping, Movement, Speed, Target, and
+Spell Slot terms plus `UBIQUITOUS_LANGUAGE.md` check, confirming all modeled
+rules trace to specific SRD text; Surface parser/schema tests; generated content
+refresh if Dhall/JSON content changes; `pnpm unit-profile-coverage:check --write`;
+`/simplify` convergence, minimum two rounds unless the final changeset is
+trivial.
+
+### Task 240 - SRDINV47 - Widen Feather Fall Falling Reaction Surface
+
+Status: `ready-for-research`
+
+Depends on: SRDINV41
+
+Blocks: SRDINV48
+
+Research / plan:
+[SRDINV41_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md),
+[Feather Fall](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: widen Surface for falling Reaction trigger, up-to-five falling creature
+targets, fall-rate cap, fall-damage prevention, and per-target landing cleanup.
+
+Out of scope: runtime falling simulation, fall-distance derivation, and table
+geometry for landing.
+
+Verification: RAW/source review for Feather Fall, Falling, Reaction, Target,
+Movement, and damage terms plus `UBIQUITOUS_LANGUAGE.md` check, confirming all
+modeled rules trace to specific SRD text; Surface parser/schema tests; generated
+content refresh if Dhall/JSON content changes; `pnpm unit-profile-coverage:check --write`;
+`/simplify` convergence, minimum two rounds unless the final changeset is
+trivial.
+
+### Task 241 - SRDINV48 - Recursive SRD Inventory Planning Review
+
+Status: `ready-for-research`
+
+Depends on: SRDINV42-SRDINV47
+
+Blocks: none
+
+Research / plan:
+[SRDINV41_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md),
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: review SRDINV42-SRDINV47 movement/action Surface widening results,
+refresh spell Unit metrics, and append the next concrete spell Surface or
+runtime batch.
+
+Out of scope: implementation work not captured by the newly appended batch and
+treating catalog admission alone as behavior support.
+
+Verification: RAW/source review for any appended rule slices plus
+`UBIQUITOUS_LANGUAGE.md` check, confirming all modeled rules trace to specific
+SRD text; active-plan consistency across Ralph index, DAG table, and task
+details; regenerated inventory with `pnpm unit-profile-coverage:check --write`
+when evidence or inventory artifacts change; confirm the appended result is
+Ralph-sized concrete work; `/simplify` convergence, minimum two rounds unless
+the final changeset is trivial.

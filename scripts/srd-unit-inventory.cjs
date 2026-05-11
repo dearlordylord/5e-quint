@@ -2071,6 +2071,16 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
   const srdinv38SleepRows = spellRowsByUnitIds(["sleep"]);
   const srdinv39EldritchBlastRows = spellRowsByUnitIds(["eldritch_blast"]);
   const srdinv40GreaseRows = spellRowsByUnitIds(["grease"]);
+  const srdinv42CommandRows = spellRowsByUnitIds(["command"]);
+  const srdinv43DissonantWhispersRows = spellRowsByUnitIds([
+    "dissonant_whispers",
+  ]);
+  const srdinv44ThunderwaveRows = spellRowsByUnitIds(["thunderwave"]);
+  const srdinv45ExpeditiousRetreatRows = spellRowsByUnitIds([
+    "expeditious_retreat",
+  ]);
+  const srdinv46JumpRows = spellRowsByUnitIds(["jump"]);
+  const srdinv47FeatherFallRows = spellRowsByUnitIds(["feather_fall"]);
 
   const batches = [
     makeBatch({
@@ -2794,7 +2804,7 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
       nextAction:
         "Model the taking-damage reaction window, visible-damager eligibility, Reaction and Spell Slot spend, Dexterity save, Fire damage, half damage on success, and slot scaling.",
       acceptance:
-        "Hellish Rebuke has promoted runtime evidence for its reaction trigger and save-damage resolution without widening ordinary Action-time spell casting.",
+        "Hellish Rebuke has focused runtime-test evidence for its reaction trigger and save-damage resolution; Unit profile support remains unpromoted until the authoritative QNT model owns the behavior.",
     }),
     makeBatch({
       id: "SRDINV37",
@@ -2855,6 +2865,90 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
         "Refresh spell Unit inventory metrics, inspect any rejected partial-support findings, and append the next concrete Surface-blocker batch by execution invariant.",
       acceptance:
         "The review records refreshed spell metrics and appends concrete follow-up work rather than a passive backlog list.",
+    }),
+    makeBatch({
+      id: "SRDINV42",
+      title: "Widen Command Option Surface",
+      suggestedStatus: "blocked-on-SRDINV41",
+      intent:
+        "Widen Surface for Command's named option grammar before runtime support.",
+      rows: srdinv42CommandRows,
+      nextAction:
+        "Represent Approach, Drop, Flee, Grovel, Halt, next-turn execution, turn-ending clauses, and slot-scaled additional targets without smuggling pathfinding into authored data.",
+      acceptance:
+        "Command's SRD options are expressible as typed Surface facts, and runtime execution remains a separate follow-up.",
+    }),
+    makeBatch({
+      id: "SRDINV43",
+      title: "Widen Dissonant Whispers Forced Reaction Movement Surface",
+      suggestedStatus: "blocked-on-SRDINV41",
+      intent:
+        "Widen Surface for Dissonant Whispers' save-gated damage plus forced Reaction movement.",
+      rows: srdinv43DissonantWhispersRows,
+      nextAction:
+        "Represent failed-save Psychic damage, target Reaction movement away by safest route, no-Reaction fallback, half-damage success, and slot-scaled damage while keeping route derivation caller/table-owned.",
+      acceptance:
+        "Dissonant Whispers is expressible without claiming runtime movement/pathfinding support.",
+    }),
+    makeBatch({
+      id: "SRDINV44",
+      title: "Widen Thunderwave Push Surface",
+      suggestedStatus: "blocked-on-SRDINV41",
+      intent:
+        "Widen Surface for Thunderwave's self-origin Cube damage plus push effects.",
+      rows: srdinv44ThunderwaveRows,
+      nextAction:
+        "Represent Constitution save damage, failed-save creature push, unsecured-object push, audible boom, and slot-scaled Thunder damage without resolving push geometry.",
+      acceptance:
+        "Thunderwave is expressible as save damage plus typed push/noise facts, with runtime push resolution left separate.",
+    }),
+    makeBatch({
+      id: "SRDINV45",
+      title: "Widen Expeditious Retreat Dash Surface",
+      suggestedStatus: "blocked-on-SRDINV41",
+      intent:
+        "Widen Surface for Expeditious Retreat's immediate and ongoing Dash grants.",
+      rows: srdinv45ExpeditiousRetreatRows,
+      nextAction:
+        "Represent the Bonus Action casting-time Dash and Concentration-granted later Bonus Action Dash without duplicating Movement budget state.",
+      acceptance:
+        "Expeditious Retreat's Dash grants are authored as typed Surface facts while Dash execution stays with Movement/action runtime owners.",
+    }),
+    makeBatch({
+      id: "SRDINV46",
+      title: "Widen Jump Movement Replacement Surface",
+      suggestedStatus: "blocked-on-SRDINV41",
+      intent:
+        "Widen Surface for Jump's once-per-turn movement-spend jump replacement.",
+      rows: srdinv46JumpRows,
+      nextAction:
+        "Represent touched willing targets, one jump up to 30 feet by spending 10 feet of movement once on each target turn, timed duration, and slot-scaled additional targets.",
+      acceptance:
+        "Jump's movement replacement is expressible without deriving jump arcs, landing geometry, or movement execution.",
+    }),
+    makeBatch({
+      id: "SRDINV47",
+      title: "Widen Feather Fall Falling Reaction Surface",
+      suggestedStatus: "blocked-on-SRDINV41",
+      intent:
+        "Widen Surface for Feather Fall's falling-trigger Reaction and per-target fall mitigation.",
+      rows: srdinv47FeatherFallRows,
+      nextAction:
+        "Represent the falling trigger, up-to-five falling creature targets, fall-rate cap, fall-damage prevention, and per-target landing cleanup.",
+      acceptance:
+        "Feather Fall is expressible as a typed falling Reaction spell without adding runtime fall-distance or landing geometry simulation.",
+    }),
+    makeBatch({
+      id: "SRDINV48",
+      title: "Recursive SRD Inventory Planning Review",
+      suggestedStatus: "blocked-on-SRDINV42-SRDINV47",
+      intent:
+        "Review the movement/action Surface widening batch before selecting the next spell Surface or runtime frontier.",
+      rows: spellPressure,
+      nextAction:
+        "Refresh spell Unit inventory metrics after SRDINV42-SRDINV47, inspect remaining Surface blockers and deferred partial-support findings, and append the next concrete batch by execution invariant.",
+      acceptance:
+        "The next review records refreshed metrics and appends Ralph-sized follow-up work rather than an omnibus spell backlog.",
     }),
   ];
   return withActivePlanStatuses(batches, activePlanTaskStatuses);
