@@ -148,7 +148,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 234,
       "id": "SRDINV38C",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Sleep Wake-Up Cleanup Runtime"
     },
     {
@@ -209,7 +209,7 @@ Keep it synchronized with the DAG table and task details.
 | 230   | SRDINV40 - Research Grease Ground Hazard Runtime Retry | ready-for-research | SRDINV33 | SRDINV41 | [Grease](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Retry Grease only as a standalone recurring ground-hazard lifecycle with table-supplied area membership for cast-time, enter-area, and end-turn saves. |
 | 232   | SRDINV38A - Promote Sleep Target Admission Runtime | done | SRDINV38 | SRDINV38B, SRDINV41 | [Sleep research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV38_SLEEP_SAVE_LOOP_RESEARCH.md), [Sleep](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [save gate runtime](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer/spells-profiles-save-gates.ts), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Sleep target admission is promoted with caller-supplied point-origin Sphere targets, Wisdom save holes, Exhaustion-immunity auto-success, explicit rejected non-sleeper facts, and Magic action plus Spell Slot spend. |
 | 233   | SRDINV38B - Promote Sleep Repeat Save Lifecycle | done | SRDINV38A | SRDINV38C, SRDINV41 | [Sleep research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV38_SLEEP_SAVE_LOOP_RESEARCH.md), [turn-end reducer](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer/turn-end-movement.ts), [condition helpers](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer/spell-condition-effects-helpers.ts), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Sleep failed-save targets now carry a typed pending repeat-save lifecycle, ask for the second Wisdom save at that target's next end turn, and either end Sleep or escalate to spell-owned Unconscious. |
-| 234   | SRDINV38C - Promote Sleep Wake-Up Cleanup Runtime | ready-for-implementation-after-light-research | SRDINV38B | SRDINV41 | [Sleep research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV38_SLEEP_SAVE_LOOP_RESEARCH.md), [condition helpers](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer/spell-condition-effects-helpers.ts), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Add damage-from-any-source cleanup, action-spent adjacent shake-awake with caller-supplied adjacency, Concentration cleanup, and Unconscious removal leaving Prone. |
+| 234   | SRDINV38C - Promote Sleep Wake-Up Cleanup Runtime | done | SRDINV38B | SRDINV41 | [Sleep research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV38_SLEEP_SAVE_LOOP_RESEARCH.md), [condition helpers](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer/spell-condition-effects-helpers.ts), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Sleep cleanup is promoted for damage from any source, action-spent adjacent shake-awake with caller-supplied adjacency, caster Concentration cleanup, and Prone preservation after Sleep-owned Unconscious ends. |
 | 231   | SRDINV41 - Recursive SRD Inventory Planning Review | blocked | SRDINV34-SRDINV40, SRDINV38A-SRDINV38C | none | [SRDINV33 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV33_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review SRDINV34-SRDINV40 plus SRDINV38A-SRDINV38C results, refresh spell Unit metrics, inspect rejected partial-support findings including Charm Person Friendly disposition/social effects and target knowledge, and append the next concrete Surface-blocker batch. |
 
 ## Task Details
@@ -672,7 +672,7 @@ Quint self-tests and `pnpm quality` passed.
 
 ### Task 234 - SRDINV38C - Promote Sleep Wake-Up Cleanup Runtime
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: SRDINV38B
 
@@ -696,13 +696,16 @@ semantics outside Sleep's shake-awake text, grid/pathfinding/adjacency
 derivation, Knock Out first aid, death-save unconscious cleanup, and broad
 condition cleanup rewrites.
 
+Completed: Sleep cleanup is promoted with damage-from-any-source target cleanup,
+caller-supplied adjacent shake-awake action spend and fact validation, caster
+Concentration cleanup for pending and escalated Sleep effects, and shared
+condition algebra preserving Prone when Sleep-owned Unconscious ends.
+
 Verification: re-read local RAW for Sleep, Unconscious, Concentration, damage,
-and actions; check `UBIQUITOUS_LANGUAGE.md`; focused runtime tests for
-damage-from-any-source cleanup, adjacent shake-awake action spend and fact
-validation, caster Concentration cleanup, and Prone remaining after
-Sleep-owned Unconscious ends; `pnpm unit-profile-coverage:check` if support
-evidence changes; `pnpm quality`; Tier 1 battle-runtime MBT only if integrated
-coverage is needed after focused tests pass.
+and actions; checked `UBIQUITOUS_LANGUAGE.md`; focused Sleep runtime tests,
+package-local Quint `test_sleep`, package typecheck, `git diff --check`, and
+`pnpm quality` passed. MBT was not run because focused runtime and package
+Quint coverage directly cover the completed behavior.
 
 ### Task 231 - SRDINV41 - Recursive SRD Inventory Planning Review
 

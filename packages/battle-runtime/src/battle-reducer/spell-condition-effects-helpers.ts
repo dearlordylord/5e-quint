@@ -56,6 +56,8 @@ function activeEffectSourcesCondition(
     (effect.kind === "spellCondition" &&
       (effect.condition === condition ||
         (condition === "prone" && effect.condition === "unconscious"))) ||
+    (effect.kind === "sleepUnconscious" &&
+      (condition === "unconscious" || condition === "prone")) ||
     activeEffectDirectlyAppliesCondition(effect, condition)
   );
 }
@@ -66,7 +68,9 @@ function activeEffectDirectlyAppliesCondition(
 ): boolean {
   return (
     (effect.kind === "spellCondition" && effect.condition === condition) ||
-    (effect.kind === "sleepPendingRepeatSave" && condition === "incapacitated")
+    (effect.kind === "sleepPendingRepeatSave" &&
+      condition === "incapacitated") ||
+    (effect.kind === "sleepUnconscious" && condition === "unconscious")
   );
 }
 
@@ -167,6 +171,63 @@ export function removeSpellConditionEffect(
   };
 }
 
+export function combatantHasSleepEffect(
+  combatant: BattleCreatureState | undefined,
+): combatant is BattleCreatureState {
+  return combatant?.activeEffects.some(isSleepEffect) === true;
+}
+
+export function sleepShakeAwakeTargetChoices(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly CombatantId[] {
+  return [...state.combatants]
+    .filter(
+      ([id, combatant]) => id !== actorId && combatantHasSleepEffect(combatant),
+    )
+    .map(([id]) => id);
+}
+
+export function removeSleepEffectsFromTarget(
+  state: BattleState,
+  targetId: CombatantId,
+): BattleState {
+  const target = state.combatants.get(targetId);
+  if (target === undefined) {
+    return state;
+  }
+  const expiring = target.activeEffects.filter(isSleepEffect);
+  if (expiring.length === 0) {
+    return state;
+  }
+  const activeEffects = target.activeEffects.filter(
+    (effect) => !expiring.includes(effect),
+  );
+  const nextCombatant: BattleCreatureState =
+    target.positiveHpUnconscious === null
+      ? {
+          ...target,
+          activeEffects,
+          conditions: conditionsAfterExpiringSpellConditionEffects(
+            target.conditions,
+            activeEffects,
+            expiring,
+          ),
+        }
+      : { ...target, activeEffects };
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(targetId, nextCombatant),
+  };
+}
+
+function isSleepEffect(effect: BattleActiveEffect): boolean {
+  return (
+    effect.kind === "sleepPendingRepeatSave" ||
+    effect.kind === "sleepUnconscious"
+  );
+}
+
 export function conditionsAfterApplyingSpellConditionEffects(
   conditions: ConditionState,
   activeEffects: readonly BattleActiveEffect[],
@@ -193,9 +254,11 @@ export function conditionsAfterApplyingSpellConditionEffects(
         | Extract<
             BattleActiveEffect,
             { readonly kind: "sleepPendingRepeatSave" }
-          > =>
+          >
+        | Extract<BattleActiveEffect, { readonly kind: "sleepUnconscious" }> =>
         effect.kind === "spellCondition" ||
-        effect.kind === "sleepPendingRepeatSave",
+        effect.kind === "sleepPendingRepeatSave" ||
+        effect.kind === "sleepUnconscious",
     )
     .filter(
       (effect) =>
@@ -226,9 +289,11 @@ export function conditionsAfterExpiringSpellConditionEffects(
         | Extract<
             BattleActiveEffect,
             { readonly kind: "sleepPendingRepeatSave" }
-          > =>
+          >
+        | Extract<BattleActiveEffect, { readonly kind: "sleepUnconscious" }> =>
         effect.kind === "spellCondition" ||
-        effect.kind === "sleepPendingRepeatSave",
+        effect.kind === "sleepPendingRepeatSave" ||
+        effect.kind === "sleepUnconscious",
     )
     .reduce((nextConditions, effect) => {
       const condition = activeEffectCondition(effect);
@@ -244,7 +309,11 @@ export function conditionsAfterExpiringSpellConditionEffects(
 function activeEffectCondition(
   effect:
     | Extract<BattleActiveEffect, { readonly kind: "spellCondition" }>
-    | Extract<BattleActiveEffect, { readonly kind: "sleepPendingRepeatSave" }>,
+    | Extract<BattleActiveEffect, { readonly kind: "sleepPendingRepeatSave" }>
+    | Extract<BattleActiveEffect, { readonly kind: "sleepUnconscious" }>,
 ): Condition {
-  return effect.kind === "spellCondition" ? effect.condition : "incapacitated";
+  if (effect.kind === "spellCondition") return effect.condition;
+  return effect.kind === "sleepPendingRepeatSave"
+    ? "incapacitated"
+    : "unconscious";
 }

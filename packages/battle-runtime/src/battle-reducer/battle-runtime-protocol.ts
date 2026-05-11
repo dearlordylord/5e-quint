@@ -5,24 +5,37 @@
 
 import type { RuntimeActionResource } from "@dnd/shared-algebras/action-economy-algebra";
 import { resetTurnActionEconomy } from "@dnd/shared-algebras/action-economy-algebra";
-import { holeId,holeInstanceKey } from "@dnd/shared-algebras/runtime-hole-algebra";
+import {
+  holeId,
+  holeInstanceKey,
+} from "@dnd/shared-algebras/runtime-hole-algebra";
 import type { StandardActionKind } from "@dnd/shared/game-facts";
-import { difficultyClass,Hp,movementFeet,Round,type Round as RoundType } from "@dnd/shared/types";
-import type { CreatureNamedActionOption,CreatureNamedMultiattack } from "@dnd/surface/surface/types";
-import type { StatBlockAttackActionOption,StatBlockPartKey } from "../battle-action-options.ts";
+import {
+  difficultyClass,
+  Hp,
+  movementFeet,
+  Round,
+  type Round as RoundType,
+} from "@dnd/shared/types";
 import type {
-BattleAttackDamageDisposition,
-BattleAttackRollResult,
-BattleFill,
-BattleRolledDiceFill,
-BattleTargetSpatialFact,
+  CreatureNamedActionOption,
+  CreatureNamedMultiattack,
+} from "@dnd/surface/surface/types";
+import type {
+  StatBlockAttackActionOption,
+  StatBlockPartKey,
+} from "../battle-action-options.ts";
+import type {
+  BattleAttackDamageDisposition,
+  BattleAttackRollResult,
+  BattleFill,
+  BattleRolledDiceFill,
+  BattleTargetSpatialFact,
 } from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
 
-export 
-
-const INITIAL_ROUND: RoundType = Round(1);export 
-const INITIAL_TURN_RESOURCES = resetTurnActionEconomy({
+export const INITIAL_ROUND: RoundType = Round(1);
+export const INITIAL_TURN_RESOURCES = resetTurnActionEconomy({
   actionResources: [],
   currentHasBonusAction: false,
   spellSlotExpendedThisTurn: false,
@@ -37,18 +50,20 @@ export const ATTACK_ROLL_HOLE_ID = holeId("battle:attack:roll");
 export const ATTACK_DAMAGE_DISPOSITION_HOLE_ID = holeId(
   "battle:attack:damage-disposition",
 );
-export const ATTACK_TARGET_HOLE_INSTANCE = holeInstanceKey("battle:attack:target");
+export const ATTACK_TARGET_HOLE_INSTANCE = holeInstanceKey(
+  "battle:attack:target",
+);
 export const ATTACK_ROLL_HOLE_INSTANCE = holeInstanceKey("battle:attack:roll");
 export const ATTACK_DAMAGE_DISPOSITION_HOLE_INSTANCE = holeInstanceKey(
   "battle:attack:damage-disposition",
-);export 
-const SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS = [
+);
+export const SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS = [
   "disengage",
   "hide",
-] as const satisfies ReadonlyArray<StandardActionKind>;export 
-type SupportedStatBlockBonusActionStandardAction =
-  (typeof SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS)[number];export 
-const ATTACK_ONLY_ACTION_RESOURCE_EXCLUDED_ACTIONS = [
+] as const satisfies ReadonlyArray<StandardActionKind>;
+export type SupportedStatBlockBonusActionStandardAction =
+  (typeof SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS)[number];
+export const ATTACK_ONLY_ACTION_RESOURCE_EXCLUDED_ACTIONS = [
   "dash",
   "disengage",
   "dodge",
@@ -64,20 +79,28 @@ const ATTACK_ONLY_ACTION_RESOURCE_EXCLUDED_ACTIONS = [
 export type StatBlockMultiattackActionResource = Extract<
   RuntimeActionResource,
   { readonly source: "statBlockMultiattack" }
->;export 
-type ClassFeatureExtraAttackActionResource = Extract<
+>;
+export type ClassFeatureExtraAttackActionResource = Extract<
   RuntimeActionResource,
   { readonly source: "classFeatureExtraAttack" }
->;export 
-const HELP_ATTACK_ALLY_HOLE_ID = holeId("battle:help-attack:ally");export 
-const HELP_ATTACK_TARGET_HOLE_ID = holeId("battle:help-attack:target");export 
-const HELP_ATTACK_ALLY_HOLE_INSTANCE = holeInstanceKey(
+>;
+export const HELP_ATTACK_ALLY_HOLE_ID = holeId("battle:help-attack:ally");
+export const HELP_ATTACK_TARGET_HOLE_ID = holeId("battle:help-attack:target");
+export const HELP_ATTACK_ALLY_HOLE_INSTANCE = holeInstanceKey(
   "battle:help-attack:ally",
-);export 
-const HELP_ATTACK_TARGET_HOLE_INSTANCE = holeInstanceKey(
+);
+export const HELP_ATTACK_TARGET_HOLE_INSTANCE = holeInstanceKey(
   "battle:help-attack:target",
 );
-export const DEATH_SAVING_THROW_HOLE_ID = holeId("battle:end-turn:death-saving-throw");
+export const SLEEP_SHAKE_AWAKE_TARGET_HOLE_ID = holeId(
+  "battle:sleep-shake-awake:target",
+);
+export const SLEEP_SHAKE_AWAKE_TARGET_HOLE_INSTANCE = holeInstanceKey(
+  "battle:sleep-shake-awake:target",
+);
+export const DEATH_SAVING_THROW_HOLE_ID = holeId(
+  "battle:end-turn:death-saving-throw",
+);
 export const DEATH_SAVING_THROW_HOLE_INSTANCE = holeInstanceKey(
   "battle:end-turn:death-saving-throw",
 );
@@ -88,13 +111,13 @@ export const STAT_BLOCK_RECHARGE_ROLL_HOLE_INSTANCE = holeInstanceKey(
   "battle:end-turn:stat-block-recharge-roll",
 );
 export const CONCENTRATION_SAVING_THROW_HOLE_INSTANCE_PREFIX =
-  "battle:concentration:saving-throw";export 
-const REACTION_DECISION_HOLE_ID = holeId("battle:reaction:decision");export 
-const REACTION_DECISION_HOLE_INSTANCE = holeInstanceKey(
+  "battle:concentration:saving-throw";
+export const REACTION_DECISION_HOLE_ID = holeId("battle:reaction:decision");
+export const REACTION_DECISION_HOLE_INSTANCE = holeInstanceKey(
   "battle:reaction:decision",
-);export 
-const MOVEMENT_HOLE_ID = holeId("battle:movement");export 
-const MOVEMENT_HOLE_INSTANCE = holeInstanceKey("battle:movement");
+);
+export const MOVEMENT_HOLE_ID = holeId("battle:movement");
+export const MOVEMENT_HOLE_INSTANCE = holeInstanceKey("battle:movement");
 export const HIDE_ABILITY_CHECK_HOLE_ID = holeId("battle:hide:stealth-check");
 export const HIDE_ABILITY_CHECK_HOLE_INSTANCE = holeInstanceKey(
   "battle:hide:stealth-check",
@@ -126,31 +149,33 @@ export const ESCAPE_GRAPPLE_OUTCOME_HOLE_INSTANCE = holeInstanceKey(
 export const ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_ID = holeId(
   "battle:escape-spell-restraint:athletics-check",
 );
-export const ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_INSTANCE = holeInstanceKey(
-  "battle:escape-spell-restraint:athletics-check",
-);export 
-const REACTION_MODIFIER_ROLL_HOLE_ID = holeId("battle:reaction:modifier-roll");export 
-const REACTION_MODIFIER_ROLL_HOLE_INSTANCE = holeInstanceKey(
+export const ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_INSTANCE =
+  holeInstanceKey("battle:escape-spell-restraint:athletics-check");
+export const REACTION_MODIFIER_ROLL_HOLE_ID = holeId(
   "battle:reaction:modifier-roll",
 );
-export const HIDE_DC = difficultyClass(15);export type SupportedStatBlockBonusActionOption = {
+export const REACTION_MODIFIER_ROLL_HOLE_INSTANCE = holeInstanceKey(
+  "battle:reaction:modifier-roll",
+);
+export const HIDE_DC = difficultyClass(15);
+export type SupportedStatBlockBonusActionOption = {
   readonly option: Omit<CreatureNamedActionOption, "options"> & {
     readonly options: readonly SupportedStatBlockBonusActionStandardAction[];
   };
   readonly part: StatBlockPartKey;
-};export 
-
-type SupportedStatBlockMultiattack = {
+};
+export type SupportedStatBlockMultiattack = {
   readonly multiattack: CreatureNamedMultiattack;
   readonly dispatches: readonly StatBlockAttackActionOption[];
-};export 
-type SupportedLiteralMultiattackDispatch =
+};
+export type SupportedLiteralMultiattackDispatch =
   CreatureNamedMultiattack["dispatches"][number] & {
     readonly count: Extract<
       CreatureNamedMultiattack["dispatches"][number]["count"],
       { readonly kind: "literal" }
     >;
-  };export type AttackFillSet =
+  };
+export type AttackFillSet =
   | {
       readonly tag: "ok";
       readonly targetId: CombatantId | undefined;
@@ -173,8 +198,8 @@ type SupportedLiteralMultiattackDispatch =
         | BattleRolledDiceFill
         | undefined;
     }
-  | { readonly tag: "invalid"; readonly message: string };export 
-type GrappleFillSet =
+  | { readonly tag: "invalid"; readonly message: string };
+export type GrappleFillSet =
   | {
       readonly tag: "ok";
       readonly targetId: CombatantId | undefined;
@@ -183,7 +208,8 @@ type GrappleFillSet =
         | Extract<BattleFill, { readonly kind: "grappleOutcome" }>
         | undefined;
     }
-  | { readonly tag: "invalid"; readonly message: string };export type UnitFeatureRolledDiceFill =
+  | { readonly tag: "invalid"; readonly message: string };
+export type UnitFeatureRolledDiceFill =
   | {
       readonly tag: "ok";
       readonly value:
@@ -191,7 +217,6 @@ type GrappleFillSet =
         | undefined;
     }
   | { readonly tag: "invalid"; readonly message: string };
-
 
 export type HpDamageProjection = {
   readonly effectiveDamage: number;
@@ -202,4 +227,3 @@ export type HpDamageProjection = {
   readonly nextHp: Hp;
   readonly massiveDamageKills: boolean;
 };
-

@@ -226,7 +226,9 @@ The support-profile parser surface should cover these profile families:
   record a concentration-owned Sleep pending repeat-save lifecycle:
   Incapacitated until that target's next end turn, then success ends that
   target's Sleep effect and failure escalates it to concentration-owned
-  Unconscious.
+  Unconscious. Damage from any source or an adjacent shake-awake action ends
+  Sleep on that target; breaking the caster's Concentration removes all
+  remaining Sleep effects.
 - `SpellProfile.creatureTypeProtectionAndCharm`: an action-cast, slot-spent
   profile for creature-type-scoped condition/protection clauses. Animal
   Friendship admits Beast targets and applies spell-owned Charmed on failed
@@ -650,6 +652,9 @@ Feature and spell resources:
   concentration-owned Sleep Incapacitated until the target's next end turn,
   where the runtime asks for the second Wisdom save and either removes that
   target's Sleep effect or replaces it with concentration-owned Unconscious.
+  Damage from any source ends Sleep on the damaged target, and a separate
+  action can shake one adjacent target awake using a caller-supplied within-5-
+  feet fact.
 - Prepared `hellish_rebuke` is admitted as an after-damage triggered-Reaction
   spell: a damaging visible creature within 60 feet makes a Dexterity save,
   takes Fire damage on a failed save and half as much on success, and the spell

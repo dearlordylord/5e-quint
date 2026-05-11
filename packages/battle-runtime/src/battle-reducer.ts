@@ -233,6 +233,7 @@ export {
   resolveReady,
   resolveReleaseGrappleCommand,
   resolveSearch,
+  resolveShakeAwakeFromSleep,
   resolveStatBlockBonusActionDisengage,
   resolveStatBlockBonusActionHide,
   resolveStatBlockBonusActionOption,
@@ -484,6 +485,14 @@ export type BattleActiveEffect =
         BattleActiveEffectExpiration,
         { readonly kind: "endOfTurn" }
       >;
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "concentration" }
+      >;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "sleepUnconscious";
+      readonly conditionHadNonSpellSource: boolean;
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
         { readonly kind: "concentration" }
@@ -1064,6 +1073,11 @@ export type BattleTargetSpatialFact =
     }
   | {
       readonly kind: "spellRestraintEscapeActorWithinTargetReach";
+      readonly actorId: CombatantId;
+      readonly targetId: CombatantId;
+    }
+  | {
+      readonly kind: "sleepShakeAwakeActorWithin5Feet";
       readonly actorId: CombatantId;
       readonly targetId: CombatantId;
     }
@@ -2910,6 +2924,8 @@ export {
   SEARCH_ABILITY_CHECK_HOLE_INSTANCE,
   SEARCH_TARGET_HOLE_ID,
   SEARCH_TARGET_HOLE_INSTANCE,
+  SLEEP_SHAKE_AWAKE_TARGET_HOLE_ID,
+  SLEEP_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
   STAT_BLOCK_RECHARGE_ROLL_HOLE_ID,
   STAT_BLOCK_RECHARGE_ROLL_HOLE_INSTANCE,
   SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS,

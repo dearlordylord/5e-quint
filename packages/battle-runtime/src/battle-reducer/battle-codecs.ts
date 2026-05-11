@@ -1313,6 +1313,11 @@ type BattleFillEncoded =
             readonly targetId: string;
           }
         | {
+            readonly kind: "sleepShakeAwakeActorWithin5Feet";
+            readonly actorId: string;
+            readonly targetId: string;
+          }
+        | {
             readonly kind: "sneakAttackAllyWithin5FeetOfTarget";
             readonly attackerId: string;
             readonly targetId: string;
@@ -1661,6 +1666,11 @@ export const BattleFillSchema: Schema.Schema<
               kind: Schema.Literal(
                 "spellRestraintEscapeActorWithinTargetReach",
               ),
+              actorId: CombatantId,
+              targetId: CombatantId,
+            }),
+            Schema.Struct({
+              kind: Schema.Literal("sleepShakeAwakeActorWithin5Feet"),
               actorId: CombatantId,
               targetId: CombatantId,
             }),

@@ -35,6 +35,7 @@ import {
   markMarkedDamageRiderTransferAvailable,
   removeSpellConditionEffectsFromTargetDamagedByCasterOrAlly,
 } from "./damage-apply.ts";
+import { removeSleepEffectsFromTarget } from "./spell-condition-effects-helpers.ts";
 import {
   attackRollMissToHitReplacementHolePayload,
   signedModifier,
@@ -860,13 +861,17 @@ export function applySpellDamage(
           priorConcentration: target.concentration,
         })
       : afterMarkDrop;
-  return effectiveDamage > 0 && damageSourceId !== undefined
-    ? removeSpellConditionEffectsFromTargetDamagedByCasterOrAlly(
-        concentrated,
-        damageSourceId,
-        targetId,
-      )
-    : concentrated;
+  const afterDamageEscapes =
+    effectiveDamage > 0 && damageSourceId !== undefined
+      ? removeSpellConditionEffectsFromTargetDamagedByCasterOrAlly(
+          concentrated,
+          damageSourceId,
+          targetId,
+        )
+      : concentrated;
+  return effectiveDamage > 0
+    ? removeSleepEffectsFromTarget(afterDamageEscapes, targetId)
+    : afterDamageEscapes;
 }
 
 type PreparedSlotSpellDamageContext = {
@@ -915,13 +920,17 @@ export function applyPreparedSlotSpellDamage(
           priorConcentration: target.concentration,
         })
       : afterMarkDrop;
-  return damageAmount > 0 && damageSourceId !== undefined
-    ? removeSpellConditionEffectsFromTargetDamagedByCasterOrAlly(
-        concentrated,
-        damageSourceId,
-        targetId,
-      )
-    : concentrated;
+  const afterDamageEscapes =
+    damageAmount > 0 && damageSourceId !== undefined
+      ? removeSpellConditionEffectsFromTargetDamagedByCasterOrAlly(
+          concentrated,
+          damageSourceId,
+          targetId,
+        )
+      : concentrated;
+  return damageAmount > 0
+    ? removeSleepEffectsFromTarget(afterDamageEscapes, targetId)
+    : afterDamageEscapes;
 }
 
 export function spellDamageAmountForTarget(

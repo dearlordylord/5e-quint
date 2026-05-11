@@ -210,6 +210,7 @@ import {
   resolveReleaseReadiedMovementCommand,
   resolveReleaseReadiedSpellCommand,
   resolveSearch,
+  resolveShakeAwakeFromSleep,
   resolveStandFromProneCommand,
   resolveStatBlockBonusActionOption,
   resolveUnitFeature,
@@ -365,7 +366,8 @@ export function resolveBattleSubjectInternal(
       input.subject.action === "search" ||
       input.subject.action === "grapple" ||
       input.subject.action === "escapeGrapple" ||
-      input.subject.action === "escapeSpellRestraint") &&
+      input.subject.action === "escapeSpellRestraint" ||
+      input.subject.action === "shakeAwakeFromSleep") &&
     !combatantCanTakeActions(input.state.combatants.get(actorId))
   ) {
     return invalidResult(
@@ -503,6 +505,9 @@ export function resolveBattleSubjectInternal(
     }
     if (subject.tag === "action" && subject.action === "escapeSpellRestraint") {
       return resolveEscapeSpellRestraint({ ...input, subject });
+    }
+    if (subject.tag === "action" && subject.action === "shakeAwakeFromSleep") {
+      return resolveShakeAwakeFromSleep({ ...input, subject });
     }
     if (subject.tag === "bonusAction" && subject.action === "offHandAttack") {
       return resolveOffHandAttack({
@@ -664,6 +669,9 @@ export function standardActionKindForSubject(
   subject: BattleSubject,
 ): StandardActionKind | null {
   if (subject.tag !== "action" || isLegendaryAttackSubject(subject)) {
+    return null;
+  }
+  if (subject.action === "shakeAwakeFromSleep") {
     return null;
   }
   return Match.value(subject.action).pipe(

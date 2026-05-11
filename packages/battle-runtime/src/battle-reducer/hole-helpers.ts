@@ -39,6 +39,8 @@ import {
   SEARCH_ABILITY_CHECK_HOLE_INSTANCE,
   SEARCH_TARGET_HOLE_ID,
   SEARCH_TARGET_HOLE_INSTANCE,
+  SLEEP_SHAKE_AWAKE_TARGET_HOLE_ID,
+  SLEEP_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
   snapshotBattle,
   spellSaveDcForCaster,
   type AvailableBattleAct,
@@ -57,6 +59,7 @@ import {
   representedMovementSpeedKinds,
 } from "./movement-speed.ts";
 import { combatantCanTakeActions } from "./creature-state.ts";
+import { sleepShakeAwakeTargetChoices } from "./spell-condition-effects-helpers.ts";
 
 export function bonusActionDashSubjectForSpeedKind(
   actorId: CombatantId,
@@ -171,6 +174,20 @@ export function grappleTargetHole(
     label: "Grapple target",
     requiresTableSpatialFact: true,
     choices: grappleTargetChoices(state, actorId),
+  };
+}
+
+export function sleepShakeAwakeTargetHole(
+  state: BattleState,
+  actorId: CombatantId,
+): BattleTargetChoiceHole {
+  return {
+    kind: "targetChoice",
+    holeId: SLEEP_SHAKE_AWAKE_TARGET_HOLE_ID,
+    holeInstanceKey: SLEEP_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
+    label: "Sleep target to shake awake",
+    requiresTableSpatialFact: true,
+    choices: sleepShakeAwakeTargetChoices(state, actorId),
   };
 }
 

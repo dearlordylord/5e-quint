@@ -1719,7 +1719,14 @@ module battleRuntime {
         | _ => true
       })
 
-  pure def combatantWithoutSpellEffectConcentrationEffects(target: Combatant): Combatant = {
+  pure def activeEffectsWithoutSleepEffects(effects: Set[ActiveEffect]): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | SleepPendingRepeatSave(_) => false
+      | SleepUnconscious(_) => false
+      | _ => true
+    })
+
+  pure def combatantWithSleepEffectsRemoved(target: Combatant, activeEffects: Set[ActiveEffect]): Combatant = {
     val hadSleepPending = target.activeEffects.exists(effect => match effect {
       | SleepPendingRepeatSave(_) => true
       | _ => false
@@ -1742,7 +1749,7 @@ module battleRuntime {
     })
     {
       ...target,
-      activeEffects: activeEffectsWithoutSpellEffectConcentration(target.activeEffects),
+      activeEffects: activeEffects,
       incapacitated:
         if (hadSleepUnconscious) sleepUnconsciousHadIncapacitated
         else if (hadSleepPending) sleepPendingHadIncapacitated
@@ -1751,6 +1758,9 @@ module battleRuntime {
       prone: if (hadSleepUnconscious and not(sleepUnconsciousHadUnconscious)) true else target.prone,
     }
   }
+
+  pure def combatantWithoutSpellEffectConcentrationEffects(target: Combatant): Combatant =
+    combatantWithSleepEffectsRemoved(target, activeEffectsWithoutSpellEffectConcentration(target.activeEffects))
 
   pure def breakConcentration(target: Combatant): Combatant = {
     val withoutSpellEffectConcentration = combatantWithoutSpellEffectConcentrationEffects(target)
@@ -1798,6 +1808,10 @@ module battleRuntime {
       | _ => true
     })
 
+  pure def combatantWithoutSleepEffects(target: Combatant): Combatant =
+    combatantWithSleepEffectsRemoved(target, activeEffectsWithoutSleepEffects(target.activeEffects))
+
+
   pure def applyDamageFromSource(
     target: Combatant,
     damage: int,
@@ -1808,7 +1822,10 @@ module battleRuntime {
   ): Combatant = {
     val damaged = applyDamageWithDisposition(target, damage, deathFailuresAtZeroHp, concentrationSaveSucceeded, damageDisposition)
     if (damage > 0)
-      { ...damaged, activeEffects: activeEffectsAfterTargetDamagedByCasterOrAlly(damaged.activeEffects, damageSource) }
+      combatantWithoutSleepEffects({
+        ...damaged,
+        activeEffects: activeEffectsAfterTargetDamagedByCasterOrAlly(damaged.activeEffects, damageSource),
+      })
     else
       damaged
   }
@@ -3862,6 +3879,31 @@ module battleRuntime {
           endTurn(state)
     }
 
+  pure def combatantHasSleepEffect(target: Combatant): bool =
+    target.activeEffects.exists(effect => match effect {
+      | SleepPendingRepeatSave(_) => true
+      | SleepUnconscious(_) => true
+      | _ => false
+    })
+
+  pure def shakeAwakeFromSleep(state: BattleState, targetActor: Actor, actorWithin5Feet: bool): BattleState =
+    if (not(state.actionAvailable) or not(actorWithin5Feet) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated)
+      state
+    else {
+      match targetActor {
+        | Fighter =>
+          if (combatantHasSleepEffect(state.fighter))
+            { ...state, fighter: combatantWithoutSleepEffects(state.fighter), actionAvailable: false }
+          else
+            state
+        | Goblin =>
+          if (combatantHasSleepEffect(state.goblin))
+            { ...state, goblin: combatantWithoutSleepEffects(state.goblin), actionAvailable: false }
+          else
+            state
+      }
+    }
+
   pure def selectedTargetCount(fighterTargeted: bool, goblinTargeted: bool): int =
     (if (fighterTargeted) 1 else 0) + (if (goblinTargeted) 1 else 0)
 
@@ -5466,6 +5508,44 @@ module battleRuntime {
         hadUnconscious: false,
         hadIncapacitated: false,
       }))),
+    }
+  }
+
+  run test_sleep_damage_ends_pending_sleep_on_target = {
+    val slept = resolveSleepTargetAdmission(initialState, false)
+    val damaged = { ...slept, goblin: applyDamageFromSource(slept.goblin, 1, 1, true, OrdinaryDamage, Goblin) }
+    all {
+      assert(not(damaged.goblin.incapacitated)),
+      assert(not(combatantHasSleepEffect(damaged.goblin))),
+    }
+  }
+
+  run test_sleep_damage_ends_unconscious_sleep_and_leaves_prone = {
+    val slept = resolveSleepTargetAdmission(initialState, false)
+    val goblinTurn = endTurn(slept)
+    val repeated = endTurnWithSleepRepeatSave(goblinTurn, false)
+    val damaged = { ...repeated, goblin: applyDamageFromSource(repeated.goblin, 1, 1, true, OrdinaryDamage, Goblin) }
+    all {
+      assert(not(damaged.goblin.unconscious)),
+      assert(damaged.goblin.prone),
+      assert(not(combatantHasSleepEffect(damaged.goblin))),
+    }
+  }
+
+  run test_sleep_adjacent_action_shakes_target_awake = {
+    val slept = resolveSleepTargetAdmission(initialState, false)
+    val nextRoundFighterTurn = {
+      ...slept,
+      initiative: { round: 2, alreadyActed: List(), stillToAct: List(Fighter, Goblin) },
+      actionAvailable: true,
+    }
+    val shaken = shakeAwakeFromSleep(nextRoundFighterTurn, Goblin, true)
+    val notAdjacent = shakeAwakeFromSleep(nextRoundFighterTurn, Goblin, false)
+    all {
+      assert(not(shaken.actionAvailable)),
+      assert(not(shaken.goblin.incapacitated)),
+      assert(not(combatantHasSleepEffect(shaken.goblin))),
+      assert(notAdjacent == nextRoundFighterTurn),
     }
   }
 

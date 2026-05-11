@@ -518,7 +518,8 @@ type SleepPendingRepeatSaveEffect = Extract<
 type DurationActiveEffect = Extract<
   Exclude<
     BattleActiveEffect,
-    Extract<BattleActiveEffect, { readonly kind: "sleepPendingRepeatSave" }>
+    | Extract<BattleActiveEffect, { readonly kind: "sleepPendingRepeatSave" }>
+    | Extract<BattleActiveEffect, { readonly kind: "sleepUnconscious" }>
   >,
   { readonly expiresAt: BattleActiveEffectExpiration }
 > & {
@@ -646,18 +647,15 @@ function applySleepRepeatSaveFills(
           };
     const unconsciousEffect: Extract<
       BattleActiveEffect,
-      { readonly kind: "spellCondition" }
+      { readonly kind: "sleepUnconscious" }
     > = {
-      kind: "spellCondition" as const,
+      kind: "sleepUnconscious" as const,
       sourceSpellId: effect.sourceSpellId,
       sourceCombatantId: effect.sourceCombatantId,
-      condition: "unconscious" as const,
       conditionHadNonSpellSource: conditionHadNonSpellSourceBeforeSpellEffect(
         targetWithoutPending,
         "unconscious",
       ),
-      escape: null,
-      turnStartDamage: null,
       expiresAt: {
         kind: "concentration" as const,
         combatantId: effect.sourceCombatantId,
@@ -859,6 +857,7 @@ function isDurationActiveEffect(
 ): effect is DurationActiveEffect {
   return (
     effect.kind !== "sleepPendingRepeatSave" &&
+    effect.kind !== "sleepUnconscious" &&
     "expiresAt" in effect &&
     effect.expiresAt.kind === "duration"
   );

@@ -203,7 +203,8 @@ flowchart TD
   per-target concentration-owned pending lifecycle that applies Incapacitated
   until that target's next end turn; the end-turn command then asks for the
   second Wisdom save and either removes that target's Sleep effect or escalates
-  it to concentration-owned Unconscious.
+  it to concentration-owned Unconscious. Damage from any source or a
+  caller-supplied adjacent shake-awake action removes Sleep from one target.
   `animal_friendship` and `charm_person` add the same save-gated condition
   procedure for Beast-target and Humanoid-target Charmed effects. Charm Person
   annotates hostile targets' Wisdom saves with Advantage, and both Charmed
