@@ -5725,6 +5725,645 @@ describe("SRDINV31 deterministic after-hit Spell Unit admission", () => {
     });
   });
 
+  test("divine_smite validates resources before spending and does not treat Ready as a pre-cast interrupt", () => {
+    const divineSmite = spellRecord(divineSmiteUnitId);
+    const rayOfFrost = spellRecord(rayOfFrostUnitId);
+    const initialState = spellBattle({
+      preparedSpells: [divineSmite],
+      attack: zeroAbilityWeaponAttack("weapon_longsword"),
+      targetSpellcasting: {
+        spellcastingAbilityModifier: abilityModifier(3),
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [rayOfFrost],
+        preparedSpells: [],
+        spellSlots: [],
+      },
+    });
+    const targetTurn = endTurn({
+      state: initialState,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected target turn to begin.");
+    }
+    const readiedRay = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: {
+        tag: "actionSpell",
+        actorId: spellTargetId,
+        invocation: cantripSpellInvocationRef(
+          rayOfFrostUnitId,
+          "spellAttackDamage",
+        ),
+        mode: { tag: "ready", trigger: "spellCast" },
+      },
+      fills: [],
+    });
+    if (readiedRay.tag !== "resolved") {
+      throw new Error("Expected target to ready Ray of Frost.");
+    }
+    const casterTurn = endTurn({
+      state: readiedRay.state,
+      actorId: spellTargetId,
+    });
+    if (casterTurn.tag !== "resolved") {
+      throw new Error("Expected caster turn to resume.");
+    }
+
+    const subject = weaponAttackSubject("Longsword");
+    const target = requireResultHole(
+      resolveBattleSubject({ state: casterTurn.state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const targetFill = attackTargetFill(
+      target,
+      spellCasterId,
+      spellTargetId,
+      "Longsword",
+    );
+    const roll = requireResultHole(
+      resolveBattleSubject({
+        state: casterTurn.state,
+        subject,
+        fills: [targetFill],
+      }),
+      "attackRoll",
+    );
+    const rollFill = attackRollFill(roll, { total: 15, naturalD20: 10 });
+    const awaitingAttackHit = resolveBattleSubject({
+      state: casterTurn.state,
+      subject,
+      fills: [targetFill, rollFill],
+    });
+    if (awaitingAttackHit.tag !== "needsHoles") {
+      throw new Error("Expected Divine Smite attack-hit window.");
+    }
+    const smiteChoice =
+      awaitingAttackHit.snapshot.pendingReaction?.choices.find(
+        (choice) =>
+          choice.kind === "castAttackHitBonusActionSpell" &&
+          choice.reactorId === spellCasterId,
+      );
+    if (
+      smiteChoice === undefined ||
+      smiteChoice.kind !== "castAttackHitBonusActionSpell"
+    ) {
+      throw new Error("Expected Divine Smite after-hit choice.");
+    }
+    const staleWithoutBonusAction = resolveBattleReaction({
+      state: {
+        ...awaitingAttackHit.state,
+        currentTurnResources: {
+          ...awaitingAttackHit.state.currentTurnResources,
+          currentHasBonusAction: false,
+        },
+      },
+      fill: reactionDecisionFill(
+        requireHole(awaitingAttackHit.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId: spellCasterId,
+          choice: {
+            kind: "castAttackHitBonusActionSpell",
+            invocation: smiteChoice.invocation,
+            fills: [],
+          },
+        },
+      ),
+    });
+    expect(staleWithoutBonusAction).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+    });
+    const staleAfterSlotSpend = resolveBattleReaction({
+      state: {
+        ...awaitingAttackHit.state,
+        currentTurnResources: {
+          ...awaitingAttackHit.state.currentTurnResources,
+          spellSlotExpendedThisTurn: true,
+        },
+      },
+      fill: reactionDecisionFill(
+        requireHole(awaitingAttackHit.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId: spellCasterId,
+          choice: {
+            kind: "castAttackHitBonusActionSpell",
+            invocation: smiteChoice.invocation,
+            fills: [],
+          },
+        },
+      ),
+    });
+    expect(staleAfterSlotSpend).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+    });
+    const malformedFills = resolveBattleReaction({
+      state: awaitingAttackHit.state,
+      fill: reactionDecisionFill(
+        requireHole(awaitingAttackHit.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId: spellCasterId,
+          choice: {
+            kind: "castAttackHitBonusActionSpell",
+            invocation: smiteChoice.invocation,
+            fills: [targetFill],
+          },
+        },
+      ),
+    });
+    expect(malformedFills).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+
+    const afterSmite = resolveBattleReaction({
+      state: awaitingAttackHit.state,
+      fill: reactionDecisionFill(
+        requireHole(awaitingAttackHit.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId: spellCasterId,
+          choice: {
+            kind: "castAttackHitBonusActionSpell",
+            invocation: smiteChoice.invocation,
+            fills: [],
+          },
+        },
+      ),
+    });
+
+    expect(afterSmite).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "reactionDecision", trigger: "spellCast" }],
+      snapshot: {
+        pendingReaction: {
+          trigger: "spellCast",
+          choices: [
+            expect.objectContaining({
+              kind: "releaseReadiedSpell",
+              readiedSpellCasterId: spellTargetId,
+            }),
+          ],
+        },
+        turn: { bonusActionAvailable: false, spellSlotExpendedThisTurn: true },
+      },
+    });
+    if (afterSmite.tag !== "needsHoles") {
+      throw new Error("Expected Divine Smite post-cast Ready window.");
+    }
+    const afterReadyDecline = resolveBattleReaction({
+      state: afterSmite.state,
+      fill: reactionDecisionFill(
+        afterSmite.snapshot.pendingReaction!.decisionHole,
+        { kind: "decline", reactorId: spellTargetId },
+      ),
+    });
+    expect(afterReadyDecline).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "rolledDice" }],
+      snapshot: { pendingReaction: null },
+    });
+    if (afterReadyDecline.tag !== "needsHoles") {
+      throw new Error("Expected Divine Smite replay to need attack damage.");
+    }
+    const damage = requireHole(afterReadyDecline.holes, "rolledDice");
+    expect(damage).toEqual(
+      expect.objectContaining({
+        spellWeaponDamageRiders: [
+          expect.objectContaining({
+            sourceSpellId: divineSmiteUnitId,
+            damage: {
+              expr: { dice: 2, dieSize: 8 },
+              damageType: "radiant",
+            },
+          }),
+        ],
+      }),
+    );
+  });
+
+  test("ensnaring_strike does not reopen save-failed reactions after decline", () => {
+    const spell = spellRecord(ensnaringStrikeUnitId);
+    const rayOfFrost = spellRecord(rayOfFrostUnitId);
+    const initialState = spellBattle({
+      preparedSpells: [spell],
+      attack: zeroAbilityWeaponAttack("weapon_shortbow"),
+      targetSpellcasting: {
+        spellcastingAbilityModifier: abilityModifier(3),
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [rayOfFrost],
+        preparedSpells: [],
+        spellSlots: [],
+      },
+    });
+    const targetTurn = endTurn({
+      state: initialState,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected target turn to begin.");
+    }
+    const readiedRay = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: {
+        tag: "actionSpell",
+        actorId: spellTargetId,
+        invocation: cantripSpellInvocationRef(
+          rayOfFrostUnitId,
+          "spellAttackDamage",
+        ),
+        mode: { tag: "ready", trigger: "saveFailed" },
+      },
+      fills: [],
+    });
+    if (readiedRay.tag !== "resolved") {
+      throw new Error("Expected target to ready Ray of Frost.");
+    }
+    const casterTurn = endTurn({
+      state: readiedRay.state,
+      actorId: spellTargetId,
+    });
+    if (casterTurn.tag !== "resolved") {
+      throw new Error("Expected caster turn to resume.");
+    }
+
+    const subject = weaponAttackSubject("Shortbow");
+    const target = requireResultHole(
+      resolveBattleSubject({ state: casterTurn.state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const targetFill = attackTargetFill(
+      target,
+      spellCasterId,
+      spellTargetId,
+      "Shortbow",
+    );
+    const roll = requireResultHole(
+      resolveBattleSubject({
+        state: casterTurn.state,
+        subject,
+        fills: [targetFill],
+      }),
+      "attackRoll",
+    );
+    const rollFill = attackRollFill(roll, { total: 15, naturalD20: 10 });
+    const awaitingAttackHit = resolveBattleSubject({
+      state: casterTurn.state,
+      subject,
+      fills: [targetFill, rollFill],
+    });
+    if (awaitingAttackHit.tag !== "needsHoles") {
+      throw new Error("Expected Ensnaring Strike attack-hit window.");
+    }
+    const choice = awaitingAttackHit.snapshot.pendingReaction?.choices.find(
+      (candidate) =>
+        candidate.kind === "castAttackHitBonusActionSpell" &&
+        candidate.invocation.spellId === ensnaringStrikeUnitId,
+    );
+    if (
+      choice === undefined ||
+      choice.kind !== "castAttackHitBonusActionSpell"
+    ) {
+      throw new Error("Expected Ensnaring Strike after-hit choice.");
+    }
+    const save = requireHole(choice.initialHoles, "savingThrowOutcome");
+    const awaitingSaveFailedReaction = resolveBattleReaction({
+      state: awaitingAttackHit.state,
+      fill: reactionDecisionFill(
+        requireHole(awaitingAttackHit.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId: spellCasterId,
+          choice: {
+            kind: "castAttackHitBonusActionSpell",
+            invocation: choice.invocation,
+            fills: [
+              savingThrowOutcomeFill(save, [
+                { targetId: spellTargetId, succeeded: false },
+              ]),
+            ],
+          },
+        },
+      ),
+    });
+    expect(awaitingSaveFailedReaction).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "reactionDecision", trigger: "saveFailed" }],
+    });
+    if (awaitingSaveFailedReaction.tag !== "needsHoles") {
+      throw new Error("Expected Ensnaring Strike save-failed reaction.");
+    }
+
+    const afterDecline = resolveBattleReaction({
+      state: awaitingSaveFailedReaction.state,
+      fill: reactionDecisionFill(
+        awaitingSaveFailedReaction.snapshot.pendingReaction!.decisionHole,
+        { kind: "decline", reactorId: spellTargetId },
+      ),
+    });
+    expect(afterDecline).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "rolledDice" }],
+      snapshot: { pendingReaction: null },
+    });
+  });
+
+  test("ensnaring_strike opens a post-cast Ready spell-cast reaction before attack damage", () => {
+    const spell = spellRecord(ensnaringStrikeUnitId);
+    const rayOfFrost = spellRecord(rayOfFrostUnitId);
+    const initialState = spellBattle({
+      preparedSpells: [spell],
+      attack: zeroAbilityWeaponAttack("weapon_shortbow"),
+      targetSpellcasting: {
+        spellcastingAbilityModifier: abilityModifier(3),
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [rayOfFrost],
+        preparedSpells: [],
+        spellSlots: [],
+      },
+    });
+    const targetTurn = endTurn({
+      state: initialState,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected target turn to begin.");
+    }
+    const readiedRay = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: {
+        tag: "actionSpell",
+        actorId: spellTargetId,
+        invocation: cantripSpellInvocationRef(
+          rayOfFrostUnitId,
+          "spellAttackDamage",
+        ),
+        mode: { tag: "ready", trigger: "spellCast" },
+      },
+      fills: [],
+    });
+    if (readiedRay.tag !== "resolved") {
+      throw new Error("Expected target to ready Ray of Frost.");
+    }
+    const casterTurn = endTurn({
+      state: readiedRay.state,
+      actorId: spellTargetId,
+    });
+    if (casterTurn.tag !== "resolved") {
+      throw new Error("Expected caster turn to resume.");
+    }
+
+    const subject = weaponAttackSubject("Shortbow");
+    const target = requireResultHole(
+      resolveBattleSubject({ state: casterTurn.state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const targetFill = attackTargetFill(
+      target,
+      spellCasterId,
+      spellTargetId,
+      "Shortbow",
+    );
+    const roll = requireResultHole(
+      resolveBattleSubject({
+        state: casterTurn.state,
+        subject,
+        fills: [targetFill],
+      }),
+      "attackRoll",
+    );
+    const rollFill = attackRollFill(roll, { total: 15, naturalD20: 10 });
+    const awaitingAttackHit = resolveBattleSubject({
+      state: casterTurn.state,
+      subject,
+      fills: [targetFill, rollFill],
+    });
+    if (awaitingAttackHit.tag !== "needsHoles") {
+      throw new Error("Expected Ensnaring Strike attack-hit window.");
+    }
+    const choice = awaitingAttackHit.snapshot.pendingReaction?.choices.find(
+      (candidate) =>
+        candidate.kind === "castAttackHitBonusActionSpell" &&
+        candidate.invocation.spellId === ensnaringStrikeUnitId,
+    );
+    if (
+      choice === undefined ||
+      choice.kind !== "castAttackHitBonusActionSpell"
+    ) {
+      throw new Error("Expected Ensnaring Strike after-hit choice.");
+    }
+    const save = requireHole(choice.initialHoles, "savingThrowOutcome");
+    const awaitingSpellCastReaction = resolveBattleReaction({
+      state: awaitingAttackHit.state,
+      fill: reactionDecisionFill(
+        requireHole(awaitingAttackHit.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId: spellCasterId,
+          choice: {
+            kind: "castAttackHitBonusActionSpell",
+            invocation: choice.invocation,
+            fills: [
+              savingThrowOutcomeFill(save, [
+                { targetId: spellTargetId, succeeded: false },
+              ]),
+            ],
+          },
+        },
+      ),
+    });
+    expect(awaitingSpellCastReaction).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "reactionDecision", trigger: "spellCast" }],
+      snapshot: {
+        pendingReaction: {
+          trigger: "spellCast",
+          choices: [
+            expect.objectContaining({
+              kind: "releaseReadiedSpell",
+              readiedSpellCasterId: spellTargetId,
+            }),
+          ],
+        },
+      },
+    });
+    if (awaitingSpellCastReaction.tag !== "needsHoles") {
+      throw new Error("Expected Ensnaring Strike post-cast Ready window.");
+    }
+    const afterDecline = resolveBattleReaction({
+      state: awaitingSpellCastReaction.state,
+      fill: reactionDecisionFill(
+        awaitingSpellCastReaction.snapshot.pendingReaction!.decisionHole,
+        { kind: "decline", reactorId: spellTargetId },
+      ),
+    });
+    expect(afterDecline).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "rolledDice" }],
+      snapshot: { pendingReaction: null },
+    });
+  });
+
+  test("ensnaring_strike still opens post-cast Ready after save-failed decline", () => {
+    const spell = spellRecord(ensnaringStrikeUnitId);
+    const rayOfFrost = spellRecord(rayOfFrostUnitId);
+    const initialState = spellBattle({
+      preparedSpells: [spell],
+      attack: zeroAbilityWeaponAttack("weapon_shortbow"),
+      extraTargetIds: [ensnaringStrikeHelperId],
+      targetSpellcasting: {
+        spellcastingAbilityModifier: abilityModifier(3),
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [rayOfFrost],
+        preparedSpells: [],
+        spellSlots: [],
+      },
+    });
+    const targetTurn = endTurn({
+      state: initialState,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected target turn to begin.");
+    }
+    const readiedSaveFailed = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: {
+        tag: "actionSpell",
+        actorId: spellTargetId,
+        invocation: cantripSpellInvocationRef(
+          rayOfFrostUnitId,
+          "spellAttackDamage",
+        ),
+        mode: { tag: "ready", trigger: "saveFailed" },
+      },
+      fills: [],
+    });
+    if (readiedSaveFailed.tag !== "resolved") {
+      throw new Error("Expected target to ready Ray of Frost.");
+    }
+    const helperTurn = endTurn({
+      state: readiedSaveFailed.state,
+      actorId: spellTargetId,
+    });
+    if (helperTurn.tag !== "resolved") {
+      throw new Error("Expected helper turn to begin.");
+    }
+    const readiedSpellCast = resolveBattleSubject({
+      state: helperTurn.state,
+      subject: {
+        tag: "action",
+        actorId: ensnaringStrikeHelperId,
+        action: "ready",
+        readyTrigger: "spellCast",
+      },
+      fills: [],
+    });
+    if (readiedSpellCast.tag !== "resolved") {
+      throw new Error("Expected helper to ready movement.");
+    }
+    const casterTurn = endTurn({
+      state: readiedSpellCast.state,
+      actorId: ensnaringStrikeHelperId,
+    });
+    if (casterTurn.tag !== "resolved") {
+      throw new Error("Expected caster turn to resume.");
+    }
+
+    const subject = weaponAttackSubject("Shortbow");
+    const target = requireResultHole(
+      resolveBattleSubject({ state: casterTurn.state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const targetFill = attackTargetFill(
+      target,
+      spellCasterId,
+      spellTargetId,
+      "Shortbow",
+    );
+    const roll = requireResultHole(
+      resolveBattleSubject({
+        state: casterTurn.state,
+        subject,
+        fills: [targetFill],
+      }),
+      "attackRoll",
+    );
+    const rollFill = attackRollFill(roll, { total: 15, naturalD20: 10 });
+    const awaitingAttackHit = resolveBattleSubject({
+      state: casterTurn.state,
+      subject,
+      fills: [targetFill, rollFill],
+    });
+    if (awaitingAttackHit.tag !== "needsHoles") {
+      throw new Error("Expected Ensnaring Strike attack-hit window.");
+    }
+    const choice = awaitingAttackHit.snapshot.pendingReaction?.choices.find(
+      (candidate) =>
+        candidate.kind === "castAttackHitBonusActionSpell" &&
+        candidate.invocation.spellId === ensnaringStrikeUnitId,
+    );
+    if (
+      choice === undefined ||
+      choice.kind !== "castAttackHitBonusActionSpell"
+    ) {
+      throw new Error("Expected Ensnaring Strike after-hit choice.");
+    }
+    const save = requireHole(choice.initialHoles, "savingThrowOutcome");
+    const awaitingSaveFailedReaction = resolveBattleReaction({
+      state: awaitingAttackHit.state,
+      fill: reactionDecisionFill(
+        requireHole(awaitingAttackHit.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId: spellCasterId,
+          choice: {
+            kind: "castAttackHitBonusActionSpell",
+            invocation: choice.invocation,
+            fills: [
+              savingThrowOutcomeFill(save, [
+                { targetId: spellTargetId, succeeded: false },
+              ]),
+            ],
+          },
+        },
+      ),
+    });
+    if (awaitingSaveFailedReaction.tag !== "needsHoles") {
+      throw new Error("Expected Ensnaring Strike save-failed reaction.");
+    }
+    const afterSaveFailedDecline = resolveBattleReaction({
+      state: awaitingSaveFailedReaction.state,
+      fill: reactionDecisionFill(
+        awaitingSaveFailedReaction.snapshot.pendingReaction!.decisionHole,
+        { kind: "decline", reactorId: spellTargetId },
+      ),
+    });
+    expect(afterSaveFailedDecline).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "reactionDecision", trigger: "spellCast" }],
+      snapshot: {
+        pendingReaction: {
+          trigger: "spellCast",
+          choices: [
+            expect.objectContaining({
+              kind: "releaseReadiedMovement",
+              readiedMovementActorId: ensnaringStrikeHelperId,
+            }),
+          ],
+        },
+      },
+    });
+  });
+
   test("divine_smite scales by slot level and doubles smite dice on critical hits", () => {
     const spell = spellRecord(divineSmiteUnitId);
     const state = spellBattle({
@@ -8428,6 +9067,10 @@ function spellBattle(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["characterUnitRefs"];
+  readonly targetSpellcasting?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["spellcasting"];
   readonly casterClassLevels?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -8479,6 +9122,9 @@ function spellBattle(input: {
         ...(input.targetUnitRefs === undefined
           ? {}
           : { characterUnitRefs: input.targetUnitRefs }),
+        ...(input.targetSpellcasting === undefined
+          ? {}
+          : { spellcasting: input.targetSpellcasting }),
       }),
       ...(input.extraTargetIds ?? []).map((combatantId, index) =>
         characterCreature({

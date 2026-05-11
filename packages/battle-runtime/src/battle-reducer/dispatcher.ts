@@ -111,6 +111,7 @@ import {
 
 import {
   markSpellSlotExpendedThisTurn,
+  spellActTurnResourceAvailable,
   spellHasAvailableSpend,
   supportedSpellActs,
 } from "./spells-profiles.ts";
@@ -577,6 +578,7 @@ export function resolveBattleSubjectInternal(
       return resolveCastAttackHitBonusActionSpellCommand({
         ...input,
         subject,
+        suppressedReactionTrigger: options.suppressedReactionTrigger,
       });
     }
     if (
@@ -1066,16 +1068,37 @@ export function resolveCastTriggeredReactionSpellCommand(
   };
 }
 
+type AttackHitBonusActionSpellCommandSubject = Extract<
+  BattleSubject,
+  {
+    readonly tag: "runtimeCommand";
+    readonly command: "castAttackHitBonusActionSpell";
+  }
+>;
+type AttackHitBonusActionSpellCommandInput =
+  BattleResolutionInputForSubject<AttackHitBonusActionSpellCommandSubject> & {
+    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+  };
+type AttackHitBonusActionSpellInvocation = Extract<
+  ReturnType<typeof supportedSpellActs>[number],
+  {
+    readonly procedure:
+      | "afterHitDamage"
+      | "afterHitSaveGatedCondition"
+      | "afterHitTimedDamageAndSave";
+  }
+>;
+type AttackHitSaveGatedConditionInvocation = Extract<
+  AttackHitBonusActionSpellInvocation,
+  { readonly procedure: "afterHitSaveGatedCondition" }
+>;
+type AttackHitSaveGatedConditionFillSet = Extract<
+  ReturnType<typeof spellFillSet>,
+  { readonly tag: "ok" }
+>;
+
 export function resolveCastAttackHitBonusActionSpellCommand(
-  input: BattleResolutionInputForSubject<
-    Extract<
-      BattleSubject,
-      {
-        readonly tag: "runtimeCommand";
-        readonly command: "castAttackHitBonusActionSpell";
-      }
-    >
-  >,
+  input: AttackHitBonusActionSpellCommandInput,
 ): BattleResolutionResult {
   const frame = currentReactionFrame(input.state);
   const activeReaction = frame?.activeReaction;
@@ -1122,6 +1145,13 @@ export function resolveCastAttackHitBonusActionSpellCommand(
       "Attack-hit Bonus Action spell command requires a supported prepared after-hit spell.",
     );
   }
+  if (!combatantCanTakeActions(actor)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Attack-hit Bonus Action spell caster can no longer take actions.",
+    );
+  }
   if (target === undefined) {
     return invalidResult(
       input.state,
@@ -1155,18 +1185,59 @@ export function resolveCastAttackHitBonusActionSpellCommand(
       "Attack-hit Bonus Action spell no longer has its required runtime spell resource.",
     );
   }
+  const fillValidation = attackHitBonusActionSpellFillValidation(
+    input,
+    invocation,
+    target,
+  );
+  if (fillValidation.tag === "invalid") {
+    return fillValidation.result;
+  }
+  if (
+    !spellActTurnResourceAvailable(input.state.currentTurnResources, invocation)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Attack-hit Bonus Action spell is no longer available for this turn.",
+    );
+  }
+  const spellCastFrame = {
+    trigger: "spellCast",
+    casterId: input.subject.casterId,
+    spellId: invocation.spell.id,
+    targetIds: [target.combatantId],
+    continuation: {
+      kind: "replay",
+      subject: input.subject,
+      fills: input.fills,
+    },
+  } satisfies BattleReactionFrameInput;
+  const spellCastReactionWindow =
+    input.suppressedReactionTrigger === undefined
+      ? maybeOpenReactionWindowWithChoices(
+          input.state,
+          spellCastFrame,
+          input.suppressedReactionTrigger,
+          triggeredReactionSpellChoices(input.state, spellCastFrame),
+        )
+      : null;
+  if (spellCastReactionWindow !== null) {
+    return spellCastReactionWindow;
+  }
   if (invocation.procedure === "afterHitSaveGatedCondition") {
+    if (fillValidation.tag !== "validSaveGated") {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Attack-hit save-gated condition spell fills were not parsed.",
+      );
+    }
     return resolveCastAttackHitSaveGatedConditionSpellCommand(
       input,
       invocation,
       target,
-    );
-  }
-  if (input.fills.length > 0) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Attack-hit Bonus Action spell does not accept table fills.",
+      fillValidation.fillSet,
     );
   }
   const spentBonusAction = spendActivationResource(
@@ -1250,6 +1321,17 @@ export function resolveCastAttackHitBonusActionSpellCommand(
       reactionInterruptFrame(nextFrame),
     ],
   };
+  const readiedSpellCastReactionWindow = maybeOpenPostCastReadySpellCastWindow({
+    state: nextState,
+    subject: input.subject,
+    casterId: input.subject.casterId,
+    spellId: invocation.spell.id,
+    targetIds: [target.combatantId],
+    suppressedReactionTrigger: input.suppressedReactionTrigger,
+  });
+  if (readiedSpellCastReactionWindow !== null) {
+    return readiedSpellCastReactionWindow;
+  }
   return {
     tag: "resolved",
     state: nextState,
@@ -1257,25 +1339,91 @@ export function resolveCastAttackHitBonusActionSpellCommand(
   };
 }
 
-function resolveCastAttackHitSaveGatedConditionSpellCommand(
-  input: BattleResolutionInputForSubject<
-    Extract<
-      BattleSubject,
-      {
-        readonly tag: "runtimeCommand";
-        readonly command: "castAttackHitBonusActionSpell";
-      }
-    >
-  >,
-  invocation: Extract<
-    ReturnType<typeof supportedSpellActs>[number],
-    { readonly procedure: "afterHitSaveGatedCondition" }
-  >,
+function maybeOpenPostCastReadySpellCastWindow(input: {
+  readonly state: BattleState;
+  readonly subject: BattleSubject;
+  readonly casterId: CombatantId;
+  readonly spellId: string;
+  readonly targetIds: readonly CombatantId[];
+  readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+}): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> | null {
+  return input.suppressedReactionTrigger !== "spellCast"
+    ? maybeOpenReactionWindowWithChoices(
+        input.state,
+        {
+          trigger: "spellCast",
+          casterId: input.casterId,
+          spellId: input.spellId,
+          targetIds: input.targetIds,
+          continuation: {
+            kind: "resolved",
+            subject: input.subject,
+          },
+        },
+        input.suppressedReactionTrigger,
+        [
+          ...readiedSpellReactionChoices(input.state, "spellCast"),
+          ...readiedMovementReactionChoices(input.state, "spellCast"),
+        ],
+      )
+    : null;
+}
+
+function attackHitBonusActionSpellFillValidation(
+  input: BattleResolutionInputForSubject<AttackHitBonusActionSpellCommandSubject>,
+  invocation: AttackHitBonusActionSpellInvocation,
   target: BattleCreatureState,
-): BattleResolutionResult {
+):
+  | { readonly tag: "validNonSave" }
+  | {
+      readonly tag: "validSaveGated";
+      readonly fillSet: AttackHitSaveGatedConditionFillSet;
+    }
+  | {
+      readonly tag: "invalid";
+      readonly result: Extract<BattleResolutionResult, { readonly tag: "invalid" }>;
+    } {
+  if (invocation.procedure !== "afterHitSaveGatedCondition") {
+    return input.fills.length === 0
+      ? { tag: "validNonSave" }
+      : {
+          tag: "invalid",
+          result: invalidResult(
+            input.state,
+            "invalidFill",
+            "Attack-hit Bonus Action spell does not accept table fills.",
+          ),
+        };
+  }
+  const fillSetResult = attackHitSaveGatedConditionFillSet(
+    input,
+    invocation,
+    target,
+  );
+  return fillSetResult.tag === "invalid"
+    ? fillSetResult
+    : { tag: "validSaveGated", fillSet: fillSetResult.fillSet };
+}
+
+function attackHitSaveGatedConditionFillSet(
+  input: BattleResolutionInputForSubject<AttackHitBonusActionSpellCommandSubject>,
+  invocation: AttackHitSaveGatedConditionInvocation,
+  target: BattleCreatureState,
+):
+  | {
+      readonly tag: "ok";
+      readonly fillSet: AttackHitSaveGatedConditionFillSet;
+    }
+  | {
+      readonly tag: "invalid";
+      readonly result: Extract<BattleResolutionResult, { readonly tag: "invalid" }>;
+    } {
   const fillSet = spellFillSet(input.fills, invocation);
   if (fillSet.tag === "invalid") {
-    return invalidResult(input.state, "invalidFill", fillSet.message);
+    return {
+      tag: "invalid",
+      result: invalidResult(input.state, "invalidFill", fillSet.message),
+    };
   }
   if (
     fillSet.targetId !== undefined ||
@@ -1289,13 +1437,36 @@ function resolveCastAttackHitSaveGatedConditionSpellCommand(
     fillSet.damageDispositions.length > 0 ||
     fillSet.spellDamageReductionRolls.length > 0
   ) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Attack-hit save-gated condition spells only use Saving Throw outcome fills.",
-    );
+    return {
+      tag: "invalid",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Attack-hit save-gated condition spells only use Saving Throw outcome fills.",
+      ),
+    };
   }
+  if (fillSet.savingThrowOutcomes === undefined) {
+    return { tag: "ok", fillSet };
+  }
+  const validation = validateAttackHitSavingThrowOutcome(
+    fillSet.savingThrowOutcomes,
+    target.combatantId,
+  );
+  return validation === null
+    ? { tag: "ok", fillSet }
+    : {
+        tag: "invalid",
+        result: invalidResult(input.state, "invalidFill", validation),
+      };
+}
 
+function resolveCastAttackHitSaveGatedConditionSpellCommand(
+  input: AttackHitBonusActionSpellCommandInput,
+  invocation: AttackHitSaveGatedConditionInvocation,
+  target: BattleCreatureState,
+  fillSet: AttackHitSaveGatedConditionFillSet,
+): BattleResolutionResult {
   const savingThrowHole = attackHitSavingThrowOutcomeHole(
     input.state,
     input.subject.casterId,
@@ -1304,13 +1475,6 @@ function resolveCastAttackHitSaveGatedConditionSpellCommand(
   );
   if (fillSet.savingThrowOutcomes === undefined) {
     return needsHolesResult(input.state, input.subject, [savingThrowHole]);
-  }
-  const validation = validateAttackHitSavingThrowOutcome(
-    fillSet.savingThrowOutcomes,
-    target.combatantId,
-  );
-  if (validation !== null) {
-    return invalidResult(input.state, "invalidFill", validation);
   }
 
   const failedTargets = fillSet.savingThrowOutcomes.outcomes[0]!.succeeded
@@ -1329,7 +1493,7 @@ function resolveCastAttackHitSaveGatedConditionSpellCommand(
           fills: input.fills,
         },
       },
-      undefined,
+      input.suppressedReactionTrigger,
     );
     if (saveFailedReactionWindow !== null) {
       return saveFailedReactionWindow;
@@ -1352,6 +1516,17 @@ function resolveCastAttackHitSaveGatedConditionSpellCommand(
     failedTargets,
     invocation,
   );
+  const readiedSpellCastReactionWindow = maybeOpenPostCastReadySpellCastWindow({
+    state: effected,
+    subject: input.subject,
+    casterId: input.subject.casterId,
+    spellId: invocation.spell.id,
+    targetIds: [target.combatantId],
+    suppressedReactionTrigger: input.suppressedReactionTrigger,
+  });
+  if (readiedSpellCastReactionWindow !== null) {
+    return readiedSpellCastReactionWindow;
+  }
   return {
     tag: "resolved",
     state: effected,
@@ -1619,7 +1794,9 @@ export function completeActiveReactionProcedure(
       : closedState;
 
   return remainingReactors.length === 0
-    ? resumeInterruptedProcedure(nextState, frame.continuation, frame.trigger)
+    ? completeResolvedActiveReactionIfPending(
+        resumeInterruptedProcedure(nextState, frame.continuation, frame.trigger),
+      )
     : {
         tag: "resolved",
         state: nextState,
@@ -2254,10 +2431,23 @@ export function maybeOpenReactionWindow(
   frame: BattleReactionFrameInput,
   suppressedReactionTrigger: BattleReactionTrigger | undefined,
 ): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> | null {
+  return maybeOpenReactionWindowWithChoices(
+    state,
+    frame,
+    suppressedReactionTrigger,
+    reactionChoices(state, frame),
+  );
+}
+
+function maybeOpenReactionWindowWithChoices(
+  state: BattleState,
+  frame: BattleReactionFrameInput,
+  suppressedReactionTrigger: BattleReactionTrigger | undefined,
+  choices: readonly BattleReactionProcedureChoice[],
+): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> | null {
   if (frame.trigger === suppressedReactionTrigger) {
     return null;
   }
-  const choices = reactionChoices(state, frame);
   if (choices.length === 0) {
     return null;
   }
