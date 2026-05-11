@@ -204,10 +204,6 @@ violating policy or simply exposing that the policy was aspirational.
 - Does character creation need a similar migration before its MBT file becomes a
   broad scenario accumulator?
 
-See `plans/BATTLE_RUNTIME_QNT_VERTICAL_INVENTORY.md` for the current
-policy-bearing vertical inventory. That document is the migration control
-surface while this research note remains temporary context.
-
 ## 2026-05-11 First-Pass Findings
 
 - Quint `import child.*` names are not re-exported through a facade module. A

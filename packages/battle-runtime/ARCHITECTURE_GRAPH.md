@@ -11,6 +11,15 @@ hooks, and compatibility wrappers. Generic SRD procedure semantics that are not
 specific to the reducer protocol should live in shared rule-core QNT algebras
 and be projected into the package-local spec.
 
+`battle-runtime.qnt` cannot become a pure import-only facade. Quint names
+imported by a child module are not re-exported through a parent `import child.*`
+facade, so moved public QNT names need explicit wrappers or focused specs need
+to import narrower modules directly. Keep package-local integration vocabulary
+such as `Actor`, `Combatant`, `BattleState`, `ActiveEffect`, `Hole`, and replay
+variants inline in `battle-runtime.qnt` unless a focused lane can direct-import
+a smaller module without creating duplicate state names or compatibility-wrapper
+churn.
+
 The promoted MBT strategy is selective. MBT proves reducer facts after Surface
 decode/projection; it must not enumerate all Surface-authored content multiplied
 by all battle states. Shared reducer algebras remain covered by modular MBT,
