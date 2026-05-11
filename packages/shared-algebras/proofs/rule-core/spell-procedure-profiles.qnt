@@ -104,6 +104,13 @@ module spellProcedureProfiles {
     | HeroismFrightenedImmunityEffect
     | HeroismTurnStartTemporaryHitPointsEffect({ amount: int })
 
+  type DamageRiderSpellProfile =
+    | DivineFavorWeaponDamageRiderProfile
+    | DivineSmiteAfterHitDamageProfile
+    | HuntersMarkMarkedDamageRiderProfile
+    | EnsnaringStrikeAfterHitConditionProfile
+    | SearingSmiteAfterHitTimedDamageProfile
+
   type SpellAreaProfile =
     | NoSpellAreaProfile
     | MassCureWoundsPointOriginSphereArea
@@ -429,6 +436,41 @@ module spellProcedureProfiles {
 
   pure def scalarBuffRequiresConcentration(profile: ScalarBuffSpellProfile): bool =
     profile == ShieldOfFaithScalarBuffProfile or profile == HeroismScalarBuffProfile
+
+  pure def damageRiderSpellAction(profile: DamageRiderSpellProfile): SpellInvocationAction =
+    BonusActionSpellInvocation
+
+  pure def damageRiderRequiresConcentration(profile: DamageRiderSpellProfile): bool =
+    profile == HuntersMarkMarkedDamageRiderProfile
+      or profile == EnsnaringStrikeAfterHitConditionProfile
+
+  pure def divineFavorDamageType: RuleDamageType = RadiantDamage
+
+  pure def divineFavorDurationTicks: int = 10
+
+  pure def divineSmiteDamageType: RuleDamageType = RadiantDamage
+
+  pure def divineSmiteDamageDice(slotLevel: int, targetFiendOrUndead: bool): int =
+    2 + (if (slotLevel > 1) slotLevel - 1 else 0) + (if (targetFiendOrUndead) 1 else 0)
+
+  pure def huntersMarkDamageType: RuleDamageType = ForceDamage
+
+  pure def huntersMarkRangeFeet: int = 90
+
+  pure def ensnaringStrikeDamageType: RuleDamageType = PiercingDamage
+
+  pure def ensnaringStrikeDamageDice(slotLevel: int): int =
+    if (slotLevel < 1) 0 else slotLevel
+
+  pure def ensnaringStrikeTargetHasSaveAdvantage(targetLargeOrLarger: bool): bool =
+    targetLargeOrLarger
+
+  pure def searingSmiteDamageType: RuleDamageType = FireDamage
+
+  pure def searingSmiteDamageDice(slotLevel: int): int =
+    if (slotLevel < 1) 0 else slotLevel
+
+  pure def searingSmiteDurationTicks: int = 10
 
   pure def spellActionCost(invocationAction: SpellInvocationAction): ActionCost =
     if (invocationAction == BonusActionSpellInvocation) BonusActionCost
@@ -865,6 +907,31 @@ module spellProcedureProfiles {
       assert(scalarBuffRequiresConcentration(ShieldOfFaithScalarBuffProfile)),
       assert(scalarBuffRequiresConcentration(HeroismScalarBuffProfile)),
       assert(not(scalarBuffRequiresConcentration(LongstriderScalarBuffProfile))),
+    }
+  }
+
+  run test_damage_rider_spell_profiles_project_damage_dice_duration_and_concentration = {
+    all {
+      assert(damageRiderSpellAction(DivineFavorWeaponDamageRiderProfile) == BonusActionSpellInvocation),
+      assert(damageRiderSpellAction(DivineSmiteAfterHitDamageProfile) == BonusActionSpellInvocation),
+      assert(damageRiderRequiresConcentration(HuntersMarkMarkedDamageRiderProfile)),
+      assert(damageRiderRequiresConcentration(EnsnaringStrikeAfterHitConditionProfile)),
+      assert(not(damageRiderRequiresConcentration(DivineFavorWeaponDamageRiderProfile))),
+      assert(divineFavorDamageType == RadiantDamage),
+      assert(divineFavorDurationTicks == 10),
+      assert(divineSmiteDamageType == RadiantDamage),
+      assert(divineSmiteDamageDice(1, false) == 2),
+      assert(divineSmiteDamageDice(1, true) == 3),
+      assert(divineSmiteDamageDice(3, true) == 5),
+      assert(huntersMarkDamageType == ForceDamage),
+      assert(huntersMarkRangeFeet == 90),
+      assert(ensnaringStrikeDamageType == PiercingDamage),
+      assert(ensnaringStrikeDamageDice(3) == 3),
+      assert(ensnaringStrikeTargetHasSaveAdvantage(true)),
+      assert(not(ensnaringStrikeTargetHasSaveAdvantage(false))),
+      assert(searingSmiteDamageType == FireDamage),
+      assert(searingSmiteDamageDice(3) == 3),
+      assert(searingSmiteDurationTicks == 10),
     }
   }
 

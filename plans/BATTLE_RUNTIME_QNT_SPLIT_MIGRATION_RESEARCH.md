@@ -298,6 +298,13 @@ surface while this research note remains temporary context.
   scaling, active-effect identity, and concentration requirement. Broad battle
   keeps target mutation, temporary-HP replacement, and caster concentration
   cleanup.
+- The damage-rider tracer added profile facts for Divine Favor, Divine Smite,
+  Hunter's Mark, Ensnaring Strike, and Searing Smite. Rule-core now owns the
+  shared Bonus Action profile, concentration requirement, damage type, duration,
+  Hunter's Mark range, slot-level damage dice, Divine Smite Fiend/Undead bonus
+  dice, and Ensnaring Strike Large+ save Advantage. Broad battle still owns the
+  after-hit timing, mark transfer state, target mutation, repeated damage ticks,
+  and concentration cleanup.
 - The same movement/action bridge now carries the projected start-turn resource
   reset for action, Bonus Action, Reaction, Dash movement bonus, movement spent,
   Dodge, Disengage, Help, and Ready Movement facts. Broad battle still owns

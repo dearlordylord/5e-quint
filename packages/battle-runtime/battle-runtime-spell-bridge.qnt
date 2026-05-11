@@ -73,6 +73,13 @@ module battleRuntimeSpellBridge {
     | BattleRuntimeHeroismFrightenedImmunityEffect
     | BattleRuntimeHeroismTurnStartTemporaryHitPointsEffect({ amount: int })
 
+  type BattleRuntimeDamageRiderSpellProfile =
+    | BattleRuntimeDivineFavorWeaponDamageRider
+    | BattleRuntimeDivineSmiteAfterHitDamage
+    | BattleRuntimeHuntersMarkMarkedDamageRider
+    | BattleRuntimeEnsnaringStrikeAfterHitCondition
+    | BattleRuntimeSearingSmiteAfterHitTimedDamage
+
   pure def battleRuntimeDirectHitPointRestorationSpellProfile(
     profile: BattleRuntimeDirectHitPointRestorationProfile
   ): SpellDefinitionProfile =
@@ -298,6 +305,51 @@ module battleRuntimeSpellBridge {
   pure def battleRuntimeScalarBuffRequiresConcentration(profile: BattleRuntimeScalarBuffProfile): bool =
     scalarBuffRequiresConcentration(battleRuntimeScalarBuffProfile(profile))
 
+  pure def battleRuntimeDamageRiderSpellProfile(
+    profile: BattleRuntimeDamageRiderSpellProfile
+  ): DamageRiderSpellProfile =
+    match profile {
+      | BattleRuntimeDivineFavorWeaponDamageRider => DivineFavorWeaponDamageRiderProfile
+      | BattleRuntimeDivineSmiteAfterHitDamage => DivineSmiteAfterHitDamageProfile
+      | BattleRuntimeHuntersMarkMarkedDamageRider => HuntersMarkMarkedDamageRiderProfile
+      | BattleRuntimeEnsnaringStrikeAfterHitCondition => EnsnaringStrikeAfterHitConditionProfile
+      | BattleRuntimeSearingSmiteAfterHitTimedDamage => SearingSmiteAfterHitTimedDamageProfile
+    }
+
+  pure def battleRuntimeDamageRiderUsesBonusAction(profile: BattleRuntimeDamageRiderSpellProfile): bool =
+    damageRiderSpellAction(battleRuntimeDamageRiderSpellProfile(profile)) == BonusActionSpellInvocation
+
+  pure def battleRuntimeDamageRiderRequiresConcentration(profile: BattleRuntimeDamageRiderSpellProfile): bool =
+    damageRiderRequiresConcentration(battleRuntimeDamageRiderSpellProfile(profile))
+
+  pure def battleRuntimeDivineFavorDamageType: RuleDamageType = divineFavorDamageType
+
+  pure def battleRuntimeDivineFavorDurationTicks: int = divineFavorDurationTicks
+
+  pure def battleRuntimeDivineSmiteDamageType: RuleDamageType = divineSmiteDamageType
+
+  pure def battleRuntimeDivineSmiteDamageDice(slotLevel: int, targetFiendOrUndead: bool): int =
+    divineSmiteDamageDice(slotLevel, targetFiendOrUndead)
+
+  pure def battleRuntimeHuntersMarkDamageType: RuleDamageType = huntersMarkDamageType
+
+  pure def battleRuntimeHuntersMarkRangeFeet: int = huntersMarkRangeFeet
+
+  pure def battleRuntimeEnsnaringStrikeDamageType: RuleDamageType = ensnaringStrikeDamageType
+
+  pure def battleRuntimeEnsnaringStrikeDamageDice(slotLevel: int): int =
+    ensnaringStrikeDamageDice(slotLevel)
+
+  pure def battleRuntimeEnsnaringStrikeTargetHasSaveAdvantage(targetLargeOrLarger: bool): bool =
+    ensnaringStrikeTargetHasSaveAdvantage(targetLargeOrLarger)
+
+  pure def battleRuntimeSearingSmiteDamageType: RuleDamageType = searingSmiteDamageType
+
+  pure def battleRuntimeSearingSmiteDamageDice(slotLevel: int): int =
+    searingSmiteDamageDice(slotLevel)
+
+  pure def battleRuntimeSearingSmiteDurationTicks: int = searingSmiteDurationTicks
+
   run test_direct_hit_point_restoration_profile_projection = {
     all {
       assert(battleRuntimeDirectHitPointRestorationUsesBonusAction(BattleRuntimeHealingWordRestoration)),
@@ -347,6 +399,29 @@ module battleRuntimeSpellBridge {
       assert(battleRuntimeScalarBuffTemporaryHitPoints(BattleRuntimeFalseLifeScalarBuff, 3, 4) == 18),
       assert(battleRuntimeScalarBuffEffects(BattleRuntimeHeroismScalarBuff, 3) == Set(BattleRuntimeHeroismFrightenedImmunityEffect, BattleRuntimeHeroismTurnStartTemporaryHitPointsEffect({ amount: 3 }))),
       assert(battleRuntimeScalarBuffRequiresConcentration(BattleRuntimeHeroismScalarBuff)),
+    }
+  }
+
+  run test_damage_rider_profile_projection = {
+    all {
+      assert(battleRuntimeDamageRiderUsesBonusAction(BattleRuntimeDivineFavorWeaponDamageRider)),
+      assert(battleRuntimeDamageRiderUsesBonusAction(BattleRuntimeDivineSmiteAfterHitDamage)),
+      assert(battleRuntimeDamageRiderRequiresConcentration(BattleRuntimeHuntersMarkMarkedDamageRider)),
+      assert(battleRuntimeDamageRiderRequiresConcentration(BattleRuntimeEnsnaringStrikeAfterHitCondition)),
+      assert(not(battleRuntimeDamageRiderRequiresConcentration(BattleRuntimeDivineFavorWeaponDamageRider))),
+      assert(battleRuntimeDivineFavorDamageType == RadiantDamage),
+      assert(battleRuntimeDivineFavorDurationTicks == 10),
+      assert(battleRuntimeDivineSmiteDamageDice(1, false) == 2),
+      assert(battleRuntimeDivineSmiteDamageDice(1, true) == 3),
+      assert(battleRuntimeDivineSmiteDamageDice(3, true) == 5),
+      assert(battleRuntimeHuntersMarkDamageType == ForceDamage),
+      assert(battleRuntimeHuntersMarkRangeFeet == 90),
+      assert(battleRuntimeEnsnaringStrikeDamageType == PiercingDamage),
+      assert(battleRuntimeEnsnaringStrikeDamageDice(3) == 3),
+      assert(battleRuntimeEnsnaringStrikeTargetHasSaveAdvantage(true)),
+      assert(battleRuntimeSearingSmiteDamageType == FireDamage),
+      assert(battleRuntimeSearingSmiteDamageDice(3) == 3),
+      assert(battleRuntimeSearingSmiteDurationTicks == 10),
     }
   }
 }

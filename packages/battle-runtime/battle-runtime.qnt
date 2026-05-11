@@ -2592,7 +2592,8 @@ module battleRuntime {
     else
       state
 
-  pure def favorWeaponDamageRiderDurationTicks: int = 10
+  pure def favorWeaponDamageRiderDurationTicks: int =
+    battleRuntimeDivineFavorDurationTicks
 
   pure def activeEffectsWithoutDivineFavor(effects: Set[ActiveEffect]): Set[ActiveEffect] =
     effects.filter(effect => match effect {
@@ -2610,9 +2611,10 @@ module battleRuntime {
     if (activeEffectsContainDivineFavor(effects)) divineFavorDamageRoll else 0
 
   pure def divineSmiteDamageDice(slotLevel: int, targetCreatureType: RuntimeCreatureType): int =
-    2 +
-    (if (slotLevel > 1) slotLevel - 1 else 0) +
-    (if (targetCreatureType == FiendCreature or targetCreatureType == UndeadCreature) 1 else 0)
+    battleRuntimeDivineSmiteDamageDice(
+      slotLevel,
+      targetCreatureType == FiendCreature or targetCreatureType == UndeadCreature,
+    )
 
   pure def resolveDivineSmiteAfterMeleeHit(
     state: BattleState,
@@ -2653,10 +2655,12 @@ module battleRuntime {
     })
 
   pure def ensnaringStrikeDamageDiceForSlot(slotLevel: int): int =
-    if (slotLevel < 1) 0 else slotLevel
+    battleRuntimeEnsnaringStrikeDamageDice(slotLevel)
 
   pure def ensnaringStrikeTargetHasSaveAdvantage(targetSize: CreatureSize): bool =
-    targetSize == Large or targetSize == Huge or targetSize == Gargantuan
+    battleRuntimeEnsnaringStrikeTargetHasSaveAdvantage(
+      targetSize == Large or targetSize == Huge or targetSize == Gargantuan
+    )
 
   pure def ensnaringStrikeDamageDice(effects: Set[ActiveEffect]): int =
     effects
@@ -2714,9 +2718,10 @@ module battleRuntime {
   }
 
   pure def searingSmiteDamageDiceForSlot(slotLevel: int): int =
-    if (slotLevel < 1) 0 else slotLevel
+    battleRuntimeSearingSmiteDamageDice(slotLevel)
 
-  pure def searingSmiteDurationTicks: int = 10
+  pure def searingSmiteDurationTicks: int =
+    battleRuntimeSearingSmiteDurationTicks
 
   pure def activeEffectsWithoutSearingSmite(effects: Set[ActiveEffect]): Set[ActiveEffect] =
     effects.filter(effect => match effect {
