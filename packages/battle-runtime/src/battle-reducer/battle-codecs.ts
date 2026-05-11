@@ -46,7 +46,10 @@ import {
   type SpellInvocationRefEncoded,
 } from "../battle-subjects.ts";
 import { BattleCombatantSide, BattleId, CombatantId } from "../identity.ts";
-import { BATTLE_ATTACK_RANGE_BANDS } from "./domain-constants.ts";
+import {
+  BATTLE_ATTACK_RANGE_BANDS,
+  SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS,
+} from "./domain-constants.ts";
 
 const BATTLE_SURFACE_SKILLS = SURFACE_SKILLS;
 
@@ -523,12 +526,16 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
               kind: Schema.Literal("abilityCheck"),
               ability: Schema.Literal("str"),
               skill: Schema.Literal("athletics"),
+              successEnds: Schema.Literal(
+                ...SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS,
+              ),
             }),
             Schema.Struct({
               kind: Schema.Literal("targetDamagedByCasterOrAlly"),
             }),
           ),
         ),
+        turnStartDamage: Schema.NullOr(BattleRuntimeObjectSchema),
       }),
       rangeFeet: MovementFeet,
     }),
@@ -681,6 +688,27 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
         targetCreatureTypes: Schema.Array(Schema.String),
         expr: BattleRuntimeObjectSchema,
         damageType: DamageTypeSchema,
+      }),
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("afterHitSaveGatedCondition"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      ability: AbilitySchema,
+      dc: DcSourceSchema,
+      targeting: Schema.Struct({ kind: Schema.Literal("singleCombatant") }),
+      effect: Schema.Struct({
+        condition: Schema.Literal(...ALL_CONDITIONS),
+        expiresAt: Schema.Literal("concentration"),
+        escape: Schema.Struct({
+          kind: Schema.Literal("abilityCheck"),
+          ability: Schema.Literal("str"),
+          skill: Schema.Literal("athletics"),
+          successEnds: Schema.Literal("spell"),
+        }),
+        turnStartDamage: BattleRuntimeObjectSchema,
       }),
     }),
     Schema.Struct({
@@ -860,6 +888,11 @@ export const BattleHoleSchema = Schema.Union(
         dieSize: Schema.Literal(4),
       }),
     }),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("rolledDice"),
+    spellConditionTurnStartDamage: BattleRuntimeObjectSchema,
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -1084,6 +1117,11 @@ type BattleFillEncoded =
             readonly targetId: string;
           }
         | {
+            readonly kind: "spellRestraintEscapeActorWithinTargetReach";
+            readonly actorId: string;
+            readonly targetId: string;
+          }
+        | {
             readonly kind: "sneakAttackAllyWithin5FeetOfTarget";
             readonly attackerId: string;
             readonly targetId: string;
@@ -1286,6 +1324,11 @@ type BattleFillEncoded =
       readonly value: {
         readonly total: number;
       };
+      readonly spatialFacts?: readonly {
+        readonly kind: "spellRestraintEscapeActorWithinTargetReach";
+        readonly actorId: string;
+        readonly targetId: string;
+      }[];
     }
   | {
       readonly kind: "grappleOutcome";
@@ -1371,6 +1414,13 @@ export const BattleFillSchema: Schema.Schema<
             Schema.Struct({
               kind: Schema.Literal("grappleTargetWithinReach"),
               grapplerId: CombatantId,
+              targetId: CombatantId,
+            }),
+            Schema.Struct({
+              kind: Schema.Literal(
+                "spellRestraintEscapeActorWithinTargetReach",
+              ),
+              actorId: CombatantId,
               targetId: CombatantId,
             }),
             Schema.Struct({
@@ -1604,6 +1654,16 @@ export const BattleFillSchema: Schema.Schema<
       value: Schema.Struct({
         total: Schema.Number.pipe(Schema.int()),
       }),
+      spatialFacts: Schema.optionalWith(
+        Schema.Array(
+          Schema.Struct({
+            kind: Schema.Literal("spellRestraintEscapeActorWithinTargetReach"),
+            actorId: CombatantId,
+            targetId: CombatantId,
+          }),
+        ),
+        { exact: true },
+      ),
     }),
     Schema.Struct({
       kind: Schema.Literal("grappleOutcome"),

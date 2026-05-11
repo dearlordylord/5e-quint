@@ -8,7 +8,11 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { validateRolledDiceForDiceExpr } from "@dnd/shared-algebras/runtime-dice-algebra";
 import { isIncapacitated } from "@dnd/shared-algebras/conditions-algebra";
-import type { Ability, DamageType, SpellRecord } from "@dnd/surface/surface/types";
+import type {
+  Ability,
+  DamageType,
+  SpellRecord,
+} from "@dnd/surface/surface/types";
 import type { CombatantId } from "../identity.ts";
 import type { SupportedUnitFeatureProfile } from "../unit-feature-support.ts";
 import {
@@ -438,6 +442,7 @@ export function spellSavingThrowOutcomeHole(
     {
       readonly procedure:
         | "attackBurstSaveDamage"
+        | "afterHitSaveGatedCondition"
         | "rollModifier"
         | "saveGatedDamage"
         | "saveGatedCondition"
@@ -490,6 +495,7 @@ export function spellSavingThrowAbility(
     {
       readonly procedure:
         | "attackBurstSaveDamage"
+        | "afterHitSaveGatedCondition"
         | "rollModifier"
         | "saveGatedDamage"
         | "saveGatedCondition"
@@ -512,6 +518,7 @@ export function spellSavingThrowTargeting(
     {
       readonly procedure:
         | "attackBurstSaveDamage"
+        | "afterHitSaveGatedCondition"
         | "saveGatedDamage"
         | "saveGatedCondition"
         | "saveGatedAttackRollAdvantage";

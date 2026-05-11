@@ -230,7 +230,10 @@ export function discoverSupportedSpellInvocations(
           },
         ];
       }
-      if (invocation.procedure === "afterHitDamage") {
+      if (
+        invocation.procedure === "afterHitDamage" ||
+        invocation.procedure === "afterHitSaveGatedCondition"
+      ) {
         return [];
       }
       if (invocation.procedure === "markedDamageRider") {
@@ -406,6 +409,9 @@ export function spellInvocationCastSummary(
   if (invocation.procedure === "afterHitDamage") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot after a qualifying hit.`;
   }
+  if (invocation.procedure === "afterHitSaveGatedCondition") {
+    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot after a qualifying hit.`;
+  }
   if (invocation.procedure === "markedDamageRider") {
     return invocation.action === "transfer"
       ? `Move ${invocation.spell.name} to a new target.`
@@ -518,6 +524,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "scalarBuff" &&
     invocation.procedure !== "weaponDamageRider" &&
     invocation.procedure !== "afterHitDamage" &&
+    invocation.procedure !== "afterHitSaveGatedCondition" &&
     invocation.procedure !== "markedDamageRider" &&
     invocation.procedure !== "saveGatedCondition" &&
     invocation.procedure !== "saveGatedAttackRollAdvantage" &&

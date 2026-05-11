@@ -52,7 +52,7 @@ flowchart TD
   AttackOption["supported Attack action option<br/>source: character selected weapon or StatBlockRecord named attack<br/>why: attack bonus, damage, reach, normal/long range, and attack identity derive from authored inputs"]
   MonsterControl["monster control resources<br/>success: spend X/Day or Recharge; discover Legendary Actions after another turn; refresh Legendary Actions and recharge rolls at start turn; pending Multiattack dispatches expose matching dispatch attacks, Movement, and End Turn<br/>why: reusable Stat Block limited-use protocol"]
   UnitFeature["Unit feature activation/passive support<br/>source: retained Unit + runtime use-count, turn-resource, or support-profile state<br/>success: Action Surge grants one non-Magic action; Second Wind spends Bonus Action and heals; Defense admits a passive Armor Class bonus profile; Savage Attacker chooses weapon damage dice"]
-  SpellAct["spell act<br/>source: retained Spell Records + runtime Spell Slot/effect state<br/>success: action-time spells consume Magic action; Magic Missile allocates darts and spends the selected slot; direct healing spells restore selected targets, including Mass Cure Wounds point-origin Sphere choices; Shield spends Reaction + slot from trigger windows; Ray of Frost records Speed effect; Shocking Grasp denies Opportunity Attacks; Guiding Bolt, Ray of Sickness, and Vicious Mockery record source-owned timed attack-roll/condition riders; Animal Friendship and Protection from Evil and Good record creature-type-scoped condition/protection effects; Poison Spray, damage-only Chill Touch, Sacred Flame, Acid Splash, and Inflict Wounds apply admitted spell damage"]
+  SpellAct["spell act<br/>source: retained Spell Records + runtime Spell Slot/effect state<br/>success: action-time spells consume Magic action; Magic Missile allocates darts and spends the selected slot; direct healing spells restore selected targets, including Mass Cure Wounds point-origin Sphere choices; Shield spends Reaction + slot from trigger windows; Ray of Frost records Speed effect; Shocking Grasp denies Opportunity Attacks; Guiding Bolt, Ray of Sickness, and Vicious Mockery record source-owned timed attack-roll/condition riders; Animal Friendship, Ensnaring Strike, and Protection from Evil and Good record source-owned condition/protection effects; Poison Spray, damage-only Chill Touch, Sacred Flame, Acid Splash, and Inflict Wounds apply admitted spell damage"]
   AttackReplay["Attack replay<br/>subject carries attack name; needs target -> attack roll -> damage on hit<br/>success: miss spends action, hit applies damage then spends action<br/>why: staged holes match the SRD attack sequence without a second attack IR"]
   Damage["apply HP damage<br/>success: temp HP absorbed first, HP clamped at 0, zero-HP lifecycle or melee Knock Out applied<br/>why: one HP mutation boundary"]
   Hidden["Hidden state<br/>source: Hide/Search procedure<br/>data: discovery DC<br/>why: battle-owned execution fact for Invisible projection, Search, and reveal triggers"]
@@ -94,7 +94,7 @@ flowchart TD
 flowchart TD
   Subject["BattleSubject<br/>action.attack, action.multiattack, actionSpell, unitFeature, or runtimeCommand.endTurn"]
   CurrentActor["actorId === currentActing(state.initiative)<br/>success: continue<br/>failure: invalid wrongActor<br/>why: subject legality is turn-local"]
-  EndTurn["runtimeCommand.endTurn<br/>success: resolved next turn<br/>invalid: fills are not accepted"]
+  EndTurn["runtimeCommand.endTurn<br/>success: resolved next turn; asks for start-turn Death Saving Throw, recharge, or spell-condition damage fills when needed<br/>invalid: wrong actor, stale fills, or fills that do not match requested holes"]
   Attack["action.attack + attackName<br/>success: staged target/roll/damage replay<br/>invalid: actor missing, unsupported shape, no action resource, bad fills"]
   UnitFeature["unitFeature<br/>success: spend retained feature resource and resolve supported Unit procedure<br/>invalid: no use remains, no Bonus Action, or already used this turn"]
   Magic["actionSpell + spellId<br/>success: staged action-time spell replay via Magic action, including supported attack, save, damage, mixed attack-plus-burst, scalar buff, and creature-type protection/charm spells<br/>invalid: unsupported spell shape, no Magic action, no slot for prepared spell"]
@@ -138,7 +138,8 @@ flowchart TD
   reach/range remains content metadata; the caller/table supplies spatially
   legal targets and the runtime does not store pairwise distances. Ranged target
   facts carry a single selected range band; long range feeds the shared
-  Advantage/Disadvantage roll-mode path.
+  Advantage/Disadvantage roll-mode path. Ensnaring Strike helper escapes use a
+  table-supplied actor-within-restrained-target-reach fact on the escape check.
 - Hide/Search replay is gated by battle-owned Hide prerequisite state: the GM
   adjudicated that the actor is Heavily Obscured or behind enough cover and out
   of enemy line of sight. Successful Hide then records one executable fact, the
@@ -230,9 +231,13 @@ flowchart TD
   spell procedures also share a turn-resource fact for the SRD one-Spell-Slot
   per-turn rule. Divine Smite is admitted from an already-hit melee weapon or
   Unarmed Strike window and threads its added damage through the interrupted
-  attack continuation. Off-Hand Attack uses the shared attack host Reaction
-  windows before the Bonus Action resource is committed for damage replay.
-  Broader generic Bonus Action subjects remain future width.
+  attack continuation. Ensnaring Strike is admitted from an already-hit weapon
+  attack window, gates Restrained behind the target Strength save, records
+  spell-owned turn-start Piercing damage, and uses the shared spell-restraint
+  escape action for the target or a table-positioned helper. Off-Hand Attack
+  uses the shared attack host Reaction windows before the Bonus Action resource
+  is committed for damage replay. Broader generic Bonus Action subjects remain
+  future width.
 - The package-local `battle-runtime.qnt` spec constrains this implemented
   subset. Old root `battle.qnt` remains broad legacy/Core proof and restore
   source material, not the target for new runtime behavior.

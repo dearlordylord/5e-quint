@@ -38,6 +38,7 @@ import divineSmiteInput from "../../content/divine_smite.json";
 import druidDruidicInput from "../../content/druid_druidic.json";
 import druidPrimalOrderInput from "../../content/druid_primal_order.json";
 import eldritchBlastInput from "../../content/eldritch_blast.json";
+import ensnaringStrikeInput from "../../content/ensnaring_strike.json";
 import entangleInput from "../../content/entangle.json";
 import faerieFireInput from "../../content/faerie_fire.json";
 import equipmentShieldInput from "../../content/equipment_shield.json";
@@ -297,6 +298,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     cureWoundsInput,
     divineFavorInput,
     divineSmiteInput,
+    ensnaringStrikeInput,
     entangleInput,
     faerieFireInput,
     falseLifeInput,

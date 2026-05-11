@@ -82,7 +82,10 @@ import {
   literalStatBlockNumber,
 } from "./creature-state.ts";
 
-import { applyTemporaryHitPoints } from "./damage-apply.ts";
+import {
+  applyTemporaryHitPoints,
+  breakBattleConcentration,
+} from "./damage-apply.ts";
 
 import {
   attackDamageContinuationConcentrationFrame,
@@ -134,6 +137,7 @@ import {
 
 import type {
   AttackDamageRider,
+  BattleActiveEffect,
   BattleAttackDamageContinuationWithoutConcentration,
   BattleAttackHostSubject,
   BattleConcentrationSavingThrowHole,
@@ -1301,7 +1305,7 @@ export function resolveEscapeSpellRestraint(
 ): BattleResolutionResult {
   const effect = spellRestraintEffectFor(
     input.state,
-    input.subject.actorId,
+    input.subject.targetId,
     input.subject.sourceSpellId,
     input.subject.sourceCombatantId,
   );
@@ -1342,8 +1346,25 @@ export function resolveEscapeSpellRestraint(
   }
   if (check.value === undefined) {
     return needsHolesResult(input.state, input.subject, [
-      escapeSpellRestraintAbilityCheckHole(input.state, effect),
+      escapeSpellRestraintAbilityCheckHole(input.state, effect, {
+        actorId: input.subject.actorId,
+        targetId: input.subject.targetId,
+      }),
     ]);
+  }
+  if (
+    input.subject.actorId !== input.subject.targetId &&
+    !spellRestraintEscapeActorWithinTargetReach(
+      check.value.spatialFacts ?? [],
+      input.subject.actorId,
+      input.subject.targetId,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Escape spell Restraint helper must be within reach of the restrained target by table-supplied fact.",
+    );
   }
   const spent = spendAction(input.state.currentTurnResources, "utilize");
   if (Either.isLeft(spent)) {
@@ -1355,12 +1376,12 @@ export function resolveEscapeSpellRestraint(
   }
   const nextState =
     check.value.value.total >= dc
-      ? removeSpellConditionEffect(
+      ? resolveSuccessfulEscapeSpellRestraint(
           {
             ...input.state,
             currentTurnResources: spent.right,
           },
-          input.subject.actorId,
+          input.subject.targetId,
           effect,
         )
       : {
@@ -1372,6 +1393,38 @@ export function resolveEscapeSpellRestraint(
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
+}
+
+function resolveSuccessfulEscapeSpellRestraint(
+  state: BattleState,
+  targetId: CombatantId,
+  effect: Extract<BattleActiveEffect, { readonly kind: "spellCondition" }>,
+): BattleState {
+  if (effect.escape?.kind !== "abilityCheck") {
+    return removeSpellConditionEffect(state, targetId, effect);
+  }
+  return Match.value(effect.escape.successEnds).pipe(
+    Match.when("condition", () =>
+      removeSpellConditionEffect(state, targetId, effect),
+    ),
+    Match.when("spell", () =>
+      breakBattleConcentration(state, effect.sourceCombatantId),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function spellRestraintEscapeActorWithinTargetReach(
+  facts: readonly BattleTargetSpatialFact[],
+  actorId: CombatantId,
+  targetId: CombatantId,
+): boolean {
+  return facts.some(
+    (fact) =>
+      fact.kind === "spellRestraintEscapeActorWithinTargetReach" &&
+      fact.actorId === actorId &&
+      fact.targetId === targetId,
+  );
 }
 
 export function resolveReleaseGrappleCommand(

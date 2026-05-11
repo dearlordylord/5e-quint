@@ -70,6 +70,25 @@ export function spellRestraintEffects(
   );
 }
 
+export type SpellRestraintEffectEntry = {
+  readonly targetId: CombatantId;
+  readonly effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "spellCondition" }
+  >;
+};
+
+export function spellRestraintEffectEntries(
+  state: BattleState,
+): readonly SpellRestraintEffectEntry[] {
+  return [...state.combatants.keys()].flatMap((targetId) =>
+    spellRestraintEffects(state, targetId).map((effect) => ({
+      targetId,
+      effect,
+    })),
+  );
+}
+
 export function spellRestraintEffectFor(
   state: BattleState,
   combatantId: CombatantId,

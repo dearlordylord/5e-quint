@@ -84,7 +84,9 @@ export function hideAbilityCheckHole(): BattleAbilityCheckHole {
   };
 }
 
-export function searchAbilityCheckHole(dc: DifficultyClass): BattleAbilityCheckHole {
+export function searchAbilityCheckHole(
+  dc: DifficultyClass,
+): BattleAbilityCheckHole {
   return {
     holeInstanceKey: SEARCH_ABILITY_CHECK_HOLE_INSTANCE,
     holeId: SEARCH_ABILITY_CHECK_HOLE_ID,
@@ -99,6 +101,7 @@ export function searchAbilityCheckHole(dc: DifficultyClass): BattleAbilityCheckH
 export function escapeSpellRestraintAbilityCheckHole(
   state: BattleState,
   effect: Extract<BattleActiveEffect, { readonly kind: "spellCondition" }>,
+  input: { readonly actorId: CombatantId; readonly targetId: CombatantId },
 ): BattleAbilityCheckHole {
   const dc = spellSaveDcForCaster(state, effect.sourceCombatantId);
   return {
@@ -109,6 +112,9 @@ export function escapeSpellRestraintAbilityCheckHole(
     ability: "str",
     skill: "athletics",
     dc: dc ?? difficultyClass(1),
+    ...(input.actorId === input.targetId
+      ? {}
+      : { requiresTableSpatialFact: true }),
   };
 }
 
@@ -168,7 +174,9 @@ export function grappleTargetHole(
   };
 }
 
-export function grappleOutcomeHole(link: BattleGrappleLink): BattleGrappleOutcomeHole {
+export function grappleOutcomeHole(
+  link: BattleGrappleLink,
+): BattleGrappleOutcomeHole {
   return {
     kind: "grappleOutcome",
     holeId: GRAPPLE_OUTCOME_HOLE_ID,

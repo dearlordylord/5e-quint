@@ -17,6 +17,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage spell.invocation-damage-reduction
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31A divine_favor
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31C divine_smite
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31D ensnaring_strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31B hunters_mark
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV32B produce_flame
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield
@@ -161,6 +162,7 @@ const burningHandsUnitId = "burning_hands";
 const chromaticOrbUnitId = "chromatic_orb";
 const colorSprayUnitId = "color_spray";
 const entangleUnitId = "entangle";
+const ensnaringStrikeUnitId = "ensnaring_strike";
 const iceKnifeUnitId = "ice_knife";
 const sleepUnitId = "sleep";
 const monkDeflectAttacksUnitId = "monk_deflect_attacks";
@@ -224,6 +226,7 @@ const combatProwessSupportProfile = {
 } as const;
 const spellCasterId = combatantId("unit-profile-spell-caster");
 const spellTargetId = combatantId("unit-profile-spell-target");
+const ensnaringStrikeHelperId = combatantId("unit-profile-ensnaring-helper");
 const massHealingTargetIds = [
   spellTargetId,
   combatantId("unit-profile-spell-target-2"),
@@ -2847,6 +2850,7 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
           condition: "blinded",
           expiresAt: "endOfCasterNextTurn",
           escape: null,
+          turnStartDamage: null,
         },
         rangeFeet: 0,
       }),
@@ -2898,7 +2902,9 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
             kind: "abilityCheck",
             ability: "str",
             skill: "athletics",
+            successEnds: "condition",
           },
+          turnStartDamage: null,
         },
         rangeFeet: 90,
       }),
@@ -5021,6 +5027,210 @@ describe("SRDINV31C deterministic after-hit damage Spell Unit admission", () => 
       tag: "needsHoles",
       snapshot: { pendingReaction: null },
     });
+  });
+
+  test("ensnaring_strike restrains after a weapon hit, damages at turn start, and can be escaped", () => {
+    const spell = spellRecord(ensnaringStrikeUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      attack: zeroAbilityWeaponAttack("weapon_shortbow"),
+      extraTargetIds: [ensnaringStrikeHelperId],
+      targetHp: 20,
+      targetMaxHp: 20,
+    });
+    const subject = weaponAttackSubject("Shortbow");
+    const target = requireResultHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const targetFill = attackTargetFill(
+      target,
+      spellCasterId,
+      spellTargetId,
+      "Shortbow",
+    );
+    const roll = requireResultHole(
+      resolveBattleSubject({ state, subject, fills: [targetFill] }),
+      "attackRoll",
+    );
+    const rollFill = attackRollFill(roll, { total: 15, naturalD20: 10 });
+    const awaitingReaction = resolveBattleSubject({
+      state,
+      subject,
+      fills: [targetFill, rollFill],
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected Ensnaring Strike attack-hit window.");
+    }
+    const choice = awaitingReaction.snapshot.pendingReaction?.choices.find(
+      (candidate) =>
+        candidate.kind === "castAttackHitBonusActionSpell" &&
+        candidate.invocation.spellId === ensnaringStrikeUnitId,
+    );
+    if (
+      choice === undefined ||
+      choice.kind !== "castAttackHitBonusActionSpell"
+    ) {
+      throw new Error("Expected Ensnaring Strike after-hit choice.");
+    }
+    const save = requireHole(choice.initialHoles, "savingThrowOutcome");
+    expect(save).toMatchObject({ ability: "str" });
+    const afterEnsnaring = resolveBattleReaction({
+      state: awaitingReaction.state,
+      fill: reactionDecisionFill(
+        requireHole(awaitingReaction.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId: spellCasterId,
+          choice: {
+            kind: "castAttackHitBonusActionSpell",
+            invocation: choice.invocation,
+            fills: [
+              savingThrowOutcomeFill(save, [
+                { targetId: spellTargetId, succeeded: false },
+              ]),
+            ],
+          },
+        },
+      ),
+    });
+    if (afterEnsnaring.tag !== "needsHoles") {
+      throw new Error(
+        "Expected Ensnaring Strike replay to need attack damage.",
+      );
+    }
+    const damage = requireHole(afterEnsnaring.holes, "rolledDice");
+    const afterWeaponDamage = resolveBattleSubject({
+      state: afterEnsnaring.state,
+      subject,
+      fills: [targetFill, rollFill, damageRollFillWithGroups(damage, [[3]])],
+    });
+    if (afterWeaponDamage.tag !== "resolved") {
+      throw new Error("Expected Ensnaring Strike host attack to resolve.");
+    }
+    expect(
+      requireCombatant(afterWeaponDamage.state, spellTargetId),
+    ).toMatchObject({
+      conditions: expect.objectContaining({ restrained: true }),
+    });
+
+    const awaitingTurnStartDamage = endTurn({
+      state: afterWeaponDamage.state,
+      actorId: spellCasterId,
+    });
+    const turnStartDamage = requireResultHole(
+      awaitingTurnStartDamage,
+      "rolledDice",
+    );
+    expect(turnStartDamage).toMatchObject({
+      spellConditionTurnStartDamage: {
+        sourceSpellId: ensnaringStrikeUnitId,
+        targetId: spellTargetId,
+        damage: { expr: { dice: 1, dieSize: 6 }, damageType: "piercing" },
+      },
+    });
+    const targetTurn = endTurn({
+      state: afterWeaponDamage.state,
+      actorId: spellCasterId,
+      fills: [damageRollFillWithGroups(turnStartDamage, [[4]])],
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error(
+        "Expected Ensnaring Strike turn-start damage to resolve.",
+      );
+    }
+    expect(requireCombatant(targetTurn.state, spellTargetId).hp).toBe(Hp(13));
+
+    const escapeAct = discoverBattleActs(targetTurn.state).find(
+      (act) =>
+        act.subject.tag === "action" &&
+        act.subject.action === "escapeSpellRestraint",
+    );
+    if (
+      escapeAct?.subject.tag !== "action" ||
+      escapeAct.subject.action !== "escapeSpellRestraint" ||
+      escapeAct.subject.targetId !== spellTargetId
+    ) {
+      throw new Error("Expected Ensnaring Strike escape action.");
+    }
+    const escaped = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: escapeAct.subject,
+      fills: [
+        abilityCheckFill(
+          requireHole(escapeAct.initialHoles, "abilityCheck"),
+          13,
+        ),
+      ],
+    });
+    if (escaped.tag !== "resolved") {
+      throw new Error("Expected Ensnaring Strike escape to resolve.");
+    }
+    expect(requireCombatant(escaped.state, spellTargetId)).toMatchObject({
+      conditions: expect.objectContaining({ restrained: false }),
+    });
+    expect(
+      requireCombatant(escaped.state, spellCasterId).concentration,
+    ).toBeNull();
+
+    const helperTurnResult = endTurn({
+      state: targetTurn.state,
+      actorId: spellTargetId,
+    });
+    if (helperTurnResult.tag !== "resolved") {
+      throw new Error("Expected Ensnaring Strike helper turn to start.");
+    }
+    const helperTurn = helperTurnResult.state;
+    const helperEscapeAct = discoverBattleActs(helperTurn).find(
+      (act) =>
+        act.subject.tag === "action" &&
+        act.subject.action === "escapeSpellRestraint" &&
+        act.subject.actorId === ensnaringStrikeHelperId &&
+        act.subject.targetId === spellTargetId,
+    );
+    if (
+      helperEscapeAct?.subject.tag !== "action" ||
+      helperEscapeAct.subject.action !== "escapeSpellRestraint"
+    ) {
+      throw new Error("Expected Ensnaring Strike helper escape action.");
+    }
+    const helperEscapeCheck = requireHole(
+      helperEscapeAct.initialHoles,
+      "abilityCheck",
+    );
+    expect(helperEscapeCheck).toMatchObject({
+      requiresTableSpatialFact: true,
+    });
+    expect(
+      resolveBattleSubject({
+        state: helperTurn,
+        subject: helperEscapeAct.subject,
+        fills: [abilityCheckFill(helperEscapeCheck, 13)],
+      }),
+    ).toMatchObject({ tag: "invalid" });
+
+    const helperEscaped = resolveBattleSubject({
+      state: helperTurn,
+      subject: helperEscapeAct.subject,
+      fills: [
+        abilityCheckFill(helperEscapeCheck, 13, [
+          {
+            kind: "spellRestraintEscapeActorWithinTargetReach",
+            actorId: ensnaringStrikeHelperId,
+            targetId: spellTargetId,
+          },
+        ]),
+      ],
+    });
+    if (helperEscaped.tag !== "resolved") {
+      throw new Error("Expected Ensnaring Strike helper escape to resolve.");
+    }
+    expect(requireCombatant(helperEscaped.state, spellTargetId)).toMatchObject({
+      conditions: expect.objectContaining({ restrained: false }),
+    });
+    expect(
+      requireCombatant(helperEscaped.state, spellCasterId).concentration,
+    ).toBeNull();
   });
 
   test("divine_smite is admitted after a melee weapon hit and adds Radiant damage without replaying the base attack", () => {
@@ -8966,6 +9176,22 @@ function reactionDecisionFill(
   value: Extract<BattleFill, { readonly kind: "reactionDecision" }>["value"],
 ): Extract<BattleFill, { readonly kind: "reactionDecision" }> {
   return { kind: "reactionDecision", holeId: hole.holeId, value };
+}
+
+function abilityCheckFill(
+  hole: Extract<BattleHole, { readonly kind: "abilityCheck" }>,
+  total: number,
+  spatialFacts?: Extract<
+    BattleFill,
+    { readonly kind: "abilityCheck" }
+  >["spatialFacts"],
+): Extract<BattleFill, { readonly kind: "abilityCheck" }> {
+  return {
+    kind: "abilityCheck",
+    holeId: hole.holeId,
+    value: { total },
+    ...(spatialFacts === undefined ? {} : { spatialFacts }),
+  };
 }
 
 function spellAct(input: {

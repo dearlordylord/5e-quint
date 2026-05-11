@@ -106,6 +106,7 @@ import { type DamageAmountByTypeEntry } from "./battle-reducer/damage-helpers.ts
 import {
   BATTLE_ATTACK_RANGE_BANDS,
   CRITICAL_HIT_THRESHOLDS,
+  SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS,
 } from "./battle-reducer/domain-constants.ts";
 export {
   addBattleCombatant,
@@ -419,15 +420,22 @@ type BattleSpellEffectBase = {
   readonly sourceSpellId: SpellRecord["id"];
   readonly sourceCombatantId: CombatantId;
 };
+export type SpellConditionAbilityCheckSuccessEnd =
+  (typeof SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS)[number];
 export type SpellConditionEscape =
   | {
       readonly kind: "abilityCheck";
       readonly ability: "str";
       readonly skill: "athletics";
+      readonly successEnds: SpellConditionAbilityCheckSuccessEnd;
     }
   | {
       readonly kind: "targetDamagedByCasterOrAlly";
     };
+export type SpellConditionTurnStartDamage = {
+  readonly expr: DiceExpr;
+  readonly damageType: DamageType;
+};
 export type BattleActiveEffect =
   | (BattleSpellEffectBase & {
       readonly kind: "speedDelta";
@@ -452,6 +460,7 @@ export type BattleActiveEffect =
       readonly condition: Condition;
       readonly conditionHadNonSpellSource: boolean;
       readonly escape: SpellConditionEscape | null;
+      readonly turnStartDamage: SpellConditionTurnStartDamage | null;
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {
@@ -647,7 +656,9 @@ export type AttackDamageReductionZeroDamageRedirectAvailableOffer = {
 };
 export type BattleAttackKindForRedirect = "melee" | "ranged";
 export type BattleAttackHitTriggerKind =
-  | "meleeWeaponOrUnarmedStrike"
+  | "meleeWeapon"
+  | "rangedWeapon"
+  | "unarmedStrike"
   | "otherAttack";
 export type AttackDamageReductionRedirectTargetGate = NonNullable<
   Extract<
@@ -999,11 +1010,20 @@ export type BattleTargetSpatialFact =
       readonly targetId: CombatantId;
     }
   | {
+      readonly kind: "spellRestraintEscapeActorWithinTargetReach";
+      readonly actorId: CombatantId;
+      readonly targetId: CombatantId;
+    }
+  | {
       readonly kind: "sneakAttackAllyWithin5FeetOfTarget";
       readonly attackerId: CombatantId;
       readonly targetId: CombatantId;
       readonly allyId: CombatantId;
     };
+export type BattleAbilityCheckSpatialFact = Extract<
+  BattleTargetSpatialFact,
+  { readonly kind: "spellRestraintEscapeActorWithinTargetReach" }
+>;
 export type BattleResolvedMovement = {
   readonly moverId: CombatantId;
   readonly speedKind: BattleMovementSpeedKind;
@@ -1113,6 +1133,7 @@ export type SpellFailedSaveConditionEffect = {
         readonly durationTicks: ElapsedTimeTicks;
       };
   readonly escape: SpellConditionEscape | null;
+  readonly turnStartDamage: SpellConditionTurnStartDamage | null;
 };
 export type SpellFailedSaveAttackRollEffect = Extract<
   BattleActiveEffect,
@@ -1263,6 +1284,20 @@ export type AfterHitDamageSpellInvocation = {
     readonly expr: DiceExpr;
     readonly damageType: DamageType;
   };
+};
+export type AfterHitSaveGatedConditionSpellInvocation = {
+  readonly access: PreparedSpellAccess;
+  readonly resource: SpellSlotInvocationResource;
+  readonly procedure: "afterHitSaveGatedCondition";
+  readonly spell: SpellRecord;
+  readonly actionCost: "bonusAction";
+  readonly ability: Ability;
+  readonly dc: DcSource;
+  readonly targeting: Extract<
+    SpellTargeting,
+    { readonly kind: "singleCombatant" }
+  >;
+  readonly effect: SpellFailedSaveConditionEffect;
 };
 export type MarkedDamageRiderSpellInvocation =
   | {
@@ -1460,6 +1495,7 @@ export type SupportedSpellInvocation =
   | ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation
   | WeaponDamageRiderSpellInvocation
   | AfterHitDamageSpellInvocation
+  | AfterHitSaveGatedConditionSpellInvocation
   | MarkedDamageRiderSpellInvocation
   | {
       readonly access: PreparedSpellAccess;
@@ -1522,6 +1558,7 @@ export type SupportedDamageSpellInvocation = Exclude<
       | "scalarBuff"
       | "weaponDamageRider"
       | "afterHitDamage"
+      | "afterHitSaveGatedCondition"
       | "markedDamageRider"
       | "heldLight"
       | "shieldReaction"
@@ -2018,6 +2055,18 @@ export type BattleSpellDamageReductionRollHole = Extract<
 > & {
   readonly spellDamageReduction: SpellDamageReductionRoll;
 };
+export type BattleSpellConditionTurnStartDamageRollHole = Extract<
+  RuntimeHole,
+  { readonly kind: "rolledDice" }
+> & {
+  readonly spellConditionTurnStartDamage: {
+    readonly targetId: CombatantId;
+    readonly sourceSpellId: SpellRecord["id"];
+    readonly sourceCombatantId: CombatantId;
+    readonly condition: Condition;
+    readonly damage: SpellConditionTurnStartDamage;
+  };
+};
 export type BattleSpellHealingRollHole = Extract<
   RuntimeHole,
   { readonly kind: "rolledDice" }
@@ -2081,6 +2130,7 @@ export type BattleSpellSavingThrowOutcomeHole = {
         | "rollModifier"
         | "saveGatedDamage"
         | "saveGatedCondition"
+        | "afterHitSaveGatedCondition"
         | "saveGatedAttackRollAdvantage";
     }
   >;
@@ -2174,6 +2224,7 @@ export type BattleAbilityCheckHole = {
   readonly ability: Ability;
   readonly skill: "stealth" | "perception" | "athletics";
   readonly dc: DifficultyClass;
+  readonly requiresTableSpatialFact?: boolean;
 };
 export type BattleGrappleOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -2204,6 +2255,7 @@ export type BattleHole =
   | BattleDamageRollHole
   | BattleSpellDamageRollHole
   | BattleSpellDamageReductionRollHole
+  | BattleSpellConditionTurnStartDamageRollHole
   | BattleSpellHealingRollHole
   | BattleSpellSkillChoiceHole
   | BattleSpellSavingThrowOutcomeHole
@@ -2330,6 +2382,7 @@ export type BattleFill =
       readonly value: {
         readonly total: number;
       };
+      readonly spatialFacts?: readonly BattleAbilityCheckSpatialFact[];
     }
   | {
       readonly kind: "grappleOutcome";

@@ -3,34 +3,29 @@
 // resolver modules from depending on the monolithic spell dispatcher.
 
 import {
-spendAction,
-spendActivationResource,
+  spendAction,
+  spendActivationResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
 import { Either } from "effect";
 import type {
-BattleResolutionResult,
-BattleState,
-SupportedSpellInvocation,
+  BattleResolutionResult,
+  BattleState,
+  SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
-import {
-breakBattleConcentration,
-} from "./damage-apply.ts";
+import { breakBattleConcentration } from "./damage-apply.ts";
 import { snapshotBattle } from "./dispatcher.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { expendSpellSlot } from "./spell-effects.ts";
-import {
-markSpellSlotExpendedThisTurn,
-} from "./spells-profiles.ts";
-import {
-clearPendingAttackRollMissToHitReplacementSelection,
-} from "./statblock-attacks.ts";
+import { markSpellSlotExpendedThisTurn } from "./spells-profiles.ts";
+import { clearPendingAttackRollMissToHitReplacementSelection } from "./statblock-attacks.ts";
 
 export function spendSpellCastResources(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly invocation: SupportedSpellInvocation;
   readonly errorState: BattleState;
+  readonly startConcentration?: boolean;
 }): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
   const actionCost =
     "actionCost" in input.invocation
@@ -51,6 +46,8 @@ export function spendSpellCastResources(input: {
         : "Magic action is no longer available for the current actor.",
     );
   }
+  const shouldStartConcentration =
+    input.startConcentration ?? spellRequiresConcentration(input.invocation);
   if (input.invocation.resource.tag === "none") {
     const afterPriorConcentration = spellRequiresConcentration(input.invocation)
       ? breakBattleConcentration(input.state, input.actorId)
@@ -62,7 +59,7 @@ export function spendSpellCastResources(input: {
         input.actorId,
       ),
     };
-    const nextState = spellRequiresConcentration(input.invocation)
+    const nextState = shouldStartConcentration
       ? startSpellEffectConcentration(
           resourced,
           input.actorId,
@@ -98,7 +95,7 @@ export function spendSpellCastResources(input: {
       input.actorId,
     ),
   };
-  const nextState = spellRequiresConcentration(input.invocation)
+  const nextState = shouldStartConcentration
     ? startSpellEffectConcentration(resourced, input.actorId, input.invocation)
     : resourced;
   return {

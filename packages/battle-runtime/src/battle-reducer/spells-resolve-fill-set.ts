@@ -1,38 +1,32 @@
 // Spell replay fill parser extracted from spells-resolve.ts.
 // Owns classification and validation of supplied fills against spell replay holes.
 
+import { type AttackRollResult } from "@dnd/shared-algebras/runtime-hole-algebra";
+import type { Skill } from "@dnd/surface/surface/types";
 import {
-type AttackRollResult
-} from "@dnd/shared-algebras/runtime-hole-algebra";
-import type {
-Skill
-} from "@dnd/surface/surface/types";
-import {
-ATTACK_ROLL_HOLE_ID,
-ATTACK_TARGET_HOLE_ID,
-isScalarBuffTargetListInvocation,
-isTargetListSpellInvocation,
-type BattleAttackRollResult,
-type BattleFill,
-type BattleSpellSavingThrowOutcomeValue,
-type BattleSpellTargetAllocation,
-type BattleSpellTargetListSpatialFact,
-type BattleTargetSpatialFact,
-type SpellTargeting,
-type SupportedSpellInvocation
+  ATTACK_ROLL_HOLE_ID,
+  ATTACK_TARGET_HOLE_ID,
+  isScalarBuffTargetListInvocation,
+  isTargetListSpellInvocation,
+  type BattleAttackRollResult,
+  type BattleFill,
+  type BattleSpellSavingThrowOutcomeValue,
+  type BattleSpellTargetAllocation,
+  type BattleSpellTargetListSpatialFact,
+  type BattleTargetSpatialFact,
+  type SpellTargeting,
+  type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
+import { isSpellDamageReductionRollFill } from "./damage-helpers.ts";
 import {
-isSpellDamageReductionRollFill
-} from "./damage-helpers.ts";
-import {
-spellBurstDamageHole,
-spellDamageHole,
-spellDamageTypeChoiceHole,
-spellRollModifierSkillChoiceHoleId,
-spellSavingThrowOutcomeHoleId,
-spellTargetAllocationHoleId,
-spellTargetListHoleId
+  spellBurstDamageHole,
+  spellDamageHole,
+  spellDamageTypeChoiceHole,
+  spellRollModifierSkillChoiceHoleId,
+  spellSavingThrowOutcomeHoleId,
+  spellTargetAllocationHoleId,
+  spellTargetListHoleId,
 } from "./spells-holes-fills.ts";
 
 export type SpellFillSet =
@@ -234,6 +228,7 @@ export function spellFillSet(
         invocation.procedure !== "attackBurstSaveDamage" &&
         invocation.procedure !== "saveGatedDamage" &&
         invocation.procedure !== "saveGatedCondition" &&
+        invocation.procedure !== "afterHitSaveGatedCondition" &&
         invocation.procedure !== "saveGatedAttackRollAdvantage" &&
         !(
           invocation.procedure === "rollModifier" &&
@@ -465,6 +460,7 @@ export function spellFillSetSavingThrowTargeting(
     ? invocation.burst.targeting
     : invocation.procedure === "saveGatedDamage" ||
         invocation.procedure === "saveGatedCondition" ||
+        invocation.procedure === "afterHitSaveGatedCondition" ||
         invocation.procedure === "saveGatedAttackRollAdvantage"
       ? invocation.targeting
       : { kind: "singleCombatant" };

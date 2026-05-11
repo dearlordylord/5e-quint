@@ -198,7 +198,7 @@ module battleRuntime {
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | FaerieFire | AnimalFriendship | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | FaerieFire | AnimalFriendship | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack
   type ChainedSpellAttackDamageInvocation =
     | ChromaticOrbChainedSpellAttack
@@ -220,7 +220,7 @@ module battleRuntime {
   type RollModifierSpell = BaneRollModifier | BlessRollModifier | GuidanceRollModifier
   type SpellActionCost = SpellMagicAction | SpellBonusAction
 
-  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | FaerieFireAttackRollAdvantage | AnimalFriendshipCharmed({ durationTicks: int }) | ProtectionFromEvilAndGoodAttackDisadvantage | ProduceFlameHeldLight({ durationTicks: int })
+  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | FaerieFireAttackRollAdvantage | AnimalFriendshipCharmed({ durationTicks: int }) | ProtectionFromEvilAndGoodAttackDisadvantage | ProduceFlameHeldLight({ durationTicks: int })
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
   type RuntimeCreatureType = HumanoidCreature | BeastCreature | AberrationCreature | CelestialCreature | ElementalCreature | FeyCreature | FiendCreature | UndeadCreature
 
@@ -788,6 +788,7 @@ module battleRuntime {
         | ViciousMockeryNextAttackDisadvantage => false
         | ColorSprayBlinded => false
         | EntangleRestrained => false
+        | EnsnaringStrikeRestrained(_) => false
         | FaerieFireAttackRollAdvantage => false
         | AnimalFriendshipCharmed(_) => false
         | ProtectionFromEvilAndGoodAttackDisadvantage => false
@@ -1575,6 +1576,7 @@ module battleRuntime {
       .exclude(spellEffectConcentrationActiveEffects)
       .filter(effect => match effect {
         | HeroismTurnStartTemporaryHitPoints(_) => false
+        | EnsnaringStrikeRestrained(_) => false
         | ResistanceDamageReduction(_) => false
         | _ => true
       })
@@ -2124,6 +2126,98 @@ module battleRuntime {
     else
       state
 
+  pure def activeEffectsWithoutEnsnaringStrike(effects: Set[ActiveEffect]): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | EnsnaringStrikeRestrained(_) => false
+      | _ => true
+    })
+
+  pure def activeEffectsContainEnsnaringStrike(effects: Set[ActiveEffect]): bool =
+    effects.exists(effect => match effect {
+      | EnsnaringStrikeRestrained(_) => true
+      | _ => false
+    })
+
+  pure def ensnaringStrikeDamageDiceForSlot(slotLevel: int): int =
+    if (slotLevel < 1) 0 else slotLevel
+
+  pure def ensnaringStrikeTargetHasSaveAdvantage(targetSize: CreatureSize): bool =
+    targetSize == Large or targetSize == Huge or targetSize == Gargantuan
+
+  pure def ensnaringStrikeDamageDice(effects: Set[ActiveEffect]): int =
+    effects
+      .map(effect => match effect {
+        | EnsnaringStrikeRestrained(data) => data.damageDice
+        | _ => 0
+      })
+      .fold(0, (highest, dice) => if (highest > dice) highest else dice)
+
+  pure def resolveEnsnaringStrikeAfterWeaponHit(
+    state: BattleState,
+    slotLevel: int,
+    goblinSavingThrowSucceeded: bool,
+  ): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      slotLevel >= 1 and
+      state.bonusActionAvailable and
+      canExpendSpellSlotThisTurn(state) and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state))
+    )
+      {
+      val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
+      {
+        ...withoutPrior,
+        fighter: { ...withoutPrior.fighter, concentrating: not(goblinSavingThrowSucceeded) },
+        goblin: if (goblinSavingThrowSucceeded)
+          withoutPrior.goblin
+        else
+          {
+            ...withoutPrior.goblin,
+            activeEffects: activeEffectsWithoutEnsnaringStrike(withoutPrior.goblin.activeEffects)
+              .union(Set(EnsnaringStrikeRestrained({ damageDice: ensnaringStrikeDamageDiceForSlot(slotLevel) }))),
+          },
+        bonusActionAvailable: false,
+        spellSlotExpendedThisTurn: true,
+      }
+    }
+    else
+      state
+
+  pure def endTurnWithEnsnaringStrikeDamage(
+    state: BattleState,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+  ): BattleState = {
+    val advanced = endTurn(state)
+    val damageDice = ensnaringStrikeDamageDice(advanced.goblin.activeEffects)
+    if (currentActor(advanced) == Goblin and damageDice > 0)
+      { ...advanced, goblin: applyDamage(advanced.goblin, damageRoll, 1, concentrationSaveSucceeded) }
+    else
+      advanced
+  }
+
+  pure def escapeEnsnaringStrike(
+    state: BattleState,
+    checkSucceeded: bool,
+    actorWithinRestrainedTargetReach: bool,
+  ): BattleState =
+    if (
+      not(state.actionAvailable)
+        or not(activeEffectsContainEnsnaringStrike(state.goblin.activeEffects))
+        or (currentActor(state) != Goblin and not(actorWithinRestrainedTargetReach))
+    )
+      state
+    else
+      {
+        ...state,
+        fighter: if (checkSucceeded) { ...state.fighter, concentrating: false } else state.fighter,
+        goblin: if (checkSucceeded) { ...state.goblin, activeEffects: activeEffectsWithoutEnsnaringStrike(state.goblin.activeEffects) } else state.goblin,
+        actionAvailable: false,
+      }
+
   pure def resolveHuntersMark(state: BattleState, target: Actor): BattleState =
     if (
       currentActor(state) == Fighter and
@@ -2570,6 +2664,7 @@ module battleRuntime {
       | BurningHands => true
       | ColorSpray => true
       | Entangle => true
+      | EnsnaringStrike => true
       | FaerieFire => true
       | AnimalFriendship => true
       | ProtectionFromEvilAndGood => true
@@ -4926,6 +5021,33 @@ module battleRuntime {
       assert(smote.spellSlotExpendedThisTurn),
       assert(alreadySpent.goblin.hp == initialState.goblin.hp),
       assert(critical.goblin.hp == 0),
+    }
+  }
+
+  run test_ensnaring_strike_after_weapon_hit_restrains_damages_and_escapes = {
+    val ensnared = resolveEnsnaringStrikeAfterWeaponHit(initialState, 1, false)
+    val damaged = endTurnWithEnsnaringStrikeDamage(ensnared, 4, true)
+    val escaped = escapeEnsnaringStrike(damaged, true, false)
+    val helperTurn = endTurn(damaged)
+    val helperWithoutReach = escapeEnsnaringStrike(helperTurn, true, false)
+    val helperEscaped = escapeEnsnaringStrike(helperTurn, true, true)
+    val saveSucceeded = resolveEnsnaringStrikeAfterWeaponHit(initialState, 1, true)
+    all {
+      assert(ensnared.goblin.activeEffects.contains(EnsnaringStrikeRestrained({ damageDice: 1 }))),
+      assert(ensnared.fighter.concentrating),
+      assert(not(ensnared.bonusActionAvailable)),
+      assert(ensnared.spellSlotExpendedThisTurn),
+      assert(damaged.goblin.hp == initialState.goblin.hp - 4),
+      assert(not(escaped.goblin.activeEffects.contains(EnsnaringStrikeRestrained({ damageDice: 1 })))),
+      assert(not(escaped.fighter.concentrating)),
+      assert(helperWithoutReach.goblin.activeEffects.contains(EnsnaringStrikeRestrained({ damageDice: 1 }))),
+      assert(not(helperEscaped.goblin.activeEffects.contains(EnsnaringStrikeRestrained({ damageDice: 1 })))),
+      assert(not(helperEscaped.fighter.concentrating)),
+      assert(not(saveSucceeded.fighter.concentrating)),
+      assert(not(activeEffectsContainEnsnaringStrike(saveSucceeded.goblin.activeEffects))),
+      assert(ensnaringStrikeTargetHasSaveAdvantage(Large)),
+      assert(not(ensnaringStrikeTargetHasSaveAdvantage(Medium))),
+      assert(ensnaringStrikeDamageDiceForSlot(3) == 3),
     }
   }
 

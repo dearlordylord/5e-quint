@@ -15577,6 +15577,10 @@ describe("battle runtime", () => {
       conditions: expect.not.objectContaining({ restrained: true }),
       activeEffects: [],
     });
+    expect(escaped.state.combatants.get(wizardId)?.concentration).toEqual({
+      sourceSpellId: "entangle",
+      effectKind: "spellEffect",
+    });
   });
 
   test("Entangle escape actions identify the restraining caster", () => {
@@ -16705,7 +16709,7 @@ function runCanonicalBattleRuntimeQntSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("138 passing");
+  expect(quintOutput).toContain("139 passing");
 }
 
 function hidePrerequisites(

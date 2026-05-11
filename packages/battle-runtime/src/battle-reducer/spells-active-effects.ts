@@ -2,7 +2,11 @@
 
 import { Match } from "effect";
 import { type Round as RoundType } from "@dnd/shared/types";
-import type { DamageType, Skill, SpellRecord } from "@dnd/surface/surface/types";
+import type {
+  DamageType,
+  Skill,
+  SpellRecord,
+} from "@dnd/surface/surface/types";
 import type { CombatantId } from "../identity.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import { applyTemporaryHitPoints } from "./damage-apply.ts";
@@ -143,7 +147,9 @@ export function applyFailedSaveSpellConditionEffects(
   targetIds: readonly CombatantId[],
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "saveGatedCondition" }
+    {
+      readonly procedure: "afterHitSaveGatedCondition" | "saveGatedCondition";
+    }
   >,
 ): BattleState {
   const combatants = new Map(state.combatants);
@@ -171,6 +177,7 @@ export function applyFailedSaveSpellConditionEffects(
           invocation.effect.condition,
         ),
         escape: invocation.effect.escape,
+        turnStartDamage: invocation.effect.turnStartDamage,
         expiresAt: activeEffectExpirationForPostDamageRider(
           state,
           actorId,
@@ -292,6 +299,7 @@ export function spellPostDamageRiderActiveEffect(input: {
         rider.condition,
       ),
       escape: null,
+      turnStartDamage: null,
       expiresAt,
     })),
     Match.when({ kind: "opportunityAttackDenied" }, () => ({
@@ -356,7 +364,6 @@ export function endOfNextTurnExpiration(
     round,
   };
 }
-
 
 export function applyPersistentSpellActiveEffect(
   state: BattleState,
@@ -581,16 +588,16 @@ export function applyCreatureTypeProtectionSpellEffect(
       sourceCombatantId: actorId,
     };
     const activeEffects = [
-        ...target.activeEffects.filter(
-          (effect) =>
-            !(
-              effect.kind === "attackerTypeScopedAttackRollAgainstSelf" &&
-              effect.sourceSpellId === invocation.spell.id &&
-              effect.sourceCombatantId === actorId
-            ),
-        ),
-        nextEffect,
-      ];
+      ...target.activeEffects.filter(
+        (effect) =>
+          !(
+            effect.kind === "attackerTypeScopedAttackRollAgainstSelf" &&
+            effect.sourceSpellId === invocation.spell.id &&
+            effect.sourceCombatantId === actorId
+          ),
+      ),
+      nextEffect,
+    ];
     return {
       ...nextState,
       combatants: new Map(nextState.combatants).set(targetId, {

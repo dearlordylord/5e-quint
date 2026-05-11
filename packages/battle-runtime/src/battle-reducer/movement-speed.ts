@@ -437,9 +437,14 @@ export function attackKindForDeflectRedirect(
 export function attackHitTriggerKind(
   attack: SupportedAttackActionOption,
 ): BattleAttackHitTriggerKind {
-  return (attack.kind === "weapon" || attack.kind === "unarmedStrike") &&
+  if (attack.kind === "weapon") {
+    return attackTargetConstraint(attack).kind === "meleeReach"
+      ? "meleeWeapon"
+      : "rangedWeapon";
+  }
+  return attack.kind === "unarmedStrike" &&
     attackTargetConstraint(attack).kind === "meleeReach"
-    ? "meleeWeaponOrUnarmedStrike"
+    ? "unarmedStrike"
     : "otherAttack";
 }
 

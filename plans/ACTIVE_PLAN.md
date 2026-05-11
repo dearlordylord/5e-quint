@@ -70,7 +70,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 218,
       "id": "SRDINV31D",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Ensnaring Strike Runtime"
     },
     {
@@ -136,7 +136,7 @@ Keep it synchronized with the DAG table and task details.
 | ----- | --------------------------------------------------------- | ------------------ | ---------- | ------ | --------------- | ----------- |
 | 164   | QMBT69 - Recursive Unit Profile Planning Review | deferred | QMBT68 | none | [QMBT66 review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT66_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Still parked by the SRD inventory frontier instruction; QMBT68 is complete, but the older QMBT queue remains deferred until that frontier resumes it. |
 | 217   | SRDINV31C - Promote Divine Smite After-Hit Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Divine Smite](/workspace/typescript/dnd/packages/surface/content/divine_smite.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Completed: Divine Smite is promoted as an immediate after-hit Bonus Action damage splice without replaying the base attack. |
-| 218   | SRDINV31D - Promote Ensnaring Strike Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Ensnaring Strike](/workspace/typescript/dnd/packages/surface/content/ensnaring_strike.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote after-hit save-gated Restrained, start-turn damage, and escape lifecycle. |
+| 218   | SRDINV31D - Promote Ensnaring Strike Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Ensnaring Strike](/workspace/typescript/dnd/packages/surface/content/ensnaring_strike.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Completed: Ensnaring Strike is promoted as an after-hit weapon spell with Strength save, Restrained, start-turn Piercing damage, helper escape by table reach fact, and spell-ending concentration cleanup. |
 | 219   | SRDINV31E - Promote Searing Smite Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [Searing Smite](/workspace/typescript/dnd/packages/surface/content/searing_smite.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote after-hit Fire damage plus recurring start-turn damage and save-to-end. |
 | 220   | SRDINV31F - Promote True Strike Weapon Spell Runtime | ready-for-research | SRDINV28A-SRDINV28E | SRDINV33 | [True Strike](/workspace/typescript/dnd/packages/surface/content/true_strike.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Promote spell-hosted weapon attack with spellcasting ability and damage type choice. |
 | 223   | SRDINV33 - Recursive SRD Inventory Planning Review | blocked | SRDINV28A-SRDINV28E, SRDINV29A-SRDINV29E, SRDINV29F3, SRDINV30A-SRDINV32B | SRDINV34 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review the split spell-runtime closure, refresh spell Unit metrics, and append Ralph-sized follow-up tasks only after checking execution-invariant granularity. |
@@ -193,7 +193,7 @@ Verification: RAW checked in
 
 ### Task 218 - SRDINV31D - Promote Ensnaring Strike Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV28A-SRDINV28E
 
@@ -202,6 +202,11 @@ Blocks: SRDINV33
 Scope: promote Ensnaring Strike's weapon-hit trigger, Strength save, Restrained
 condition, Concentration cleanup, start-turn Piercing damage, slot scaling, and
 escape action.
+
+Verification: RAW checked in
+`.references/srd-5.2.1/Spells/Descriptions-E-L.md` and
+`UBIQUITOUS_LANGUAGE.md`; package-local focused admission/runtime tests passed;
+`pnpm quality` passed; Tier 1 battle-runtime MBT passed.
 
 ### Task 219 - SRDINV31E - Promote Searing Smite Runtime
 

@@ -22,6 +22,14 @@ export function supportedSpellInvocationRef(
       procedure: "afterHitDamage",
     };
   }
+  if (invocation.procedure === "afterHitSaveGatedCondition") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "afterHitSaveGatedCondition",
+    };
+  }
   return Match.value(invocation).pipe(
     Match.when({ procedure: "heldLight" }, (cantrip) => ({
       tag: "cantrip" as const,

@@ -5,158 +5,110 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 import type {
-ActionEconomyState,
-RuntimeActionResource,
+  ActionEconomyState,
+  RuntimeActionResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
 
 import {
-actionRestrictionAllows,
-canSpendAction
+  actionRestrictionAllows,
+  canSpendAction,
 } from "@dnd/shared-algebras/action-economy-algebra";
 
-
-
-
-
-
-
-
-
-import {
-type StandardActionKind
-} from "@dnd/shared/game-facts";
-
-
+import { type StandardActionKind } from "@dnd/shared/game-facts";
 
 import type {
-CreatureNamedMultiattack,
-StatBlockRecord
+  CreatureNamedMultiattack,
+  StatBlockRecord,
 } from "@dnd/surface/surface/types";
-
 
 import { Match } from "effect";
 
-
 import * as Either from "effect/Either";
 
-
-
-
-import {
-BATTLE_REACTION_TRIGGERS
-} from "../battle-reaction-triggers.ts";
+import { BATTLE_REACTION_TRIGGERS } from "../battle-reaction-triggers.ts";
 
 import {
-type BattleMovementSpeedKind,
-type BattleSubject
+  type BattleMovementSpeedKind,
+  type BattleSubject,
 } from "../battle-subjects.ts";
 
-
-
-
-import {
-CombatantId,
-spellId
-} from "../identity.ts";
-
-
-
+import { CombatantId, spellId } from "../identity.ts";
 
 import {
-attackActionOptionsForActor,
-offHandAttackActionOptionForActor,
-offHandAttackPrerequisiteMet
+  attackActionOptionsForActor,
+  offHandAttackActionOptionForActor,
+  offHandAttackPrerequisiteMet,
 } from "./attack-damage-apply.ts";
 
 import {
-helpAttackAllyChoices,
-helpAttackAllyHole
+  helpAttackAllyChoices,
+  helpAttackAllyHole,
 } from "./attack-resolution.ts";
 
-import {
-currentActorId,
-grappledBy
-} from "./creature-state-leaves.ts";
+import { currentActorId, grappledBy } from "./creature-state-leaves.ts";
+
+import { combatantCanTakeActions } from "./creature-state.ts";
+
+import { reactionTriggerLabel } from "./dispatcher.ts";
 
 import {
-combatantCanTakeActions
-} from "./creature-state.ts";
-
-
-import {
-reactionTriggerLabel
-} from "./dispatcher.ts";
-
-
-
-import {
-attackTargetChoices,
-attackTargetHole,
-bonusActionStandardActionActs,
-canHideInCurrentCircumstances,
-escapeGrappleOutcomeHole,
-escapeSpellRestraintAbilityCheckHole,
-grappleTargetChoices,
-grappleTargetHole,
-hiddenSearchTargetChoices,
-hideAbilityCheckHole,
-searchTargetHole
+  attackTargetChoices,
+  attackTargetHole,
+  bonusActionStandardActionActs,
+  canHideInCurrentCircumstances,
+  escapeGrappleOutcomeHole,
+  escapeSpellRestraintAbilityCheckHole,
+  grappleTargetChoices,
+  grappleTargetHole,
+  hiddenSearchTargetChoices,
+  hideAbilityCheckHole,
+  searchTargetHole,
 } from "./hole-helpers.ts";
 
 import {
-combatantCanMoveInState,
-movementHoleHasRemainingBudget,
-representedMovementSpeedKinds
+  combatantCanMoveInState,
+  movementHoleHasRemainingBudget,
+  representedMovementSpeedKinds,
 } from "./movement-speed.ts";
 
-import {
-spellRestraintEffects
-} from "./spell-condition-effects-helpers.ts";
+import { spellRestraintEffectEntries } from "./spell-condition-effects-helpers.ts";
+
+import { discoverSupportedSpellInvocations } from "./spells-discovery.ts";
+
+import { attackActionOptionName } from "./statblock-attacks.ts";
 
 import {
-discoverSupportedSpellInvocations
-} from "./spells-discovery.ts";
-
-import {
-attackActionOptionName
-} from "./statblock-attacks.ts";
-
-import {
-attackActionOptionIsOrdinaryAttackAction,
-statBlockActionSectionAttackOptions,
-statBlockAttackResourceAvailable,
-statBlockLimitedUseForPart,
-statBlockPartLimitedUseAvailable,
-statBlockSubjectPart
+  attackActionOptionIsOrdinaryAttackAction,
+  statBlockActionSectionAttackOptions,
+  statBlockAttackResourceAvailable,
+  statBlockLimitedUseForPart,
+  statBlockPartLimitedUseAvailable,
+  statBlockSubjectPart,
 } from "./statblock.ts";
 
 import {
-movementHole,
-readiedSpellInitialHoles,
-standFromProneCostFeet
+  movementHole,
+  readiedSpellInitialHoles,
+  standFromProneCostFeet,
 } from "./turn-end-movement.ts";
 
-import {
-supportedUnitFeatureActs
-} from "./unit-features.ts";
-
-
+import { supportedUnitFeatureActs } from "./unit-features.ts";
 
 import type {
-AvailableBattleAct,
-BattleCreatureState,
-BattleState,
-ClassFeatureExtraAttackActionResource,
-StatBlockBattleCreatureState,
-StatBlockMultiattackActionResource,
-SupportedLiteralMultiattackDispatch,
-SupportedStatBlockBonusActionOption,
-SupportedStatBlockBonusActionStandardAction,
-SupportedStatBlockMultiattack,
+  AvailableBattleAct,
+  BattleCreatureState,
+  BattleState,
+  ClassFeatureExtraAttackActionResource,
+  StatBlockBattleCreatureState,
+  StatBlockMultiattackActionResource,
+  SupportedLiteralMultiattackDispatch,
+  SupportedStatBlockBonusActionOption,
+  SupportedStatBlockBonusActionStandardAction,
+  SupportedStatBlockMultiattack,
 } from "../battle-reducer.ts";
 import {
-SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS,
-discoverLegendaryActionActs,
+  SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS,
+  discoverLegendaryActionActs,
 } from "../battle-reducer.ts";
 export function discoverBattleActs(
   state: BattleState,
@@ -329,7 +281,7 @@ export function discoverBattleActs(
       });
     }
   }
-  for (const effect of spellRestraintEffects(state, actorId)) {
+  for (const { targetId, effect } of spellRestraintEffectEntries(state)) {
     if (
       combatantCanTakeActions(state.combatants.get(actorId)) &&
       !actorHasStatBlockMultiattackActionResource(state, actorId) &&
@@ -340,13 +292,24 @@ export function discoverBattleActs(
           tag: "action",
           actorId,
           action: "escapeSpellRestraint",
+          targetId,
           sourceSpellId: spellId(effect.sourceSpellId),
           sourceCombatantId: effect.sourceCombatantId,
         },
-        label: `Escape ${effect.sourceSpellId}`,
+        label:
+          actorId === targetId
+            ? `Escape ${effect.sourceSpellId}`
+            : `Help escape ${effect.sourceSpellId}`,
         summary:
-          "Use an action to attempt to end a spell-imposed Restrained condition.",
-        initialHoles: [escapeSpellRestraintAbilityCheckHole(state, effect)],
+          actorId === targetId
+            ? "Use an action to attempt to end a spell-imposed Restrained condition."
+            : "Use an action while within reach of the target to attempt to end a spell-imposed Restrained condition.",
+        initialHoles: [
+          escapeSpellRestraintAbilityCheckHole(state, effect, {
+            actorId,
+            targetId,
+          }),
+        ],
       });
     }
   }
@@ -409,9 +372,9 @@ export function discoverBattleActs(
   return acts;
 }
 
-
-
-export function releaseGrappleActs(state: BattleState): readonly AvailableBattleAct[] {
+export function releaseGrappleActs(
+  state: BattleState,
+): readonly AvailableBattleAct[] {
   return state.grapples.map((grapple) => ({
     subject: {
       tag: "runtimeCommand" as const,
@@ -424,8 +387,6 @@ export function releaseGrappleActs(state: BattleState): readonly AvailableBattle
     initialHoles: [],
   }));
 }
-
-
 
 export function movementActs(
   state: BattleState,
@@ -450,8 +411,6 @@ export function movementActs(
   ];
 }
 
-
-
 export function dashActsForActor(
   state: BattleState,
   actorId: CombatantId,
@@ -469,16 +428,12 @@ export function dashActsForActor(
   }));
 }
 
-
-
 export function dashSubjectForSpeedKind(
   actorId: CombatantId,
   speedKind: BattleMovementSpeedKind,
 ): Extract<BattleSubject, { readonly tag: "action"; readonly action: "dash" }> {
   return { tag: "action", actorId, action: "dash", speedKind };
 }
-
-
 
 export function statBlockMultiattackActs(
   state: BattleState,
@@ -522,8 +477,6 @@ export function statBlockMultiattackActs(
     },
   );
 }
-
-
 
 export function statBlockBonusActionOptionActs(
   state: BattleState,
@@ -576,9 +529,7 @@ export function statBlockBonusActionOptionActs(
   );
 }
 
-export 
-
-function supportedStatBlockMultiattacks(
+export function supportedStatBlockMultiattacks(
   statBlock: StatBlockRecord,
 ): readonly SupportedStatBlockMultiattack[] {
   const actionAttacks = statBlockActionSectionAttackOptions(
@@ -617,8 +568,6 @@ function supportedStatBlockMultiattacks(
   );
 }
 
-
-
 export function supportedLiteralMultiattackDispatches(
   multiattack: CreatureNamedMultiattack,
 ): readonly SupportedLiteralMultiattackDispatch[] | null {
@@ -632,8 +581,6 @@ export function supportedLiteralMultiattackDispatches(
     : null;
 }
 
-
-
 export function isSupportedLiteralMultiattackDispatch(
   dispatch: CreatureNamedMultiattack["dispatches"][number],
 ): dispatch is SupportedLiteralMultiattackDispatch {
@@ -644,9 +591,7 @@ export function isSupportedLiteralMultiattackDispatch(
   );
 }
 
-export 
-
-function supportedStatBlockBonusActionOptions(
+export function supportedStatBlockBonusActionOptions(
   statBlock: StatBlockRecord,
 ): readonly SupportedStatBlockBonusActionOption[] {
   return (
@@ -669,17 +614,13 @@ function supportedStatBlockBonusActionOptions(
   );
 }
 
-export 
-
-function supportedStatBlockBonusActionStandardAction(
+export function supportedStatBlockBonusActionStandardAction(
   standardAction: StandardActionKind,
 ): standardAction is SupportedStatBlockBonusActionStandardAction {
   return SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS.some(
     (supported) => supported === standardAction,
   );
 }
-
-
 
 export function isStatBlockMultiattackActionResource(
   resource: RuntimeActionResource,
@@ -691,9 +632,7 @@ export function isStatBlockMultiattackActionResource(
   );
 }
 
-export 
-
-function isClassFeatureExtraAttackActionResource(
+export function isClassFeatureExtraAttackActionResource(
   resource: RuntimeActionResource,
   actorId: CombatantId,
 ): resource is ClassFeatureExtraAttackActionResource {
@@ -703,9 +642,7 @@ function isClassFeatureExtraAttackActionResource(
   );
 }
 
-export 
-
-function actorHasStatBlockMultiattackActionResource(
+export function actorHasStatBlockMultiattackActionResource(
   state: BattleState,
   actorId: CombatantId,
 ): boolean {
@@ -714,9 +651,7 @@ function actorHasStatBlockMultiattackActionResource(
   );
 }
 
-export 
-
-function currentActorHasOpenStatBlockMultiattackDispatch(
+export function currentActorHasOpenStatBlockMultiattackDispatch(
   state: BattleState,
 ): boolean {
   return actorHasStatBlockMultiattackActionResource(
@@ -725,9 +660,7 @@ function currentActorHasOpenStatBlockMultiattackDispatch(
   );
 }
 
-export 
-
-function actorHasClassFeatureExtraAttackActionResource(
+export function actorHasClassFeatureExtraAttackActionResource(
   state: BattleState,
   actorId: CombatantId,
 ): boolean {
@@ -735,8 +668,6 @@ function actorHasClassFeatureExtraAttackActionResource(
     isClassFeatureExtraAttackActionResource(resource, actorId),
   );
 }
-
-
 
 export function canSpendEscapeGrappleActionResource(
   state: BattleState,
@@ -750,9 +681,7 @@ export function canSpendEscapeGrappleActionResource(
   );
 }
 
-export 
-
-function subjectAllowedDuringStatBlockMultiattackDispatch(
+export function subjectAllowedDuringStatBlockMultiattackDispatch(
   state: BattleState,
   subject: BattleSubject,
 ): boolean {
@@ -779,15 +708,11 @@ function subjectAllowedDuringStatBlockMultiattackDispatch(
   );
 }
 
-
-
 export function hasTurnActionResource(state: ActionEconomyState): boolean {
   return state.actionResources.some((resource) => resource.source === "turn");
 }
 
-export 
-
-function spendTurnAction<T extends ActionEconomyState>(
+export function spendTurnAction<T extends ActionEconomyState>(
   state: T,
 ): Either.Either<T, "no action resource available"> {
   const turnActionResourceIndex = state.actionResources.findIndex(
@@ -805,15 +730,11 @@ function spendTurnAction<T extends ActionEconomyState>(
   });
 }
 
-export 
-
-function isStatBlockBattleCreatureState(
+export function isStatBlockBattleCreatureState(
   combatant: BattleCreatureState | undefined,
 ): combatant is StatBlockBattleCreatureState {
   return combatant?.origin.kind === "statBlock";
 }
-
-
 
 export function standardActionLabel(
   standardAction: SupportedStatBlockBonusActionStandardAction,

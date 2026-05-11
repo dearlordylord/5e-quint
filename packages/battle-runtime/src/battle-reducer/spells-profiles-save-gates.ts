@@ -1,49 +1,47 @@
 // Save-gated and attack-damage spell profile projections extracted from spells-profiles.ts.
 
+import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
-elapsedTimeTicksFromTimeSpanDuration
-} from "@dnd/shared-algebras/elapsed-time-algebra";
-import {
-movementDeltaFeet,
-movementFeet,
-type MovementFeet,
-type SpellSlotLevel
+  movementDeltaFeet,
+  movementFeet,
+  type MovementFeet,
+  type SpellSlotLevel,
 } from "@dnd/shared/types";
 import type { CreatureType } from "@dnd/shared/game-facts";
 import type {
-ActivationPhase,
-Attachment,
-DiceExpr,
-SpellRecord,
-DiceAmount as SurfaceDiceAmount,
-TargetSelection
+  ActivationPhase,
+  Attachment,
+  DiceExpr,
+  SpellRecord,
+  DiceAmount as SurfaceDiceAmount,
+  TargetSelection,
 } from "@dnd/surface/surface/types";
-import { Either,Match } from "effect";
+import { Either, Match } from "effect";
 import {
-COLOR_SPRAY_FAILED_SAVE_CONDITION,
-ENTANGLE_FAILED_SAVE_CONDITION,
-SUPPORTED_POINT_CUBE_SAVE_GATE_SIDE_FEET,
-SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET,
-SUPPORTED_SELF_CONE_SAVE_GATE_LENGTH_FEET,
-damageSpellSource,
-type BattleAttackKindForRedirect,
-type DamageSpellSource,
-type SaveGateFailureEffect,
-type SpellActivationPhase,
-type SpellAttackHitEffect,
-type SpellAttackKind,
-type SpellFailedSaveAttackRollEffect,
-type SpellFailedSaveConditionEffect,
-type SpellFailedSavePostDamageRider,
-type SpellPostDamageRider,
-type SpellTargeting,
-type SupportedSpellInvocation
+  COLOR_SPRAY_FAILED_SAVE_CONDITION,
+  ENTANGLE_FAILED_SAVE_CONDITION,
+  SUPPORTED_POINT_CUBE_SAVE_GATE_SIDE_FEET,
+  SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET,
+  SUPPORTED_SELF_CONE_SAVE_GATE_LENGTH_FEET,
+  damageSpellSource,
+  type BattleAttackKindForRedirect,
+  type DamageSpellSource,
+  type SaveGateFailureEffect,
+  type SpellActivationPhase,
+  type SpellAttackHitEffect,
+  type SpellAttackKind,
+  type SpellFailedSaveAttackRollEffect,
+  type SpellFailedSaveConditionEffect,
+  type SpellFailedSavePostDamageRider,
+  type SpellPostDamageRider,
+  type SpellTargeting,
+  type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import type { CharacterBattleSpellcastingState } from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
 import {
-sameStringSet,
-scalarBuffSpellTargetCount,
+  sameStringSet,
+  scalarBuffSpellTargetCount,
 } from "./spells-profile-shared.ts";
 
 export type SaveGateConditionSpell = {
@@ -294,6 +292,7 @@ export function animalFriendshipSaveGateConditionSpell(
       condition: "charmed",
       expiresAt: { kind: "duration", durationTicks: durationTicks.right },
       escape: { kind: "targetDamagedByCasterOrAlly" },
+      turnStartDamage: null,
     },
     rangeFeet: movementFeet(spell.mechanics.range.feet),
   };
@@ -343,6 +342,7 @@ export function colorSpraySaveGateConditionSpell(
       condition: COLOR_SPRAY_FAILED_SAVE_CONDITION,
       expiresAt: "endOfCasterNextTurn",
       escape: null,
+      turnStartDamage: null,
     },
     rangeFeet: movementFeet(0),
   };
@@ -383,21 +383,27 @@ export function entangleSaveGateConditionSpell(
   }
   const cubeShape = phase.attachment.value.shape;
 
-    return {
-      phase,
-      targeting: () => ({
-        kind: "pointOriginCubeExcludingCaster",
-        sideFeet: movementFeet(cubeShape.sideFeet),
-      }),
-      targetCreatureTypes: null,
-      effect: {
-        condition: ENTANGLE_FAILED_SAVE_CONDITION,
-        expiresAt: "concentration",
-        escape: { kind: "abilityCheck", ability: "str", skill: "athletics" },
+  return {
+    phase,
+    targeting: () => ({
+      kind: "pointOriginCubeExcludingCaster",
+      sideFeet: movementFeet(cubeShape.sideFeet),
+    }),
+    targetCreatureTypes: null,
+    effect: {
+      condition: ENTANGLE_FAILED_SAVE_CONDITION,
+      expiresAt: "concentration",
+      escape: {
+        kind: "abilityCheck",
+        ability: "str",
+        skill: "athletics",
+        successEnds: "condition",
       },
-      rangeFeet: movementFeet(spell.mechanics.range.feet),
-    };
-  }
+      turnStartDamage: null,
+    },
+    rangeFeet: movementFeet(spell.mechanics.range.feet),
+  };
+}
 
 export function supportedSaveGateDamageProfile(
   input: {
@@ -469,7 +475,9 @@ export function supportedSaveGateDamageProfile(
   return [{ ...damageSpellSource(input), ...saveGatedInvocation }];
 }
 
-export function saveGateTargeting(attachment: Attachment): SpellTargeting | null {
+export function saveGateTargeting(
+  attachment: Attachment,
+): SpellTargeting | null {
   const value = attachment.kind === "hole" ? attachment.value : attachment;
   if (
     value.kind === "target" &&
