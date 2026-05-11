@@ -580,23 +580,28 @@ const canonicalDep = (value) => {
 
 const expandDependency = (value) => {
   const dep = canonicalDep(value)
-  const range = dep.match(/^([A-Z]+)([0-9]+)-([A-Z]+)([0-9]+)$/)
-  if (!range || range[1] !== range[3]) {
-    return [dep]
+  const numericRange = dep.match(/^([A-Z]+)([0-9]+)-([A-Z]+)([0-9]+)$/)
+  if (numericRange && numericRange[1] === numericRange[3]) {
+    const prefix = numericRange[1]
+    const start = Number(numericRange[2])
+    const end = Number(numericRange[4])
+    if (Number.isInteger(start) && Number.isInteger(end) && start <= end) {
+      return Array.from({ length: end - start + 1 }, (_, index) => `${prefix}${start + index}`)
+    }
   }
 
-  const prefix = range[1]
-  const start = Number(range[2])
-  const end = Number(range[4])
-  if (!Number.isInteger(start) || !Number.isInteger(end) || end < start) {
-    return [dep]
+  const sameNumberLetterRange = dep.match(/^([A-Z]+)([0-9]+)([A-Z])-([A-Z]+)([0-9]+)([A-Z])$/)
+  if (sameNumberLetterRange && sameNumberLetterRange[1] === sameNumberLetterRange[4] && sameNumberLetterRange[2] === sameNumberLetterRange[5]) {
+    const prefix = sameNumberLetterRange[1]
+    const number = sameNumberLetterRange[2]
+    const start = sameNumberLetterRange[3].charCodeAt(0)
+    const end = sameNumberLetterRange[6].charCodeAt(0)
+    if (start <= end) {
+      return Array.from({ length: end - start + 1 }, (_, index) => `${prefix}${number}${String.fromCharCode(start + index)}`)
+    }
   }
 
-  const expanded = []
-  for (let number = start; number <= end; number += 1) {
-    expanded.push(`${prefix}${number}`)
-  }
-  return expanded
+  return [dep]
 }
 
 const indexMatch = text.match(/<!-- ralph-task-index\n([\s\S]*?)\n-->/)
@@ -742,6 +747,127 @@ NODE
   fi
 }
 
+assert_no_stale_dependency_blocks() {
+  local target_file="$1"
+
+  node - "$target_file" <<'NODE'
+const fs = require("fs")
+
+const path = process.argv[2]
+const text = fs.readFileSync(path, "utf8")
+
+const canonicalDep = (value) => value.trim().replace(/\s+/g, " ")
+
+const expandDependency = (value) => {
+  const dep = canonicalDep(value)
+  const numericRange = dep.match(/^([A-Z]+)([0-9]+)-([A-Z]+)([0-9]+)$/)
+  if (numericRange && numericRange[1] === numericRange[3]) {
+    const prefix = numericRange[1]
+    const start = Number(numericRange[2])
+    const end = Number(numericRange[4])
+    if (Number.isInteger(start) && Number.isInteger(end) && start <= end) {
+      return Array.from({ length: end - start + 1 }, (_, index) => `${prefix}${start + index}`)
+    }
+  }
+
+  const sameNumberLetterRange = dep.match(/^([A-Z]+)([0-9]+)([A-Z])-([A-Z]+)([0-9]+)([A-Z])$/)
+  if (sameNumberLetterRange && sameNumberLetterRange[1] === sameNumberLetterRange[4] && sameNumberLetterRange[2] === sameNumberLetterRange[5]) {
+    const prefix = sameNumberLetterRange[1]
+    const number = sameNumberLetterRange[2]
+    const start = sameNumberLetterRange[3].charCodeAt(0)
+    const end = sameNumberLetterRange[6].charCodeAt(0)
+    if (start <= end) {
+      return Array.from({ length: end - start + 1 }, (_, index) => `${prefix}${number}${String.fromCharCode(start + index)}`)
+    }
+  }
+
+  return [dep]
+}
+
+const indexMatch = text.match(/<!-- ralph-task-index\n([\s\S]*?)\n-->/)
+if (!indexMatch) {
+  throw new Error(`missing ralph-task-index block in ${path}`)
+}
+
+const index = JSON.parse(indexMatch[1])
+if (index.schema !== "ralph-plan.v1" || !Array.isArray(index.tasks)) {
+  throw new Error(`invalid ralph-task-index schema in ${path}`)
+}
+
+const statusById = new Map()
+for (const task of index.tasks) {
+  if (typeof task?.id === "string") {
+    statusById.set(task.id.trim(), String(task.status ?? "").trim())
+  }
+}
+
+const lines = text.split("\n")
+let inDagSection = false
+const staleBlocks = []
+
+for (const line of lines) {
+  const trimmed = line.trim()
+
+  if (trimmed.startsWith("## DAG / Queue Order")) {
+    inDagSection = true
+    continue
+  }
+
+  if (inDagSection && trimmed.startsWith("## Task Details")) {
+    break
+  }
+
+  if (!inDagSection || !line.startsWith("|")) {
+    continue
+  }
+
+  const cells = line.split("|")
+  if (cells.length < 6) {
+    continue
+  }
+
+  const order = cells[1]?.trim()
+  const titleCell = String(cells[2] ?? "").trim()
+  const statusCell = String(cells[3] ?? "").trim()
+  const dependsCell = String(cells[4] ?? "").trim()
+  const taskId = titleCell.split(" - ")[0]?.trim()
+
+  if (!taskId || statusCell !== "blocked") {
+    continue
+  }
+
+  const deps = canonicalDep(dependsCell)
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .flatMap(expandDependency)
+    .filter((dep) => {
+      const normalized = dep.toLowerCase()
+      return normalized !== "none" && normalized !== "completed baseline"
+    })
+
+  if (deps.length === 0) {
+    continue
+  }
+
+  const activeUnsatisfied = deps.filter((dep) => statusById.has(dep) && statusById.get(dep) !== "done")
+  const missing = deps.filter((dep) => !statusById.has(dep))
+
+  if (missing.length > 0 && activeUnsatisfied.length === 0) {
+    staleBlocks.push(`${order} ${taskId}: unresolved dependency refs not in active index: ${missing.join(", ")}`)
+  }
+}
+
+if (staleBlocks.length > 0) {
+  throw new Error([
+    "no runnable tasks, but blocked dependency tasks may be stale:",
+    ...staleBlocks.map((entry) => `- ${entry}`),
+    "Fix the plan by unblocking the task, restoring dependency tasks to the index, or recording an explicit owner-decision blocker.",
+  ].join("\n"))
+}
+NODE
+}
+
 commit_plan_automation_change() {
   local message="$1"
 
@@ -834,7 +960,9 @@ cleanup() {
   if [[ "$status" -eq 0 ]]; then
     note "run" "complete"
   else
-    printf 'run exited with status %s\n' "$status" >"$last_error_file"
+    if [[ ! -s "$last_error_file" ]]; then
+      printf 'run exited with status %s\n' "$status" >"$last_error_file"
+    fi
     note "run" "aborted status=$status"
   fi
 
@@ -1641,6 +1769,12 @@ choose_next_task() {
 
   write_ready_tasks_file "$ready_tasks_file"
   if [[ ! -s "$ready_tasks_file" ]]; then
+    local stale_block_error=""
+    if ! stale_block_error="$(assert_no_stale_dependency_blocks "$plan_snapshot" 2>&1)"; then
+      printf '%s\n' "$stale_block_error" >"$last_error_file"
+      note "chooser" "fatal-stale-dependency-blocks"
+      return 2
+    fi
     note "chooser" "no-runnable-tasks"
     return 1
   fi
