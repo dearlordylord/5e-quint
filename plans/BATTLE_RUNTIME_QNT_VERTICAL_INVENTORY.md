@@ -82,7 +82,7 @@ This makes a pure "facade imports every child module" split insufficient.
 | Attack-burst save damage | Ice Knife attack plus burst and single concentration check | `spell-procedure-profiles.qnt`; `battle-runtime-spell-bridge.qnt` | `rule-core-owned` for Ice Knife profile facts, `battle-integration-owned` for combined resolver/concentration/reactions | High: combines attack, save, burst, concentration, reactions | Tracer complete for slot requirement, attack damage type, burst damage type, slot-scaled burst dice, and no-damage-on-success burst policy through spell bridge | Single-concentration behavior, hit reaction ordering, and target inclusion remain package-local integration facts |
 | Object-target spell damage | Starry Wisp object target/disposition/outcome | `spell-procedure-profiles.qnt`; `battle-runtime-spell-bridge.qnt`; `battle-runtime-starry-wisp-object.mbt.qnt`; TS object fill tests | `focused-mbt-owned` plus `ts-contract-owned` | Medium: object identity is caller/table supplied | Tracer complete for HP damage threshold, clamped next HP, and destruction result through spell bridge; object identity and table/disposition wrapping remain package-local | Broad battle does not enumerate object catalog/geometry |
 | Active effect expiry and start/end hooks | `expireStartOfTurnSpellEffects`, `tickDurationActiveEffects`, Heroism THP, Resistance reset, timed effects | `spell-procedure-profiles.qnt`; `battle-runtime-spell-bridge.qnt`; spread across feature profile algebras | `battle-integration-owned` | High: one turn hook touches many features/spells | Tracer complete for Heroism turn-start Temporary Hit Points replacement, Resistance once-per-turn reset, Shield start-of-next-turn expiry, and timed spell duration tick/removal through spell bridge | Adding a timed effect requires one local hook entry and one focused semantic owner |
-| Hybrid trace contract | Not yet implemented | TS reducer public APIs; future bridge | `ts-contract-owned` plus focused QNT checkpoints | High but essential for north-star traces | Prototype one public protocol event/checkpoint vertical after first semantic split | QNT does not emit internal `BattleState` diffs; TS can roll representative battle traces |
+| Hybrid trace contract | Public reducer replay checkpoints | `battle-runtime-public-trace-contract.qnt`; `battle-trace-contract.ts`; `battle-trace-contract.test.ts` | `ts-contract-owned` plus focused QNT checkpoints | High but essential for north-star traces | Tracer complete for weapon Attack hit/miss replay: act availability, target hole, attack-roll hole, damage-roll-on-hit hole, and resolved checkpoint | QNT does not emit internal `BattleState` diffs; TS rolls representative public reducer traces with checkpoint projection |
 | Broad package-local integration shell | Entire `battle-runtime.qnt`; broad `run` tests | Existing broad tests and MBT wrappers | `battle-integration-owned` with shrinking scope | High | Keep compatibility wrappers for moved public names only as needed | Broad file stops growing by default and records why each remaining vertical is broad |
 
 ## First Tracer-Bullet Recommendation
@@ -143,6 +143,16 @@ The same spell-profile tracer now owns the reusable active-effect hook facts:
 - Shield's one-round AC bonus expiry and timed spell duration decrement/removal
   are bridge-projected, while the package-local scheduler still enumerates the
   concrete `ActiveEffect` variants.
+
+The first hybrid trace contract now exists:
+
+- `battle-runtime-public-trace-contract.qnt` owns a small checkpoint vocabulary
+  and representative weapon Attack hit/miss checkpoint order.
+- `battle-trace-contract.ts` projects public `AvailableBattleAct` and
+  `BattleResolutionResult` values into that checkpoint vocabulary without
+  exposing internal state diffs.
+- `battle-trace-contract.test.ts` rolls real public reducer Attack hit/miss
+  traces and compares only the checkpoint sequence.
 
 ## Verification Policy
 

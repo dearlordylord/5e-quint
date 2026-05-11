@@ -20,6 +20,14 @@ export type {
   CharacterZeroHpLifecycleInit,
   ZeroHpLifecycle,
 } from "./zero-hp-lifecycle.ts";
+export {
+  BATTLE_TRACE_HOLE_KINDS,
+  battleActTraceCheckpoint,
+  battleResolutionTraceCheckpoint,
+  battleTraceHoleKinds,
+  type BattleTraceCheckpoint,
+  type BattleTraceHoleKind,
+} from "./battle-trace-contract.ts";
 export type {
   CharacterBattleClassLevel,
   CharacterBattleClassLevelInit,

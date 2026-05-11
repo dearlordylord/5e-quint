@@ -289,6 +289,24 @@ Projection:
   spell targets, and Grapple outcomes are caller/table fills, not derived grid
   state.
 
+## Public Trace Checkpoint Contract
+
+`battle-runtime-public-trace-contract.qnt` owns small public replay checkpoint
+vocabulary for representative traces. TypeScript projects real public reducer
+results with `battleActTraceCheckpoint` and `battleResolutionTraceCheckpoint`
+instead of comparing full internal `BattleState` diffs.
+
+The first contract covers weapon Attack replay:
+
+- attack available with `targetChoice`;
+- target selected, then `attackRoll`;
+- hit selected, then `rolledDice`;
+- hit or miss resolves.
+
+This is the hybrid trace shape for broad protocol checks: QNT owns semantic
+checkpoint order, while TypeScript owns public fill payload width, authored
+fixtures, and concrete reducer snapshots.
+
 Focused lanes currently include:
 
 - `rule-core-movement.mbt.qnt` / `src/rule-core-movement.mbt.test.ts` for
