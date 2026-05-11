@@ -71,6 +71,7 @@ export function spellDamageComponents(
       ? invocation.damage.expr.dice * invocation.targeting.repeatedEffectCount
       : invocation.damage.expr.dice *
         ((invocation.procedure === "heldLightHurl" ||
+          invocation.procedure === "spellAttackBeamSequence" ||
           invocation.procedure === "spellAttackDamage" ||
           invocation.procedure === "attackBurstSaveDamage") &&
         critical

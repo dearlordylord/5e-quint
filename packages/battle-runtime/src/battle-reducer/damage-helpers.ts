@@ -178,11 +178,16 @@ export function damageAmountByTypeMapEntries(
 
 const SPELL_DAMAGE_REDUCTION_ROLL_HOLE_PREFIX =
   "battle:spell-damage-reduction-roll";
+const SPELL_BEAM_DAMAGE_REDUCTION_ROLL_HOLE_PREFIX =
+  "battle:spell:beam-damage-reduction-roll";
 
 export function isSpellDamageReductionRollFill(
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
 ): boolean {
-  return fill.holeId.startsWith(SPELL_DAMAGE_REDUCTION_ROLL_HOLE_PREFIX);
+  return (
+    fill.holeId.startsWith(SPELL_DAMAGE_REDUCTION_ROLL_HOLE_PREFIX) ||
+    fill.holeId.startsWith(SPELL_BEAM_DAMAGE_REDUCTION_ROLL_HOLE_PREFIX)
+  );
 }
 
 export function spellDamageReductionRollProtocolId(
@@ -242,6 +247,9 @@ export function applyAvailableSpellDamageReduction(
   target: BattleCreatureState,
   damageByType: ReadonlyMap<DamageType, number>,
   roll: Extract<BattleFill, { readonly kind: "rolledDice" }> | undefined,
+  rollHoleForReduction: (
+    reduction: SpellDamageReductionRoll,
+  ) => BattleSpellDamageReductionRollHole = spellDamageReductionRollHole,
 ):
   | {
       readonly tag: "ok";
@@ -251,15 +259,14 @@ export function applyAvailableSpellDamageReduction(
   | { readonly tag: "needsHoles"; readonly holes: readonly BattleHole[] }
   | { readonly tag: "invalid" } {
   const reduction = availableSpellDamageReduction(target, damageByType);
+  const reductionHole =
+    reduction === null ? null : rollHoleForReduction(reduction);
   if (roll === undefined) {
     return reduction === null
       ? { tag: "ok", target, damageByType }
-      : { tag: "needsHoles", holes: [spellDamageReductionRollHole(reduction)] };
+      : { tag: "needsHoles", holes: [rollHoleForReduction(reduction)] };
   }
-  if (
-    reduction === null ||
-    roll.holeId !== spellDamageReductionRollHole(reduction).holeId
-  ) {
+  if (reduction === null || reductionHole === null || roll.holeId !== reductionHole.holeId) {
     return { tag: "invalid" };
   }
   const validation = validateRolledDiceForDiceExpr(roll.value, {

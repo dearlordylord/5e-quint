@@ -56,7 +56,7 @@ flowchart TD
   AttackOption["supported Attack action option<br/>source: character selected weapon or StatBlockRecord named attack<br/>why: attack bonus, damage, reach, normal/long range, and attack identity derive from authored inputs"]
   MonsterControl["monster control resources<br/>success: spend X/Day or Recharge; discover Legendary Actions after another turn; refresh Legendary Actions and recharge rolls at start turn; pending Multiattack dispatches expose matching dispatch attacks, Movement, and End Turn<br/>why: reusable Stat Block limited-use protocol"]
   UnitFeature["Unit feature activation/passive support<br/>source: retained Unit + runtime use-count, turn-resource, or support-profile state<br/>success: Action Surge grants one non-Magic action; Second Wind spends Bonus Action and heals; Defense admits a passive Armor Class bonus profile; Savage Attacker chooses weapon damage dice"]
-  SpellAct["spell act<br/>source: retained Spell Records + runtime Spell Slot/effect state<br/>success: action-time spells consume Magic action; Magic Missile allocates darts and spends the selected slot; direct healing spells restore selected targets, including Mass Cure Wounds point-origin Sphere choices; Shield and Hellish Rebuke spend Reaction + slot from trigger windows; Ray of Frost records Speed effect; Shocking Grasp denies Opportunity Attacks; True Strike hosts proficient weapon attack replay with spellcasting ability and Radiant cantrip damage; Guiding Bolt, Ray of Sickness, and Vicious Mockery record source-owned timed attack-roll/condition riders; Animal Friendship, Ensnaring Strike, and Protection from Evil and Good record source-owned condition/protection effects; Searing Smite records source-owned timed burn damage plus Constitution save-to-end; Poison Spray, Starry Wisp, damage-only Chill Touch, Sacred Flame, Acid Splash, and Inflict Wounds apply admitted spell damage; creature-or-object spell attacks consume caller-supplied object range, Armor Class, and damage disposition facts"]
+  SpellAct["spell act<br/>source: retained Spell Records + runtime Spell Slot/effect state<br/>success: action-time spells consume Magic action; Magic Missile allocates darts and spends the selected slot; direct healing spells restore selected targets, including Mass Cure Wounds point-origin Sphere choices; Shield and Hellish Rebuke spend Reaction + slot from trigger windows; Ray of Frost records Speed effect; Shocking Grasp denies Opportunity Attacks; True Strike hosts proficient weapon attack replay with spellcasting ability and Radiant cantrip damage; Eldritch Blast resolves character-level beams with independent creature-or-object targets, attack rolls, and Force damage; Guiding Bolt, Ray of Sickness, Vicious Mockery, and Sleep record source-owned timed attack-roll/condition/lifecycle riders; Animal Friendship, Ensnaring Strike, and Protection from Evil and Good record source-owned condition/protection effects; Searing Smite records source-owned timed burn damage plus Constitution save-to-end; Poison Spray, Starry Wisp, damage-only Chill Touch, Sacred Flame, Acid Splash, and Inflict Wounds apply admitted spell damage; creature-or-object spell attacks consume caller-supplied object range, Armor Class, and damage disposition facts"]
   AttackReplay["Attack replay<br/>subject carries attack name; needs target -> attack roll -> damage on hit<br/>success: miss spends action, hit applies damage then spends action<br/>why: staged holes match the SRD attack sequence without a second attack IR"]
   Damage["apply HP damage<br/>success: temp HP absorbed first, HP clamped at 0, zero-HP lifecycle or melee Knock Out applied<br/>why: one HP mutation boundary"]
   Hidden["Hidden state<br/>source: Hide/Search procedure<br/>data: discovery DC<br/>why: battle-owned execution fact for Invisible projection, Search, and reveal triggers"]
@@ -196,6 +196,9 @@ flowchart TD
   `chromatic_orb` is a separate chained spell attack profile with one
   cast-local damage-type choice, step-scoped target/attack/damage holes,
   duplicate-d8 leap gating, target uniqueness, and previous-target range facts.
+  `eldritch_blast` is a separate beam-sequence cantrip profile with one Magic
+  action spend, character-level beam count, beam-indexed creature-or-object
+  target choices, separate attack rolls, and Force damage on each hit.
   `vicious_mockery` adds an attack-roll-only Disadvantage effect on failed
   saves.
   `sleep` has a separate admission profile for caller-supplied point-origin
@@ -203,8 +206,12 @@ flowchart TD
   for selected creatures that are not automatic successes, derives
   Exhaustion-immunity automatic success from retained Stat Block condition
   immunities, rejects non-sleeper facts until executable support lands, and
-  spends the Magic action plus Spell Slot without applying the pending
-  repeat-save lifecycle.
+  spends the Magic action plus Spell Slot. Failed saves record a typed
+  per-target concentration-owned pending lifecycle that applies Incapacitated
+  until that target's next end turn; the end-turn command then asks for the
+  second Wisdom save and either removes that target's Sleep effect or escalates
+  it to concentration-owned Unconscious. Damage from any source or a
+  caller-supplied adjacent shake-awake action removes Sleep from one target.
   `animal_friendship` and `charm_person` add the same save-gated condition
   procedure for Beast-target and Humanoid-target Charmed effects. Charm Person
   annotates hostile targets' Wisdom saves with Advantage, and both Charmed

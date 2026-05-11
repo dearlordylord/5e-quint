@@ -1,6 +1,9 @@
 // Spell target holes and target legality validation extracted from spells-holes-fills.ts.
 
-import { holeId, holeInstanceKey } from "@dnd/shared-algebras/runtime-hole-algebra";
+import {
+  holeId,
+  holeInstanceKey,
+} from "@dnd/shared-algebras/runtime-hole-algebra";
 import type { CombatantId } from "../identity.ts";
 import { battleCreatureType } from "./attack-roll.ts";
 import {
@@ -22,20 +25,21 @@ import {
 } from "../battle-reducer.ts";
 import type { BattleObjectId } from "../identity.ts";
 
-type SingleCreatureOrObjectSpellAttackDamageInvocation = Extract<
-  BattleTargetSpatialFact,
-  { readonly kind: "spellObjectTarget" }
-> extends infer ObjectFact
-  ? {
-      readonly procedure: "spellAttackDamage";
-      readonly spell: { readonly id: string; readonly name: string };
-      readonly rangeFeet: ObjectFact extends {
-        readonly rangeFeet: infer RangeFeet;
+type SingleCreatureOrObjectSpellAttackDamageInvocation =
+  Extract<
+    BattleTargetSpatialFact,
+    { readonly kind: "spellObjectTarget" }
+  > extends infer ObjectFact
+    ? {
+        readonly procedure: "spellAttackBeamSequence" | "spellAttackDamage";
+        readonly spell: { readonly id: string; readonly name: string };
+        readonly rangeFeet: ObjectFact extends {
+          readonly rangeFeet: infer RangeFeet;
+        }
+          ? RangeFeet
+          : never;
       }
-        ? RangeFeet
-        : never;
-    }
-  : never;
+    : never;
 
 export function spellTargetHole(
   state: BattleState,
@@ -54,6 +58,48 @@ export function spellTargetHole(
   };
 }
 
+export function spellBeamTargetHole(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spellAttackBeamSequence" }
+  >,
+  beamIndex: number,
+): BattleTargetChoiceHole {
+  const holeKey = spellBeamTargetHoleKey(invocation, beamIndex);
+  return {
+    kind: "targetChoice",
+    holeId: holeId(holeKey),
+    holeInstanceKey: holeInstanceKey(holeKey),
+    label: `${invocation.spell.name} beam ${beamIndex + 1} target`,
+    requiresTableSpatialFact: true,
+    choices: [...state.combatants.keys()].filter((id) =>
+      spellTargetHasNonSpatialPrerequisites(state, actorId, id, invocation),
+    ),
+  };
+}
+
+export function spellBeamTargetHoleId(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spellAttackBeamSequence" }
+  >,
+  beamIndex: number,
+): BattleHoleId {
+  return holeId(spellBeamTargetHoleKey(invocation, beamIndex));
+}
+
+function spellBeamTargetHoleKey(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spellAttackBeamSequence" }
+  >,
+  beamIndex: number,
+): string {
+  return `battle:spell:beam-target:${invocation.spell.id}:${beamIndex}`;
+}
+
 export function spellObjectTargetHole(
   invocation: SingleCreatureOrObjectSpellAttackDamageInvocation,
 ): BattleObjectTargetChoiceHole {
@@ -65,6 +111,43 @@ export function spellObjectTargetHole(
     label: `${invocation.spell.name} object target`,
     requiresTableSpatialFact: true,
   };
+}
+
+export function spellBeamObjectTargetHole(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spellAttackBeamSequence" }
+  >,
+  beamIndex: number,
+): BattleObjectTargetChoiceHole {
+  const holeKey = spellBeamObjectTargetHoleKey(invocation, beamIndex);
+  return {
+    kind: "objectTargetChoice",
+    holeId: holeId(holeKey),
+    holeInstanceKey: holeInstanceKey(holeKey),
+    label: `${invocation.spell.name} beam ${beamIndex + 1} object target`,
+    requiresTableSpatialFact: true,
+  };
+}
+
+export function spellBeamObjectTargetHoleId(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spellAttackBeamSequence" }
+  >,
+  beamIndex: number,
+): BattleHoleId {
+  return holeId(spellBeamObjectTargetHoleKey(invocation, beamIndex));
+}
+
+function spellBeamObjectTargetHoleKey(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spellAttackBeamSequence" }
+  >,
+  beamIndex: number,
+): string {
+  return `battle:spell:beam-object-target:${invocation.spell.id}:${beamIndex}`;
 }
 
 export function spellObjectTargetHoleId(
@@ -179,9 +262,10 @@ export function spellObjectTargetFact(
   actorId: CombatantId,
   objectId: BattleObjectId,
   invocation: SingleCreatureOrObjectSpellAttackDamageInvocation,
-):
-  | Extract<BattleTargetSpatialFact, { readonly kind: "spellObjectTarget" }>
-  | null {
+): Extract<
+  BattleTargetSpatialFact,
+  { readonly kind: "spellObjectTarget" }
+> | null {
   return (
     facts.find(
       (fact) =>

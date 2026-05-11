@@ -23,10 +23,9 @@ export function conditionHasNonSpellSource(
   condition: Condition,
 ): boolean {
   return (
-    hasCondition(combatant.conditions, condition) &&
-    !combatant.activeEffects.some(
-      (effect) =>
-        effect.kind === "spellCondition" && effect.condition === condition,
+    hasConditionFromOwnFlag(combatant.conditions, condition) &&
+    !combatant.activeEffects.some((effect) =>
+      activeEffectSourcesCondition(effect, condition),
     )
   );
 }
@@ -39,11 +38,49 @@ export function conditionHadNonSpellSourceBeforeSpellEffect(
     conditionHasNonSpellSource(combatant, condition) ||
     combatant.activeEffects.some(
       (effect) =>
-        effect.kind === "spellCondition" &&
-        effect.condition === condition &&
+        activeEffectSourcesCondition(effect, condition) &&
+        "conditionHadNonSpellSource" in effect &&
         effect.conditionHadNonSpellSource,
     )
   );
+}
+
+function activeEffectSourcesCondition(
+  effect: BattleActiveEffect,
+  condition: Condition,
+): boolean {
+  if (condition === "incapacitated") {
+    return activeEffectDirectlyAppliesCondition(effect, condition);
+  }
+  return (
+    (effect.kind === "spellCondition" &&
+      (effect.condition === condition ||
+        (condition === "prone" && effect.condition === "unconscious"))) ||
+    (effect.kind === "sleepUnconscious" &&
+      (condition === "unconscious" || condition === "prone")) ||
+    activeEffectDirectlyAppliesCondition(effect, condition)
+  );
+}
+
+function activeEffectDirectlyAppliesCondition(
+  effect: BattleActiveEffect,
+  condition: Condition,
+): boolean {
+  return (
+    (effect.kind === "spellCondition" && effect.condition === condition) ||
+    (effect.kind === "sleepPendingRepeatSave" &&
+      condition === "incapacitated") ||
+    (effect.kind === "sleepUnconscious" && condition === "unconscious")
+  );
+}
+
+function hasConditionFromOwnFlag(
+  conditions: ConditionState,
+  condition: Condition,
+): boolean {
+  return condition === "incapacitated"
+    ? conditions.directIncapacitated
+    : hasCondition(conditions, condition);
 }
 
 export function spellRestraintEffects(
@@ -134,6 +171,63 @@ export function removeSpellConditionEffect(
   };
 }
 
+export function combatantHasSleepEffect(
+  combatant: BattleCreatureState | undefined,
+): combatant is BattleCreatureState {
+  return combatant?.activeEffects.some(isSleepEffect) === true;
+}
+
+export function sleepShakeAwakeTargetChoices(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly CombatantId[] {
+  return [...state.combatants]
+    .filter(
+      ([id, combatant]) => id !== actorId && combatantHasSleepEffect(combatant),
+    )
+    .map(([id]) => id);
+}
+
+export function removeSleepEffectsFromTarget(
+  state: BattleState,
+  targetId: CombatantId,
+): BattleState {
+  const target = state.combatants.get(targetId);
+  if (target === undefined) {
+    return state;
+  }
+  const expiring = target.activeEffects.filter(isSleepEffect);
+  if (expiring.length === 0) {
+    return state;
+  }
+  const activeEffects = target.activeEffects.filter(
+    (effect) => !expiring.includes(effect),
+  );
+  const nextCombatant: BattleCreatureState =
+    target.positiveHpUnconscious === null
+      ? {
+          ...target,
+          activeEffects,
+          conditions: conditionsAfterExpiringSpellConditionEffects(
+            target.conditions,
+            activeEffects,
+            expiring,
+          ),
+        }
+      : { ...target, activeEffects };
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(targetId, nextCombatant),
+  };
+}
+
+function isSleepEffect(effect: BattleActiveEffect): boolean {
+  return (
+    effect.kind === "sleepPendingRepeatSave" ||
+    effect.kind === "sleepUnconscious"
+  );
+}
+
 export function conditionsAfterApplyingSpellConditionEffects(
   conditions: ConditionState,
   activeEffects: readonly BattleActiveEffect[],
@@ -152,18 +246,31 @@ export function conditionsAfterApplyingSpellConditionEffects(
     conditions,
   );
   return activeEffects
-    .filter((effect) => effect.kind === "spellCondition")
+    .filter(
+      (
+        effect,
+      ): effect is
+        | Extract<BattleActiveEffect, { readonly kind: "spellCondition" }>
+        | Extract<
+            BattleActiveEffect,
+            { readonly kind: "sleepPendingRepeatSave" }
+          >
+        | Extract<BattleActiveEffect, { readonly kind: "sleepUnconscious" }> =>
+        effect.kind === "spellCondition" ||
+        effect.kind === "sleepPendingRepeatSave" ||
+        effect.kind === "sleepUnconscious",
+    )
     .filter(
       (effect) =>
         !activeEffects.some(
           (candidate) =>
             candidate.kind === "conditionImmunity" &&
-            candidate.condition === effect.condition,
+            candidate.condition === activeEffectCondition(effect),
         ),
     )
     .reduce(
       (nextConditions, effect) =>
-        applyCondition(nextConditions, effect.condition),
+        applyCondition(nextConditions, activeEffectCondition(effect)),
       baseConditions,
     );
 }
@@ -174,15 +281,39 @@ export function conditionsAfterExpiringSpellConditionEffects(
   expiringEffects: readonly BattleActiveEffect[],
 ): ConditionState {
   return expiringEffects
-    .filter((effect) => effect.kind === "spellCondition")
+    .filter(
+      (
+        effect,
+      ): effect is
+        | Extract<BattleActiveEffect, { readonly kind: "spellCondition" }>
+        | Extract<
+            BattleActiveEffect,
+            { readonly kind: "sleepPendingRepeatSave" }
+          >
+        | Extract<BattleActiveEffect, { readonly kind: "sleepUnconscious" }> =>
+        effect.kind === "spellCondition" ||
+        effect.kind === "sleepPendingRepeatSave" ||
+        effect.kind === "sleepUnconscious",
+    )
     .reduce((nextConditions, effect) => {
-      const stillHasSpellSource = remainingEffects.some(
-        (remaining) =>
-          remaining.kind === "spellCondition" &&
-          remaining.condition === effect.condition,
+      const condition = activeEffectCondition(effect);
+      const stillHasSpellSource = remainingEffects.some((remaining) =>
+        activeEffectDirectlyAppliesCondition(remaining, condition),
       );
       return stillHasSpellSource || effect.conditionHadNonSpellSource
         ? nextConditions
-        : removeCondition(nextConditions, effect.condition);
+        : removeCondition(nextConditions, condition);
     }, conditions);
+}
+
+function activeEffectCondition(
+  effect:
+    | Extract<BattleActiveEffect, { readonly kind: "spellCondition" }>
+    | Extract<BattleActiveEffect, { readonly kind: "sleepPendingRepeatSave" }>
+    | Extract<BattleActiveEffect, { readonly kind: "sleepUnconscious" }>,
+): Condition {
+  if (effect.kind === "spellCondition") return effect.condition;
+  return effect.kind === "sleepPendingRepeatSave"
+    ? "incapacitated"
+    : "unconscious";
 }

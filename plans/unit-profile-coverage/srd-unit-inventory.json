@@ -160,19 +160,19 @@
       "non-runtime": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 238,
+      "catalog-installed-owner-evidence-present": 239,
       "non-runtime": 12,
       "catalog-only/dead-for-now": 80,
       "needs-surface-widening": 33,
       "catalog-authored-executable-follow-up": 2,
-      "catalog-installed-owner-evidence-required": 2
+      "catalog-installed-owner-evidence-required": 1
     },
     "spellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 80,
-      "catalog-installed-owner-evidence-present": 94,
+      "catalog-installed-owner-evidence-present": 95,
       "needs-surface-widening": 33,
       "catalog-authored-executable-follow-up": 2,
-      "catalog-installed-owner-evidence-required": 2
+      "catalog-installed-owner-evidence-required": 1
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -2409,7 +2409,7 @@
     {
       "id": "SRDINV39",
       "title": "Promote Eldritch Blast Beam Runtime",
-      "suggestedStatus": "ready-for-research",
+      "suggestedStatus": "done",
       "intent": "Promote Eldritch Blast as one or more independent ranged spell attack beams with cantrip scaling.",
       "rowCount": 1,
       "rowIds": [
@@ -14404,7 +14404,7 @@
         "state": "installed",
         "unitId": "eldritch_blast"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -14413,11 +14413,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Unit matrix records unsupported-profile: Spell Definition is installed for Warlock Spell Access validation; promoted invocation/projectile runtime evidence is not present yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV39 at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Unit matrix records unsupported-profile: Spell Definition is installed for Warlock Spell Access validation; promoted invocation/projectile runtime evidence is not present yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_mage_hand",

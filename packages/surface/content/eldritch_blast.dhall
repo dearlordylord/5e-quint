@@ -52,6 +52,7 @@ let eldritchBlast =
                                 }
                             , repeatsAllowed = True
                             }
+                          // { targetKinds = [ "creature", "object" ] }
                         }
                     }
                 , attackKind = "ranged_spell_attack"

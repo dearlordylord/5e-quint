@@ -104,6 +104,7 @@ import {
   needsHolesResult,
   searchAbilityCheckHole,
   searchTargetHole,
+  sleepShakeAwakeTargetHole,
 } from "./hole-helpers.ts";
 
 import {
@@ -117,7 +118,9 @@ import { invalidResult } from "./result-helpers.ts";
 
 import {
   removeSpellConditionEffect,
+  removeSleepEffectsFromTarget,
   spellRestraintEffectFor,
+  sleepShakeAwakeTargetChoices,
 } from "./spell-condition-effects-helpers.ts";
 
 import {
@@ -183,6 +186,7 @@ import {
   HIDE_DC,
   SEARCH_ABILITY_CHECK_HOLE_ID,
   SEARCH_TARGET_HOLE_ID,
+  SLEEP_SHAKE_AWAKE_TARGET_HOLE_ID,
   actorHasClassFeatureExtraAttackActionResource,
   actorHasStatBlockMultiattackActionResource,
   isClassFeatureExtraAttackActionResource,
@@ -673,6 +677,67 @@ export function resolveHelpAttack(
       },
     ],
   };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+export function resolveShakeAwakeFromSleep(
+  input: BattleResolutionInputForSubject<
+    Extract<
+      BattleSubject,
+      { readonly tag: "action"; readonly action: "shakeAwakeFromSleep" }
+    >
+  >,
+): BattleResolutionResult {
+  const [targetFill] = input.fills;
+  if (targetFill === undefined) {
+    return needsHolesResult(input.state, input.subject, [
+      sleepShakeAwakeTargetHole(input.state, input.subject.actorId),
+    ]);
+  }
+  if (
+    input.fills.length > 1 ||
+    targetFill.kind !== "targetChoice" ||
+    targetFill.holeId !== SLEEP_SHAKE_AWAKE_TARGET_HOLE_ID
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Sleep shake-awake requires one target fill.",
+    );
+  }
+  const targetId = targetFill.value;
+  if (
+    !sleepShakeAwakeTargetChoices(input.state, input.subject.actorId).includes(
+      targetId,
+    ) ||
+    !hasSleepShakeAwakeSpatialFact(
+      targetFill.spatialFacts ?? [],
+      input.subject.actorId,
+      targetId,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Sleep shake-awake target must be within 5 feet of the actor by table-supplied fact.",
+    );
+  }
+  const spent = spendTurnAction(input.state.currentTurnResources);
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Sleep shake-awake is no longer available.",
+    );
+  }
+  const nextState = removeSleepEffectsFromTarget(
+    { ...input.state, currentTurnResources: spent.right },
+    targetId,
+  );
   return {
     tag: "resolved",
     state: nextState,
@@ -1422,6 +1487,19 @@ function spellRestraintEscapeActorWithinTargetReach(
   return facts.some(
     (fact) =>
       fact.kind === "spellRestraintEscapeActorWithinTargetReach" &&
+      fact.actorId === actorId &&
+      fact.targetId === targetId,
+  );
+}
+
+function hasSleepShakeAwakeSpatialFact(
+  facts: readonly BattleTargetSpatialFact[],
+  actorId: CombatantId,
+  targetId: CombatantId,
+): boolean {
+  return facts.some(
+    (fact) =>
+      fact.kind === "sleepShakeAwakeActorWithin5Feet" &&
       fact.actorId === actorId &&
       fact.targetId === targetId,
   );

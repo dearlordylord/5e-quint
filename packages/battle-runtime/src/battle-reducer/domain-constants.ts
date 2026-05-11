@@ -34,6 +34,17 @@ export const CHROMATIC_ORB_CONTINUATION_LIMIT_KINDS = [
   "max_leaps_from_slot_level",
   "exclude_already_targeted_in_same_cast",
 ] as const;
+export const ELDRITCH_BLAST_BEAM_COUNT_TIERS = [
+  { atLevel: 5, value: 2 },
+  { atLevel: 11, value: 3 },
+  { atLevel: 17, value: 4 },
+] as const;
+export const ELDRITCH_BLAST_BEAM_COUNTS = [
+  1,
+  ...ELDRITCH_BLAST_BEAM_COUNT_TIERS.map((tier) => tier.value),
+] as const;
+export type EldritchBlastBeamCount =
+  (typeof ELDRITCH_BLAST_BEAM_COUNTS)[number];
 export const ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_TARGET_HOLE_ID = holeId(
   "battle:attack-damage-reduction-zero-damage-redirect:target",
 );

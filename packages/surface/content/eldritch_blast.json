@@ -45,7 +45,8 @@
                 ]
               },
               "mode": "choose_up_to",
-              "repeatsAllowed": true
+              "repeatsAllowed": true,
+              "targetKinds": ["creature", "object"]
             }
           }
         },

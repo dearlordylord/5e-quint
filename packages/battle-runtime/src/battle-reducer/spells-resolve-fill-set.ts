@@ -10,6 +10,7 @@ import {
   isTargetListSpellInvocation,
   type BattleAttackRollResult,
   type BattleFill,
+  type BattleHoleId,
   type BattleSpellSavingThrowOutcomeValue,
   type BattleSpellTargetAllocation,
   type BattleSpellTargetAllocationSpatialFact,
@@ -22,6 +23,10 @@ import type { BattleObjectId, CombatantId } from "../identity.ts";
 import { isSpellDamageReductionRollFill } from "./damage-helpers.ts";
 import {
   spellBurstDamageHole,
+  spellBeamAttackRollHoleId,
+  spellBeamDamageHoleId,
+  spellBeamObjectTargetHoleId,
+  spellBeamTargetHoleId,
   spellDamageHole,
   spellDamageTypeChoiceHole,
   spellObjectTargetHoleId,
@@ -30,6 +35,29 @@ import {
   spellTargetAllocationHoleId,
   spellTargetListHoleId,
 } from "./spells-holes-fills.ts";
+
+export type SpellBeamTargetFill =
+  | {
+      readonly kind: "combatant";
+      readonly targetId: CombatantId;
+      readonly spatialFacts: readonly BattleTargetSpatialFact[];
+    }
+  | {
+      readonly kind: "object";
+      readonly objectId: BattleObjectId;
+      readonly spatialFacts: readonly Extract<
+        BattleTargetSpatialFact,
+        { readonly kind: "spellObjectTarget" }
+      >[];
+    };
+
+export type SpellBeamFillSet = {
+  readonly target: SpellBeamTargetFill | undefined;
+  readonly attackRoll: BattleAttackRollResult | undefined;
+  readonly damageRoll:
+    | Extract<BattleFill, { readonly kind: "rolledDice" }>
+    | undefined;
+};
 
 export type SpellFillSet =
   | {
@@ -57,6 +85,7 @@ export type SpellFillSet =
             readonly spatialFacts: readonly BattleSpellTargetListSpatialFact[];
           }
         | undefined;
+      readonly beamFills: readonly SpellBeamFillSet[];
       readonly attackRoll: BattleAttackRollResult | undefined;
       readonly savingThrowOutcomes:
         | BattleSpellSavingThrowOutcomeValue
@@ -117,6 +146,14 @@ export function spellFillSet(
       }
     | undefined;
   let attackRoll: AttackRollResult | undefined;
+  const beamFills: SpellBeamFillSet[] =
+    invocation.procedure === "spellAttackBeamSequence"
+      ? Array.from({ length: invocation.targeting.beamCount }, () => ({
+          target: undefined,
+          attackRoll: undefined,
+          damageRoll: undefined,
+        }))
+      : [];
   let savingThrowOutcomes: BattleSpellSavingThrowOutcomeValue | undefined;
   let skillChoice: Skill | undefined;
   let damageTypeChoice:
@@ -153,7 +190,73 @@ export function spellFillSet(
       continue;
     }
 
+    if (
+      fill.kind === "targetChoice" &&
+      invocation.procedure === "spellAttackBeamSequence"
+    ) {
+      const beamIndex = spellBeamIndexForHole(
+        invocation,
+        fill.holeId,
+        "target",
+      );
+      if (beamIndex !== null) {
+        const beamFill = beamFills[beamIndex];
+        if (beamFill === undefined) {
+          return {
+            tag: "invalid",
+            message: "Spell beam target is outside this spell act.",
+          };
+        }
+        if (beamFill.target !== undefined) {
+          return {
+            tag: "invalid",
+            message: "Spell beam target was filled twice.",
+          };
+        }
+        beamFills[beamIndex] = {
+          ...beamFill,
+          target: {
+            kind: "combatant",
+            targetId: fill.value,
+            spatialFacts: fill.spatialFacts ?? [],
+          },
+        };
+        continue;
+      }
+    }
+
     if (fill.kind === "objectTargetChoice") {
+      if (invocation.procedure === "spellAttackBeamSequence") {
+        const beamIndex = spellBeamIndexForHole(
+          invocation,
+          fill.holeId,
+          "object",
+        );
+        if (beamIndex !== null) {
+          const beamFill = beamFills[beamIndex];
+          if (beamFill === undefined) {
+            return {
+              tag: "invalid",
+              message: "Spell beam object target is outside this spell act.",
+            };
+          }
+          if (beamFill.target !== undefined) {
+            return {
+              tag: "invalid",
+              message: "Spell beam target was filled twice.",
+            };
+          }
+          beamFills[beamIndex] = {
+            ...beamFill,
+            target: {
+              kind: "object",
+              objectId: fill.value,
+              spatialFacts: fill.spatialFacts,
+            },
+          };
+          continue;
+        }
+      }
       if (
         invocation.procedure !== "spellAttackDamage" ||
         invocation.targeting.kind !== "singleCreatureOrObject"
@@ -265,6 +368,34 @@ export function spellFillSet(
       }
       attackRoll = fill.value;
       continue;
+    }
+
+    if (
+      fill.kind === "attackRoll" &&
+      invocation.procedure === "spellAttackBeamSequence"
+    ) {
+      const beamIndex = spellBeamIndexForHole(
+        invocation,
+        fill.holeId,
+        "attackRoll",
+      );
+      if (beamIndex !== null) {
+        const beamFill = beamFills[beamIndex];
+        if (beamFill === undefined) {
+          return {
+            tag: "invalid",
+            message: "Spell beam attack roll is outside this spell act.",
+          };
+        }
+        if (beamFill.attackRoll !== undefined) {
+          return {
+            tag: "invalid",
+            message: "Spell beam attack roll was filled twice.",
+          };
+        }
+        beamFills[beamIndex] = { ...beamFill, attackRoll: fill.value };
+        continue;
+      }
     }
 
     if (fill.kind === "savingThrowOutcome") {
@@ -381,6 +512,30 @@ export function spellFillSet(
     }
 
     if (fill.kind === "rolledDice") {
+      if (invocation.procedure === "spellAttackBeamSequence") {
+        const beamIndex = spellBeamIndexForHole(
+          invocation,
+          fill.holeId,
+          "damage",
+        );
+        if (beamIndex !== null) {
+          const beamFill = beamFills[beamIndex];
+          if (beamFill === undefined) {
+            return {
+              tag: "invalid",
+              message: "Spell beam damage is outside this spell act.",
+            };
+          }
+          if (beamFill.damageRoll !== undefined) {
+            return {
+              tag: "invalid",
+              message: "Spell beam damage was filled twice.",
+            };
+          }
+          beamFills[beamIndex] = { ...beamFill, damageRoll: fill };
+          continue;
+        }
+      }
       if (isSpellDamageReductionRollFill(fill)) {
         if (
           spellDamageReductionRolls.some(
@@ -489,6 +644,7 @@ export function spellFillSet(
     targetSpatialFacts,
     targetAllocation,
     targetList,
+    beamFills,
     attackRoll,
     savingThrowOutcomes,
     skillChoice,
@@ -514,4 +670,34 @@ export function spellFillSetSavingThrowTargeting(
         invocation.procedure === "sleepTargetAdmission"
       ? invocation.targeting
       : { kind: "singleCombatant" };
+}
+
+function spellBeamIndexForHole(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spellAttackBeamSequence" }
+  >,
+  holeId: BattleHoleId,
+  kind: "attackRoll" | "damage" | "object" | "target",
+): number | null {
+  for (
+    let beamIndex = 0;
+    beamIndex < invocation.targeting.beamCount;
+    beamIndex += 1
+  ) {
+    if (
+      (kind === "target" &&
+        spellBeamTargetHoleId(invocation, beamIndex) === holeId) ||
+      (kind === "object" &&
+        spellBeamObjectTargetHoleId(invocation, beamIndex) === holeId) ||
+      (kind === "attackRoll" &&
+        spellBeamAttackRollHoleId(invocation, beamIndex) === holeId) ||
+      (kind === "damage" &&
+        (spellBeamDamageHoleId(invocation, beamIndex, false) === holeId ||
+          spellBeamDamageHoleId(invocation, beamIndex, true) === holeId))
+    ) {
+      return beamIndex;
+    }
+  }
+  return null;
 }

@@ -62,9 +62,9 @@
       "value": 124
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 62,
-      "numerator": 58,
-      "percent": "93.5%"
+      "denominator": 63,
+      "numerator": 59,
+      "percent": "93.7%"
     },
     "profileClassificationCoverage": {
       "denominator": 124,
@@ -72,34 +72,34 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 39,
-      "numerator": 39,
+      "denominator": 41,
+      "numerator": 41,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 39,
-      "numerator": 37,
-      "percent": "94.9%"
+      "denominator": 41,
+      "numerator": 39,
+      "percent": "95.1%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 39,
-      "numerator": 39,
+      "denominator": 41,
+      "numerator": 41,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 39,
-      "numerator": 39,
+      "denominator": 41,
+      "numerator": 41,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 62,
+      "denominator": 63,
       "numerator": 10,
-      "percent": "16.1%"
+      "percent": "15.9%"
     },
     "supportedProfileCoverage": {
       "denominator": 100,
-      "numerator": 62,
-      "percent": "62%"
+      "numerator": 63,
+      "percent": "63%"
     }
   },
   "metricSemantics": [
@@ -883,6 +883,34 @@
       ]
     },
     {
+      "id": "spell.invocation-sleep-repeat-save-lifecycle",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "SRDINV38B"
+      ],
+      "title": "Spell invocation resolves Sleep's pending repeat-save lifecycle",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/index.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.invocation-damage-reduction",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -1027,6 +1055,38 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-beam-sequence",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "SRDINV39"
+      ],
+      "title": "Spell invocation resolves independent creature-or-object ranged spell attack beams",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/index.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts"
         }
       ]
     },
@@ -1602,6 +1662,22 @@
       "taskId": "SRDINV38A"
     },
     {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Sleep's pending Incapacitated repeat-save lifecycle, repeat success cleanup, repeat failure escalation to Unconscious, and Concentration cleanup.",
+      "profileIds": [
+        "spell.invocation-sleep-repeat-save-lifecycle"
+      ],
+      "taskId": "SRDINV38B"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests and MBT cover Sleep failed-save pending Incapacitated, target end-turn repeat Wisdom save holes, repeat success cleanup, repeat failure escalation to spell-owned Unconscious, target Concentration breaks, and preservation of unrelated condition sources.",
+      "profileIds": [
+        "spell.invocation-sleep-repeat-save-lifecycle"
+      ],
+      "taskId": "SRDINV38B"
+    },
+    {
       "claimKind": "completed-runtime-parity",
       "note": "Focused battle-runtime Ice Knife tests for primary ranged spell attack, Critical Hit doubling limited to Piercing attack dice, mandatory primary-target-origin burst saves on hit or miss, Cold slot scaling, primary target inclusion, and Concentration follow-up for damaged burst targets.",
       "profileIds": [
@@ -1848,6 +1924,22 @@
         "spell.invocation-damage-save-or-attack"
       ],
       "taskId": "SRDINV34"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Eldritch Blast beam count scaling, Force damage, creature-or-object beam targeting holes, and cantrip slot behavior.",
+      "profileIds": [
+        "spell.invocation-beam-sequence"
+      ],
+      "taskId": "SRDINV39"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime reducer tests and MBT cover Eldritch Blast beam target/attack/damage sequencing, creature and object targets, Concentration saves, spell damage reduction, zero-HP replacement, and attack-hit/after-damage reaction windows.",
+      "profileIds": [
+        "spell.invocation-beam-sequence"
+      ],
+      "taskId": "SRDINV39"
     }
   ],
   "units": [
@@ -6898,20 +6990,13 @@
             "mechanic": "creatures that do not sleep automatically succeed only when an executable non-sleeper fact is supported"
           },
           {
-            "followUpTaskId": "SRDINV38B",
-            "mechanic": "failed initial save applies Incapacitated until the end of the target's next turn with a repeat Wisdom save"
-          },
-          {
-            "followUpTaskId": "SRDINV38B",
-            "mechanic": "failed repeat save escalates to spell-owned Unconscious for the duration"
-          },
-          {
             "followUpTaskId": "SRDINV38C",
             "mechanic": "damage-from-any-source and adjacent shake-awake cleanup"
           }
         ],
         "profileIds": [
-          "spell.invocation-sleep-target-admission"
+          "spell.invocation-sleep-target-admission",
+          "spell.invocation-sleep-repeat-save-lifecycle"
         ],
         "rawRequirementIds": [
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
@@ -6920,7 +7005,10 @@
           "point-origin 5-foot-radius Sphere target admission",
           "Wisdom Saving Throw holes for selected targets that are not automatic successes",
           "Exhaustion-immunity automatic success derived from retained Stat Block condition-immunity facts",
-          "Magic action and Spell Slot spend"
+          "Magic action and Spell Slot spend",
+          "failed initial save applies Sleep-owned Incapacitated until the end of the target's next turn with a repeat Wisdom save",
+          "repeat success ends that target's Sleep effect",
+          "failed repeat save escalates to spell-owned Unconscious for the remaining Concentration duration"
         ],
         "tag": "profile-subset-supported"
       },
@@ -6955,6 +7043,34 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "spell.invocation-sleep-repeat-save-lifecycle",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV38B"
+          ],
+          "title": "Spell invocation resolves Sleep's pending repeat-save lifecycle",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts"
             }
           ]
         }
@@ -7041,14 +7157,58 @@
         "status": "installed"
       },
       "claim": {
-        "reason": "Spell Definition is installed for Warlock Spell Access validation; promoted invocation/projectile runtime evidence is not present yet.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "spell.invocation-beam-sequence"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV39"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-beam-sequence",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV39"
+          ],
+          "title": "Spell invocation resolves independent creature-or-object ranged spell attack beams",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/eldritch_blast.json",
       "unitId": "eldritch_blast"
     },

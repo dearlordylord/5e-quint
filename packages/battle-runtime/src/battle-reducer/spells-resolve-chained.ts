@@ -48,6 +48,7 @@ import { damageAmountAfterTargetAdjustments } from "./damage-helpers.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
+import { removeSleepEffectsFromTarget } from "./spell-condition-effects-helpers.ts";
 import {
   chainedSpellAttackRollHole,
   chainedSpellAttackRollHoleId,
@@ -795,16 +796,16 @@ export function applyChainedSpellDamage(
   if (target === undefined) {
     return state;
   }
-  const damaged = applyHpDamage(
+  const damageAmount = chainedSpellDamageAmountForTarget(
     target,
-    chainedSpellDamageAmountForTarget(
-      target,
-      invocation,
-      damageType,
-      damageRoll,
-    ),
-    { deathFailuresAtZeroHp: critical ? 2 : 1, damageDisposition },
+    invocation,
+    damageType,
+    damageRoll,
   );
+  const damaged = applyHpDamage(target, damageAmount, {
+    deathFailuresAtZeroHp: critical ? 2 : 1,
+    damageDisposition,
+  });
   const nextState = {
     ...state,
     combatants: new Map(state.combatants).set(targetId, damaged),
@@ -815,12 +816,16 @@ export function applyChainedSpellDamage(
     target.hp,
     damaged.hp,
   );
-  return concentrationSavingThrow?.value.succeeded === false ||
+  const concentrated =
+    concentrationSavingThrow?.value.succeeded === false ||
     (target.concentration !== null && damaged.concentration === null)
-    ? breakBattleConcentrationAfterDamage({
-        state: afterMarkDrop,
-        combatantId: targetId,
-        priorConcentration: target.concentration,
-      })
-    : afterMarkDrop;
+      ? breakBattleConcentrationAfterDamage({
+          state: afterMarkDrop,
+          combatantId: targetId,
+          priorConcentration: target.concentration,
+        })
+      : afterMarkDrop;
+  return damageAmount > 0
+    ? removeSleepEffectsFromTarget(concentrated, targetId)
+    : concentrated;
 }

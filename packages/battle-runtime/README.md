@@ -220,6 +220,9 @@ The support-profile parser surface should cover these profile families:
   cantrips such as Poison Spray carry an empty rider list. Creature-or-object
   spell attacks may expose either a combatant target fill or a caller-supplied
   object target fact with range, Armor Class, and object damage disposition.
+  Eldritch Blast uses a beam-sequence variant of this profile: one Magic action
+  creates the character-level beam count, each beam has its own creature-or-object
+  target choice and attack roll, and each hit deals Force damage.
 - `SpellProfile.cantripSaveGateDamage` / prepared save-gate damage: an
   action-cast save-gate damage profile for either single creature targets or
   admitted caller-supplied area target sets, currently point-origin Spheres and
@@ -229,7 +232,13 @@ The support-profile parser surface should cover these profile families:
   sets. It produces Wisdom Saving Throw holes only for selected creatures that
   are not automatic successes; Exhaustion Immunity is derived from retained
   Stat Block condition-immunity facts, while non-sleeper facts are explicitly
-  shaped but rejected until executable support lands.
+  shaped but rejected until executable support lands. Failed initial saves
+  record a concentration-owned Sleep pending repeat-save lifecycle:
+  Incapacitated until that target's next end turn, then success ends that
+  target's Sleep effect and failure escalates it to concentration-owned
+  Unconscious. Damage from any source or an adjacent shake-awake action ends
+  Sleep on that target; breaking the caster's Concentration removes all
+  remaining Sleep effects.
 - `SpellProfile.creatureTypeProtectionAndCharm`: an action-cast, slot-spent
   profile for creature-type-scoped condition/protection clauses. Animal
   Friendship admits Beast targets and applies spell-owned Charmed on failed
@@ -667,7 +676,13 @@ Feature and spell resources:
   saves only for selected targets that are not automatic successes, derives
   Exhaustion-immunity automatic success from retained Stat Block condition
   immunities, rejects non-sleeper facts until executable support lands, and
-  spends the Magic action plus Spell Slot without applying the pending lifecycle.
+  spends the Magic action plus Spell Slot. Failed saves apply pending
+  concentration-owned Sleep Incapacitated until the target's next end turn,
+  where the runtime asks for the second Wisdom save and either removes that
+  target's Sleep effect or replaces it with concentration-owned Unconscious.
+  Damage from any source ends Sleep on the damaged target, and a separate
+  action can shake one adjacent target awake using a caller-supplied within-5-
+  feet fact.
 - Prepared `hellish_rebuke` is admitted as an after-damage triggered-Reaction
   spell: a damaging visible creature within 60 feet makes a Dexterity save,
   takes Fire damage on a failed save and half as much on success, and the spell

@@ -26,6 +26,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV32B produce_flame
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV34 starry_wisp
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV38A sleep
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV39 eldritch_blast
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT25 healing_word
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT32 cure_wounds mass_healing_word
@@ -43,11 +44,12 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT59 monk_deflect_attacks
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT62 fighter_tactical_mind
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT65 bard_cutting_words
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider spell.scalar-buff
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
 import myceliumStepInput from "../../../plans/unit-profile-coverage/fixtures/classic-non-srd/mycelium_step.json";
+import eldritchBlastInput from "../../surface/content/eldritch_blast.json";
 import starryWispInput from "../../surface/content/starry_wisp.json";
 import trueStrikeInput from "../../surface/content/true_strike.json";
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
@@ -171,6 +173,7 @@ const burningHandsUnitId = "burning_hands";
 const chromaticOrbUnitId = "chromatic_orb";
 const colorSprayUnitId = "color_spray";
 const entangleUnitId = "entangle";
+const eldritchBlastUnitId = "eldritch_blast";
 const ensnaringStrikeUnitId = "ensnaring_strike";
 const searingSmiteUnitId = "searing_smite";
 const trueStrikeUnitId = "true_strike";
@@ -3354,6 +3357,137 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
         spellId: shieldUnitId,
       }),
     ).toBeUndefined();
+  });
+});
+
+describe("SRDINV39 deterministic Eldritch Blast Spell Unit admission", () => {
+  test("eldritch_blast is admitted as exact SRD creature-or-object spell attack beams", () => {
+    const spell = spellRecord(eldritchBlastUnitId);
+    const state = spellBattle({
+      cantrips: [spell],
+      casterClassLevels: [{ className: "warlock", level: classLevel(5) }],
+    });
+    const act = spellAct({ state, spellId: eldritchBlastUnitId });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: cantripSpellInvocationRef(
+        eldritchBlastUnitId,
+        "spellAttackBeamSequence",
+      ),
+      mode: { tag: "cast" },
+    });
+    expect(act.initialHoles.map((hole) => hole.kind)).toEqual([
+      "targetChoice",
+      "objectTargetChoice",
+      "targetChoice",
+      "objectTargetChoice",
+    ]);
+    expect(act.initialHoles).toEqual([
+      expect.objectContaining({ label: "Eldritch Blast beam 1 target" }),
+      expect.objectContaining({
+        label: "Eldritch Blast beam 1 object target",
+        requiresTableSpatialFact: true,
+      }),
+      expect.objectContaining({ label: "Eldritch Blast beam 2 target" }),
+      expect.objectContaining({
+        label: "Eldritch Blast beam 2 object target",
+        requiresTableSpatialFact: true,
+      }),
+    ]);
+    const targetHoles = act.initialHoles.filter(
+      (
+        hole,
+      ): hole is Extract<BattleHole, { readonly kind: "targetChoice" }> =>
+        hole.kind === "targetChoice",
+    );
+    const attackRoll = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: targetHoles.map((hole) =>
+          spellTargetFill(
+            hole,
+            eldritchBlastUnitId,
+            spellCasterId,
+            spellTargetId,
+          ),
+        ),
+      }),
+      "attackRoll",
+    );
+    expect(spellHoleInvocation([attackRoll])).toEqual(
+      expect.objectContaining({
+        procedure: "spellAttackBeamSequence",
+        spell,
+        targeting: { kind: "beamSequenceCreatureOrObject", beamCount: 2 },
+        damage: {
+          expr: { dice: 1, dieSize: 10 },
+          damageType: "force",
+        },
+        rangeFeet: 120,
+        attackKind: "ranged_spell_attack",
+        attackBonus: attackBonus(5),
+      }),
+    );
+  });
+
+  test("canonical Eldritch Blast records with non-SRD beam count tiers are not admitted", () => {
+    const decoded = decodeUnitRecordSync(eldritchBlastInput);
+    expect(decoded.kind).toBe("spell");
+    if (decoded.kind !== "spell") return;
+
+    const malformedSpells = [
+      eldritchBlastWithTargetCount(decoded, "eldritch_blast_wrong_base", {
+        kind: "threshold_tiers",
+        axis: "character",
+        base: 2,
+        tiers: [
+          { atLevel: 5, value: 2 },
+          { atLevel: 11, value: 3 },
+          { atLevel: 17, value: 4 },
+        ],
+      }),
+      eldritchBlastWithTargetCount(decoded, "eldritch_blast_wrong_level", {
+        kind: "threshold_tiers",
+        axis: "character",
+        base: 1,
+        tiers: [
+          { atLevel: 4, value: 2 },
+          { atLevel: 11, value: 3 },
+          { atLevel: 17, value: 4 },
+        ],
+      }),
+      eldritchBlastWithTargetCount(decoded, "eldritch_blast_wrong_count", {
+        kind: "threshold_tiers",
+        axis: "character",
+        base: 1,
+        tiers: [
+          { atLevel: 5, value: 2 },
+          { atLevel: 11, value: 4 },
+          { atLevel: 17, value: 4 },
+        ],
+      }),
+      eldritchBlastWithTargetCount(decoded, "eldritch_blast_missing_tier", {
+        kind: "threshold_tiers",
+        axis: "character",
+        base: 1,
+        tiers: [
+          { atLevel: 5, value: 2 },
+          { atLevel: 11, value: 3 },
+        ],
+      }),
+    ] as const satisfies readonly SpellRecord[];
+
+    for (const spell of malformedSpells) {
+      expect(
+        maybeSpellAct({
+          state: spellBattle({ cantrips: [spell] }),
+          spellId: spell.id,
+        }),
+      ).toBeUndefined();
+    }
   });
 });
 
@@ -9575,6 +9709,46 @@ function spellRecord(unitId: string): SpellRecord {
   const unit = unitLibrary.requireUnit(unitId);
   expect(unit.kind).toBe("spell");
   return unit as SpellRecord;
+}
+
+function eldritchBlastWithTargetCount(
+  base: SpellRecord,
+  id: string,
+  count: unknown,
+): SpellRecord {
+  if (base.mechanics.family !== "activation") {
+    throw new Error("Expected Eldritch Blast activation mechanics.");
+  }
+  const [phase] = base.mechanics.phases;
+  if (
+    phase?.kind !== "attack_roll" ||
+    phase.attachment.kind !== "hole" ||
+    phase.attachment.value.kind !== "target"
+  ) {
+    throw new Error("Expected Eldritch Blast target hole.");
+  }
+  return {
+    ...base,
+    id,
+    mechanics: {
+      ...base.mechanics,
+      phases: [
+        {
+          ...phase,
+          attachment: {
+            ...phase.attachment,
+            value: {
+              ...phase.attachment.value,
+              selection: {
+                ...phase.attachment.value.selection,
+                count,
+              },
+            },
+          },
+        },
+      ],
+    },
+  } as SpellRecord;
 }
 
 function spellBattle(input: {

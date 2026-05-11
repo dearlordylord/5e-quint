@@ -63,6 +63,7 @@ import {
   hiddenSearchTargetChoices,
   hideAbilityCheckHole,
   searchTargetHole,
+  sleepShakeAwakeTargetHole,
 } from "./hole-helpers.ts";
 
 import {
@@ -71,7 +72,10 @@ import {
   representedMovementSpeedKinds,
 } from "./movement-speed.ts";
 
-import { spellRestraintEffectEntries } from "./spell-condition-effects-helpers.ts";
+import {
+  sleepShakeAwakeTargetChoices,
+  spellRestraintEffectEntries,
+} from "./spell-condition-effects-helpers.ts";
 
 import { discoverSupportedSpellInvocations } from "./spells-discovery.ts";
 
@@ -207,6 +211,18 @@ export function discoverBattleActs(
       summary:
         "Help an ally's next attack roll against an enemy within 5 feet.",
       initialHoles: [helpAttackAllyHole(state, actorId)],
+    });
+  }
+  if (
+    combatantCanTakeActions(state.combatants.get(actorId)) &&
+    hasTurnActionResource(state.currentTurnResources) &&
+    sleepShakeAwakeTargetChoices(state, actorId).length > 0
+  ) {
+    acts.push({
+      subject: { tag: "action", actorId, action: "shakeAwakeFromSleep" },
+      label: "Shake Awake",
+      summary: "Use an action to shake an adjacent creature out of Sleep.",
+      initialHoles: [sleepShakeAwakeTargetHole(state, actorId)],
     });
   }
   if (

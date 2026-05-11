@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points
@@ -8,7 +8,9 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-damage spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-marked-damage-rider
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-attack-roll-advantage-save
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-beam-sequence
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-damage-reduction
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-sleep-repeat-save-lifecycle
 module battleRuntime {
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
@@ -177,6 +179,10 @@ module battleRuntime {
   //   Wounds, Burning Hands, Color Spray, Entangle, and the damage-only slice
   //   of Chill Touch are action-time spells with creature or table-supplied
   //   area targets, cantrip/slot scaling, and the listed attack/save outcomes.
+  //   Spells/Descriptions-E-L.md lines 30-41: Eldritch Blast creates ranged
+  //   spell attack beams that can target creatures or objects, deal Force
+  //   damage on a hit, scale to two/three/four beams at character levels
+  //   5/11/17, and use a separate attack roll for each beam.
   //   Spells/Descriptions-S-Z.md lines 529-540: Starry Wisp targets one
   //   creature or object within range, makes a ranged spell attack, and deals
   //   Radiant damage on a hit. This object-target slice models caller-supplied
@@ -225,8 +231,10 @@ module battleRuntime {
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | TrueStrike
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | EldritchBlast | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | TrueStrike
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | StarryWispSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack
+  type SpellAttackBeamSequenceInvocation =
+    | EldritchBlastBeamSequence
   type ChainedSpellAttackDamageInvocation =
     | ChromaticOrbChainedSpellAttack
   type ChromaticOrbDamageTypeChoice = ChromaticOrbAcid | ChromaticOrbCold | ChromaticOrbFire | ChromaticOrbLightning | ChromaticOrbPoison | ChromaticOrbThunder
@@ -251,11 +259,12 @@ module battleRuntime {
   type RollModifierSpell = BaneRollModifier | BlessRollModifier | GuidanceRollModifier
   type SpellActionCost = SpellMagicAction | SpellBonusAction
 
-  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireAttackRollAdvantage | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodAttackDisadvantage | ProduceFlameHeldLight({ durationTicks: int })
+  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireAttackRollAdvantage | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodAttackDisadvantage | ProduceFlameHeldLight({ durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool })
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
   type RuntimeCreatureType = HumanoidCreature | BeastCreature | AberrationCreature | CelestialCreature | ElementalCreature | FeyCreature | FiendCreature | UndeadCreature
   type ObjectTarget =
     | StarryWispObjectTarget
+    | EldritchBlastObjectTarget
   type ObjectDamageDisposition =
     | ObjectHitPoints({ hitPoints: int })
     | ObjectHitPointsWithDamageThreshold({ hitPoints: int, damageThreshold: int })
@@ -939,6 +948,8 @@ module battleRuntime {
         | CharmPersonCharmed(_) => false
         | ProtectionFromEvilAndGoodAttackDisadvantage => false
         | ProduceFlameHeldLight(_) => false
+        | SleepPendingRepeatSave(_) => false
+        | SleepUnconscious(_) => false
       })) 13 + dexMod else baseAc
       val shieldBonus = if (effects.contains(ShieldArmorClassBonus)) 5 else 0
       val shieldOfFaithBonus = if (effects.contains(ShieldOfFaithArmorClassBonus)) 2 else 0
@@ -1858,6 +1869,40 @@ module battleRuntime {
       { ...rolled, goblin: damaged, actionAvailable: false }
     }
 
+  pure def resolveEldritchBlastBeamAgainstGoblin(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+  ): BattleState =
+    if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), 20)))
+      recordFighterAttackRoll(state)
+    else {
+      val adjustedDamage = damageAfterAdjustments(damageRoll, Force, Set(), Set(), Set())
+      val damaged = applyDamageFromSource(state.goblin, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter)
+      { ...recordFighterAttackRoll(state), goblin: damaged }
+    }
+
+  pure def resolveEldritchBlastTwoBeams(
+    state: BattleState,
+    firstAttackTotal: int,
+    firstNaturalD20: int,
+    firstDamageRoll: int,
+    firstConcentrationSaveSucceeded: bool,
+    secondAttackTotal: int,
+    secondNaturalD20: int,
+    secondDamageRoll: int,
+    secondConcentrationSaveSucceeded: bool,
+  ): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state))
+      state
+    else {
+      val firstResolved = resolveEldritchBlastBeamAgainstGoblin(revealFighterHidden(state), firstAttackTotal, firstNaturalD20, firstDamageRoll, firstConcentrationSaveSucceeded)
+      val secondResolved = resolveEldritchBlastBeamAgainstGoblin(firstResolved, secondAttackTotal, secondNaturalD20, secondDamageRoll, secondConcentrationSaveSucceeded)
+      { ...secondResolved, actionAvailable: false }
+    }
+
   pure def concentrationSavingThrowDc(damage: int): int = {
     battleRuntimeConcentrationSavingThrowDc(damage)
   }
@@ -1873,11 +1918,79 @@ module battleRuntime {
         | EnsnaringStrikeRestrained(_) => false
         | SearingSmiteBurning(_) => false
         | ResistanceDamageReduction(_) => false
+        | SleepPendingRepeatSave(_) => false
+        | SleepUnconscious(_) => false
         | _ => true
       })
 
-  pure def breakConcentration(target: Combatant): Combatant =
-    { ...target, concentrating: false, activeEffects: activeEffectsWithoutHuntersMark(activeEffectsWithoutSpellEffectConcentration(target.activeEffects).exclude(Set(MageArmor))) }
+  pure def activeEffectsWithoutSleepEffects(effects: Set[ActiveEffect]): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | SleepPendingRepeatSave(_) => false
+      | SleepUnconscious(_) => false
+      | _ => true
+    })
+
+  pure def combatantWithSleepEffectsRemoved(target: Combatant, activeEffects: Set[ActiveEffect]): Combatant = {
+    val hadSleepPending = target.activeEffects.exists(effect => match effect {
+      | SleepPendingRepeatSave(_) => true
+      | _ => false
+    })
+    val hadSleepUnconscious = target.activeEffects.exists(effect => match effect {
+      | SleepUnconscious(_) => true
+      | _ => false
+    })
+    val sleepPendingHadIncapacitated = target.activeEffects.exists(effect => match effect {
+      | SleepPendingRepeatSave(data) => data.hadIncapacitated
+      | _ => false
+    })
+    val sleepUnconsciousHadIncapacitated = target.activeEffects.exists(effect => match effect {
+      | SleepUnconscious(data) => data.hadIncapacitated
+      | _ => false
+    })
+    val sleepUnconsciousHadUnconscious = target.activeEffects.exists(effect => match effect {
+      | SleepUnconscious(data) => data.hadUnconscious
+      | _ => false
+    })
+    {
+      ...target,
+      activeEffects: activeEffects,
+      incapacitated:
+        if (hadSleepUnconscious) sleepUnconsciousHadIncapacitated
+        else if (hadSleepPending) sleepPendingHadIncapacitated
+        else target.incapacitated,
+      unconscious: if (hadSleepUnconscious) sleepUnconsciousHadUnconscious else target.unconscious,
+      prone: if (hadSleepUnconscious and not(sleepUnconsciousHadUnconscious)) true else target.prone,
+    }
+  }
+
+  pure def combatantWithoutSpellEffectConcentrationEffects(target: Combatant): Combatant =
+    combatantWithSleepEffectsRemoved(target, activeEffectsWithoutSpellEffectConcentration(target.activeEffects))
+
+  pure def breakConcentration(target: Combatant): Combatant = {
+    val withoutSpellEffectConcentration = combatantWithoutSpellEffectConcentrationEffects(target)
+    {
+      ...withoutSpellEffectConcentration,
+      concentrating: false,
+      activeEffects: activeEffectsWithoutHuntersMark(withoutSpellEffectConcentration.activeEffects).exclude(Set(MageArmor)),
+    }
+  }
+
+  pure def sleepEffectFromOtherSource(effect: ActiveEffect, targetActor: Actor): bool =
+    match effect {
+      | SleepPendingRepeatSave(data) => data.source != targetActor
+      | SleepUnconscious(data) => data.source != targetActor
+      | _ => false
+    }
+
+  pure def breakConcentrationFromSleepAppliedIncapacitated(target: Combatant, targetActor: Actor): Combatant =
+    if (not(target.concentrating))
+      target
+    else {
+      val sleepEffectsFromOtherSources = target.activeEffects.filter(effect => sleepEffectFromOtherSource(effect, targetActor))
+      val effectsSubjectToBreak = target.activeEffects.filter(effect => not(sleepEffectFromOtherSource(effect, targetActor)))
+      val broken = breakConcentration({ ...target, activeEffects: effectsSubjectToBreak })
+      { ...broken, activeEffects: broken.activeEffects.union(sleepEffectsFromOtherSources) }
+    }
 
   pure def stateWithFighterDamage(state: BattleState, damagedFighter: Combatant): BattleState =
     if (state.fighter.concentrating and not(damagedFighter.concentrating))
@@ -1970,6 +2083,10 @@ module battleRuntime {
       | _ => true
     })
 
+  pure def combatantWithoutSleepEffects(target: Combatant): Combatant =
+    combatantWithSleepEffectsRemoved(target, activeEffectsWithoutSleepEffects(target.activeEffects))
+
+
   pure def applyDamageFromSource(
     target: Combatant,
     damage: int,
@@ -1980,7 +2097,10 @@ module battleRuntime {
   ): Combatant = {
     val damaged = applyDamageWithDisposition(target, damage, deathFailuresAtZeroHp, concentrationSaveSucceeded, damageDisposition)
     if (damage > 0)
-      { ...damaged, activeEffects: activeEffectsAfterTargetDamagedByCasterOrAlly(damaged.activeEffects, damageSource) }
+      combatantWithoutSleepEffects({
+        ...damaged,
+        activeEffects: activeEffectsAfterTargetDamagedByCasterOrAlly(damaged.activeEffects, damageSource),
+      })
     else
       damaged
   }
@@ -3368,6 +3488,7 @@ module battleRuntime {
       | PoisonSpray => false
       | ChillTouch => false
       | StarryWisp => false
+      | EldritchBlast => false
       | SacredFlame => false
       | InflictWounds => true
       | BurningHands => true
@@ -3543,6 +3664,37 @@ module battleRuntime {
       battleRuntimeSpellAttackDamageProfileForInvocation(invocation),
     )
 
+  pure def spellAttackBeamSequenceDamageType(invocation: SpellAttackBeamSequenceInvocation): DamageType =
+    match invocation {
+      | EldritchBlastBeamSequence => Force
+    }
+
+  pure def eldritchBlastBeamCount(characterLevel: int): int =
+    if (characterLevel >= 17) 4
+    else if (characterLevel >= 11) 3
+    else if (characterLevel >= 5) 2
+    else 1
+
+  pure def spellAttackBeamSequenceReplayHoles(
+    invocation: SpellAttackBeamSequenceInvocation,
+    canCastSpells: bool,
+    beamCount: int,
+    beamTargetsFilled: int,
+    beamAttackRollsFilled: int,
+    beamHits: int,
+    beamDamageRollsFilled: int,
+  ): Set[Hole] =
+    if (not(canCastSpells) or beamCount <= 0)
+      Set()
+    else if (beamTargetsFilled < beamCount)
+      Set(TargetChoice, ObjectTargetChoice)
+    else if (beamAttackRollsFilled < beamCount)
+      Set(AttackRoll)
+    else if (beamDamageRollsFilled < beamHits)
+      Set(SpellDamageRoll)
+    else
+      Set()
+
   pure def objectHitPointDamageOutcome(
     object: ObjectTarget,
     damageType: DamageType,
@@ -3592,6 +3744,37 @@ module battleRuntime {
           objectHitPointDamageOutcome(
             object,
             spellAttackDamageType(invocation),
+            damageRoll,
+            fill.hitPoints,
+            fill.damageThreshold,
+          )
+    }
+
+  pure def spellAttackBeamSequenceObjectDamageOutcome(
+    invocation: SpellAttackBeamSequenceInvocation,
+    object: ObjectTarget,
+    damageRoll: int,
+    disposition: ObjectDamageDisposition,
+  ): ObjectDamageOutcome =
+    match disposition {
+      | ObjectTableResolved =>
+          ObjectTableResolvedDamage({
+            object: object,
+            damageType: spellAttackBeamSequenceDamageType(invocation),
+            rolledDamage: damageRoll,
+          })
+      | ObjectHitPoints(fill) =>
+          objectHitPointDamageOutcome(
+            object,
+            spellAttackBeamSequenceDamageType(invocation),
+            damageRoll,
+            fill.hitPoints,
+            0,
+          )
+      | ObjectHitPointsWithDamageThreshold(fill) =>
+          objectHitPointDamageOutcome(
+            object,
+            spellAttackBeamSequenceDamageType(invocation),
             damageRoll,
             fill.hitPoints,
             fill.damageThreshold,
@@ -4208,6 +4391,166 @@ module battleRuntime {
     else
       { ...target, activeEffects: target.activeEffects.union(saveGatedConditionFailedSaveActiveEffects(invocation, source)) }
 
+  pure def actorHasTurnLaterThisRound(state: BattleState, actor: Actor): bool =
+    actor != currentActor(state) and state.initiative.stillToAct.length() > 1
+
+  pure def sleepRepeatAtRound(state: BattleState, target: Actor): int =
+    if (actorHasTurnLaterThisRound(state, target))
+      state.initiative.round
+    else
+      state.initiative.round + 1
+
+  pure def sleepPendingRepeatSaveEffect(
+    state: BattleState,
+    target: Actor,
+    source: Actor,
+    hadIncapacitated: bool,
+  ): ActiveEffect =
+    SleepPendingRepeatSave({
+      source: source,
+      repeatAtActor: target,
+      repeatAtRound: sleepRepeatAtRound(state, target),
+      hadIncapacitated: hadIncapacitated,
+    })
+
+  pure def sleepInitialSaveTarget(
+    state: BattleState,
+    target: Combatant,
+    targetActor: Actor,
+    savingThrowSucceeded: bool,
+    source: Actor,
+  ): Combatant =
+    if (savingThrowSucceeded)
+      target
+    else {
+      val slept = {
+        ...target,
+        incapacitated: true,
+        activeEffects: target.activeEffects
+          .filter(effect => match effect {
+            | SleepPendingRepeatSave(data) => data.source != source
+            | SleepUnconscious(data) => data.source != source
+            | _ => true
+          })
+          .union(Set(sleepPendingRepeatSaveEffect(state, targetActor, source, target.incapacitated))),
+      }
+      breakConcentrationFromSleepAppliedIncapacitated(slept, targetActor)
+    }
+
+  pure def resolveSleepTargetAdmission(
+    state: BattleState,
+    goblinSavingThrowSucceeded: bool,
+  ): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)))
+      state
+    else {
+      val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
+      {
+        ...withoutPrior,
+        fighter: { ...withoutPrior.fighter, concentrating: true },
+        goblin: sleepInitialSaveTarget(withoutPrior, withoutPrior.goblin, Goblin, goblinSavingThrowSucceeded, Fighter),
+        actionAvailable: false,
+        spellSlotExpendedThisTurn: true,
+      }
+    }
+
+  pure def sleepRepeatSaveDue(effects: Set[ActiveEffect], actor: Actor, round: int): bool =
+    effects.exists(effect => match effect {
+      | SleepPendingRepeatSave(data) => data.repeatAtActor == actor and data.repeatAtRound == round
+      | _ => false
+    })
+
+  pure def sleepPendingHadIncapacitated(effects: Set[ActiveEffect], actor: Actor, round: int): bool =
+    effects.exists(effect => match effect {
+      | SleepPendingRepeatSave(data) => data.repeatAtActor == actor and data.repeatAtRound == round and data.hadIncapacitated
+      | _ => false
+    })
+
+  pure def activeEffectsWithoutSleepPendingRepeatSave(effects: Set[ActiveEffect], actor: Actor, round: int): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | SleepPendingRepeatSave(data) => not(data.repeatAtActor == actor and data.repeatAtRound == round)
+      | _ => true
+    })
+
+  pure def sleepRepeatSaveHoles(state: BattleState): Set[Hole] =
+    match currentActor(state) {
+      | Fighter =>
+        if (sleepRepeatSaveDue(state.fighter.activeEffects, Fighter, state.initiative.round))
+          Set(SavingThrowOutcome)
+        else
+          Set()
+      | Goblin =>
+        if (sleepRepeatSaveDue(state.goblin.activeEffects, Goblin, state.initiative.round))
+          Set(SavingThrowOutcome)
+        else
+          Set()
+    }
+
+  pure def sleepRepeatSaveTarget(
+    target: Combatant,
+    targetActor: Actor,
+    round: int,
+    savingThrowSucceeded: bool,
+  ): Combatant = {
+    val activeEffectsWithoutPending = activeEffectsWithoutSleepPendingRepeatSave(target.activeEffects, targetActor, round)
+    val hadIncapacitated = sleepPendingHadIncapacitated(target.activeEffects, targetActor, round)
+    if (savingThrowSucceeded)
+      { ...target, incapacitated: hadIncapacitated, activeEffects: activeEffectsWithoutPending }
+    else {
+      val slept = {
+        ...target,
+        incapacitated: hadIncapacitated,
+        unconscious: true,
+        prone: true,
+        activeEffects: activeEffectsWithoutPending.union(Set(SleepUnconscious({
+          source: Fighter,
+          hadUnconscious: target.unconscious,
+          hadIncapacitated: hadIncapacitated,
+        }))),
+      }
+      breakConcentrationFromSleepAppliedIncapacitated(slept, targetActor)
+    }
+  }
+
+  pure def endTurnWithSleepRepeatSave(state: BattleState, savingThrowSucceeded: bool): BattleState =
+    match currentActor(state) {
+      | Fighter =>
+        if (sleepRepeatSaveDue(state.fighter.activeEffects, Fighter, state.initiative.round))
+          endTurn({ ...state, fighter: sleepRepeatSaveTarget(state.fighter, Fighter, state.initiative.round, savingThrowSucceeded) })
+        else
+          endTurn(state)
+      | Goblin =>
+        if (sleepRepeatSaveDue(state.goblin.activeEffects, Goblin, state.initiative.round))
+          endTurn({ ...state, goblin: sleepRepeatSaveTarget(state.goblin, Goblin, state.initiative.round, savingThrowSucceeded) })
+        else
+          endTurn(state)
+    }
+
+  pure def combatantHasSleepEffect(target: Combatant): bool =
+    target.activeEffects.exists(effect => match effect {
+      | SleepPendingRepeatSave(_) => true
+      | SleepUnconscious(_) => true
+      | _ => false
+    })
+
+  pure def shakeAwakeFromSleep(state: BattleState, targetActor: Actor, actorWithin5Feet: bool): BattleState =
+    if (not(state.actionAvailable) or not(actorWithin5Feet) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated)
+      state
+    else {
+      match targetActor {
+        | Fighter =>
+          if (combatantHasSleepEffect(state.fighter))
+            { ...state, fighter: combatantWithoutSleepEffects(state.fighter), actionAvailable: false }
+          else
+            state
+        | Goblin =>
+          if (combatantHasSleepEffect(state.goblin))
+            { ...state, goblin: combatantWithoutSleepEffects(state.goblin), actionAvailable: false }
+          else
+            state
+      }
+    }
+
   pure def selectedTargetCount(fighterTargeted: bool, goblinTargeted: bool): int =
     (if (fighterTargeted) 1 else 0) + (if (goblinTargeted) 1 else 0)
 
@@ -4303,13 +4646,13 @@ module battleRuntime {
         {
           ...state,
           fighter: breakConcentration(state.fighter),
-          goblin: { ...state.goblin, activeEffects: activeEffectsWithoutSpellEffectConcentration(state.goblin.activeEffects) },
+          goblin: combatantWithoutSpellEffectConcentrationEffects(state.goblin),
         }
       | Goblin =>
         {
           ...state,
           goblin: breakConcentration(state.goblin),
-          fighter: { ...state.fighter, activeEffects: activeEffectsWithoutSpellEffectConcentration(state.fighter.activeEffects) },
+          fighter: combatantWithoutSpellEffectConcentrationEffects(state.fighter),
         }
     }
 
@@ -5127,6 +5470,15 @@ module battleRuntime {
       assert(spellAttackDamageActiveEffects(StarryWispSpellAttack) == Set()),
       assert(spellAttackDamageSupportsObjectTarget(StarryWispSpellAttack)),
       assert(not(spellAttackDamageSupportsObjectTarget(ChillTouchSpellAttack))),
+      assert(spellAttackBeamSequenceDamageType(EldritchBlastBeamSequence) == Force),
+      assert(eldritchBlastBeamCount(1) == 1),
+      assert(eldritchBlastBeamCount(5) == 2),
+      assert(eldritchBlastBeamCount(11) == 3),
+      assert(eldritchBlastBeamCount(17) == 4),
+      assert(spellAttackBeamSequenceReplayHoles(EldritchBlastBeamSequence, true, 2, 0, 0, 0, 0) == Set(TargetChoice, ObjectTargetChoice)),
+      assert(spellAttackBeamSequenceReplayHoles(EldritchBlastBeamSequence, true, 2, 2, 1, 0, 0) == Set(AttackRoll)),
+      assert(spellAttackBeamSequenceReplayHoles(EldritchBlastBeamSequence, true, 2, 2, 2, 2, 1) == Set(SpellDamageRoll)),
+      assert(spellAttackBeamSequenceReplayHoles(EldritchBlastBeamSequence, true, 2, 2, 2, 1, 1) == Set()),
       assert(spellAttackDamageObjectReplayHoles(StarryWispSpellAttack, true, false, false, false, false) == Set(ObjectTargetChoice)),
       assert(spellAttackDamageObjectReplayHoles(StarryWispSpellAttack, true, true, false, false, false) == Set(AttackRoll)),
       assert(spellAttackDamageObjectReplayHoles(StarryWispSpellAttack, true, true, true, true, false) == Set(SpellDamageRoll)),
@@ -5147,6 +5499,15 @@ module battleRuntime {
         effectiveDamage: 0,
         priorHitPoints: 10,
         nextHitPoints: 10,
+        destroyed: false,
+      })),
+      assert(spellAttackBeamSequenceObjectDamageOutcome(EldritchBlastBeamSequence, EldritchBlastObjectTarget, 6, ObjectHitPoints({ hitPoints: 10 })) == ObjectHitPointDamage({
+        object: EldritchBlastObjectTarget,
+        damageType: Force,
+        rolledDamage: 6,
+        effectiveDamage: 6,
+        priorHitPoints: 10,
+        nextHitPoints: 4,
         destroyed: false,
       })),
       assert(spellAttackDamageActiveEffects(ShockingGraspSpellAttack) == Set(ShockingGraspOpportunityAttackDenied)),
@@ -5731,6 +6092,136 @@ module battleRuntime {
     }
   }
 
+  run test_sleep_failed_initial_save_adds_pending_repeat_save_until_concentration = {
+    val slept = resolveSleepTargetAdmission(initialState, false)
+    val broken = breakConcentrationSpellEffects(slept, Fighter)
+    all {
+      assert(not(slept.actionAvailable)),
+      assert(slept.spellSlotExpendedThisTurn),
+      assert(slept.fighter.concentrating),
+      assert(slept.goblin.incapacitated),
+      assert(slept.goblin.activeEffects.contains(SleepPendingRepeatSave({
+        source: Fighter,
+        repeatAtActor: Goblin,
+        repeatAtRound: 1,
+        hadIncapacitated: false,
+      }))),
+      assert(not(broken.fighter.concentrating)),
+      assert(not(broken.goblin.incapacitated)),
+      assert(not(sleepRepeatSaveDue(broken.goblin.activeEffects, Goblin, 1))),
+    }
+  }
+
+  run test_sleep_repeat_save_success_removes_pending_effect = {
+    val slept = resolveSleepTargetAdmission(initialState, false)
+    val goblinTurn = endTurn(slept)
+    val repeated = endTurnWithSleepRepeatSave(goblinTurn, true)
+    all {
+      assert(sleepRepeatSaveHoles(goblinTurn) == Set(SavingThrowOutcome)),
+      assert(not(repeated.goblin.incapacitated)),
+      assert(not(sleepRepeatSaveDue(repeated.goblin.activeEffects, Goblin, 1))),
+    }
+  }
+
+  run test_sleep_failed_initial_save_breaks_target_concentration = {
+    val concentratingGoblin = {
+      ...initialState,
+      goblin: { ...initialState.goblin, concentrating: true, activeEffects: Set(MageArmor) },
+    }
+    val slept = resolveSleepTargetAdmission(concentratingGoblin, false)
+    all {
+      assert(not(slept.goblin.concentrating)),
+      assert(not(slept.goblin.activeEffects.contains(MageArmor))),
+      assert(slept.goblin.activeEffects.contains(SleepPendingRepeatSave({
+        source: Fighter,
+        repeatAtActor: Goblin,
+        repeatAtRound: 1,
+        hadIncapacitated: false,
+      }))),
+    }
+  }
+
+  run test_sleep_repeat_save_failure_escalates_to_unconscious_until_concentration = {
+    val slept = resolveSleepTargetAdmission(initialState, false)
+    val goblinTurn = endTurn(slept)
+    val repeated = endTurnWithSleepRepeatSave(goblinTurn, false)
+    val broken = breakConcentrationSpellEffects(repeated, Fighter)
+    all {
+      assert(repeated.goblin.unconscious),
+      assert(repeated.goblin.prone),
+      assert(not(repeated.goblin.incapacitated)),
+      assert(repeated.goblin.activeEffects.contains(SleepUnconscious({
+        source: Fighter,
+        hadUnconscious: false,
+        hadIncapacitated: false,
+      }))),
+      assert(not(broken.goblin.unconscious)),
+      assert(broken.goblin.prone),
+      assert(not(broken.goblin.activeEffects.contains(SleepUnconscious({
+        source: Fighter,
+        hadUnconscious: false,
+        hadIncapacitated: false,
+      })))),
+    }
+  }
+
+  run test_sleep_repeat_save_failure_breaks_target_concentration = {
+    val slept = resolveSleepTargetAdmission(initialState, false)
+    val goblinTurn = endTurn(slept)
+    val concentratingGoblinTurn = {
+      ...goblinTurn,
+      goblin: { ...goblinTurn.goblin, concentrating: true, activeEffects: goblinTurn.goblin.activeEffects.union(Set(MageArmor)) },
+    }
+    val repeated = endTurnWithSleepRepeatSave(concentratingGoblinTurn, false)
+    all {
+      assert(not(repeated.goblin.concentrating)),
+      assert(not(repeated.goblin.activeEffects.contains(MageArmor))),
+      assert(repeated.goblin.activeEffects.contains(SleepUnconscious({
+        source: Fighter,
+        hadUnconscious: false,
+        hadIncapacitated: false,
+      }))),
+    }
+  }
+
+  run test_sleep_damage_ends_pending_sleep_on_target = {
+    val slept = resolveSleepTargetAdmission(initialState, false)
+    val damaged = { ...slept, goblin: applyDamageFromSource(slept.goblin, 1, 1, true, OrdinaryDamage, Goblin) }
+    all {
+      assert(not(damaged.goblin.incapacitated)),
+      assert(not(combatantHasSleepEffect(damaged.goblin))),
+    }
+  }
+
+  run test_sleep_damage_ends_unconscious_sleep_and_leaves_prone = {
+    val slept = resolveSleepTargetAdmission(initialState, false)
+    val goblinTurn = endTurn(slept)
+    val repeated = endTurnWithSleepRepeatSave(goblinTurn, false)
+    val damaged = { ...repeated, goblin: applyDamageFromSource(repeated.goblin, 1, 1, true, OrdinaryDamage, Goblin) }
+    all {
+      assert(not(damaged.goblin.unconscious)),
+      assert(damaged.goblin.prone),
+      assert(not(combatantHasSleepEffect(damaged.goblin))),
+    }
+  }
+
+  run test_sleep_adjacent_action_shakes_target_awake = {
+    val slept = resolveSleepTargetAdmission(initialState, false)
+    val nextRoundFighterTurn = {
+      ...slept,
+      initiative: { round: 2, alreadyActed: List(), stillToAct: List(Fighter, Goblin) },
+      actionAvailable: true,
+    }
+    val shaken = shakeAwakeFromSleep(nextRoundFighterTurn, Goblin, true)
+    val notAdjacent = shakeAwakeFromSleep(nextRoundFighterTurn, Goblin, false)
+    all {
+      assert(not(shaken.actionAvailable)),
+      assert(not(shaken.goblin.incapacitated)),
+      assert(not(combatantHasSleepEffect(shaken.goblin))),
+      assert(notAdjacent == nextRoundFighterTurn),
+    }
+  }
+
   run test_poison_spray_applies_poison_spell_attack_damage = {
     val noReaction = { ...initialState, goblin: { ...initialState.goblin, reactionAvailable: false } }
     val result = resolvePoisonSpray(noReaction, 15, 10, 7, true)
@@ -5748,6 +6239,19 @@ module battleRuntime {
       assert(result.actionAvailable == false),
       assert(result.goblin.hp == 4),
       assert(not(result.spellSlotExpendedThisTurn)),
+    }
+  }
+
+  run test_eldritch_blast_resolves_two_independent_force_beams = {
+    val result = resolveEldritchBlastTwoBeams(initialState, 15, 10, 4, true, 1, 1, 6, true)
+    val twoHits = resolveEldritchBlastTwoBeams(initialState, 15, 10, 4, true, 16, 11, 6, true)
+    all {
+      assert(result.actionAvailable == false),
+      assert(result.goblin.hp == 6),
+      assert(not(result.spellSlotExpendedThisTurn)),
+      assert(twoHits.actionAvailable == false),
+      assert(twoHits.goblin.hp == 0),
+      assert(not(twoHits.spellSlotExpendedThisTurn)),
     }
   }
 

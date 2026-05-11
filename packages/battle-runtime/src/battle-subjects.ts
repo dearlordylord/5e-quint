@@ -20,6 +20,7 @@ export const BATTLE_SUBJECT_ACTIONS = [
   "grapple",
   "escapeGrapple",
   "escapeSpellRestraint",
+  "shakeAwakeFromSleep",
 ] as const;
 export type BattleSubjectAction = (typeof BATTLE_SUBJECT_ACTIONS)[number];
 
@@ -52,6 +53,7 @@ export const CANTRIP_SPELL_PROCEDURES = [
   "heldLight",
   "heldLightHurl",
   "damageReduction",
+  "spellAttackBeamSequence",
   "spellHostedWeaponAttack",
   "spellAttackDamage",
   "saveGatedDamage",
@@ -259,6 +261,11 @@ export const BattleSubjectSchema = Schema.Union(
     sourceCombatantId: CombatantId,
   }),
   Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("shakeAwakeFromSleep"),
+  }),
+  Schema.Struct({
     tag: Schema.Literal("bonusAction"),
     actorId: CombatantId,
     action: Schema.Literal("offHandAttack"),
@@ -423,6 +430,9 @@ function spellSubjectModeKey(mode: SpellSubjectMode): readonly unknown[] {
 }
 
 function battleSubjectKey(subject: BattleSubject): string {
+  if (subject.tag === "action" && subject.action === "shakeAwakeFromSleep") {
+    return JSON.stringify([subject.tag, subject.actorId, subject.action]);
+  }
   return Match.value(subject).pipe(
     Match.when({ tag: "action", action: "attack" }, (attack) =>
       JSON.stringify([

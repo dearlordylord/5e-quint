@@ -9,7 +9,10 @@ import type {
 } from "@dnd/surface/surface/types";
 import type { CombatantId } from "../identity.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
-import { applyTemporaryHitPoints } from "./damage-apply.ts";
+import {
+  applyTemporaryHitPoints,
+  breakBattleConcentration,
+} from "./damage-apply.ts";
 import { scalarBuffTemporaryHitPointsAmount } from "./spell-effects.ts";
 import {
   conditionsAfterApplyingSpellConditionEffects,
@@ -192,6 +195,60 @@ export function applyFailedSaveSpellConditionEffects(
     );
   }
   return { ...state, combatants };
+}
+
+export function applySleepPendingRepeatSaveEffects(
+  state: BattleState,
+  actorId: CombatantId,
+  targetIds: readonly CombatantId[],
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "sleepTargetAdmission" }
+  >,
+): BattleState {
+  const combatants = new Map(state.combatants);
+  for (const targetId of targetIds) {
+    const target = combatants.get(targetId);
+    if (target === undefined) {
+      continue;
+    }
+    const replacing = target.activeEffects.filter(
+      (effect) =>
+        effect.kind === "sleepPendingRepeatSave" &&
+        effect.sourceSpellId === invocation.spell.id &&
+        effect.sourceCombatantId === actorId,
+    );
+    const activeEffects = [
+      ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
+      {
+        kind: "sleepPendingRepeatSave" as const,
+        sourceSpellId: invocation.spell.id,
+        sourceCombatantId: actorId,
+        conditionHadNonSpellSource: conditionHadNonSpellSourceBeforeSpellEffect(
+          target,
+          "incapacitated",
+        ),
+        save: {
+          ability: invocation.ability,
+          dc: invocation.dc,
+        },
+        repeatAt: endOfNextTurnExpiration(state, targetId),
+        expiresAt: {
+          kind: "concentration" as const,
+          combatantId: actorId,
+        },
+      },
+    ];
+    combatants.set(
+      targetId,
+      battleCreatureWithSpellActiveEffects(target, activeEffects),
+    );
+  }
+  const effected: BattleState = { ...state, combatants };
+  return targetIds.reduce(
+    (nextState, targetId) => breakBattleConcentration(nextState, targetId),
+    effected,
+  );
 }
 
 export function applyAfterHitTimedDamageAndSaveSpellEffect(

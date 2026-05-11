@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 import type {
   ActionEconomyState,
   RuntimeActionResource,
@@ -111,6 +111,7 @@ import { type DamageAmountByTypeEntry } from "./battle-reducer/damage-helpers.ts
 import {
   BATTLE_ATTACK_RANGE_BANDS,
   CRITICAL_HIT_THRESHOLDS,
+  type EldritchBlastBeamCount,
   SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS,
 } from "./battle-reducer/domain-constants.ts";
 export {
@@ -233,6 +234,7 @@ export {
   resolveReady,
   resolveReleaseGrappleCommand,
   resolveSearch,
+  resolveShakeAwakeFromSleep,
   resolveStatBlockBonusActionDisengage,
   resolveStatBlockBonusActionHide,
   resolveStatBlockBonusActionOption,
@@ -472,6 +474,30 @@ export type BattleActiveEffect =
       readonly escape: SpellConditionEscape | null;
       readonly turnStartDamage: SpellTurnStartDamage | null;
       readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "sleepPendingRepeatSave";
+      readonly conditionHadNonSpellSource: boolean;
+      readonly save: {
+        readonly ability: Extract<Ability, "wis">;
+        readonly dc: DcSource;
+      };
+      readonly repeatAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "endOfTurn" }
+      >;
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "concentration" }
+      >;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "sleepUnconscious";
+      readonly conditionHadNonSpellSource: boolean;
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "concentration" }
+      >;
     })
   | (BattleSpellEffectBase & {
       readonly kind: "spellTurnStartDamageAndSave";
@@ -1052,6 +1078,11 @@ export type BattleTargetSpatialFact =
       readonly targetId: CombatantId;
     }
   | {
+      readonly kind: "sleepShakeAwakeActorWithin5Feet";
+      readonly actorId: CombatantId;
+      readonly targetId: CombatantId;
+    }
+  | {
       readonly kind: "sneakAttackAllyWithin5FeetOfTarget";
       readonly attackerId: CombatantId;
       readonly targetId: CombatantId;
@@ -1425,6 +1456,10 @@ export type SpellAttackDamageTargeting = Extract<
   SpellTargeting,
   { readonly kind: "singleCombatant" | "singleCreatureOrObject" }
 >;
+export type SpellAttackBeamSequenceTargeting = {
+  readonly kind: "beamSequenceCreatureOrObject";
+  readonly beamCount: EldritchBlastBeamCount;
+};
 export type SpellHostedWeaponAttackInvocation = {
   readonly access: ClassCantripSpellAccess;
   readonly resource: NoSpellInvocationResource;
@@ -1478,6 +1513,20 @@ export type SupportedSpellInvocation =
       readonly attackBonus: AttackBonus;
       readonly postDamageRiders: readonly SpellPostDamageRider[];
     })
+  | {
+      readonly access: ClassCantripSpellAccess;
+      readonly resource: NoSpellInvocationResource;
+      readonly procedure: "spellAttackBeamSequence";
+      readonly spell: SpellRecord;
+      readonly targeting: SpellAttackBeamSequenceTargeting;
+      readonly damage: {
+        readonly expr: DiceExpr;
+        readonly damageType: DamageType;
+      };
+      readonly rangeFeet: MovementFeet;
+      readonly attackKind: Extract<SpellAttackKind, "ranged_spell_attack">;
+      readonly attackBonus: AttackBonus;
+    }
   | (PreparedDamageSpellSource & {
       readonly procedure: "chainedSpellAttackDamage";
       readonly spell: SpellRecord;
@@ -2189,6 +2238,7 @@ export type BattleSpellDamageRollHole = Extract<
         | "heldLightHurl"
         | "repeatedDamageAllocation"
         | "saveGatedDamage"
+        | "spellAttackBeamSequence"
         | "spellAttackDamage";
     }
   >;
@@ -2231,6 +2281,25 @@ export type BattleSpellTurnStartSavingThrowOutcomeHole = {
     readonly save: SpellTurnStartDamageSave;
   };
   readonly ability: Ability;
+  readonly dc: DcSource;
+  readonly areaChoices: readonly [];
+  readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
+};
+export type BattleSleepRepeatSavingThrowOutcomeHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "savingThrowOutcome";
+  readonly label: string;
+  readonly sleepRepeatSave: {
+    readonly targetId: CombatantId;
+    readonly sourceSpellId: SpellRecord["id"];
+    readonly sourceCombatantId: CombatantId;
+    readonly save: {
+      readonly ability: Extract<Ability, "wis">;
+      readonly dc: DcSource;
+    };
+  };
+  readonly ability: Extract<Ability, "wis">;
   readonly dc: DcSource;
   readonly areaChoices: readonly [];
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
@@ -2439,6 +2508,7 @@ export type BattleHole =
   | BattleSpellSkillChoiceHole
   | BattleSpellSavingThrowOutcomeHole
   | BattleSpellTurnStartSavingThrowOutcomeHole
+  | BattleSleepRepeatSavingThrowOutcomeHole
   | BattleUnitFeatureSavingThrowOutcomeHole
   | BattleUnitFeatureRollHole
   | BattleDeathSavingThrowHole
@@ -2695,7 +2765,7 @@ export type BattleResolutionResult =
       readonly tag: "resolved";
       readonly state: BattleState;
       readonly snapshot: BattleSnapshot;
-      readonly objectDamage?: BattleObjectDamageOutcome;
+      readonly objectDamages?: readonly BattleObjectDamageOutcome[];
     }
   | {
       readonly tag: "needsHoles";
@@ -2874,6 +2944,8 @@ export {
   SEARCH_ABILITY_CHECK_HOLE_INSTANCE,
   SEARCH_TARGET_HOLE_ID,
   SEARCH_TARGET_HOLE_INSTANCE,
+  SLEEP_SHAKE_AWAKE_TARGET_HOLE_ID,
+  SLEEP_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
   STAT_BLOCK_RECHARGE_ROLL_HOLE_ID,
   STAT_BLOCK_RECHARGE_ROLL_HOLE_INSTANCE,
   SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS,
