@@ -111,6 +111,28 @@ module spellProcedureProfiles {
     | EnsnaringStrikeAfterHitConditionProfile
     | SearingSmiteAfterHitTimedDamageProfile
 
+  type ChainedSpellAttackDamageProfile =
+    | ChromaticOrbChainedSpellAttackProfile
+
+  type ChainedSpellAttackDamageTypeChoice =
+    | ChainedSpellAttackAcidDamage
+    | ChainedSpellAttackColdDamage
+    | ChainedSpellAttackFireDamage
+    | ChainedSpellAttackLightningDamage
+    | ChainedSpellAttackPoisonDamage
+    | ChainedSpellAttackThunderDamage
+
+  type ChainedSpellAttackD8FaceCounts = {
+    face1: int,
+    face2: int,
+    face3: int,
+    face4: int,
+    face5: int,
+    face6: int,
+    face7: int,
+    face8: int,
+  }
+
   type SpellAreaProfile =
     | NoSpellAreaProfile
     | MassCureWoundsPointOriginSphereArea
@@ -471,6 +493,121 @@ module spellProcedureProfiles {
     if (slotLevel < 1) 0 else slotLevel
 
   pure def searingSmiteDurationTicks: int = 10
+
+  pure def chainedSpellAttackDamageChoices(
+    profile: ChainedSpellAttackDamageProfile
+  ): Set[ChainedSpellAttackDamageTypeChoice] =
+    match profile {
+      | ChromaticOrbChainedSpellAttackProfile => Set(
+          ChainedSpellAttackAcidDamage,
+          ChainedSpellAttackColdDamage,
+          ChainedSpellAttackFireDamage,
+          ChainedSpellAttackLightningDamage,
+          ChainedSpellAttackPoisonDamage,
+          ChainedSpellAttackThunderDamage,
+        )
+    }
+
+  pure def chainedSpellAttackDamageType(choice: ChainedSpellAttackDamageTypeChoice): RuleDamageType =
+    match choice {
+      | ChainedSpellAttackAcidDamage => AcidDamage
+      | ChainedSpellAttackColdDamage => ColdDamage
+      | ChainedSpellAttackFireDamage => FireDamage
+      | ChainedSpellAttackLightningDamage => LightningDamage
+      | ChainedSpellAttackPoisonDamage => PoisonDamage
+      | ChainedSpellAttackThunderDamage => ThunderDamage
+    }
+
+  pure def chainedSpellAttackDamageBaseSpellLevel(profile: ChainedSpellAttackDamageProfile): int =
+    match profile {
+      | ChromaticOrbChainedSpellAttackProfile => 1
+    }
+
+  pure def chainedSpellAttackDamageDieSize(profile: ChainedSpellAttackDamageProfile): int =
+    match profile {
+      | ChromaticOrbChainedSpellAttackProfile => 8
+    }
+
+  pure def chainedSpellAttackDamageSlotLevelIsLegal(profile: ChainedSpellAttackDamageProfile, slotLevel: int): bool =
+    slotLevel >= chainedSpellAttackDamageBaseSpellLevel(profile)
+
+  pure def chainedSpellAttackDamageLeapCountIsLegal(
+    profile: ChainedSpellAttackDamageProfile,
+    slotLevel: int,
+    leapsUsed: int,
+  ): bool =
+    chainedSpellAttackDamageSlotLevelIsLegal(profile, slotLevel) and
+    leapsUsed >= 0 and
+    leapsUsed <= slotLevel
+
+  pure def chainedSpellAttackDamageDice(profile: ChainedSpellAttackDamageProfile, slotLevel: int): int =
+    match profile {
+      | ChromaticOrbChainedSpellAttackProfile => 3 + (slotLevel - chainedSpellAttackDamageBaseSpellLevel(profile))
+    }
+
+  pure def chainedSpellAttackDamageRolledD8Count(
+    profile: ChainedSpellAttackDamageProfile,
+    slotLevel: int,
+    criticalHit: bool,
+  ): int = {
+    val ordinaryDice = chainedSpellAttackDamageDice(profile, slotLevel)
+    if (criticalHit) ordinaryDice * 2 else ordinaryDice
+  }
+
+  pure def chainedSpellAttackD8FaceCountTotal(counts: ChainedSpellAttackD8FaceCounts): int =
+    counts.face1 +
+    counts.face2 +
+    counts.face3 +
+    counts.face4 +
+    counts.face5 +
+    counts.face6 +
+    counts.face7 +
+    counts.face8
+
+  pure def chainedSpellAttackD8FaceCountsAreNonNegative(counts: ChainedSpellAttackD8FaceCounts): bool =
+    counts.face1 >= 0 and
+    counts.face2 >= 0 and
+    counts.face3 >= 0 and
+    counts.face4 >= 0 and
+    counts.face5 >= 0 and
+    counts.face6 >= 0 and
+    counts.face7 >= 0 and
+    counts.face8 >= 0
+
+  pure def chainedSpellAttackD8FaceCountsMatchRolledDice(
+    profile: ChainedSpellAttackDamageProfile,
+    slotLevel: int,
+    criticalHit: bool,
+    counts: ChainedSpellAttackD8FaceCounts,
+  ): bool =
+    chainedSpellAttackDamageSlotLevelIsLegal(profile, slotLevel) and
+    chainedSpellAttackD8FaceCountsAreNonNegative(counts) and
+    chainedSpellAttackD8FaceCountTotal(counts) == chainedSpellAttackDamageRolledD8Count(profile, slotLevel, criticalHit)
+
+  pure def chainedSpellAttackDamageRollHasDuplicateD8Face(counts: ChainedSpellAttackD8FaceCounts): bool =
+    counts.face1 >= 2 or
+    counts.face2 >= 2 or
+    counts.face3 >= 2 or
+    counts.face4 >= 2 or
+    counts.face5 >= 2 or
+    counts.face6 >= 2 or
+    counts.face7 >= 2 or
+    counts.face8 >= 2
+
+  pure def chainedSpellAttackDamageCanLeap(
+    profile: ChainedSpellAttackDamageProfile,
+    slotLevel: int,
+    leapsUsed: int,
+    criticalHit: bool,
+    counts: ChainedSpellAttackD8FaceCounts,
+  ): bool =
+    match profile {
+      | ChromaticOrbChainedSpellAttackProfile =>
+          chainedSpellAttackD8FaceCountsMatchRolledDice(profile, slotLevel, criticalHit, counts) and
+          chainedSpellAttackDamageRollHasDuplicateD8Face(counts) and
+          leapsUsed >= 0 and
+          leapsUsed < slotLevel
+    }
 
   pure def spellActionCost(invocationAction: SpellInvocationAction): ActionCost =
     if (invocationAction == BonusActionSpellInvocation) BonusActionCost
@@ -932,6 +1069,42 @@ module spellProcedureProfiles {
       assert(searingSmiteDamageType == FireDamage),
       assert(searingSmiteDamageDice(3) == 3),
       assert(searingSmiteDurationTicks == 10),
+    }
+  }
+
+  run test_chained_spell_attack_damage_profile_projects_chromatic_orb_math = {
+    val duplicateFaces = {
+      face1: 2,
+      face2: 1,
+      face3: 0,
+      face4: 0,
+      face5: 0,
+      face6: 0,
+      face7: 0,
+      face8: 0,
+    }
+    val noDuplicateFaces = {
+      face1: 1,
+      face2: 1,
+      face3: 1,
+      face4: 0,
+      face5: 0,
+      face6: 0,
+      face7: 0,
+      face8: 0,
+    }
+    all {
+      assert(chainedSpellAttackDamageChoices(ChromaticOrbChainedSpellAttackProfile).contains(ChainedSpellAttackLightningDamage)),
+      assert(chainedSpellAttackDamageType(ChainedSpellAttackThunderDamage) == ThunderDamage),
+      assert(chainedSpellAttackDamageBaseSpellLevel(ChromaticOrbChainedSpellAttackProfile) == 1),
+      assert(chainedSpellAttackDamageDieSize(ChromaticOrbChainedSpellAttackProfile) == 8),
+      assert(chainedSpellAttackDamageDice(ChromaticOrbChainedSpellAttackProfile, 1) == 3),
+      assert(chainedSpellAttackDamageDice(ChromaticOrbChainedSpellAttackProfile, 3) == 5),
+      assert(chainedSpellAttackD8FaceCountsMatchRolledDice(ChromaticOrbChainedSpellAttackProfile, 1, false, duplicateFaces)),
+      assert(chainedSpellAttackDamageRollHasDuplicateD8Face(duplicateFaces)),
+      assert(not(chainedSpellAttackDamageRollHasDuplicateD8Face(noDuplicateFaces))),
+      assert(chainedSpellAttackDamageCanLeap(ChromaticOrbChainedSpellAttackProfile, 1, 0, false, duplicateFaces)),
+      assert(not(chainedSpellAttackDamageCanLeap(ChromaticOrbChainedSpellAttackProfile, 1, 1, false, duplicateFaces))),
     }
   }
 

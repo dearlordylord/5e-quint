@@ -3429,6 +3429,35 @@ module battleRuntime {
       | ShieldOfFaithScalarBuff => BattleRuntimeShieldOfFaithScalarBuff
     }
 
+  pure def battleRuntimeChainedSpellAttackDamageProfileForInvocation(
+    invocation: ChainedSpellAttackDamageInvocation
+  ): BattleRuntimeChainedSpellAttackDamageProfile =
+    match invocation {
+      | ChromaticOrbChainedSpellAttack => BattleRuntimeChromaticOrbChainedSpellAttack
+    }
+
+  pure def battleRuntimeChainedSpellAttackDamageChoiceForChromaticOrb(choice: ChromaticOrbDamageTypeChoice): BattleRuntimeChainedSpellAttackDamageTypeChoice =
+    match choice {
+      | ChromaticOrbAcid => BattleRuntimeChainedSpellAttackAcidDamage
+      | ChromaticOrbCold => BattleRuntimeChainedSpellAttackColdDamage
+      | ChromaticOrbFire => BattleRuntimeChainedSpellAttackFireDamage
+      | ChromaticOrbLightning => BattleRuntimeChainedSpellAttackLightningDamage
+      | ChromaticOrbPoison => BattleRuntimeChainedSpellAttackPoisonDamage
+      | ChromaticOrbThunder => BattleRuntimeChainedSpellAttackThunderDamage
+    }
+
+  pure def chromaticOrbDamageTypeChoiceFromBridge(
+    choice: BattleRuntimeChainedSpellAttackDamageTypeChoice
+  ): ChromaticOrbDamageTypeChoice =
+    match choice {
+      | BattleRuntimeChainedSpellAttackAcidDamage => ChromaticOrbAcid
+      | BattleRuntimeChainedSpellAttackColdDamage => ChromaticOrbCold
+      | BattleRuntimeChainedSpellAttackFireDamage => ChromaticOrbFire
+      | BattleRuntimeChainedSpellAttackLightningDamage => ChromaticOrbLightning
+      | BattleRuntimeChainedSpellAttackPoisonDamage => ChromaticOrbPoison
+      | BattleRuntimeChainedSpellAttackThunderDamage => ChromaticOrbThunder
+    }
+
   pure def magicMissileDartCount(slotLevel: int): int =
     3 + (slotLevel - 1)
 
@@ -3549,76 +3578,66 @@ module battleRuntime {
       Set()
 
   pure def chromaticOrbDamageTypeChoice(choice: ChromaticOrbDamageTypeChoice): DamageType =
-    match choice {
-      | ChromaticOrbAcid => Acid
-      | ChromaticOrbCold => Cold
-      | ChromaticOrbFire => Fire
-      | ChromaticOrbLightning => Lightning
-      | ChromaticOrbPoison => Poison
-      | ChromaticOrbThunder => Thunder
-    }
+    damageTypeFromRuleDamageType(
+      battleRuntimeChainedSpellAttackDamageType(
+        battleRuntimeChainedSpellAttackDamageChoiceForChromaticOrb(choice)
+      )
+    )
 
   pure def chainedSpellAttackDamageChoices(invocation: ChainedSpellAttackDamageInvocation): Set[ChromaticOrbDamageTypeChoice] =
-    match invocation {
-      | ChromaticOrbChainedSpellAttack => Set(ChromaticOrbAcid, ChromaticOrbCold, ChromaticOrbFire, ChromaticOrbLightning, ChromaticOrbPoison, ChromaticOrbThunder)
-    }
+    battleRuntimeChainedSpellAttackDamageChoices(
+      battleRuntimeChainedSpellAttackDamageProfileForInvocation(invocation)
+    ).map(chromaticOrbDamageTypeChoiceFromBridge)
 
   pure def chainedSpellAttackDamageBaseSpellLevel(invocation: ChainedSpellAttackDamageInvocation): int =
-    match invocation {
-      | ChromaticOrbChainedSpellAttack => 1
-    }
+    battleRuntimeChainedSpellAttackDamageBaseSpellLevel(
+      battleRuntimeChainedSpellAttackDamageProfileForInvocation(invocation)
+    )
 
   pure def chainedSpellAttackDamageDieSize(invocation: ChainedSpellAttackDamageInvocation): int =
-    match invocation {
-      | ChromaticOrbChainedSpellAttack => 8
-    }
+    battleRuntimeChainedSpellAttackDamageDieSize(
+      battleRuntimeChainedSpellAttackDamageProfileForInvocation(invocation)
+    )
 
   pure def chainedSpellAttackDamageSlotLevelIsLegal(invocation: ChainedSpellAttackDamageInvocation, slotLevel: int): bool =
-    slotLevel >= chainedSpellAttackDamageBaseSpellLevel(invocation)
+    battleRuntimeChainedSpellAttackDamageSlotLevelIsLegal(
+      battleRuntimeChainedSpellAttackDamageProfileForInvocation(invocation),
+      slotLevel,
+    )
 
   pure def chainedSpellAttackDamageLeapCountIsLegal(
     invocation: ChainedSpellAttackDamageInvocation,
     slotLevel: int,
     leapsUsed: int,
   ): bool =
-    chainedSpellAttackDamageSlotLevelIsLegal(invocation, slotLevel) and
-    leapsUsed >= 0 and
-    leapsUsed <= slotLevel
+    battleRuntimeChainedSpellAttackDamageLeapCountIsLegal(
+      battleRuntimeChainedSpellAttackDamageProfileForInvocation(invocation),
+      slotLevel,
+      leapsUsed,
+    )
 
   pure def chainedSpellAttackDamageDice(invocation: ChainedSpellAttackDamageInvocation, slotLevel: int): int =
-    match invocation {
-      | ChromaticOrbChainedSpellAttack => 3 + (slotLevel - chainedSpellAttackDamageBaseSpellLevel(invocation))
-    }
+    battleRuntimeChainedSpellAttackDamageDice(
+      battleRuntimeChainedSpellAttackDamageProfileForInvocation(invocation),
+      slotLevel,
+    )
 
   pure def chainedSpellAttackDamageRolledD8Count(
     invocation: ChainedSpellAttackDamageInvocation,
     slotLevel: int,
     criticalHit: bool,
-  ): int = {
-    val ordinaryDice = chainedSpellAttackDamageDice(invocation, slotLevel)
-
-    if (criticalHit) ordinaryDice * 2 else ordinaryDice
-  }
+  ): int =
+    battleRuntimeChainedSpellAttackDamageRolledD8Count(
+      battleRuntimeChainedSpellAttackDamageProfileForInvocation(invocation),
+      slotLevel,
+      criticalHit,
+    )
 
   pure def d8FaceCountTotal(counts: D8FaceCounts): int =
-    counts.face1 +
-    counts.face2 +
-    counts.face3 +
-    counts.face4 +
-    counts.face5 +
-    counts.face6 +
-    counts.face7 +
-    counts.face8
+    battleRuntimeD8FaceCountTotal(counts)
 
   pure def d8FaceCountsAreNonNegative(counts: D8FaceCounts): bool =
-    counts.face1 >= 0 and
-    counts.face2 >= 0 and
-    counts.face3 >= 0 and
-    counts.face4 >= 0 and
-    counts.face5 >= 0 and
-    counts.face6 >= 0 and
-    counts.face7 >= 0 and
-    counts.face8 >= 0
+    battleRuntimeD8FaceCountsAreNonNegative(counts)
 
   pure def d8FaceCountsMatchRolledDice(
     invocation: ChainedSpellAttackDamageInvocation,
@@ -3626,19 +3645,15 @@ module battleRuntime {
     criticalHit: bool,
     counts: D8FaceCounts,
   ): bool =
-    chainedSpellAttackDamageSlotLevelIsLegal(invocation, slotLevel) and
-    d8FaceCountsAreNonNegative(counts) and
-    d8FaceCountTotal(counts) == chainedSpellAttackDamageRolledD8Count(invocation, slotLevel, criticalHit)
+    battleRuntimeD8FaceCountsMatchRolledDice(
+      battleRuntimeChainedSpellAttackDamageProfileForInvocation(invocation),
+      slotLevel,
+      criticalHit,
+      counts,
+    )
 
   pure def damageRollHasDuplicateD8Face(counts: D8FaceCounts): bool =
-    counts.face1 >= 2 or
-    counts.face2 >= 2 or
-    counts.face3 >= 2 or
-    counts.face4 >= 2 or
-    counts.face5 >= 2 or
-    counts.face6 >= 2 or
-    counts.face7 >= 2 or
-    counts.face8 >= 2
+    battleRuntimeDamageRollHasDuplicateD8Face(counts)
 
   pure def chainedSpellAttackDamageCanLeap(
     invocation: ChainedSpellAttackDamageInvocation,
@@ -3647,22 +3662,20 @@ module battleRuntime {
     criticalHit: bool,
     counts: D8FaceCounts,
   ): bool =
-    match invocation {
-      | ChromaticOrbChainedSpellAttack =>
-          d8FaceCountsMatchRolledDice(invocation, slotLevel, criticalHit, counts) and
-          damageRollHasDuplicateD8Face(counts) and
-          leapsUsed >= 0 and
-          leapsUsed < slotLevel
-    }
+    battleRuntimeChainedSpellAttackDamageCanLeap(
+      battleRuntimeChainedSpellAttackDamageProfileForInvocation(invocation),
+      slotLevel,
+      leapsUsed,
+      criticalHit,
+      counts,
+    )
 
   pure def chainedSpellAttackDamageStepDamageType(
     invocation: ChainedSpellAttackDamageInvocation,
     selectedDamageType: ChromaticOrbDamageTypeChoice,
     stepIndex: int,
   ): DamageType =
-    match invocation {
-      | ChromaticOrbChainedSpellAttack => chromaticOrbDamageTypeChoice(selectedDamageType)
-    }
+    chromaticOrbDamageTypeChoice(selectedDamageType)
 
   pure def chainedSpellAttackDamageTargetedHistoryIsCoherent(
     invocation: ChainedSpellAttackDamageInvocation,

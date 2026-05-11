@@ -305,6 +305,12 @@ surface while this research note remains temporary context.
   dice, and Ensnaring Strike Large+ save Advantage. Broad battle still owns the
   after-hit timing, mark transfer state, target mutation, repeated damage ticks,
   and concentration cleanup.
+- The chained-spell tracer moved Chromatic Orb's pure chain math into
+  `spell-procedure-profiles.qnt`: damage choices, damage type, base slot level,
+  d8 scaling, critical doubled dice count, d8 face accounting, duplicate-face
+  detection, and leap-budget admission. Broad battle keeps the ordered replay
+  holes, target history, and target-admission integration through
+  `battle-runtime-spell-bridge.qnt`.
 - The same movement/action bridge now carries the projected start-turn resource
   reset for action, Bonus Action, Reaction, Dash movement bonus, movement spent,
   Dodge, Disengage, Help, and Ready Movement facts. Broad battle still owns

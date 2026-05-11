@@ -80,6 +80,17 @@ module battleRuntimeSpellBridge {
     | BattleRuntimeEnsnaringStrikeAfterHitCondition
     | BattleRuntimeSearingSmiteAfterHitTimedDamage
 
+  type BattleRuntimeChainedSpellAttackDamageProfile =
+    | BattleRuntimeChromaticOrbChainedSpellAttack
+
+  type BattleRuntimeChainedSpellAttackDamageTypeChoice =
+    | BattleRuntimeChainedSpellAttackAcidDamage
+    | BattleRuntimeChainedSpellAttackColdDamage
+    | BattleRuntimeChainedSpellAttackFireDamage
+    | BattleRuntimeChainedSpellAttackLightningDamage
+    | BattleRuntimeChainedSpellAttackPoisonDamage
+    | BattleRuntimeChainedSpellAttackThunderDamage
+
   pure def battleRuntimeDirectHitPointRestorationSpellProfile(
     profile: BattleRuntimeDirectHitPointRestorationProfile
   ): SpellDefinitionProfile =
@@ -350,6 +361,106 @@ module battleRuntimeSpellBridge {
 
   pure def battleRuntimeSearingSmiteDurationTicks: int = searingSmiteDurationTicks
 
+  pure def battleRuntimeChainedSpellAttackDamageProfile(
+    profile: BattleRuntimeChainedSpellAttackDamageProfile
+  ): ChainedSpellAttackDamageProfile =
+    match profile {
+      | BattleRuntimeChromaticOrbChainedSpellAttack => ChromaticOrbChainedSpellAttackProfile
+    }
+
+  pure def battleRuntimeChainedSpellAttackDamageChoice(
+    choice: ChainedSpellAttackDamageTypeChoice
+  ): BattleRuntimeChainedSpellAttackDamageTypeChoice =
+    match choice {
+      | ChainedSpellAttackAcidDamage => BattleRuntimeChainedSpellAttackAcidDamage
+      | ChainedSpellAttackColdDamage => BattleRuntimeChainedSpellAttackColdDamage
+      | ChainedSpellAttackFireDamage => BattleRuntimeChainedSpellAttackFireDamage
+      | ChainedSpellAttackLightningDamage => BattleRuntimeChainedSpellAttackLightningDamage
+      | ChainedSpellAttackPoisonDamage => BattleRuntimeChainedSpellAttackPoisonDamage
+      | ChainedSpellAttackThunderDamage => BattleRuntimeChainedSpellAttackThunderDamage
+    }
+
+  pure def battleRuntimeChainedSpellAttackDamageChoices(
+    profile: BattleRuntimeChainedSpellAttackDamageProfile
+  ): Set[BattleRuntimeChainedSpellAttackDamageTypeChoice] =
+    chainedSpellAttackDamageChoices(battleRuntimeChainedSpellAttackDamageProfile(profile))
+      .map(battleRuntimeChainedSpellAttackDamageChoice)
+
+  pure def battleRuntimeChainedSpellAttackDamageType(
+    choice: BattleRuntimeChainedSpellAttackDamageTypeChoice
+  ): RuleDamageType =
+    match choice {
+      | BattleRuntimeChainedSpellAttackAcidDamage => chainedSpellAttackDamageType(ChainedSpellAttackAcidDamage)
+      | BattleRuntimeChainedSpellAttackColdDamage => chainedSpellAttackDamageType(ChainedSpellAttackColdDamage)
+      | BattleRuntimeChainedSpellAttackFireDamage => chainedSpellAttackDamageType(ChainedSpellAttackFireDamage)
+      | BattleRuntimeChainedSpellAttackLightningDamage => chainedSpellAttackDamageType(ChainedSpellAttackLightningDamage)
+      | BattleRuntimeChainedSpellAttackPoisonDamage => chainedSpellAttackDamageType(ChainedSpellAttackPoisonDamage)
+      | BattleRuntimeChainedSpellAttackThunderDamage => chainedSpellAttackDamageType(ChainedSpellAttackThunderDamage)
+    }
+
+  pure def battleRuntimeChainedSpellAttackDamageBaseSpellLevel(profile: BattleRuntimeChainedSpellAttackDamageProfile): int =
+    chainedSpellAttackDamageBaseSpellLevel(battleRuntimeChainedSpellAttackDamageProfile(profile))
+
+  pure def battleRuntimeChainedSpellAttackDamageDieSize(profile: BattleRuntimeChainedSpellAttackDamageProfile): int =
+    chainedSpellAttackDamageDieSize(battleRuntimeChainedSpellAttackDamageProfile(profile))
+
+  pure def battleRuntimeChainedSpellAttackDamageSlotLevelIsLegal(profile: BattleRuntimeChainedSpellAttackDamageProfile, slotLevel: int): bool =
+    chainedSpellAttackDamageSlotLevelIsLegal(battleRuntimeChainedSpellAttackDamageProfile(profile), slotLevel)
+
+  pure def battleRuntimeChainedSpellAttackDamageLeapCountIsLegal(
+    profile: BattleRuntimeChainedSpellAttackDamageProfile,
+    slotLevel: int,
+    leapsUsed: int
+  ): bool =
+    chainedSpellAttackDamageLeapCountIsLegal(battleRuntimeChainedSpellAttackDamageProfile(profile), slotLevel, leapsUsed)
+
+  pure def battleRuntimeChainedSpellAttackDamageDice(profile: BattleRuntimeChainedSpellAttackDamageProfile, slotLevel: int): int =
+    chainedSpellAttackDamageDice(battleRuntimeChainedSpellAttackDamageProfile(profile), slotLevel)
+
+  pure def battleRuntimeChainedSpellAttackDamageRolledD8Count(
+    profile: BattleRuntimeChainedSpellAttackDamageProfile,
+    slotLevel: int,
+    criticalHit: bool
+  ): int =
+    chainedSpellAttackDamageRolledD8Count(battleRuntimeChainedSpellAttackDamageProfile(profile), slotLevel, criticalHit)
+
+  pure def battleRuntimeD8FaceCountTotal(counts: ChainedSpellAttackD8FaceCounts): int =
+    chainedSpellAttackD8FaceCountTotal(counts)
+
+  pure def battleRuntimeD8FaceCountsAreNonNegative(counts: ChainedSpellAttackD8FaceCounts): bool =
+    chainedSpellAttackD8FaceCountsAreNonNegative(counts)
+
+  pure def battleRuntimeD8FaceCountsMatchRolledDice(
+    profile: BattleRuntimeChainedSpellAttackDamageProfile,
+    slotLevel: int,
+    criticalHit: bool,
+    counts: ChainedSpellAttackD8FaceCounts
+  ): bool =
+    chainedSpellAttackD8FaceCountsMatchRolledDice(
+      battleRuntimeChainedSpellAttackDamageProfile(profile),
+      slotLevel,
+      criticalHit,
+      counts,
+    )
+
+  pure def battleRuntimeDamageRollHasDuplicateD8Face(counts: ChainedSpellAttackD8FaceCounts): bool =
+    chainedSpellAttackDamageRollHasDuplicateD8Face(counts)
+
+  pure def battleRuntimeChainedSpellAttackDamageCanLeap(
+    profile: BattleRuntimeChainedSpellAttackDamageProfile,
+    slotLevel: int,
+    leapsUsed: int,
+    criticalHit: bool,
+    counts: ChainedSpellAttackD8FaceCounts
+  ): bool =
+    chainedSpellAttackDamageCanLeap(
+      battleRuntimeChainedSpellAttackDamageProfile(profile),
+      slotLevel,
+      leapsUsed,
+      criticalHit,
+      counts,
+    )
+
   run test_direct_hit_point_restoration_profile_projection = {
     all {
       assert(battleRuntimeDirectHitPointRestorationUsesBonusAction(BattleRuntimeHealingWordRestoration)),
@@ -422,6 +533,30 @@ module battleRuntimeSpellBridge {
       assert(battleRuntimeSearingSmiteDamageType == FireDamage),
       assert(battleRuntimeSearingSmiteDamageDice(3) == 3),
       assert(battleRuntimeSearingSmiteDurationTicks == 10),
+    }
+  }
+
+  run test_chained_spell_attack_damage_profile_projection = {
+    val duplicateFaces = {
+      face1: 2,
+      face2: 1,
+      face3: 0,
+      face4: 0,
+      face5: 0,
+      face6: 0,
+      face7: 0,
+      face8: 0,
+    }
+    all {
+      assert(battleRuntimeChainedSpellAttackDamageChoices(BattleRuntimeChromaticOrbChainedSpellAttack).contains(BattleRuntimeChainedSpellAttackLightningDamage)),
+      assert(battleRuntimeChainedSpellAttackDamageType(BattleRuntimeChainedSpellAttackThunderDamage) == ThunderDamage),
+      assert(battleRuntimeChainedSpellAttackDamageBaseSpellLevel(BattleRuntimeChromaticOrbChainedSpellAttack) == 1),
+      assert(battleRuntimeChainedSpellAttackDamageDieSize(BattleRuntimeChromaticOrbChainedSpellAttack) == 8),
+      assert(battleRuntimeChainedSpellAttackDamageDice(BattleRuntimeChromaticOrbChainedSpellAttack, 3) == 5),
+      assert(battleRuntimeD8FaceCountsMatchRolledDice(BattleRuntimeChromaticOrbChainedSpellAttack, 1, false, duplicateFaces)),
+      assert(battleRuntimeDamageRollHasDuplicateD8Face(duplicateFaces)),
+      assert(battleRuntimeChainedSpellAttackDamageCanLeap(BattleRuntimeChromaticOrbChainedSpellAttack, 1, 0, false, duplicateFaces)),
+      assert(not(battleRuntimeChainedSpellAttackDamageCanLeap(BattleRuntimeChromaticOrbChainedSpellAttack, 1, 1, false, duplicateFaces))),
     }
   }
 }
