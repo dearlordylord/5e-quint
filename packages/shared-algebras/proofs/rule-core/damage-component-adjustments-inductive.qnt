@@ -16,12 +16,19 @@ module damageComponentAdjustmentsInductive {
   var qTotal: int
 
   pure def qDamageByType: DamageByType = {
-    slashing: qSlashing,
-    fire: qFire,
-    poison: qPoison,
     acid: 0,
+    bludgeoning: 0,
     cold: 0,
+    fire: qFire,
     force: 0,
+    lightning: 0,
+    necrotic: 0,
+    piercing: 0,
+    poison: qPoison,
+    psychic: 0,
+    radiant: 0,
+    slashing: qSlashing,
+    thunder: 0,
   }
 
   pure def factsForFixture(fixture: AdjustmentFixture): DamageAdjustmentFacts =

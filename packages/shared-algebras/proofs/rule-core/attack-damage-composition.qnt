@@ -57,8 +57,11 @@ module attackDamageComposition {
     facts.criticalThreshold == 19 or facts.criticalThreshold == 20,
   }
 
+  pure def naturalD20MeetsCriticalThreshold(naturalD20: int, criticalThreshold: int): bool =
+    naturalD20 >= criticalThreshold
+
   pure def attackRollIsCriticalHit(facts: AttackRollProcedureFacts): bool =
-    facts.naturalD20 >= facts.criticalThreshold
+    naturalD20MeetsCriticalThreshold(facts.naturalD20, facts.criticalThreshold)
 
   pure def resolveAttackRoll(facts: AttackRollProcedureFacts): AttackRollOutcome = {
     val critical = attackRollIsCriticalHit(facts)

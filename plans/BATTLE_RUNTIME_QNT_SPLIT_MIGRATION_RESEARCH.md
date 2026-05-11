@@ -1,0 +1,301 @@
+# Battle Runtime QNT Split Migration Research
+
+Date: 2026-05-11
+
+This is a temporary research and migration-orientation note. It is not the
+steady-state architecture document. It records the current evidence around
+`packages/battle-runtime/battle-runtime.qnt`, the likely split direction, and
+questions that should be answered while the split happens.
+
+The wording here is intentionally tentative. The migration is expected to reveal
+more about which procedure seams are real, which integrations still need broad
+state, and which current rule-core modules are deep enough to own semantics.
+
+## Current Evidence
+
+`battle-runtime.qnt` is not currently shrinking. Git history shows a broad
+canonical spec that has grown quickly:
+
+- 2026-04-30 `625db25a` chose the canonical battle QNT spec at 523 lines.
+- 2026-05-06 `e0a98372` had grown it to 2,488 lines.
+- 2026-05-11 `c28c5a0e` has it at 5,778 lines.
+- 2026-05-11 `f10e718a` has it at 5,954 lines after the Sleep target
+  admission promotion.
+
+The commit stream is mostly restore/promote work:
+
+- restore commits for death saves, save-gate spells, persistent concentration,
+  reaction windows, movement, monster resources, grapples, hidden actions,
+  active ongoing feature riders, attack riders, stat-block Multiattack, and
+  Magic Missile;
+- promotion commits for direct healing spells, Extra Attack, Roving, Adrenaline
+  Rush, Deflect Attacks, pure spell damage, spell attacks, cones, Ice Knife,
+  Chromatic Orb, scalar buffs, Produce Flame, Divine Favor, Hunter's Mark,
+  Protection/Charm, Heroism, Faerie Fire, Resistance, Divine Smite, Ensnaring
+  Strike, Searing Smite, True Strike, and Starry Wisp object targeting.
+
+Rule-core and focused MBT lanes also exist and are growing. As of this note, the
+rule-core proof and battle-runtime focused MBT files together are about 12K+
+lines. That is useful decomposition, but it has been additive so far: broad
+`battle-runtime.qnt` remains an active semantic target rather than a retired
+integration shell.
+
+The immediate risk is documentation drift. Some docs describe the intended
+composition direction, but the implemented fact is that the broad package-local
+battle spec is still accumulating production behavior.
+
+## Relevant Existing Direction
+
+Existing docs already contain the likely target shape:
+
+- `plans/QCORE0_COMPOSITION_RESEARCH.md` recommends stateless Quint
+  contract/procedure modules, one owned state machine per procedure family, and
+  shallow integration modules only where adjacent procedures need composition
+  checks.
+- `plans/QCORE2_100_PERCENT_RAW_COVERAGE_RESEARCH.md` says QNT authority should
+  cover production-executable reducer procedures through post-projection
+  executable facts, not Surface catalog width.
+- `packages/battle-runtime/README.md` says QNT/MBT should target
+  procedure-family behavior and composition, not one trace per authored Unit,
+  Spell Record, feature, or Stat Block.
+- `QUINT_CONNECT_TROUBLESHOOT.md` records that broad battle simulation cost is
+  driven by action branch search, snapshot/restore over battle state, and complex
+  action bodies. It also records already-tried mitigations such as phase-split
+  turn start, spell capability split, and rejected RAW-violating sub-phase
+  splits.
+
+Those docs are directionally consistent, but they do not yet describe a
+completed implementation. Treat them as migration input, not proof that the
+split has already happened.
+
+## External Model-Checking Context
+
+The broader Quint/TLA+ lesson is unsurprising but important: module composition
+does not by itself reduce the checked state space. The checked model is the
+reachable transition system from the selected `init`, `step`, and properties.
+If a composed entrypoint reaches many state variables, broad `any` branches, or
+large nondeterministic choices, the model checker still pays for them.
+
+Common state-space controls that apply here:
+
+- keep state variables to facts that actually change and matter to the property;
+- verify finite, purpose-built model instances rather than the whole product
+  surface;
+- separate pure procedure contracts from stateful lifecycle machines;
+- use shallow integration checks for adjacent procedures after their local
+  invariants are proved;
+- test catalog/projection width outside QNT so authored content breadth does not
+  multiply proof state;
+- record branch budgets near broad `any` blocks so growth is visible.
+
+Useful references:
+
+- Quint language basics and model entrypoints:
+  https://quint.sh/docs/language-basics
+- Quint model-checker overview:
+  https://quint.sh/docs/model-checkers
+- Quint property checking and inductive invariants:
+  https://quint.sh/docs/checking-properties
+- Apalache idiom on keeping minimum state variables:
+  https://apalache-mc.org/docs/idiomatic/000keep-minimum-state-variables.html
+- TLA+ model vs finite TLC model instance:
+  https://lamport.azurewebsites.net/tla/model-popup.html
+
+## Migration Posture
+
+This work probably wants a temporary split-migration plan before architecture
+docs are rewritten. The plan can be deleted or archived once the code shape is
+settled. The steady-state docs should then describe what is actually
+implemented.
+
+A useful migration posture could be:
+
+1. Inventory `battle-runtime.qnt` by procedure family.
+2. For each family, identify whether rule-core already owns a stateless
+   procedure contract and whether there is an inductive/focused state machine.
+3. Pick one narrow family where the split has high confidence and low coupling.
+4. Move or re-anchor semantic authority in the smaller procedure proof.
+5. Keep only selected cross-procedure facts in broad battle QNT.
+6. Update TypeScript parity and focused MBT around observable scalar facts.
+7. Delete migrated broad-spec assertions only when another proof or parity lane
+   actually owns them.
+
+The broad battle spec may continue to have value as an integration model. The
+question is which behavior belongs there after the split: likely selected
+verticals that exercise replay, holes, interrupt windows, action resources, and
+snapshots together, not every authored procedure's local semantics.
+
+## Candidate Inventory Axes
+
+During inventory, classify each `battle-runtime.qnt` section along these axes:
+
+- procedure family: HP lifecycle, death saves, attack damage, save-gate damage,
+  spell attack damage, healing, action economy, movement, grapples, reactions,
+  concentration, stat-block controls, class features, spell profiles;
+- state owner: battle state, creature state, runtime hole/replay state,
+  interrupt stack, retained origin/profile facts, table-supplied facts;
+- existing smaller authority: shared-algebras rule-core proof, focused
+  battle-runtime MBT, deterministic reducer tests, or none;
+- integration pressure: no integration needed, adjacent-procedure integration
+  needed, broad battle replay needed;
+- deletion confidence: can remove from broad battle now, can narrow after a
+  focused parity bridge, or must remain until more facts are discovered.
+
+The inventory should not assume that every section splits cleanly. Some broad
+state may reveal missing procedure facts, duplicated projections, or places
+where the TypeScript reducer has not yet been shaped around the smaller QNT
+contract.
+
+## Candidate First Splits
+
+These are plausible candidates, not commitments:
+
+- Hit Point / zero-HP / healing lifecycle. Rule-core files already exist, and
+  the invariants are deep enough to be useful. The migration work would confirm
+  whether `battle-runtime.qnt` still carries local semantics that should move
+  into focused parity or stay as integration.
+- Movement and Grapple. There are rule-core movement and focused runtime MBT
+  lanes. The table-supplied spatial-fact boundary may make this a good test of
+  keeping geometry out of QNT while still proving state transitions.
+- Stat-block controls. Multiattack, limited-use, Recharge, and Legendary Action
+  controls have procedure-shaped behavior and focused QCORE coverage, but broad
+  battle integration may still be needed for dispatch replay and stale-subject
+  behavior.
+
+Spells are likely a later migration candidate. The recent commit history shows
+many spell promotions landing directly in broad battle QNT, so the split may
+need a better spell procedure inventory before it can be done without guessing.
+
+## Documentation Strategy
+
+Documentation changes should probably happen in two layers.
+
+First, add only a factual warning to active architecture docs if needed:
+
+> As of 2026-05-11, `packages/battle-runtime/battle-runtime.qnt` remains an
+> active broad package-local spec and is still growing. Rule-core/focused lanes
+> exist but do not yet replace the broad spec as the implemented authority for
+> all promoted battle behavior.
+
+Second, after split-migration changes land, update steady-state docs to describe
+the implemented proof ownership. That update should be factual:
+
+- which procedure families are owned by rule-core;
+- which focused MBT lanes compare runtime replay against those procedures;
+- what broad battle QNT still owns;
+- when a new promoted runtime slice should touch broad battle QNT;
+- when it should instead add or widen a smaller procedure proof.
+
+Avoid writing target-state language as if it is already true. That would make
+review harder, because reviewers would need to infer whether a future PR is
+violating policy or simply exposing that the policy was aspirational.
+
+## Open Questions For The Split
+
+- Which `battle-runtime.qnt` procedures are pure duplicate semantics of existing
+  rule-core proofs?
+- Which ones are still the only Quint authority for production behavior?
+- Are focused MBT lanes comparing the right observable facts, or do they miss
+  state that broad battle currently protects?
+- Where does broad battle QNT still catch composition bugs that smaller proofs
+  cannot see?
+- Which broad-spec sections can be narrowed to fixtures around selected
+  high-risk verticals instead of general procedure semantics?
+- Does character creation need a similar migration before its MBT file becomes a
+  broad scenario accumulator?
+
+See `plans/BATTLE_RUNTIME_QNT_VERTICAL_INVENTORY.md` for the current
+policy-bearing vertical inventory. That document is the migration control
+surface while this research note remains temporary context.
+
+## 2026-05-11 First-Pass Findings
+
+- Quint `import child.*` names are not re-exported through a facade module. A
+  stable `battle-runtime.qnt` compatibility entrypoint therefore needs direct
+  wrapper definitions for moved public names, or focused MBT must import the
+  narrower module directly.
+- A small attack-roll tracer successfully re-anchored `attackHits` and
+  `attackIsCritical` to `attack-damage-composition.qnt` while preserving the
+  package-local compatibility helper names in `battle-runtime.qnt`.
+- The first tracer suggests the larger split should prefer "shared algebra owns
+  generic procedure semantics, battle runtime owns projection/wrappers" over a
+  purely mechanical file extraction.
+- The HP lifecycle tracer strengthened that shape. `battle-runtime.qnt` now
+  projects package-local `Combatant` state into rule-core `CreatureVitals`,
+  `DeathSavingThrowLifecycle`, and positive-HP Unconscious recovery values, then
+  delegates damage, healing, zero-HP damage, Knock Out recovery, and start-turn
+  Death Saving Throw transitions to the shared HP algebras. Concentration and
+  active-effect cleanup remain package-local integration wrappers.
+- The HP tracer exposed a missing rule-core helper:
+  `applyDamageToZeroHitPointCreature` now models Temporary Hit Points absorbing
+  damage before Death Saving Throw failures at 0 HP. That helper prevents
+  battle QNT from keeping a parallel zero-HP damage algorithm.
+- The movement/action tracer introduced `battle-runtime-movement-bridge.qnt`.
+  Broad battle QNT now projects package-local turn and movement facts into
+  `action-turn-procedures.qnt` and `movement-spatial-grapple.qnt` for
+  Dash/Bonus Action Dash/Disengage/Dodge/Ready Movement/Help Attack, movement
+  budget, stand from Prone, movement spend, Hide/Search checks, Grapple
+  admission, Escape Grapple, Grappled attack-roll Disadvantage, and Opportunity
+  Attack trigger facts. Battle still owns hand/link state, recorded Hidden
+  discovery DCs, feature use counts, Temporary Hit Point projection, and
+  interrupt-frame composition.
+- The bridge now also exposes generic Attack-action, Magic-action, and
+  Bonus-action spend helpers. Broad battle uses those for Extra Attack's
+  ordinary Attack-action spend and for direct healing/scalar-buff/Heroism spell
+  action costs; feature-specific extra slots, Spell Slot ledger state, Rage
+  gates, concentration effects, and target projection remain package-local.
+- The stat-block controls tracer introduced
+  `battle-runtime-stat-block-bridge.qnt`. Broad battle now delegates Recharge
+  roll availability, Legendary Action resource spend/admission, and Goblin
+  Multiattack dispatch counts to `stat-block-controls.qnt`; the broad spec keeps
+  concrete attack resolution, end-turn composition, and the package-local
+  representative Goblin fields.
+- The unit-feature tracer introduced `battle-runtime-feature-bridge.qnt` for
+  Rage and Reckless Attack projections. Broad battle now delegates Rage damage
+  bonus, physical resistance facts, spellcasting block, Reckless Attack
+  activation, and incoming attack Advantage to `unit-feature-procedure-profiles`;
+  the broad spec keeps package-local occurrence storage and turn-hook expiry.
+- The same feature bridge now covers reaction/modifier helpers for Cutting
+  Words, Uncanny Dodge, and Deflect Attacks. Broad battle keeps representative
+  reaction composition tests, but no longer owns the feature-local arithmetic or
+  basic admission facts for those helpers.
+- Champion Improved Critical threshold projection also routes through the
+  feature bridge; broad battle keeps only the package-local flag that says the
+  representative Fighter has the improved range.
+- The spell tracer introduced `battle-runtime-spell-bridge.qnt` for direct
+  hit-point restoration profile facts. Broad battle now delegates Healing
+  Word/Cure Wounds/Mass Healing Word action profile, target-count, and healing
+  amount facts to the spell bridge. The broad helper does not carry selected
+  slot level, so slot-level dice legality remains out of that projection;
+  scalar buff active-effect projection remains package-local.
+- The same movement/action bridge now carries the projected start-turn resource
+  reset for action, Bonus Action, Reaction, Dash movement bonus, movement spent,
+  Dodge, Disengage, Help, and Ready Movement facts. Broad battle still owns
+  initiative rotation, spell-slot-per-turn reset, readied spell expiry,
+  feature/effect hooks, Death Saving Throw wrappers, and recharge wrappers.
+- The damage-adjustment tracer widened `damage-component-adjustments.qnt` to
+  the full SRD damage-type set and re-anchored broad battle
+  resistance/vulnerability/immunity math through `DamageAdjustmentFacts`.
+  Resistance spell use-once state remains package-local.
+- The concentration tracer added a tiny bridge for Concentration damage-save DC
+  arithmetic. Spell-effect cleanup and concentration interrupt frames remain
+  package-local because they depend on active-effect projection and replay
+  continuation shape.
+- The interrupt tracer introduced `battle-runtime-interrupt-bridge.qnt`.
+  Broad battle QNT now classifies package-local reaction triggers, reaction
+  procedures, and replay continuation kinds, and routes take/decline admission
+  through the rule-core reaction-window contract. Concrete state mutation,
+  Shield/readied-spell effects, Opportunity Attack resolution, and continuation
+  resume remain package-local integration responsibilities.
+
+## Suggested Completion Shape
+
+This temporary note has served its purpose when the migration has produced a
+factual replacement in active docs. A good end state would be:
+
+- `battle-runtime.qnt` no longer grows by default for every promoted procedure;
+- new procedure semantics land first in a smaller QNT authority or an explicit
+  reason is recorded for broad ownership;
+- broad battle QNT has an explicit, limited integration role;
+- architecture docs describe the implemented state, not the desired future;
+- this research note can be deleted or moved to an archive.

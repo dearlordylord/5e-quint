@@ -10,6 +10,18 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-attack-roll-advantage-save
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-damage-reduction
 module battleRuntime {
+  import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
+  import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
+  import hitPointRecovery.* from "../shared-algebras/proofs/rule-core/hit-point-recovery"
+  import zeroHitPointLifecycle.* from "../shared-algebras/proofs/rule-core/zero-hit-point-lifecycle"
+  import damageComponentAdjustments.* from "../shared-algebras/proofs/rule-core/damage-component-adjustments"
+  import battleRuntimeMovementBridge.* from "./battle-runtime-movement-bridge"
+  import battleRuntimeConcentrationBridge.* from "./battle-runtime-concentration-bridge"
+  import battleRuntimeInterruptBridge.* from "./battle-runtime-interrupt-bridge"
+  import battleRuntimeStatBlockBridge.* from "./battle-runtime-stat-block-bridge"
+  import battleRuntimeFeatureBridge.* from "./battle-runtime-feature-bridge"
+  import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
+
   // SRD traceability for this canonical battle runtime spec:
   // - Playing-the-Game.md lines 479-495: combat proceeds in rounds and turns
   //   by Initiative order, and the Initiative order remains fixed round to round.
@@ -314,6 +326,16 @@ module battleRuntime {
 
   type HandUse = HFree | HMainWeapon | HOffWeapon | HShield | HGrapple
 
+  pure def creatureSizeRank(creatureSize: CreatureSize): int =
+    match creatureSize {
+      | Tiny => 0
+      | Small => 1
+      | Medium => 2
+      | Large => 3
+      | Huge => 4
+      | Gargantuan => 5
+    }
+
   type Hole =
     | TargetChoice
     | ObjectTargetChoice
@@ -375,6 +397,48 @@ module battleRuntime {
   type PendingReactionFrameOption =
     | NoPendingReactionFrame
     | HasPendingReactionFrame(PendingReactionFrame)
+
+  pure def battleRuntimeReactionTrigger(trigger: ReactionTrigger): BattleRuntimeReactionTrigger =
+    match trigger {
+      | AttackHit => BattleRuntimeAttackHit
+      | AttackDamage => BattleRuntimeAttackDamage
+      | SpellCast => BattleRuntimeSpellCast
+      | SaveFailed => BattleRuntimeSaveFailed
+      | AfterDamage => BattleRuntimeAfterDamage
+      | OpportunityAttack => BattleRuntimeOpportunityAttack
+    }
+
+  pure def reactionContinuationKind(continuation: ReactionContinuation): BattleRuntimeContinuationKind =
+    match continuation {
+      | ResumeAttack(_) => BattleRuntimeAttackDamageContinuation
+      | ResumeRayOfFrost => BattleRuntimeSpellAttackContinuation
+      | ResumePoisonSpray => BattleRuntimeSpellAttackContinuation
+      | ResumeChillTouch => BattleRuntimeSpellAttackContinuation
+      | ResumeTrueStrikeWeaponAttack => BattleRuntimeSpellAttackContinuation
+      | ResumeProduceFlameHurl => BattleRuntimeSpellAttackContinuation
+      | ResumeIceKnife => BattleRuntimeSpellAttackContinuation
+      | ResumeSaveGateDamage => BattleRuntimeSaveGateContinuation
+      | ResumeAfterDamage => BattleRuntimeAfterDamageContinuation
+      | ResumeMovement(_) => BattleRuntimeMovementContinuation
+    }
+
+  pure def reactionProcedureForFrame(
+    state: BattleState,
+    frame: PendingReactionFrame,
+    reactor: Actor
+  ): BattleRuntimeReactionProcedure =
+    match frame.trigger {
+      | OpportunityAttack => BattleRuntimeOpportunityAttackProcedure
+      | AttackHit =>
+        if (state.fighterReadiedSpellHeld and reactor == Fighter)
+          BattleRuntimeReadiedSpellReleaseProcedure
+        else
+          BattleRuntimeShieldReactionProcedure
+      | SpellCast => BattleRuntimeShieldReactionProcedure
+      | AttackDamage => BattleRuntimeDamageInterruptionProcedure
+      | SaveFailed => BattleRuntimeDamageInterruptionProcedure
+      | AfterDamage => BattleRuntimeDamageInterruptionProcedure
+    }
 
   type ZeroHpLifecycle = DiesAtZeroHp | UsesDeathSavingThrows
   type DamageDisposition = OrdinaryDamage | KnockOut
@@ -638,10 +702,13 @@ module battleRuntime {
     fighterRecklessAttackOccurrence(state) == ActiveStartOfTurnOngoingFeature
 
   pure def fighterRageResistances(state: BattleState): Set[DamageType] =
-    if (fighterHasRage(state))
-      Set(Bludgeoning, Piercing, Slashing)
-    else
+    {
+      val projection = battleRuntimeRageResistanceProjection(fighterHasRage(state))
       Set()
+        .union(if (projection.bludgeoning) Set(Bludgeoning) else Set())
+        .union(if (projection.piercing) Set(Piercing) else Set())
+        .union(if (projection.slashing) Set(Slashing) else Set())
+    }
 
   pure def removeFighterBonusActionOngoingFeature(state: BattleState): BattleState =
     {
@@ -891,36 +958,42 @@ module battleRuntime {
     }
 
   pure def hideFighter(state: BattleState, stealthTotal: int): BattleState =
-    if (
-      currentActor(state) == Fighter and
-      state.actionAvailable and
-      not(state.fighter.unconscious) and
-      state.fighterHidePrerequisite
-    )
+    {
+      val step = battleRuntimeHide(movementProjectionForFighter(state, WalkSpeedKind), state.fighterHidePrerequisite, stealthTotal, 15)
+      val advanced = stateWithFighterMovementStep(state, step)
+      if (step.hidden)
       {
-        ...state,
-        fighter: { ...state.fighter, hidden: totalToHiddenState(stealthTotal) },
-        actionAvailable: false,
+        ...advanced,
+        fighter: { ...advanced.fighter, hidden: totalToHiddenState(stealthTotal) },
       }
-    else
-      state
+      else
+        { ...advanced, fighter: { ...advanced.fighter, hidden: NotHidden } }
+    }
 
   pure def searchGoblinForFighter(state: BattleState, perceptionTotal: int): BattleState =
-    if (currentActor(state) == Goblin and state.actionAvailable)
-      {
-        ...state,
+    match state.fighter.hidden {
+      | NotHidden => {
+          val step = battleRuntimeSearch(movementProjectionForGrappledGoblin(state), false, perceptionTotal, 0)
+          { ...state, actionAvailable: step.actionAvailable, bonusActionAvailable: step.bonusActionAvailable }
+        }
+      | HiddenByDc(dc) => {
+          val step = battleRuntimeSearch(
+            movementProjectionForGrappledGoblin(state).with("hidden", true),
+            true,
+            perceptionTotal,
+            hiddenDiscoveryDcValue(dc),
+          )
+          {
+            ...state,
+            actionAvailable: step.actionAvailable,
+            bonusActionAvailable: step.bonusActionAvailable,
         fighter: {
           ...state.fighter,
-          hidden: match state.fighter.hidden {
-            | NotHidden => NotHidden
-            | HiddenByDc(dc) =>
-              if (perceptionTotal >= hiddenDiscoveryDcValue(dc)) NotHidden else state.fighter.hidden
-          },
+              hidden: if (step.hidden) state.fighter.hidden else NotHidden,
         },
-        actionAvailable: false,
       }
-    else
-      state
+        }
+    }
 
   pure def revealFighterHidden(state: BattleState): BattleState =
     { ...state, fighter: { ...state.fighter, hidden: NotHidden } }
@@ -959,21 +1032,33 @@ module battleRuntime {
       tickRoundDurationSpellEffects(featureAdvanced)
     else
       featureAdvanced
+    val turnAdvanced = { ...spellDurationAdvanced, initiative: advancedInitiative }
+    val nextActorStep =
+      if (nextActor == Fighter)
+        battleRuntimeStartTurn(movementProjectionForFighter(turnAdvanced, WalkSpeedKind))
+      else
+        battleRuntimeStartTurn(movementProjectionForGrappledGoblin(turnAdvanced))
     {
       ...spellDurationAdvanced,
       initiative: advancedInitiative,
-      actionAvailable: true,
-      bonusActionAvailable: true,
+      actionAvailable: nextActorStep.actionAvailable,
+      bonusActionAvailable: nextActorStep.bonusActionAvailable,
       spellSlotExpendedThisTurn: false,
       attackRollMadeThisTurn: false,
-      dashMovementBonus: 0,
-      disengaged: false,
+      dashMovementBonus: nextActorStep.dashMovementBonus,
+      disengaged: nextActorStep.disengaged,
       lightWeaponAttackMade: false,
       fighterReadiedSpellHeld: if (spellDurationAdvanced.fighterReadiedSpellHeld and nextActor == Fighter) false else spellDurationAdvanced.fighterReadiedSpellHeld,
-      fighterReadiedMovementHeld: if (spellDurationAdvanced.fighterReadiedMovementHeld and nextActor == Fighter) false else spellDurationAdvanced.fighterReadiedMovementHeld,
-      fighterHelpAttackGoblinForGoblin: if (nextActor == Fighter) false else spellDurationAdvanced.fighterHelpAttackGoblinForGoblin,
-      fighter: if (nextActor == Fighter) { ...spellDurationAdvanced.fighter, reactionAvailable: true, movementSpent: 0, dodging: false } else spellDurationAdvanced.fighter,
-      goblin: if (nextActor == Goblin) { ...spellDurationAdvanced.goblin, reactionAvailable: true, movementSpent: 0, dodging: false } else spellDurationAdvanced.goblin,
+      fighterReadiedMovementHeld: if (nextActor == Fighter) nextActorStep.readiedMovementHeld else spellDurationAdvanced.fighterReadiedMovementHeld,
+      fighterHelpAttackGoblinForGoblin: if (nextActor == Fighter) nextActorStep.helpAttackHeld else spellDurationAdvanced.fighterHelpAttackGoblinForGoblin,
+      fighter: if (nextActor == Fighter)
+        { ...spellDurationAdvanced.fighter, reactionAvailable: nextActorStep.reactionAvailable, movementSpent: nextActorStep.movementSpentFeet, dodging: nextActorStep.dodging }
+      else
+        spellDurationAdvanced.fighter,
+      goblin: if (nextActor == Goblin)
+        { ...spellDurationAdvanced.goblin, reactionAvailable: nextActorStep.reactionAvailable, movementSpent: nextActorStep.movementSpentFeet, dodging: nextActorStep.dodging }
+      else
+        spellDurationAdvanced.goblin,
       goblinLegendaryUsesRemaining: if (nextActor == Goblin) 2 else spellDurationAdvanced.goblinLegendaryUsesRemaining,
       goblinMultiattackDispatchesRemaining: 0,
       lastTurnActor: if (currentActor(featureChecked) == Fighter) LastTurnFighter else LastTurnGoblin,
@@ -986,7 +1071,7 @@ module battleRuntime {
   pure def endTurnWithGoblinRechargeRoll(state: BattleState, roll: int): BattleState = {
     val advanced = endTurn(state)
     if (currentActor(advanced) == Goblin and not(advanced.goblinRechargeAvailable))
-      { ...advanced, goblinRechargeAvailable: roll >= 5 }
+      { ...advanced, goblinRechargeAvailable: battleRuntimeRechargeAvailableAfterRoll(advanced.goblinRechargeAvailable, 5, roll) }
     else
       advanced
   }
@@ -995,13 +1080,26 @@ module battleRuntime {
     state.lastTurnActor == LastTurnFighter and currentActor(state) != Goblin and not(state.legendaryActionWindowConsumed)
 
   pure def goblinCanUseLegendaryAction(state: BattleState): bool =
-    state.goblin.hp > 0 and
-    goblinLegendaryActionWindowOpen(state) and
-    state.goblinLegendaryUsesRemaining > 0
+    battleRuntimeCanUseLegendaryAction(
+      state.goblin.hp > 0,
+      goblinLegendaryActionWindowOpen(state),
+      state.legendaryActionWindowConsumed,
+      state.goblinLegendaryUsesRemaining,
+      2,
+    )
 
   pure def useGoblinLegendaryAction(state: BattleState): BattleState =
     if (goblinCanUseLegendaryAction(state))
-      { ...state, goblinLegendaryUsesRemaining: state.goblinLegendaryUsesRemaining - 1, legendaryActionWindowConsumed: true }
+      {
+        ...state,
+        goblinLegendaryUsesRemaining: battleRuntimeLegendaryUsesAfterUse(
+          state.goblinLegendaryUsesRemaining,
+          2,
+          goblinLegendaryActionWindowOpen(state),
+          state.goblin.incapacitated,
+        ),
+        legendaryActionWindowConsumed: true,
+      }
     else
       state
 
@@ -1010,6 +1108,9 @@ module battleRuntime {
 
   pure def reactionFrameComplete(frame: PendingReactionFrame): bool =
     frame.eligibleReactors == frame.offeredReactors
+
+  pure def reactionFrameCompleteAfterOffering(frame: PendingReactionFrame, reactor: Actor): bool =
+    reactionFrameComplete({ ...frame, offeredReactors: frame.offeredReactors.union(Set(reactor)) })
 
   pure def reactorCanReact(state: BattleState, reactor: Actor): bool =
     match reactor {
@@ -1051,16 +1152,21 @@ module battleRuntime {
       val top = state.interruptStack[state.interruptStack.length() - 1]
       match top {
         | PendingReaction(frame) => {
-            val validReactor = frame.eligibleReactors.contains(reactor) and not(frame.offeredReactors.contains(reactor))
-            if (not(validReactor))
-              state
-            else {
-              val updatedFrame = { ...frame, offeredReactors: frame.offeredReactors.union(Set(reactor)) }
-              val rest = state.interruptStack.slice(0, state.interruptStack.length() - 1)
-              if (reactionFrameComplete(updatedFrame))
-                { ...state, interruptStack: rest }
-              else
-                { ...state, interruptStack: rest.append(PendingReaction(updatedFrame)) }
+            val updatedFrame = { ...frame, offeredReactors: frame.offeredReactors.union(Set(reactor)) }
+            val decision = battleRuntimeDeclineReactionDecision(
+              frame.eligibleReactors.contains(reactor),
+              frame.offeredReactors.contains(reactor),
+              reactionFrameComplete(updatedFrame),
+            )
+            match decision {
+              | BattleRuntimeDeclinedReaction(result) => {
+                  val rest = state.interruptStack.slice(0, state.interruptStack.length() - 1)
+                  if (result.frameComplete)
+                    { ...state, interruptStack: rest }
+                  else
+                    { ...state, interruptStack: rest.append(PendingReaction(updatedFrame)) }
+                }
+              | _ => state
             }
           }
         | _ => state
@@ -1086,31 +1192,39 @@ module battleRuntime {
     }
 
   pure def resolveReaction(state: BattleState, reactor: Actor): BattleState =
-    if (state.interruptStack.length() == 0 or not(reactorCanReact(state, reactor)))
+    if (state.interruptStack.length() == 0)
       state
     else {
       val top = state.interruptStack[state.interruptStack.length() - 1]
       match top {
         | PendingReaction(frame) => {
-            val validReactor = frame.eligibleReactors.contains(reactor) and not(frame.offeredReactors.contains(reactor))
-            if (not(validReactor))
-              state
-            else if (reactionResolvesShieldSpell(state, frame, reactor) and not(canExpendSpellSlotThisTurn(state)))
-              state
-            else {
-              val afterReactionSpend = spendReaction(state, reactor)
-              val afterReactionProcedure =
-                match frame.trigger {
-                  | OpportunityAttack => resolveGoblinOpportunityAttack(afterReactionSpend, 20, 18, 4, true)
-                  | AttackHit => if (state.fighterReadiedSpellHeld and reactor == Fighter) releaseReadiedSpell(afterReactionSpend) else castShieldReactionSpell(afterReactionSpend, reactor)
-                  | SpellCast => castShieldReactionSpell(afterReactionSpend, reactor)
-                  | _ => releaseReadiedSpell(afterReactionSpend)
+            val procedure = reactionProcedureForFrame(state, frame, reactor)
+            val decision = battleRuntimeTakeReactionDecision(
+              battleRuntimeReactionTrigger(frame.trigger),
+              procedure,
+              frame.eligibleReactors.contains(reactor),
+              frame.offeredReactors.contains(reactor),
+              reactorCanReact(state, reactor),
+              not(reactionResolvesShieldSpell(state, frame, reactor)) or canExpendSpellSlotThisTurn(state),
+              reactionFrameCompleteAfterOffering(frame, reactor),
+            )
+            match decision {
+              | BattleRuntimeTookReaction(_) => {
+                  val afterReactionSpend = spendReaction(state, reactor)
+                  val afterReactionProcedure =
+                    match frame.trigger {
+                      | OpportunityAttack => resolveGoblinOpportunityAttack(afterReactionSpend, 20, 18, 4, true)
+                      | AttackHit => if (procedure == BattleRuntimeReadiedSpellReleaseProcedure) releaseReadiedSpell(afterReactionSpend) else castShieldReactionSpell(afterReactionSpend, reactor)
+                      | SpellCast => castShieldReactionSpell(afterReactionSpend, reactor)
+                      | _ => releaseReadiedSpell(afterReactionSpend)
+                    }
+                  val afterDecision = declineReaction(afterReactionProcedure, reactor)
+                  if (afterDecision.interruptStack.length() < state.interruptStack.length())
+                    resumeReactionContinuation(afterDecision, frame.continuation)
+                  else
+                    afterDecision
                 }
-              val afterDecision = declineReaction(afterReactionProcedure, reactor)
-              if (afterDecision.interruptStack.length() < state.interruptStack.length())
-                resumeReactionContinuation(afterDecision, frame.continuation)
-              else
-                afterDecision
+              | _ => state
             }
           }
         | _ => state
@@ -1170,18 +1284,18 @@ module battleRuntime {
   }
 
   pure def attackHits(total: int, naturalD20: int, armorClass: int, criticalThreshold: int): bool =
-    if (naturalD20 == 1) false
-    else if (attackIsCritical(naturalD20, criticalThreshold)) true
-    else total >= armorClass
+    resolveAttackRoll({
+      naturalD20: naturalD20,
+      total: total,
+      armorClass: armorClass,
+      criticalThreshold: criticalThreshold,
+    }).hits
 
   pure def attackIsCritical(naturalD20: int, criticalThreshold: int): bool =
-    naturalD20 >= criticalThreshold
+    naturalD20MeetsCriticalThreshold(naturalD20, criticalThreshold)
 
   pure def fighterCriticalThreshold(state: BattleState): int =
-    match state.fighterCriticalRange {
-      | DefaultCriticalRange => 20
-      | ImprovedCriticalRange19 => 19
-    }
+    battleRuntimeChampionCriticalThreshold(state.fighterCriticalRange == ImprovedCriticalRange19)
 
   pure def attackCriticalThreshold(state: BattleState, attacker: Actor): int =
     if (attacker == Fighter) fighterCriticalThreshold(state) else 20
@@ -1198,14 +1312,19 @@ module battleRuntime {
   pure def spendFighterAttackActionOrExtraAttackSlot(state: BattleState): BattleState =
     if (state.fighterExtraAttackSlotsRemaining > 0)
       { ...state, fighterExtraAttackSlotsRemaining: state.fighterExtraAttackSlotsRemaining - 1 }
-    else if (state.actionAvailable)
+    else {
+      val spent = stateWithFighterMovementStep(
+        state,
+        battleRuntimeSpendAttackAction(movementProjectionForFighter(state, WalkSpeedKind)),
+      )
+      if (spent != state)
       {
-        ...state,
-        actionAvailable: false,
+        ...spent,
         fighterExtraAttackSlotsRemaining: if (state.fighterExtraAttackSupported) 1 else 0,
       }
-    else
-      state
+      else
+        state
+    }
 
   pure def withGoblinHp(state: BattleState, hp: int, tempHp: int): BattleState =
     { ...state, goblin: { ...state.goblin, hp: hp, tempHp: tempHp } }
@@ -1431,10 +1550,10 @@ module battleRuntime {
     }
 
   pure def cuttingWordsAttackRollTotal(attackTotal: int, bardicInspirationRoll: int): int =
-    attackTotal - bardicInspirationRoll
+    battleRuntimeCuttingWordsRollTotal(attackTotal, bardicInspirationRoll)
 
   pure def cuttingWordsAbilityCheckTotal(originalTotal: int, bardicInspirationRoll: int): int =
-    originalTotal - bardicInspirationRoll
+    battleRuntimeCuttingWordsRollTotal(originalTotal, bardicInspirationRoll)
 
   pure def abilityCheckSucceeds(total: int, dc: int): bool =
     total >= dc
@@ -1448,22 +1567,28 @@ module battleRuntime {
     reactionAvailable: bool,
     bardicInspirationUsesRemaining: int,
   ): CuttingWordsResult = {
-    if (not(abilityCheckSucceeds(originalTotal, dc)) or not(bardCanSeeCreature) or not(creatureWithinSixtyFeet) or not(reactionAvailable) or bardicInspirationUsesRemaining <= 0)
-      { state: initialState, usesRemaining: bardicInspirationUsesRemaining }
-    else
+    if (battleRuntimeCuttingWordsAbilityCheckAdmitted(
+      originalTotal,
+      dc,
+      bardicInspirationRoll,
+      bardCanSeeCreature,
+      creatureWithinSixtyFeet,
+      reactionAvailable,
+      bardicInspirationUsesRemaining,
+    ))
       {
         state: { ...initialState, fighter: { ...initialState.fighter, reactionAvailable: false } },
         usesRemaining: bardicInspirationUsesRemaining - 1,
       }
+    else
+      { state: initialState, usesRemaining: bardicInspirationUsesRemaining }
   }
 
   pure def uncannyDodgeDamage(damage: int): int =
-    damage / 2
+    battleRuntimeUncannyDodgeDamage(damage)
 
-  pure def deflectAttacksDamage(damage: int, deflectRoll: int, dexMod: int, monkLevel: int): int = {
-    val reduced = damage - (deflectRoll + dexMod + monkLevel)
-    if (reduced < 0) 0 else reduced
-  }
+  pure def deflectAttacksDamage(damage: int, deflectRoll: int, dexMod: int, monkLevel: int): int =
+    battleRuntimeDeflectAttacksDamage(damage, deflectRoll, dexMod, monkLevel)
 
   pure def deflectAttacksRedirectTargetEligible(
     targetSeen: bool,
@@ -1472,13 +1597,13 @@ module battleRuntime {
     targetWithinSixtyFeet: bool,
     targetBehindTotalCover: bool,
   ): bool =
-    all {
+    battleRuntimeDeflectAttacksRedirectTargetEligible(
       targetSeen,
-      if (attackWasMelee)
-        targetWithinFiveFeet
-      else
-        all { targetWithinSixtyFeet, not(targetBehindTotalCover) },
-    }
+      attackWasMelee,
+      targetWithinFiveFeet,
+      targetWithinSixtyFeet,
+      targetBehindTotalCover,
+    )
 
   pure def deflectAttacksRedirectDamage(
     reducedDamage: int,
@@ -1489,19 +1614,22 @@ module battleRuntime {
     secondMartialArtsRoll: int,
     dexMod: int,
   ): int =
-    if (all { reducedDamage == 0, focusUsesRemaining > 0, targetEligible, not(savingThrowSucceeded) }) {
-      val redirected = firstMartialArtsRoll + secondMartialArtsRoll + dexMod
-      if (redirected < 0) 0 else redirected
-    } else 0
+    battleRuntimeDeflectAttacksRedirectDamage(
+      reducedDamage,
+      focusUsesRemaining,
+      targetEligible,
+      savingThrowSucceeded,
+      firstMartialArtsRoll,
+      secondMartialArtsRoll,
+      dexMod,
+    )
 
   pure def deflectAttacksRedirectFocusRemaining(
     reducedDamage: int,
     focusUsesRemaining: int,
     targetEligible: bool,
   ): int =
-    if (all { reducedDamage == 0, focusUsesRemaining > 0, targetEligible })
-      focusUsesRemaining - 1
-    else focusUsesRemaining
+    battleRuntimeDeflectAttacksRedirectFocusRemaining(reducedDamage, focusUsesRemaining, targetEligible)
 
   pure def resolveAttackRecklessly(
     state: BattleState,
@@ -1535,7 +1663,7 @@ module battleRuntime {
     if (not(state.actionAvailable) or currentActor(state) != Goblin or state.goblin.hp == 0)
       state
     else
-      { ...state, actionAvailable: false, goblinMultiattackDispatchesRemaining: 2 }
+      { ...state, actionAvailable: false, goblinMultiattackDispatchesRemaining: battleRuntimeGoblinMultiattackDispatchesAfterFirstAttack }
 
   pure def goblinMultiattackDispatchContinuationOpen(state: BattleState): bool =
     currentActor(state) == Goblin and state.goblinMultiattackDispatchesRemaining > 0
@@ -1550,12 +1678,12 @@ module battleRuntime {
     if (state.goblinMultiattackDispatchesRemaining <= 0 or currentActor(state) != Goblin or state.goblin.hp == 0)
       state
     else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.fighter), 20)))
-      { ...state, goblinMultiattackDispatchesRemaining: state.goblinMultiattackDispatchesRemaining - 1 }
+      { ...state, goblinMultiattackDispatchesRemaining: battleRuntimeGoblinMultiattackDispatchesAfterDispatch(state.goblinMultiattackDispatchesRemaining) }
     else {
       val adjustedDamage = damageAfterAdjustments(damageRoll + 2, Slashing, fighterRageResistances(state), Set(), Set())
       {
         ...stateWithFighterDamage(state, applyDamageFromSource(state.fighter, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Goblin)),
-        goblinMultiattackDispatchesRemaining: state.goblinMultiattackDispatchesRemaining - 1,
+        goblinMultiattackDispatchesRemaining: battleRuntimeGoblinMultiattackDispatchesAfterDispatch(state.goblinMultiattackDispatchesRemaining),
       }
     }
 
@@ -1695,9 +1823,7 @@ module battleRuntime {
     }
 
   pure def concentrationSavingThrowDc(damage: int): int = {
-    val halfDamage = damage / 2
-    val floor = if (halfDamage < 10) 10 else halfDamage
-    if (floor > 30) 30 else floor
+    battleRuntimeConcentrationSavingThrowDc(damage)
   }
 
   pure def spellEffectConcentrationActiveEffects(): Set[ActiveEffect] =
@@ -1727,6 +1853,77 @@ module battleRuntime {
     else
       { ...state, fighter: damagedFighter }
 
+  // Rule-core CreatureKind is the HP lifecycle policy, not source provenance.
+  pure def combatantCreatureKind(target: Combatant): CreatureKind =
+    match target.lifecycle {
+      | DiesAtZeroHp => MonsterCreature
+      | UsesDeathSavingThrows => PlayerCharacter
+    }
+
+  pure def combatantIsDead(target: Combatant): bool =
+    match target.lifecycle {
+      | DiesAtZeroHp => target.hp == 0
+      | UsesDeathSavingThrows => target.deathFailures >= 3
+    }
+
+  pure def combatantVitals(target: Combatant): CreatureVitals = {
+    kind: combatantCreatureKind(target),
+    hitPoints: target.hp,
+    hitPointMaximum: target.maxHp,
+    temporaryHitPoints: target.tempHp,
+    dead: combatantIsDead(target),
+    unconscious:
+      target.unconscious
+        or (target.lifecycle == UsesDeathSavingThrows and target.hp == 0 and target.deathFailures < 3),
+  }
+
+  pure def combatantDeathSavingThrows(target: Combatant): DeathSavingThrowLifecycle =
+    match target.lifecycle {
+      | DiesAtZeroHp => resetDeathSavingThrowLifecycle
+      | UsesDeathSavingThrows => {
+          successes: target.deathSuccesses,
+          failures: target.deathFailures,
+          stable: target.stable,
+          hpRegained: false,
+        }
+    }
+
+  pure def combatantPositiveHitPointUnconsciousRecovery(target: Combatant): PositiveHitPointUnconsciousRecovery =
+    if (target.knockedOut) EndsWhenHitPointsRegained else NoPositiveHitPointUnconsciousRecovery
+
+  pure def combatantWithHitPointState(
+    target: Combatant,
+    vitals: CreatureVitals,
+    deathSavingThrows: DeathSavingThrowLifecycle,
+    recovery: PositiveHitPointUnconsciousRecovery
+  ): Combatant =
+    match target.lifecycle {
+      | DiesAtZeroHp => {
+          ...target,
+          hp: vitals.hitPoints,
+          tempHp: vitals.temporaryHitPoints,
+          unconscious: vitals.unconscious,
+          knockedOut: recovery == EndsWhenHitPointsRegained,
+          stable: false,
+        }
+      | UsesDeathSavingThrows => {
+          ...target,
+          hp: vitals.hitPoints,
+          tempHp: vitals.temporaryHitPoints,
+          unconscious: vitals.unconscious or vitals.dead,
+          knockedOut: recovery == EndsWhenHitPointsRegained,
+          stable: deathSavingThrows.stable,
+          deathSuccesses: deathSavingThrows.successes,
+          deathFailures: if (vitals.dead) 3 else deathSavingThrows.failures,
+        }
+    }
+
+  pure def combatantWithHitPointRecoveryResult(target: Combatant, result: HitPointRecoveryResult): Combatant =
+    combatantWithHitPointState(target, result.vitals, result.deathSavingThrows, result.positiveHitPointUnconsciousRecovery)
+
+  pure def combatantWithZeroHitPointLifecycleResult(target: Combatant, result: ZeroHitPointLifecycleResult): Combatant =
+    combatantWithHitPointState(target, result.vitals, result.deathSavingThrows, NoPositiveHitPointUnconsciousRecovery)
+
   pure def applyDamage(target: Combatant, damage: int, deathFailuresAtZeroHp: int, concentrationSaveSucceeded: bool): Combatant =
     applyDamageWithDisposition(target, damage, deathFailuresAtZeroHp, concentrationSaveSucceeded, OrdinaryDamage)
 
@@ -1753,30 +1950,44 @@ module battleRuntime {
   }
 
   pure def applyDamageWithDisposition(target: Combatant, damage: int, deathFailuresAtZeroHp: int, concentrationSaveSucceeded: bool, damageDisposition: DamageDisposition): Combatant = {
-    val effectiveDamage = if (damage < 0) 0 else damage
-    val tempHpAbsorbed = if (target.tempHp < effectiveDamage) target.tempHp else effectiveDamage
-    val hpDamage = effectiveDamage - tempHpAbsorbed
-    val nextHp = if (target.hp - hpDamage < 0) 0 else target.hp - hpDamage
-    val massiveDamageKills =
-      hpDamage > 0 and
-      (if (target.hp <= 0) hpDamage else hpDamage - target.hp) >= target.maxHp
-    val damaged = { ...target, hp: nextHp, tempHp: target.tempHp - tempHpAbsorbed }
-
+    val effectiveDamage = nonnegative(damage)
     val afterDamage =
       if (effectiveDamage <= 0)
         target
-      else if (target.hp <= 0)
-        if (massiveDamageKills) applyInstantDeath(damaged) else applyDamageAtZeroHp(damaged, deathFailuresAtZeroHp)
-      else if (nextHp > 0)
-        damaged
+      else if (target.hp <= 0) {
+        val result = applyDamageToZeroHitPointCreature(
+          combatantVitals(target),
+          combatantDeathSavingThrows(target),
+          effectiveDamage,
+          deathFailuresAtZeroHp >= 2,
+        )
+        combatantWithZeroHitPointLifecycleResult(target, result)
+      } else {
+        val result = applyResolvedDamageToPositiveHitPoints(combatantVitals(target), effectiveDamage)
+        val recovery =
+          if (damageDisposition == KnockOut) {
+            applyKnockOutDisposition(result)
+          } else {
+            {
+              vitals: result.vitals,
+              deathSavingThrows:
+                deathSavingThrowLifecycleAfterPositiveHitPointDamage(combatantDeathSavingThrows(target), result),
+              positiveHitPointUnconsciousRecovery: NoPositiveHitPointUnconsciousRecovery,
+              hitPointsRegained: 0,
+            }
+        }
+        combatantWithHitPointRecoveryResult(target, recovery)
+      }
+    val afterIncapacitatingDamage =
+      if (target.concentrating and not(target.unconscious) and afterDamage.unconscious)
+        breakConcentration(afterDamage)
       else
-        if (damageDisposition == KnockOut) applyKnockOut(damaged)
-        else if (massiveDamageKills) applyInstantDeath(damaged) else applyDropToZeroHp(damaged)
+        afterDamage
 
     if (target.concentrating and effectiveDamage > 0 and not(concentrationSaveSucceeded))
-      breakConcentration(afterDamage)
+      breakConcentration(afterIncapacitatingDamage)
     else
-      afterDamage
+      afterIncapacitatingDamage
   }
 
   pure def applyKnockOut(target: Combatant): Combatant =
@@ -1806,11 +2017,90 @@ module battleRuntime {
   pure def dashFighter(state: BattleState): BattleState =
     dashFighterWithSpeedKind(state, WalkSpeedKind)
 
-  pure def dashFighterWithSpeedKind(state: BattleState, speedKind: MovementSpeedKind): BattleState =
-    if (currentActor(state) == Fighter and state.actionAvailable and not(state.fighter.unconscious) and not(state.fighter.incapacitated))
-      { ...state, actionAvailable: false, dashMovementBonus: state.dashMovementBonus + movementSpeed(state.fighter, speedKind) }
-    else
-      state
+  pure def movementProjectionForFighter(state: BattleState, speedKind: MovementSpeedKind): BattleRuntimeMovementProjection = {
+    currentActorOwnsTurn:
+      currentActor(state) == Fighter
+        and not(state.fighter.unconscious)
+        and not(state.fighter.incapacitated),
+    actionAvailable: state.actionAvailable,
+    bonusActionAvailable: state.bonusActionAvailable,
+    reactionAvailable: state.fighter.reactionAvailable,
+    dashMovementBonus: state.dashMovementBonus,
+    disengaged: state.disengaged,
+    dodging: state.fighter.dodging,
+    hidden: fighterIsHidden(state),
+    helpAttackHeld: state.fighterHelpAttackGoblinForGoblin,
+    readiedMovementHeld: state.fighterReadiedMovementHeld,
+    speedFeet: movementSpeed(state.fighter, speedKind),
+    movementSpentFeet: state.fighter.movementSpent,
+    prone: state.fighter.prone,
+    grappleEscapeDc: 0,
+  }
+
+  pure def movementProjectionForGrappledGoblin(state: BattleState): BattleRuntimeMovementProjection =
+    match state.grapple {
+      | NoGrapple => {
+          currentActorOwnsTurn:
+            currentActor(state) == Goblin
+              and not(state.goblin.unconscious)
+              and not(state.goblin.incapacitated),
+          actionAvailable: state.actionAvailable,
+          bonusActionAvailable: state.bonusActionAvailable,
+          reactionAvailable: state.goblin.reactionAvailable,
+          dashMovementBonus: state.dashMovementBonus,
+          disengaged: state.disengaged,
+          dodging: state.goblin.dodging,
+          hidden: false,
+          helpAttackHeld: false,
+          readiedMovementHeld: false,
+          speedFeet: movementSpeed(state.goblin, WalkSpeedKind),
+          movementSpentFeet: state.goblin.movementSpent,
+          prone: state.goblin.prone,
+          grappleEscapeDc: 0,
+        }
+      | FighterGrapplesGoblin(link) => {
+          currentActorOwnsTurn:
+            currentActor(state) == Goblin
+              and not(state.goblin.unconscious)
+              and not(state.goblin.incapacitated),
+          actionAvailable: state.actionAvailable,
+          bonusActionAvailable: state.bonusActionAvailable,
+          reactionAvailable: state.goblin.reactionAvailable,
+          dashMovementBonus: state.dashMovementBonus,
+          disengaged: state.disengaged,
+          dodging: state.goblin.dodging,
+          hidden: false,
+          helpAttackHeld: false,
+          readiedMovementHeld: false,
+          speedFeet: movementSpeed(state.goblin, WalkSpeedKind),
+          movementSpentFeet: state.goblin.movementSpent,
+          prone: state.goblin.prone,
+          grappleEscapeDc: link.escapeDc,
+        }
+    }
+
+  pure def stateWithFighterMovementStep(state: BattleState, step: BattleRuntimeMovementStep): BattleState =
+    {
+      ...state,
+      actionAvailable: step.actionAvailable,
+      bonusActionAvailable: step.bonusActionAvailable,
+      dashMovementBonus: step.dashMovementBonus,
+      disengaged: step.disengaged,
+      fighterHelpAttackGoblinForGoblin: step.helpAttackHeld,
+      fighterReadiedMovementHeld: step.readiedMovementHeld,
+      fighter: {
+        ...state.fighter,
+        reactionAvailable: step.reactionAvailable,
+        movementSpent: step.movementSpentFeet,
+        prone: step.prone,
+        dodging: step.dodging,
+      },
+    }
+
+  pure def dashFighterWithSpeedKind(state: BattleState, speedKind: MovementSpeedKind): BattleState = {
+    val step = battleRuntimeDash(movementProjectionForFighter(state, speedKind), movementSpeed(state.fighter, speedKind))
+    stateWithFighterMovementStep(state, step)
+  }
 
   pure def applyFighterTemporaryHitPoints(state: BattleState, temporaryHitPoints: int): BattleState =
     { ...state, fighter: { ...state.fighter, tempHp: if (state.fighter.tempHp > temporaryHitPoints) state.fighter.tempHp else temporaryHitPoints } }
@@ -1828,11 +2118,10 @@ module battleRuntime {
       and proficiencyBonus <= 6
       and not(state.fighter.unconscious)
       and not(state.fighter.incapacitated)) {
-      val dashed = {
-        ...state,
-        bonusActionAvailable: false,
-        dashMovementBonus: state.dashMovementBonus + movementSpeed(state.fighter, speedKind),
-      }
+      val dashed = stateWithFighterMovementStep(
+        state,
+        battleRuntimeBonusActionDash(movementProjectionForFighter(state, speedKind), movementSpeed(state.fighter, speedKind)),
+      )
       {
         state: applyFighterTemporaryHitPoints(dashed, proficiencyBonus),
         usesRemaining: usesRemaining - 1,
@@ -1842,46 +2131,46 @@ module battleRuntime {
     }
 
   pure def disengageFighter(state: BattleState): BattleState =
-    if (currentActor(state) == Fighter and state.actionAvailable and not(state.fighter.unconscious) and not(state.fighter.incapacitated))
-      { ...state, actionAvailable: false, disengaged: true }
-    else
-      state
+    stateWithFighterMovementStep(state, battleRuntimeDisengage(movementProjectionForFighter(state, WalkSpeedKind)))
 
   pure def dodgeFighter(state: BattleState): BattleState =
-    if (currentActor(state) == Fighter and state.actionAvailable and not(state.fighter.unconscious) and not(state.fighter.incapacitated))
-      { ...state, actionAvailable: false, fighter: { ...state.fighter, dodging: true } }
-    else
-      state
+    stateWithFighterMovementStep(state, battleRuntimeDodge(movementProjectionForFighter(state, WalkSpeedKind)))
 
   pure def readyFighter(state: BattleState): BattleState =
-    if (currentActor(state) == Fighter and state.actionAvailable and not(state.fighter.unconscious) and not(state.fighter.incapacitated))
-      { ...state, actionAvailable: false, fighterReadiedMovementHeld: true }
-    else
-      state
+    stateWithFighterMovementStep(state, battleRuntimeReadyMovement(movementProjectionForFighter(state, WalkSpeedKind), true))
 
   pure def helpFighterAttack(state: BattleState): BattleState =
-    if (currentActor(state) == Fighter and state.actionAvailable and not(state.fighter.unconscious) and not(state.fighter.incapacitated))
-      { ...state, actionAvailable: false, fighterHelpAttackGoblinForGoblin: true }
-    else
-      state
+    stateWithFighterMovementStep(state, battleRuntimeHelpAttack(movementProjectionForFighter(state, WalkSpeedKind), true))
 
-  pure def standFighterFromProne(state: BattleState): BattleState =
-    if (currentActor(state) == Fighter and state.fighter.prone and state.fighter.speed / 2 > 0 and state.fighter.movementSpent + state.fighter.speed / 2 <= state.fighter.speed + state.dashMovementBonus)
-      { ...state, fighter: { ...state.fighter, movementSpent: state.fighter.movementSpent + state.fighter.speed / 2, prone: false } }
-    else
-      state
+  pure def standFighterFromProne(state: BattleState): BattleState = {
+    val step = battleRuntimeStandFromProne(movementProjectionForFighter(state, WalkSpeedKind))
+    stateWithFighterMovementStep(state, step)
+  }
 
   pure def movementRemainingForFighter(state: BattleState): int = {
     movementRemainingForFighterWithSpeedKind(state, WalkSpeedKind)
   }
 
-  pure def movementRemainingForFighterWithSpeedKind(state: BattleState, speedKind: MovementSpeedKind): int = {
-    val remaining = movementSpeed(state.fighter, speedKind) + state.dashMovementBonus - state.fighter.movementSpent
-    if (remaining < 0) 0 else remaining
-  }
+  pure def movementRemainingForFighterWithSpeedKind(state: BattleState, speedKind: MovementSpeedKind): int =
+    battleRuntimeMovementRemaining(movementProjectionForFighter(state, speedKind))
 
   pure def movementRemaining(combatant: Combatant): int =
-    if (combatant.speed - combatant.movementSpent < 0) 0 else combatant.speed - combatant.movementSpent
+    battleRuntimeMovementRemaining({
+      currentActorOwnsTurn: true,
+      actionAvailable: true,
+      bonusActionAvailable: true,
+      reactionAvailable: true,
+      dashMovementBonus: 0,
+      disengaged: false,
+      dodging: false,
+      hidden: false,
+      helpAttackHeld: false,
+      readiedMovementHeld: false,
+      speedFeet: combatant.speed,
+      movementSpentFeet: combatant.movementSpent,
+      prone: combatant.prone,
+      grappleEscapeDc: 0,
+    })
 
   pure def movementSpeed(combatant: Combatant, speedKind: MovementSpeedKind): int = {
     val walkSpeed = combatant.speed + (if (combatant.activeEffects.contains(LongstriderSpeedDelta)) 10 else 0)
@@ -1908,30 +2197,39 @@ module battleRuntime {
     fighterCanMoveWithSpeedKind(state, WalkSpeedKind, movementCost)
 
   pure def fighterCanMoveWithSpeedKind(state: BattleState, speedKind: MovementSpeedKind, movementCost: int): bool =
-    currentActor(state) == Fighter and
-    not(state.fighter.unconscious) and
-    not(state.fighter.incapacitated) and
-    movementCost > 0 and
-    movementCost <= movementRemainingForFighterWithSpeedKind(state, speedKind)
+    battleRuntimeCanSpendMovement(movementProjectionForFighter(state, speedKind), movementCost)
 
   pure def fighterCanGrappleGoblin(state: BattleState): bool =
-    currentActor(state) == Fighter and
-    state.actionAvailable and
-    not(state.fighter.unconscious) and
-    not(state.fighter.incapacitated) and
-    not(fighterGoblinGrappleExists(state)) and
-    state.fighter.leftHandUse == HFree
+    battleRuntimeCanAttemptGrappleBySizeRank(
+      creatureSizeRank(state.fighter.creatureSize),
+      creatureSizeRank(state.goblin.creatureSize),
+      state.fighter.leftHandUse == HFree,
+      FIGHTER_GRAPPLE_ESCAPE_DC,
+    )
+      and currentActor(state) == Fighter
+      and state.actionAvailable
+      and not(state.fighter.unconscious)
+      and not(state.fighter.incapacitated)
+      and not(fighterGoblinGrappleExists(state))
 
-  pure def grappleFighterGoblin(state: BattleState, targetFailedSave: bool): BattleState =
+  pure val FIGHTER_GRAPPLE_ESCAPE_DC = 13
+
+  pure def grappleFighterGoblin(state: BattleState, targetSaveTotal: int): BattleState =
     if (not(fighterCanGrappleGoblin(state)))
       state
-    else if (targetFailedSave) {
+    else if (battleRuntimeGrappleAttemptSucceedsBySizeRank(
+      creatureSizeRank(state.fighter.creatureSize),
+      creatureSizeRank(state.goblin.creatureSize),
+      state.fighter.leftHandUse == HFree,
+      targetSaveTotal,
+      FIGHTER_GRAPPLE_ESCAPE_DC,
+    )) {
       val extended = extendRageWithEnemySavingThrow(state, Goblin)
       {
         ...extended,
         actionAvailable: false,
         fighter: { ...extended.fighter, leftHandUse: HGrapple },
-        grapple: FighterGrapplesGoblin({ escapeDc: 13, targetDragCostExempt: false }),
+        grapple: FighterGrapplesGoblin({ escapeDc: FIGHTER_GRAPPLE_ESCAPE_DC, targetDragCostExempt: false }),
       }
     }
     else {
@@ -1949,17 +2247,19 @@ module battleRuntime {
     else
       state
 
-  pure def escapeFighterGrapple(state: BattleState, escapeSucceeded: bool): BattleState =
-    if (currentActor(state) == Goblin and state.actionAvailable and fighterGoblinGrappleExists(state))
-      if (escapeSucceeded)
-        { ...releaseFighterGrapple(state), actionAvailable: false }
-      else
-        { ...state, actionAvailable: false }
-    else
+  pure def escapeFighterGrapple(state: BattleState, escapeCheckTotal: int): BattleState =
+    if (not(fighterGoblinGrappleExists(state)))
       state
+    else {
+      val step = battleRuntimeEscapeGrapple(movementProjectionForGrappledGoblin(state), escapeCheckTotal)
+      if (step.grappleActive)
+        { ...state, actionAvailable: step.actionAvailable, bonusActionAvailable: step.bonusActionAvailable }
+      else
+        { ...releaseFighterGrapple(state), actionAvailable: step.actionAvailable, bonusActionAvailable: step.bonusActionAvailable }
+    }
 
   pure def goblinAttackRequiresDisadvantage(state: BattleState, targetIsFighter: bool): bool =
-    fighterGoblinGrappleExists(state) and not(targetIsFighter)
+    battleRuntimeGrappledAttackRollHasDisadvantage(fighterGoblinGrappleExists(state), targetIsFighter)
 
   pure def offHandAttackFighter(state: BattleState, attackTotal: int, naturalD20: int, damageRoll: int): BattleState =
     if (currentActor(state) == Fighter and state.bonusActionAvailable and state.lightWeaponAttackMade)
@@ -1984,20 +2284,21 @@ module battleRuntime {
   pure def goblinCanOpportunityAttack(state: BattleState, provokedByTable: bool): bool =
     state.goblin.hp > 0 and
     state.goblin.reactionAvailable and
-    not(state.disengaged) and
-    provokedByTable
+    battleRuntimeOpportunityAttackTriggered(
+      movementProjectionForFighter(state, WalkSpeedKind),
+      true,
+      true,
+      provokedByTable,
+      true,
+    )
 
   pure def applyFighterMovement(state: BattleState, movementCost: int): BattleState =
     applyFighterMovementWithSpeedKind(state, WalkSpeedKind, movementCost)
 
-  pure def applyFighterMovementWithSpeedKind(state: BattleState, speedKind: MovementSpeedKind, movementCost: int): BattleState =
-    if (fighterCanMoveWithSpeedKind(state, speedKind, movementCost))
-      {
-        ...state,
-        fighter: { ...state.fighter, movementSpent: state.fighter.movementSpent + movementCost },
-      }
-    else
-      state
+  pure def applyFighterMovementWithSpeedKind(state: BattleState, speedKind: MovementSpeedKind, movementCost: int): BattleState = {
+    val step = battleRuntimeSpendMovement(movementProjectionForFighter(state, speedKind), movementCost)
+    stateWithFighterMovementStep(state, step)
+  }
 
   pure def moveFighter(state: BattleState, movementCost: int, provokedByTable: bool): BattleState =
     moveFighterWithSpeedKind(state, WalkSpeedKind, movementCost, provokedByTable)
@@ -2016,40 +2317,50 @@ module battleRuntime {
       applyFighterMovementWithSpeedKind(state, speedKind, movementCost)
 
   pure def applyHealing(target: Combatant, healing: int): Combatant = {
-    val effectiveHealing = if (healing < 0) 0 else healing
-    val nextHp =
-      if (target.hp + effectiveHealing > target.maxHp)
-        target.maxHp
-      else
-        target.hp + effectiveHealing
-
-    if (target.deathFailures >= 3 or effectiveHealing <= 0)
-      target
-    else if (target.hp == 0 and nextHp > 0)
-      {
-        ...target,
-        hp: nextHp,
-        unconscious: false,
-        knockedOut: false,
-        stable: false,
-        deathSuccesses: 0,
-        deathFailures: 0,
-      }
-    else if (target.knockedOut and nextHp > target.hp)
-      { ...target, hp: nextHp, unconscious: false, knockedOut: false }
-    else
-      { ...target, hp: nextHp }
+    val result = applyHitPointHealing(
+      combatantVitals(target),
+      combatantDeathSavingThrows(target),
+      combatantPositiveHitPointUnconsciousRecovery(target),
+      healing,
+    )
+    combatantWithHitPointRecoveryResult(target, result)
   }
 
+  pure def spendFighterSpellActionCost(state: BattleState, actionCost: SpellActionCost): BattleState =
+    stateWithFighterMovementStep(
+      state,
+      if (actionCost == SpellBonusAction)
+        battleRuntimeSpendBonusAction(movementProjectionForFighter(state, WalkSpeedKind))
+      else
+        battleRuntimeSpendMagicAction(movementProjectionForFighter(state, WalkSpeedKind)),
+    )
+
+  pure def canSpendFighterSpellActionCost(state: BattleState, actionCost: SpellActionCost): bool =
+    spendFighterSpellActionCost(state, actionCost) != state
+
+  pure def battleRuntimeDirectRestorationProfile(
+    invocation: DirectHitPointRestorationSpell
+  ): BattleRuntimeDirectHitPointRestorationProfile =
+    match invocation {
+      | HealingWordRestoration => BattleRuntimeHealingWordRestoration
+      | CureWoundsRestoration => BattleRuntimeCureWoundsRestoration
+      | MassHealingWordRestoration => BattleRuntimeMassHealingWordRestoration
+    }
+
   pure def directHitPointRestorationActionCost(invocation: DirectHitPointRestorationSpell): SpellActionCost =
-    if (invocation == HealingWordRestoration or invocation == MassHealingWordRestoration) SpellBonusAction
-    else SpellMagicAction
+    if (battleRuntimeDirectHitPointRestorationUsesBonusAction(battleRuntimeDirectRestorationProfile(invocation)))
+      SpellBonusAction
+    else
+      SpellMagicAction
 
   pure def directHitPointRestorationMaximumTargets(invocation: DirectHitPointRestorationSpell): int =
-    if (invocation == MassHealingWordRestoration) 6 else 1
+    battleRuntimeDirectHitPointRestorationMaximumTargets(battleRuntimeDirectRestorationProfile(invocation), 3)
 
-  pure def directHitPointRestorationHealing(healingRoll: int, spellcastingAbilityModifier: int): int =
-    healingRoll + spellcastingAbilityModifier
+  pure def directHitPointRestorationHealing(
+    healingRoll: int,
+    spellcastingAbilityModifier: int
+  ): int =
+    battleRuntimeDirectHitPointRestorationHealing(healingRoll, spellcastingAbilityModifier)
 
   pure def resolveDirectHitPointRestoration(
     state: BattleState,
@@ -2060,9 +2371,7 @@ module battleRuntime {
   ): BattleState = {
     val actionCost = directHitPointRestorationActionCost(invocation)
     val validTargetCount = targetCount >= 1 and targetCount <= directHitPointRestorationMaximumTargets(invocation)
-    val canSpendActionCost =
-      if (actionCost == SpellBonusAction) state.bonusActionAvailable
-      else state.actionAvailable
+    val canSpendActionCost = canSpendFighterSpellActionCost(state, actionCost)
     if (
       currentActor(state) == Fighter and
       validTargetCount and
@@ -2077,10 +2386,8 @@ module battleRuntime {
         directHitPointRestorationHealing(healingRoll, spellcastingAbilityModifier)
       )
       {
-        ...state,
+        ...spendFighterSpellActionCost(state, actionCost),
         fighter: healed,
-        actionAvailable: if (actionCost == SpellMagicAction) false else state.actionAvailable,
-        bonusActionAvailable: if (actionCost == SpellBonusAction) false else state.bonusActionAvailable,
         spellSlotExpendedThisTurn: true,
       }
     } else {
@@ -2140,9 +2447,7 @@ module battleRuntime {
     val actionCost = scalarBuffActionCost(invocation)
     val targetCount = targets.size()
     val validTargetCount = targetCount >= 1 and targetCount <= scalarBuffMaximumTargets(invocation, slotLevel)
-    val canSpendActionCost =
-      if (actionCost == SpellBonusAction) state.bonusActionAvailable
-      else state.actionAvailable
+    val canSpendActionCost = canSpendFighterSpellActionCost(state, actionCost)
     if (
       currentActor(state) == Fighter and
       validTargetCount and
@@ -2162,11 +2467,10 @@ module battleRuntime {
         else
           state
       val effected = scalarBuffTargetedState(concentrationBase, invocation, targets, slotLevel, rolledDice)
+      val spent = spendFighterSpellActionCost(effected, actionCost)
       {
-        ...effected,
-        fighter: { ...effected.fighter, concentrating: if (invocation == ShieldOfFaithScalarBuff) true else effected.fighter.concentrating },
-        actionAvailable: if (actionCost == SpellMagicAction) false else state.actionAvailable,
-        bonusActionAvailable: if (actionCost == SpellBonusAction) false else state.bonusActionAvailable,
+        ...spent,
+        fighter: { ...spent.fighter, concentrating: if (invocation == ShieldOfFaithScalarBuff) true else spent.fighter.concentrating },
         spellSlotExpendedThisTurn: true,
       }
     } else {
@@ -2187,7 +2491,7 @@ module battleRuntime {
       currentActor(state) == Fighter and
       validTargetCount and
       knownWillingTargets and
-      state.actionAvailable and
+      canSpendFighterSpellActionCost(state, SpellMagicAction) and
       canExpendSpellSlotThisTurn(state) and
       not(state.fighter.unconscious) and
       not(state.fighter.incapacitated) and
@@ -2199,11 +2503,11 @@ module battleRuntime {
         goblin: { ...state.goblin, activeEffects: activeEffectsWithoutSpellEffectConcentration(state.goblin.activeEffects) },
       }
       val heroismEffects = Set(HeroismFrightenedImmunity, HeroismTurnStartTemporaryHitPoints({ amount: spellcastingAbilityModifier }))
+      val spent = spendFighterSpellActionCost(concentrationBase, SpellMagicAction)
       {
-        ...concentrationBase,
-        fighter: if (targets.contains(Fighter)) { ...concentrationBase.fighter, concentrating: true, activeEffects: concentrationBase.fighter.activeEffects.union(heroismEffects) } else { ...concentrationBase.fighter, concentrating: true },
-        goblin: if (targets.contains(Goblin)) { ...concentrationBase.goblin, activeEffects: concentrationBase.goblin.activeEffects.union(heroismEffects) } else concentrationBase.goblin,
-        actionAvailable: false,
+        ...spent,
+        fighter: if (targets.contains(Fighter)) { ...spent.fighter, concentrating: true, activeEffects: spent.fighter.activeEffects.union(heroismEffects) } else { ...spent.fighter, concentrating: true },
+        goblin: if (targets.contains(Goblin)) { ...spent.goblin, activeEffects: spent.goblin.activeEffects.union(heroismEffects) } else spent.goblin,
         spellSlotExpendedThisTurn: true,
       }
     } else {
@@ -2671,16 +2975,74 @@ module battleRuntime {
     vulnerabilities: Set[DamageType],
     immunities: Set[DamageType],
   ): int =
-    if (immunities.contains(damageType)) 0
-    else {
-      val afterResistance =
-        if (resistances.contains(damageType)) damage / 2 else damage
+    damageAmountAfterTargetAdjustments(
+      damage,
+      ruleDamageType(damageType),
+      damageAdjustmentFacts(resistances, vulnerabilities, immunities),
+    )
 
-      if (vulnerabilities.contains(damageType))
-        afterResistance * 2
-      else
-        afterResistance
+  pure def ruleDamageType(damageType: DamageType): RuleDamageType =
+    match damageType {
+      | Acid => AcidDamage
+      | Bludgeoning => BludgeoningDamage
+      | Poison => PoisonDamage
+      | Force => ForceDamage
+      | Cold => ColdDamage
+      | Slashing => SlashingDamage
+      | Piercing => PiercingDamage
+      | Radiant => RadiantDamage
+      | Necrotic => NecroticDamage
+      | Lightning => LightningDamage
+      | Psychic => PsychicDamage
+      | Fire => FireDamage
+      | Thunder => ThunderDamage
     }
+
+  pure def damageAdjustmentFacts(
+    resistances: Set[DamageType],
+    vulnerabilities: Set[DamageType],
+    immunities: Set[DamageType]
+  ): DamageAdjustmentFacts = {
+    immuneAcid: immunities.contains(Acid),
+    immuneBludgeoning: immunities.contains(Bludgeoning),
+    immuneCold: immunities.contains(Cold),
+    immuneFire: immunities.contains(Fire),
+    immuneForce: immunities.contains(Force),
+    immuneLightning: immunities.contains(Lightning),
+    immuneNecrotic: immunities.contains(Necrotic),
+    immunePiercing: immunities.contains(Piercing),
+    immunePoison: immunities.contains(Poison),
+    immunePsychic: immunities.contains(Psychic),
+    immuneRadiant: immunities.contains(Radiant),
+    immuneSlashing: immunities.contains(Slashing),
+    immuneThunder: immunities.contains(Thunder),
+    resistantAcid: resistances.contains(Acid),
+    resistantBludgeoning: resistances.contains(Bludgeoning),
+    resistantCold: resistances.contains(Cold),
+    resistantFire: resistances.contains(Fire),
+    resistantForce: resistances.contains(Force),
+    resistantLightning: resistances.contains(Lightning),
+    resistantNecrotic: resistances.contains(Necrotic),
+    resistantPiercing: resistances.contains(Piercing),
+    resistantPoison: resistances.contains(Poison),
+    resistantPsychic: resistances.contains(Psychic),
+    resistantRadiant: resistances.contains(Radiant),
+    resistantSlashing: resistances.contains(Slashing),
+    resistantThunder: resistances.contains(Thunder),
+    vulnerableAcid: vulnerabilities.contains(Acid),
+    vulnerableBludgeoning: vulnerabilities.contains(Bludgeoning),
+    vulnerableCold: vulnerabilities.contains(Cold),
+    vulnerableFire: vulnerabilities.contains(Fire),
+    vulnerableForce: vulnerabilities.contains(Force),
+    vulnerableLightning: vulnerabilities.contains(Lightning),
+    vulnerableNecrotic: vulnerabilities.contains(Necrotic),
+    vulnerablePiercing: vulnerabilities.contains(Piercing),
+    vulnerablePoison: vulnerabilities.contains(Poison),
+    vulnerablePsychic: vulnerabilities.contains(Psychic),
+    vulnerableRadiant: vulnerabilities.contains(Radiant),
+    vulnerableSlashing: vulnerabilities.contains(Slashing),
+    vulnerableThunder: vulnerabilities.contains(Thunder),
+  }
 
   pure def sameTypeDamageAfterAdjustments(
     damageParts: List[int],
@@ -2861,8 +3223,12 @@ module battleRuntime {
   pure def activateRecklessAttackOnFirstAttackRoll(state: BattleState): BattleState =
     if (
       currentActor(state) == Fighter and
-      not(state.attackRollMadeThisTurn) and
-      not(fighterHasRecklessAttack(state))
+      battleRuntimeRecklessAttackActivates(
+        fighterHasRecklessAttack(state),
+        state.attackRollMadeThisTurn,
+        true,
+        true,
+      )
     )
       {
         ...state,
@@ -2876,7 +3242,7 @@ module battleRuntime {
       state
 
   pure def goblinAttackAgainstFighterHasAdvantage(state: BattleState): bool =
-    fighterHasRecklessAttack(state)
+    battleRuntimeRecklessAttackGrantsIncomingAttackAdvantage(fighterHasRecklessAttack(state))
 
   pure def expendedSlotsAfterInvocation(
     invocation: SpellInvocation,
@@ -2933,12 +3299,10 @@ module battleRuntime {
     not(state.spellSlotExpendedThisTurn)
 
   pure def canDiscoverSpellActs(canCastSpells: bool, raging: bool): bool =
-    canCastSpells and not(raging)
+    canCastSpells and not(battleRuntimeRagePreventsSpellcasting(raging))
 
   pure def fighterRageDamageBonus(barbarianLevel: int): int =
-    if (barbarianLevel >= 16) 4
-    else if (barbarianLevel >= 9) 3
-    else 2
+    battleRuntimeRageDamageBonus(barbarianLevel)
 
   pure def spellAttackModifier(
     spellcastingAbilityModifier: int,
@@ -3955,46 +4319,44 @@ module battleRuntime {
       }
     }
 
-  pure def applyDropToZeroHp(target: Combatant): Combatant =
-    match target.lifecycle {
-      | DiesAtZeroHp => { ...target, knockedOut: false }
-      | UsesDeathSavingThrows => { ...breakConcentration(target), unconscious: true, knockedOut: false, stable: false, deathSuccesses: 0, deathFailures: 0 }
-    }
+  pure def applyDropToZeroHp(target: Combatant): Combatant = {
+    val damageResult = applyResolvedDamageToPositiveHitPoints(combatantVitals(target), target.hp)
+    combatantWithHitPointRecoveryResult(
+      breakConcentration(target),
+      {
+        vitals: damageResult.vitals,
+        deathSavingThrows:
+          deathSavingThrowLifecycleAfterPositiveHitPointDamage(
+            combatantDeathSavingThrows(target),
+            damageResult,
+          ),
+        positiveHitPointUnconsciousRecovery: NoPositiveHitPointUnconsciousRecovery,
+        hitPointsRegained: 0,
+      }
+    )
+  }
 
   pure def applyDamageAtZeroHp(target: Combatant, deathFailuresAtZeroHp: int): Combatant =
-    match target.lifecycle {
-      | DiesAtZeroHp => { ...target, knockedOut: false }
-      | UsesDeathSavingThrows => {
-          ...target,
-          stable: false,
-          unconscious: true,
-          knockedOut: false,
-          deathFailures: if (target.deathFailures + deathFailuresAtZeroHp > 3) 3 else target.deathFailures + deathFailuresAtZeroHp,
-        }
-    }
+    combatantWithZeroHitPointLifecycleResult(
+      target,
+      addDeathSavingThrowFailures(
+        combatantVitals(target),
+        combatantDeathSavingThrows(target),
+        deathFailuresAtZeroHp,
+      )
+    )
 
   pure def applyInstantDeath(target: Combatant): Combatant =
-    match target.lifecycle {
-      | DiesAtZeroHp => { ...target, knockedOut: false }
-      | UsesDeathSavingThrows => { ...target, unconscious: true, knockedOut: false, stable: false, deathFailures: 3 }
-    }
+    combatantWithZeroHitPointLifecycleResult(
+      target,
+      addDeathSavingThrowFailures(combatantVitals(target), combatantDeathSavingThrows(target), 3)
+    )
 
   pure def applyStartTurnDeathSave(target: Combatant, deathSaveRoll: int): Combatant =
-    if (target.lifecycle != UsesDeathSavingThrows or target.hp != 0 or target.stable or target.deathFailures >= 3)
-      target
-    else if (deathSaveRoll == 20)
-      { ...target, hp: 1, unconscious: false, knockedOut: false, stable: false, deathSuccesses: 0, deathFailures: 0 }
-    else if (deathSaveRoll == 1)
-      applyDamageAtZeroHp(target, 2)
-    else if (deathSaveRoll >= 10) {
-      val successes = if (target.deathSuccesses + 1 > 3) 3 else target.deathSuccesses + 1
-      if (successes >= 3)
-        { ...target, stable: true, deathSuccesses: 0, deathFailures: 0 }
-      else
-        { ...target, deathSuccesses: successes }
-    } else {
-      applyDamageAtZeroHp(target, 1)
-    }
+    combatantWithZeroHitPointLifecycleResult(
+      target,
+      resolveStartTurnDeathSavingThrow(combatantVitals(target), combatantDeathSavingThrows(target), deathSaveRoll)
+    )
 
   run test_initial_holes_cover_attack_target = {
     assert(openHoles(initialState).contains(TargetChoice))
@@ -4381,7 +4743,7 @@ module battleRuntime {
   run test_rage_extends_when_grapple_forces_enemy_save = {
     val raging = startRage(initialState, 2).state
     val nextFighterTurn = endTurn(endTurn(raging))
-    val grappled = grappleFighterGoblin(nextFighterTurn, true)
+    val grappled = grappleFighterGoblin(nextFighterTurn, 12)
     val extendedToNextTurn = match fighterRageOccurrence(grappled) {
       | ActiveRoundExtendedOngoingFeature(data) =>
           data.expiresAtEndOfFighterTurnRound == nextFighterTurn.initiative.round + 1
@@ -5354,6 +5716,21 @@ module battleRuntime {
     }
   }
 
+  run test_character_temporary_hp_at_zero_absorbs_damage_before_death_failures = {
+    val absorbed = applyDamage(withFighterHp(initialState, 0, 5).fighter, 4, 2, true)
+    val overflow = applyDamage(withFighterHp(initialState, 0, 5).fighter, 7, 2, true)
+    all {
+      assert(absorbed.hp == 0),
+      assert(absorbed.tempHp == 1),
+      assert(absorbed.deathFailures == 0),
+      assert(absorbed.unconscious),
+      assert(overflow.hp == 0),
+      assert(overflow.tempHp == 0),
+      assert(overflow.deathFailures == 2),
+      assert(overflow.unconscious),
+    }
+  }
+
   run test_massive_damage_at_zero_kills_character = {
     val result = applyDamage(withFighterHp(initialState, 0, 0).fighter, 13, 2, true)
     all {
@@ -5398,12 +5775,29 @@ module battleRuntime {
   }
 
   run test_end_turn_advances_current_actor_and_resets_resources = {
-    val result = endTurn({ ...initialState, actionAvailable: false, bonusActionAvailable: false })
+    val result = endTurn({
+      ...initialState,
+      actionAvailable: false,
+      bonusActionAvailable: false,
+      dashMovementBonus: 30,
+      disengaged: true,
+      goblin: {
+        ...initialState.goblin,
+        reactionAvailable: false,
+        movementSpent: 20,
+        dodging: true,
+      },
+    })
     all {
       assert(currentActor(result) == Goblin),
       assert(result.initiative.round == 1),
       assert(result.actionAvailable),
       assert(result.bonusActionAvailable),
+      assert(result.goblin.reactionAvailable),
+      assert(result.goblin.movementSpent == 0),
+      assert(not(result.goblin.dodging)),
+      assert(result.dashMovementBonus == 0),
+      assert(not(result.disengaged)),
     }
   }
 
@@ -5849,9 +6243,9 @@ module battleRuntime {
   }
 
   run test_grapple_release_and_escape_update_link_state = {
-    val grappled = grappleFighterGoblin(initialState, true)
+    val grappled = grappleFighterGoblin(initialState, 12)
     val released = releaseFighterGrapple(grappled)
-    val escaped = escapeFighterGrapple(endTurn(grappled), true)
+    val escaped = escapeFighterGrapple(endTurn(grappled), 13)
     all {
       assert(fighterGoblinGrappleExists(grappled)),
       assert(grappled.fighter.leftHandUse == HGrapple),
@@ -5873,7 +6267,7 @@ module battleRuntime {
   }
 
   run test_grappled_attack_disadvantage_excludes_the_grappler = {
-    val grappled = endTurn(grappleFighterGoblin(initialState, true))
+    val grappled = endTurn(grappleFighterGoblin(initialState, 12))
     all {
       assert(not(goblinAttackRequiresDisadvantage(grappled, true))),
       assert(goblinAttackRequiresDisadvantage(grappled, false)),
@@ -5881,7 +6275,7 @@ module battleRuntime {
   }
 
   run test_grapple_drag_cost_is_table_supplied = {
-    val grappled = grappleFighterGoblin(initialState, true)
+    val grappled = grappleFighterGoblin(initialState, 12)
     val oneFootCost = moveFighter(grappled, 1, false)
     val tenFootCost = moveFighter(grappled, 10, false)
     all {
@@ -5901,6 +6295,43 @@ module battleRuntime {
         offeredReactors: Set(),
         continuation: ResumeMovement({ speedKind: WalkSpeedKind, movementCost: 5 }),
       })),
+    }
+  }
+
+  run test_reaction_continuations_have_battle_runtime_contract_kinds = {
+    all {
+      assert(reactionContinuationKind(ResumeAttack({ damage: 7 })) == BattleRuntimeAttackDamageContinuation),
+      assert(reactionContinuationKind(ResumeRayOfFrost) == BattleRuntimeSpellAttackContinuation),
+      assert(reactionContinuationKind(ResumePoisonSpray) == BattleRuntimeSpellAttackContinuation),
+      assert(reactionContinuationKind(ResumeChillTouch) == BattleRuntimeSpellAttackContinuation),
+      assert(reactionContinuationKind(ResumeTrueStrikeWeaponAttack) == BattleRuntimeSpellAttackContinuation),
+      assert(reactionContinuationKind(ResumeProduceFlameHurl) == BattleRuntimeSpellAttackContinuation),
+      assert(reactionContinuationKind(ResumeIceKnife) == BattleRuntimeSpellAttackContinuation),
+      assert(reactionContinuationKind(ResumeSaveGateDamage) == BattleRuntimeSaveGateContinuation),
+      assert(reactionContinuationKind(ResumeAfterDamage) == BattleRuntimeAfterDamageContinuation),
+      assert(reactionContinuationKind(ResumeMovement({ speedKind: WalkSpeedKind, movementCost: 5 })) == BattleRuntimeMovementContinuation),
+    }
+  }
+
+  run test_reaction_decision_contract_rejects_unavailable_reaction = {
+    val awaiting = moveFighter({ ...initialState, goblin: { ...initialState.goblin, reactionAvailable: false } }, 5, 10 > 5)
+    all {
+      assert(resolveReaction(awaiting, Goblin) == awaiting),
+      assert(declineReactionAndResume(awaiting, Goblin).fighter.movementSpent == 5),
+    }
+  }
+
+  run test_after_damage_reaction_resolves_through_damage_interruption_contract = {
+    val awaitingReaction = openReactionWindow(initialState, {
+      trigger: AfterDamage,
+      eligibleReactors: Set(Fighter),
+      offeredReactors: Set(),
+      continuation: ResumeAfterDamage,
+    })
+    val resolved = resolveReaction(awaitingReaction, Fighter)
+    all {
+      assert(resolved.interruptStack == []),
+      assert(not(resolved.fighter.reactionAvailable)),
     }
   }
 

@@ -87,12 +87,19 @@ Use this decision rule for every new authored battle ability:
   or retained origin records. Do not store derived labels, copied attack scalars,
   support-status markers, or provenance labels beside their source facts.
 
-When a new procedure family is required, update the type boundary,
-`battle-runtime.qnt`, focused reducer tests, and, for high-risk composed public
-replay, integrated MBT. Catalog breadth remains a deterministic
-table/contract-test problem. QNT/MBT should target procedure-family behavior and
-composition, not one model trace per authored Unit, Spell Record, feature, or
-Stat Block.
+When a new procedure family is required, put generic SRD procedure semantics in
+the relevant rule-core QNT algebra when one exists or can be deepened. Keep
+`battle-runtime.qnt` responsible for package-local projection, reducer protocol
+composition, holes/replay, concentration or effect cleanup hooks, focused smoke
+checks, compatibility wrappers for broad imports, and small package-local bridge
+modules that project `BattleState` facts into shared rule-core contracts.
+Current bridge examples cover movement/action/grapple, concentration DCs,
+Reaction-window take/decline decisions, stat-block resource controls, and
+selected unit-feature and spell-profile projections. Update focused reducer
+tests and, for high-risk composed public replay, integrated MBT. Catalog breadth
+remains a deterministic table/contract-test problem. QNT/MBT should target
+procedure-family behavior and composition, not one model trace per authored
+Unit, Spell Record, feature, or Stat Block.
 
 Projected executable vocabulary must stay out of this package. Translate SRD
 procedures into Surface readers, support gates, battle subjects, holes, and

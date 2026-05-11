@@ -5,7 +5,11 @@ battle protocol for package callers: initialize combatants, discover battle
 subjects, replay caller fills, resolve state transitions, and expose snapshots.
 
 `@dnd/battle-runtime` is the semantic authority for Unit/StatBlock-backed battle
-behavior. `battle-runtime.qnt` is its canonical package-local spec.
+behavior. `battle-runtime.qnt` is its canonical package-local integration spec:
+it owns BattleState projection, holes/replay, interrupt windows, effect cleanup
+hooks, and compatibility wrappers. Generic SRD procedure semantics that are not
+specific to the reducer protocol should live in shared rule-core QNT algebras
+and be projected into the package-local spec.
 
 The promoted MBT strategy is selective. MBT proves reducer facts after Surface
 decode/projection; it must not enumerate all Surface-authored content multiplied
