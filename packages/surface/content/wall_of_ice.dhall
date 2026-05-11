@@ -125,7 +125,7 @@ let frigidAirDamage : Outcome =
 
 let Effect : Type =
       { kind : Text
-      , direction : Optional Text
+      , movementKind : Optional Text
       , distanceFeet : Optional Natural
       , maxSize : Optional Text
       , shape : Optional Shape
@@ -138,7 +138,7 @@ let Effect : Type =
       }
 
 let noneEffect =
-      { direction = None Text
+      { movementKind = None Text
       , distanceFeet = None Natural
       , maxSize = None Text
       , shape = None Shape
@@ -167,7 +167,7 @@ let createWall : Effect =
 let pushCreatures : Effect =
       noneEffect
         //  { kind = "force_move"
-            , direction = Some "push"
+            , movementKind = Some "push"
             , distanceFeet = Some 5
             }
 

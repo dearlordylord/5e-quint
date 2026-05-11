@@ -3,6 +3,7 @@
 let Leaf : Type =
       { kind : Text
       , condition : Optional Text
+      , movementKind : Optional Text
       , direction : Optional Text
       , distanceFeet : Optional Natural
       , maxDistanceFeet : Optional Natural
@@ -11,6 +12,7 @@ let Leaf : Type =
 
 let noneLeaf =
       { condition = None Text
+      , movementKind = None Text
       , direction = None Text
       , distanceFeet = None Natural
       , maxDistanceFeet = None Natural
@@ -20,6 +22,7 @@ let noneLeaf =
 let moveCreature =
       noneLeaf
         //  { kind = "force_move"
+            , movementKind = Some "move"
             , direction = Some "any_direction"
             , distanceFeet = Some 30
             }
@@ -45,6 +48,7 @@ let manipulateObject =
 let Outcome : Type =
       { kind : Text
       , condition : Optional Text
+      , movementKind : Optional Text
       , direction : Optional Text
       , distanceFeet : Optional Natural
       , maxDistanceFeet : Optional Natural
@@ -62,6 +66,7 @@ let composite =
 let ModeEffect : Type =
       { kind : Text
       , condition : Optional Text
+      , movementKind : Optional Text
       , direction : Optional Text
       , distanceFeet : Optional Natural
       , maxDistanceFeet : Optional Natural

@@ -241,9 +241,34 @@ export type CommandTargetNextTurnOptions = Schema.Schema.Type<
 export type ForcedReactionMovement = Schema.Schema.Type<
   typeof SurfaceSchema.ForcedReactionMovementSchema
 >;
+export type ForceMoveEffect = Schema.Schema.Type<
+  typeof SurfaceSchema.ForceMoveEffectSchema
+>;
+export type AudibleEffect = Schema.Schema.Type<
+  typeof SurfaceSchema.AudibleEffectSchema
+>;
+export type AreaPushUnsecuredObjects = Schema.Schema.Type<
+  typeof SurfaceSchema.AreaPushUnsecuredObjectsSchema
+>;
+export type AreaScopedEffectAtom = Schema.Schema.Type<
+  typeof SurfaceSchema.AreaScopedEffectAtomSchema
+>;
+export type AreaDirectEffectAtom = Schema.Schema.Type<
+  typeof SurfaceSchema.AreaDirectEffectAtomSchema
+>;
 export type EffectAtom = Schema.Schema.Type<
   typeof SurfaceSchema.EffectAtomSchema
 >;
+
+export function isAreaScopedEffectAtom(
+  effect: AreaDirectEffectAtom,
+): effect is AreaScopedEffectAtom {
+  return effect.kind === "push_unsecured_objects";
+}
+
+export function isEffectAtom(effect: AreaDirectEffectAtom): effect is EffectAtom {
+  return !isAreaScopedEffectAtom(effect);
+}
 export type SpellLevel = Schema.Schema.Type<
   typeof SurfaceSchema.SpellLevelSchema
 >;

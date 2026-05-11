@@ -27,6 +27,7 @@ import type {
   UnitRecord,
   WeaponRecord,
 } from "@dnd/surface/surface/types";
+import { isEffectAtom } from "@dnd/surface/surface/types";
 import type { BattleMovementSpeedKind } from "./battle-subjects.ts";
 import type { BattleUnitRef } from "./battle-init.ts";
 import type { CharacterBattleClassLevel } from "./character-class-level.ts";
@@ -2026,11 +2027,13 @@ function parseOngoingFeatureUnitFeatureProfile(
   ) {
     return null;
   }
-  const parsedEffects = parseOngoingFeatureEffects(
-    phase.effects,
-    classLevels,
-    unit,
+  const effects = phase.effects.flatMap((effect): readonly EffectAtom[] =>
+    isEffectAtom(effect) ? [effect] : [],
   );
+  if (effects.length !== phase.effects.length) {
+    return null;
+  }
+  const parsedEffects = parseOngoingFeatureEffects(effects, classLevels, unit);
   if (parsedEffects === null) {
     return null;
   }

@@ -29,6 +29,7 @@ import type {
   AttachmentRangeOrigin,
   ObjectFilter,
   EffectAtom,
+  AreaDirectEffectAtom,
   OngoingOperation,
   DiceAmount,
   DiceExpr,
@@ -250,7 +251,7 @@ export function traceStatBlock(record: StatBlockRecord): Trace {
 // callers omit it; composite (and future structural atoms) need it to
 // wire child nodes under the returned parent.
 function traceEffectAtom(
-  e: EffectAtom,
+  e: AreaDirectEffectAtom,
   nodes: TraceNode[],
   ids: IdGen,
   edges?: TraceEdge[],
@@ -533,6 +534,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "audible": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "audible",
+        label: `audible\n${e.sound}\nradius: ${e.audibleRadiusFeet} ft`,
+      });
+      return id;
+    }
     case "remove_condition": {
       const id = ids("eff");
       const label = `remove_condition\n${describeConditionChoice(e.condition)}`;
@@ -722,11 +733,27 @@ function traceEffectAtom(
     }
     case "force_move": {
       const id = ids("eff");
+      let movementDetail: string = e.movementKind;
+      if (e.movementKind === "move") {
+        movementDetail = `${e.movementKind} ${e.direction}`;
+      } else if (e.movementKind === "push" && e.originDirection !== undefined) {
+        movementDetail = `${e.movementKind} ${e.originDirection}`;
+      }
       nodes.push({
         id,
         category: "effect",
         atomKind: "force_move",
-        label: `force_move\n${e.direction} ${e.distanceFeet} ft`,
+        label: `force_move\n${movementDetail} ${e.distanceFeet} ft`,
+      });
+      return id;
+    }
+    case "push_unsecured_objects": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "push_unsecured_objects",
+        label: `push_unsecured_objects\n${e.objectLocation}\n${e.originDirection} ${e.distanceFeet} ft`,
       });
       return id;
     }
@@ -2017,7 +2044,7 @@ function traceEffectAtom(
 
 // Emit scaling nodes for effect atoms that carry a DiceAmount.
 function traceEffectAtomScaling(
-  e: EffectAtom,
+  e: AreaDirectEffectAtom,
   effectId: string,
   slotId: string | null,
   nodes: TraceNode[],
@@ -2080,6 +2107,8 @@ function traceEffectAtomScaling(
     case "restrict_action_usage":
     case "command_target_next_turn":
     case "forced_reaction_movement":
+    case "audible":
+    case "push_unsecured_objects":
     case "remove_condition":
     case "grant_resistance":
     case "kill_target":

@@ -199,6 +199,45 @@ export const ForcedReactionMovementSchema = strictStruct({
   route: Schema.Literal("safest_available"),
 });
 
+export const AudibleEffectSchema = strictStruct({
+  kind: Schema.Literal("audible"),
+  sound: Schema.String,
+  audibleRadiusFeet: PositiveIntegerSchema,
+});
+
+export const AreaPushUnsecuredObjectsSchema = strictStruct({
+  kind: Schema.Literal("push_unsecured_objects"),
+  objectLocation: Schema.Literal("entirely_within_area"),
+  originDirection: Schema.Literal("away_from_caster"),
+  distanceFeet: PositiveIntegerSchema,
+});
+
+export const ForceMovePushEffectSchema = strictStruct({
+  kind: Schema.Literal("force_move"),
+  movementKind: Schema.Literal("push"),
+  originDirection: optionalExact(Schema.Literal("away_from_caster")),
+  distanceFeet: PositiveIntegerSchema,
+});
+
+export const ForceMovePullSlideEffectSchema = strictStruct({
+  kind: Schema.Literal("force_move"),
+  movementKind: Schema.Literal("pull", "slide"),
+  distanceFeet: PositiveIntegerSchema,
+});
+
+export const ForceMoveAnyDirectionEffectSchema = strictStruct({
+  kind: Schema.Literal("force_move"),
+  movementKind: Schema.Literal("move"),
+  direction: Schema.Literal("any_direction"),
+  distanceFeet: PositiveIntegerSchema,
+});
+
+export const ForceMoveEffectSchema = Schema.Union(
+  ForceMovePushEffectSchema,
+  ForceMovePullSlideEffectSchema,
+  ForceMoveAnyDirectionEffectSchema,
+);
+
 type DamageTypeRef = Schema.Schema.Type<typeof DamageTypeRefSchema>;
 type DiceAmount = Schema.Schema.Type<typeof DiceAmountSchema>;
 type DiceDelta = Schema.Schema.Type<typeof DiceDeltaSchema>;
@@ -265,9 +304,17 @@ type CommandTargetNextTurnOptions = Schema.Schema.Type<
 type ForcedReactionMovement = Schema.Schema.Type<
   typeof ForcedReactionMovementSchema
 >;
+type ForceMoveEffect = Schema.Schema.Type<typeof ForceMoveEffectSchema>;
+type AudibleEffect = Schema.Schema.Type<typeof AudibleEffectSchema>;
+type AreaPushUnsecuredObjects = Schema.Schema.Type<
+  typeof AreaPushUnsecuredObjectsSchema
+>;
+type AreaScopedEffectAtom = AreaPushUnsecuredObjects;
+type AreaDirectEffectAtom = EffectAtom | AreaScopedEffectAtom;
 type PolymorphRevertTrigger = Schema.Schema.Type<
   typeof PolymorphRevertTriggerSchema
 >;
+type AreaAttachment = Schema.Schema.Type<typeof AreaAttachmentSchema>;
 type Attachment = Schema.Schema.Type<typeof AttachmentSchema>;
 type DcSource = Schema.Schema.Type<typeof DcSourceSchema>;
 type CastTimeEffectModeChoice = Schema.Schema.Type<
@@ -426,6 +473,7 @@ type EffectAtom =
       readonly options: CommandTargetNextTurnOptions;
     }
   | ForcedReactionMovement
+  | AudibleEffect
   | {
       readonly kind: "remove_condition";
       readonly condition:
@@ -552,11 +600,7 @@ type EffectAtom =
       readonly numerator: number;
       readonly denominator: number;
     }
-  | {
-      readonly kind: "force_move";
-      readonly direction: "push" | "pull" | "slide" | "any_direction";
-      readonly distanceFeet: number;
-    }
+  | ForceMoveEffect
   | { readonly kind: "suspend_target"; readonly until: "end_of_next_turn" }
   | { readonly kind: "fall_at_end_of_next_turn_unless_reapplied" }
   | {
@@ -1039,6 +1083,12 @@ type ActivationPhase =
     }
   | {
       readonly kind: "direct";
+      readonly attachment: AreaAttachment;
+      readonly effects: ReadonlyNonEmptyArray<AreaDirectEffectAtom>;
+      readonly mode?: CastTimeEffectModeChoice;
+    }
+  | {
+      readonly kind: "direct";
       readonly attachment: Attachment;
       readonly effects?: ReadonlyNonEmptyArray<EffectAtom>;
       readonly mode?: CastTimeEffectModeChoice;
@@ -1335,6 +1385,20 @@ export const ObjectFilterSchema = Schema.Struct({
   maxSize: optionalExact(SizeSchema),
 });
 
+export const AreaAttachmentBaseSchema = Schema.Struct({
+  kind: Schema.Literal("area"),
+  shape: AreaShapeSpecSchema,
+  origin: AreaOriginSchema,
+  selection: optionalExact(TargetSelectionSchema),
+  occupantDispositionFilter: optionalExact(AreaOccupantDispositionFilterSchema),
+  rangeOrigin: optionalExact(AttachmentRangeOriginSchema),
+});
+
+export const AreaAttachmentSchema = Schema.Union(
+  AreaAttachmentBaseSchema,
+  makeHoleSchema(AreaAttachmentBaseSchema),
+);
+
 export const AttachmentBaseSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("self"),
@@ -1344,16 +1408,7 @@ export const AttachmentBaseSchema = Schema.Union(
     selection: TargetSelectionSchema,
     rangeOrigin: optionalExact(AttachmentRangeOriginSchema),
   }),
-  Schema.Struct({
-    kind: Schema.Literal("area"),
-    shape: AreaShapeSpecSchema,
-    origin: AreaOriginSchema,
-    selection: optionalExact(TargetSelectionSchema),
-    occupantDispositionFilter: optionalExact(
-      AreaOccupantDispositionFilterSchema,
-    ),
-    rangeOrigin: optionalExact(AttachmentRangeOriginSchema),
-  }),
+  AreaAttachmentBaseSchema,
   Schema.Struct({
     kind: Schema.Literal("mark"),
     selection: TargetSelectionSchema,
@@ -1700,6 +1755,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         options: CommandTargetNextTurnOptionsSchema,
       }),
       ForcedReactionMovementSchema,
+      AudibleEffectSchema,
       Schema.Struct({
         kind: Schema.Literal("remove_condition"),
         condition: Schema.Union(
@@ -1854,11 +1910,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         numerator: Schema.Number,
         denominator: Schema.Number,
       }),
-      Schema.Struct({
-        kind: Schema.Literal("force_move"),
-        direction: Schema.Literal("push", "pull", "slide", "any_direction"),
-        distanceFeet: Schema.Number,
-      }),
+      ForceMoveEffectSchema,
       Schema.Struct({
         kind: Schema.Literal("suspend_target"),
         until: Schema.Literal("end_of_next_turn"),
@@ -2407,6 +2459,12 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
     ),
   );
 
+export const AreaScopedEffectAtomSchema = AreaPushUnsecuredObjectsSchema;
+export const AreaDirectEffectAtomSchema = Schema.Union(
+  EffectAtomSchema,
+  AreaScopedEffectAtomSchema,
+);
+
 export const SaveSuccessOutcomeSchema: Schema.suspend<
   SaveSuccessOutcome,
   SaveSuccessOutcome,
@@ -2499,6 +2557,12 @@ export const ActivationPhaseSchema: Schema.suspend<
       kind: Schema.Literal("random_table"),
       roll: RandomTableRollSchema,
       outcomes: nonEmpty(RandomTableOutcomeSchema),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("direct"),
+      attachment: AreaAttachmentSchema,
+      effects: nonEmpty(AreaDirectEffectAtomSchema),
+      mode: optionalExact(CastTimeEffectModeChoiceSchema),
     }),
     Schema.Struct({
       kind: Schema.Literal("direct"),

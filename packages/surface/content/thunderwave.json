@@ -1,5 +1,5 @@
 {
-  "description": "You unleash a wave of thunderous energy. Each creature in a 15-foot Cube originating from you makes a Constitution saving throw. On a failed save, a creature takes 2d8 Thunder damage and is pushed 10 feet away from you. On a successful save, a creature takes half as much damage only. Using a Higher-Level Spell Slot. The damage increases by 1d8 for each spell slot level above 1.",
+  "description": "You unleash a wave of thunderous energy. Each creature in a 15-foot Cube originating from you makes a Constitution saving throw. On a failed save, a creature takes 2d8 Thunder damage and is pushed 10 feet away from you. On a successful save, a creature takes half as much damage only. In addition, unsecured objects that are entirely within the Cube are pushed 10 feet away from you, and a thunderous boom is audible within 300 feet. Using a Higher-Level Spell Slot. The damage increases by 1d8 for each spell slot level above 1.",
   "id": "thunderwave",
   "kind": "spell",
   "mechanics": {
@@ -52,9 +52,10 @@
               "kind": "damage"
             },
             {
-              "direction": "push",
               "distanceFeet": 10,
-              "kind": "force_move"
+              "kind": "force_move",
+              "movementKind": "push",
+              "originDirection": "away_from_caster"
             }
           ],
           "kind": "composite"
@@ -62,6 +63,32 @@
         "onSuccess": {
           "kind": "half_damage"
         }
+      },
+      {
+        "attachment": {
+          "kind": "area",
+          "origin": {
+            "kind": "self"
+          },
+          "shape": {
+            "kind": "cube",
+            "sideFeet": 15
+          }
+        },
+        "effects": [
+          {
+            "distanceFeet": 10,
+            "kind": "push_unsecured_objects",
+            "objectLocation": "entirely_within_area",
+            "originDirection": "away_from_caster"
+          },
+          {
+            "audibleRadiusFeet": 300,
+            "kind": "audible",
+            "sound": "thunderous boom"
+          }
+        ],
+        "kind": "direct"
       }
     ],
     "range": {

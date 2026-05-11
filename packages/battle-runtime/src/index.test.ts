@@ -93,6 +93,7 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
+import { isEffectAtom } from "@dnd/surface/surface/types";
 import magicMissileInput from "../../surface/content/magic_missile.json";
 import mageArmorInput from "../../surface/content/mage_armor.json";
 import rayOfFrostInput from "../../surface/content/ray_of_frost.json";
@@ -114,6 +115,8 @@ import huntersMarkInput from "../../surface/content/hunters_mark.json";
 import healingWordInput from "../../surface/content/healing_word.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type {
+  AreaDirectEffectAtom,
+  EffectAtom,
   SpellRecord,
   StatBlockRecord,
   UnitRecord,
@@ -21512,7 +21515,7 @@ function actionSurgeWithAdditionalDirectEffect(): UnitRecord {
       phases: [
         {
           ...phase,
-          effects: [...phase.effects, phase.effects[0]],
+          effects: duplicateRuntimeDirectEffects(phase.effects, "Action Surge"),
         },
       ],
     },
@@ -21535,11 +21538,28 @@ function secondWindWithAdditionalDirectEffect(): UnitRecord {
       phases: [
         {
           ...phase,
-          effects: [...phase.effects, phase.effects[0]],
+          effects: duplicateRuntimeDirectEffects(phase.effects, "Second Wind"),
         },
       ],
     },
   };
+}
+
+function duplicateRuntimeDirectEffects(
+  effects: readonly AreaDirectEffectAtom[],
+  unitName: string,
+): readonly [EffectAtom, ...EffectAtom[]] {
+  const runtimeEffects = effects.flatMap((effect): readonly EffectAtom[] =>
+    isEffectAtom(effect) ? [effect] : [],
+  );
+  const duplicatedEffect = runtimeEffects.at(0);
+  if (
+    runtimeEffects.length !== effects.length ||
+    duplicatedEffect === undefined
+  ) {
+    throw new Error(`Expected ${unitName} direct EffectAtom phase.`);
+  }
+  return [duplicatedEffect, ...runtimeEffects];
 }
 
 function wizardVsSkeletonBattle(input?: {

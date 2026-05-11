@@ -163,14 +163,14 @@
       "catalog-installed-owner-evidence-present": 241,
       "non-runtime": 12,
       "catalog-only/dead-for-now": 80,
-      "catalog-installed-owner-evidence-required": 5,
-      "needs-surface-widening": 29
+      "catalog-installed-owner-evidence-required": 9,
+      "needs-surface-widening": 25
     },
     "spellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 80,
       "catalog-installed-owner-evidence-present": 97,
-      "catalog-installed-owner-evidence-required": 5,
-      "needs-surface-widening": 29
+      "catalog-installed-owner-evidence-required": 9,
+      "needs-surface-widening": 25
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -750,18 +750,16 @@
       "title": "Review Catalog-Only and Surface-Widening Rows",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Preserve catalog-only/dead-for-now rows and name missing Surface constructs for nonspell and spell Surface-widening blockers.",
-      "rowCount": 29,
+      "rowCount": 25,
       "rowIds": [
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_feather_fall",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_hideous_laughter",
-        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_thunderwave",
         "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_spare_the_dying",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_sanctuary",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_shillelagh",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_spare_the_dying",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_fog_cloud",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_jump",
-        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_thunderwave",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_fog_cloud",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_jump",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_fire_bolt",
@@ -770,7 +768,6 @@
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_feather_fall",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_fog_cloud",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_jump",
-        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_thunderwave",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_expeditious_retreat",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hex",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hideous_laughter",
@@ -779,8 +776,7 @@
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_feather_fall",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_fog_cloud",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_hideous_laughter",
-        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_jump",
-        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_thunderwave"
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_jump"
       ],
       "nextAction": "Either keep catalog-only rows explicitly catalog-only/dead-for-now or promote a named Surface-widening task for each blocker, including spell Surface pressure.",
       "acceptance": "Catalog-only rows are counted deliberately, and every nonspell or spell Surface-widening row names the missing construct."
@@ -2677,7 +2673,7 @@
     {
       "id": "SRDINV44",
       "title": "Widen Thunderwave Push Surface",
-      "suggestedStatus": "ready-for-research",
+      "suggestedStatus": "done",
       "intent": "Widen Surface for Thunderwave's self-origin Cube damage plus push effects.",
       "rowCount": 4,
       "rowIds": [
@@ -5241,8 +5237,7 @@
       "detail": "Thunderwave (Evocation; —)",
       "candidateUnitId": "thunderwave",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "Save-gated damage plus push movement requires a combined spell effect profile not present in this matrix slice."
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -5253,7 +5248,7 @@
         "state": "installed",
         "unitId": "thunderwave"
       },
-      "finalDisposition": "needs-surface-widening",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -5261,12 +5256,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "Surface Spell Definition plus battle-runtime spell invocation/projection",
-          "evidence": "Save-gated damage plus push movement requires a combined spell effect profile not present in this matrix slice.",
-          "status": "Surface widening required before owner evidence can be present"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Unit matrix records unsupported-profile: Spell Definition is installed with typed self-origin Cube Constitution save damage, failed-save creature push, unsecured-object push, audible boom, and slot-scaled Thunder damage facts; runtime push resolution, object inventory simulation, and sound propagation are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
         }
       ],
-      "nextAction": "Widen Surface: Save-gated damage plus push movement requires a combined spell effect profile not present in this matrix slice."
+      "nextAction": "Unit matrix records unsupported-profile: Spell Definition is installed with typed self-origin Cube Constitution save damage, failed-save creature push, unsecured-object push, audible boom, and slot-scaled Thunder damage facts; runtime push resolution, object inventory simulation, and sound propagation are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_unseen_servant",
@@ -8291,8 +8286,7 @@
       "detail": "Thunderwave (Evocation; —)",
       "candidateUnitId": "thunderwave",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "Save-gated damage plus push movement requires a combined spell effect profile not present in this matrix slice."
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -8303,7 +8297,7 @@
         "state": "installed",
         "unitId": "thunderwave"
       },
-      "finalDisposition": "needs-surface-widening",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -8311,12 +8305,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "Surface Spell Definition plus battle-runtime spell invocation/projection",
-          "evidence": "Save-gated damage plus push movement requires a combined spell effect profile not present in this matrix slice.",
-          "status": "Surface widening required before owner evidence can be present"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Unit matrix records unsupported-profile: Spell Definition is installed with typed self-origin Cube Constitution save damage, failed-save creature push, unsecured-object push, audible boom, and slot-scaled Thunder damage facts; runtime push resolution, object inventory simulation, and sound propagation are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
         }
       ],
-      "nextAction": "Widen Surface: Save-gated damage plus push movement requires a combined spell effect profile not present in this matrix slice."
+      "nextAction": "Unit matrix records unsupported-profile: Spell Definition is installed with typed self-origin Cube Constitution save damage, failed-save creature push, unsecured-object push, audible boom, and slot-scaled Thunder damage facts; runtime push resolution, object inventory simulation, and sound propagation are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/fighter:level-1:class-container:fighter_class_container",
@@ -14136,8 +14130,7 @@
       "detail": "Thunderwave (Evocation; —)",
       "candidateUnitId": "thunderwave",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "Save-gated damage plus push movement requires a combined spell effect profile not present in this matrix slice."
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -14148,7 +14141,7 @@
         "state": "installed",
         "unitId": "thunderwave"
       },
-      "finalDisposition": "needs-surface-widening",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -14156,12 +14149,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "Surface Spell Definition plus battle-runtime spell invocation/projection",
-          "evidence": "Save-gated damage plus push movement requires a combined spell effect profile not present in this matrix slice.",
-          "status": "Surface widening required before owner evidence can be present"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Unit matrix records unsupported-profile: Spell Definition is installed with typed self-origin Cube Constitution save damage, failed-save creature push, unsecured-object push, audible boom, and slot-scaled Thunder damage facts; runtime push resolution, object inventory simulation, and sound propagation are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
         }
       ],
-      "nextAction": "Widen Surface: Save-gated damage plus push movement requires a combined spell effect profile not present in this matrix slice."
+      "nextAction": "Unit matrix records unsupported-profile: Spell Definition is installed with typed self-origin Cube Constitution save damage, failed-save creature push, unsecured-object push, audible boom, and slot-scaled Thunder damage facts; runtime push resolution, object inventory simulation, and sound propagation are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/warlock:level-1:class-container:warlock_class_container",
@@ -17490,8 +17483,7 @@
       "detail": "Thunderwave (Evocation; —)",
       "candidateUnitId": "thunderwave",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "Save-gated damage plus push movement requires a combined spell effect profile not present in this matrix slice."
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -17502,7 +17494,7 @@
         "state": "installed",
         "unitId": "thunderwave"
       },
-      "finalDisposition": "needs-surface-widening",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -17510,12 +17502,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "Surface Spell Definition plus battle-runtime spell invocation/projection",
-          "evidence": "Save-gated damage plus push movement requires a combined spell effect profile not present in this matrix slice.",
-          "status": "Surface widening required before owner evidence can be present"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Unit matrix records unsupported-profile: Spell Definition is installed with typed self-origin Cube Constitution save damage, failed-save creature push, unsecured-object push, audible boom, and slot-scaled Thunder damage facts; runtime push resolution, object inventory simulation, and sound propagation are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
         }
       ],
-      "nextAction": "Widen Surface: Save-gated damage plus push movement requires a combined spell effect profile not present in this matrix slice."
+      "nextAction": "Unit matrix records unsupported-profile: Spell Definition is installed with typed self-origin Cube Constitution save damage, failed-save creature push, unsecured-object push, audible boom, and slot-scaled Thunder damage facts; runtime push resolution, object inventory simulation, and sound propagation are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_unseen_servant",

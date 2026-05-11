@@ -11,6 +11,7 @@ import {
   type SpellSlotLevel,
 } from "@dnd/shared/types";
 import { DamageTypeSchema } from "@dnd/surface/surface/schema";
+import { isEffectAtom } from "@dnd/surface/surface/types";
 import type {
   Attachment,
   DamageType,
@@ -68,7 +69,8 @@ export function supportedPreparedScalarBuffSpellProfile(
     spell.mechanics.phases.length !== 1 ||
     phase?.kind !== "direct" ||
     phase.effects?.length !== 1 ||
-    effect === undefined
+    effect === undefined ||
+    !isEffectAtom(effect)
   ) {
     return [];
   }

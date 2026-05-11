@@ -172,7 +172,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 237,
       "id": "SRDINV44",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Widen Thunderwave Push Surface"
     },
     {
@@ -255,7 +255,7 @@ Keep it synchronized with the DAG table and task details.
 | 231   | SRDINV41 - Recursive SRD Inventory Planning Review | done | SRDINV34-SRDINV40, SRDINV38A-SRDINV38C | SRDINV42-SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed: refreshed spell Unit metrics, kept Hellish Rebuke QNT/parity support unpromoted, rejected Charm Person social memory and Grease automatic geometry as battle-runtime state, and appended SRDINV42-SRDINV48 movement/action Surface batch. |
 | 235   | SRDINV42 - Widen Command Option Surface | done | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Command is installed with typed next-turn option facts for Approach, Drop, Flee, Grovel, Halt, turn-ending clauses, and slot-scaled target count; named-option runtime execution remains unpromoted and visible in the Unit matrix as owner-evidence-required work. |
 | 236   | SRDINV43 - Widen Dissonant Whispers Forced Reaction Movement Surface | done | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Dissonant Whispers](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Dissonant Whispers is installed with typed save-gated Psychic damage, half-damage success, slot-scaled damage, and failed-save forced Reaction movement facts; runtime execution of forced Reaction movement, route choice, and Opportunity Attack derivation remains unpromoted and visible in the Unit matrix as owner-evidence-required work. |
-| 237   | SRDINV44 - Widen Thunderwave Push Surface | ready-for-research | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Thunderwave](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface for self-origin Cube save damage plus failed-save creature push, unsecured-object push, audible boom, and slot-scaled Thunder damage. |
+| 237   | SRDINV44 - Widen Thunderwave Push Surface | done | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Thunderwave](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Thunderwave is installed with typed self-origin Cube Constitution save damage, failed-save creature push, unsecured-object push, audible boom, and slot-scaled Thunder damage facts; runtime push resolution, object inventory simulation, and sound propagation remain unpromoted and visible in the Unit matrix as owner-evidence-required work. |
 | 238   | SRDINV45 - Widen Expeditious Retreat Dash Surface | ready-for-research | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Expeditious Retreat](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface for immediate Dash on Bonus Action casting and ongoing Concentration-granted Bonus Action Dash without duplicating Movement state. |
 | 239   | SRDINV46 - Widen Jump Movement Replacement Surface | ready-for-research | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Jump](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface for once-per-turn jump movement up to 30 feet by spending 10 feet of movement, touched willing targets, timed duration, and slot-scaled additional targets. |
 | 240   | SRDINV47 - Widen Feather Fall Falling Reaction Surface | ready-for-research | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Feather Fall](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface for falling Reaction trigger, up-to-five falling creature targets, fall-rate cap, fall-damage prevention, and per-target landing cleanup. |
@@ -866,7 +866,7 @@ with `--write` and `pnpm quality` passed.
 
 ### Task 237 - SRDINV44 - Widen Thunderwave Push Surface
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV41
 
@@ -889,6 +889,12 @@ confirming all modeled rules trace to specific SRD text; Surface parser/schema
 tests; generated content refresh if Dhall/JSON content changes;
 `pnpm unit-profile-coverage:check --write`; `/simplify` convergence, minimum
 two rounds unless the final changeset is trivial.
+
+Result: Thunderwave is installed with typed self-origin Cube Constitution save
+damage, failed-save creature push, unsecured-object push, audible boom, and
+slot-scaled Thunder damage facts. Runtime push resolution, object inventory
+simulation, and sound propagation remain unpromoted and visible in the Unit
+matrix as owner-evidence-required work.
 
 ### Task 238 - SRDINV45 - Widen Expeditious Retreat Dash Surface
 

@@ -7233,8 +7233,8 @@
         "status": "installed"
       },
       "claim": {
-        "issue": "Save-gated damage plus push movement requires a combined spell effect profile not present in this matrix slice.",
-        "tag": "needs-surface-widening"
+        "reason": "Spell Definition is installed with typed self-origin Cube Constitution save damage, failed-save creature push, unsecured-object push, audible boom, and slot-scaled Thunder damage facts; runtime push resolution, object inventory simulation, and sound propagation are not promoted yet.",
+        "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [],

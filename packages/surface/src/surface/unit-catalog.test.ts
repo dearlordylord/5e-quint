@@ -4,8 +4,11 @@ import { Either, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
+  ActivationPhaseSchema,
+  AudibleEffectSchema,
   decodeUnitRecordEither,
   decodeUnitRecordSync,
+  EffectAtomSchema,
   OnHitTriggerMechanicsSchema,
 } from "./schema.ts";
 import {
@@ -233,6 +236,157 @@ describe("SRD Unit catalog boundary", () => {
         ],
       });
     }
+  });
+
+  test("decodes Thunderwave as save damage plus push and boom facts", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const thunderwave = result.catalog.requireUnit("thunderwave");
+      expect(thunderwave.kind).toBe("spell");
+      if (thunderwave.kind !== "spell") return;
+      expect(thunderwave.mechanics.family).toBe("activation");
+      if (thunderwave.mechanics.family !== "activation") return;
+
+      const savePhase = thunderwave.mechanics.phases[0];
+      expect(savePhase?.kind).toBe("save_gate");
+      if (savePhase?.kind !== "save_gate") return;
+
+      const thunderwaveArea = {
+        kind: "area",
+        shape: { kind: "cube", sideFeet: 15 },
+        origin: { kind: "self" },
+      };
+      expect(savePhase.attachment).toEqual(thunderwaveArea);
+      expect(savePhase.ability).toBe("con");
+      expect(savePhase.onSuccess).toEqual({ kind: "half_damage" });
+      expect(savePhase.onFail).toEqual({
+        kind: "composite",
+        effects: [
+          {
+            kind: "damage",
+            damageType: "thunder",
+            amount: {
+              kind: "linear_per_level",
+              axis: "slot",
+              base: { dice: 2, dieSize: 8 },
+              perLevel: { dice: 1 },
+              startingAtLevel: 1,
+            },
+          },
+          {
+            kind: "force_move",
+            movementKind: "push",
+            originDirection: "away_from_caster",
+            distanceFeet: 10,
+          },
+        ],
+      });
+
+      const objectAndBoomPhase = thunderwave.mechanics.phases[1];
+      expect(objectAndBoomPhase?.kind).toBe("direct");
+      if (objectAndBoomPhase?.kind !== "direct") return;
+
+      expect(objectAndBoomPhase.attachment).toEqual(thunderwaveArea);
+      expect(objectAndBoomPhase.effects).toEqual([
+        {
+          kind: "push_unsecured_objects",
+          objectLocation: "entirely_within_area",
+          originDirection: "away_from_caster",
+          distanceFeet: 10,
+        },
+        {
+          kind: "audible",
+          sound: "thunderous boom",
+          audibleRadiusFeet: 300,
+        },
+      ]);
+    }
+  });
+
+  test("rejects Thunderwave area-only push facts outside area attachments", () => {
+    const decode = Schema.decodeUnknownEither(ActivationPhaseSchema);
+
+    expect(
+      Either.isLeft(
+        decode({
+          kind: "direct",
+          attachment: { kind: "self" },
+          effects: [
+            {
+              kind: "push_unsecured_objects",
+              objectLocation: "entirely_within_area",
+              originDirection: "away_from_caster",
+              distanceFeet: 10,
+            },
+          ],
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          kind: "direct",
+          attachment: {
+            kind: "area",
+            shape: { kind: "cube", sideFeet: 15 },
+            origin: { kind: "self" },
+          },
+          effects: [
+            {
+              kind: "push_unsecured_objects",
+              objectLocation: "entirely_within_area",
+              originDirection: "away_from_caster",
+              distanceFeet: 0,
+            },
+          ],
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test("rejects non-positive or fractional Thunderwave feet facts", () => {
+    const decodeAudible = Schema.decodeUnknownEither(AudibleEffectSchema);
+    const decodeEffectAtom = Schema.decodeUnknownEither(EffectAtomSchema);
+
+    expect(
+      Either.isLeft(
+        decodeAudible({
+          kind: "audible",
+          sound: "thunderous boom",
+          audibleRadiusFeet: 0,
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decodeAudible({
+          kind: "audible",
+          sound: "thunderous boom",
+          audibleRadiusFeet: 300.5,
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decodeEffectAtom({
+          kind: "force_move",
+          movementKind: "push",
+          originDirection: "away_from_caster",
+          distanceFeet: 10.5,
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decodeEffectAtom({
+          kind: "force_move",
+          direction: "away_from_caster",
+          distanceFeet: 10,
+        }),
+      ),
+    ).toBe(true);
   });
 
   test("installs expressible SRD level-1 class containers", () => {

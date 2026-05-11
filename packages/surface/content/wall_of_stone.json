@@ -45,10 +45,7 @@
               {
                 "durability": {
                   "acValue": 15,
-                  "damageImmunities": [
-                    "poison",
-                    "psychic"
-                  ],
+                  "damageImmunities": ["poison", "psychic"],
                   "hpPerSection": 30
                 },
                 "kind": "create_object",
@@ -60,9 +57,9 @@
                 }
               },
               {
-                "direction": "push",
                 "distanceFeet": 5,
-                "kind": "force_move"
+                "kind": "force_move",
+                "movementKind": "push"
               }
             ],
             "kind": "composite"

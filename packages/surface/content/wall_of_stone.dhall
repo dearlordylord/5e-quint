@@ -52,7 +52,7 @@ let Durability : Type =
 
 let CompEffect : Type =
       { kind : Text
-      , direction : Optional Text
+      , movementKind : Optional Text
       , distanceFeet : Optional Natural
       , maxSize : Optional Text
       , shape : Optional Shape
@@ -61,7 +61,7 @@ let CompEffect : Type =
 
 let createWall : CompEffect =
       { kind = "create_object"
-      , direction = None Text
+      , movementKind = None Text
       , distanceFeet = None Natural
       , maxSize = Some "gargantuan"
       , shape = Some { kind = "line", lengthFeet = 100, widthFeet = 10 }
@@ -75,7 +75,7 @@ let createWall : CompEffect =
 
 let pushCreatures : CompEffect =
       { kind = "force_move"
-      , direction = Some "push"
+      , movementKind = Some "push"
       , distanceFeet = Some 5
       , maxSize = None Text
       , shape = None Shape

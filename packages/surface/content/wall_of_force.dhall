@@ -63,7 +63,7 @@ let forceWallShape : Shape =
 
 let EffectLeaf : Type =
       { kind : Text
-      , direction : Optional Text
+      , movementKind : Optional Text
       , distanceFeet : Optional Natural
       , maxSize : Optional Text
       , shape : Optional Shape
@@ -72,7 +72,7 @@ let EffectLeaf : Type =
       }
 
 let noneLeaf =
-      { direction = None Text
+      { movementKind = None Text
       , distanceFeet = None Natural
       , maxSize = None Text
       , shape = None Shape
@@ -90,13 +90,13 @@ let createWall : EffectLeaf =
 let pushCreatures : EffectLeaf =
       noneLeaf
         //  { kind = "force_move"
-            , direction = Some "push"
+            , movementKind = Some "push"
             , distanceFeet = Some 5
             }
 
 let Effect : Type =
       { kind : Text
-      , direction : Optional Text
+      , movementKind : Optional Text
       , distanceFeet : Optional Natural
       , maxSize : Optional Text
       , shape : Optional Shape
