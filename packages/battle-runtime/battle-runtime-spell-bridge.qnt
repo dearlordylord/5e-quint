@@ -91,6 +91,9 @@ module battleRuntimeSpellBridge {
     | BattleRuntimeChainedSpellAttackPoisonDamage
     | BattleRuntimeChainedSpellAttackThunderDamage
 
+  type BattleRuntimeAttackBurstSaveDamageProfile =
+    | BattleRuntimeIceKnifeAttackBurstSaveDamage
+
   pure def battleRuntimeDirectHitPointRestorationSpellProfile(
     profile: BattleRuntimeDirectHitPointRestorationProfile
   ): SpellDefinitionProfile =
@@ -461,6 +464,28 @@ module battleRuntimeSpellBridge {
       counts,
     )
 
+  pure def battleRuntimeAttackBurstSaveDamageProfile(
+    profile: BattleRuntimeAttackBurstSaveDamageProfile
+  ): AttackBurstSaveDamageProfile =
+    match profile {
+      | BattleRuntimeIceKnifeAttackBurstSaveDamage => IceKnifeAttackBurstSaveDamageProfile
+    }
+
+  pure def battleRuntimeAttackBurstSaveDamageRequiresSlot(profile: BattleRuntimeAttackBurstSaveDamageProfile): bool =
+    attackBurstSaveDamageRequiresSlot(battleRuntimeAttackBurstSaveDamageProfile(profile))
+
+  pure def battleRuntimeAttackBurstSaveDamageAttackType(profile: BattleRuntimeAttackBurstSaveDamageProfile): RuleDamageType =
+    attackBurstSaveDamageAttackType(battleRuntimeAttackBurstSaveDamageProfile(profile))
+
+  pure def battleRuntimeAttackBurstSaveDamageBurstType(profile: BattleRuntimeAttackBurstSaveDamageProfile): RuleDamageType =
+    attackBurstSaveDamageBurstType(battleRuntimeAttackBurstSaveDamageProfile(profile))
+
+  pure def battleRuntimeAttackBurstSaveDamageBurstDice(profile: BattleRuntimeAttackBurstSaveDamageProfile, slotLevel: int): int =
+    attackBurstSaveDamageBurstDice(battleRuntimeAttackBurstSaveDamageProfile(profile), slotLevel)
+
+  pure def battleRuntimeAttackBurstSaveDamageBurstAmount(damageRoll: int, savingThrowSucceeded: bool): int =
+    attackBurstSaveDamageBurstAmount(damageRoll, savingThrowSucceeded)
+
   run test_direct_hit_point_restoration_profile_projection = {
     all {
       assert(battleRuntimeDirectHitPointRestorationUsesBonusAction(BattleRuntimeHealingWordRestoration)),
@@ -557,6 +582,17 @@ module battleRuntimeSpellBridge {
       assert(battleRuntimeDamageRollHasDuplicateD8Face(duplicateFaces)),
       assert(battleRuntimeChainedSpellAttackDamageCanLeap(BattleRuntimeChromaticOrbChainedSpellAttack, 1, 0, false, duplicateFaces)),
       assert(not(battleRuntimeChainedSpellAttackDamageCanLeap(BattleRuntimeChromaticOrbChainedSpellAttack, 1, 1, false, duplicateFaces))),
+    }
+  }
+
+  run test_attack_burst_save_damage_profile_projection = {
+    all {
+      assert(battleRuntimeAttackBurstSaveDamageRequiresSlot(BattleRuntimeIceKnifeAttackBurstSaveDamage)),
+      assert(battleRuntimeAttackBurstSaveDamageAttackType(BattleRuntimeIceKnifeAttackBurstSaveDamage) == PiercingDamage),
+      assert(battleRuntimeAttackBurstSaveDamageBurstType(BattleRuntimeIceKnifeAttackBurstSaveDamage) == ColdDamage),
+      assert(battleRuntimeAttackBurstSaveDamageBurstDice(BattleRuntimeIceKnifeAttackBurstSaveDamage, 3) == 4),
+      assert(battleRuntimeAttackBurstSaveDamageBurstAmount(6, false) == 6),
+      assert(battleRuntimeAttackBurstSaveDamageBurstAmount(6, true) == 0),
     }
   }
 }

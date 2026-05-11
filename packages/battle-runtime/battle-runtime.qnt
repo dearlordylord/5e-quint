@@ -3436,6 +3436,13 @@ module battleRuntime {
       | ChromaticOrbChainedSpellAttack => BattleRuntimeChromaticOrbChainedSpellAttack
     }
 
+  pure def battleRuntimeAttackBurstSaveDamageProfileForInvocation(
+    invocation: AttackBurstSaveDamageInvocation
+  ): BattleRuntimeAttackBurstSaveDamageProfile =
+    match invocation {
+      | IceKnifeAttackBurstSaveDamage => BattleRuntimeIceKnifeAttackBurstSaveDamage
+    }
+
   pure def battleRuntimeChainedSpellAttackDamageChoiceForChromaticOrb(choice: ChromaticOrbDamageTypeChoice): BattleRuntimeChainedSpellAttackDamageTypeChoice =
     match choice {
       | ChromaticOrbAcid => BattleRuntimeChainedSpellAttackAcidDamage
@@ -3902,19 +3909,23 @@ module battleRuntime {
     )
 
   pure def attackBurstSaveDamageSpendsLevelOneSlot(invocation: AttackBurstSaveDamageInvocation): bool =
-    match invocation {
-      | IceKnifeAttackBurstSaveDamage => true
-    }
+    battleRuntimeAttackBurstSaveDamageRequiresSlot(
+      battleRuntimeAttackBurstSaveDamageProfileForInvocation(invocation)
+    )
 
   pure def attackBurstSaveDamageAttackType(invocation: AttackBurstSaveDamageInvocation): DamageType =
-    match invocation {
-      | IceKnifeAttackBurstSaveDamage => Piercing
-    }
+    damageTypeFromRuleDamageType(
+      battleRuntimeAttackBurstSaveDamageAttackType(
+        battleRuntimeAttackBurstSaveDamageProfileForInvocation(invocation)
+      )
+    )
 
   pure def attackBurstSaveDamageBurstType(invocation: AttackBurstSaveDamageInvocation): DamageType =
-    match invocation {
-      | IceKnifeAttackBurstSaveDamage => Cold
-    }
+    damageTypeFromRuleDamageType(
+      battleRuntimeAttackBurstSaveDamageBurstType(
+        battleRuntimeAttackBurstSaveDamageProfileForInvocation(invocation)
+      )
+    )
 
   pure def attackBurstSaveDamageReplayHoles(
     invocation: AttackBurstSaveDamageInvocation,
@@ -4386,11 +4397,10 @@ module battleRuntime {
     burstDamageRoll: int,
     concentrationSaveSucceeded: bool,
   ): Combatant = {
-    val burstDamage =
-      if (savingThrowSucceeded)
-        0
-      else
-        adjustedAttackBurstSaveDamage(burstDamageRoll, attackBurstSaveDamageBurstType(IceKnifeAttackBurstSaveDamage))
+    val burstDamage = adjustedAttackBurstSaveDamage(
+      battleRuntimeAttackBurstSaveDamageBurstAmount(burstDamageRoll, savingThrowSucceeded),
+      attackBurstSaveDamageBurstType(IceKnifeAttackBurstSaveDamage),
+    )
     applyIceKnifeDamageWithSingleConcentrationCheck(target, 0, burstDamage, concentrationSaveSucceeded)
   }
 

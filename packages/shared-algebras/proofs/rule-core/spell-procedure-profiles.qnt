@@ -133,6 +133,9 @@ module spellProcedureProfiles {
     face8: int,
   }
 
+  type AttackBurstSaveDamageProfile =
+    | IceKnifeAttackBurstSaveDamageProfile
+
   type SpellAreaProfile =
     | NoSpellAreaProfile
     | MassCureWoundsPointOriginSphereArea
@@ -608,6 +611,29 @@ module spellProcedureProfiles {
           leapsUsed >= 0 and
           leapsUsed < slotLevel
     }
+
+  pure def attackBurstSaveDamageRequiresSlot(profile: AttackBurstSaveDamageProfile): bool =
+    match profile {
+      | IceKnifeAttackBurstSaveDamageProfile => true
+    }
+
+  pure def attackBurstSaveDamageAttackType(profile: AttackBurstSaveDamageProfile): RuleDamageType =
+    match profile {
+      | IceKnifeAttackBurstSaveDamageProfile => PiercingDamage
+    }
+
+  pure def attackBurstSaveDamageBurstType(profile: AttackBurstSaveDamageProfile): RuleDamageType =
+    match profile {
+      | IceKnifeAttackBurstSaveDamageProfile => ColdDamage
+    }
+
+  pure def attackBurstSaveDamageBurstDice(profile: AttackBurstSaveDamageProfile, slotLevel: int): int =
+    match profile {
+      | IceKnifeAttackBurstSaveDamageProfile => if (slotLevel < 1) 0 else 2 + (slotLevel - 1)
+    }
+
+  pure def attackBurstSaveDamageBurstAmount(damageRoll: int, savingThrowSucceeded: bool): int =
+    if (savingThrowSucceeded) 0 else damageRoll
 
   pure def spellActionCost(invocationAction: SpellInvocationAction): ActionCost =
     if (invocationAction == BonusActionSpellInvocation) BonusActionCost
@@ -1105,6 +1131,18 @@ module spellProcedureProfiles {
       assert(not(chainedSpellAttackDamageRollHasDuplicateD8Face(noDuplicateFaces))),
       assert(chainedSpellAttackDamageCanLeap(ChromaticOrbChainedSpellAttackProfile, 1, 0, false, duplicateFaces)),
       assert(not(chainedSpellAttackDamageCanLeap(ChromaticOrbChainedSpellAttackProfile, 1, 1, false, duplicateFaces))),
+    }
+  }
+
+  run test_attack_burst_save_damage_profile_projects_ice_knife_facts = {
+    all {
+      assert(attackBurstSaveDamageRequiresSlot(IceKnifeAttackBurstSaveDamageProfile)),
+      assert(attackBurstSaveDamageAttackType(IceKnifeAttackBurstSaveDamageProfile) == PiercingDamage),
+      assert(attackBurstSaveDamageBurstType(IceKnifeAttackBurstSaveDamageProfile) == ColdDamage),
+      assert(attackBurstSaveDamageBurstDice(IceKnifeAttackBurstSaveDamageProfile, 1) == 2),
+      assert(attackBurstSaveDamageBurstDice(IceKnifeAttackBurstSaveDamageProfile, 3) == 4),
+      assert(attackBurstSaveDamageBurstAmount(6, false) == 6),
+      assert(attackBurstSaveDamageBurstAmount(6, true) == 0),
     }
   }
 

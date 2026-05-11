@@ -311,6 +311,11 @@ surface while this research note remains temporary context.
   detection, and leap-budget admission. Broad battle keeps the ordered replay
   holes, target history, and target-admission integration through
   `battle-runtime-spell-bridge.qnt`.
+- The attack-burst tracer added Ice Knife profile facts to the spell bridge:
+  slot requirement, attack damage type, burst damage type, slot-scaled burst
+  dice, and no-damage-on-success burst policy. Broad battle keeps the combined
+  attack/save resolver, hit reaction ordering, primary-target inclusion, and
+  single concentration check composition.
 - The same movement/action bridge now carries the projected start-turn resource
   reset for action, Bonus Action, Reaction, Dash movement bonus, movement spent,
   Dodge, Disengage, Help, and Ready Movement facts. Broad battle still owns
