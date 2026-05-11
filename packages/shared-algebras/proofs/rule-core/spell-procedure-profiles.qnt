@@ -662,6 +662,25 @@ module spellProcedureProfiles {
     }
   }
 
+  pure def turnStartTemporaryHitPoints(
+    existingTemporaryHitPoints: int,
+    grantedTemporaryHitPoints: int
+  ): int =
+    if (existingTemporaryHitPoints > grantedTemporaryHitPoints)
+      existingTemporaryHitPoints
+    else
+      grantedTemporaryHitPoints
+
+  pure def oncePerTurnSpellEffectUsedAtTurnStart: bool = false
+
+  pure def oneRoundShieldArmorClassBonusExpiresAtStartOfNextTurn: bool = true
+
+  pure def timedSpellEffectDurationAfterRoundTick(durationTicks: int): int =
+    durationTicks - 1
+
+  pure def timedSpellEffectRemainsActive(durationTicks: int): bool =
+    durationTicks > 0
+
   pure def spellActionCost(invocationAction: SpellInvocationAction): ActionCost =
     if (invocationAction == BonusActionSpellInvocation) BonusActionCost
     else StandardActionCost(MagicAction)
@@ -1192,6 +1211,19 @@ module spellProcedureProfiles {
       assert(thresholdBlocked.effectiveDamage == 0),
       assert(thresholdBlocked.nextHitPoints == 10),
       assert(not(thresholdBlocked.destroyed)),
+    }
+  }
+
+  run test_spell_turn_hook_semantics_project_temporary_hit_points_and_duration = {
+    all {
+      assert(turnStartTemporaryHitPoints(2, 5) == 5),
+      assert(turnStartTemporaryHitPoints(7, 5) == 7),
+      assert(not(oncePerTurnSpellEffectUsedAtTurnStart)),
+      assert(oneRoundShieldArmorClassBonusExpiresAtStartOfNextTurn),
+      assert(timedSpellEffectDurationAfterRoundTick(2) == 1),
+      assert(timedSpellEffectDurationAfterRoundTick(1) == 0),
+      assert(timedSpellEffectRemainsActive(1)),
+      assert(not(timedSpellEffectRemainsActive(0))),
     }
   }
 

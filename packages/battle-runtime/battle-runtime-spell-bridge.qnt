@@ -511,6 +511,24 @@ module battleRuntimeSpellBridge {
     }
   }
 
+  pure def battleRuntimeTurnStartTemporaryHitPoints(
+    existingTemporaryHitPoints: int,
+    grantedTemporaryHitPoints: int
+  ): int =
+    turnStartTemporaryHitPoints(existingTemporaryHitPoints, grantedTemporaryHitPoints)
+
+  pure def battleRuntimeOncePerTurnSpellEffectUsedAtTurnStart: bool =
+    oncePerTurnSpellEffectUsedAtTurnStart
+
+  pure def battleRuntimeOneRoundShieldArmorClassBonusExpiresAtStartOfNextTurn: bool =
+    oneRoundShieldArmorClassBonusExpiresAtStartOfNextTurn
+
+  pure def battleRuntimeTimedSpellEffectDurationAfterRoundTick(durationTicks: int): int =
+    timedSpellEffectDurationAfterRoundTick(durationTicks)
+
+  pure def battleRuntimeTimedSpellEffectRemainsActive(durationTicks: int): bool =
+    timedSpellEffectRemainsActive(durationTicks)
+
   run test_direct_hit_point_restoration_profile_projection = {
     all {
       assert(battleRuntimeDirectHitPointRestorationUsesBonusAction(BattleRuntimeHealingWordRestoration)),
@@ -632,6 +650,19 @@ module battleRuntimeSpellBridge {
       assert(thresholdBlocked.effectiveDamage == 0),
       assert(thresholdBlocked.nextHitPoints == 10),
       assert(not(thresholdBlocked.destroyed)),
+    }
+  }
+
+  run test_spell_turn_hook_projection = {
+    all {
+      assert(battleRuntimeTurnStartTemporaryHitPoints(2, 5) == 5),
+      assert(battleRuntimeTurnStartTemporaryHitPoints(7, 5) == 7),
+      assert(not(battleRuntimeOncePerTurnSpellEffectUsedAtTurnStart)),
+      assert(battleRuntimeOneRoundShieldArmorClassBonusExpiresAtStartOfNextTurn),
+      assert(battleRuntimeTimedSpellEffectDurationAfterRoundTick(2) == 1),
+      assert(battleRuntimeTimedSpellEffectDurationAfterRoundTick(1) == 0),
+      assert(battleRuntimeTimedSpellEffectRemainsActive(1)),
+      assert(not(battleRuntimeTimedSpellEffectRemainsActive(0))),
     }
   }
 }

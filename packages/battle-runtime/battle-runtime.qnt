@@ -758,21 +758,32 @@ module battleRuntime {
     else
       state
 
+  pure def expireStartOfTurnEffectsForActor(effects: Set[ActiveEffect]): Set[ActiveEffect] = {
+    val resetEffects = resetResistanceDamageReductions(effects)
+    if (battleRuntimeOneRoundShieldArmorClassBonusExpiresAtStartOfNextTurn)
+      resetEffects.exclude(Set(ShieldArmorClassBonus))
+    else
+      resetEffects
+  }
+
   pure def expireStartOfTurnSpellEffects(state: BattleState, nextActor: Actor): BattleState =
     match nextActor {
       | Fighter => {
           ...state,
-          fighter: { ...state.fighter, activeEffects: resetResistanceDamageReductions(state.fighter.activeEffects).exclude(Set(ShieldArmorClassBonus)) },
+          fighter: { ...state.fighter, activeEffects: expireStartOfTurnEffectsForActor(state.fighter.activeEffects) },
         }
       | Goblin => {
           ...state,
-          goblin: { ...state.goblin, activeEffects: resetResistanceDamageReductions(state.goblin.activeEffects).exclude(Set(ShieldArmorClassBonus)) },
+          goblin: { ...state.goblin, activeEffects: expireStartOfTurnEffectsForActor(state.goblin.activeEffects) },
         }
     }
 
   pure def resetResistanceDamageReductions(effects: Set[ActiveEffect]): Set[ActiveEffect] =
     effects.map(effect => match effect {
-      | ResistanceDamageReduction(data) => ResistanceDamageReduction({ ...data, usedThisTurn: false })
+      | ResistanceDamageReduction(data) => ResistanceDamageReduction({
+          ...data,
+          usedThisTurn: battleRuntimeOncePerTurnSpellEffectUsedAtTurnStart,
+        })
       | _ => effect
     })
 
@@ -787,7 +798,10 @@ module battleRuntime {
             .fold(0, (highest, amount) => if (highest > amount) highest else amount)
           {
             ...state,
-            fighter: { ...state.fighter, tempHp: if (state.fighter.tempHp > heroismTempHp) state.fighter.tempHp else heroismTempHp },
+            fighter: {
+              ...state.fighter,
+              tempHp: battleRuntimeTurnStartTemporaryHitPoints(state.fighter.tempHp, heroismTempHp),
+            },
           }
         }
       | Goblin => {
@@ -799,7 +813,10 @@ module battleRuntime {
             .fold(0, (highest, amount) => if (highest > amount) highest else amount)
           {
             ...state,
-            goblin: { ...state.goblin, tempHp: if (state.goblin.tempHp > heroismTempHp) state.goblin.tempHp else heroismTempHp },
+            goblin: {
+              ...state.goblin,
+              tempHp: battleRuntimeTurnStartTemporaryHitPoints(state.goblin.tempHp, heroismTempHp),
+            },
           }
         }
     }
@@ -807,21 +824,34 @@ module battleRuntime {
   pure def tickDurationActiveEffects(effects: Set[ActiveEffect]): Set[ActiveEffect] =
     effects
       .map(effect => match effect {
-        | DivineFavorWeaponDamageRider(data) => DivineFavorWeaponDamageRider({ durationTicks: data.durationTicks - 1 })
+        | DivineFavorWeaponDamageRider(data) => DivineFavorWeaponDamageRider({
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | HuntersMarkDamageRider(data) => HuntersMarkDamageRider(data)
-        | SearingSmiteBurning(data) => SearingSmiteBurning({ damageDice: data.damageDice, durationTicks: data.durationTicks - 1 })
-        | AnimalFriendshipCharmed(data) => AnimalFriendshipCharmed({ source: data.source, durationTicks: data.durationTicks - 1 })
-        | CharmPersonCharmed(data) => CharmPersonCharmed({ source: data.source, durationTicks: data.durationTicks - 1 })
-        | ProduceFlameHeldLight(data) => ProduceFlameHeldLight({ durationTicks: data.durationTicks - 1 })
+        | SearingSmiteBurning(data) => SearingSmiteBurning({
+            damageDice: data.damageDice,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
+        | AnimalFriendshipCharmed(data) => AnimalFriendshipCharmed({
+            source: data.source,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
+        | CharmPersonCharmed(data) => CharmPersonCharmed({
+            source: data.source,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
+        | ProduceFlameHeldLight(data) => ProduceFlameHeldLight({
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | _ => effect
       })
       .filter(effect => match effect {
-        | DivineFavorWeaponDamageRider(data) => data.durationTicks > 0
+        | DivineFavorWeaponDamageRider(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | HuntersMarkDamageRider(_) => true
-        | SearingSmiteBurning(data) => data.durationTicks > 0
-        | AnimalFriendshipCharmed(data) => data.durationTicks > 0
-        | CharmPersonCharmed(data) => data.durationTicks > 0
-        | ProduceFlameHeldLight(data) => data.durationTicks > 0
+        | SearingSmiteBurning(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | AnimalFriendshipCharmed(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | CharmPersonCharmed(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | ProduceFlameHeldLight(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | _ => true
       })
 
