@@ -136,6 +136,19 @@ module spellProcedureProfiles {
   type AttackBurstSaveDamageProfile =
     | IceKnifeAttackBurstSaveDamageProfile
 
+  type ObjectHitPointDamageFacts = {
+    rolledDamage: int,
+    priorHitPoints: int,
+    damageThreshold: int,
+  }
+
+  type ObjectHitPointDamageResult = {
+    effectiveDamage: int,
+    priorHitPoints: int,
+    nextHitPoints: int,
+    destroyed: bool,
+  }
+
   type SpellAreaProfile =
     | NoSpellAreaProfile
     | MassCureWoundsPointOriginSphereArea
@@ -634,6 +647,20 @@ module spellProcedureProfiles {
 
   pure def attackBurstSaveDamageBurstAmount(damageRoll: int, savingThrowSucceeded: bool): int =
     if (savingThrowSucceeded) 0 else damageRoll
+
+  pure def objectHitPointEffectiveDamage(rolledDamage: int, damageThreshold: int): int =
+    if (damageThreshold > 0 and rolledDamage < damageThreshold) 0 else rolledDamage
+
+  pure def objectHitPointDamageResult(facts: ObjectHitPointDamageFacts): ObjectHitPointDamageResult = {
+    val effectiveDamage = objectHitPointEffectiveDamage(facts.rolledDamage, facts.damageThreshold)
+    val nextHitPoints = if (facts.priorHitPoints - effectiveDamage < 0) 0 else facts.priorHitPoints - effectiveDamage
+    {
+      effectiveDamage: effectiveDamage,
+      priorHitPoints: facts.priorHitPoints,
+      nextHitPoints: nextHitPoints,
+      destroyed: nextHitPoints == 0,
+    }
+  }
 
   pure def spellActionCost(invocationAction: SpellInvocationAction): ActionCost =
     if (invocationAction == BonusActionSpellInvocation) BonusActionCost
@@ -1143,6 +1170,28 @@ module spellProcedureProfiles {
       assert(attackBurstSaveDamageBurstDice(IceKnifeAttackBurstSaveDamageProfile, 3) == 4),
       assert(attackBurstSaveDamageBurstAmount(6, false) == 6),
       assert(attackBurstSaveDamageBurstAmount(6, true) == 0),
+    }
+  }
+
+  run test_object_hit_point_damage_projects_threshold_and_destruction = {
+    val destroyed = objectHitPointDamageResult({
+      rolledDamage: 6,
+      priorHitPoints: 5,
+      damageThreshold: 0,
+    })
+    val thresholdBlocked = objectHitPointDamageResult({
+      rolledDamage: 6,
+      priorHitPoints: 10,
+      damageThreshold: 10,
+    })
+    all {
+      assert(destroyed.effectiveDamage == 6),
+      assert(destroyed.priorHitPoints == 5),
+      assert(destroyed.nextHitPoints == 0),
+      assert(destroyed.destroyed),
+      assert(thresholdBlocked.effectiveDamage == 0),
+      assert(thresholdBlocked.nextHitPoints == 10),
+      assert(not(thresholdBlocked.destroyed)),
     }
   }
 

@@ -80,7 +80,7 @@ This makes a pure "facade imports every child module" split insufficient.
 | Weapon and marked damage rider spells | Divine Favor, Divine Smite, Hunter's Mark, Ensnaring Strike, Searing Smite | `spell-procedure-profiles.qnt`; `battle-runtime-spell-bridge.qnt`; unit-feature attack rider algebras | `rule-core-owned` for profile facts, `battle-integration-owned` for after-hit timing/concentration/target transfer | High: after-hit timing, concentration, target transfer, repeated damage | Tracer complete for Bonus Action profile, concentration requirement, damage type, duration, range, damage dice scaling, Divine Smite Fiend/Undead bonus dice, and Ensnaring Strike Large+ save Advantage through spell bridge | Broad QNT keeps after-hit timing, target mutation, mark transfer state, repeated damage ticks, and concentration cleanup |
 | Chained spell attacks | Chromatic Orb replay, D8 duplicate-face, leap target history | `spell-procedure-profiles.qnt`; `battle-runtime-spell-bridge.qnt`; TS chained spell tests | `rule-core-owned` for profile/math facts, `battle-integration-owned` for replay state and target history | High: custom replay state and ordered holes | Tracer complete for Chromatic Orb damage choices, damage type, slot scaling, d8 face accounting, duplicate-face detection, and leap-budget predicate through spell bridge | Broad battle keeps ordered replay holes, target history, and target-admission smoke |
 | Attack-burst save damage | Ice Knife attack plus burst and single concentration check | `spell-procedure-profiles.qnt`; `battle-runtime-spell-bridge.qnt` | `rule-core-owned` for Ice Knife profile facts, `battle-integration-owned` for combined resolver/concentration/reactions | High: combines attack, save, burst, concentration, reactions | Tracer complete for slot requirement, attack damage type, burst damage type, slot-scaled burst dice, and no-damage-on-success burst policy through spell bridge | Single-concentration behavior, hit reaction ordering, and target inclusion remain package-local integration facts |
-| Object-target spell damage | Starry Wisp object target/disposition/outcome | `battle-runtime-starry-wisp-object.mbt.qnt`; TS object fill tests | `focused-mbt-owned` plus `ts-contract-owned` | Medium: object identity is caller/table supplied | Keep object damage outcome facts narrow and import directly in focused MBT | Broad battle does not enumerate object catalog/geometry |
+| Object-target spell damage | Starry Wisp object target/disposition/outcome | `spell-procedure-profiles.qnt`; `battle-runtime-spell-bridge.qnt`; `battle-runtime-starry-wisp-object.mbt.qnt`; TS object fill tests | `focused-mbt-owned` plus `ts-contract-owned` | Medium: object identity is caller/table supplied | Tracer complete for HP damage threshold, clamped next HP, and destruction result through spell bridge; object identity and table/disposition wrapping remain package-local | Broad battle does not enumerate object catalog/geometry |
 | Active effect expiry and start/end hooks | `expireStartOfTurnSpellEffects`, `tickDurationActiveEffects`, Heroism THP, Resistance reset, timed effects | Spread across spell and feature profile algebras | `battle-integration-owned` | High: one turn hook touches many features/spells | Split hook scheduler from per-effect semantics | Adding a timed effect requires one local hook entry and one focused semantic owner |
 | Hybrid trace contract | Not yet implemented | TS reducer public APIs; future bridge | `ts-contract-owned` plus focused QNT checkpoints | High but essential for north-star traces | Prototype one public protocol event/checkpoint vertical after first semantic split | QNT does not emit internal `BattleState` diffs; TS can roll representative battle traces |
 | Broad package-local integration shell | Entire `battle-runtime.qnt`; broad `run` tests | Existing broad tests and MBT wrappers | `battle-integration-owned` with shrinking scope | High | Keep compatibility wrappers for moved public names only as needed | Broad file stops growing by default and records why each remaining vertical is broad |
@@ -125,6 +125,15 @@ The current interrupt tracer splits the next highest-coupling boundary:
 The wrapper/import finding means larger moves should decide up front whether
 the moved names remain facade-compatible wrappers or become direct imports for
 focused MBT only.
+
+The spell-profile tracer now includes object HP damage arithmetic:
+
+- `spell-procedure-profiles.qnt` owns the generic object HP damage threshold,
+  clamped next-HP, and destruction result.
+- `battle-runtime-spell-bridge.qnt` projects those facts into package-local
+  battle runtime shape.
+- `battle-runtime.qnt` keeps object identity, spell damage type wrapping, and
+  public object-damage disposition integration local.
 
 ## Verification Policy
 

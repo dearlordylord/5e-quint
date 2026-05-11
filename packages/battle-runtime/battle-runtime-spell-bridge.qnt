@@ -94,6 +94,13 @@ module battleRuntimeSpellBridge {
   type BattleRuntimeAttackBurstSaveDamageProfile =
     | BattleRuntimeIceKnifeAttackBurstSaveDamage
 
+  type BattleRuntimeObjectHitPointDamageResult = {
+    effectiveDamage: int,
+    priorHitPoints: int,
+    nextHitPoints: int,
+    destroyed: bool,
+  }
+
   pure def battleRuntimeDirectHitPointRestorationSpellProfile(
     profile: BattleRuntimeDirectHitPointRestorationProfile
   ): SpellDefinitionProfile =
@@ -486,6 +493,24 @@ module battleRuntimeSpellBridge {
   pure def battleRuntimeAttackBurstSaveDamageBurstAmount(damageRoll: int, savingThrowSucceeded: bool): int =
     attackBurstSaveDamageBurstAmount(damageRoll, savingThrowSucceeded)
 
+  pure def battleRuntimeObjectHitPointDamageResult(
+    rolledDamage: int,
+    priorHitPoints: int,
+    damageThreshold: int
+  ): BattleRuntimeObjectHitPointDamageResult = {
+    val result = objectHitPointDamageResult({
+      rolledDamage: rolledDamage,
+      priorHitPoints: priorHitPoints,
+      damageThreshold: damageThreshold,
+    })
+    {
+      effectiveDamage: result.effectiveDamage,
+      priorHitPoints: result.priorHitPoints,
+      nextHitPoints: result.nextHitPoints,
+      destroyed: result.destroyed,
+    }
+  }
+
   run test_direct_hit_point_restoration_profile_projection = {
     all {
       assert(battleRuntimeDirectHitPointRestorationUsesBonusAction(BattleRuntimeHealingWordRestoration)),
@@ -593,6 +618,20 @@ module battleRuntimeSpellBridge {
       assert(battleRuntimeAttackBurstSaveDamageBurstDice(BattleRuntimeIceKnifeAttackBurstSaveDamage, 3) == 4),
       assert(battleRuntimeAttackBurstSaveDamageBurstAmount(6, false) == 6),
       assert(battleRuntimeAttackBurstSaveDamageBurstAmount(6, true) == 0),
+    }
+  }
+
+  run test_object_hit_point_damage_projection = {
+    val damaged = battleRuntimeObjectHitPointDamageResult(6, 5, 0)
+    val thresholdBlocked = battleRuntimeObjectHitPointDamageResult(6, 10, 10)
+    all {
+      assert(damaged.effectiveDamage == 6),
+      assert(damaged.priorHitPoints == 5),
+      assert(damaged.nextHitPoints == 0),
+      assert(damaged.destroyed),
+      assert(thresholdBlocked.effectiveDamage == 0),
+      assert(thresholdBlocked.nextHitPoints == 10),
+      assert(not(thresholdBlocked.destroyed)),
     }
   }
 }

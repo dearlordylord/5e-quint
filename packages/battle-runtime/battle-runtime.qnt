@@ -3520,17 +3520,20 @@ module battleRuntime {
     priorHitPoints: int,
     damageThreshold: int,
   ): ObjectDamageOutcome = {
-    val effectiveDamage = if (damageThreshold > 0 and rolledDamage < damageThreshold) 0 else rolledDamage
-    val nextHitPoints = if (priorHitPoints - effectiveDamage < 0) 0 else priorHitPoints - effectiveDamage
+    val result = battleRuntimeObjectHitPointDamageResult(
+      rolledDamage,
+      priorHitPoints,
+      damageThreshold,
+    )
 
     ObjectHitPointDamage({
       object: object,
       damageType: damageType,
       rolledDamage: rolledDamage,
-      effectiveDamage: effectiveDamage,
-      priorHitPoints: priorHitPoints,
-      nextHitPoints: nextHitPoints,
-      destroyed: nextHitPoints == 0,
+      effectiveDamage: result.effectiveDamage,
+      priorHitPoints: result.priorHitPoints,
+      nextHitPoints: result.nextHitPoints,
+      destroyed: result.destroyed,
     })
   }
 
