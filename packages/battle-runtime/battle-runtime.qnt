@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-grease-ground-hazard spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points
@@ -11,6 +11,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-beam-sequence
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-damage-reduction
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-sleep-repeat-save-lifecycle
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-grease-ground-hazard
 module battleRuntime {
   // SRD traceability for this canonical battle runtime spec:
   // - Playing-the-Game.md lines 479-495: combat proceeds in rounds and turns
@@ -181,6 +182,13 @@ module battleRuntime {
   //   Action spell with a primary ranged spell attack, hit-only Piercing
   //   damage, and an unconditional primary-target-anchored burst Dexterity
   //   Saving Throw that deals Cold damage only on a failed save.
+  //   Spells/Descriptions-E-L.md lines 886-897, Rules-Glossary.md lines
+  //   395-397 and 802-806, Playing-the-Game.md lines 543-547, and
+  //   UBIQUITOUS_LANGUAGE.md: Grease is a level-1 Action spell that covers
+  //   the ground in a 10-foot square, makes that area Difficult Terrain for 1
+  //   minute, and forces Dexterity Saving Throws when the grease appears, when
+  //   a creature enters the area, and when a creature ends its turn there; a
+  //   failed save gives the Prone condition.
   //   Spells/Descriptions-S-Z.md lines 1024-1035: True Strike is an Action
   //   cantrip whose material component is a proficient weapon worth at least
   //   1 CP, immediately makes one attack with that weapon, uses the
@@ -219,7 +227,7 @@ module battleRuntime {
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | EldritchBlast | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | TrueStrike
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | EldritchBlast | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | TrueStrike | Grease
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | StarryWispSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack
   type SpellAttackBeamSequenceInvocation =
     | EldritchBlastBeamSequence
@@ -247,7 +255,7 @@ module battleRuntime {
   type RollModifierSpell = BaneRollModifier | BlessRollModifier | GuidanceRollModifier
   type SpellActionCost = SpellMagicAction | SpellBonusAction
 
-  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireAttackRollAdvantage | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodAttackDisadvantage | ProduceFlameHeldLight({ durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool })
+  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireAttackRollAdvantage | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodAttackDisadvantage | ProduceFlameHeldLight({ durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | GreaseGroundHazard({ areaId: int, durationTicks: int })
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
   type RuntimeCreatureType = HumanoidCreature | BeastCreature | AberrationCreature | CelestialCreature | ElementalCreature | FeyCreature | FiendCreature | UndeadCreature
   type ObjectTarget =
@@ -755,6 +763,7 @@ module battleRuntime {
         | AnimalFriendshipCharmed(data) => AnimalFriendshipCharmed({ source: data.source, durationTicks: data.durationTicks - 1 })
         | CharmPersonCharmed(data) => CharmPersonCharmed({ source: data.source, durationTicks: data.durationTicks - 1 })
         | ProduceFlameHeldLight(data) => ProduceFlameHeldLight({ durationTicks: data.durationTicks - 1 })
+        | GreaseGroundHazard(data) => GreaseGroundHazard({ areaId: data.areaId, durationTicks: data.durationTicks - 1 })
         | _ => effect
       })
       .filter(effect => match effect {
@@ -764,6 +773,7 @@ module battleRuntime {
         | AnimalFriendshipCharmed(data) => data.durationTicks > 0
         | CharmPersonCharmed(data) => data.durationTicks > 0
         | ProduceFlameHeldLight(data) => data.durationTicks > 0
+        | GreaseGroundHazard(data) => data.durationTicks > 0
         | _ => true
       })
 
@@ -853,6 +863,7 @@ module battleRuntime {
         | ProduceFlameHeldLight(_) => false
         | SleepPendingRepeatSave(_) => false
         | SleepUnconscious(_) => false
+        | GreaseGroundHazard(_) => false
       })) 13 + dexMod else baseAc
       val shieldBonus = if (effects.contains(ShieldArmorClassBonus)) 5 else 0
       val shieldOfFaithBonus = if (effects.contains(ShieldOfFaithArmorClassBonus)) 2 else 0
@@ -3048,6 +3059,7 @@ module battleRuntime {
       | ViciousMockery => false
       | ProduceFlame => false
       | TrueStrike => false
+      | Grease => true
     }
 
   pure def canExpendSpellSlotThisTurn(state: BattleState): bool =
@@ -4009,6 +4021,70 @@ module battleRuntime {
       }
     }
 
+  pure val greaseDurationTicks = 10
+  pure val greaseAreaId = 1
+
+  pure def activeEffectsWithoutGreaseGroundHazard(effects: Set[ActiveEffect], areaId: int): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | GreaseGroundHazard(data) => data.areaId != areaId
+      | _ => true
+    })
+
+  pure def combatantAfterGreaseSave(target: Combatant, savingThrowSucceeded: bool): Combatant =
+    if (savingThrowSucceeded)
+      target
+    else
+      { ...target, prone: true }
+
+  pure def resolveGrease(
+    state: BattleState,
+    goblinIncludedInArea: bool,
+    goblinSavingThrowSucceeded: bool,
+  ): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)))
+      state
+    else
+      {
+        ...state,
+        fighter: {
+          ...state.fighter,
+          activeEffects: activeEffectsWithoutGreaseGroundHazard(state.fighter.activeEffects, greaseAreaId)
+            .union(Set(GreaseGroundHazard({ areaId: greaseAreaId, durationTicks: greaseDurationTicks }))),
+        },
+        goblin: if (goblinIncludedInArea) combatantAfterGreaseSave(state.goblin, goblinSavingThrowSucceeded) else state.goblin,
+        actionAvailable: false,
+        spellSlotExpendedThisTurn: true,
+      }
+
+  pure def greaseGroundHazardActive(state: BattleState, areaId: int): bool =
+    state.fighter.activeEffects.exists(effect => match effect {
+      | GreaseGroundHazard(data) => data.areaId == areaId
+      | _ => false
+    })
+
+  pure def resolveGreaseGroundHazardSave(
+    state: BattleState,
+    targetActor: Actor,
+    areaId: int,
+    savingThrowSucceeded: bool,
+  ): BattleState =
+    if (not(greaseGroundHazardActive(state, areaId)))
+      state
+    else {
+      match targetActor {
+        | Fighter => { ...state, fighter: combatantAfterGreaseSave(state.fighter, savingThrowSucceeded) }
+        | Goblin => { ...state, goblin: combatantAfterGreaseSave(state.goblin, savingThrowSucceeded) }
+      }
+    }
+
+  pure def endTurnWithGreaseGroundHazardSave(
+    state: BattleState,
+    targetActor: Actor,
+    areaId: int,
+    savingThrowSucceeded: bool,
+  ): BattleState =
+    endTurn(resolveGreaseGroundHazardSave(state, targetActor, areaId, savingThrowSucceeded))
+
   pure def selectedTargetCount(fighterTargeted: bool, goblinTargeted: bool): int =
     (if (fighterTargeted) 1 else 0) + (if (goblinTargeted) 1 else 0)
 
@@ -4853,6 +4929,44 @@ module battleRuntime {
       assert(expendedSlotsAfterInvocation(Bane, 0) == 1),
       assert(expendedSlotsAfterInvocation(Bless, 0) == 1),
       assert(expendedSlotsAfterInvocation(Guidance, 0) == 0),
+      assert(expendedSlotsAfterInvocation(Grease, 0) == 1),
+    }
+  }
+
+  run test_grease_records_ground_hazard_and_prones_failed_appearance_save = {
+    val resolved = resolveGrease(initialState, true, false)
+    all {
+      assert(resolved.fighter.activeEffects.contains(GreaseGroundHazard({ areaId: greaseAreaId, durationTicks: greaseDurationTicks }))),
+      assert(resolved.goblin.prone),
+      assert(not(resolved.actionAvailable)),
+      assert(resolved.spellSlotExpendedThisTurn),
+    }
+  }
+
+  run test_grease_empty_area_records_hazard_without_target_membership_state = {
+    val resolved = resolveGrease(initialState, false, true)
+    all {
+      assert(resolved.fighter.activeEffects.contains(GreaseGroundHazard({ areaId: greaseAreaId, durationTicks: greaseDurationTicks }))),
+      assert(not(resolved.goblin.prone)),
+    }
+  }
+
+  run test_grease_ground_hazard_entry_save_applies_prone = {
+    val resolved = resolveGrease(initialState, false, true)
+    val entryFailed = resolveGreaseGroundHazardSave(resolved, Goblin, greaseAreaId, false)
+    all {
+      assert(entryFailed.goblin.prone),
+      assert(currentActor(entryFailed) == Fighter),
+    }
+  }
+
+  run test_grease_ground_hazard_end_turn_save_advances_turn = {
+    val resolved = resolveGrease(initialState, false, true)
+    val goblinTurn = endTurn(resolved)
+    val endTurnFailed = endTurnWithGreaseGroundHazardSave(goblinTurn, Goblin, greaseAreaId, false)
+    all {
+      assert(endTurnFailed.goblin.prone),
+      assert(currentActor(endTurnFailed) == Fighter),
     }
   }
 

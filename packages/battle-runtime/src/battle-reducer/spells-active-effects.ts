@@ -1,6 +1,7 @@
 // Spell active-effect application extracted from spells-holes-fills.ts.
 
 import { Match } from "effect";
+import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { type Round as RoundType } from "@dnd/shared/types";
 import type {
   DamageType,
@@ -9,6 +10,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import type { CombatantId } from "../identity.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
+import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state.ts";
 import {
   applyTemporaryHitPoints,
   breakBattleConcentration,
@@ -23,6 +25,7 @@ import {
   type BattleActiveEffectExpiration,
   type BattleCreatureState,
   type BattleFill,
+  type BattleSpellAreaChoice,
   type BattleState,
   type SpellFailedSaveConditionEffect,
   type SpellFailedSavePostDamageRider,
@@ -249,6 +252,86 @@ export function applySleepPendingRepeatSaveEffects(
     (nextState, targetId) => breakBattleConcentration(nextState, targetId),
     effected,
   );
+}
+
+export function applyGreaseGroundHazardCastEffects(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly area: Extract<
+    BattleSpellAreaChoice,
+    { readonly kind: "greaseGroundArea" }
+  >;
+  readonly failedTargetIds: readonly CombatantId[];
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "greaseGroundHazard" }
+  >;
+}): BattleState {
+  const combatants = new Map(input.state.combatants);
+  const caster = combatants.get(input.actorId);
+  if (caster !== undefined) {
+    const replacing = caster.activeEffects.filter(
+      (effect) =>
+        effect.kind === "greaseGroundHazard" &&
+        effect.sourceSpellId === input.invocation.spell.id &&
+        effect.sourceCombatantId === input.actorId &&
+        effect.areaId === input.area.areaId,
+    );
+    const activeEffects = [
+      ...caster.activeEffects.filter((effect) => !replacing.includes(effect)),
+      {
+        kind: "greaseGroundHazard" as const,
+        sourceSpellId: input.invocation.spell.id,
+        sourceCombatantId: input.actorId,
+        areaId: input.area.areaId,
+        save: {
+          ability: input.invocation.ability,
+          dc: input.invocation.dc,
+        },
+        expiresAt: {
+          kind: "duration" as const,
+          durationTicks: input.invocation.durationTicks,
+        },
+      },
+    ];
+    combatants.set(input.actorId, { ...caster, activeEffects });
+  }
+  return {
+    ...input.state,
+    combatants: applyGreaseProneToCombatants(combatants, input.failedTargetIds),
+  };
+}
+
+export function applyGreaseProneToTarget(
+  state: BattleState,
+  targetId: CombatantId,
+): BattleState {
+  return {
+    ...state,
+    combatants: applyGreaseProneToCombatants(new Map(state.combatants), [
+      targetId,
+    ]),
+  };
+}
+
+function applyGreaseProneToCombatants(
+  combatants: Map<CombatantId, BattleCreatureState>,
+  targetIds: readonly CombatantId[],
+): Map<CombatantId, BattleCreatureState> {
+  for (const targetId of targetIds) {
+    const target = combatants.get(targetId);
+    if (target === undefined) {
+      continue;
+    }
+    combatants.set(
+      targetId,
+      battleCreatureStateWithKnockOutPreservedConditions(
+        target,
+        applyCondition(target.conditions, "prone"),
+      ),
+    );
+  }
+  return combatants;
 }
 
 export function applyAfterHitTimedDamageAndSaveSpellEffect(

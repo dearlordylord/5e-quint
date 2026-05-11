@@ -38,6 +38,7 @@ import type {
   ActiveOngoingFeatureOccurrenceSnapshotEncoded,
   BattleAttackRangeBand,
   BattleFill,
+  BattleSpellAreaChoice,
   SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import {
@@ -148,6 +149,44 @@ const BattleRuntimeObjectSchema = Schema.Record({
   key: Schema.String,
   value: Schema.Any,
 });
+
+const BattleSleepNonSleeperFactSchema = Schema.Struct({
+  kind: Schema.Literal("doesNotSleep"),
+  targetId: CombatantId,
+});
+
+const BattleSpellAreaChoiceBaseSchema = {
+  originAnchorId: CombatantId,
+  affectedTargetIds: Schema.Array(CombatantId),
+} as const;
+
+const BattleSpellAreaChoiceSchema = Schema.Union(
+  Schema.Struct({
+    ...BattleSpellAreaChoiceBaseSchema,
+    kind: Schema.optionalWith(Schema.Never, { exact: true }),
+    areaId: Schema.optionalWith(Schema.Never, { exact: true }),
+    sleepNonSleeperFacts: Schema.optionalWith(Schema.Never, { exact: true }),
+  }),
+  Schema.Struct({
+    ...BattleSpellAreaChoiceBaseSchema,
+    kind: Schema.optionalWith(Schema.Never, { exact: true }),
+    areaId: Schema.optionalWith(Schema.Never, { exact: true }),
+    sleepNonSleeperFacts: Schema.Array(BattleSleepNonSleeperFactSchema),
+  }),
+  Schema.Struct({
+    ...BattleSpellAreaChoiceBaseSchema,
+    kind: Schema.Literal("greaseGroundArea"),
+    areaId: Schema.String,
+    sleepNonSleeperFacts: Schema.optionalWith(Schema.Never, { exact: true }),
+  }),
+  // Effect Schema infers the exact-forbidden optional fields as broader
+  // output than this tagged union; the branches above enumerate every
+  // BattleSpellAreaChoice encoding shape, so the codec boundary is aligned.
+) as unknown as Schema.Schema<
+  BattleSpellAreaChoice,
+  BattleSpellAreaChoiceEncoded,
+  never
+>;
 
 const CharacterWeaponAttackActionOptionSchema = Schema.Struct({
   kind: Schema.Literal("weapon"),
@@ -680,6 +719,20 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       rangeFeet: MovementFeet,
     }),
     Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("greaseGroundHazard"),
+      spell: BattleRuntimeObjectSchema,
+      ability: Schema.Literal("dex"),
+      dc: DcSourceSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("pointOriginCube"),
+        sideFeet: MovementFeet,
+      }),
+      durationTicks: BattleRuntimeObjectSchema,
+      rangeFeet: MovementFeet,
+    }),
+    Schema.Struct({
       access: ClassCantripSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
       procedure: Schema.Literal("damageReduction"),
@@ -1081,24 +1134,25 @@ export const BattleHoleSchema = Schema.Union(
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("savingThrowOutcome"),
     label: Schema.String,
+    greaseGroundHazard: BattleRuntimeObjectSchema,
+    ability: Schema.Literal("dex"),
+    dc: DcSourceSchema,
+    areaChoices: Schema.Array(BattleRuntimeObjectSchema),
+    targetRollModes: Schema.Array(
+      Schema.Struct({
+        targetId: CombatantId,
+        rollMode: Schema.Literal(...ATTACK_ROLL_MODES),
+      }),
+    ),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("savingThrowOutcome"),
+    label: Schema.String,
     spell: SupportedSpellInvocationSchema,
     ability: Schema.String,
     dc: BattleRuntimeObjectSchema,
-    areaChoices: Schema.Array(
-      Schema.Struct({
-        originAnchorId: CombatantId,
-        affectedTargetIds: Schema.Array(CombatantId),
-        sleepNonSleeperFacts: Schema.optionalWith(
-          Schema.Array(
-            Schema.Struct({
-              kind: Schema.Literal("doesNotSleep"),
-              targetId: CombatantId,
-            }),
-          ),
-          { exact: true },
-        ),
-      }),
-    ),
+    areaChoices: Schema.Array(BattleSpellAreaChoiceSchema),
     targetRollModes: Schema.Array(
       Schema.Struct({
         targetId: CombatantId,
@@ -1234,6 +1288,30 @@ const BattleAttackRollResultSchema = Schema.Struct({
 const BattleRolledDiceGroupSchema = Schema.Struct({
   results: Schema.NonEmptyArray(BattleDieRollResultSchema),
 });
+
+type BattleSpellAreaChoiceEncoded = {
+  readonly originAnchorId: string;
+  readonly affectedTargetIds: readonly string[];
+} & (
+  | {
+      readonly kind?: never;
+      readonly areaId?: never;
+      readonly sleepNonSleeperFacts?: never;
+    }
+  | {
+      readonly kind?: never;
+      readonly areaId?: never;
+      readonly sleepNonSleeperFacts: readonly {
+        readonly kind: "doesNotSleep";
+        readonly targetId: string;
+      }[];
+    }
+  | {
+      readonly kind: "greaseGroundArea";
+      readonly areaId: string;
+      readonly sleepNonSleeperFacts?: never;
+    }
+);
 
 type BattleFillEncoded =
   | {
@@ -1432,20 +1510,14 @@ type BattleFillEncoded =
       readonly holeId: string;
       readonly value:
         | {
-            readonly area: {
-              readonly originAnchorId: string;
-              readonly affectedTargetIds: readonly string[];
-              readonly sleepNonSleeperFacts?: readonly {
-                readonly kind: "doesNotSleep";
-                readonly targetId: string;
-              }[];
-            };
+            readonly area: BattleSpellAreaChoiceEncoded;
             readonly outcomes: readonly {
               readonly targetId: string;
               readonly succeeded: boolean;
             }[];
           }
         | {
+            readonly area?: never;
             readonly outcomes: readonly {
               readonly targetId: string;
               readonly succeeded: boolean;
@@ -1788,19 +1860,7 @@ export const BattleFillSchema: Schema.Schema<
       holeId: BattleHoleIdSchema,
       value: Schema.Union(
         Schema.Struct({
-          area: Schema.Struct({
-            originAnchorId: CombatantId,
-            affectedTargetIds: Schema.Array(CombatantId),
-            sleepNonSleeperFacts: Schema.optionalWith(
-              Schema.Array(
-                Schema.Struct({
-                  kind: Schema.Literal("doesNotSleep"),
-                  targetId: CombatantId,
-                }),
-              ),
-              { exact: true },
-            ),
-          }),
+          area: BattleSpellAreaChoiceSchema,
           outcomes: Schema.Array(
             Schema.Struct({
               targetId: CombatantId,
@@ -1809,6 +1869,7 @@ export const BattleFillSchema: Schema.Schema<
           ),
         }),
         Schema.Struct({
+          area: Schema.optionalWith(Schema.Never, { exact: true }),
           outcomes: Schema.Array(
             Schema.Struct({
               targetId: CombatantId,

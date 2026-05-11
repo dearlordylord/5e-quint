@@ -3,7 +3,7 @@
 // intended.
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
 import { resetTurnActionEconomy } from "@dnd/shared-algebras/action-economy-algebra";
 
@@ -38,7 +38,12 @@ import {
   type Round as RoundType,
 } from "@dnd/shared/types";
 
-import { type BattleMovementSpeedKind } from "../battle-subjects.ts";
+import {
+  type BattleMovementSpeedKind,
+  type BattleSubject,
+} from "../battle-subjects.ts";
+
+import { type BattleReactionTrigger } from "../battle-reaction-triggers.ts";
 
 import { CombatantId } from "../identity.ts";
 
@@ -101,6 +106,7 @@ import { damageAmountAfterTargetAdjustments } from "./damage-helpers.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 
 import { applyPreparedSlotSpellDamage } from "./spells-damage-fills.ts";
+import { applyGreaseProneToTarget } from "./spells-active-effects.ts";
 
 import {
   attackActionOptionName,
@@ -119,6 +125,7 @@ import type {
   BattleAttackDamageDispositionHole,
   BattleCreatureState,
   BattleFill,
+  BattleGreaseGroundHazardSavingThrowOutcomeHole,
   BattleHoleId,
   BattleMovementHole,
   BattleOpportunityAttackThreat,
@@ -590,6 +597,302 @@ function validateSleepRepeatSavingThrowOutcome(
     : "Sleep repeat Saving Throw outcome must match the ending-turn target.";
 }
 
+export type GreaseGroundHazardEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "greaseGroundHazard" }
+>;
+
+function greaseGroundHazardEffectFor(
+  state: BattleState,
+  subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "greaseGroundHazardSave";
+    }
+  >,
+): GreaseGroundHazardEffect | undefined {
+  const source = state.combatants.get(subject.sourceCombatantId);
+  return source?.activeEffects.find(
+    (effect): effect is GreaseGroundHazardEffect =>
+      effect.kind === "greaseGroundHazard" &&
+      effect.sourceSpellId === subject.sourceSpellId &&
+      effect.sourceCombatantId === subject.sourceCombatantId &&
+      effect.areaId === subject.areaId,
+  );
+}
+
+export function greaseGroundHazardSavingThrowOutcomeHole(
+  targetId: CombatantId,
+  effect: GreaseGroundHazardEffect,
+  trigger: "entersArea" | "endsTurnInArea",
+): BattleGreaseGroundHazardSavingThrowOutcomeHole {
+  const key = `battle:grease-ground-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}:${trigger}`;
+  return {
+    kind: "savingThrowOutcome",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${effect.sourceSpellId} ${trigger === "entersArea" ? "entry" : "end-turn"} DEX save`,
+    greaseGroundHazard: {
+      targetId,
+      sourceSpellId: effect.sourceSpellId,
+      sourceCombatantId: effect.sourceCombatantId,
+      areaId: effect.areaId,
+      trigger,
+      save: effect.save,
+    },
+    ability: effect.save.ability,
+    dc: effect.save.dc,
+    areaChoices: [],
+    targetRollModes: [],
+  };
+}
+
+function greaseGroundHazardSavingThrowOutcomeFor(
+  fills: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[],
+  hole: BattleGreaseGroundHazardSavingThrowOutcomeHole,
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
+  return fills.find((fill) => fill.holeId === hole.holeId);
+}
+
+function validateGreaseGroundHazardSavingThrowOutcome(
+  value: BattleSavingThrowOutcomeValue,
+  targetId: CombatantId,
+): string | null {
+  if ("area" in value) {
+    return "Grease ground-hazard Saving Throw outcome must not include area facts.";
+  }
+  return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
+    ? null
+    : "Grease ground-hazard Saving Throw outcome must match the triggering target.";
+}
+
+export function resolveGreaseGroundHazardSaveCommand(
+  input: BattleResolutionInput & {
+    readonly subject: Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "greaseGroundHazardSave";
+      }
+    >;
+    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+  },
+): BattleResolutionResult {
+  if (input.subject.trigger === "endsTurnInArea") {
+    return resolveGreaseGroundHazardEndTurnSaveCommand(input);
+  }
+  return resolveGreaseGroundHazardEntrySaveCommand(input);
+}
+
+function resolveGreaseGroundHazardEntrySaveCommand(
+  input: BattleResolutionInput & {
+    readonly subject: Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "greaseGroundHazardSave";
+      }
+    >;
+    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+  },
+): BattleResolutionResult {
+  if (
+    input.fills.some((fill) => fill.kind !== "savingThrowOutcome") ||
+    input.fills.length > 1
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Grease ground-hazard save accepts exactly one Saving Throw outcome fill.",
+    );
+  }
+  const effect = greaseGroundHazardEffectFor(input.state, input.subject);
+  if (
+    effect === undefined ||
+    !input.state.combatants.has(input.subject.actorId)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Grease ground-hazard save is no longer available.",
+    );
+  }
+  const hole = greaseGroundHazardSavingThrowOutcomeHole(
+    input.subject.actorId,
+    effect,
+    input.subject.trigger,
+  );
+  const savingThrowFill = greaseGroundHazardSavingThrowOutcomeFor(
+    input.fills.filter(
+      (
+        fill,
+      ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+        fill.kind === "savingThrowOutcome",
+    ),
+    hole,
+  );
+  if (savingThrowFill === undefined) {
+    return needsHolesResult(input.state, input.subject, [hole]);
+  }
+  const validation = validateGreaseGroundHazardSavingThrowOutcome(
+    savingThrowFill.value,
+    input.subject.actorId,
+  );
+  if (validation !== null) {
+    return invalidResult(input.state, "invalidFill", validation);
+  }
+  const outcome = savingThrowFill.value.outcomes[0]!;
+  if (!outcome.succeeded) {
+    const saveFailedReactionWindow = maybeOpenReactionWindow(
+      input.state,
+      {
+        trigger: "saveFailed",
+        targetId: input.subject.actorId,
+        sourceSpellId: effect.sourceSpellId,
+        continuation: {
+          kind: "replay",
+          subject: input.subject,
+          fills: input.fills,
+        },
+      },
+      input.suppressedReactionTrigger,
+    );
+    if (saveFailedReactionWindow !== null) {
+      return saveFailedReactionWindow;
+    }
+  }
+  const nextState = outcome.succeeded
+    ? input.state
+    : applyGreaseProneToTarget(input.state, input.subject.actorId);
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function resolveGreaseGroundHazardEndTurnSaveCommand(
+  input: BattleResolutionInput & {
+    readonly subject: Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "greaseGroundHazardSave";
+      }
+    >;
+    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+  },
+): BattleResolutionResult {
+  const effect = greaseGroundHazardEffectFor(input.state, input.subject);
+  if (
+    effect === undefined ||
+    !input.state.combatants.has(input.subject.actorId)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Grease ground-hazard save is no longer available.",
+    );
+  }
+  const hole = greaseGroundHazardSavingThrowOutcomeHole(
+    input.subject.actorId,
+    effect,
+    input.subject.trigger,
+  );
+  const matchingGreaseFills = input.fills.filter(
+    (fill) => fill.holeId === hole.holeId,
+  );
+  if (matchingGreaseFills.length > 1) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "End Turn in Grease received duplicate Grease Saving Throw outcome fills.",
+    );
+  }
+  const [matchingGreaseFill] = matchingGreaseFills;
+  if (
+    matchingGreaseFill !== undefined &&
+    matchingGreaseFill.kind !== "savingThrowOutcome"
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "End Turn in Grease requires a Grease Saving Throw outcome fill.",
+    );
+  }
+  const endTurnSubject = {
+    tag: "runtimeCommand" as const,
+    actorId: input.subject.actorId,
+    command: "endTurn" as const,
+  };
+  const endTurnFills = input.fills.filter(
+    (fill) => fill.holeId !== hole.holeId,
+  );
+  const endTurnProbe = resolveEndTurnCommand({
+    state: input.state,
+    subject: endTurnSubject,
+    fills: endTurnFills,
+  });
+  if (matchingGreaseFill === undefined) {
+    return endTurnProbe.tag === "needsHoles"
+      ? needsHolesResult(input.state, input.subject, [
+          hole,
+          ...endTurnProbe.holes,
+        ])
+      : endTurnProbe.tag === "invalid"
+        ? endTurnProbe
+        : needsHolesResult(input.state, input.subject, [hole]);
+  }
+  const validation = validateGreaseGroundHazardSavingThrowOutcome(
+    matchingGreaseFill.value,
+    input.subject.actorId,
+  );
+  if (validation !== null) {
+    return invalidResult(input.state, "invalidFill", validation);
+  }
+  if (endTurnProbe.tag === "needsHoles") {
+    return { ...endTurnProbe, subject: input.subject };
+  }
+  if (endTurnProbe.tag === "invalid") {
+    return endTurnProbe;
+  }
+  const outcome = matchingGreaseFill.value.outcomes[0]!;
+  if (!outcome.succeeded) {
+    const saveFailedReactionWindow = maybeOpenReactionWindow(
+      input.state,
+      {
+        trigger: "saveFailed",
+        targetId: input.subject.actorId,
+        sourceSpellId: effect.sourceSpellId,
+        continuation: {
+          kind: "replay",
+          subject: input.subject,
+          fills: input.fills,
+        },
+      },
+      input.suppressedReactionTrigger,
+    );
+    if (saveFailedReactionWindow !== null) {
+      return saveFailedReactionWindow;
+    }
+  }
+  const nextState = outcome.succeeded
+    ? input.state
+    : applyGreaseProneToTarget(input.state, input.subject.actorId);
+  const endTurnResult = resolveEndTurnCommand({
+    state: nextState,
+    subject: endTurnSubject,
+    fills: endTurnFills,
+  });
+  return endTurnResult.tag === "needsHoles"
+    ? { ...endTurnResult, subject: input.subject }
+    : endTurnResult;
+}
+
 function applySleepRepeatSaveFills(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   actorId: CombatantId,
@@ -816,25 +1119,26 @@ export function tickDurationEffects(
   return new Map(
     [...combatants].map(([id, combatant]) => {
       const expiring: BattleActiveEffect[] = [];
-      const activeEffects = combatant.activeEffects.flatMap((effect) => {
+      const activeEffects: BattleActiveEffect[] = [];
+      for (const effect of combatant.activeEffects) {
         if (!isDurationActiveEffect(effect)) {
-          return [effect];
+          activeEffects.push(effect);
+          continue;
         }
         const remainingTicks = Number(effect.expiresAt.durationTicks) - 1;
         if (remainingTicks <= 0) {
           expiring.push(effect);
-          return [];
+          continue;
         }
-        return [
-          {
-            ...effect,
-            expiresAt: {
-              ...effect.expiresAt,
-              durationTicks: elapsedTimeTicks(remainingTicks),
-            },
+        const ticked: BattleActiveEffect = {
+          ...effect,
+          expiresAt: {
+            ...effect.expiresAt,
+            durationTicks: elapsedTimeTicks(remainingTicks),
           },
-        ];
-      });
+        };
+        activeEffects.push(ticked);
+      }
       const nextCombatant: BattleCreatureState =
         combatant.positiveHpUnconscious === null
           ? {

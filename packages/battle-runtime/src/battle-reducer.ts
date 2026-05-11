@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 import type {
   ActionEconomyState,
   RuntimeActionResource,
@@ -177,6 +177,7 @@ export {
   expireStartOfTurnEffects,
   expireStartOfTurnOngoingFeatures,
   movementHole,
+  greaseGroundHazardSavingThrowOutcomeHole,
   movementHoleWithBudget,
   parseBattleMovement,
   readiedMovementBudgetForActor,
@@ -189,6 +190,7 @@ export {
   resetStartOfTurnCombatant,
   resolveEndTurn,
   resolveEndTurnCommand,
+  resolveGreaseGroundHazardSaveCommand,
   resolveMoveCommand,
   resolveOpportunityAttackCommand,
   resolveReleaseReadiedMovementCommand,
@@ -497,6 +499,18 @@ export type BattleActiveEffect =
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
         { readonly kind: "concentration" }
+      >;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "greaseGroundHazard";
+      readonly areaId: string;
+      readonly save: {
+        readonly ability: Extract<Ability, "dex">;
+        readonly dc: DcSource;
+      };
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "duration" }
       >;
     })
   | (BattleSpellEffectBase & {
@@ -1625,6 +1639,20 @@ export type SupportedSpellInvocation =
   | {
       readonly access: PreparedSpellAccess;
       readonly resource: SpellSlotInvocationResource;
+      readonly procedure: "greaseGroundHazard";
+      readonly spell: SpellRecord;
+      readonly ability: Extract<Ability, "dex">;
+      readonly dc: DcSource;
+      readonly targeting: Extract<
+        SpellTargeting,
+        { readonly kind: "pointOriginCube" }
+      >;
+      readonly durationTicks: ElapsedTimeTicks;
+      readonly rangeFeet: MovementFeet;
+    }
+  | {
+      readonly access: PreparedSpellAccess;
+      readonly resource: SpellSlotInvocationResource;
       readonly procedure: "scalarBuff";
       readonly spell: SpellRecord;
       readonly actionCost: HealingSpellActionCost;
@@ -1710,6 +1738,7 @@ export type SupportedDamageSpellInvocation = Exclude<
       | "saveGatedCondition"
       | "saveGatedAttackRollAdvantage"
       | "sleepTargetAdmission"
+      | "greaseGroundHazard"
       | "chainedSpellAttackDamage";
   }
 >;
@@ -2304,6 +2333,28 @@ export type BattleSleepRepeatSavingThrowOutcomeHole = {
   readonly areaChoices: readonly [];
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
 };
+export type BattleGreaseGroundHazardTrigger = "entersArea" | "endsTurnInArea";
+export type BattleGreaseGroundHazardSavingThrowOutcomeHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "savingThrowOutcome";
+  readonly label: string;
+  readonly greaseGroundHazard: {
+    readonly targetId: CombatantId;
+    readonly sourceSpellId: SpellRecord["id"];
+    readonly sourceCombatantId: CombatantId;
+    readonly areaId: string;
+    readonly trigger: BattleGreaseGroundHazardTrigger;
+    readonly save: {
+      readonly ability: Extract<Ability, "dex">;
+      readonly dc: DcSource;
+    };
+  };
+  readonly ability: Extract<Ability, "dex">;
+  readonly dc: DcSource;
+  readonly areaChoices: readonly [];
+  readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
+};
 export type BattleSpellHealingRollHole = Extract<
   RuntimeHole,
   { readonly kind: "rolledDice" }
@@ -2349,12 +2400,17 @@ export type SaveDamageResult = (typeof SAVE_DAMAGE_RESULTS)[number];
 export type BattleSpellAreaChoice = {
   readonly originAnchorId: CombatantId;
   readonly affectedTargetIds: readonly CombatantId[];
-} & (
-  | { readonly sleepNonSleeperFacts?: never }
+} & BattleSpellAreaChoiceKind;
+type BattleSpellAreaChoiceKind =
+  | { readonly kind?: never; readonly sleepNonSleeperFacts?: never }
   | {
+      readonly kind?: never;
       readonly sleepNonSleeperFacts: readonly BattleSleepNonSleeperFact[];
     }
-);
+  | {
+      readonly kind: "greaseGroundArea";
+      readonly areaId: string;
+    };
 export type BattleSleepNonSleeperFact = {
   readonly kind: "doesNotSleep";
   readonly targetId: CombatantId;
@@ -2378,7 +2434,8 @@ export type BattleSpellSavingThrowOutcomeHole = {
         | "saveGatedCondition"
         | "afterHitSaveGatedCondition"
         | "saveGatedAttackRollAdvantage"
-        | "sleepTargetAdmission";
+        | "sleepTargetAdmission"
+        | "greaseGroundHazard";
     }
   >;
   readonly ability: Ability;
@@ -2509,6 +2566,7 @@ export type BattleHole =
   | BattleSpellSavingThrowOutcomeHole
   | BattleSpellTurnStartSavingThrowOutcomeHole
   | BattleSleepRepeatSavingThrowOutcomeHole
+  | BattleGreaseGroundHazardSavingThrowOutcomeHole
   | BattleUnitFeatureSavingThrowOutcomeHole
   | BattleUnitFeatureRollHole
   | BattleDeathSavingThrowHole

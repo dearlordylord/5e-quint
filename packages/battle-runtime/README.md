@@ -508,6 +508,11 @@ Available acts:
 - movement fills carry the Movement cost paid and any table-supplied
   Opportunity Attack threat facts. Grappled Movable extra cost is part of the
   submitted Movement cost, not derived from pairwise distance state.
+- Grease ground hazards record the spell-owned area id and one-minute duration.
+  Callers choose `entersArea` when table geometry says a creature enters the
+  area. `endsTurnInArea` is an End Turn boundary: the Dexterity save and any
+  Prone result resolve before the turn advances. The Difficult Terrain
+  movement-cost increase remains part of the submitted Movement cost.
 - discover Escape Grapple for a Grappled current actor and Release Grapple for a
   grappler. Release spends no action; Escape spends the action on success or
   failure.

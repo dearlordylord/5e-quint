@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 350,
-      "numerator": 99,
-      "percent": "28.3%"
+      "numerator": 100,
+      "percent": "28.6%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 417,
-      "numerator": 123,
-      "percent": "29.5%"
+      "numerator": 124,
+      "percent": "29.7%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 124
+      "value": 125
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 63,
@@ -67,28 +67,28 @@
       "percent": "93.7%"
     },
     "profileClassificationCoverage": {
-      "denominator": 124,
-      "numerator": 124,
+      "denominator": 125,
+      "numerator": 125,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 41,
-      "numerator": 41,
+      "denominator": 42,
+      "numerator": 42,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 41,
-      "numerator": 39,
-      "percent": "95.1%"
+      "denominator": 42,
+      "numerator": 40,
+      "percent": "95.2%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 41,
-      "numerator": 41,
+      "denominator": 42,
+      "numerator": 42,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 41,
-      "numerator": 41,
+      "denominator": 42,
+      "numerator": 42,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -97,9 +97,9 @@
       "percent": "15.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 100,
+      "denominator": 101,
       "numerator": 63,
-      "percent": "63%"
+      "percent": "62.4%"
     }
   },
   "metricSemantics": [
@@ -907,6 +907,33 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-grease-ground-hazard",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+      ],
+      "sourceBoundary": "Caller-supplied Grease ground-area identity and per-trigger membership; movement-cost accounting for Difficult Terrain stays at the Movement fill boundary.",
+      "taskRefs": [
+        "SRDINV40"
+      ],
+      "title": "Spell invocation creates a timed Grease ground hazard with recurring Dexterity saves",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
         }
       ]
     },
@@ -1940,6 +1967,22 @@
         "spell.invocation-beam-sequence"
       ],
       "taskId": "SRDINV39"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Grease's one-minute ground hazard, appearance save, recurring table-triggered area saves, and Prone on failed saves.",
+      "profileIds": [
+        "spell.invocation-grease-ground-hazard"
+      ],
+      "taskId": "SRDINV40"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Grease's ground-area id fill, hazard duration, on-cast Dexterity save, entry/end-turn save commands, and Prone application; automatic Difficult Terrain movement-cost derivation remains outside the runtime geometry boundary.",
+      "profileIds": [
+        "spell.invocation-grease-ground-hazard"
+      ],
+      "taskId": "SRDINV40"
     }
   ],
   "units": [
@@ -5191,6 +5234,75 @@
       ],
       "sourceRecordPath": "packages/surface/content/guidance.json",
       "unitId": "guidance"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "SRDINV41",
+            "mechanic": "automatic Difficult Terrain movement-cost derivation, pathfinding, and grid geometry; movement cost remains caller-authored at the Movement boundary"
+          }
+        ],
+        "profileIds": [
+          "spell.invocation-grease-ground-hazard"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "one-minute Grease ground hazard lifecycle keyed by caller-supplied ground-area id",
+          "on-cast Dexterity Saving Throw for caller-supplied affected creatures",
+          "Prone application on failed Grease saves",
+          "table-triggered enter-area and end-turn-in-area Dexterity save procedures"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV40"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-grease-ground-hazard",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+          ],
+          "sourceBoundary": "Caller-supplied Grease ground-area identity and per-trigger membership; movement-cost accounting for Difficult Terrain stays at the Movement fill boundary.",
+          "taskRefs": [
+            "SRDINV40"
+          ],
+          "title": "Spell invocation creates a timed Grease ground hazard with recurring Dexterity saves",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/grease.json",
+      "unitId": "grease"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -9130,29 +9242,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/gentle_repose.json",
       "unitId": "gentle_repose"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "reason": "SRDINV29D keeps Grease out of supported spell evidence because its SRD one-minute ground hazard requires an active area lifecycle plus executable recurring Dexterity save procedures for creatures that enter the area or end turns there; the promoted battle runtime currently has no table-supplied area-membership fact boundary for those later events, so the authored on-cast Prone save is not claimed as a supported partial runtime profile.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/grease.json",
-      "unitId": "grease"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

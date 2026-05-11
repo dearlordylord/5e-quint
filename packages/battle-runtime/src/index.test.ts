@@ -13041,6 +13041,55 @@ describe("battle runtime", () => {
     });
   });
 
+  test("spell saving throw outcome codec rejects incomplete Grease area facts", () => {
+    const invalidGreaseArea = {
+      originAnchorId: wizardId,
+      affectedTargetIds: [goblinId],
+      kind: "greaseGroundArea",
+    };
+    const greaseInvocation = {
+      access: { tag: "prepared" },
+      resource: { tag: "spellSlot", slotLevel: 1 },
+      procedure: "greaseGroundHazard",
+      spell: { id: "grease" },
+      ability: "dex",
+      dc: { kind: "caster_spell_save_dc" },
+      targeting: { kind: "pointOriginCube", sideFeet: movementFeet(10) },
+      durationTicks: { amount: 10 },
+      rangeFeet: movementFeet(60),
+    };
+
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleHoleSchema)({
+          kind: "savingThrowOutcome",
+          holeId: holeId("battle:test:invalid-grease-area-hole"),
+          holeInstanceKey: holeInstanceKey(
+            "battle:test:invalid-grease-area-hole",
+          ),
+          label: "Invalid Grease area facts",
+          spell: greaseInvocation,
+          ability: "dex",
+          dc: { kind: "caster_spell_save_dc" },
+          areaChoices: [invalidGreaseArea],
+          targetRollModes: [],
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleFillSchema)({
+          kind: "savingThrowOutcome",
+          holeId: "battle:test:invalid-grease-area-fill",
+          value: {
+            area: invalidGreaseArea,
+            outcomes: [{ targetId: goblinId, succeeded: false }],
+          },
+        }),
+      ),
+    ).toBe(true);
+  });
+
   test("spell-hosted weapon invocation holes reject non-weapon component attacks", () => {
     const baseHole = {
       kind: "attackRoll",
@@ -14676,7 +14725,10 @@ describe("battle runtime", () => {
             damageType: "force" as const,
             amount: { dice: 1 as const, dieSize: 4 as const },
             usedThisTurn: false,
-            expiresAt: { kind: "concentration" as const, combatantId: wizardId },
+            expiresAt: {
+              kind: "concentration" as const,
+              combatantId: wizardId,
+            },
           },
         ],
       }),
@@ -14891,7 +14943,10 @@ describe("battle runtime", () => {
       }),
     } satisfies BattleState;
     const subject = magicSubject("eldritch_blast");
-    const target = findHole(findAct(state, subject).initialHoles, "targetChoice");
+    const target = findHole(
+      findAct(state, subject).initialHoles,
+      "targetChoice",
+    );
     const attack = requireHole(
       resolveBattleSubject({
         state,
@@ -14956,7 +15011,10 @@ describe("battle runtime", () => {
             damageType: "force" as const,
             amount: { dice: 1 as const, dieSize: 4 as const },
             usedThisTurn: false,
-            expiresAt: { kind: "concentration" as const, combatantId: wizardId },
+            expiresAt: {
+              kind: "concentration" as const,
+              combatantId: wizardId,
+            },
           },
         ],
       }),
@@ -19148,7 +19206,8 @@ function subjectName(
   | "releaseReadiedMovement"
   | "castTriggeredReactionSpell"
   | "castAttackHitBonusActionSpell"
-  | "opportunityAttack" {
+  | "opportunityAttack"
+  | "greaseGroundHazardSave" {
   if (subject.tag === "action") {
     return subject.action;
   }
@@ -19185,7 +19244,7 @@ function runCanonicalBattleRuntimeQntSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("153 passing");
+  expect(quintOutput).toContain("156 passing");
 }
 
 function hidePrerequisites(

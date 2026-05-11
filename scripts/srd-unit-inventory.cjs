@@ -164,15 +164,7 @@ const authoredSpellUnitCatalogOnlyClosures = new Map([
   ],
 ]);
 
-const spellUnitExecutableFollowUpBatches = [
-  {
-    id: "spell-area-chain-and-typed-damage-runtime",
-    label: "Area, chain, and typed-damage spell runtime",
-    nextAction:
-      "Admit these authored Spell Definitions after adding runtime support for spell-chosen damage types, chained target selection, mixed attack-plus-area resolution, area condition application, and terrain/ground effects.",
-    unitIds: ["grease"],
-  },
-];
+const spellUnitExecutableFollowUpBatches = [];
 
 const spellUnitExecutableFollowUps = new Map(
   spellUnitExecutableFollowUpBatches.flatMap((batch) =>
@@ -2048,7 +2040,7 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
   const srdinv29ABurningHandsRows = spellRowsByUnitIds([]);
   const srdinv29BColorSprayRows = spellRowsByUnitIds([]);
   const srdinv29CEntangleRows = spellRowsByUnitIds([]);
-  const srdinv29DGreaseRows = spellRowsByUnitIds(["grease"]);
+  const srdinv29DGreaseRows = spellRowsByUnitIds([]);
   const srdinv29EIceKnifeRows = spellRowsByUnitIds(["ice_knife"]);
   const srdinv29FChromaticOrbRows = spellRowsByUnitIds(["chromatic_orb"]);
   const srdinv30ASimpleBuffRows = spellRowsByUnitIds([]);
@@ -2065,14 +2057,16 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
   const srdinv31FTrueStrikeRows = spellRowsByUnitIds(["true_strike"]);
   const srdinv32AProduceFlameLightRows = spellRowsByUnitIds(["produce_flame"]);
   const srdinv32BProduceFlameHurlRows = spellRowsByUnitIds(["produce_flame"]);
-  const srdinv34StarryWispObjectTargetRows =
-    spellRowsByUnitIds(["starry_wisp"]);
+  const srdinv34StarryWispObjectTargetRows = spellRowsByUnitIds([
+    "starry_wisp",
+  ]);
   const srdinv35DetectAuthoringRows = spellRowsByUnitIds([
     "detect_evil_and_good",
     "detect_poison_and_disease",
   ]);
-  const srdinv36HellishRebukeReactionRows =
-    spellRowsByUnitIds(["hellish_rebuke"]);
+  const srdinv36HellishRebukeReactionRows = spellRowsByUnitIds([
+    "hellish_rebuke",
+  ]);
   const srdinv37CharmPersonRows = spellRowsByUnitIds(["charm_person"]);
   const srdinv38SleepRows = spellRowsByUnitIds(["sleep"]);
   const srdinv39EldritchBlastRows = spellRowsByUnitIds(["eldritch_blast"]);
