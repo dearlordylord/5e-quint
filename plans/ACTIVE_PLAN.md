@@ -94,7 +94,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 224,
       "id": "SRDINV34",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Starry Wisp Object Target Runtime"
     },
     {
