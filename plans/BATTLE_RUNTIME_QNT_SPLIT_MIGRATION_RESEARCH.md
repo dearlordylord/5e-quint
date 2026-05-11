@@ -285,6 +285,13 @@ surface while this research note remains temporary context.
   profiles through `battle-runtime-spell-bridge.qnt`; concrete attack replay,
   Shield reaction composition, object damage disposition, and `ActiveEffect`
   storage remain package-local.
+- The save-gated spell tracer extended the same spell bridge to save-damage,
+  save-condition, and save-granted-attack-advantage families. Rule-core now owns
+  targeting shape, save-success damage policy, damage type, slot requirement,
+  failed-save effect identity/duration, target-list scaling, creature-type
+  admissibility for Animal Friendship/Charm Person, and Charm Person's hostile
+  target save Advantage. Broad battle still owns replay holes, concrete target
+  mutation, source-actor projection, and concentration cleanup.
 - The same movement/action bridge now carries the projected start-turn resource
   reset for action, Bonus Action, Reaction, Dash movement bonus, movement spent,
   Dodge, Disengage, Help, and Ready Movement facts. Broad battle still owns

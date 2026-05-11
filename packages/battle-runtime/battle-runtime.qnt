@@ -3391,6 +3391,27 @@ module battleRuntime {
       | ProduceFlameHurlSpellAttack => BattleRuntimeProduceFlameHurlSpellAttack
     }
 
+  pure def battleRuntimeSaveGatedDamageProfileForInvocation(
+    invocation: SaveGatedDamageInvocation
+  ): BattleRuntimeSaveGatedDamageProfile =
+    match invocation {
+      | AcidSplashSaveGate => BattleRuntimeAcidSplashSaveDamage
+      | SacredFlameSaveGate => BattleRuntimeSacredFlameSaveDamage
+      | InflictWoundsSaveGate => BattleRuntimeInflictWoundsSaveDamage
+      | BurningHandsSaveGate => BattleRuntimeBurningHandsSaveDamage
+      | ViciousMockerySaveGate => BattleRuntimeViciousMockerySaveDamage
+    }
+
+  pure def battleRuntimeSaveGatedConditionProfileForInvocation(
+    invocation: SaveGatedConditionInvocation
+  ): BattleRuntimeSaveGatedConditionProfile =
+    match invocation {
+      | ColorSpraySaveGate => BattleRuntimeColorSpraySaveCondition
+      | EntangleSaveGate => BattleRuntimeEntangleSaveCondition
+      | AnimalFriendshipSaveGate => BattleRuntimeAnimalFriendshipSaveCondition
+      | CharmPersonSaveGate => BattleRuntimeCharmPersonSaveCondition
+    }
+
   pure def magicMissileDartCount(slotLevel: int): int =
     3 + (slotLevel - 1)
 
@@ -3740,12 +3761,28 @@ module battleRuntime {
     }
 
   pure def saveGatedDamageFailedSaveActiveEffects(invocation: SaveGatedDamageInvocation): Set[ActiveEffect] =
-    match invocation {
-      | AcidSplashSaveGate => Set()
-      | SacredFlameSaveGate => Set()
-      | InflictWoundsSaveGate => Set()
-      | BurningHandsSaveGate => Set()
-      | ViciousMockerySaveGate => Set(ViciousMockeryNextAttackDisadvantage)
+    battleRuntimeSaveGatedDamageFailedSaveEffects(
+      battleRuntimeSaveGatedDamageProfileForInvocation(invocation)
+    ).map(saveGatedFailedSaveActiveEffect)
+
+  pure def saveGatedFailedSaveActiveEffect(effect: BattleRuntimeSaveGatedFailedEffect): ActiveEffect =
+    match effect {
+      | BattleRuntimeViciousMockeryNextAttackDisadvantageEffect => ViciousMockeryNextAttackDisadvantage
+      | BattleRuntimeColorSprayBlindedEffect => ColorSprayBlinded
+      | BattleRuntimeEntangleRestrainedEffect => EntangleRestrained
+      | BattleRuntimeAnimalFriendshipCharmedEffect(data) => AnimalFriendshipCharmed({ source: Fighter, durationTicks: data.durationTicks })
+      | BattleRuntimeCharmPersonCharmedEffect(data) => CharmPersonCharmed({ source: Fighter, durationTicks: data.durationTicks })
+      | BattleRuntimeFaerieFireAttackRollAdvantageEffect => FaerieFireAttackRollAdvantage
+    }
+
+  pure def saveGatedFailedSaveActiveEffectFromSource(
+    effect: BattleRuntimeSaveGatedFailedEffect,
+    source: Actor
+  ): ActiveEffect =
+    match effect {
+      | BattleRuntimeAnimalFriendshipCharmedEffect(data) => AnimalFriendshipCharmed({ source: source, durationTicks: data.durationTicks })
+      | BattleRuntimeCharmPersonCharmedEffect(data) => CharmPersonCharmed({ source: source, durationTicks: data.durationTicks })
+      | _ => saveGatedFailedSaveActiveEffect(effect)
     }
 
   pure def spellAttackRollModeFromActiveEffects(
@@ -3801,40 +3838,38 @@ module battleRuntime {
     hit and currentActor != caster
 
   pure def saveGatedTargeting(invocation: SaveGatedDamageInvocation): SaveGatedTargeting =
-    match invocation {
-      | AcidSplashSaveGate => AreaSaveTargets
-      | SacredFlameSaveGate => SingleSaveTarget
-      | InflictWoundsSaveGate => SingleSaveTarget
-      | BurningHandsSaveGate => AreaSaveTargets
-      | ViciousMockerySaveGate => SingleSaveTarget
+    saveGatedTargetingFromBridge(
+      battleRuntimeSaveGatedDamageTargeting(
+        battleRuntimeSaveGatedDamageProfileForInvocation(invocation)
+      )
+    )
+
+  pure def saveGatedTargetingFromBridge(targeting: BattleRuntimeSaveGatedTargeting): SaveGatedTargeting =
+    match targeting {
+      | BattleRuntimeSingleSaveTarget => SingleSaveTarget
+      | BattleRuntimeAreaSaveTargets => AreaSaveTargets
+      | BattleRuntimeTargetListSaveTargets(data) => TargetListSaveTargets(data)
     }
 
   pure def saveGatedDamageSuccess(invocation: SaveGatedDamageInvocation): SaveGatedDamageSuccess =
-    match invocation {
-      | AcidSplashSaveGate => NoDamageOnSaveSuccess
-      | SacredFlameSaveGate => NoDamageOnSaveSuccess
-      | InflictWoundsSaveGate => HalfDamageOnSaveSuccess
-      | BurningHandsSaveGate => HalfDamageOnSaveSuccess
-      | ViciousMockerySaveGate => NoDamageOnSaveSuccess
+    match battleRuntimeSaveGatedDamageSuccess(
+      battleRuntimeSaveGatedDamageProfileForInvocation(invocation)
+    ) {
+      | BattleRuntimeNoDamageOnSaveSuccess => NoDamageOnSaveSuccess
+      | BattleRuntimeHalfDamageOnSaveSuccess => HalfDamageOnSaveSuccess
     }
 
   pure def saveGatedDamageType(invocation: SaveGatedDamageInvocation): DamageType =
-    match invocation {
-      | AcidSplashSaveGate => Acid
-      | SacredFlameSaveGate => Radiant
-      | InflictWoundsSaveGate => Necrotic
-      | BurningHandsSaveGate => Fire
-      | ViciousMockerySaveGate => Psychic
-    }
+    damageTypeFromRuleDamageType(
+      battleRuntimeSaveGatedDamageType(
+        battleRuntimeSaveGatedDamageProfileForInvocation(invocation)
+      )
+    )
 
   pure def saveGatedDamageSpendsLevelOneSlot(invocation: SaveGatedDamageInvocation): bool =
-    match invocation {
-      | AcidSplashSaveGate => false
-      | SacredFlameSaveGate => false
-      | InflictWoundsSaveGate => true
-      | BurningHandsSaveGate => true
-      | ViciousMockerySaveGate => false
-    }
+    battleRuntimeSaveGatedDamageRequiresSlot(
+      battleRuntimeSaveGatedDamageProfileForInvocation(invocation)
+    )
 
   pure def attackBurstSaveDamageSpendsLevelOneSlot(invocation: AttackBurstSaveDamageInvocation): bool =
     match invocation {
@@ -3877,31 +3912,26 @@ module battleRuntime {
       Set()
 
   pure def saveGatedConditionTargeting(invocation: SaveGatedConditionInvocation): SaveGatedTargeting =
-    match invocation {
-      | ColorSpraySaveGate => AreaSaveTargets
-      | EntangleSaveGate => AreaSaveTargets
-      | AnimalFriendshipSaveGate => TargetListSaveTargets({ minTargets: 1, baseSlotLevel: 1, baseTargets: 1, additionalTargetsPerSlotLevel: 1 })
-      | CharmPersonSaveGate => TargetListSaveTargets({ minTargets: 1, baseSlotLevel: 1, baseTargets: 1, additionalTargetsPerSlotLevel: 1 })
-    }
+    saveGatedTargetingFromBridge(
+      battleRuntimeSaveGatedConditionTargeting(
+        battleRuntimeSaveGatedConditionProfileForInvocation(invocation)
+      )
+    )
 
   pure def saveGatedTargetMaxTargets(targeting: SaveGatedTargeting, slotLevel: int): int =
+    battleRuntimeSaveGatedTargetMaxTargets(saveGatedTargetingToBridge(targeting), slotLevel)
+
+  pure def saveGatedTargetingToBridge(targeting: SaveGatedTargeting): BattleRuntimeSaveGatedTargeting =
     match targeting {
-      | TargetListSaveTargets(data) =>
-        data.baseTargets +
-          (if (slotLevel > data.baseSlotLevel)
-            (slotLevel - data.baseSlotLevel) * data.additionalTargetsPerSlotLevel
-          else
-            0)
-      | _ => 1
+      | SingleSaveTarget => BattleRuntimeSingleSaveTarget
+      | AreaSaveTargets => BattleRuntimeAreaSaveTargets
+      | TargetListSaveTargets(data) => BattleRuntimeTargetListSaveTargets(data)
     }
 
   pure def saveGatedConditionFailedSaveActiveEffects(invocation: SaveGatedConditionInvocation, source: Actor): Set[ActiveEffect] =
-    match invocation {
-      | ColorSpraySaveGate => Set(ColorSprayBlinded)
-      | EntangleSaveGate => Set(EntangleRestrained)
-      | AnimalFriendshipSaveGate => Set(AnimalFriendshipCharmed({ source: source, durationTicks: 24 * 60 }))
-      | CharmPersonSaveGate => Set(CharmPersonCharmed({ source: source, durationTicks: charmPersonCharmedDurationTicks }))
-    }
+    battleRuntimeSaveGatedConditionFailedSaveEffects(
+      battleRuntimeSaveGatedConditionProfileForInvocation(invocation)
+    ).map(effect => saveGatedFailedSaveActiveEffectFromSource(effect, source))
 
   pure def charmPersonCharmedDurationTicks: int = 60 * 10
 
@@ -3909,21 +3939,20 @@ module battleRuntime {
     invocation: SaveGatedConditionInvocation,
     targetCreatureType: RuntimeCreatureType,
   ): bool =
-    match invocation {
-      | ColorSpraySaveGate => true
-      | EntangleSaveGate => true
-      | AnimalFriendshipSaveGate => targetCreatureType == BeastCreature
-      | CharmPersonSaveGate => targetCreatureType == HumanoidCreature
-    }
+    battleRuntimeSaveGatedConditionTargetCreatureTypeIsLegal(
+      battleRuntimeSaveGatedConditionProfileForInvocation(invocation),
+      targetCreatureType == BeastCreature,
+      targetCreatureType == HumanoidCreature,
+    )
 
   pure def saveGatedConditionSavingThrowHasAdvantage(
     invocation: SaveGatedConditionInvocation,
     targetIsHostile: bool,
   ): bool =
-    match invocation {
-      | CharmPersonSaveGate => targetIsHostile
-      | _ => false
-    }
+    battleRuntimeSaveGatedConditionSavingThrowHasAdvantage(
+      battleRuntimeSaveGatedConditionProfileForInvocation(invocation),
+      targetIsHostile,
+    )
 
   pure def saveGatedConditionReplayHoles(
     invocation: SaveGatedConditionInvocation,
@@ -3944,12 +3973,15 @@ module battleRuntime {
 
   pure def saveGatedAttackRollAdvantageTargeting(invocation: SaveGatedAttackRollAdvantageInvocation): SaveGatedTargeting =
     match invocation {
-      | FaerieFireSaveGate => AreaSaveTargets
+      | FaerieFireSaveGate => saveGatedTargetingFromBridge(
+          battleRuntimeSaveGatedConditionTargeting(BattleRuntimeFaerieFireSaveAttackRollAdvantage)
+        )
     }
 
   pure def saveGatedAttackRollAdvantageFailedSaveActiveEffects(invocation: SaveGatedAttackRollAdvantageInvocation): Set[ActiveEffect] =
     match invocation {
-      | FaerieFireSaveGate => Set(FaerieFireAttackRollAdvantage)
+      | FaerieFireSaveGate => battleRuntimeSaveGatedConditionFailedSaveEffects(BattleRuntimeFaerieFireSaveAttackRollAdvantage)
+          .map(saveGatedFailedSaveActiveEffect)
     }
 
   pure def saveGatedAttackRollAdvantageReplayHoles(

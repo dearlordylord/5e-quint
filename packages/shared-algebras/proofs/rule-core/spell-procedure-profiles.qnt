@@ -56,6 +56,42 @@ module spellProcedureProfiles {
     | GuidingBoltNextAttackAdvantageHitEffect
     | RayOfSicknessPoisonedHitEffect
 
+  type SpellSaveGatedTargeting =
+    | SpellSingleSaveTarget
+    | SpellAreaSaveTargets
+    | SpellTargetListSaveTargets({
+        minTargets: int,
+        baseSlotLevel: int,
+        baseTargets: int,
+        additionalTargetsPerSlotLevel: int,
+      })
+
+  type SpellSaveGatedDamageSuccess =
+    | SpellNoDamageOnSaveSuccess
+    | SpellHalfDamageOnSaveSuccess
+
+  type SpellSaveGatedDamageProfile =
+    | AcidSplashSaveDamageProfile
+    | SacredFlameSaveDamageProfile
+    | InflictWoundsSaveDamageProfile
+    | BurningHandsSaveDamageProfile
+    | ViciousMockerySaveDamageProfile
+
+  type SpellSaveGatedConditionProfile =
+    | ColorSpraySaveConditionProfile
+    | EntangleSaveConditionProfile
+    | AnimalFriendshipSaveConditionProfile
+    | CharmPersonSaveConditionProfile
+    | FaerieFireSaveAttackRollAdvantageProfile
+
+  type SpellSaveGatedFailedEffect =
+    | ViciousMockeryNextAttackDisadvantageEffect
+    | ColorSprayBlindedEffect
+    | EntangleRestrainedEffect
+    | AnimalFriendshipCharmedEffect({ durationMinutes: int })
+    | CharmPersonCharmedEffect({ durationMinutes: int })
+    | FaerieFireAttackRollAdvantageEffect
+
   type SpellAreaProfile =
     | NoSpellAreaProfile
     | MassCureWoundsPointOriginSphereArea
@@ -266,6 +302,94 @@ module spellProcedureProfiles {
 
   pure def spellAttackDamageProfileSupportsObjectTarget(profile: SpellAttackDamageProfile): bool =
     profile == StarryWispSpellAttackProfile
+
+  pure def spellSaveGatedDamageTargeting(profile: SpellSaveGatedDamageProfile): SpellSaveGatedTargeting =
+    match profile {
+      | AcidSplashSaveDamageProfile => SpellAreaSaveTargets
+      | SacredFlameSaveDamageProfile => SpellSingleSaveTarget
+      | InflictWoundsSaveDamageProfile => SpellSingleSaveTarget
+      | BurningHandsSaveDamageProfile => SpellAreaSaveTargets
+      | ViciousMockerySaveDamageProfile => SpellSingleSaveTarget
+    }
+
+  pure def spellSaveGatedDamageSuccess(profile: SpellSaveGatedDamageProfile): SpellSaveGatedDamageSuccess =
+    match profile {
+      | AcidSplashSaveDamageProfile => SpellNoDamageOnSaveSuccess
+      | SacredFlameSaveDamageProfile => SpellNoDamageOnSaveSuccess
+      | InflictWoundsSaveDamageProfile => SpellHalfDamageOnSaveSuccess
+      | BurningHandsSaveDamageProfile => SpellHalfDamageOnSaveSuccess
+      | ViciousMockerySaveDamageProfile => SpellNoDamageOnSaveSuccess
+    }
+
+  pure def spellSaveGatedDamageType(profile: SpellSaveGatedDamageProfile): RuleDamageType =
+    match profile {
+      | AcidSplashSaveDamageProfile => AcidDamage
+      | SacredFlameSaveDamageProfile => RadiantDamage
+      | InflictWoundsSaveDamageProfile => NecroticDamage
+      | BurningHandsSaveDamageProfile => FireDamage
+      | ViciousMockerySaveDamageProfile => PsychicDamage
+    }
+
+  pure def spellSaveGatedDamageRequiresSlot(profile: SpellSaveGatedDamageProfile): bool =
+    match profile {
+      | AcidSplashSaveDamageProfile => false
+      | SacredFlameSaveDamageProfile => false
+      | InflictWoundsSaveDamageProfile => true
+      | BurningHandsSaveDamageProfile => true
+      | ViciousMockerySaveDamageProfile => false
+    }
+
+  pure def spellSaveGatedDamageFailedSaveEffects(profile: SpellSaveGatedDamageProfile): Set[SpellSaveGatedFailedEffect] =
+    match profile {
+      | ViciousMockerySaveDamageProfile => Set(ViciousMockeryNextAttackDisadvantageEffect)
+      | _ => Set()
+    }
+
+  pure def spellSaveGatedConditionTargeting(profile: SpellSaveGatedConditionProfile): SpellSaveGatedTargeting =
+    match profile {
+      | ColorSpraySaveConditionProfile => SpellAreaSaveTargets
+      | EntangleSaveConditionProfile => SpellAreaSaveTargets
+      | AnimalFriendshipSaveConditionProfile => SpellTargetListSaveTargets({ minTargets: 1, baseSlotLevel: 1, baseTargets: 1, additionalTargetsPerSlotLevel: 1 })
+      | CharmPersonSaveConditionProfile => SpellTargetListSaveTargets({ minTargets: 1, baseSlotLevel: 1, baseTargets: 1, additionalTargetsPerSlotLevel: 1 })
+      | FaerieFireSaveAttackRollAdvantageProfile => SpellAreaSaveTargets
+    }
+
+  pure def spellSaveGatedTargetMaxTargets(targeting: SpellSaveGatedTargeting, slotLevel: int): int =
+    match targeting {
+      | SpellTargetListSaveTargets(data) =>
+        data.baseTargets +
+          (if (slotLevel > data.baseSlotLevel)
+            (slotLevel - data.baseSlotLevel) * data.additionalTargetsPerSlotLevel
+          else
+            0)
+      | _ => 1
+    }
+
+  pure def spellSaveGatedConditionFailedSaveEffects(profile: SpellSaveGatedConditionProfile): Set[SpellSaveGatedFailedEffect] =
+    match profile {
+      | ColorSpraySaveConditionProfile => Set(ColorSprayBlindedEffect)
+      | EntangleSaveConditionProfile => Set(EntangleRestrainedEffect)
+      | AnimalFriendshipSaveConditionProfile => Set(AnimalFriendshipCharmedEffect({ durationMinutes: 24 * 60 }))
+      | CharmPersonSaveConditionProfile => Set(CharmPersonCharmedEffect({ durationMinutes: 10 * 60 }))
+      | FaerieFireSaveAttackRollAdvantageProfile => Set(FaerieFireAttackRollAdvantageEffect)
+    }
+
+  pure def spellSaveGatedConditionTargetCreatureTypeIsLegal(
+    profile: SpellSaveGatedConditionProfile,
+    targetIsBeast: bool,
+    targetIsHumanoid: bool
+  ): bool =
+    match profile {
+      | AnimalFriendshipSaveConditionProfile => targetIsBeast
+      | CharmPersonSaveConditionProfile => targetIsHumanoid
+      | _ => true
+    }
+
+  pure def spellSaveGatedConditionSavingThrowHasAdvantage(
+    profile: SpellSaveGatedConditionProfile,
+    targetIsHostile: bool
+  ): bool =
+    profile == CharmPersonSaveConditionProfile and targetIsHostile
 
   pure def spellActionCost(invocationAction: SpellInvocationAction): ActionCost =
     if (invocationAction == BonusActionSpellInvocation) BonusActionCost
@@ -660,6 +784,31 @@ module spellProcedureProfiles {
       assert(spellAttackDamageProfileHitEffects(StarryWispSpellAttackProfile) == Set()),
       assert(spellAttackDamageProfileSupportsObjectTarget(StarryWispSpellAttackProfile)),
       assert(not(spellAttackDamageProfileSupportsObjectTarget(RayOfFrostSpellAttackProfile))),
+    }
+  }
+
+  run test_save_gated_spell_profiles_project_damage_targeting_and_effects = {
+    val animalTargets = spellSaveGatedConditionTargeting(AnimalFriendshipSaveConditionProfile)
+    all {
+      assert(spellSaveGatedDamageTargeting(SacredFlameSaveDamageProfile) == SpellSingleSaveTarget),
+      assert(spellSaveGatedDamageTargeting(BurningHandsSaveDamageProfile) == SpellAreaSaveTargets),
+      assert(spellSaveGatedDamageSuccess(InflictWoundsSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
+      assert(spellSaveGatedDamageSuccess(ViciousMockerySaveDamageProfile) == SpellNoDamageOnSaveSuccess),
+      assert(spellSaveGatedDamageType(ViciousMockerySaveDamageProfile) == PsychicDamage),
+      assert(spellSaveGatedDamageRequiresSlot(BurningHandsSaveDamageProfile)),
+      assert(not(spellSaveGatedDamageRequiresSlot(AcidSplashSaveDamageProfile))),
+      assert(spellSaveGatedDamageFailedSaveEffects(ViciousMockerySaveDamageProfile) == Set(ViciousMockeryNextAttackDisadvantageEffect)),
+      assert(spellSaveGatedConditionTargeting(ColorSpraySaveConditionProfile) == SpellAreaSaveTargets),
+      assert(spellSaveGatedTargetMaxTargets(animalTargets, 1) == 1),
+      assert(spellSaveGatedTargetMaxTargets(animalTargets, 2) == 2),
+      assert(spellSaveGatedConditionFailedSaveEffects(EntangleSaveConditionProfile) == Set(EntangleRestrainedEffect)),
+      assert(spellSaveGatedConditionFailedSaveEffects(FaerieFireSaveAttackRollAdvantageProfile) == Set(FaerieFireAttackRollAdvantageEffect)),
+      assert(spellSaveGatedConditionTargetCreatureTypeIsLegal(AnimalFriendshipSaveConditionProfile, true, false)),
+      assert(not(spellSaveGatedConditionTargetCreatureTypeIsLegal(AnimalFriendshipSaveConditionProfile, false, true))),
+      assert(spellSaveGatedConditionTargetCreatureTypeIsLegal(CharmPersonSaveConditionProfile, false, true)),
+      assert(not(spellSaveGatedConditionTargetCreatureTypeIsLegal(CharmPersonSaveConditionProfile, true, false))),
+      assert(spellSaveGatedConditionSavingThrowHasAdvantage(CharmPersonSaveConditionProfile, true)),
+      assert(not(spellSaveGatedConditionSavingThrowHasAdvantage(CharmPersonSaveConditionProfile, false))),
     }
   }
 
