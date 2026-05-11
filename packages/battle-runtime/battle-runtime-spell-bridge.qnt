@@ -94,6 +94,24 @@ module battleRuntimeSpellBridge {
   type BattleRuntimeAttackBurstSaveDamageProfile =
     | BattleRuntimeIceKnifeAttackBurstSaveDamage
 
+  type BattleRuntimeSpellAttackBeamSequenceProfile =
+    | BattleRuntimeEldritchBlastBeamSequence
+
+  type BattleRuntimeSpellAttackBeamSequenceStep =
+    | BattleRuntimeBeamSequenceUnavailable
+    | BattleRuntimeBeamSequenceNeedsTargets
+    | BattleRuntimeBeamSequenceNeedsAttackRoll
+    | BattleRuntimeBeamSequenceNeedsDamageRoll
+    | BattleRuntimeBeamSequenceComplete
+
+  type BattleRuntimeSleepRepeatSaveLifecycle =
+    | BattleRuntimeNoSleepRepeatSaveLifecycle
+    | BattleRuntimePendingSleepRepeatSaveLifecycle({ hadIncapacitated: bool })
+    | BattleRuntimeUnconsciousSleepRepeatSaveLifecycle({
+        hadIncapacitated: bool,
+        hadUnconscious: bool,
+      })
+
   type BattleRuntimeObjectHitPointDamageResult = {
     effectiveDamage: int,
     priorHitPoints: int,
@@ -493,6 +511,101 @@ module battleRuntimeSpellBridge {
   pure def battleRuntimeAttackBurstSaveDamageBurstAmount(damageRoll: int, savingThrowSucceeded: bool): int =
     attackBurstSaveDamageBurstAmount(damageRoll, savingThrowSucceeded)
 
+  pure def battleRuntimeSpellAttackBeamSequenceProfile(
+    profile: BattleRuntimeSpellAttackBeamSequenceProfile
+  ): SpellAttackBeamSequenceProfile =
+    match profile {
+      | BattleRuntimeEldritchBlastBeamSequence => EldritchBlastBeamSequenceProfile
+    }
+
+  pure def battleRuntimeSpellAttackBeamSequenceStep(
+    step: SpellAttackBeamSequenceStep
+  ): BattleRuntimeSpellAttackBeamSequenceStep =
+    match step {
+      | BeamSequenceUnavailable => BattleRuntimeBeamSequenceUnavailable
+      | BeamSequenceNeedsTargets => BattleRuntimeBeamSequenceNeedsTargets
+      | BeamSequenceNeedsAttackRoll => BattleRuntimeBeamSequenceNeedsAttackRoll
+      | BeamSequenceNeedsDamageRoll => BattleRuntimeBeamSequenceNeedsDamageRoll
+      | BeamSequenceComplete => BattleRuntimeBeamSequenceComplete
+    }
+
+  pure def battleRuntimeSpellAttackBeamSequenceDamageType(
+    profile: BattleRuntimeSpellAttackBeamSequenceProfile
+  ): RuleDamageType =
+    spellAttackBeamSequenceDamageType(battleRuntimeSpellAttackBeamSequenceProfile(profile))
+
+  pure def battleRuntimeSpellAttackBeamSequenceSupportsObjectTargets(
+    profile: BattleRuntimeSpellAttackBeamSequenceProfile
+  ): bool =
+    spellAttackBeamSequenceSupportsObjectTargets(battleRuntimeSpellAttackBeamSequenceProfile(profile))
+
+  pure def battleRuntimeSpellAttackBeamSequenceBeamCount(
+    profile: BattleRuntimeSpellAttackBeamSequenceProfile,
+    characterLevel: int
+  ): int =
+    spellAttackBeamSequenceBeamCount(battleRuntimeSpellAttackBeamSequenceProfile(profile), characterLevel)
+
+  pure def battleRuntimeSpellAttackBeamSequenceNextStep(
+    profile: BattleRuntimeSpellAttackBeamSequenceProfile,
+    canCastSpells: bool,
+    beamCount: int,
+    beamTargetsFilled: int,
+    beamAttackRollsFilled: int,
+    beamHits: int,
+    beamDamageRollsFilled: int,
+  ): BattleRuntimeSpellAttackBeamSequenceStep =
+    battleRuntimeSpellAttackBeamSequenceStep(
+      spellAttackBeamSequenceStep(
+        battleRuntimeSpellAttackBeamSequenceProfile(profile),
+        canCastSpells,
+        beamCount,
+        beamTargetsFilled,
+        beamAttackRollsFilled,
+        beamHits,
+        beamDamageRollsFilled,
+      )
+    )
+
+  pure def battleRuntimeSleepRepeatSaveLifecycle(
+    lifecycle: SleepRepeatSaveLifecycle
+  ): BattleRuntimeSleepRepeatSaveLifecycle =
+    match lifecycle {
+      | NoSleepRepeatSaveLifecycle => BattleRuntimeNoSleepRepeatSaveLifecycle
+      | PendingSleepRepeatSaveLifecycle(data) => BattleRuntimePendingSleepRepeatSaveLifecycle(data)
+      | UnconsciousSleepRepeatSaveLifecycle(data) => BattleRuntimeUnconsciousSleepRepeatSaveLifecycle(data)
+    }
+
+  pure def battleRuntimeSleepInitialSaveLifecycle(
+    savingThrowSucceeded: bool,
+    hadIncapacitated: bool,
+  ): BattleRuntimeSleepRepeatSaveLifecycle =
+    battleRuntimeSleepRepeatSaveLifecycle(
+      sleepInitialSaveLifecycle(savingThrowSucceeded, hadIncapacitated)
+    )
+
+  pure def battleRuntimeSleepRepeatSaveLifecycleAfterSave(
+    lifecycle: BattleRuntimeSleepRepeatSaveLifecycle,
+    savingThrowSucceeded: bool,
+    hadUnconscious: bool,
+  ): BattleRuntimeSleepRepeatSaveLifecycle =
+    match lifecycle {
+      | BattleRuntimePendingSleepRepeatSaveLifecycle(data) =>
+          battleRuntimeSleepRepeatSaveLifecycle(
+            sleepRepeatSaveLifecycle(
+              PendingSleepRepeatSaveLifecycle(data),
+              savingThrowSucceeded,
+              hadUnconscious,
+            )
+          )
+      | _ => lifecycle
+    }
+
+  pure def battleRuntimeSleepEffectEndsOnDamage: bool =
+    sleepEffectEndsOnDamage
+
+  pure def battleRuntimeSleepEffectEndsOnAdjacentShakeAwakeAction: bool =
+    sleepEffectEndsOnAdjacentShakeAwakeAction
+
   pure def battleRuntimeObjectHitPointDamageResult(
     rolledDamage: int,
     priorHitPoints: int,
@@ -636,6 +749,39 @@ module battleRuntimeSpellBridge {
       assert(battleRuntimeAttackBurstSaveDamageBurstDice(BattleRuntimeIceKnifeAttackBurstSaveDamage, 3) == 4),
       assert(battleRuntimeAttackBurstSaveDamageBurstAmount(6, false) == 6),
       assert(battleRuntimeAttackBurstSaveDamageBurstAmount(6, true) == 0),
+    }
+  }
+
+  run test_spell_attack_beam_sequence_projection = {
+    all {
+      assert(battleRuntimeSpellAttackBeamSequenceDamageType(BattleRuntimeEldritchBlastBeamSequence) == ForceDamage),
+      assert(battleRuntimeSpellAttackBeamSequenceSupportsObjectTargets(BattleRuntimeEldritchBlastBeamSequence)),
+      assert(battleRuntimeSpellAttackBeamSequenceBeamCount(BattleRuntimeEldritchBlastBeamSequence, 1) == 1),
+      assert(battleRuntimeSpellAttackBeamSequenceBeamCount(BattleRuntimeEldritchBlastBeamSequence, 5) == 2),
+      assert(battleRuntimeSpellAttackBeamSequenceBeamCount(BattleRuntimeEldritchBlastBeamSequence, 11) == 3),
+      assert(battleRuntimeSpellAttackBeamSequenceBeamCount(BattleRuntimeEldritchBlastBeamSequence, 17) == 4),
+      assert(battleRuntimeSpellAttackBeamSequenceNextStep(BattleRuntimeEldritchBlastBeamSequence, false, 2, 0, 0, 0, 0) == BattleRuntimeBeamSequenceUnavailable),
+      assert(battleRuntimeSpellAttackBeamSequenceNextStep(BattleRuntimeEldritchBlastBeamSequence, true, 2, 0, 0, 0, 0) == BattleRuntimeBeamSequenceNeedsTargets),
+      assert(battleRuntimeSpellAttackBeamSequenceNextStep(BattleRuntimeEldritchBlastBeamSequence, true, 2, 2, 1, 0, 0) == BattleRuntimeBeamSequenceNeedsAttackRoll),
+      assert(battleRuntimeSpellAttackBeamSequenceNextStep(BattleRuntimeEldritchBlastBeamSequence, true, 2, 2, 2, 2, 1) == BattleRuntimeBeamSequenceNeedsDamageRoll),
+      assert(battleRuntimeSpellAttackBeamSequenceNextStep(BattleRuntimeEldritchBlastBeamSequence, true, 2, 2, 2, 1, 1) == BattleRuntimeBeamSequenceComplete),
+    }
+  }
+
+  run test_sleep_repeat_save_lifecycle_projection = {
+    val pending = battleRuntimeSleepInitialSaveLifecycle(false, true)
+    val saved = battleRuntimeSleepRepeatSaveLifecycleAfterSave(pending, true, false)
+    val unconscious = battleRuntimeSleepRepeatSaveLifecycleAfterSave(pending, false, false)
+    all {
+      assert(battleRuntimeSleepInitialSaveLifecycle(true, true) == BattleRuntimeNoSleepRepeatSaveLifecycle),
+      assert(pending == BattleRuntimePendingSleepRepeatSaveLifecycle({ hadIncapacitated: true })),
+      assert(saved == BattleRuntimeNoSleepRepeatSaveLifecycle),
+      assert(unconscious == BattleRuntimeUnconsciousSleepRepeatSaveLifecycle({
+        hadIncapacitated: true,
+        hadUnconscious: false,
+      })),
+      assert(battleRuntimeSleepEffectEndsOnDamage),
+      assert(battleRuntimeSleepEffectEndsOnAdjacentShakeAwakeAction),
     }
   }
 

@@ -136,6 +136,24 @@ module spellProcedureProfiles {
   type AttackBurstSaveDamageProfile =
     | IceKnifeAttackBurstSaveDamageProfile
 
+  type SpellAttackBeamSequenceProfile =
+    | EldritchBlastBeamSequenceProfile
+
+  type SpellAttackBeamSequenceStep =
+    | BeamSequenceUnavailable
+    | BeamSequenceNeedsTargets
+    | BeamSequenceNeedsAttackRoll
+    | BeamSequenceNeedsDamageRoll
+    | BeamSequenceComplete
+
+  type SleepRepeatSaveLifecycle =
+    | NoSleepRepeatSaveLifecycle
+    | PendingSleepRepeatSaveLifecycle({ hadIncapacitated: bool })
+    | UnconsciousSleepRepeatSaveLifecycle({
+        hadIncapacitated: bool,
+        hadUnconscious: bool,
+      })
+
   type ObjectHitPointDamageFacts = {
     rolledDamage: int,
     priorHitPoints: int,
@@ -647,6 +665,78 @@ module spellProcedureProfiles {
 
   pure def attackBurstSaveDamageBurstAmount(damageRoll: int, savingThrowSucceeded: bool): int =
     if (savingThrowSucceeded) 0 else damageRoll
+
+  pure def spellAttackBeamSequenceDamageType(profile: SpellAttackBeamSequenceProfile): RuleDamageType =
+    match profile {
+      | EldritchBlastBeamSequenceProfile => ForceDamage
+    }
+
+  pure def spellAttackBeamSequenceSupportsObjectTargets(profile: SpellAttackBeamSequenceProfile): bool =
+    match profile {
+      | EldritchBlastBeamSequenceProfile => true
+    }
+
+  pure def spellAttackBeamSequenceBeamCount(profile: SpellAttackBeamSequenceProfile, characterLevel: int): int =
+    match profile {
+      | EldritchBlastBeamSequenceProfile =>
+          if (characterLevel >= 17) 4
+          else if (characterLevel >= 11) 3
+          else if (characterLevel >= 5) 2
+          else 1
+    }
+
+  pure def spellAttackBeamSequenceStep(
+    profile: SpellAttackBeamSequenceProfile,
+    canCastSpells: bool,
+    beamCount: int,
+    beamTargetsFilled: int,
+    beamAttackRollsFilled: int,
+    beamHits: int,
+    beamDamageRollsFilled: int,
+  ): SpellAttackBeamSequenceStep =
+    match profile {
+      | EldritchBlastBeamSequenceProfile =>
+          if (not(canCastSpells) or beamCount <= 0)
+            BeamSequenceUnavailable
+          else if (beamTargetsFilled < beamCount)
+            BeamSequenceNeedsTargets
+          else if (beamAttackRollsFilled < beamCount)
+            BeamSequenceNeedsAttackRoll
+          else if (beamDamageRollsFilled < beamHits)
+            BeamSequenceNeedsDamageRoll
+          else
+            BeamSequenceComplete
+    }
+
+  pure def sleepInitialSaveLifecycle(
+    savingThrowSucceeded: bool,
+    hadIncapacitated: bool,
+  ): SleepRepeatSaveLifecycle =
+    if (savingThrowSucceeded)
+      NoSleepRepeatSaveLifecycle
+    else
+      PendingSleepRepeatSaveLifecycle({ hadIncapacitated: hadIncapacitated })
+
+  pure def sleepRepeatSaveLifecycle(
+    pending: SleepRepeatSaveLifecycle,
+    savingThrowSucceeded: bool,
+    hadUnconscious: bool,
+  ): SleepRepeatSaveLifecycle =
+    match pending {
+      | PendingSleepRepeatSaveLifecycle(data) =>
+          if (savingThrowSucceeded)
+            NoSleepRepeatSaveLifecycle
+          else
+            UnconsciousSleepRepeatSaveLifecycle({
+              hadIncapacitated: data.hadIncapacitated,
+              hadUnconscious: hadUnconscious,
+            })
+      | _ => pending
+    }
+
+  pure def sleepEffectEndsOnDamage: bool = true
+
+  pure def sleepEffectEndsOnAdjacentShakeAwakeAction: bool = true
 
   pure def objectHitPointEffectiveDamage(rolledDamage: int, damageThreshold: int): int =
     if (damageThreshold > 0 and rolledDamage < damageThreshold) 0 else rolledDamage
@@ -1189,6 +1279,39 @@ module spellProcedureProfiles {
       assert(attackBurstSaveDamageBurstDice(IceKnifeAttackBurstSaveDamageProfile, 3) == 4),
       assert(attackBurstSaveDamageBurstAmount(6, false) == 6),
       assert(attackBurstSaveDamageBurstAmount(6, true) == 0),
+    }
+  }
+
+  run test_spell_attack_beam_sequence_projects_eldritch_blast_facts = {
+    all {
+      assert(spellAttackBeamSequenceDamageType(EldritchBlastBeamSequenceProfile) == ForceDamage),
+      assert(spellAttackBeamSequenceSupportsObjectTargets(EldritchBlastBeamSequenceProfile)),
+      assert(spellAttackBeamSequenceBeamCount(EldritchBlastBeamSequenceProfile, 1) == 1),
+      assert(spellAttackBeamSequenceBeamCount(EldritchBlastBeamSequenceProfile, 5) == 2),
+      assert(spellAttackBeamSequenceBeamCount(EldritchBlastBeamSequenceProfile, 11) == 3),
+      assert(spellAttackBeamSequenceBeamCount(EldritchBlastBeamSequenceProfile, 17) == 4),
+      assert(spellAttackBeamSequenceStep(EldritchBlastBeamSequenceProfile, false, 2, 0, 0, 0, 0) == BeamSequenceUnavailable),
+      assert(spellAttackBeamSequenceStep(EldritchBlastBeamSequenceProfile, true, 2, 0, 0, 0, 0) == BeamSequenceNeedsTargets),
+      assert(spellAttackBeamSequenceStep(EldritchBlastBeamSequenceProfile, true, 2, 2, 1, 0, 0) == BeamSequenceNeedsAttackRoll),
+      assert(spellAttackBeamSequenceStep(EldritchBlastBeamSequenceProfile, true, 2, 2, 2, 2, 1) == BeamSequenceNeedsDamageRoll),
+      assert(spellAttackBeamSequenceStep(EldritchBlastBeamSequenceProfile, true, 2, 2, 2, 1, 1) == BeamSequenceComplete),
+    }
+  }
+
+  run test_sleep_repeat_save_lifecycle_projects_pending_and_unconscious = {
+    val pending = sleepInitialSaveLifecycle(false, true)
+    val saved = sleepRepeatSaveLifecycle(pending, true, false)
+    val unconscious = sleepRepeatSaveLifecycle(pending, false, false)
+    all {
+      assert(sleepInitialSaveLifecycle(true, true) == NoSleepRepeatSaveLifecycle),
+      assert(pending == PendingSleepRepeatSaveLifecycle({ hadIncapacitated: true })),
+      assert(saved == NoSleepRepeatSaveLifecycle),
+      assert(unconscious == UnconsciousSleepRepeatSaveLifecycle({
+        hadIncapacitated: true,
+        hadUnconscious: false,
+      })),
+      assert(sleepEffectEndsOnDamage),
+      assert(sleepEffectEndsOnAdjacentShakeAwakeAction),
     }
   }
 

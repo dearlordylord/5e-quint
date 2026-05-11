@@ -2096,7 +2096,7 @@ module battleRuntime {
     damageSource: Actor,
   ): Combatant = {
     val damaged = applyDamageWithDisposition(target, damage, deathFailuresAtZeroHp, concentrationSaveSucceeded, damageDisposition)
-    if (damage > 0)
+    if (damage > 0 and battleRuntimeSleepEffectEndsOnDamage)
       combatantWithoutSleepEffects({
         ...damaged,
         activeEffects: activeEffectsAfterTargetDamagedByCasterOrAlly(damaged.activeEffects, damageSource),
@@ -3664,16 +3664,25 @@ module battleRuntime {
       battleRuntimeSpellAttackDamageProfileForInvocation(invocation),
     )
 
-  pure def spellAttackBeamSequenceDamageType(invocation: SpellAttackBeamSequenceInvocation): DamageType =
+  pure def battleRuntimeSpellAttackBeamSequenceProfileForInvocation(
+    invocation: SpellAttackBeamSequenceInvocation
+  ): BattleRuntimeSpellAttackBeamSequenceProfile =
     match invocation {
-      | EldritchBlastBeamSequence => Force
+      | EldritchBlastBeamSequence => BattleRuntimeEldritchBlastBeamSequence
     }
 
+  pure def spellAttackBeamSequenceDamageType(invocation: SpellAttackBeamSequenceInvocation): DamageType =
+    damageTypeFromRuleDamageType(
+      battleRuntimeSpellAttackBeamSequenceDamageType(
+        battleRuntimeSpellAttackBeamSequenceProfileForInvocation(invocation),
+      )
+    )
+
   pure def eldritchBlastBeamCount(characterLevel: int): int =
-    if (characterLevel >= 17) 4
-    else if (characterLevel >= 11) 3
-    else if (characterLevel >= 5) 2
-    else 1
+    battleRuntimeSpellAttackBeamSequenceBeamCount(
+      BattleRuntimeEldritchBlastBeamSequence,
+      characterLevel,
+    )
 
   pure def spellAttackBeamSequenceReplayHoles(
     invocation: SpellAttackBeamSequenceInvocation,
@@ -3684,16 +3693,20 @@ module battleRuntime {
     beamHits: int,
     beamDamageRollsFilled: int,
   ): Set[Hole] =
-    if (not(canCastSpells) or beamCount <= 0)
-      Set()
-    else if (beamTargetsFilled < beamCount)
-      Set(TargetChoice, ObjectTargetChoice)
-    else if (beamAttackRollsFilled < beamCount)
-      Set(AttackRoll)
-    else if (beamDamageRollsFilled < beamHits)
-      Set(SpellDamageRoll)
-    else
-      Set()
+    match battleRuntimeSpellAttackBeamSequenceNextStep(
+      battleRuntimeSpellAttackBeamSequenceProfileForInvocation(invocation),
+      canCastSpells,
+      beamCount,
+      beamTargetsFilled,
+      beamAttackRollsFilled,
+      beamHits,
+      beamDamageRollsFilled,
+    ) {
+      | BattleRuntimeBeamSequenceNeedsTargets => Set(TargetChoice, ObjectTargetChoice)
+      | BattleRuntimeBeamSequenceNeedsAttackRoll => Set(AttackRoll)
+      | BattleRuntimeBeamSequenceNeedsDamageRoll => Set(SpellDamageRoll)
+      | _ => Set()
+    }
 
   pure def objectHitPointDamageOutcome(
     object: ObjectTarget,
@@ -4420,21 +4433,23 @@ module battleRuntime {
     savingThrowSucceeded: bool,
     source: Actor,
   ): Combatant =
-    if (savingThrowSucceeded)
-      target
-    else {
-      val slept = {
-        ...target,
-        incapacitated: true,
-        activeEffects: target.activeEffects
-          .filter(effect => match effect {
-            | SleepPendingRepeatSave(data) => data.source != source
-            | SleepUnconscious(data) => data.source != source
-            | _ => true
-          })
-          .union(Set(sleepPendingRepeatSaveEffect(state, targetActor, source, target.incapacitated))),
-      }
-      breakConcentrationFromSleepAppliedIncapacitated(slept, targetActor)
+    match battleRuntimeSleepInitialSaveLifecycle(savingThrowSucceeded, target.incapacitated) {
+      | BattleRuntimeNoSleepRepeatSaveLifecycle => target
+      | BattleRuntimePendingSleepRepeatSaveLifecycle(data) => {
+          val slept = {
+            ...target,
+            incapacitated: true,
+            activeEffects: target.activeEffects
+              .filter(effect => match effect {
+                | SleepPendingRepeatSave(existing) => existing.source != source
+                | SleepUnconscious(existing) => existing.source != source
+                | _ => true
+              })
+              .union(Set(sleepPendingRepeatSaveEffect(state, targetActor, source, data.hadIncapacitated))),
+          }
+          breakConcentrationFromSleepAppliedIncapacitated(slept, targetActor)
+        }
+      | BattleRuntimeUnconsciousSleepRepeatSaveLifecycle(_) => target
     }
 
   pure def resolveSleepTargetAdmission(
@@ -4494,21 +4509,29 @@ module battleRuntime {
   ): Combatant = {
     val activeEffectsWithoutPending = activeEffectsWithoutSleepPendingRepeatSave(target.activeEffects, targetActor, round)
     val hadIncapacitated = sleepPendingHadIncapacitated(target.activeEffects, targetActor, round)
-    if (savingThrowSucceeded)
-      { ...target, incapacitated: hadIncapacitated, activeEffects: activeEffectsWithoutPending }
-    else {
-      val slept = {
-        ...target,
-        incapacitated: hadIncapacitated,
-        unconscious: true,
-        prone: true,
-        activeEffects: activeEffectsWithoutPending.union(Set(SleepUnconscious({
-          source: Fighter,
-          hadUnconscious: target.unconscious,
-          hadIncapacitated: hadIncapacitated,
-        }))),
-      }
-      breakConcentrationFromSleepAppliedIncapacitated(slept, targetActor)
+    val lifecycle = battleRuntimeSleepRepeatSaveLifecycleAfterSave(
+      BattleRuntimePendingSleepRepeatSaveLifecycle({ hadIncapacitated: hadIncapacitated }),
+      savingThrowSucceeded,
+      target.unconscious,
+    )
+    match lifecycle {
+      | BattleRuntimeNoSleepRepeatSaveLifecycle =>
+          { ...target, incapacitated: hadIncapacitated, activeEffects: activeEffectsWithoutPending }
+      | BattleRuntimeUnconsciousSleepRepeatSaveLifecycle(data) => {
+          val slept = {
+            ...target,
+            incapacitated: data.hadIncapacitated,
+            unconscious: true,
+            prone: true,
+            activeEffects: activeEffectsWithoutPending.union(Set(SleepUnconscious({
+              source: Fighter,
+              hadUnconscious: data.hadUnconscious,
+              hadIncapacitated: data.hadIncapacitated,
+            }))),
+          }
+          breakConcentrationFromSleepAppliedIncapacitated(slept, targetActor)
+        }
+      | BattleRuntimePendingSleepRepeatSaveLifecycle(_) => target
     }
   }
 
@@ -4534,7 +4557,7 @@ module battleRuntime {
     })
 
   pure def shakeAwakeFromSleep(state: BattleState, targetActor: Actor, actorWithin5Feet: bool): BattleState =
-    if (not(state.actionAvailable) or not(actorWithin5Feet) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated)
+    if (not(battleRuntimeSleepEffectEndsOnAdjacentShakeAwakeAction) or not(state.actionAvailable) or not(actorWithin5Feet) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated)
       state
     else {
       match targetActor {

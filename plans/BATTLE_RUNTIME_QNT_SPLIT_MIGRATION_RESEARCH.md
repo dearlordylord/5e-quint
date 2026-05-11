@@ -328,6 +328,13 @@ surface while this research note remains temporary context.
   `battle-trace-contract.ts` for weapon Attack hit/miss checkpoint projection.
   QNT owns the representative semantic checkpoint order; TypeScript owns public
   reducer fill payload width and concrete snapshots.
+- After merging `master` at `48151511`, the Eldritch Blast and Sleep promotions
+  were brought forward into the split architecture. Rule-core now owns Eldritch
+  Blast beam count scaling, Force damage type, object-target support, and beam
+  replay step classification, plus Sleep initial-save pending lifecycle,
+  repeat-save escalation/removal, and end-on-damage/adjacent-shake facts. Broad
+  battle keeps concrete beam replay state, target mutation, Sleep condition
+  restoration, and concentration cleanup.
 - The same movement/action bridge now carries the projected start-turn resource
   reset for action, Bonus Action, Reaction, Dash movement bonus, movement spent,
   Dodge, Disengage, Help, and Ready Movement facts. Broad battle still owns
