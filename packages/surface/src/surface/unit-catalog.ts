@@ -54,7 +54,9 @@ import fighterImprovedCriticalInput from "../../content/fighter_improved_critica
 import fighterSecondWindInput from "../../content/fighter_second_wind.json";
 import fighterTacticalMindInput from "../../content/fighter_tactical_mind.json";
 import fighterWeaponMasteryInput from "../../content/fighter_weapon_mastery.json";
+import detectEvilAndGoodInput from "../../content/detect_evil_and_good.json";
 import detectMagicInput from "../../content/detect_magic.json";
+import detectPoisonAndDiseaseInput from "../../content/detect_poison_and_disease.json";
 import falseLifeInput from "../../content/false_life.json";
 import fireBoltInput from "../../content/fire_bolt.json";
 import guidanceInput from "../../content/guidance.json";
@@ -325,7 +327,9 @@ export const srdUnitCollection = defineSrdUnitCollection({
     shockingGraspInput,
     starryWispInput,
     viciousMockeryInput,
+    detectEvilAndGoodInput,
     detectMagicInput,
+    detectPoisonAndDiseaseInput,
     mageArmorInput,
     magicMissileInput,
     massCureWoundsInput,

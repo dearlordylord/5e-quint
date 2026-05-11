@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 348,
-      "numerator": 97,
-      "percent": "27.9%"
+      "denominator": 350,
+      "numerator": 99,
+      "percent": "28.3%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 415,
-      "numerator": 121,
-      "percent": "29.2%"
+      "denominator": 417,
+      "numerator": 123,
+      "percent": "29.5%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 122
+      "value": 124
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 62,
@@ -67,8 +67,8 @@
       "percent": "93.5%"
     },
     "profileClassificationCoverage": {
-      "denominator": 122,
-      "numerator": 122,
+      "denominator": 124,
+      "numerator": 124,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -97,9 +97,9 @@
       "percent": "16.1%"
     },
     "supportedProfileCoverage": {
-      "denominator": 98,
+      "denominator": 100,
       "numerator": 62,
-      "percent": "63.3%"
+      "percent": "62%"
     }
   },
   "metricSemantics": [
@@ -6346,6 +6346,24 @@
         "status": "installed"
       },
       "claim": {
+        "reason": "Detection/occlusion search semantics and Hallow discovery are not promoted as battle Unit profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/detect_evil_and_good.json",
+      "unitId": "detect_evil_and_good"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "reason": "Detection/concentration search semantics are not promoted as a battle Unit profile.",
         "tag": "unsupported-profile"
       },
@@ -6356,6 +6374,24 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/detect_magic.json",
       "unitId": "detect_magic"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Detection/occlusion search semantics and poison/disease identification are not promoted as battle Unit profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/detect_poison_and_disease.json",
+      "unitId": "detect_poison_and_disease"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

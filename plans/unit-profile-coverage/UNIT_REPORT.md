@@ -8,16 +8,16 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Metric | Value |
 | --- | ---: |
-| Installed collection inventory count | 122 Units |
+| Installed collection inventory count | 124 Units |
 
 ## Coverage Metrics
 
 | Metric | Covered | Percent |
 | --- | ---: | ---: |
-| Authored Surface Unit catalog admission | 121/415 | 29.2% |
-| Authored Surface executable catalog admission | 97/348 | 27.9% |
-| Installed Unit profile classification coverage | 122/122 | 100% |
-| Supported executable Unit coverage | 62/98 | 63.3% |
+| Authored Surface Unit catalog admission | 123/417 | 29.5% |
+| Authored Surface executable catalog admission | 99/350 | 28.3% |
+| Installed Unit profile classification coverage | 124/124 | 100% |
+| Supported executable Unit coverage | 62/100 | 62% |
 | QNT profile modeling coverage | 39/39 | 100% |
 | QNT proof coverage | 37/39 | 94.9% |
 | Runtime mapping coverage | 39/39 | 100% |
@@ -885,7 +885,9 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `protection_from_evil_and_good` | profile-subset-supported | supported subset: one touched target; concentration active effect; Aberration/Celestial/Elemental/Fey/Fiend/Undead attacker creature-type filter; attack-roll Disadvantage against the protected target; deferred: target can't be possessed by scoped creatures (SRDINV33); target can't gain Charmed or Frightened from scoped creatures (SRDINV33); Advantage on new saves against already-applied possession, Charmed, or Frightened effects from scoped creatures (SRDINV33) |
 | `produce_flame` | profile-subset-supported | supported subset: Bonus Action held-light state; held-state-gated later Magic action hurl; combatant-target ranged spell attack damage; Fire damage; cantrip damage scaling; deferred: object target identity, Armor Class/Hit Points, and damage disposition for the SRD creature-or-object hurl target (SRDINV34) |
 | `starry_wisp` | profile-subset-supported | supported subset: creature-or-object target boundary with combatant target choice or typed caller-supplied object identity; caller-supplied object range, Armor Class, Hit Points or table-resolved damage disposition facts; ranged spell attack hit/miss adjudication against combatant and object targets; Radiant damage and cantrip damage scaling; deferred: target emits Dim Light in a 10-foot radius until the end of the caster's next turn (SRDINV41); target can't benefit from the Invisible condition until the end of the caster's next turn (SRDINV41) |
+| `detect_evil_and_good` | unsupported-profile | Detection/occlusion search semantics and Hallow discovery are not promoted as battle Unit profiles. |
 | `detect_magic` | unsupported-profile | Detection/concentration search semantics are not promoted as a battle Unit profile. |
+| `detect_poison_and_disease` | unsupported-profile | Detection/occlusion search semantics and poison/disease identification are not promoted as battle Unit profiles. |
 | `sleep` | unsupported-profile | Hit Point ordered target allocation and Incapacitated/Unconscious application are not a stable Unit profile row. |
 | `thunderwave` | needs-surface-widening | Save-gated damage plus push movement requires a combined spell effect profile not present in this matrix slice. |
 | `eldritch_blast` | unsupported-profile | Spell Definition is installed for Warlock Spell Access validation; promoted invocation/projectile runtime evidence is not present yet. |
@@ -906,7 +908,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
-| srd-5.2.1 | unassigned | unsupported-profile | 52 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `bard_bardic_inspiration`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `monk_martial_arts`, `ranger_favored_enemy`, `rogue_expertise`, `rogue_thieves_cant`, `sorcerer_innate_sorcery`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `mastery_sap`, `orc_darkvision`, `light`, `detect_magic`, `sleep`, `eldritch_blast`, `minor_illusion`, `charm_person`, `hellish_rebuke`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `grease` |
+| srd-5.2.1 | unassigned | unsupported-profile | 54 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `bard_bardic_inspiration`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `monk_martial_arts`, `ranger_favored_enemy`, `rogue_expertise`, `rogue_thieves_cant`, `sorcerer_innate_sorcery`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `mastery_sap`, `orc_darkvision`, `light`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `sleep`, `eldritch_blast`, `minor_illusion`, `charm_person`, `hellish_rebuke`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `grease` |
 | srd-5.2.1 | unassigned | profile-subset-supported | 7 | `animal_friendship`, `chill_touch`, `faerie_fire`, `hunters_mark`, `protection_from_evil_and_good`, `produce_flame`, `starry_wisp` |
 | srd-5.2.1 | QCORE10 | needs-surface-widening | 1 | `fire_bolt` |
 | srd-5.2.1 | unassigned | needs-surface-widening | 1 | `thunderwave` |

@@ -100,7 +100,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 225,
       "id": "SRDINV35",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Author Missing Detect Spell Records"
     },
     {
@@ -183,7 +183,7 @@ Keep it synchronized with the DAG table and task details.
 | 220   | SRDINV31F - Promote True Strike Weapon Spell Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [True Strike](/workspace/typescript/dnd/packages/surface/content/true_strike.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Completed: True Strike is promoted as a spell-hosted proficient material-weapon attack with spellcasting ability attack/damage replacement, Radiant-or-normal damage choice, and Radiant cantrip scaling. |
 | 223   | SRDINV33 - Recursive SRD Inventory Planning Review | done | SRDINV28A-SRDINV28E, SRDINV29A-SRDINV29E, SRDINV29F3, SRDINV30A-SRDINV32B | SRDINV34-SRDINV40 | [SRDINV33 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV33_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed: refreshed spell Unit metrics, closed missing Heroism/Ensnaring Strike evidence, and appended SRDINV34-SRDINV40 plus SRDINV41 review. |
 | 224   | SRDINV34 - Promote Starry Wisp Object Target Runtime | done | SRDINV33 | SRDINV41 | [SRDINV28E decision](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV28E_STARRY_WISP_OBJECT_TARGET_DECISION.md), [battle-runtime target facts](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer/spells-targeting.ts), [Starry Wisp](/workspace/typescript/dnd/packages/surface/content/starry_wisp.dhall), [Chill Touch](/workspace/typescript/dnd/packages/surface/content/chill_touch.dhall), [SRD Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [SRD Chill Touch](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Starry Wisp is promoted over the creature-or-object target subset with typed object target facts, object attack resolution, and object damage disposition; Dim Light and Invisible-benefit riders remain visible for SRDINV41. |
-| 225   | SRDINV35 - Author Missing Detect Spell Records | ready-for-implementation-after-light-research | SRDINV33 | SRDINV41 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Detect Evil and Good](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Detect Poison and Disease](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Author SRD-provenance Spell Definition records for the two missing Detect spells using existing detection Surface atoms without promoting detection runtime behavior. |
+| 225   | SRDINV35 - Author Missing Detect Spell Records | done | SRDINV33 | SRDINV41 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Detect Evil and Good](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Detect Poison and Disease](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Detect Evil and Good and Detect Poison and Disease have SRD-provenance Spell Definition records installed in the SRD Unit catalog; detection, occlusion, Hallow discovery, and poison/disease identification remain unsupported runtime behavior. |
 | 226   | SRDINV36 - Promote Hellish Rebuke Reaction Runtime | ready-for-research | SRDINV33 | SRDINV41 | [Hellish Rebuke](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [battle reactions](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reaction-triggers.ts), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Research and promote the damage-triggered Reaction spell window, Dexterity save, Fire damage, half damage on success, and slot scaling. |
 | 227   | SRDINV37 - Promote Charm Person Runtime | ready-for-research | SRDINV33 | SRDINV41 | [Charm Person](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Animal Friendship evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/unit-claims.jsonl), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Humanoid-target charm with hostile-target save Advantage, damage-break cleanup, one-hour duration, and slot-scaled target count without reusing Beast-specific Animal Friendship logic. |
 | 228   | SRDINV38 - Research Sleep Save Loop Runtime | ready-for-research | SRDINV33 | SRDINV41 | [Sleep](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [condition helpers](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer/spell-condition-effects-helpers.ts), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Research the Sleep save loop and Incapacitated/Unconscious lifecycle; split before implementation if repeat-save or wake-up procedures exceed one execution invariant. |
@@ -389,7 +389,7 @@ emission and Invisible-benefit denial stay checker-visible for SRDINV41.
 
 ### Task 225 - SRDINV35 - Author Missing Detect Spell Records
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: SRDINV33
 
@@ -402,8 +402,8 @@ Research / plan:
 [SRD Detect Poison and Disease](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md),
 [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
 
-Scope: author SRD-provenance Spell Definition records for Detect Evil and Good
-and Detect Poison and Disease using existing Surface detection atoms. Keep
+Scope: completed SRD-provenance Spell Definition records for Detect Evil and
+Good and Detect Poison and Disease using existing Surface detection atoms. Kept
 detection, occlusion, Hallow discovery, poison/disease identification, and
 exploration runtime behavior outside the support claim.
 

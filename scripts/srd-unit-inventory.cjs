@@ -126,7 +126,9 @@ const catalogOnlyClosures = new Map([
 ]);
 
 const installedSpellUnitCatalogOnlyClosures = new Set([
+  "detect_evil_and_good",
   "detect_magic",
+  "detect_poison_and_disease",
   "light",
   "minor_illusion",
 ]);
@@ -199,22 +201,6 @@ const spellUnitMissingClassifications = new Map([
       kind: "catalog-only-closure",
       reason:
         "Creation/destruction of water, rain extinguishing exposed flames, and fog removal are exploration/environment effects outside the current promoted character-creation and battle-runtime owners.",
-    },
-  ],
-  [
-    "detect_evil_and_good",
-    {
-      kind: "authoring-ready",
-      nextAction:
-        "Author an SRD-provenance Spell Definition record with existing Surface detect support for evil_and_good sensing; keep promoted runtime ownership for detection/occlusion as future exploration support.",
-    },
-  ],
-  [
-    "detect_poison_and_disease",
-    {
-      kind: "authoring-ready",
-      nextAction:
-        "Author an SRD-provenance Spell Definition record with existing Surface detect support for poison_and_disease sensing; keep promoted runtime ownership for detection/occlusion as future exploration support.",
     },
   ],
   [

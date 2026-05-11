@@ -162,18 +162,16 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 230,
       "non-runtime": 12,
-      "catalog-only/dead-for-now": 74,
+      "catalog-only/dead-for-now": 80,
       "catalog-installed-owner-evidence-required": 10,
       "needs-surface-widening": 33,
-      "missing-authored-record": 6,
       "catalog-authored-executable-follow-up": 2
     },
     "spellPressureRowsByDisposition": {
-      "catalog-only/dead-for-now": 74,
+      "catalog-only/dead-for-now": 80,
       "catalog-installed-owner-evidence-present": 86,
       "catalog-installed-owner-evidence-required": 10,
       "needs-surface-widening": 33,
-      "missing-authored-record": 6,
       "catalog-authored-executable-follow-up": 2
     },
     "levelOneRowsByCategory": {
@@ -512,15 +510,8 @@
       "title": "Classify Missing Cantrip and Level-1 Spell Units",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Classify missing SRD cantrip and level-1 Spell Unit records without loading the whole spell-pressure backlog into one task.",
-      "rowCount": 6,
-      "rowIds": [
-        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_evil_and_good",
-        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_poison_and_disease",
-        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_detect_poison_and_disease",
-        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_detect_evil_and_good",
-        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_detect_poison_and_disease",
-        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_detect_poison_and_disease"
-      ],
+      "rowCount": 0,
+      "rowIds": [],
       "nextAction": "Group missing Spell Unit rows by authoring readiness, Surface blockers, and runtime-support pressure.",
       "acceptance": "Missing cantrip and level-1 Spell Unit pressure rows have sharper next actions than generic author-or-close wording."
     },
@@ -529,7 +520,7 @@
       "title": "Classify Installed Cantrip and Level-1 Spell Units",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Classify installed SRD cantrip and level-1 Spell Unit owner evidence separately from missing and catalog-only spell rows.",
-      "rowCount": 118,
+      "rowCount": 124,
       "rowIds": [
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_light",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_minor_illusion",
@@ -555,7 +546,9 @@
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bane",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bless",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_cure_wounds",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_evil_and_good",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_magic",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_poison_and_disease",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_guiding_bolt",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_healing_word",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_inflict_wounds",
@@ -570,6 +563,7 @@
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_charm_person",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_cure_wounds",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_detect_magic",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_detect_poison_and_disease",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_entangle",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_faerie_fire",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_healing_word",
@@ -579,7 +573,9 @@
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_thunderwave",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_bless",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_cure_wounds",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_detect_evil_and_good",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_detect_magic",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_detect_poison_and_disease",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_divine_favor",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_divine_smite",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_heroism",
@@ -589,6 +585,7 @@
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_animal_friendship",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_cure_wounds",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_detect_magic",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_detect_poison_and_disease",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_ensnaring_strike",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_entangle",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_hunters_mark",
@@ -658,7 +655,7 @@
       "title": "Review Catalog-Only Cantrip and Level-1 Spell Units",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Keep catalog-only spell pressure explicit and counted without forcing unrelated class or nonspell rows into the same task.",
-      "rowCount": 76,
+      "rowCount": 82,
       "rowIds": [
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_dancing_lights",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_light",
@@ -679,7 +676,9 @@
         "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_mending",
         "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_thaumaturgy",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_create_or_destroy_water",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_evil_and_good",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_magic",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_poison_and_disease",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_purify_food_and_drink",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_druidcraft",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_elementalism",
@@ -687,13 +686,17 @@
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_message",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_create_or_destroy_water",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_detect_magic",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_detect_poison_and_disease",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_goodberry",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_purify_food_and_drink",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_speak_with_animals",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_detect_evil_and_good",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_detect_magic",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_detect_poison_and_disease",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_purify_food_and_drink",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_alarm",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_detect_magic",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_detect_poison_and_disease",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_goodberry",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_speak_with_animals",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_dancing_lights",
@@ -2334,7 +2337,7 @@
     {
       "id": "SRDINV34",
       "title": "Promote Starry Wisp Object Target Runtime",
-      "suggestedStatus": "ready-for-implementation-after-light-research",
+      "suggestedStatus": "done",
       "intent": "Promote the Starry Wisp creature-or-object target boundary before claiming object-target spell support.",
       "rowCount": 2,
       "rowIds": [
@@ -2347,7 +2350,7 @@
     {
       "id": "SRDINV35",
       "title": "Author Missing Detect Spell Records",
-      "suggestedStatus": "ready-for-implementation-after-light-research",
+      "suggestedStatus": "done",
       "intent": "Author missing SRD Detect Evil and Good and Detect Poison and Disease Spell Definition records using existing detection Surface atoms.",
       "rowCount": 6,
       "rowIds": [
@@ -5946,18 +5949,31 @@
       "detail": "Detect Evil and Good (Divination; C)",
       "candidateUnitId": "detect_evil_and_good",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "detect_evil_and_good",
+        "sourceRecordPath": "packages/surface/content/detect_evil_and_good.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "detect_evil_and_good"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Spell Definition record with existing Surface detect support for evil_and_good sensing; keep promoted runtime ownership for detection/occlusion as future exploration support."
+      "finalDisposition": "catalog-only/dead-for-now",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit detect_evil_and_good is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "catalog-only/dead-for-now",
+          "evidence": "Detection/occlusion search semantics and Hallow discovery are not promoted as battle Unit profiles.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Detection/occlusion search semantics and Hallow discovery are not promoted as battle Unit profiles."
     },
     {
       "id": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_magic",
@@ -6015,18 +6031,31 @@
       "detail": "Detect Poison and Disease (Divination; C, R)",
       "candidateUnitId": "detect_poison_and_disease",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "detect_poison_and_disease",
+        "sourceRecordPath": "packages/surface/content/detect_poison_and_disease.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "detect_poison_and_disease"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Spell Definition record with existing Surface detect support for poison_and_disease sensing; keep promoted runtime ownership for detection/occlusion as future exploration support."
+      "finalDisposition": "catalog-only/dead-for-now",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit detect_poison_and_disease is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "catalog-only/dead-for-now",
+          "evidence": "Detection/occlusion search semantics and poison/disease identification are not promoted as battle Unit profiles.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Detection/occlusion search semantics and poison/disease identification are not promoted as battle Unit profiles."
     },
     {
       "id": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_guiding_bolt",
@@ -7494,18 +7523,31 @@
       "detail": "Detect Poison and Disease (Divination; C, R)",
       "candidateUnitId": "detect_poison_and_disease",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "detect_poison_and_disease",
+        "sourceRecordPath": "packages/surface/content/detect_poison_and_disease.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "detect_poison_and_disease"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Spell Definition record with existing Surface detect support for poison_and_disease sensing; keep promoted runtime ownership for detection/occlusion as future exploration support."
+      "finalDisposition": "catalog-only/dead-for-now",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit detect_poison_and_disease is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "catalog-only/dead-for-now",
+          "evidence": "Detection/occlusion search semantics and poison/disease identification are not promoted as battle Unit profiles.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Detection/occlusion search semantics and poison/disease identification are not promoted as battle Unit profiles."
     },
     {
       "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_entangle",
@@ -9796,18 +9838,31 @@
       "detail": "Detect Evil and Good (Divination; C)",
       "candidateUnitId": "detect_evil_and_good",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "detect_evil_and_good",
+        "sourceRecordPath": "packages/surface/content/detect_evil_and_good.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "detect_evil_and_good"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Spell Definition record with existing Surface detect support for evil_and_good sensing; keep promoted runtime ownership for detection/occlusion as future exploration support."
+      "finalDisposition": "catalog-only/dead-for-now",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit detect_evil_and_good is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "catalog-only/dead-for-now",
+          "evidence": "Detection/occlusion search semantics and Hallow discovery are not promoted as battle Unit profiles.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Detection/occlusion search semantics and Hallow discovery are not promoted as battle Unit profiles."
     },
     {
       "id": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_detect_magic",
@@ -9865,18 +9920,31 @@
       "detail": "Detect Poison and Disease (Divination; C, R)",
       "candidateUnitId": "detect_poison_and_disease",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "detect_poison_and_disease",
+        "sourceRecordPath": "packages/surface/content/detect_poison_and_disease.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "detect_poison_and_disease"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Spell Definition record with existing Surface detect support for poison_and_disease sensing; keep promoted runtime ownership for detection/occlusion as future exploration support."
+      "finalDisposition": "catalog-only/dead-for-now",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit detect_poison_and_disease is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "catalog-only/dead-for-now",
+          "evidence": "Detection/occlusion search semantics and poison/disease identification are not promoted as battle Unit profiles.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Detection/occlusion search semantics and poison/disease identification are not promoted as battle Unit profiles."
     },
     {
       "id": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_divine_favor",
@@ -10895,18 +10963,31 @@
       "detail": "Detect Poison and Disease (Divination; C, R)",
       "candidateUnitId": "detect_poison_and_disease",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "detect_poison_and_disease",
+        "sourceRecordPath": "packages/surface/content/detect_poison_and_disease.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "detect_poison_and_disease"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Spell Definition record with existing Surface detect support for poison_and_disease sensing; keep promoted runtime ownership for detection/occlusion as future exploration support."
+      "finalDisposition": "catalog-only/dead-for-now",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit detect_poison_and_disease is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "catalog-only/dead-for-now",
+          "evidence": "Detection/occlusion search semantics and poison/disease identification are not promoted as battle Unit profiles.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Detection/occlusion search semantics and poison/disease identification are not promoted as battle Unit profiles."
     },
     {
       "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_ensnaring_strike",
