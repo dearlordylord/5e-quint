@@ -40,6 +40,22 @@ module spellProcedureProfiles {
     | MassHealingWordSpellProfile
     | MageArmorSpellProfile
 
+  type SpellAttackDamageProfile =
+    | RayOfFrostSpellAttackProfile
+    | PoisonSpraySpellAttackProfile
+    | ChillTouchSpellAttackProfile
+    | StarryWispSpellAttackProfile
+    | ShockingGraspSpellAttackProfile
+    | GuidingBoltSpellAttackProfile
+    | RayOfSicknessSpellAttackProfile
+    | ProduceFlameHurlSpellAttackProfile
+
+  type SpellAttackDamageHitEffect =
+    | RayOfFrostSpeedReductionHitEffect
+    | ShockingGraspOpportunityAttackDeniedHitEffect
+    | GuidingBoltNextAttackAdvantageHitEffect
+    | RayOfSicknessPoisonedHitEffect
+
   type SpellAreaProfile =
     | NoSpellAreaProfile
     | MassCureWoundsPointOriginSphereArea
@@ -223,6 +239,33 @@ module spellProcedureProfiles {
 
   pure def spellProfileRequiresSlot(profile: SpellDefinitionProfile): bool =
     spellProfileMinimumSlotLevel(profile) > 0
+
+  pure def spellAttackDamageProfileDamageType(profile: SpellAttackDamageProfile): RuleDamageType =
+    match profile {
+      | RayOfFrostSpellAttackProfile => ColdDamage
+      | PoisonSpraySpellAttackProfile => PoisonDamage
+      | ChillTouchSpellAttackProfile => NecroticDamage
+      | StarryWispSpellAttackProfile => RadiantDamage
+      | ShockingGraspSpellAttackProfile => LightningDamage
+      | GuidingBoltSpellAttackProfile => RadiantDamage
+      | RayOfSicknessSpellAttackProfile => PoisonDamage
+      | ProduceFlameHurlSpellAttackProfile => FireDamage
+    }
+
+  pure def spellAttackDamageProfileHitEffects(profile: SpellAttackDamageProfile): Set[SpellAttackDamageHitEffect] =
+    match profile {
+      | RayOfFrostSpellAttackProfile => Set(RayOfFrostSpeedReductionHitEffect)
+      | PoisonSpraySpellAttackProfile => Set()
+      | ChillTouchSpellAttackProfile => Set()
+      | StarryWispSpellAttackProfile => Set()
+      | ShockingGraspSpellAttackProfile => Set(ShockingGraspOpportunityAttackDeniedHitEffect)
+      | GuidingBoltSpellAttackProfile => Set(GuidingBoltNextAttackAdvantageHitEffect)
+      | RayOfSicknessSpellAttackProfile => Set(RayOfSicknessPoisonedHitEffect)
+      | ProduceFlameHurlSpellAttackProfile => Set()
+    }
+
+  pure def spellAttackDamageProfileSupportsObjectTarget(profile: SpellAttackDamageProfile): bool =
+    profile == StarryWispSpellAttackProfile
 
   pure def spellActionCost(invocationAction: SpellInvocationAction): ActionCost =
     if (invocationAction == BonusActionSpellInvocation) BonusActionCost
@@ -597,6 +640,26 @@ module spellProcedureProfiles {
       assert(invocation.state.slotLedger == initialSpellSlotLedger),
       assert(not(invocation.state.slotSpellCastThisTurn)),
       assert(invocation.state.turn.actionQuota == ActionSpent),
+    }
+  }
+
+  run test_spell_attack_damage_profiles_project_damage_and_hit_effects = {
+    all {
+      assert(spellAttackDamageProfileDamageType(RayOfFrostSpellAttackProfile) == ColdDamage),
+      assert(spellAttackDamageProfileDamageType(PoisonSpraySpellAttackProfile) == PoisonDamage),
+      assert(spellAttackDamageProfileDamageType(ChillTouchSpellAttackProfile) == NecroticDamage),
+      assert(spellAttackDamageProfileDamageType(StarryWispSpellAttackProfile) == RadiantDamage),
+      assert(spellAttackDamageProfileDamageType(ShockingGraspSpellAttackProfile) == LightningDamage),
+      assert(spellAttackDamageProfileDamageType(GuidingBoltSpellAttackProfile) == RadiantDamage),
+      assert(spellAttackDamageProfileDamageType(RayOfSicknessSpellAttackProfile) == PoisonDamage),
+      assert(spellAttackDamageProfileDamageType(ProduceFlameHurlSpellAttackProfile) == FireDamage),
+      assert(spellAttackDamageProfileHitEffects(RayOfFrostSpellAttackProfile) == Set(RayOfFrostSpeedReductionHitEffect)),
+      assert(spellAttackDamageProfileHitEffects(ShockingGraspSpellAttackProfile) == Set(ShockingGraspOpportunityAttackDeniedHitEffect)),
+      assert(spellAttackDamageProfileHitEffects(GuidingBoltSpellAttackProfile) == Set(GuidingBoltNextAttackAdvantageHitEffect)),
+      assert(spellAttackDamageProfileHitEffects(RayOfSicknessSpellAttackProfile) == Set(RayOfSicknessPoisonedHitEffect)),
+      assert(spellAttackDamageProfileHitEffects(StarryWispSpellAttackProfile) == Set()),
+      assert(spellAttackDamageProfileSupportsObjectTarget(StarryWispSpellAttackProfile)),
+      assert(not(spellAttackDamageProfileSupportsObjectTarget(RayOfFrostSpellAttackProfile))),
     }
   }
 

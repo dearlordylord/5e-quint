@@ -3048,6 +3048,23 @@ module battleRuntime {
       | Thunder => ThunderDamage
     }
 
+  pure def damageTypeFromRuleDamageType(damageType: RuleDamageType): DamageType =
+    match damageType {
+      | AcidDamage => Acid
+      | BludgeoningDamage => Bludgeoning
+      | ColdDamage => Cold
+      | FireDamage => Fire
+      | ForceDamage => Force
+      | LightningDamage => Lightning
+      | NecroticDamage => Necrotic
+      | PiercingDamage => Piercing
+      | PoisonDamage => Poison
+      | PsychicDamage => Psychic
+      | RadiantDamage => Radiant
+      | SlashingDamage => Slashing
+      | ThunderDamage => Thunder
+    }
+
   pure def damageAdjustmentFacts(
     resistances: Set[DamageType],
     vulnerabilities: Set[DamageType],
@@ -3360,6 +3377,20 @@ module battleRuntime {
   ): int =
     spellcastingAbilityModifier + proficiencyBonus
 
+  pure def battleRuntimeSpellAttackDamageProfileForInvocation(
+    invocation: SpellAttackDamageInvocation
+  ): BattleRuntimeSpellAttackDamageProfile =
+    match invocation {
+      | RayOfFrostSpellAttack => BattleRuntimeRayOfFrostSpellAttack
+      | PoisonSpraySpellAttack => BattleRuntimePoisonSpraySpellAttack
+      | ChillTouchSpellAttack => BattleRuntimeChillTouchSpellAttack
+      | StarryWispSpellAttack => BattleRuntimeStarryWispSpellAttack
+      | ShockingGraspSpellAttack => BattleRuntimeShockingGraspSpellAttack
+      | GuidingBoltSpellAttack => BattleRuntimeGuidingBoltSpellAttack
+      | RayOfSicknessSpellAttack => BattleRuntimeRayOfSicknessSpellAttack
+      | ProduceFlameHurlSpellAttack => BattleRuntimeProduceFlameHurlSpellAttack
+    }
+
   pure def magicMissileDartCount(slotLevel: int): int =
     3 + (slotLevel - 1)
 
@@ -3382,40 +3413,31 @@ module battleRuntime {
       magicMissileAllocatedDamage(dieTotal, dartCount, flatPerDart)
 
   pure def spellAttackDamageType(invocation: SpellAttackDamageInvocation): DamageType =
-    match invocation {
-      | RayOfFrostSpellAttack => Cold
-      | PoisonSpraySpellAttack => Poison
-      | ChillTouchSpellAttack => Necrotic
-      | StarryWispSpellAttack => Radiant
-      | ShockingGraspSpellAttack => Lightning
-      | GuidingBoltSpellAttack => Radiant
-      | RayOfSicknessSpellAttack => Poison
-      | ProduceFlameHurlSpellAttack => Fire
+    damageTypeFromRuleDamageType(
+      battleRuntimeSpellAttackDamageType(
+        battleRuntimeSpellAttackDamageProfileForInvocation(invocation),
+      ),
+    )
+
+  pure def spellAttackDamageActiveEffectForHitEffect(
+    effect: BattleRuntimeSpellAttackDamageHitEffect
+  ): ActiveEffect =
+    match effect {
+      | BattleRuntimeRayOfFrostSpeedReductionHitEffect => RayOfFrostSpeedDelta
+      | BattleRuntimeShockingGraspOpportunityAttackDeniedHitEffect => ShockingGraspOpportunityAttackDenied
+      | BattleRuntimeGuidingBoltNextAttackAdvantageHitEffect => GuidingBoltNextAttackAdvantage
+      | BattleRuntimeRayOfSicknessPoisonedHitEffect => RayOfSicknessPoisoned
     }
 
   pure def spellAttackDamageActiveEffects(invocation: SpellAttackDamageInvocation): Set[ActiveEffect] =
-    match invocation {
-      | RayOfFrostSpellAttack => Set(RayOfFrostSpeedDelta)
-      | PoisonSpraySpellAttack => Set()
-      | ChillTouchSpellAttack => Set()
-      | StarryWispSpellAttack => Set()
-      | ShockingGraspSpellAttack => Set(ShockingGraspOpportunityAttackDenied)
-      | GuidingBoltSpellAttack => Set(GuidingBoltNextAttackAdvantage)
-      | RayOfSicknessSpellAttack => Set(RayOfSicknessPoisoned)
-      | ProduceFlameHurlSpellAttack => Set()
-    }
+    battleRuntimeSpellAttackDamageHitEffects(
+      battleRuntimeSpellAttackDamageProfileForInvocation(invocation),
+    ).map(spellAttackDamageActiveEffectForHitEffect)
 
   pure def spellAttackDamageSupportsObjectTarget(invocation: SpellAttackDamageInvocation): bool =
-    match invocation {
-      | StarryWispSpellAttack => true
-      | RayOfFrostSpellAttack => false
-      | PoisonSpraySpellAttack => false
-      | ChillTouchSpellAttack => false
-      | ShockingGraspSpellAttack => false
-      | GuidingBoltSpellAttack => false
-      | RayOfSicknessSpellAttack => false
-      | ProduceFlameHurlSpellAttack => false
-    }
+    battleRuntimeSpellAttackDamageSupportsObjectTarget(
+      battleRuntimeSpellAttackDamageProfileForInvocation(invocation),
+    )
 
   pure def objectHitPointDamageOutcome(
     object: ObjectTarget,

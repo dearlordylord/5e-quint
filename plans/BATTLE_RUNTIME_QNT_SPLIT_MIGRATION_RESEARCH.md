@@ -279,6 +279,12 @@ surface while this research note remains temporary context.
   keeps a negative one. Broad battle still owns the representative off-hand
   replay and delegates admission, spend, and damage amount through
   `battle-runtime-movement-bridge.qnt`.
+- The spell-attack damage tracer added SRD spell-attack profiles to
+  `spell-procedure-profiles.qnt` for damage type, hit rider, and object-target
+  capability facts. Broad battle now maps package-local invocations to those
+  profiles through `battle-runtime-spell-bridge.qnt`; concrete attack replay,
+  Shield reaction composition, object damage disposition, and `ActiveEffect`
+  storage remain package-local.
 - The same movement/action bridge now carries the projected start-turn resource
   reset for action, Bonus Action, Reaction, Dash movement bonus, movement spent,
   Dodge, Disengage, Help, and Ready Movement facts. Broad battle still owns
