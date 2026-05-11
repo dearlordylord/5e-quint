@@ -4,33 +4,33 @@
 // vice versa; ESM tolerates the cycle because all bindings are function values
 // accessed only at call time.
 
-import { Match } from "effect";
 import { resourceCount } from "@dnd/shared/types";
 import type {
-  CreatureActions,
-  CreatureLimitedUse,
-  CreatureNamedAttackRoll,
-  StatBlockRecord,
+CreatureActions,
+CreatureLimitedUse,
+CreatureNamedAttackRoll,
+StatBlockRecord,
 } from "@dnd/surface/surface/types";
+import { Match } from "effect";
 import type {
-  StatBlockAttackActionOption,
-  StatBlockDailyUseState,
-  StatBlockLimitedUseSnapshot,
-  StatBlockMutableResourceState,
-  StatBlockPartKey,
-  StatBlockPartSection,
-  StatBlockResourceSnapshot,
-  SupportedAttackActionOption,
-  SupportedCreatureNamedAttackRoll,
+StatBlockAttackActionOption,
+StatBlockDailyUseState,
+StatBlockLimitedUseSnapshot,
+StatBlockMutableResourceState,
+StatBlockPartKey,
+StatBlockPartSection,
+StatBlockResourceSnapshot,
+SupportedAttackActionOption,
+SupportedCreatureNamedAttackRoll,
 } from "../battle-action-options.ts";
+import {
+type BattleState,
+type StatBlockBattleCreatureState,
+} from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
 import {
-  type BattleState,
-  type StatBlockBattleCreatureState,
-} from "../battle-reducer.ts";
-import {
-  supportedStatBlockAttackDamage,
-  supportedStatBlockAttackTargetConstraint,
+supportedStatBlockAttackDamage,
+supportedStatBlockAttackTargetConstraint,
 } from "./statblock-attacks.ts";
 
 export function supportedStatBlockAttackActionOption(
@@ -481,6 +481,6 @@ export function assertUniqueStatBlockPartKeys(
 }
 
 export function statBlockPartKeyString(key: StatBlockPartKey): string {
-  return `${key.section} ${key.name}`;
+  return `${key.section}\u0000${key.name}`;
 }
 

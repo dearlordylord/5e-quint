@@ -3,18 +3,18 @@
 // refactor map, hoisting these here lets S avoid cycling back into G.
 
 import {
-  hasCondition,
-  isIncapacitated,
+hasCondition,
+isIncapacitated,
 } from "@dnd/shared-algebras/conditions-algebra";
 import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
 import type { HandUse } from "@dnd/shared/types";
-import type { CombatantId } from "../identity.ts";
+import { Match } from "effect";
 import {
-  zeroHpLifecycleIsTerminal,
-  type BattleCreatureState,
-  type BattleGrappleLink,
-  type BattleState,
+type BattleCreatureState,
+type BattleGrappleLink,
+type BattleState,
 } from "../battle-reducer.ts";
+import type { CombatantId } from "../identity.ts";
 
 export function combatantCanSee(
   state: BattleState,
@@ -124,4 +124,19 @@ export function normalizeBattleGrapples(state: BattleState): BattleState {
   return grapples.length === state.grapples.length
     ? state
     : { ...state, grapples };
+}
+
+
+
+
+
+export function zeroHpLifecycleIsTerminal(combatant: BattleCreatureState): boolean {
+  return Match.value(combatant.zeroHpLifecycle).pipe(
+    Match.when({ policy: "diesAtZeroHp" }, () => combatant.hp === 0),
+    Match.when(
+      { policy: "usesDeathSavingThrows" },
+      (lifecycle) => lifecycle.deathSaves.dead,
+    ),
+    Match.exhaustive,
+  );
 }

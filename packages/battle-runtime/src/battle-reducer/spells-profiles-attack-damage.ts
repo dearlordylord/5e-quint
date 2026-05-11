@@ -1,0 +1,444 @@
+// Spell attack damage profile projections extracted from spells-profiles.ts.
+
+import {
+  attackBonus,
+  movementFeet,
+  type AbilityModifier,
+  type ProficiencyBonus as ProficiencyBonusType,
+  type SpellSlotLevel,
+} from "@dnd/shared/types";
+import type { Attachment, SpellRecord } from "@dnd/surface/surface/types";
+import {
+  SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET,
+  damageSpellSource,
+  type DamageSpellSource,
+  type PreparedDamageSpellSource,
+  type SpellTargeting,
+  type SupportedSpellInvocation,
+} from "../battle-reducer.ts";
+import type { CharacterBattleSpellcastingState } from "../character-battle-resources.ts";
+import {
+  CHROMATIC_ORB_CONTINUATION_LIMIT_KINDS,
+  CHROMATIC_ORB_DAMAGE_TYPES,
+  CHROMATIC_ORB_LEAP_RANGE_FEET,
+} from "./domain-constants.ts";
+import { sameDiceExpr, sameStringSet } from "./spells-profile-shared.ts";
+import {
+  singleTargetSpellRangeFeet,
+  supportedDamageAmountExpr,
+  supportedSpellAttackKind,
+  supportedSpellPostDamageRiders,
+} from "./spells-profiles-save-gates.ts";
+
+export function supportedCantripSpellAttackProfile(
+  spell: SpellRecord,
+  spellcastingAbilityModifier: AbilityModifier,
+  proficiencyBonus: ProficiencyBonusType,
+  characterLevel: number,
+): readonly SupportedSpellInvocation[] {
+  return supportedSpellAttackDamageProfile({
+    spell,
+    access: { tag: "classCantrip" },
+    resource: { tag: "none" },
+    spellcastingAbilityModifier,
+    proficiencyBonus,
+    characterLevel,
+  });
+}
+
+export function supportedPreparedSpellAttackProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+  spellcastingAbilityModifier: AbilityModifier,
+  proficiencyBonus: ProficiencyBonusType,
+): readonly SupportedSpellInvocation[] {
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    return supportedSpellAttackDamageProfile({
+      spell,
+      access: { tag: "prepared" },
+      resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+      spellcastingAbilityModifier,
+      proficiencyBonus,
+      slotLevel: slot.spellLevel,
+    });
+  });
+}
+
+export function supportedPreparedChainedSpellAttackDamageProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+  spellcastingAbilityModifier: AbilityModifier,
+  proficiencyBonus: ProficiencyBonusType,
+): readonly SupportedSpellInvocation[] {
+  if (!isCanonicalSrdChromaticOrbSpellDefinition(spell)) {
+    return [];
+  }
+  const range = spell.mechanics.range;
+  if (
+    spell.mechanics.family !== "activation" ||
+    spell.mechanics.level !== 1 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.duration.kind !== "instantaneous" ||
+    range.kind !== "point" ||
+    spell.mechanics.phases.length !== 1
+  ) {
+    return [];
+  }
+  const phase = spell.mechanics.phases[0];
+  const continuation = phase?.kind === "attack_roll" ? phase.continue : null;
+  const leapPhase =
+    continuation?.kind === "repeat" ? continuation.next[0] : undefined;
+  const hitDamage = phase?.kind === "attack_roll" ? phase.onHit[0] : undefined;
+  const leapHitDamage =
+    leapPhase?.kind === "attack_roll" ? leapPhase.onHit[0] : undefined;
+  const targeting =
+    phase?.kind === "attack_roll"
+      ? spellAttackDamageTargeting(phase.attachment)
+      : null;
+  const leapTargeting =
+    leapPhase?.kind === "attack_roll"
+      ? spellAttackDamageTargeting(leapPhase.attachment)
+      : null;
+  if (
+    phase?.kind !== "attack_roll" ||
+    leapPhase?.kind !== "attack_roll" ||
+    !supportedSpellAttackKind(phase.attackKind) ||
+    !supportedSpellAttackKind(leapPhase.attackKind) ||
+    phase.attackKind !== leapPhase.attackKind ||
+    targeting === null ||
+    leapTargeting === null ||
+    phase.onHit.length !== 1 ||
+    phase.onMiss.length !== 1 ||
+    phase.onMiss[0]?.kind !== "none" ||
+    leapPhase.onHit.length !== 1 ||
+    leapPhase.onMiss.length !== 1 ||
+    leapPhase.onMiss[0]?.kind !== "none" ||
+    continuation?.kind !== "repeat" ||
+    continuation.when.kind !== "damage_roll_has_duplicate_faces" ||
+    continuation.when.minimumMultiplicity !== 2 ||
+    continuation.next.length !== 1 ||
+    !isCanonicalChromaticOrbContinuationLimitSet(continuation.limits) ||
+    hitDamage?.kind !== "damage" ||
+    leapHitDamage?.kind !== "damage" ||
+    typeof hitDamage.damageType !== "object" ||
+    hitDamage.damageType.kind !== "hole" ||
+    typeof hitDamage.damageType.value !== "object" ||
+    hitDamage.damageType.value.kind !== "choice" ||
+    !sameStringSet(hitDamage.damageType.value.options, [
+      ...CHROMATIC_ORB_DAMAGE_TYPES,
+    ]) ||
+    typeof leapHitDamage.damageType !== "object" ||
+    leapHitDamage.damageType.kind !== "same_choice_as" ||
+    leapHitDamage.damageType.holeId !== hitDamage.damageType.holeId
+  ) {
+    return [];
+  }
+
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    const damageExpr = supportedDamageAmountExpr({
+      amount: hitDamage.amount,
+      spellLevel: spell.mechanics.level,
+      slotLevel: slot.spellLevel,
+    });
+    const leapDamageExpr = supportedDamageAmountExpr({
+      amount: leapHitDamage.amount,
+      spellLevel: spell.mechanics.level,
+      slotLevel: slot.spellLevel,
+    });
+    if (
+      damageExpr === null ||
+      leapDamageExpr === null ||
+      !sameDiceExpr(damageExpr, leapDamageExpr)
+    ) {
+      return [];
+    }
+    return [
+      {
+        access: { tag: "prepared" },
+        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        procedure: "chainedSpellAttackDamage",
+        spell,
+        targeting,
+        damage: { expr: damageExpr },
+        damageTypeChoices: CHROMATIC_ORB_DAMAGE_TYPES,
+        rangeFeet: movementFeet(range.feet),
+        leapRangeFeet: CHROMATIC_ORB_LEAP_RANGE_FEET,
+        attackKind: phase.attackKind,
+        attackBonus: attackBonus(
+          Number(spellcastingAbilityModifier) + Number(proficiencyBonus),
+        ),
+      },
+    ];
+  });
+}
+
+export function isCanonicalSrdChromaticOrbSpellDefinition(
+  spell: SpellRecord,
+): boolean {
+  return (
+    spell.name === "Chromatic Orb" &&
+    spell.provenance.kind === "srd-5.2.1" &&
+    spell.provenance.section === "Spells/Descriptions-A-D#Chromatic Orb"
+  );
+}
+
+export function isCanonicalChromaticOrbContinuationLimitSet(
+  limits: readonly { readonly kind: string }[],
+): boolean {
+  return (
+    limits.length === CHROMATIC_ORB_CONTINUATION_LIMIT_KINDS.length &&
+    CHROMATIC_ORB_CONTINUATION_LIMIT_KINDS.every((requiredKind) =>
+      limits.some((limit) => limit.kind === requiredKind),
+    )
+  );
+}
+
+export function supportedPreparedAttackBurstSaveDamageProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+  spellcastingAbilityModifier: AbilityModifier,
+  proficiencyBonus: ProficiencyBonusType,
+): readonly SupportedSpellInvocation[] {
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    return supportedAttackBurstSaveDamageProfile({
+      spell,
+      access: { tag: "prepared" },
+      resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+      spellcastingAbilityModifier,
+      proficiencyBonus,
+      slotLevel: slot.spellLevel,
+    });
+  });
+}
+
+export function supportedAttackBurstSaveDamageProfile(
+  input: {
+    readonly spell: SpellRecord;
+    readonly spellcastingAbilityModifier: AbilityModifier;
+    readonly proficiencyBonus: ProficiencyBonusType;
+    readonly slotLevel: SpellSlotLevel;
+  } & PreparedDamageSpellSource,
+): readonly SupportedSpellInvocation[] {
+  const spell = input.spell;
+  if (spell.mechanics.family !== "activation") {
+    return [];
+  }
+  const [attackPhase, burstPhase] = spell.mechanics.phases;
+  const targeting =
+    attackPhase?.kind === "attack_roll"
+      ? spellAttackDamageTargeting(attackPhase.attachment)
+      : null;
+  const burstTargeting =
+    burstPhase?.kind === "save_gate"
+      ? primaryTargetOriginEmanationTargeting(burstPhase.attachment)
+      : null;
+  const rangeFeet =
+    targeting?.kind === "singleCombatant"
+      ? singleTargetSpellRangeFeet(spell.mechanics.range)
+      : null;
+  if (
+    spell.name !== "Ice Knife" ||
+    spell.provenance.kind !== "srd-5.2.1" ||
+    spell.provenance.section !== "Spells/Descriptions-E-L#Ice Knife" ||
+    spell.mechanics.level !== 1 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.duration.kind !== "instantaneous" ||
+    rangeFeet === null ||
+    spell.mechanics.phases.length !== 2 ||
+    attackPhase?.kind !== "attack_roll" ||
+    burstPhase?.kind !== "save_gate" ||
+    !supportedSpellAttackKind(attackPhase.attackKind) ||
+    targeting === null ||
+    burstTargeting === null ||
+    attackPhase.onHit.length !== 1 ||
+    attackPhase.onMiss.length !== 1 ||
+    attackPhase.onMiss[0]?.kind !== "none" ||
+    burstPhase.ability !== "dex" ||
+    burstPhase.dc.kind !== "caster_spell_save_dc" ||
+    burstPhase.onSuccess.kind !== "none" ||
+    burstPhase.onFail.kind !== "damage" ||
+    typeof burstPhase.onFail.damageType !== "string"
+  ) {
+    return [];
+  }
+  const hitDamage = attackPhase.onHit[0];
+  if (
+    hitDamage?.kind !== "damage" ||
+    typeof hitDamage.damageType !== "string"
+  ) {
+    return [];
+  }
+  const hitDamageExpr = supportedDamageAmountExpr({
+    amount: hitDamage.amount,
+    spellLevel: spell.mechanics.level,
+    slotLevel: input.slotLevel,
+  });
+  const burstDamageExpr = supportedDamageAmountExpr({
+    amount: burstPhase.onFail.amount,
+    spellLevel: spell.mechanics.level,
+    slotLevel: input.slotLevel,
+  });
+  if (hitDamageExpr === null || burstDamageExpr === null) {
+    return [];
+  }
+
+  return [
+    {
+      access: input.access,
+      resource: input.resource,
+      procedure: "attackBurstSaveDamage",
+      spell,
+      targeting,
+      attackKind: attackPhase.attackKind,
+      attackBonus: attackBonus(
+        Number(input.spellcastingAbilityModifier) +
+          Number(input.proficiencyBonus),
+      ),
+      damage: {
+        expr: hitDamageExpr,
+        damageType: hitDamage.damageType,
+      },
+      burst: {
+        ability: burstPhase.ability,
+        dc: burstPhase.dc,
+        targeting: burstTargeting,
+        damage: {
+          expr: burstDamageExpr,
+          damageType: burstPhase.onFail.damageType,
+        },
+        successDamage: "none",
+      },
+      rangeFeet,
+    },
+  ];
+}
+
+export function supportedSpellAttackDamageProfile(
+  input: {
+    readonly spell: SpellRecord;
+    readonly spellcastingAbilityModifier: AbilityModifier;
+    readonly proficiencyBonus: ProficiencyBonusType;
+    readonly slotLevel?: SpellSlotLevel;
+    readonly characterLevel?: number;
+  } & DamageSpellSource,
+): readonly SupportedSpellInvocation[] {
+  const spell = input.spell;
+  if (spell.mechanics.family !== "activation") {
+    return [];
+  }
+  const phase = spell.mechanics.phases[0];
+  const targeting =
+    phase?.kind === "attack_roll"
+      ? spellAttackDamageTargeting(phase.attachment)
+      : null;
+  const rangeFeet =
+    targeting?.kind === "singleCombatant"
+      ? singleTargetSpellRangeFeet(spell.mechanics.range)
+      : null;
+  if (
+    (input.access.tag === "classCantrip"
+      ? spell.mechanics.level !== 0
+      : spell.mechanics.level < 1) ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    rangeFeet === null ||
+    spell.mechanics.phases.length !== 1 ||
+    phase?.kind !== "attack_roll" ||
+    !supportedSpellAttackKind(phase.attackKind) ||
+    targeting === null ||
+    phase.onHit.length < 1 ||
+    phase.onMiss.length !== 1 ||
+    phase.onMiss[0]?.kind !== "none"
+  ) {
+    return [];
+  }
+  const [damageEffect, ...postDamageEffects] = phase.onHit;
+  if (
+    damageEffect?.kind !== "damage" ||
+    typeof damageEffect.damageType !== "string"
+  ) {
+    return [];
+  }
+  const postDamageRiders = supportedSpellPostDamageRiders(
+    spell,
+    phase,
+    postDamageEffects,
+  );
+  if (postDamageRiders === null) {
+    return [];
+  }
+  const damageExpr = supportedDamageAmountExpr({
+    amount: damageEffect.amount,
+    spellLevel: spell.mechanics.level,
+    slotLevel: input.slotLevel,
+    characterLevel: input.characterLevel,
+  });
+  if (damageExpr == null || typeof damageEffect.damageType !== "string") {
+    return [];
+  }
+
+  const attackDamageInvocation = {
+    procedure: "spellAttackDamage" as const,
+    spell,
+    targeting,
+    damage: {
+      expr: damageExpr,
+      damageType: damageEffect.damageType,
+    },
+    rangeFeet,
+    attackKind: phase.attackKind,
+    attackBonus: attackBonus(
+      Number(input.spellcastingAbilityModifier) +
+        Number(input.proficiencyBonus),
+    ),
+    postDamageRiders,
+  };
+
+  return [{ ...damageSpellSource(input), ...attackDamageInvocation }];
+}
+
+export function spellAttackDamageTargeting(
+  attachment: Attachment,
+): Extract<SpellTargeting, { readonly kind: "singleCombatant" }> | null {
+  if (
+    attachment.kind !== "hole" ||
+    attachment.value.kind !== "target" ||
+    attachment.value.selection.mode !== "one"
+  ) {
+    return null;
+  }
+  const targetKinds = attachment.value.selection.targetKinds;
+  if (targetKinds !== undefined && !sameStringSet(targetKinds, ["creature"])) {
+    return null;
+  }
+  return { kind: "singleCombatant" };
+}
+
+export function primaryTargetOriginEmanationTargeting(
+  attachment: Attachment,
+): Extract<
+  SpellTargeting,
+  { readonly kind: "primaryTargetOriginEmanation" }
+> | null {
+  const value = attachment.kind === "hole" ? attachment.value : attachment;
+  if (
+    value.kind === "area" &&
+    value.origin.kind === "on_primary_target" &&
+    value.shape.kind === "emanation" &&
+    value.shape.radiusFeet === SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET
+  ) {
+    return {
+      kind: "primaryTargetOriginEmanation",
+      radiusFeet: movementFeet(value.shape.radiusFeet),
+    };
+  }
+  return null;
+}

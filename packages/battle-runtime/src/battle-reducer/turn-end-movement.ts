@@ -1,0 +1,970 @@
+// Turn-end, movement command, opportunity-attack, and readied-release resolution
+// extracted from ../battle-reducer.ts. Mechanical move; no behavior change
+// intended.
+
+// RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+
+import {
+resetTurnActionEconomy
+} from "@dnd/shared-algebras/action-economy-algebra";
+
+
+import {
+hasCondition,
+removeCondition
+} from "@dnd/shared-algebras/conditions-algebra";
+
+
+
+import {
+elapsedTimeTicks,
+} from "@dnd/shared-algebras/elapsed-time-algebra";
+
+
+import {
+currentActing,
+nextInitiative
+} from "@dnd/shared-algebras/initiative-algebra";
+
+import { ordinaryMovementCost } from "@dnd/shared-algebras/movement-cost-algebra";
+
+
+
+
+
+import {
+DieRollResult,
+MovementFeet,
+movementFeet,
+type Round as RoundType
+} from "@dnd/shared/types";
+
+
+
+
+
+
+
+
+
+
+import {
+type BattleMovementSpeedKind,
+} from "../battle-subjects.ts";
+
+
+
+
+import {
+CombatantId
+} from "../identity.ts";
+
+
+
+
+import {
+attackActionOptionsForActor,
+} from "./attack-damage-apply.ts";
+
+import {
+currentActorId,
+} from "./creature-state-leaves.ts";
+
+import {
+battleCreatureStateWithKnockOutPreservedConditions
+} from "./creature-state.ts";
+
+import {
+applyStartTurnDeathSavingThrow,
+applyTemporaryHitPoints,
+breakCombatantConcentration,
+deathSavingThrowHole,
+processStatBlockRechargeRolls,
+startTurnDeathSavingThrowRequired,
+statBlockRechargeRollHole
+} from "./damage-apply.ts";
+
+import {
+maybeOpenReactionWindow,
+snapshotBattle
+} from "./dispatcher.ts";
+
+
+
+import {
+needsHolesResult,
+} from "./hole-helpers.ts";
+export { resolveOpportunityAttackCommand } from "./opportunity-attacks.ts";
+export {
+applyBattleMovement,
+readiedSpellInitialHoles,
+readiedMovementInitialHoles,
+resolveReleaseReadiedMovementCommand,
+resolveReleaseReadiedSpellCommand,
+} from "./readied-release.ts";
+import { applyBattleMovement } from "./readied-release.ts";
+
+import {
+battleMovementBudgetForActor,
+combatantCanMoveWithBudget,
+effectiveMovementSpeed,
+effectiveWalkSpeed,
+opportunityAttackThreatsForMovement,
+representedMovementSpeedKinds
+} from "./movement-speed.ts";
+
+
+import { invalidResult } from "./result-helpers.ts";
+
+import {
+conditionsAfterExpiringSpellConditionEffects
+} from "./spell-condition-effects-helpers.ts";
+
+
+import {
+attackActionOptionName,
+attackTargetConstraint,
+} from "./statblock-attacks.ts";
+
+import {
+refreshStatBlockStartTurnResources,
+sameStatBlockPartKey
+} from "./statblock.ts";
+
+import type {
+ActiveOngoingFeatureOccurrence,
+BattleActiveEffect,
+BattleCreatureState,
+BattleFill,
+BattleMovementHole,
+BattleOpportunityAttackThreat,
+BattleResolutionInput,
+BattleResolutionResult,
+BattleResolvedMovement,
+BattleStatBlockRechargeRollHole,
+BattleStatBlockRechargeRollResult,
+BattleState,
+BattleTurnResources,
+} from "../battle-reducer.ts";
+import {
+DEATH_SAVING_THROW_HOLE_ID,
+MOVEMENT_HOLE_ID,
+MOVEMENT_HOLE_INSTANCE,
+STAT_BLOCK_RECHARGE_ROLL_HOLE_ID,
+} from "../battle-reducer.ts";
+export function resolveEndTurn(
+  state: BattleState,
+  deathSavingThrowRoll?: DieRollResult,
+  statBlockRechargeRolls?: readonly BattleStatBlockRechargeRollResult[],
+): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
+  const initiative = nextInitiative(state.initiative);
+  const nextActorId = currentActing(initiative);
+  const combatants = new Map<CombatantId, BattleCreatureState>();
+  for (const [id, combatant] of state.combatants) {
+    combatants.set(
+      id,
+      id === nextActorId
+        ? resetStartOfTurnCombatant(resetPerTurnCharacterResources(combatant))
+        : combatant,
+    );
+  }
+  const afterDeathSavingThrow =
+    deathSavingThrowRoll === undefined
+      ? combatants
+      : applyStartTurnDeathSavingThrow(
+          combatants,
+          nextActorId,
+          deathSavingThrowRoll,
+        );
+  const expiringReadiedSpellCasterIds = [...state.readiedSpells]
+    .filter(
+      ([, readiedSpell]) => readiedSpell.expiresAt.combatantId === nextActorId,
+    )
+    .map(([casterId]) => casterId);
+  const readiedSpells = new Map(state.readiedSpells);
+  for (const casterId of expiringReadiedSpellCasterIds) {
+    readiedSpells.delete(casterId);
+  }
+  const readiedMovements = new Map(state.readiedMovements);
+  for (const [actorId, readiedMovement] of state.readiedMovements) {
+    if (readiedMovement.expiresAt.combatantId === nextActorId) {
+      readiedMovements.delete(actorId);
+    }
+  }
+  const helpAttacks = state.helpAttacks.filter(
+    (help) => help.expiresAt.combatantId !== nextActorId,
+  );
+  let combatantsAfterExpiredReadiedSpells = afterDeathSavingThrow;
+  for (const casterId of expiringReadiedSpellCasterIds) {
+    combatantsAfterExpiredReadiedSpells = breakCombatantConcentration(
+      combatantsAfterExpiredReadiedSpells,
+      casterId,
+    );
+  }
+  const combatantsAfterEndTurnOngoingFeatures = expireEndOfTurnOngoingFeatures(
+    combatantsAfterExpiredReadiedSpells,
+    currentActorId(state),
+    state.initiative.round,
+  );
+  const combatantsAfterEndEffects = expireEndOfTurnEffects(
+    combatantsAfterEndTurnOngoingFeatures,
+    currentActorId(state),
+    state.initiative.round,
+  );
+  const combatantsAfterStartOngoingFeatures = expireStartOfTurnOngoingFeatures(
+    combatantsAfterEndEffects,
+    nextActorId,
+  );
+  const combatantsAfterStartEffects = expireStartOfTurnEffects(
+    combatantsAfterStartOngoingFeatures,
+    nextActorId,
+  );
+  const combatantsAfterStartTurnEffects = applyStartOfTurnActiveEffects(
+    combatantsAfterStartEffects,
+    nextActorId,
+  );
+  const combatantsAfterDurationTick =
+    Number(initiative.round) > Number(state.initiative.round)
+      ? tickDurationEffects(combatantsAfterStartTurnEffects)
+      : combatantsAfterStartTurnEffects;
+  const combatantsAfterRecharge =
+    statBlockRechargeRolls === undefined
+      ? combatantsAfterDurationTick
+      : processStatBlockRechargeRolls(
+          combatantsAfterDurationTick,
+          nextActorId,
+          statBlockRechargeRolls,
+        );
+  const combatantsAfterDamageReductionReset =
+    resetSpellDamageReductionsForNewTurn(combatantsAfterRecharge);
+  const nextState = {
+    ...state,
+    initiative,
+    combatants: combatantsAfterDamageReductionReset,
+    currentTurnResources: resetBattleTurnResources(state.currentTurnResources),
+    readiedSpells,
+    readiedMovements,
+    helpAttacks,
+    legendaryActionWindow: {
+      afterTurnActorId: currentActorId(state),
+      consumed: false,
+    },
+  };
+
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+
+
+export function resetSpellDamageReductionsForNewTurn(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  return new Map(
+    [...combatants].map(([id, combatant]) => {
+      const activeEffects = combatant.activeEffects.map((effect) =>
+        effect.kind === "spellDamageReduction" && effect.usedThisTurn
+          ? { ...effect, usedThisTurn: false }
+          : effect,
+      );
+      return activeEffects.some(
+        (effect, index) => effect !== combatant.activeEffects[index],
+      )
+        ? [id, { ...combatant, activeEffects }]
+        : [id, combatant];
+    }),
+  );
+}
+
+
+
+export function expireStartOfTurnEffects(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  actorId: CombatantId,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  return expireActiveEffects(
+    combatants,
+    (effect) =>
+      "expiresAt" in effect &&
+      effect.expiresAt.kind === "startOfTurn" &&
+      effect.expiresAt.combatantId === actorId,
+  );
+}
+
+
+
+export function applyStartOfTurnActiveEffects(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  actorId: CombatantId,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  const actor = combatants.get(actorId);
+  if (actor === undefined) {
+    return combatants;
+  }
+  const temporaryHitPoints = actor.activeEffects
+    .filter(
+      (
+        effect,
+      ): effect is Extract<
+        BattleActiveEffect,
+        { readonly kind: "turnStartTemporaryHitPoints" }
+      > => effect.kind === "turnStartTemporaryHitPoints",
+    )
+    .reduce(
+      (highest, effect) => Math.max(highest, effect.amount),
+      Number(actor.tempHp),
+    );
+  if (temporaryHitPoints === Number(actor.tempHp)) {
+    return combatants;
+  }
+  return new Map(combatants).set(
+    actorId,
+    applyTemporaryHitPoints(actor, temporaryHitPoints),
+  );
+}
+
+
+
+export function expireEndOfTurnEffects(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  actorId: CombatantId,
+  round: RoundType,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  return expireActiveEffects(
+    combatants,
+    (effect) =>
+      "expiresAt" in effect &&
+      effect.expiresAt.kind === "endOfTurn" &&
+      effect.expiresAt.combatantId === actorId &&
+      effect.expiresAt.round === round,
+  );
+}
+
+
+
+export function tickDurationEffects(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  return new Map(
+    [...combatants].map(([id, combatant]) => {
+      const expiring: BattleActiveEffect[] = [];
+      const activeEffects = combatant.activeEffects.flatMap((effect) => {
+        if (!("expiresAt" in effect) || effect.expiresAt.kind !== "duration") {
+          return [effect];
+        }
+        const remainingTicks = Number(effect.expiresAt.durationTicks) - 1;
+        if (remainingTicks <= 0) {
+          expiring.push(effect);
+          return [];
+        }
+        return [
+          {
+            ...effect,
+            expiresAt: {
+              ...effect.expiresAt,
+              durationTicks: elapsedTimeTicks(remainingTicks),
+            },
+          },
+        ];
+      });
+      const nextCombatant: BattleCreatureState =
+        combatant.positiveHpUnconscious === null
+          ? {
+              ...combatant,
+              activeEffects,
+              conditions: conditionsAfterExpiringSpellConditionEffects(
+                combatant.conditions,
+                activeEffects,
+                expiring,
+              ),
+            }
+          : { ...combatant, activeEffects };
+      return [id, nextCombatant];
+    }),
+  );
+}
+
+
+
+export function expireActiveEffects(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  shouldExpire: (effect: BattleActiveEffect) => boolean,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  return new Map(
+    [...combatants].map(([id, combatant]) => {
+      const expiring = combatant.activeEffects.filter(shouldExpire);
+      const activeEffects = combatant.activeEffects.filter(
+        (effect) => !shouldExpire(effect),
+      );
+      const nextCombatant: BattleCreatureState =
+        combatant.positiveHpUnconscious === null
+          ? {
+              ...combatant,
+              activeEffects,
+              conditions: conditionsAfterExpiringSpellConditionEffects(
+                combatant.conditions,
+                activeEffects,
+                expiring,
+              ),
+            }
+          : { ...combatant, activeEffects };
+      return [id, nextCombatant];
+    }),
+  );
+}
+
+
+
+export function expireStartOfTurnOngoingFeatures(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  actorId: CombatantId,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  return expireOngoingFeatures(
+    combatants,
+    (ongoingFeature) =>
+      ongoingFeature.expiresAt.kind === "startOfTurn" &&
+      ongoingFeature.expiresAt.combatantId === actorId,
+  );
+}
+
+
+
+export function expireEndOfTurnOngoingFeatures(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  actorId: CombatantId,
+  round: RoundType,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  return expireOngoingFeatures(
+    combatants,
+    (ongoingFeature) =>
+      ongoingFeature.expiresAt.kind === "endOfTurn" &&
+      ongoingFeature.expiresAt.combatantId === actorId &&
+      ongoingFeature.expiresAt.round === round,
+  );
+}
+
+
+
+export function expireOngoingFeatures(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  shouldExpire: (occurrence: ActiveOngoingFeatureOccurrence) => boolean,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  return new Map(
+    [...combatants].map(([id, combatant]) => [
+      id,
+      {
+        ...combatant,
+        activeOngoingFeatureOccurrences: new Map(
+          [...combatant.activeOngoingFeatureOccurrences].filter(
+            ([, occurrence]) => !shouldExpire(occurrence),
+          ),
+        ),
+      },
+    ]),
+  );
+}
+
+
+
+export function resetBattleTurnResources(
+  resources: BattleTurnResources,
+): BattleTurnResources {
+  const { lightWeaponAttackMade: _lightWeaponAttackMade, ...base } =
+    resetTurnActionEconomy(resources);
+  return {
+    ...base,
+    spellSlotExpendedThisTurn: false,
+    attackRollMadeThisTurn: false,
+    attackDamageRidersUsedThisTurn: [],
+    weaponDamageDiceRollChoicesUsedThisTurn: [],
+    dashMovementBonusFeet: movementFeet(0),
+    disengaged: false,
+  };
+}
+
+export 
+
+function resolveEndTurnCommand(
+  input: BattleResolutionInput,
+): BattleResolutionResult {
+  const initiative = nextInitiative(input.state.initiative);
+  const nextActorId = currentActing(initiative);
+  const nextActor = input.state.combatants.get(nextActorId);
+  const needsDeathSavingThrow = startTurnDeathSavingThrowRequired(nextActor);
+  const rechargeHole = statBlockRechargeRollHole(nextActor);
+  const expectedHoleCount =
+    (needsDeathSavingThrow ? 1 : 0) + (rechargeHole === null ? 0 : 1);
+  if (expectedHoleCount > 0 && input.fills.length === 0) {
+    return {
+      tag: "needsHoles",
+      state: input.state,
+      subject: input.subject,
+      holes: [
+        ...(needsDeathSavingThrow ? [deathSavingThrowHole(nextActorId)] : []),
+        ...(rechargeHole === null ? [] : [rechargeHole]),
+      ],
+      snapshot: snapshotBattle(input.state),
+    };
+  }
+
+  if (input.fills.length > expectedHoleCount) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "End Turn received too many fills for start-turn requirements.",
+    );
+  }
+
+  const deathSavingThrowFill = input.fills.find(
+    (fill) => fill.kind === "deathSavingThrow",
+  );
+  const rechargeRollFill = input.fills.find(
+    (fill) => fill.kind === "statBlockRechargeRoll",
+  );
+  if (
+    (needsDeathSavingThrow &&
+      deathSavingThrowFill?.kind !== "deathSavingThrow") ||
+    (!needsDeathSavingThrow && deathSavingThrowFill !== undefined)
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      needsDeathSavingThrow
+        ? "End Turn requires a Death Saving Throw fill for the next actor."
+        : "End Turn does not accept battle fills.",
+    );
+  }
+  if (
+    (rechargeHole !== null &&
+      rechargeRollFill?.kind !== "statBlockRechargeRoll") ||
+    (rechargeHole === null && rechargeRollFill !== undefined)
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      rechargeHole !== null
+        ? "End Turn requires a Stat Block Recharge roll fill for the next actor."
+        : "End Turn does not accept a Stat Block Recharge roll fill.",
+    );
+  }
+  if (
+    deathSavingThrowFill?.kind === "deathSavingThrow" &&
+    deathSavingThrowFill.holeId !== DEATH_SAVING_THROW_HOLE_ID
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Death Saving Throw fill does not match the requested hole.",
+    );
+  }
+  if (
+    rechargeRollFill?.kind === "statBlockRechargeRoll" &&
+    rechargeRollFill.holeId !== STAT_BLOCK_RECHARGE_ROLL_HOLE_ID
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Stat Block Recharge roll fill does not match the requested hole.",
+    );
+  }
+  if (
+    rechargeRollFill?.kind === "statBlockRechargeRoll" &&
+    !statBlockRechargeRollFillMatchesHole(rechargeRollFill.value, rechargeHole)
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Stat Block Recharge roll fill must provide one d6 result for each requested target.",
+    );
+  }
+
+  return resolveEndTurn(
+    input.state,
+    deathSavingThrowFill?.kind === "deathSavingThrow"
+      ? deathSavingThrowFill.value
+      : undefined,
+    rechargeRollFill?.kind === "statBlockRechargeRoll"
+      ? rechargeRollFill.value
+      : undefined,
+  );
+}
+
+
+
+export function statBlockRechargeRollFillMatchesHole(
+  value: readonly BattleStatBlockRechargeRollResult[],
+  rechargeHole: BattleStatBlockRechargeRollHole | null,
+): boolean {
+  if (rechargeHole === null) return value.length === 0;
+  if (value.length !== rechargeHole.rechargeTargets.length) return false;
+
+  const matchedTargetIndexes = new Set<number>();
+  for (const result of value) {
+    if (result.roll < 1 || result.roll > 6) return false;
+    const targetIndex = rechargeHole.rechargeTargets.findIndex(
+      (target, index) =>
+        !matchedTargetIndexes.has(index) &&
+        sameStatBlockPartKey(target, result.target),
+    );
+    if (targetIndex === -1) return false;
+    matchedTargetIndexes.add(targetIndex);
+  }
+  return true;
+}
+
+export 
+
+function resolveMoveCommand(
+  input: BattleResolutionInput,
+): BattleResolutionResult {
+  if (input.fills.length === 0) {
+    return needsHolesResult(input.state, input.subject, [
+      movementHole(input.state, input.subject.actorId),
+    ]);
+  }
+  if (input.fills.length > 1 || input.fills[0]?.kind !== "movement") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Move requires exactly one Movement fill.",
+    );
+  }
+  const fill = input.fills[0];
+  if (fill.holeId !== MOVEMENT_HOLE_ID) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Movement fill does not match the requested hole.",
+    );
+  }
+  const movement = parseBattleMovement(
+    input.state,
+    input.subject.actorId,
+    fill,
+  );
+  if (movement.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", movement.message);
+  }
+  const threats = opportunityAttackThreatsForMovement(
+    input.state,
+    movement.movement,
+  );
+  if (threats.length > 0) {
+    const reactionWindow = maybeOpenReactionWindow(
+      input.state,
+      {
+        trigger: "opportunityAttack",
+        moverId: input.subject.actorId,
+        threats,
+        continuation: {
+          kind: "movement",
+          subject: input.subject,
+          movement: movement.movement,
+        },
+      },
+      undefined,
+    );
+    if (reactionWindow !== null) return reactionWindow;
+  }
+  const nextState = applyBattleMovement(input.state, movement.movement);
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+export 
+
+function resolveStandFromProneCommand(
+  input: BattleResolutionInput,
+): BattleResolutionResult {
+  if (input.fills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Stand from Prone accepts no fills.",
+    );
+  }
+  const actor = input.state.combatants.get(input.subject.actorId);
+  const cost = standFromProneCostFeet(input.state, input.subject.actorId);
+  if (actor === undefined || cost === null) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Stand from Prone is no longer available.",
+    );
+  }
+  const nextActor = {
+    ...battleCreatureStateWithKnockOutPreservedConditions(
+      actor,
+      removeCondition(actor.conditions, "prone"),
+    ),
+    movementSpentFeet: movementFeet(Number(actor.movementSpentFeet) + cost),
+  };
+  const nextState = {
+    ...input.state,
+    combatants: new Map(input.state.combatants).set(
+      actor.combatantId,
+      nextActor,
+    ),
+  };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+
+
+export function standFromProneCostFeet(
+  state: BattleState,
+  actorId: CombatantId,
+): number | null {
+  const actor = state.combatants.get(actorId);
+  if (actor === undefined || !hasCondition(actor.conditions, "prone")) {
+    return null;
+  }
+  const speed = effectiveWalkSpeed(
+    actor,
+    state.grapples.some((grapple) => grapple.targetId === actorId),
+  );
+  const cost = Math.floor(Number(speed) / 2);
+  const remaining = battleMovementBudgetForActor(state, actorId).remainingFeet;
+  if (cost <= 0 || Number(remaining) < cost) return null;
+  return cost;
+}
+
+export function movementHole(
+  state: BattleState,
+  actorId: CombatantId,
+): BattleMovementHole {
+  const budget = battleMovementBudgetForActor(state, actorId);
+  return movementHoleWithBudget(
+    actorId,
+    budget.remainingFeet,
+    budget.speedKinds.map((speedKind) => ({
+      kind: speedKind.kind,
+      movementBudgetFeet: speedKind.remainingFeet,
+    })),
+  );
+}
+
+
+
+export function readiedMovementHole(
+  state: BattleState,
+  actorId: CombatantId,
+): BattleMovementHole {
+  const actor = state.combatants.get(actorId);
+  const isGrappled = state.grapples.some(
+    (grapple) => grapple.targetId === actorId,
+  );
+  const speedKinds =
+    actor === undefined
+      ? []
+      : representedMovementSpeedKinds(actor).map((kind) => ({
+          kind,
+          movementBudgetFeet: effectiveMovementSpeed(actor, kind, isGrappled),
+        }));
+  return movementHoleWithBudget(
+    actorId,
+    readiedMovementBudgetForActor(state, actorId),
+    speedKinds,
+  );
+}
+
+
+
+export function movementHoleWithBudget(
+  actorId: CombatantId,
+  movementBudgetFeet: MovementFeet,
+  speedKinds: readonly {
+    readonly kind: BattleMovementSpeedKind;
+    readonly movementBudgetFeet: MovementFeet;
+  }[] = [{ kind: "walk", movementBudgetFeet }],
+): BattleMovementHole {
+  return {
+    kind: "movement",
+    holeInstanceKey: MOVEMENT_HOLE_INSTANCE,
+    holeId: MOVEMENT_HOLE_ID,
+    label: "Movement",
+    actorId,
+    movementBudgetFeet,
+    speedKinds,
+  };
+}
+
+
+
+export function readiedMovementBudgetForActor(
+  state: BattleState,
+  actorId: CombatantId,
+  speedKind: BattleMovementSpeedKind = "walk",
+): MovementFeet {
+  const actor = state.combatants.get(actorId);
+  return actor === undefined
+    ? movementFeet(0)
+    : effectiveMovementSpeed(
+        actor,
+        speedKind,
+        state.grapples.some((grapple) => grapple.targetId === actorId),
+      );
+}
+
+
+
+export function parseBattleMovement(
+  state: BattleState,
+  moverId: CombatantId,
+  fill: Extract<BattleFill, { readonly kind: "movement" }>,
+  options: {
+    readonly movementBudgetFeet?: MovementFeet;
+    readonly spendsTurnMovement?: boolean;
+  } = {},
+):
+  | { readonly tag: "ok"; readonly movement: BattleResolvedMovement }
+  | { readonly tag: "invalid"; readonly message: string } {
+  const movementBudgetFeet =
+    options.movementBudgetFeet ??
+    battleMovementBudgetForActor(state, moverId, fill.value.speedKind)
+      .remainingFeet;
+  const mover = state.combatants.get(moverId);
+  if (
+    mover === undefined ||
+    !representedMovementSpeedKinds(mover).includes(fill.value.speedKind)
+  ) {
+    return {
+      tag: "invalid",
+      message: "Movement speed kind is not represented for this combatant.",
+    };
+  }
+  if (!combatantCanMoveWithBudget(state, moverId, movementBudgetFeet)) {
+    return { tag: "invalid", message: "Current combatant cannot move." };
+  }
+  if (
+    fill.value.movementCostFeet <= 0 ||
+    !Number.isInteger(fill.value.movementCostFeet)
+  ) {
+    return {
+      tag: "invalid",
+      message: "Movement cost must be a positive integer.",
+    };
+  }
+  const movementCost = ordinaryMovementCost(
+    movementFeet(fill.value.movementCostFeet),
+    fill.value.speedKind,
+  );
+  if (Number(movementCost.costFeet) > Number(movementBudgetFeet)) {
+    return {
+      tag: "invalid",
+      message: "Movement cost exceeds the combatant's remaining Movement.",
+    };
+  }
+  const seen = new Set<string>();
+  const provokedOpportunityAttacks: BattleOpportunityAttackThreat[] = [];
+  for (const threat of fill.value.provokedOpportunityAttacks) {
+    const reactorId = threat.reactorId;
+    if (reactorId === moverId) {
+      return {
+        tag: "invalid",
+        message:
+          "Movement Opportunity Attack threat cannot name the mover as reactor.",
+      };
+    }
+    if (!state.combatants.has(reactorId)) {
+      return {
+        tag: "invalid",
+        message:
+          "Movement Opportunity Attack threat references an unknown combatant.",
+      };
+    }
+    const attack = attackActionOptionsForActor(state, reactorId).find(
+      (option) => attackActionOptionName(option) === threat.attackName,
+    );
+    if (attack === undefined) {
+      return {
+        tag: "invalid",
+        message:
+          "Movement Opportunity Attack threat references an unknown attack option.",
+      };
+    }
+    if (attackTargetConstraint(attack).kind !== "meleeReach") {
+      return {
+        tag: "invalid",
+        message:
+          "Movement Opportunity Attack threat must name a melee attack option.",
+      };
+    }
+    const threatKey = `${reactorId}\u0000${threat.attackName}`;
+    if (seen.has(threatKey)) {
+      return {
+        tag: "invalid",
+        message: "Movement Opportunity Attack threat repeats an attack option.",
+      };
+    }
+    seen.add(threatKey);
+    provokedOpportunityAttacks.push(threat);
+  }
+  return {
+    tag: "ok",
+    movement: {
+      moverId,
+      speedKind: fill.value.speedKind,
+      movementCostFeet: movementCost.costFeet,
+      provokedOpportunityAttacks,
+      spendsTurnMovement: options.spendsTurnMovement ?? true,
+    },
+  };
+}
+
+export function resetStartOfTurnCombatant(
+  combatant: BattleCreatureState,
+): BattleCreatureState {
+  const resetCombatant = {
+    ...combatant,
+    dodging: false,
+    reactionAvailable: true,
+    movementSpentFeet: movementFeet(0),
+    attackRollMissToHitReplacementsUsedSinceTurnStart: [],
+  };
+  if (resetCombatant.origin.kind !== "statBlock") {
+    return resetCombatant;
+  }
+  return {
+    ...resetCombatant,
+    origin: {
+      ...resetCombatant.origin,
+      resources: refreshStatBlockStartTurnResources(
+        resetCombatant.origin.resources,
+        resetCombatant.origin.statBlock.statBlock,
+      ),
+    },
+  };
+}
+
+
+
+export function resetPerTurnCharacterResources(
+  combatant: BattleCreatureState,
+): BattleCreatureState {
+  if (combatant.origin.kind !== "character") {
+    return combatant;
+  }
+
+  return {
+    ...combatant,
+    origin: {
+      ...combatant.origin,
+      resources: combatant.origin.resources.map((resource) => ({
+        ...resource,
+        usedThisTurn: false,
+      })),
+    },
+  };
+}

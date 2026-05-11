@@ -3,15 +3,16 @@
 // mechanical extraction only — every value (and its `as const satisfies T`
 // shape) is preserved verbatim.
 
-import { movementFeet } from "@dnd/shared/types";
-import { holeId, holeInstanceKey } from "@dnd/shared-algebras/runtime-hole-algebra";
+import { holeId,holeInstanceKey } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type { CreatureType } from "@dnd/shared/game-facts";
+import { movementFeet } from "@dnd/shared/types";
 import type {
-  DamageType,
-  SpellRecord,
+DamageType,
+SpellRecord,
 } from "@dnd/surface/surface/types";
 
 export const CRITICAL_HIT_THRESHOLDS = [19, 20] as const;
+export const BATTLE_ATTACK_RANGE_BANDS = ["normal", "long"] as const;
 // Required SRD cross-record reference: Shield explicitly also triggers when
 // targeted by the Magic Missile spell.
 export const SHIELD_MAGIC_MISSILE_SPELL_ID =

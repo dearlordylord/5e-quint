@@ -7,89 +7,89 @@
 // Spell-condition expiration helpers live in spell-condition-effects-helpers.ts
 // (cycle #19) so both M and P can import them without a cycle.
 
-import { Match } from "effect";
 import {
-  DieRollResult,
-  Hp,
-  damageAmount as toDamageAmount,
-  type DamageAmount,
-} from "@dnd/shared/types";
-import {
-  applyCondition,
-  removeCondition,
+applyCondition,
+removeCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
 import {
-  addDeathFailures,
-  resetDeathSaveRuntimeState,
-  resolveDeathSavingThrow,
+addDeathFailures,
+resetDeathSaveRuntimeState,
+resolveDeathSavingThrow,
 } from "@dnd/shared-algebras/death-saves-algebra";
 import {
-  holeId,
-  holeInstanceKey,
+holeId,
+holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
-import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
-import type { ZeroHpLifecycle } from "../zero-hp-lifecycle.ts";
-import type { CombatantId } from "../identity.ts";
-import { KNOCKED_OUT_UNCONSCIOUS } from "../battle-init.ts";
 import {
-  resourceHasUsesRemaining,
-  spendCharacterResourceUse,
-  type CharacterBattleResourceState,
-} from "../character-battle-resources.ts";
-import {
-  parseSupportedUnitFeatureProfile,
-} from "../unit-feature-support.ts";
+DieRollResult,
+Hp,
+damageAmount as toDamageAmount,
+type DamageAmount,
+} from "@dnd/shared/types";
+import type { StatBlockRecord,UnitRecord } from "@dnd/surface/surface/types";
+import { Match } from "effect";
 import type {
-  StatBlockMutableResourceState,
-  StatBlockPartKey,
+StatBlockMutableResourceState,
+StatBlockPartKey,
 } from "../battle-action-options.ts";
+import { KNOCKED_OUT_UNCONSCIOUS } from "../battle-init.ts";
+import type { AttackFillSet } from "../battle-reducer.ts";
 import {
-  CONCENTRATION_SAVING_THROW_HOLE_INSTANCE_PREFIX,
-  DEATH_SAVING_THROW_HOLE_ID,
-  DEATH_SAVING_THROW_HOLE_INSTANCE,
-  STAT_BLOCK_RECHARGE_ROLL_HOLE_ID,
-  STAT_BLOCK_RECHARGE_ROLL_HOLE_INSTANCE,
-  type AttackDamageRider,
-  type BattleActiveEffect,
-  type BattleAttackDamageDisposition,
-  type BattleConcentration,
-  type BattleConcentrationSavingThrowHole,
-  type BattleCreatureState,
-  type BattleDeathSavingThrowHole,
-  type BattleFill,
-  type BattleReadiedSpell,
-  type BattleState,
-  type BattleStatBlockRechargeRollHole,
-  type BattleStatBlockRechargeRollResult,
-  type SpellMarkedDamageRider,
-  type SpellWeaponDamageRider,
-  type WeaponDamageDiceRollChoiceFill,
-  type WeaponDamageDiceRollChoiceUsage,
+CONCENTRATION_SAVING_THROW_HOLE_INSTANCE_PREFIX,
+DEATH_SAVING_THROW_HOLE_ID,
+DEATH_SAVING_THROW_HOLE_INSTANCE,
+STAT_BLOCK_RECHARGE_ROLL_HOLE_ID,
+STAT_BLOCK_RECHARGE_ROLL_HOLE_INSTANCE,
+zeroHpLifecycleIsTerminal,
+type AttackDamageRider,
+type BattleActiveEffect,
+type BattleAttackDamageDisposition,
+type BattleConcentration,
+type BattleConcentrationSavingThrowHole,
+type BattleCreatureState,
+type BattleDeathSavingThrowHole,
+type BattleFill,
+type BattleReadiedSpell,
+type BattleStatBlockRechargeRollHole,
+type BattleStatBlockRechargeRollResult,
+type BattleState,
+type SpellMarkedDamageRider,
+type SpellWeaponDamageRider,
+type WeaponDamageDiceRollChoiceFill,
+type WeaponDamageDiceRollChoiceUsage,
 } from "../battle-reducer.ts";
-import { concentrationSavingThrowDc } from "./domain-helpers.ts";
 import {
-  combatantsAreAllies,
-  normalizeBattleGrapples,
+resourceHasUsesRemaining,
+spendCharacterResourceUse,
+type CharacterBattleResourceState,
+} from "../character-battle-resources.ts";
+import type { CombatantId } from "../identity.ts";
+import {
+parseSupportedUnitFeatureProfile,
+} from "../unit-feature-support.ts";
+import type { ZeroHpLifecycle } from "../zero-hp-lifecycle.ts";
+import {
+combatantsAreAllies,
+normalizeBattleGrapples,
 } from "./creature-state-leaves.ts";
 import {
-  battleCreatureStateWithDamageProjection,
-  battleCreatureStateWithKnockOutPreservedConditions,
-  battleCreatureStateWithoutKnockOut,
-  knockedOutConditionState,
-  knockedOutOneHp,
+battleCreatureStateWithDamageProjection,
+battleCreatureStateWithKnockOutPreservedConditions,
+battleCreatureStateWithoutKnockOut,
+knockedOutConditionState,
+knockedOutOneHp,
 } from "./creature-state.ts";
-import { zeroHpLifecycleIsTerminal } from "../battle-reducer.ts";
 import {
-  applySpellDamageReductions,
-  attackDamageByType,
-  damageAmountByTypeAfterTargetAdjustments,
+applySpellDamageReductions,
+attackDamageByType,
+damageAmountByTypeAfterTargetAdjustments,
 } from "./damage-helpers.ts";
-import {
-  sameStatBlockPartKey,
-  statBlockLimitedUseForPart,
-} from "./statblock.ts";
+import { concentrationSavingThrowDc } from "./domain-helpers.ts";
 import { conditionsAfterExpiringSpellConditionEffects } from "./spell-condition-effects-helpers.ts";
-import type { AttackFillSet } from "../battle-reducer.ts";
+import {
+sameStatBlockPartKey,
+statBlockLimitedUseForPart,
+} from "./statblock.ts";
 
 export function breakBattleConcentration(
   state: BattleState,
@@ -384,7 +384,7 @@ export function removeSpellConditionEffectsFromTargetDamagedByCasterOrAllyAttack
     return state;
   }
   const activeEffects = target.activeEffects.filter(
-    (effect) => !expiring.includes(effect),
+    (effect) => !expiring.some((expired) => expired === effect),
   );
   const nextCombatant: BattleCreatureState =
     target.positiveHpUnconscious === null

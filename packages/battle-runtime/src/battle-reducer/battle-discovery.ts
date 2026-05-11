@@ -1,0 +1,826 @@
+// Battle act discovery extracted from ../battle-reducer.ts.
+// Owns top-level act discovery and subject/action-resource discovery helpers.
+// Mechanical move; no behavior change intended.
+
+// RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+import type {
+ActionEconomyState,
+RuntimeActionResource,
+} from "@dnd/shared-algebras/action-economy-algebra";
+
+import {
+actionRestrictionAllows,
+canSpendAction
+} from "@dnd/shared-algebras/action-economy-algebra";
+
+
+
+
+
+
+
+
+
+import {
+type StandardActionKind
+} from "@dnd/shared/game-facts";
+
+
+
+import type {
+CreatureNamedMultiattack,
+StatBlockRecord
+} from "@dnd/surface/surface/types";
+
+
+import { Match } from "effect";
+
+
+import * as Either from "effect/Either";
+
+
+
+
+import {
+BATTLE_REACTION_TRIGGERS
+} from "../battle-reaction-triggers.ts";
+
+import {
+type BattleMovementSpeedKind,
+type BattleSubject
+} from "../battle-subjects.ts";
+
+
+
+
+import {
+CombatantId,
+spellId
+} from "../identity.ts";
+
+
+
+
+import {
+attackActionOptionsForActor,
+offHandAttackActionOptionForActor,
+offHandAttackPrerequisiteMet
+} from "./attack-damage-apply.ts";
+
+import {
+helpAttackAllyChoices,
+helpAttackAllyHole
+} from "./attack-resolution.ts";
+
+import {
+currentActorId,
+grappledBy
+} from "./creature-state-leaves.ts";
+
+import {
+combatantCanTakeActions
+} from "./creature-state.ts";
+
+
+import {
+reactionTriggerLabel
+} from "./dispatcher.ts";
+
+
+
+import {
+attackTargetChoices,
+attackTargetHole,
+bonusActionStandardActionActs,
+canHideInCurrentCircumstances,
+escapeGrappleOutcomeHole,
+escapeSpellRestraintAbilityCheckHole,
+grappleTargetChoices,
+grappleTargetHole,
+hiddenSearchTargetChoices,
+hideAbilityCheckHole,
+searchTargetHole
+} from "./hole-helpers.ts";
+
+import {
+combatantCanMoveInState,
+movementHoleHasRemainingBudget,
+representedMovementSpeedKinds
+} from "./movement-speed.ts";
+
+import {
+spellRestraintEffects
+} from "./spell-condition-effects-helpers.ts";
+
+import {
+discoverSupportedSpellInvocations
+} from "./spells-discovery.ts";
+
+import {
+attackActionOptionName
+} from "./statblock-attacks.ts";
+
+import {
+attackActionOptionIsOrdinaryAttackAction,
+statBlockActionSectionAttackOptions,
+statBlockAttackResourceAvailable,
+statBlockLimitedUseForPart,
+statBlockPartLimitedUseAvailable,
+statBlockSubjectPart
+} from "./statblock.ts";
+
+import {
+movementHole,
+readiedSpellInitialHoles,
+standFromProneCostFeet
+} from "./turn-end-movement.ts";
+
+import {
+supportedUnitFeatureActs
+} from "./unit-features.ts";
+
+
+
+import type {
+AvailableBattleAct,
+BattleCreatureState,
+BattleState,
+ClassFeatureExtraAttackActionResource,
+StatBlockBattleCreatureState,
+StatBlockMultiattackActionResource,
+SupportedLiteralMultiattackDispatch,
+SupportedStatBlockBonusActionOption,
+SupportedStatBlockBonusActionStandardAction,
+SupportedStatBlockMultiattack,
+} from "../battle-reducer.ts";
+import {
+SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS,
+discoverLegendaryActionActs,
+} from "../battle-reducer.ts";
+export function discoverBattleActs(
+  state: BattleState,
+): readonly AvailableBattleAct[] {
+  const actorId = currentActorId(state);
+  const hasOpenStatBlockMultiattackDispatch =
+    currentActorHasOpenStatBlockMultiattackDispatch(state);
+  const acts: AvailableBattleAct[] = hasOpenStatBlockMultiattackDispatch
+    ? []
+    : [...releaseGrappleActs(state)];
+  if (!state.combatants.has(actorId)) {
+    return acts;
+  }
+  const attackActionOptions = attackActionOptionsForActor(
+    state,
+    actorId,
+  ).filter(attackActionOptionIsOrdinaryAttackAction);
+  if (
+    combatantCanTakeActions(state.combatants.get(actorId)) &&
+    canSpendAction(state.currentTurnResources, "attack") &&
+    attackActionOptions.some(
+      (attack) => attackTargetChoices(state, actorId, attack).length > 0,
+    )
+  ) {
+    acts.push(
+      ...attackActionOptions.flatMap((attack) => {
+        const targetHole = attackTargetHole(state, actorId, attack);
+        return targetHole.choices.length === 0
+          ? []
+          : [
+              {
+                subject: {
+                  tag: "action" as const,
+                  actorId,
+                  action: "attack" as const,
+                  attackName: attackActionOptionName(attack),
+                  ...statBlockSubjectPart(attack),
+                },
+                label: "Attack",
+                summary: `Take the Attack action with ${attackActionOptionName(attack)}.`,
+                initialHoles: [targetHole],
+              },
+            ];
+      }),
+    );
+  }
+  if (hasOpenStatBlockMultiattackDispatch) {
+    acts.push(...movementActs(state, actorId));
+    acts.push({
+      subject: { tag: "runtimeCommand", actorId, command: "endTurn" },
+      label: "End Turn",
+      summary:
+        "End the current combatant's turn and close pending Multiattack dispatches.",
+      initialHoles: [],
+    });
+    return acts;
+  }
+  acts.push(...statBlockMultiattackActs(state, actorId));
+  if (
+    combatantCanTakeActions(state.combatants.get(actorId)) &&
+    canSpendAction(state.currentTurnResources, "dash")
+  ) {
+    acts.push(...dashActsForActor(state, actorId));
+  }
+  if (
+    combatantCanTakeActions(state.combatants.get(actorId)) &&
+    canSpendAction(state.currentTurnResources, "disengage")
+  ) {
+    acts.push({
+      subject: { tag: "action", actorId, action: "disengage" },
+      label: "Disengage",
+      summary: "Prevent Movement from provoking Opportunity Attacks this turn.",
+      initialHoles: [],
+    });
+  }
+  if (
+    combatantCanTakeActions(state.combatants.get(actorId)) &&
+    canSpendAction(state.currentTurnResources, "dodge")
+  ) {
+    acts.push({
+      subject: { tag: "action", actorId, action: "dodge" },
+      label: "Dodge",
+      summary:
+        "Impose Disadvantage on attacks against you until your next turn.",
+      initialHoles: [],
+    });
+  }
+  if (
+    combatantCanTakeActions(state.combatants.get(actorId)) &&
+    canSpendAction(state.currentTurnResources, "help") &&
+    helpAttackAllyChoices(state, actorId).length > 0
+  ) {
+    acts.push({
+      subject: { tag: "action", actorId, action: "helpAttack" },
+      label: "Help",
+      summary:
+        "Help an ally's next attack roll against an enemy within 5 feet.",
+      initialHoles: [helpAttackAllyHole(state, actorId)],
+    });
+  }
+  if (
+    combatantCanTakeActions(state.combatants.get(actorId)) &&
+    canSpendAction(state.currentTurnResources, "ready")
+  ) {
+    acts.push(
+      ...BATTLE_REACTION_TRIGGERS.map((trigger) => ({
+        subject: {
+          tag: "action" as const,
+          actorId,
+          action: "ready" as const,
+          readyTrigger: trigger,
+        },
+        label: "Ready",
+        summary: `Prepare a Reaction for ${reactionTriggerLabel(trigger)}.`,
+        initialHoles: [],
+      })),
+    );
+  }
+  if (
+    combatantCanTakeActions(state.combatants.get(actorId)) &&
+    canSpendAction(state.currentTurnResources, "hide") &&
+    canHideInCurrentCircumstances(state, actorId)
+  ) {
+    acts.push({
+      subject: { tag: "action", actorId, action: "hide" },
+      label: "Hide",
+      summary: "Make a Dexterity (Stealth) check to become hidden.",
+      initialHoles: [hideAbilityCheckHole()],
+    });
+  }
+  const hiddenTargets = hiddenSearchTargetChoices(state, actorId);
+  if (
+    combatantCanTakeActions(state.combatants.get(actorId)) &&
+    canSpendAction(state.currentTurnResources, "search") &&
+    hiddenTargets.length > 0
+  ) {
+    acts.push({
+      subject: { tag: "action", actorId, action: "search" },
+      label: "Search",
+      summary: "Make a Wisdom (Perception) check to find a hidden creature.",
+      initialHoles: [searchTargetHole(state, actorId)],
+    });
+  }
+  if (
+    combatantCanTakeActions(state.combatants.get(actorId)) &&
+    !actorHasStatBlockMultiattackActionResource(state, actorId) &&
+    canSpendAction(state.currentTurnResources, "attack") &&
+    grappleTargetChoices(state, actorId).length > 0
+  ) {
+    acts.push({
+      subject: { tag: "action", actorId, action: "grapple" },
+      label: "Grapple",
+      summary: "Replace one attack with an Unarmed Strike Grapple.",
+      initialHoles: [grappleTargetHole(state, actorId)],
+    });
+  }
+  if (
+    combatantCanTakeActions(state.combatants.get(actorId)) &&
+    !actorHasStatBlockMultiattackActionResource(state, actorId) &&
+    canSpendEscapeGrappleActionResource(state, actorId) &&
+    grappledBy(state, actorId) !== undefined
+  ) {
+    const grapple = grappledBy(state, actorId);
+    if (grapple !== undefined) {
+      acts.push({
+        subject: { tag: "action", actorId, action: "escapeGrapple" },
+        label: "Escape Grapple",
+        summary: "Use an action to attempt to end the Grappled condition.",
+        initialHoles: [escapeGrappleOutcomeHole(grapple, actorId)],
+      });
+    }
+  }
+  for (const effect of spellRestraintEffects(state, actorId)) {
+    if (
+      combatantCanTakeActions(state.combatants.get(actorId)) &&
+      !actorHasStatBlockMultiattackActionResource(state, actorId) &&
+      canSpendAction(state.currentTurnResources, "utilize")
+    ) {
+      acts.push({
+        subject: {
+          tag: "action",
+          actorId,
+          action: "escapeSpellRestraint",
+          sourceSpellId: spellId(effect.sourceSpellId),
+          sourceCombatantId: effect.sourceCombatantId,
+        },
+        label: `Escape ${effect.sourceSpellId}`,
+        summary:
+          "Use an action to attempt to end a spell-imposed Restrained condition.",
+        initialHoles: [escapeSpellRestraintAbilityCheckHole(state, effect)],
+      });
+    }
+  }
+  const offHand = offHandAttackActionOptionForActor(state, actorId);
+  if (
+    offHand !== undefined &&
+    combatantCanTakeActions(state.combatants.get(actorId)) &&
+    state.currentTurnResources.currentHasBonusAction &&
+    offHandAttackPrerequisiteMet(state, actorId, offHand) &&
+    attackTargetChoices(state, actorId, offHand).length > 0
+  ) {
+    acts.push({
+      subject: {
+        tag: "bonusAction",
+        actorId,
+        action: "offHandAttack",
+        attackName: attackActionOptionName(offHand),
+      },
+      label: "Light Property Bonus Action Attack",
+      summary: `Make the Light property Bonus Action attack with ${attackActionOptionName(offHand)}.`,
+      initialHoles: [attackTargetHole(state, actorId, offHand)],
+    });
+  }
+  acts.push(...bonusActionStandardActionActs(state, actorId));
+  acts.push(...statBlockBonusActionOptionActs(state, actorId));
+  acts.push(...supportedUnitFeatureActs(state, actorId));
+  if (combatantCanTakeActions(state.combatants.get(actorId))) {
+    acts.push(...discoverSupportedSpellInvocations(state, actorId));
+  }
+  acts.push(...movementActs(state, actorId));
+  if (standFromProneCostFeet(state, actorId) !== null) {
+    acts.push({
+      subject: { tag: "runtimeCommand", actorId, command: "standFromProne" },
+      label: "Stand",
+      summary: "Spend Movement equal to half Speed and end Prone.",
+      initialHoles: [],
+    });
+  }
+  acts.push({
+    subject: { tag: "runtimeCommand", actorId, command: "endTurn" },
+    label: "End Turn",
+    summary: "End the current combatant's turn.",
+    initialHoles: [],
+  });
+  acts.push(
+    ...[...state.readiedSpells].map(([casterId, readiedSpell]) => ({
+      subject: {
+        tag: "runtimeCommand" as const,
+        actorId,
+        command: "releaseReadiedSpell" as const,
+        readiedSpellCasterId: casterId,
+      },
+      label: `Release ${readiedSpell.invocation.spell.name}`,
+      summary: `Release ${readiedSpell.invocation.spell.name} with a Reaction.`,
+      initialHoles: readiedSpellInitialHoles(state, casterId, readiedSpell),
+    })),
+  );
+  acts.push(...discoverLegendaryActionActs(state));
+
+  return acts;
+}
+
+
+
+export function releaseGrappleActs(state: BattleState): readonly AvailableBattleAct[] {
+  return state.grapples.map((grapple) => ({
+    subject: {
+      tag: "runtimeCommand" as const,
+      actorId: grapple.grapplerId,
+      command: "releaseGrapple" as const,
+      targetId: grapple.targetId,
+    },
+    label: "Release Grapple",
+    summary: "Release a grappled target without spending an action.",
+    initialHoles: [],
+  }));
+}
+
+
+
+export function movementActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  const movementHoleForActor = movementHole(state, actorId);
+  if (
+    !combatantCanMoveInState(state, actorId) ||
+    state.combatants.size <= 1 ||
+    !movementHoleHasRemainingBudget(movementHoleForActor)
+  ) {
+    return [];
+  }
+
+  return [
+    {
+      subject: { tag: "runtimeCommand", actorId, command: "move" },
+      label: "Move",
+      summary: "Spend Movement using table-supplied movement cost.",
+      initialHoles: [movementHoleForActor],
+    },
+  ];
+}
+
+
+
+export function dashActsForActor(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  const actor = state.combatants.get(actorId);
+  if (actor === undefined) return [];
+  const speedKinds = representedMovementSpeedKinds(actor);
+
+  return speedKinds.map((speedKind) => ({
+    subject: dashSubjectForSpeedKind(actorId, speedKind),
+    label: "Dash",
+    summary:
+      "Gain extra Movement equal to the chosen Speed for the current turn.",
+    initialHoles: [],
+  }));
+}
+
+
+
+export function dashSubjectForSpeedKind(
+  actorId: CombatantId,
+  speedKind: BattleMovementSpeedKind,
+): Extract<BattleSubject, { readonly tag: "action"; readonly action: "dash" }> {
+  return { tag: "action", actorId, action: "dash", speedKind };
+}
+
+
+
+export function statBlockMultiattackActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  const actor = state.combatants.get(actorId);
+  if (
+    actor?.origin.kind !== "statBlock" ||
+    !combatantCanTakeActions(actor) ||
+    !hasTurnActionResource(state.currentTurnResources)
+  ) {
+    return [];
+  }
+  const origin = actor.origin;
+  return supportedStatBlockMultiattacks(origin.statBlock).flatMap(
+    (multiattack) => {
+      if (
+        !multiattack.dispatches.every((dispatch) =>
+          statBlockAttackResourceAvailable(
+            origin.statBlock.statBlock,
+            origin.resources,
+            dispatch,
+          ),
+        )
+      ) {
+        return [];
+      }
+      return [
+        {
+          subject: {
+            tag: "action" as const,
+            actorId,
+            action: "multiattack" as const,
+            multiattackName: multiattack.multiattack.name,
+          },
+          label: multiattack.multiattack.name,
+          summary: `Take the Attack action using ${multiattack.multiattack.name}.`,
+          initialHoles: [],
+        },
+      ];
+    },
+  );
+}
+
+
+
+export function statBlockBonusActionOptionActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  const actor = state.combatants.get(actorId);
+  if (
+    actor?.origin.kind !== "statBlock" ||
+    !combatantCanTakeActions(actor) ||
+    !state.currentTurnResources.currentHasBonusAction
+  ) {
+    return [];
+  }
+  const origin = actor.origin;
+
+  return supportedStatBlockBonusActionOptions(origin.statBlock).flatMap(
+    (option) =>
+      option.option.options.flatMap((standardAction) => {
+        if (
+          !statBlockPartLimitedUseAvailable(
+            origin.statBlock.statBlock,
+            origin.resources,
+            option.part,
+          )
+        ) {
+          return [];
+        }
+        if (
+          standardAction === "hide" &&
+          !canHideInCurrentCircumstances(state, actorId)
+        ) {
+          return [];
+        }
+        return [
+          {
+            subject: {
+              tag: "bonusAction" as const,
+              actorId,
+              action: "statBlockActionOption" as const,
+              optionName: option.option.name,
+              standardAction,
+            },
+            label: option.option.name,
+            summary: `Use ${option.option.name} to ${standardActionLabel(standardAction)} as a Bonus Action.`,
+            initialHoles:
+              standardAction === "hide" ? [hideAbilityCheckHole()] : [],
+          },
+        ];
+      }),
+  );
+}
+
+export 
+
+function supportedStatBlockMultiattacks(
+  statBlock: StatBlockRecord,
+): readonly SupportedStatBlockMultiattack[] {
+  const actionAttacks = statBlockActionSectionAttackOptions(
+    "actions",
+    statBlock.statBlock.actions,
+  );
+  return (
+    statBlock.statBlock.actions?.multiattacks?.flatMap((multiattack) => {
+      const literalDispatches =
+        supportedLiteralMultiattackDispatches(multiattack);
+      if (literalDispatches === null) return [];
+
+      const dispatches = literalDispatches.flatMap((dispatch) => {
+        const matchingAttacks = actionAttacks.filter(
+          (candidate) => candidate.attack.name === dispatch.name,
+        );
+        const [attack] = matchingAttacks;
+        if (attack === undefined || matchingAttacks.length !== 1) return [];
+        if (
+          dispatch.count.value > 1 &&
+          statBlockLimitedUseForPart(statBlock.statBlock, attack.part) !==
+            undefined
+        ) {
+          return [];
+        }
+        return Array.from({ length: dispatch.count.value }, () => attack);
+      });
+      const dispatchCount = literalDispatches.reduce(
+        (count, dispatch) => count + dispatch.count.value,
+        0,
+      );
+      return dispatches.length === dispatchCount
+        ? [{ multiattack, dispatches }]
+        : [];
+    }) ?? []
+  );
+}
+
+
+
+export function supportedLiteralMultiattackDispatches(
+  multiattack: CreatureNamedMultiattack,
+): readonly SupportedLiteralMultiattackDispatch[] | null {
+  if (multiattack.dispatches.length === 0) return null;
+
+  const dispatches = multiattack.dispatches.filter(
+    isSupportedLiteralMultiattackDispatch,
+  );
+  return dispatches.length === multiattack.dispatches.length
+    ? dispatches
+    : null;
+}
+
+
+
+export function isSupportedLiteralMultiattackDispatch(
+  dispatch: CreatureNamedMultiattack["dispatches"][number],
+): dispatch is SupportedLiteralMultiattackDispatch {
+  return (
+    dispatch.count.kind === "literal" &&
+    dispatch.count.value >= 1 &&
+    Number.isInteger(dispatch.count.value)
+  );
+}
+
+export 
+
+function supportedStatBlockBonusActionOptions(
+  statBlock: StatBlockRecord,
+): readonly SupportedStatBlockBonusActionOption[] {
+  return (
+    statBlock.statBlock.bonusActions?.actionOptions?.flatMap((option) => {
+      const supportedOptions = option.options.filter(
+        (
+          standardAction,
+        ): standardAction is SupportedStatBlockBonusActionStandardAction =>
+          supportedStatBlockBonusActionStandardAction(standardAction),
+      );
+      return supportedOptions.length === option.options.length
+        ? [
+            {
+              option: { ...option, options: supportedOptions },
+              part: { section: "bonusActions", name: option.name },
+            },
+          ]
+        : [];
+    }) ?? []
+  );
+}
+
+export 
+
+function supportedStatBlockBonusActionStandardAction(
+  standardAction: StandardActionKind,
+): standardAction is SupportedStatBlockBonusActionStandardAction {
+  return SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS.some(
+    (supported) => supported === standardAction,
+  );
+}
+
+
+
+export function isStatBlockMultiattackActionResource(
+  resource: RuntimeActionResource,
+  actorId: CombatantId,
+): resource is StatBlockMultiattackActionResource {
+  return (
+    resource.source === "statBlockMultiattack" &&
+    resource.sourceOwnerId === actorId
+  );
+}
+
+export 
+
+function isClassFeatureExtraAttackActionResource(
+  resource: RuntimeActionResource,
+  actorId: CombatantId,
+): resource is ClassFeatureExtraAttackActionResource {
+  return (
+    resource.source === "classFeatureExtraAttack" &&
+    resource.sourceOwnerId === actorId
+  );
+}
+
+export 
+
+function actorHasStatBlockMultiattackActionResource(
+  state: BattleState,
+  actorId: CombatantId,
+): boolean {
+  return state.currentTurnResources.actionResources.some((resource) =>
+    isStatBlockMultiattackActionResource(resource, actorId),
+  );
+}
+
+export 
+
+function currentActorHasOpenStatBlockMultiattackDispatch(
+  state: BattleState,
+): boolean {
+  return actorHasStatBlockMultiattackActionResource(
+    state,
+    currentActorId(state),
+  );
+}
+
+export 
+
+function actorHasClassFeatureExtraAttackActionResource(
+  state: BattleState,
+  actorId: CombatantId,
+): boolean {
+  return state.currentTurnResources.actionResources.some((resource) =>
+    isClassFeatureExtraAttackActionResource(resource, actorId),
+  );
+}
+
+
+
+export function canSpendEscapeGrappleActionResource(
+  state: BattleState,
+  actorId: CombatantId,
+): boolean {
+  return state.currentTurnResources.actionResources.some(
+    (resource) =>
+      !isClassFeatureExtraAttackActionResource(resource, actorId) &&
+      (resource.source === "turn" ||
+        actionRestrictionAllows(resource.restriction, "attack")),
+  );
+}
+
+export 
+
+function subjectAllowedDuringStatBlockMultiattackDispatch(
+  state: BattleState,
+  subject: BattleSubject,
+): boolean {
+  const actorId = currentActorId(state);
+  if (
+    subject.tag === "runtimeCommand" &&
+    subject.actorId === actorId &&
+    (subject.command === "endTurn" || subject.command === "move")
+  ) {
+    return true;
+  }
+  if (
+    subject.tag !== "action" ||
+    subject.actorId !== actorId ||
+    subject.action !== "attack"
+  ) {
+    return false;
+  }
+  return state.currentTurnResources.actionResources.some(
+    (resource): boolean =>
+      isStatBlockMultiattackActionResource(resource, actorId) &&
+      resource.attackPart.name === subject.attackName &&
+      resource.attackPart.section === (subject.statBlockSection ?? "actions"),
+  );
+}
+
+
+
+export function hasTurnActionResource(state: ActionEconomyState): boolean {
+  return state.actionResources.some((resource) => resource.source === "turn");
+}
+
+export 
+
+function spendTurnAction<T extends ActionEconomyState>(
+  state: T,
+): Either.Either<T, "no action resource available"> {
+  const turnActionResourceIndex = state.actionResources.findIndex(
+    (resource) => resource.source === "turn",
+  );
+  if (turnActionResourceIndex === -1) {
+    return Either.left("no action resource available");
+  }
+
+  return Either.right({
+    ...state,
+    actionResources: state.actionResources.filter(
+      (_, index) => index !== turnActionResourceIndex,
+    ),
+  });
+}
+
+export 
+
+function isStatBlockBattleCreatureState(
+  combatant: BattleCreatureState | undefined,
+): combatant is StatBlockBattleCreatureState {
+  return combatant?.origin.kind === "statBlock";
+}
+
+
+
+export function standardActionLabel(
+  standardAction: SupportedStatBlockBonusActionStandardAction,
+): string {
+  return Match.value(standardAction).pipe(
+    Match.when("disengage", () => "Disengage"),
+    Match.when("hide", () => "Hide"),
+    Match.exhaustive,
+  );
+}
