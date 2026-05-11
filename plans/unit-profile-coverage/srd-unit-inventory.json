@@ -160,21 +160,21 @@
       "non-runtime": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 215,
+      "catalog-installed-owner-evidence-present": 228,
       "non-runtime": 12,
       "catalog-only/dead-for-now": 74,
       "needs-surface-widening": 35,
-      "catalog-authored-executable-follow-up": 15,
       "catalog-installed-owner-evidence-required": 10,
-      "missing-authored-record": 6
+      "missing-authored-record": 6,
+      "catalog-authored-executable-follow-up": 2
     },
     "spellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 74,
       "needs-surface-widening": 35,
-      "catalog-authored-executable-follow-up": 15,
-      "catalog-installed-owner-evidence-present": 71,
+      "catalog-installed-owner-evidence-present": 84,
       "catalog-installed-owner-evidence-required": 10,
-      "missing-authored-record": 6
+      "missing-authored-record": 6,
+      "catalog-authored-executable-follow-up": 2
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -194,7 +194,7 @@
     {
       "id": "SRDINV1",
       "title": "Classify Installed Level-1 Owner Evidence",
-      "suggestedStatus": "done",
+      "suggestedStatus": "ready-for-research",
       "intent": "Stop treating installed level-1 rows as done by catalog load alone; assign operational owner expectations or explicit catalog-only closure.",
       "rowCount": 144,
       "rowIds": [
@@ -349,7 +349,7 @@
     {
       "id": "SRDINV2",
       "title": "Author Missing Level-1 Class Containers",
-      "suggestedStatus": "done",
+      "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Create or explicitly close missing SRD level-1 class container records.",
       "rowCount": 0,
       "rowIds": [],
@@ -359,7 +359,7 @@
     {
       "id": "SRDINV3",
       "title": "Classify Missing Level-1 Class Feature Rows",
-      "suggestedStatus": "done",
+      "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Decide which missing level-1 class feature rows need authored content, Surface widening, non-runtime closure, or later runtime work.",
       "rowCount": 0,
       "rowIds": [],
@@ -369,7 +369,7 @@
     {
       "id": "SRDINV4",
       "title": "Classify Level-1 Character Creation Rows",
-      "suggestedStatus": "done",
+      "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Separate class-container-owned creation/progression facts from rows that require standalone authored records.",
       "rowCount": 112,
       "rowIds": [
@@ -492,7 +492,7 @@
     {
       "id": "SRDINV5A",
       "title": "Classify Level-1 Spell Access Rows",
-      "suggestedStatus": "done",
+      "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Keep class spell access/list facts separate from individual Spell Unit support.",
       "rowCount": 7,
       "rowIds": [
@@ -510,7 +510,7 @@
     {
       "id": "SRDINV5B",
       "title": "Classify Missing Cantrip and Level-1 Spell Units",
-      "suggestedStatus": "done",
+      "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Classify missing SRD cantrip and level-1 Spell Unit records without loading the whole spell-pressure backlog into one task.",
       "rowCount": 6,
       "rowIds": [
@@ -527,12 +527,13 @@
     {
       "id": "SRDINV5C",
       "title": "Classify Installed Cantrip and Level-1 Spell Units",
-      "suggestedStatus": "done",
+      "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Classify installed SRD cantrip and level-1 Spell Unit owner evidence separately from missing and catalog-only spell rows.",
-      "rowCount": 103,
+      "rowCount": 116,
       "rowIds": [
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_light",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_minor_illusion",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_true_strike",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_vicious_mockery",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_animal_friendship",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_bane",
@@ -540,12 +541,15 @@
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_color_spray",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_cure_wounds",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_detect_magic",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_faerie_fire",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_healing_word",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_heroism",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_longstrider",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_sleep",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_thunderwave",
         "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_guidance",
         "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_light",
+        "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_resistance",
         "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_sacred_flame",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bane",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bless",
@@ -559,11 +563,13 @@
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_guidance",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_poison_spray",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_produce_flame",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_resistance",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_animal_friendship",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_charm_person",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_cure_wounds",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_detect_magic",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_entangle",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_faerie_fire",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_healing_word",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_ice_knife",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_longstrider",
@@ -573,11 +579,15 @@
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_cure_wounds",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_detect_magic",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_divine_favor",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_divine_smite",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_heroism",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_protection_from_evil_and_good",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_searing_smite",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_shield_of_faith",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_animal_friendship",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_cure_wounds",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_detect_magic",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_ensnaring_strike",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_entangle",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_hunters_mark",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_longstrider",
@@ -589,6 +599,7 @@
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_poison_spray",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_ray_of_frost",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_shocking_grasp",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_true_strike",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_burning_hands",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_charm_person",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_chromatic_orb",
@@ -606,6 +617,7 @@
         "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_eldritch_blast",
         "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_minor_illusion",
         "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_poison_spray",
+        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_true_strike",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_bane",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_charm_person",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_detect_magic",
@@ -619,6 +631,7 @@
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_poison_spray",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_ray_of_frost",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_shocking_grasp",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_true_strike",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_burning_hands",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_charm_person",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_chromatic_orb",
@@ -641,9 +654,9 @@
     {
       "id": "SRDINV5D",
       "title": "Review Catalog-Only Cantrip and Level-1 Spell Units",
-      "suggestedStatus": "done",
+      "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Keep catalog-only spell pressure explicit and counted without forcing unrelated class or nonspell rows into the same task.",
-      "rowCount": 89,
+      "rowCount": 76,
       "rowIds": [
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_dancing_lights",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_light",
@@ -652,12 +665,9 @@
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_message",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_minor_illusion",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_prestidigitation",
-        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_true_strike",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_comprehend_languages",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_detect_magic",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_disguise_self",
-        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_faerie_fire",
-        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_heroism",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_identify",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_illusory_script",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_silent_image",
@@ -665,7 +675,6 @@
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_unseen_servant",
         "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_light",
         "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_mending",
-        "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_resistance",
         "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_thaumaturgy",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_create_or_destroy_water",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_magic",
@@ -674,21 +683,15 @@
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_elementalism",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_mending",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_message",
-        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_resistance",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_create_or_destroy_water",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_detect_magic",
-        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_faerie_fire",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_goodberry",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_purify_food_and_drink",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_speak_with_animals",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_detect_magic",
-        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_divine_smite",
-        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_heroism",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_purify_food_and_drink",
-        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_searing_smite",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_alarm",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_detect_magic",
-        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_ensnaring_strike",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_goodberry",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_speak_with_animals",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_dancing_lights",
@@ -699,7 +702,6 @@
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_message",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_minor_illusion",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_prestidigitation",
-        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_true_strike",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_comprehend_languages",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_detect_magic",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_disguise_self",
@@ -708,7 +710,6 @@
         "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_mage_hand",
         "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_minor_illusion",
         "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_prestidigitation",
-        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_true_strike",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_comprehend_languages",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_detect_magic",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_illusory_script",
@@ -722,7 +723,6 @@
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_message",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_minor_illusion",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_prestidigitation",
-        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_true_strike",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_alarm",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_comprehend_languages",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_detect_magic",
@@ -741,7 +741,7 @@
     {
       "id": "SRDINV6",
       "title": "Review Catalog-Only and Surface-Widening Rows",
-      "suggestedStatus": "done",
+      "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Preserve catalog-only/dead-for-now rows and name missing Surface constructs for nonspell and spell Surface-widening blockers.",
       "rowCount": 35,
       "rowIds": [
@@ -1375,7 +1375,7 @@
     {
       "id": "SRDINV17",
       "title": "Close Character-Creation Class Container Evidence",
-      "suggestedStatus": "done",
+      "suggestedStatus": "ready-for-research",
       "intent": "Close character-creation owner evidence for authored class containers and class-owned level-1 creation facts.",
       "rowCount": 0,
       "rowIds": [],
@@ -1385,7 +1385,7 @@
     {
       "id": "SRDINV18",
       "title": "Close Character-Creation Class Feature Evidence",
-      "suggestedStatus": "done",
+      "suggestedStatus": "blocked-on-SRDINV17",
       "intent": "Close character-creation owner evidence for authored level-1 class feature records that are retained on CharacterBuilds or discovered as choices.",
       "rowCount": 0,
       "rowIds": [],
@@ -1395,7 +1395,7 @@
     {
       "id": "SRDINV19",
       "title": "Close Character-Creation Spell Access Evidence",
-      "suggestedStatus": "done",
+      "suggestedStatus": "blocked-on-SRDINV17",
       "intent": "Close character-creation owner evidence for non-Wizard level-1 Spell Access records without admitting individual Spell Definitions as runtime-supported.",
       "rowCount": 0,
       "rowIds": [],
@@ -1405,7 +1405,7 @@
     {
       "id": "SRDINV20",
       "title": "Close Character-Creation Weapon Mastery Evidence",
-      "suggestedStatus": "done",
+      "suggestedStatus": "blocked-on-SRDINV17",
       "intent": "Close character-creation owner evidence for non-Fighter level-1 Weapon Mastery choice records.",
       "rowCount": 0,
       "rowIds": [],
@@ -1592,7 +1592,7 @@
     {
       "id": "SRDINV23",
       "title": "Promote Character-Sheet Armor Class Formula Runtime",
-      "suggestedStatus": "done",
+      "suggestedStatus": "ready-for-research",
       "intent": "Promote the character-sheet Armor Class derivation owner for base AC and class-derived Unarmored Defense formulas.",
       "rowCount": 0,
       "rowIds": [],
@@ -1602,7 +1602,7 @@
     {
       "id": "SRDINV24",
       "title": "Promote Character-Sheet Rest and Spell Slot Recovery",
-      "suggestedStatus": "done",
+      "suggestedStatus": "ready-for-research",
       "intent": "Promote the character-sheet rest recovery owner for Short Rest, Long Rest, Spell Slot recovery, and Wizard Arcane Recovery.",
       "rowCount": 1,
       "rowIds": [
@@ -1614,7 +1614,7 @@
     {
       "id": "SRDINV25",
       "title": "Promote Character-Sheet Healing Resource Actions",
-      "suggestedStatus": "done",
+      "suggestedStatus": "ready-for-research",
       "intent": "Promote the character-sheet resource-action owner for Lay On Hands healing and Poisoned-condition removal.",
       "rowCount": 1,
       "rowIds": [
@@ -1626,7 +1626,7 @@
     {
       "id": "SRDINV26",
       "title": "Close Wizard Ritual Adept Invocation Ownership",
-      "suggestedStatus": "done",
+      "suggestedStatus": "ready-for-research",
       "intent": "Close Wizard Ritual Adept owner evidence through the promoted spell-access/invocation runtime boundary.",
       "rowCount": 0,
       "rowIds": [],
@@ -1803,7 +1803,7 @@
     {
       "id": "SRDINV28A",
       "title": "Generalize Spell Damage Invocation Runtime",
-      "suggestedStatus": "done",
+      "suggestedStatus": "ready-for-research",
       "intent": "Generalize the spell attack/save-damage invocation model before admitting more concrete Spell Definitions.",
       "rowCount": 0,
       "rowIds": [],
@@ -1813,7 +1813,7 @@
     {
       "id": "SRDINV28B",
       "title": "Promote Pure Spell Damage Runtime",
-      "suggestedStatus": "done",
+      "suggestedStatus": "blocked-on-SRDINV28A",
       "intent": "Promote the simplest pure damage Spell Definitions after the shared invocation shape exists.",
       "rowCount": 0,
       "rowIds": [],
@@ -1823,7 +1823,7 @@
     {
       "id": "SRDINV28C",
       "title": "Promote Spell Attack Damage Runtime",
-      "suggestedStatus": "done",
+      "suggestedStatus": "blocked-on-SRDINV28A",
       "intent": "Promote spell attack damage without mandatory Ray-of-Frost speed-rider coupling.",
       "rowCount": 10,
       "rowIds": [
@@ -1844,7 +1844,7 @@
     {
       "id": "SRDINV28D",
       "title": "Promote Spell Rider Timing Runtime",
-      "suggestedStatus": "done",
+      "suggestedStatus": "blocked-on-SRDINV28B-SRDINV28C",
       "intent": "Promote simple spell rider timing with source-owned expiration.",
       "rowCount": 9,
       "rowIds": [
@@ -1864,7 +1864,7 @@
     {
       "id": "SRDINV28E",
       "title": "Decide Starry Wisp Object Targeting",
-      "suggestedStatus": "done",
+      "suggestedStatus": "blocked-on-SRDINV28A-SRDINV28C",
       "intent": "Decide Starry Wisp object targeting before claiming full runtime support.",
       "rowCount": 2,
       "rowIds": [
@@ -1877,7 +1877,7 @@
     {
       "id": "SRDINV29A",
       "title": "Promote Burning Hands Cone Damage Runtime",
-      "suggestedStatus": "done",
+      "suggestedStatus": "blocked-on-SRDINV28A-SRDINV28E",
       "intent": "Promote Burning Hands as self-origin cone save-for-half Fire damage with slot scaling.",
       "rowCount": 0,
       "rowIds": [],
@@ -1887,7 +1887,7 @@
     {
       "id": "SRDINV29B",
       "title": "Promote Color Spray Cone Condition Runtime",
-      "suggestedStatus": "done",
+      "suggestedStatus": "blocked-on-SRDINV28A-SRDINV28E",
       "intent": "Promote Color Spray as self-origin cone Blinded condition application with end-of-caster-next-turn expiration.",
       "rowCount": 0,
       "rowIds": [],
@@ -1897,7 +1897,7 @@
     {
       "id": "SRDINV29C",
       "title": "Promote Entangle Area Restraint Runtime",
-      "suggestedStatus": "done",
+      "suggestedStatus": "blocked-on-SRDINV28A-SRDINV28E",
       "intent": "Promote Entangle as point-origin area Restrained application with Concentration duration and escape action.",
       "rowCount": 0,
       "rowIds": [],
@@ -1907,7 +1907,7 @@
     {
       "id": "SRDINV29D",
       "title": "Promote Grease Ground Hazard Runtime",
-      "suggestedStatus": "done",
+      "suggestedStatus": "blocked-on-SRDINV28A-SRDINV28E",
       "intent": "Promote Grease as a timed ground area with on-cast Prone and recurring enter/end-turn saves.",
       "rowCount": 2,
       "rowIds": [
@@ -1920,7 +1920,7 @@
     {
       "id": "SRDINV29E",
       "title": "Promote Ice Knife Mixed Attack Burst Runtime",
-      "suggestedStatus": "done",
+      "suggestedStatus": "blocked-on-SRDINV28A-SRDINV28E",
       "intent": "Promote Ice Knife as a primary ranged spell attack followed by a mandatory burst save centered on the primary target.",
       "rowCount": 3,
       "rowIds": [
@@ -1934,7 +1934,7 @@
     {
       "id": "SRDINV29F",
       "title": "Research Chromatic Orb Chained Attack Runtime",
-      "suggestedStatus": "done",
+      "suggestedStatus": "blocked-on-SRDINV28A-SRDINV28E",
       "intent": "Research and, only if tractable, promote Chromatic Orb chosen damage type and chained attack loop.",
       "rowCount": 2,
       "rowIds": [
@@ -1947,7 +1947,7 @@
     {
       "id": "SRDINV30A",
       "title": "Promote Simple Scalar Buff Spell Runtime",
-      "suggestedStatus": "done",
+      "suggestedStatus": "blocked-on-SRDINV28A-SRDINV28E",
       "intent": "Promote False Life, Longstrider, and Shield of Faith as simple scalar HP, Speed, and AC effects.",
       "rowCount": 0,
       "rowIds": [],
@@ -1957,7 +1957,7 @@
     {
       "id": "SRDINV30B",
       "title": "Promote Roll Modifier Spell Runtime",
-      "suggestedStatus": "done",
+      "suggestedStatus": "blocked-on-SRDINV28A-SRDINV28E",
       "intent": "Promote Bane, Bless, and Guidance as D20 roll modifier spells.",
       "rowCount": 0,
       "rowIds": [],
@@ -1967,7 +1967,7 @@
     {
       "id": "SRDINV30C",
       "title": "Promote Protection and Charm Spell Runtime",
-      "suggestedStatus": "done",
+      "suggestedStatus": "blocked-on-SRDINV28A-SRDINV28E",
       "intent": "Promote Animal Friendship and Protection from Evil and Good as creature-type-scoped protection/charm effects.",
       "rowCount": 0,
       "rowIds": [],
@@ -1977,7 +1977,7 @@
     {
       "id": "SRDINV30D",
       "title": "Promote Heroism Turn-Start Runtime",
-      "suggestedStatus": "ready-for-research",
+      "suggestedStatus": "blocked-on-SRDINV28A-SRDINV28E",
       "intent": "Promote Heroism as Frightened immunity plus turn-start Temporary Hit Points.",
       "rowCount": 2,
       "rowIds": [
@@ -1990,20 +1990,17 @@
     {
       "id": "SRDINV30E",
       "title": "Promote Faerie Fire Area Reveal Runtime",
-      "suggestedStatus": "ready-for-research",
+      "suggestedStatus": "blocked-on-SRDINV28A-SRDINV28E",
       "intent": "Promote Faerie Fire as area save-gated attack Advantage and visibility/invisibility-denial support where executable.",
-      "rowCount": 2,
-      "rowIds": [
-        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_faerie_fire",
-        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_faerie_fire"
-      ],
+      "rowCount": 0,
+      "rowIds": [],
       "nextAction": "Use caller-supplied cube facts; prove save-gated affected targets, concentration cleanup, and any supported Invisible/Dim Light subset.",
       "acceptance": "Faerie Fire has promoted runtime evidence for its attack-advantage effect and explicit blockers for object outline or light/invisibility clauses not yet executable."
     },
     {
       "id": "SRDINV30F",
       "title": "Promote Resistance Damage Reduction Runtime",
-      "suggestedStatus": "ready-for-research",
+      "suggestedStatus": "blocked-on-SRDINV28A-SRDINV28E",
       "intent": "Promote Resistance as chosen-damage-type reduction with once-per-turn semantics.",
       "rowCount": 2,
       "rowIds": [
@@ -2016,7 +2013,7 @@
     {
       "id": "SRDINV31A",
       "title": "Promote Divine Favor Weapon Rider Runtime",
-      "suggestedStatus": "done",
+      "suggestedStatus": "blocked-on-SRDINV28A-SRDINV28E",
       "intent": "Promote Divine Favor as self-hosted extra Radiant damage on weapon hits.",
       "rowCount": 1,
       "rowIds": [
@@ -2028,7 +2025,7 @@
     {
       "id": "SRDINV31B",
       "title": "Promote Hunter's Mark Runtime",
-      "suggestedStatus": "done",
+      "suggestedStatus": "blocked-on-SRDINV28A-SRDINV28E",
       "intent": "Promote Hunter's Mark as marked-target damage plus zero-HP retargeting.",
       "rowCount": 1,
       "rowIds": [
@@ -2040,7 +2037,7 @@
     {
       "id": "SRDINV31C",
       "title": "Promote Divine Smite After-Hit Runtime",
-      "suggestedStatus": "ready-for-research",
+      "suggestedStatus": "done",
       "intent": "Promote Divine Smite as an immediate after-hit Bonus Action damage spell.",
       "rowCount": 1,
       "rowIds": [
@@ -2052,7 +2049,7 @@
     {
       "id": "SRDINV31D",
       "title": "Promote Ensnaring Strike Runtime",
-      "suggestedStatus": "ready-for-research",
+      "suggestedStatus": "done",
       "intent": "Promote Ensnaring Strike as after-hit save-gated Restrained plus start-turn damage and escape.",
       "rowCount": 1,
       "rowIds": [
@@ -2064,7 +2061,7 @@
     {
       "id": "SRDINV31E",
       "title": "Promote Searing Smite Runtime",
-      "suggestedStatus": "ready-for-research",
+      "suggestedStatus": "done",
       "intent": "Promote Searing Smite as after-hit Fire damage plus recurring start-turn damage/save-to-end.",
       "rowCount": 1,
       "rowIds": [
@@ -2076,7 +2073,7 @@
     {
       "id": "SRDINV31F",
       "title": "Promote True Strike Weapon Spell Runtime",
-      "suggestedStatus": "ready-for-research",
+      "suggestedStatus": "done",
       "intent": "Promote True Strike as a spell-hosted weapon attack using spellcasting ability and damage type choice.",
       "rowCount": 4,
       "rowIds": [
@@ -2091,7 +2088,7 @@
     {
       "id": "SRDINV32A",
       "title": "Promote Produce Flame Held Light Runtime",
-      "suggestedStatus": "done",
+      "suggestedStatus": "blocked-on-SRDINV28A-SRDINV28E",
       "intent": "Promote Produce Flame as held illumination with recast expiry.",
       "rowCount": 1,
       "rowIds": [
@@ -2103,7 +2100,7 @@
     {
       "id": "SRDINV32B",
       "title": "Promote Produce Flame Hurled Attack Runtime",
-      "suggestedStatus": "done",
+      "suggestedStatus": "blocked-on-SRDINV32A",
       "intent": "Promote Produce Flame's later Magic action hurl as a ranged spell attack over the held-flame state.",
       "rowCount": 1,
       "rowIds": [
@@ -2115,7 +2112,7 @@
     {
       "id": "SRDINV33",
       "title": "Recursive SRD Inventory Planning Review",
-      "suggestedStatus": "blocked",
+      "suggestedStatus": "done",
       "intent": "Review SRDINV28A-SRDINV28E and SRDINV29A-SRDINV32B spell-runtime closure and append the next concrete spell frontier.",
       "rowCount": 211,
       "rowIds": [
@@ -2333,6 +2330,325 @@
       ],
       "nextAction": "Refresh spell Unit inventory metrics after the runtime-ready spell batch, then choose the next concrete frontier among installed unsupported spell evidence, missing Detect spell authoring, and remaining Spell Surface blockers; split any future task with multiple execution invariants before marking it runnable.",
       "acceptance": "The next review records spell-runtime metrics and appends Ralph-sized follow-up work rather than a passive backlog list or omnibus runtime task."
+    },
+    {
+      "id": "SRDINV34",
+      "title": "Promote Starry Wisp Object Target Runtime",
+      "suggestedStatus": "ready-for-implementation-after-light-research",
+      "intent": "Promote the Starry Wisp creature-or-object target boundary before claiming object-target spell support.",
+      "rowCount": 2,
+      "rowIds": [
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_starry_wisp",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_starry_wisp"
+      ],
+      "nextAction": "Add typed object target identity, caller-supplied range/spatial targetability facts, ranged spell attack hit/miss against object targets, object damage disposition, and an executable decision for Dim Light emission and Invisible-benefit denial.",
+      "acceptance": "Starry Wisp has promoted runtime evidence for the executable creature-or-object target subset, or any omitted object/rider clause remains checker-visible unsupported."
+    },
+    {
+      "id": "SRDINV35",
+      "title": "Author Missing Detect Spell Records",
+      "suggestedStatus": "ready-for-implementation-after-light-research",
+      "intent": "Author missing SRD Detect Evil and Good and Detect Poison and Disease Spell Definition records using existing detection Surface atoms.",
+      "rowCount": 6,
+      "rowIds": [
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_evil_and_good",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_poison_and_disease",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_detect_poison_and_disease",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_detect_evil_and_good",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_detect_poison_and_disease",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_detect_poison_and_disease"
+      ],
+      "nextAction": "Add SRD-provenance spell records for the two Detect spells without promoting detection, occlusion, or exploration runtime behavior.",
+      "acceptance": "Detect Evil and Good and Detect Poison and Disease no longer appear as missing-authored-record Spell Unit pressure, while detection execution remains outside promoted runtime support."
+    },
+    {
+      "id": "SRDINV36",
+      "title": "Promote Hellish Rebuke Reaction Runtime",
+      "suggestedStatus": "ready-for-research",
+      "intent": "Promote Hellish Rebuke as a damage-triggered Reaction spell with Dexterity save and half damage on success.",
+      "rowCount": 1,
+      "rowIds": [
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hellish_rebuke"
+      ],
+      "nextAction": "Model the taking-damage reaction window, visible-damager eligibility, Reaction and Spell Slot spend, Dexterity save, Fire damage, half damage on success, and slot scaling.",
+      "acceptance": "Hellish Rebuke has promoted runtime evidence for its reaction trigger and save-damage resolution without widening ordinary Action-time spell casting."
+    },
+    {
+      "id": "SRDINV37",
+      "title": "Promote Charm Person Runtime",
+      "suggestedStatus": "ready-for-research",
+      "intent": "Promote Charm Person as Humanoid-target Charmed application with hostile-target save Advantage and damage-break cleanup.",
+      "rowCount": 5,
+      "rowIds": [
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_charm_person",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_charm_person",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_charm_person",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_charm_person",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_charm_person"
+      ],
+      "nextAction": "Model Humanoid target filtering, Wisdom save with hostile-target Advantage, Charmed condition ownership, one-hour duration, early ending when the caster or allies damage the target, and slot-scaled target count.",
+      "acceptance": "Charm Person has promoted runtime evidence for its SRD charm lifecycle without reusing Animal Friendship's Beast-specific target rule."
+    },
+    {
+      "id": "SRDINV38",
+      "title": "Research Sleep Save Loop Runtime",
+      "suggestedStatus": "ready-for-research",
+      "intent": "Research and split Sleep's save loop and Incapacitated/Unconscious lifecycle before claiming installed support.",
+      "rowCount": 3,
+      "rowIds": [
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_sleep",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_sleep",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_sleep"
+      ],
+      "nextAction": "Design the point-origin target set, initial Wisdom save, next-turn repeat save, Incapacitated and Unconscious application, wake-up damage/help lifecycle, sleep-immunity and Exhaustion-immunity auto-success, and Concentration cleanup; split implementation if the save loop and condition lifecycle do not fit one Ralph task.",
+      "acceptance": "Sleep is either split into implementable vertical slices with no support claim, or has promoted runtime evidence for its save loop and condition lifecycle together."
+    },
+    {
+      "id": "SRDINV39",
+      "title": "Promote Eldritch Blast Beam Runtime",
+      "suggestedStatus": "ready-for-research",
+      "intent": "Promote Eldritch Blast as one or more independent ranged spell attack beams with cantrip scaling.",
+      "rowCount": 1,
+      "rowIds": [
+        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_eldritch_blast"
+      ],
+      "nextAction": "Model per-beam target choice, attack roll, Force damage, cantrip beam-count scaling, independent hit/miss resolution, and one Magic action spell invocation spend.",
+      "acceptance": "Eldritch Blast has promoted runtime evidence for beam-by-beam attack resolution without conflating it with Chromatic Orb's chained continuation protocol."
+    },
+    {
+      "id": "SRDINV40",
+      "title": "Research Grease Ground Hazard Runtime Retry",
+      "suggestedStatus": "ready-for-research",
+      "intent": "Research and retry Grease's timed ground area with on-cast Prone and recurring enter/end-turn saves as its own hazard lifecycle.",
+      "rowCount": 2,
+      "rowIds": [
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_grease",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_grease"
+      ],
+      "nextAction": "Design the table-supplied ground-area membership boundary for on-cast creatures, later entering creatures, and end-turn occupants; split implementation before support if recurring hazard event hooks remain too broad.",
+      "acceptance": "Grease has either promoted runtime evidence for on-cast and recurring Prone saves, or a sharper split that keeps the authored spell unsupported without inert area metadata."
+    },
+    {
+      "id": "SRDINV41",
+      "title": "Recursive SRD Inventory Planning Review",
+      "suggestedStatus": "blocked",
+      "intent": "Review the object-target, Detect authoring, reaction, charm, Sleep, beam, and Grease retry batch before selecting the next remaining spell Surface frontier.",
+      "rowCount": 211,
+      "rowIds": [
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_dancing_lights",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_light",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mage_hand",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mending",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_message",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_minor_illusion",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_prestidigitation",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_starry_wisp",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_true_strike",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_vicious_mockery",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_animal_friendship",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_bane",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_charm_person",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_color_spray",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_command",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_comprehend_languages",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_cure_wounds",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_detect_magic",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_disguise_self",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_dissonant_whispers",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_faerie_fire",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_feather_fall",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_healing_word",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_heroism",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_hideous_laughter",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_identify",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_illusory_script",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_longstrider",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_silent_image",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_sleep",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_speak_with_animals",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_thunderwave",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_unseen_servant",
+        "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_guidance",
+        "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_light",
+        "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_mending",
+        "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_resistance",
+        "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_sacred_flame",
+        "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_spare_the_dying",
+        "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_thaumaturgy",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bane",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bless",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_command",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_create_or_destroy_water",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_cure_wounds",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_evil_and_good",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_magic",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_poison_and_disease",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_guiding_bolt",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_healing_word",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_inflict_wounds",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_protection_from_evil_and_good",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_purify_food_and_drink",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_sanctuary",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_shield_of_faith",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_druidcraft",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_elementalism",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_guidance",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_mending",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_message",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_poison_spray",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_produce_flame",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_resistance",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_shillelagh",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_spare_the_dying",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_starry_wisp",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_animal_friendship",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_charm_person",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_create_or_destroy_water",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_cure_wounds",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_detect_magic",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_detect_poison_and_disease",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_entangle",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_faerie_fire",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_fog_cloud",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_goodberry",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_healing_word",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_ice_knife",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_jump",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_longstrider",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_protection_from_evil_and_good",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_purify_food_and_drink",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_speak_with_animals",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_thunderwave",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_bless",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_command",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_cure_wounds",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_detect_evil_and_good",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_detect_magic",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_detect_poison_and_disease",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_divine_favor",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_divine_smite",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_heroism",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_protection_from_evil_and_good",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_purify_food_and_drink",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_searing_smite",
+        "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_shield_of_faith",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_alarm",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_animal_friendship",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_cure_wounds",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_detect_magic",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_detect_poison_and_disease",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_ensnaring_strike",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_entangle",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_fog_cloud",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_goodberry",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_hunters_mark",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_jump",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_longstrider",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_speak_with_animals",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_acid_splash",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_chill_touch",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_dancing_lights",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_elementalism",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_fire_bolt",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_light",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_mage_hand",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_mending",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_message",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_minor_illusion",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_poison_spray",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_prestidigitation",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_ray_of_frost",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_shocking_grasp",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_sorcerous_burst",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_true_strike",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_burning_hands",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_charm_person",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_chromatic_orb",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_color_spray",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_comprehend_languages",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_detect_magic",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_disguise_self",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_expeditious_retreat",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_false_life",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_feather_fall",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_fog_cloud",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_grease",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_ice_knife",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_jump",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_mage_armor",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_magic_missile",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_ray_of_sickness",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_shield",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_silent_image",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_sleep",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_thunderwave",
+        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_chill_touch",
+        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_eldritch_blast",
+        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_mage_hand",
+        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_minor_illusion",
+        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_poison_spray",
+        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_prestidigitation",
+        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_true_strike",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_bane",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_charm_person",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_comprehend_languages",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_detect_magic",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_expeditious_retreat",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hellish_rebuke",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hex",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hideous_laughter",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_illusory_script",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_protection_from_evil_and_good",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_speak_with_animals",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_unseen_servant",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_acid_splash",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_chill_touch",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_dancing_lights",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_elementalism",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_fire_bolt",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_light",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_mage_hand",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_mending",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_message",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_minor_illusion",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_poison_spray",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_prestidigitation",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_ray_of_frost",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_shocking_grasp",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_true_strike",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_alarm",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_burning_hands",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_charm_person",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_chromatic_orb",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_color_spray",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_comprehend_languages",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_detect_magic",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_disguise_self",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_expeditious_retreat",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_false_life",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_feather_fall",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_find_familiar",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_floating_disk",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_fog_cloud",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_grease",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_hideous_laughter",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_ice_knife",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_identify",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_illusory_script",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_jump",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_longstrider",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_mage_armor",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_magic_missile",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_protection_from_evil_and_good",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_ray_of_sickness",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_shield",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_silent_image",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_sleep",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_thunderwave",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_unseen_servant"
+      ],
+      "nextAction": "Refresh spell Unit inventory metrics, inspect any rejected partial-support findings, and append the next concrete Surface-blocker batch by execution invariant.",
+      "acceptance": "The review records refreshed spell metrics and appends concrete follow-up work rather than a passive backlog list."
     }
   ],
   "rows": [
@@ -3770,12 +4086,23 @@
         "sourceRecordPath": "packages/surface/content/true_strike.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "true_strike"
       },
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up batch spell-attack-rider-and-smite-runtime: Admit these authored Spell Definitions after adding spell-hosted weapon attack riders, immediate hit-trigger Bonus Action casts, retargetable marks, ongoing start-turn damage, and spellcasting-ability weapon substitution."
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit true_strike is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV31F at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_vicious_mockery",
@@ -4203,12 +4530,23 @@
         "sourceRecordPath": "packages/surface/content/faerie_fire.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "faerie_fire"
       },
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit faerie_fire is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30E at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_feather_fall",
@@ -4303,12 +4641,23 @@
         "sourceRecordPath": "packages/surface/content/heroism.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "heroism"
       },
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit heroism is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30D at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_hideous_laughter",
@@ -5276,12 +5625,23 @@
         "sourceRecordPath": "packages/surface/content/resistance.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "resistance"
       },
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit resistance is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30F at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_sacred_flame",
@@ -6800,12 +7160,23 @@
         "sourceRecordPath": "packages/surface/content/resistance.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "resistance"
       },
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit resistance is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30F at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_shillelagh",
@@ -7180,12 +7551,23 @@
         "sourceRecordPath": "packages/surface/content/faerie_fire.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "faerie_fire"
       },
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit faerie_fire is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30E at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_fog_cloud",
@@ -9540,12 +9922,23 @@
         "sourceRecordPath": "packages/surface/content/divine_smite.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "divine_smite"
       },
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up batch spell-attack-rider-and-smite-runtime: Admit these authored Spell Definitions after adding spell-hosted weapon attack riders, immediate hit-trigger Bonus Action casts, retargetable marks, ongoing start-turn damage, and spellcasting-ability weapon substitution."
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit divine_smite is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV31C at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_heroism",
@@ -9570,12 +9963,23 @@
         "sourceRecordPath": "packages/surface/content/heroism.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "heroism"
       },
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up batch spell-buff-debuff-and-protection-runtime: Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction."
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit heroism is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV30D at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_protection_from_evil_and_good",
@@ -9669,12 +10073,23 @@
         "sourceRecordPath": "packages/surface/content/searing_smite.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "searing_smite"
       },
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up batch spell-attack-rider-and-smite-runtime: Admit these authored Spell Definitions after adding spell-hosted weapon attack riders, immediate hit-trigger Bonus Action casts, retargetable marks, ongoing start-turn damage, and spellcasting-ability weapon substitution."
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit searing_smite is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV31E at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_shield_of_faith",
@@ -10496,12 +10911,23 @@
         "sourceRecordPath": "packages/surface/content/ensnaring_strike.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "ensnaring_strike"
       },
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up batch spell-attack-rider-and-smite-runtime: Admit these authored Spell Definitions after adding spell-hosted weapon attack riders, immediate hit-trigger Bonus Action casts, retargetable marks, ongoing start-turn damage, and spellcasting-ability weapon substitution."
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit ensnaring_strike is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV31D at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_entangle",
@@ -12490,12 +12916,23 @@
         "sourceRecordPath": "packages/surface/content/true_strike.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "true_strike"
       },
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up batch spell-attack-rider-and-smite-runtime: Admit these authored Spell Definitions after adding spell-hosted weapon attack riders, immediate hit-trigger Bonus Action casts, retargetable marks, ongoing start-turn damage, and spellcasting-ability weapon substitution."
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit true_strike is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV31F at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_burning_hands",
@@ -14042,12 +14479,23 @@
         "sourceRecordPath": "packages/surface/content/true_strike.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "true_strike"
       },
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up batch spell-attack-rider-and-smite-runtime: Admit these authored Spell Definitions after adding spell-hosted weapon attack riders, immediate hit-trigger Bonus Action casts, retargetable marks, ongoing start-turn damage, and spellcasting-ability weapon substitution."
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit true_strike is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV31F at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_bane",
@@ -15554,12 +16002,23 @@
         "sourceRecordPath": "packages/surface/content/true_strike.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "true_strike"
       },
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up batch spell-attack-rider-and-smite-runtime: Admit these authored Spell Definitions after adding spell-hosted weapon attack riders, immediate hit-trigger Bonus Action casts, retargetable marks, ongoing start-turn damage, and spellcasting-ability weapon substitution."
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit true_strike is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV31F at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_alarm",

@@ -1,9 +1,9 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-timed-damage-save
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-chained-attack-damage
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-damage spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-marked-damage-rider

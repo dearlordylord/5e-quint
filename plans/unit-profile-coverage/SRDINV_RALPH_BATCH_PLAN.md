@@ -75,6 +75,16 @@ Current sequence:
 - `SRDINV32A`-`SRDINV32B`: promote Produce Flame held-light and hurled attack
   runtime evidence as separate vertical slices.
 - `SRDINV33`: recursive review after the spell-runtime batch.
+- `SRDINV34`: promote Starry Wisp object target runtime.
+- `SRDINV35`: author the missing Detect Evil and Good and Detect Poison and
+  Disease Spell Definition records.
+- `SRDINV36`: promote Hellish Rebuke Reaction runtime.
+- `SRDINV37`: promote Charm Person runtime.
+- `SRDINV38`: research and split Sleep's save loop and condition lifecycle.
+- `SRDINV39`: promote Eldritch Blast independent beam runtime.
+- `SRDINV40`: research and retry Grease recurring ground-hazard runtime.
+- `SRDINV41`: recursive review after the object, authoring, installed
+  unsupported, and Grease retry batch.
 
 The spell-pressure rows are split into `SRDINV5A` through `SRDINV5D` because
 class spell access, missing Spell Unit records, installed Spell Unit evidence,
@@ -249,6 +259,42 @@ SRDINV27 also fixed a stale Wizard Arcane Recovery evidence reference in
 character-sheet runtime evidence for that row. The refreshed level-1 metrics
 are 156 rows total: 144 `catalog-installed-owner-evidence-present` rows and 12
 `non-runtime` rows.
+
+## Post-SRDINV33 Frontier Loop
+
+SRDINV33 found that the split spell-runtime batch substantially reduced the
+runtime-ready authored spell pressure, but did not close the spell frontier.
+The refreshed spell pressure now has 84 owner-evidence-present rows, 10
+installed owner-evidence-required rows, 2 authored executable follow-up rows,
+6 missing authored Detect rows, 35 Surface-widening rows, and 74 explicit
+catalog-only/dead-for-now rows.
+
+The review also fixed missing checker evidence for Heroism and Ensnaring
+Strike. Those support claims now use distinct execution profiles:
+`spell.invocation-condition-immunity-turn-start-temporary-hit-points` for
+Heroism and `spell.invocation-after-hit-restraint-turn-start-damage` for
+Ensnaring Strike. They are not scalar-buff or Searing Smite aliases.
+
+The next batch is therefore split by execution invariant:
+
+1. `SRDINV34` promotes the Starry Wisp creature-or-object target boundary and
+   keeps Fire Bolt ignition out of scope.
+2. `SRDINV35` authors Detect Evil and Good and Detect Poison and Disease using
+   existing detection Surface atoms without claiming detection runtime support.
+3. `SRDINV36` promotes Hellish Rebuke's damage-triggered Reaction timing.
+4. `SRDINV37` promotes Charm Person's Humanoid charm lifecycle.
+5. `SRDINV38` researches Sleep's SRD 5.2.1 save loop and condition lifecycle
+   before any support claim.
+6. `SRDINV39` promotes Eldritch Blast's independent beam attack protocol.
+7. `SRDINV40` retries Grease as a standalone recurring ground-hazard lifecycle
+   because inert area metadata is not executable support.
+8. `SRDINV41` reviews the batch, refreshes inventory metrics, and appends the
+   next concrete Surface-blocker batch.
+
+Remaining Surface blockers such as Command, Dissonant Whispers, Expeditious
+Retreat, Feather Fall, Fire Bolt, Fog Cloud, Hex, Hideous Laughter, Jump,
+Sanctuary, Shillelagh, Sorcerous Burst, Spare the Dying, and Thunderwave remain
+counted for SRDINV41 or later recursive planning.
 
 ## Acceptance Model
 

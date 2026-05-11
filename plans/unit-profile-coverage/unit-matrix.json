@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 348,
-      "numerator": 89,
-      "percent": "25.6%"
+      "numerator": 96,
+      "percent": "27.6%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 415,
-      "numerator": 113,
-      "percent": "27.2%"
+      "numerator": 120,
+      "percent": "28.9%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,47 +59,47 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 114
+      "value": 121
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 56,
-      "numerator": 52,
-      "percent": "92.9%"
+      "denominator": 62,
+      "numerator": 58,
+      "percent": "93.5%"
     },
     "profileClassificationCoverage": {
-      "denominator": 114,
-      "numerator": 114,
+      "denominator": 121,
+      "numerator": 121,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 32,
-      "numerator": 32,
+      "denominator": 39,
+      "numerator": 39,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 32,
-      "numerator": 30,
-      "percent": "93.8%"
+      "denominator": 39,
+      "numerator": 37,
+      "percent": "94.9%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 32,
-      "numerator": 32,
+      "denominator": 39,
+      "numerator": 39,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 32,
-      "numerator": 32,
+      "denominator": 39,
+      "numerator": 39,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 56,
+      "denominator": 62,
       "numerator": 10,
-      "percent": "17.9%"
+      "percent": "16.1%"
     },
     "supportedProfileCoverage": {
-      "denominator": 90,
-      "numerator": 56,
-      "percent": "62.2%"
+      "denominator": 97,
+      "numerator": 62,
+      "percent": "63.9%"
     }
   },
   "metricSemantics": [
@@ -859,6 +859,30 @@
       ]
     },
     {
+      "id": "spell.invocation-damage-reduction",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "SRDINV30F"
+      ],
+      "title": "Spell invocation creates a chosen damage-type reduction with a once-per-turn use marker",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.invocation-weapon-damage-rider",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -879,6 +903,102 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/index.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-after-hit-damage",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "SRDINV31C"
+      ],
+      "title": "Spell invocation spends a Bonus Action and Spell Slot after an eligible melee hit to add damage to that attack",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-after-hit-restraint-turn-start-damage",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "SRDINV31D"
+      ],
+      "title": "Spell invocation spends a Bonus Action and Spell Slot after an eligible weapon hit to restrain the target, deal turn-start damage, and allow escape",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-after-hit-timed-damage-save",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "SRDINV31E"
+      ],
+      "title": "Spell invocation spends a Bonus Action and Spell Slot after an eligible melee hit to add damage, store timed start-turn damage, and save-to-end",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-spell-hosted-weapon-attack",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "SRDINV31F"
+      ],
+      "title": "Spell invocation consumes the Magic action to make a weapon attack with spellcasting ability replacement and spell-authored damage additions",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
         },
         {
           "kind": "runtime-test",
@@ -1039,6 +1159,54 @@
       ],
       "title": "Spell invocation applies creature-type-scoped Charmed or attack-roll protection active effects",
       "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-attack-roll-advantage-save",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "SRDINV30E"
+      ],
+      "title": "Spell invocation applies save-gated attack-roll Advantage against affected combatants",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-condition-immunity-turn-start-temporary-hit-points",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "taskRefs": [
+        "SRDINV30D"
+      ],
+      "title": "Spell invocation grants condition immunity and turn-start Temporary Hit Points to willing targets",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
@@ -1475,6 +1643,54 @@
     },
     {
       "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Heroism's willing target gate, Frightened immunity, turn-start Temporary Hit Points, slot-scaled targets, concentration cleanup, and spellcasting ability modifier amount.",
+      "profileIds": [
+        "spell.invocation-condition-immunity-turn-start-temporary-hit-points"
+      ],
+      "taskId": "SRDINV30D"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests for Heroism target validation, Frightened immunity, turn-start Temporary Hit Points refresh, slot-scaled target count, and concentration-owned cleanup.",
+      "profileIds": [
+        "spell.invocation-condition-immunity-turn-start-temporary-hit-points"
+      ],
+      "taskId": "SRDINV30D"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Faerie Fire's point-origin Cube Dexterity save and concentration-owned sight-gated attack-roll Advantage against failed-save creatures.",
+      "profileIds": [
+        "spell.invocation-attack-roll-advantage-save"
+      ],
+      "taskId": "SRDINV30E"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests for Faerie Fire point-origin Cube targeting, Dexterity save outcomes, concentration cleanup, and sight-gated attack-roll Advantage against failed-save creatures. Object outline, Dim Light, and Invisible benefit denial remain deferred.",
+      "profileIds": [
+        "spell.invocation-attack-roll-advantage-save"
+      ],
+      "taskId": "SRDINV30E"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Resistance's chosen damage type, once-per-turn use marker, matching damage reduction, and next-turn reset.",
+      "profileIds": [
+        "spell.invocation-damage-reduction"
+      ],
+      "taskId": "SRDINV30F"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests for Resistance target and damage-type choices, matching damage reduction, once-per-turn consumption, next-turn reset, and fixed attack and spell damage application.",
+      "profileIds": [
+        "spell.invocation-damage-reduction"
+      ],
+      "taskId": "SRDINV30F"
+    },
+    {
+      "claimKind": "qnt-proof",
       "note": "Promoted battle-runtime Quint facts for Divine Favor's self-hosted weapon-hit Radiant damage rider.",
       "profileIds": [
         "spell.invocation-weapon-damage-rider"
@@ -1504,6 +1720,70 @@
         "spell.invocation-marked-damage-rider"
       ],
       "taskId": "SRDINV31B"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Divine Smite's after-hit Bonus Action and Spell Slot spend, Radiant damage scaling, Fiend/Undead bonus dice, and critical-hit damage doubling.",
+      "profileIds": [
+        "spell.invocation-after-hit-damage"
+      ],
+      "taskId": "SRDINV31C"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests for Divine Smite's melee weapon hit trigger, non-ordinary spell discovery, resource spend, replay continuation, and Fiend/Undead bonus damage.",
+      "profileIds": [
+        "spell.invocation-after-hit-damage"
+      ],
+      "taskId": "SRDINV31C"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Ensnaring Strike's weapon-hit Bonus Action trigger, Strength save, Large-target save Advantage, Restrained ownership, turn-start Piercing damage, helper escape, and concentration cleanup.",
+      "profileIds": [
+        "spell.invocation-after-hit-restraint-turn-start-damage"
+      ],
+      "taskId": "SRDINV31D"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests for Ensnaring Strike after-hit discovery, save-gated Restrained condition, turn-start damage, target/helper escape action, table reach fact rejection, slot scaling, and concentration cleanup.",
+      "profileIds": [
+        "spell.invocation-after-hit-restraint-turn-start-damage"
+      ],
+      "taskId": "SRDINV31D"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Searing Smite's after-hit Bonus Action and Spell Slot spend, immediate Fire damage scaling, timed start-turn Fire damage, duration expiration, and Constitution save-to-end.",
+      "profileIds": [
+        "spell.invocation-after-hit-timed-damage-save"
+      ],
+      "taskId": "SRDINV31E"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests for Searing Smite's melee weapon or Unarmed Strike hit trigger, non-ordinary spell discovery, resource spend, replay continuation, turn-start Fire damage, duration expiration, and Constitution save-to-end.",
+      "profileIds": [
+        "spell.invocation-after-hit-timed-damage-save"
+      ],
+      "taskId": "SRDINV31E"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for True Strike's Magic Action weapon attack, spellcasting ability replacement, Radiant-or-normal weapon damage choice, Radiant cantrip scaling, and cantrip slot behavior.",
+      "profileIds": [
+        "spell.invocation-spell-hosted-weapon-attack"
+      ],
+      "taskId": "SRDINV31F"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests for True Strike's material weapon identity, target/attack replay, spellcasting ability replacement, damage-type choice, Radiant cantrip damage, and no Spell Slot spend.",
+      "profileIds": [
+        "spell.invocation-spell-hosted-weapon-attack"
+      ],
+      "taskId": "SRDINV31F"
     },
     {
       "claimKind": "qnt-proof",
@@ -4415,6 +4695,114 @@
       },
       "claim": {
         "profileIds": [
+          "spell.invocation-after-hit-damage"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV31C"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-after-hit-damage",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV31C"
+          ],
+          "title": "Spell invocation spends a Bonus Action and Spell Slot after an eligible melee hit to add damage to that attack",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/divine_smite.json",
+      "unitId": "divine_smite"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "spell.invocation-after-hit-restraint-turn-start-damage"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV31D"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-after-hit-restraint-turn-start-damage",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV31D"
+          ],
+          "title": "Spell invocation spends a Bonus Action and Spell Slot after an eligible weapon hit to restrain the target, deal turn-start damage, and allow escape",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/ensnaring_strike.json",
+      "unitId": "ensnaring_strike"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
           "spell.invocation-condition-save"
         ],
         "rawRequirementIds": [
@@ -4460,6 +4848,79 @@
       ],
       "sourceRecordPath": "packages/surface/content/entangle.json",
       "unitId": "entangle"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "SRDINV33",
+            "mechanic": "object outline and object attack-roll Advantage"
+          },
+          {
+            "followUpTaskId": "SRDINV33",
+            "mechanic": "Dim Light emitted by affected creatures and objects"
+          },
+          {
+            "followUpTaskId": "SRDINV33",
+            "mechanic": "affected creatures and objects can't benefit from the Invisible condition"
+          }
+        ],
+        "profileIds": [
+          "spell.invocation-attack-roll-advantage-save"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "20-foot point-origin Cube affected-creature boundary with table-supplied area membership",
+          "Dexterity save-gated affected creatures",
+          "Concentration-owned attack-roll Advantage against failed-save affected creatures when the attacker can see them"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV30E"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-attack-roll-advantage-save",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV30E"
+          ],
+          "title": "Spell invocation applies save-gated attack-roll Advantage against affected combatants",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/faerie_fire.json",
+      "unitId": "faerie_fire"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -4672,6 +5133,60 @@
       ],
       "sourceRecordPath": "packages/surface/content/guiding_bolt.json",
       "unitId": "guiding_bolt"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "spell.invocation-condition-immunity-turn-start-temporary-hit-points"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV30D"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-condition-immunity-turn-start-temporary-hit-points",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV30D"
+          ],
+          "title": "Spell invocation grants condition immunity and turn-start Temporary Hit Points to willing targets",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/heroism.json",
+      "unitId": "heroism"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -5365,6 +5880,60 @@
       },
       "claim": {
         "profileIds": [
+          "spell.invocation-damage-reduction"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV30F"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-damage-reduction",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV30F"
+          ],
+          "title": "Spell invocation creates a chosen damage-type reduction with a once-per-turn use marker",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/resistance.json",
+      "unitId": "resistance"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
           "spell.invocation-damage-save-or-attack",
           "spell.readied-action-time-spell"
         ],
@@ -5441,6 +6010,60 @@
       ],
       "sourceRecordPath": "packages/surface/content/sacred_flame.json",
       "unitId": "sacred_flame"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "spell.invocation-after-hit-timed-damage-save"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV31E"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-after-hit-timed-damage-save",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV31E"
+          ],
+          "title": "Spell invocation spends a Bonus Action and Spell Slot after an eligible melee hit to add damage, store timed start-turn damage, and save-to-end",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/searing_smite.json",
+      "unitId": "searing_smite"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -6124,6 +6747,60 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/thunderwave.json",
       "unitId": "thunderwave"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "spell.invocation-spell-hosted-weapon-attack"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV31F"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-spell-hosted-weapon-attack",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV31F"
+          ],
+          "title": "Spell invocation consumes the Magic action to make a weapon attack with spellcasting ability replacement and spell-authored damage additions",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/true_strike.json",
+      "unitId": "true_strike"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -7581,24 +8258,6 @@
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [],
-      "sourceRecordPath": "packages/surface/content/divine_smite.json",
-      "unitId": "divine_smite"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
       "sourceRecordPath": "packages/surface/content/dominate_beast.json",
       "unitId": "dominate_beast"
     },
@@ -7725,44 +8384,8 @@
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [],
-      "sourceRecordPath": "packages/surface/content/ensnaring_strike.json",
-      "unitId": "ensnaring_strike"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
       "sourceRecordPath": "packages/surface/content/fabricate.json",
       "unitId": "fabricate"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/faerie_fire.json",
-      "unitId": "faerie_fire"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -8164,24 +8787,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/heat_metal.json",
       "unitId": "heat_metal"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/heroism.json",
-      "unitId": "heroism"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -10340,24 +10945,6 @@
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [],
-      "sourceRecordPath": "packages/surface/content/resistance.json",
-      "unitId": "resistance"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
       "sourceRecordPath": "packages/surface/content/reverse_gravity.json",
       "unitId": "reverse_gravity"
     },
@@ -10396,24 +10983,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/scorching_ray.json",
       "unitId": "scorching_ray"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/searing_smite.json",
-      "unitId": "searing_smite"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -10942,24 +11511,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/true_seeing.json",
       "unitId": "true_seeing"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/true_strike.json",
-      "unitId": "true_strike"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

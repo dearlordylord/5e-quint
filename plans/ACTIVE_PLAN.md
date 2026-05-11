@@ -88,14 +88,56 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 223,
       "id": "SRDINV33",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Recursive SRD Inventory Planning Review"
     },
     {
       "number": 224,
       "id": "SRDINV34",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Promote Starry Wisp Object Target Runtime"
+    },
+    {
+      "number": 225,
+      "id": "SRDINV35",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Author Missing Detect Spell Records"
+    },
+    {
+      "number": 226,
+      "id": "SRDINV36",
+      "status": "ready-for-research",
+      "title": "Promote Hellish Rebuke Reaction Runtime"
+    },
+    {
+      "number": 227,
+      "id": "SRDINV37",
+      "status": "ready-for-research",
+      "title": "Promote Charm Person Runtime"
+    },
+    {
+      "number": 228,
+      "id": "SRDINV38",
+      "status": "ready-for-research",
+      "title": "Research Sleep Save Loop Runtime"
+    },
+    {
+      "number": 229,
+      "id": "SRDINV39",
+      "status": "ready-for-research",
+      "title": "Promote Eldritch Blast Beam Runtime"
+    },
+    {
+      "number": 230,
+      "id": "SRDINV40",
+      "status": "ready-for-research",
+      "title": "Research Grease Ground Hazard Runtime Retry"
+    },
+    {
+      "number": 231,
+      "id": "SRDINV41",
+      "status": "blocked",
+      "title": "Recursive SRD Inventory Planning Review"
     }
   ]
 }
@@ -139,8 +181,15 @@ Keep it synchronized with the DAG table and task details.
 | 218   | SRDINV31D - Promote Ensnaring Strike Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Ensnaring Strike](/workspace/typescript/dnd/packages/surface/content/ensnaring_strike.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Completed: Ensnaring Strike is promoted as an after-hit weapon spell with Strength save, Restrained, start-turn Piercing damage, helper escape by table reach fact, and spell-ending concentration cleanup. |
 | 219   | SRDINV31E - Promote Searing Smite Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [Searing Smite](/workspace/typescript/dnd/packages/surface/content/searing_smite.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Completed: Searing Smite is promoted as an after-hit melee weapon or Unarmed Strike spell with immediate Fire damage, timed start-turn Fire damage, Constitution save-to-end, and slot scaling. |
 | 220   | SRDINV31F - Promote True Strike Weapon Spell Runtime | done | SRDINV28A-SRDINV28E | SRDINV33 | [True Strike](/workspace/typescript/dnd/packages/surface/content/true_strike.dhall), [SRD Spells](/workspace/typescript/dnd/.references/srd-5.2.1/Spells) | Completed: True Strike is promoted as a spell-hosted proficient material-weapon attack with spellcasting ability attack/damage replacement, Radiant-or-normal damage choice, and Radiant cantrip scaling. |
-| 223   | SRDINV33 - Recursive SRD Inventory Planning Review | ready-for-research | SRDINV28A-SRDINV28E, SRDINV29A-SRDINV29E, SRDINV29F3, SRDINV30A-SRDINV32B | SRDINV34 | [SRDINV27 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review the split spell-runtime closure, refresh spell Unit metrics, and append Ralph-sized follow-up tasks only after checking execution-invariant granularity. |
-| 224   | SRDINV34 - Promote Starry Wisp Object Target Runtime | blocked | SRDINV33 | none | [SRDINV28E decision](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV28E_STARRY_WISP_OBJECT_TARGET_DECISION.md), [battle-runtime target facts](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer/spells-targeting.ts), [Starry Wisp](/workspace/typescript/dnd/packages/surface/content/starry_wisp.dhall), [Chill Touch](/workspace/typescript/dnd/packages/surface/content/chill_touch.dhall), [SRD Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [SRD Chill Touch](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote the Starry Wisp creature-or-object target boundary only after SRDINV33 orders it against the remaining spell-runtime frontier. |
+| 223   | SRDINV33 - Recursive SRD Inventory Planning Review | done | SRDINV28A-SRDINV28E, SRDINV29A-SRDINV29E, SRDINV29F3, SRDINV30A-SRDINV32B | SRDINV34-SRDINV40 | [SRDINV33 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV33_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [SRD inventory Ralph batch plan](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Completed: refreshed spell Unit metrics, closed missing Heroism/Ensnaring Strike evidence, and appended SRDINV34-SRDINV40 plus SRDINV41 review. |
+| 224   | SRDINV34 - Promote Starry Wisp Object Target Runtime | ready-for-implementation-after-light-research | SRDINV33 | SRDINV41 | [SRDINV28E decision](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV28E_STARRY_WISP_OBJECT_TARGET_DECISION.md), [battle-runtime target facts](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer/spells-targeting.ts), [Starry Wisp](/workspace/typescript/dnd/packages/surface/content/starry_wisp.dhall), [Chill Touch](/workspace/typescript/dnd/packages/surface/content/chill_touch.dhall), [SRD Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [SRD Chill Touch](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote the Starry Wisp creature-or-object target boundary as the first object-target slice; keep Fire Bolt ignition and broad object simulation out of scope. |
+| 225   | SRDINV35 - Author Missing Detect Spell Records | ready-for-implementation-after-light-research | SRDINV33 | SRDINV41 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [Detect Evil and Good](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Detect Poison and Disease](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Author SRD-provenance Spell Definition records for the two missing Detect spells using existing detection Surface atoms without promoting detection runtime behavior. |
+| 226   | SRDINV36 - Promote Hellish Rebuke Reaction Runtime | ready-for-research | SRDINV33 | SRDINV41 | [Hellish Rebuke](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [battle reactions](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reaction-triggers.ts), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Research and promote the damage-triggered Reaction spell window, Dexterity save, Fire damage, half damage on success, and slot scaling. |
+| 227   | SRDINV37 - Promote Charm Person Runtime | ready-for-research | SRDINV33 | SRDINV41 | [Charm Person](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Animal Friendship evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/unit-claims.jsonl), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Humanoid-target charm with hostile-target save Advantage, damage-break cleanup, one-hour duration, and slot-scaled target count without reusing Beast-specific Animal Friendship logic. |
+| 228   | SRDINV38 - Research Sleep Save Loop Runtime | ready-for-research | SRDINV33 | SRDINV41 | [Sleep](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [condition helpers](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer/spell-condition-effects-helpers.ts), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Research the Sleep save loop and Incapacitated/Unconscious lifecycle; split before implementation if repeat-save or wake-up procedures exceed one execution invariant. |
+| 229   | SRDINV39 - Promote Eldritch Blast Beam Runtime | ready-for-research | SRDINV33 | SRDINV41 | [Eldritch Blast](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [spell attack runtime](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote per-beam ranged spell attack resolution with cantrip beam scaling, independent targets, independent attack rolls, Force damage, and one Magic action spend. |
+| 230   | SRDINV40 - Research Grease Ground Hazard Runtime Retry | ready-for-research | SRDINV33 | SRDINV41 | [Grease](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Retry Grease only as a standalone recurring ground-hazard lifecycle with table-supplied area membership for cast-time, enter-area, and end-turn saves. |
+| 231   | SRDINV41 - Recursive SRD Inventory Planning Review | blocked | SRDINV34-SRDINV40 | none | [SRDINV33 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV33_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Review SRDINV34-SRDINV40 results, refresh spell Unit metrics, inspect rejected partial-support findings, and append the next concrete Surface-blocker batch. |
 
 ## Task Details
 ### Task 164 - QMBT69 - Recursive Unit Profile Planning Review
@@ -248,23 +297,23 @@ MBT passed.
 
 ### Task 223 - SRDINV33 - Recursive SRD Inventory Planning Review
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV28A-SRDINV28E, SRDINV29A-SRDINV29E, SRDINV29F3, SRDINV30A-SRDINV32B
 
-Blocks: SRDINV34
+Blocks: SRDINV34-SRDINV40
 
 Research / plan:
+[SRDINV33_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV33_RECURSIVE_PLANNING_REVIEW.md),
 [SRDINV27_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV27_RECURSIVE_PLANNING_REVIEW.md),
 [SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
 [SRDINV_RALPH_BATCH_PLAN.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV_RALPH_BATCH_PLAN.md),
 [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
 
-Scope: review SRDINV28A-SRDINV28E, SRDINV29A-SRDINV29E, SRDINV29F3, and
-SRDINV30A-SRDINV32B spell-runtime
-closure, refresh generated inventory metrics, and append the next concrete
-spell frontier. Likely frontiers are installed unsupported spell owner evidence,
-missing Detect spell authoring, and remaining Spell Surface blockers.
+Scope: completed review of SRDINV28A-SRDINV28E, SRDINV29A-SRDINV29E,
+SRDINV29F3, and SRDINV30A-SRDINV32B spell-runtime closure; refreshed generated
+inventory metrics; closed missing checker evidence for Heroism and Ensnaring
+Strike; and appended SRDINV34-SRDINV40 plus SRDINV41 review.
 
 Granularity rule: before appending tasks, split every candidate by execution
 invariant. A task is too broad if it contains multiple independent target/fill
@@ -290,19 +339,19 @@ Out of scope: implementation work not captured by the newly appended batch,
 PHB/XPHB pressure, broad runtime rewrites, and treating catalog admission alone
 as behavior support.
 
-Verification: active-plan consistency across Ralph index, DAG table, and task
-details; regenerated inventory; `pnpm unit-profile-coverage:check`; confirm
-the appended result is Ralph-sized concrete work rather than a passive backlog
-list or omnibus runtime task; `/simplify` convergence, minimum two rounds unless
-the final changeset is trivial.
+Verification: RAW/source review recorded in SRDINV33 review; active-plan
+consistency across Ralph index, DAG table, and task details; regenerated
+inventory; `pnpm unit-profile-coverage:check --write`;
+`pnpm unit-profile-coverage:check`; `pnpm quality`; `/simplify` convergence
+recorded in two rounds.
 
 ### Task 224 - SRDINV34 - Promote Starry Wisp Object Target Runtime
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: SRDINV33
 
-Blocks: none
+Blocks: SRDINV41
 
 Research / plan:
 [SRDINV28E_STARRY_WISP_OBJECT_TARGET_DECISION.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV28E_STARRY_WISP_OBJECT_TARGET_DECISION.md),
@@ -314,14 +363,14 @@ Research / plan:
 [SRD Chill Touch](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md),
 [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
 
-Scope: promote the Starry Wisp creature-or-object spell target boundary after
-SRDINV33 orders it against the remaining spell-runtime frontier. Cover typed
-object target identity, caller-supplied range/spatial targetability facts,
-ranged spell attack hit/miss adjudication against object targets, object damage
-disposition, and a precise supported-subset decision for Dim Light emission and
-Invisible-benefit denial. Decide whether the same target branch covers Chill
-Touch's generic "target within reach" wording; if it does not, keep Chill Touch
-as a combatant-target subset with checker-visible deferred evidence.
+Scope: promote the Starry Wisp creature-or-object spell target boundary as the
+first object-target slice. Cover typed object target identity, caller-supplied
+range/spatial targetability facts, ranged spell attack hit/miss adjudication
+against object targets, object damage disposition, and a precise
+supported-subset decision for Dim Light emission and Invisible-benefit denial.
+Decide whether the same target branch covers Chill Touch's generic "target
+within reach" wording; if it does not, keep Chill Touch as a combatant-target
+subset with checker-visible deferred evidence.
 
 Out of scope: broad object simulation, inventory-wide object support, Fire
 Bolt object ignition, Produce Flame held-light state, and general illumination
@@ -332,3 +381,200 @@ focused tests for object target discovery/fill validation, range fact
 rejection, attack hit/miss, object damage disposition, and any supported rider
 subset; `pnpm unit-profile-coverage:check`; `pnpm quality`; MBT only if
 promoted battle-runtime behavior changes.
+
+### Task 225 - SRDINV35 - Author Missing Detect Spell Records
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: SRDINV33
+
+Blocks: SRDINV41
+
+Research / plan:
+[SRDINV33_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV33_RECURSIVE_PLANNING_REVIEW.md),
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[SRD Detect Evil and Good](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md),
+[SRD Detect Poison and Disease](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: author SRD-provenance Spell Definition records for Detect Evil and Good
+and Detect Poison and Disease using existing Surface detection atoms. Keep
+detection, occlusion, Hallow discovery, poison/disease identification, and
+exploration runtime behavior outside the support claim.
+
+Out of scope: promoted detection runtime, Magic action search procedures,
+occlusion simulation, and changing Detect Magic's existing unsupported runtime
+classification.
+
+Verification: RAW/source review for both Detect spells; focused Surface/catalog
+authoring checks; `pnpm unit-profile-coverage:check --write`; `pnpm quality`.
+
+### Task 226 - SRDINV36 - Promote Hellish Rebuke Reaction Runtime
+
+Status: `ready-for-research`
+
+Depends on: SRDINV33
+
+Blocks: SRDINV41
+
+Research / plan:
+[SRDINV33_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV33_RECURSIVE_PLANNING_REVIEW.md),
+[Hellish Rebuke](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[battle reactions](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reaction-triggers.ts),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: research and promote Hellish Rebuke as a damage-triggered Reaction spell:
+taking-damage trigger from a visible creature within 60 feet, Reaction and
+Spell Slot spend, Dexterity save, Fire damage, half damage on success, and slot
+scaling.
+
+Out of scope: generic reaction spell framework rewrites, Counterspell timing,
+Shield timing changes, and non-visible damager inference beyond caller-supplied
+facts.
+
+Verification: RAW/source review for Hellish Rebuke and Reaction timing; focused
+reaction-window and reducer tests; `pnpm unit-profile-coverage:check`; `pnpm
+quality`; MBT only if reaction sequencing changes require it.
+
+### Task 227 - SRDINV37 - Promote Charm Person Runtime
+
+Status: `ready-for-research`
+
+Depends on: SRDINV33
+
+Blocks: SRDINV41
+
+Research / plan:
+[SRDINV33_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV33_RECURSIVE_PLANNING_REVIEW.md),
+[Charm Person](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md),
+[Animal Friendship evidence](/workspace/typescript/dnd/plans/unit-profile-coverage/unit-claims.jsonl),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Charm Person as Humanoid-target Charmed application with
+hostile-target save Advantage, one-hour spell-owned duration, early ending when
+the caster or allies damage the target, Friendly disposition if executable at
+the current boundary, and slot-scaled target count.
+
+Out of scope: social encounter simulation beyond the executable Friendly
+subset, Beast-only Animal Friendship target reuse, broad condition-immunity
+work, and Dominate spell behavior.
+
+Verification: RAW/source review for Charm Person and Charmed terminology;
+focused admission/runtime tests for target filtering, save Advantage, damage
+break, duration, and slot scaling; `pnpm unit-profile-coverage:check`; `pnpm
+quality`; MBT only if cross-turn condition cleanup sequencing changes.
+
+### Task 228 - SRDINV38 - Research Sleep Save Loop Runtime
+
+Status: `ready-for-research`
+
+Depends on: SRDINV33
+
+Blocks: SRDINV41
+
+Research / plan:
+[SRDINV33_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV33_RECURSIVE_PLANNING_REVIEW.md),
+[Sleep](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md),
+[condition helpers](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer/spell-condition-effects-helpers.ts),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: research Sleep's current SRD 5.2.1 save loop and condition lifecycle:
+point-origin target set, Wisdom save, Incapacitated until next-turn repeat
+save, Unconscious on failed repeat save, damage/help wake-up, sleep immunity,
+Exhaustion-immunity auto-success, and Concentration cleanup. Split before
+implementation if target-area facts, repeat-save timing, and wake-up lifecycle
+do not fit one execution invariant.
+
+Out of scope: 2014 HP-pool Sleep semantics, broad unconscious/death-save
+rewrites, and generic area geometry beyond caller-supplied target membership.
+
+Verification: RAW/source review for Sleep, Incapacitated, Unconscious, and
+Concentration; research note or implementation split; `pnpm
+unit-profile-coverage:check` if evidence changes; `pnpm quality` for
+implementation; MBT only after behavior changes that need integrated coverage.
+
+### Task 229 - SRDINV39 - Promote Eldritch Blast Beam Runtime
+
+Status: `ready-for-research`
+
+Depends on: SRDINV33
+
+Blocks: SRDINV41
+
+Research / plan:
+[SRDINV33_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV33_RECURSIVE_PLANNING_REVIEW.md),
+[Eldritch Blast](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[spell attack runtime](/workspace/typescript/dnd/packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Eldritch Blast as independent ranged spell attack beams:
+creature-or-object target decision for each beam, per-beam attack roll, Force
+damage, cantrip beam-count scaling, same or different targets, and one Magic
+action invocation spend.
+
+Out of scope: Agonizing Blast or other invocation riders, Chromatic Orb
+chained continuation, Fire Bolt ignition, and broad object simulation if
+SRDINV34 has not made the object target branch reusable.
+
+Verification: RAW/source review for Eldritch Blast and Spell Attack; focused
+admission/runtime tests for beam count, per-beam targets, per-beam hit/miss,
+Force damage, action spend, and any object-target supported subset; `pnpm
+unit-profile-coverage:check`; `pnpm quality`; MBT only if multi-beam sequencing
+requires integrated coverage.
+
+### Task 230 - SRDINV40 - Research Grease Ground Hazard Runtime Retry
+
+Status: `ready-for-research`
+
+Depends on: SRDINV33
+
+Blocks: SRDINV41
+
+Research / plan:
+[SRDINV33_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV33_RECURSIVE_PLANNING_REVIEW.md),
+[Grease](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: retry Grease only as a standalone recurring ground-hazard lifecycle:
+one-minute duration, caller-supplied ground area membership, on-cast Dexterity
+save for creatures in the area, save when a creature enters the area, save when
+a creature ends its turn there, Prone application, and explicit Difficult
+Terrain support decision.
+
+Out of scope: generic persistent area engine, pathfinding, grid state,
+non-Grease ground hazards, and treating stored area metadata as runtime support
+without executable enter/end-turn procedures.
+
+Verification: RAW/source review for Grease, Prone, Difficult Terrain, and
+area/turn timing; research split if recurring hazard hooks remain broad;
+focused tests for any implemented cast-time, enter-area, and end-turn saves;
+`pnpm unit-profile-coverage:check`; `pnpm quality`; MBT only after promoted
+behavior changes that require integrated turn sequencing coverage.
+
+### Task 231 - SRDINV41 - Recursive SRD Inventory Planning Review
+
+Status: `blocked`
+
+Depends on: SRDINV34-SRDINV40
+
+Blocks: none
+
+Research / plan:
+[SRDINV33_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV33_RECURSIVE_PLANNING_REVIEW.md),
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
+
+Scope: review SRDINV34-SRDINV40, refresh spell Unit metrics, inspect rejected
+partial-support findings, and append the next concrete Surface-blocker batch by
+execution invariant.
+
+Out of scope: implementation work not captured by the newly appended batch and
+treating catalog admission alone as behavior support.
+
+Verification: RAW/source review for any appended rule slices; active-plan
+consistency across Ralph index, DAG table, and task details; regenerated
+inventory with `pnpm unit-profile-coverage:check --write` when evidence or
+inventory artifacts change; confirm the appended result is Ralph-sized concrete
+work; `/simplify` convergence, minimum two rounds unless the final changeset is
+trivial.

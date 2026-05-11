@@ -12,6 +12,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30A false_life longstrider shield_of_faith
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30B bane bless guidance
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30C animal_friendship protection_from_evil_and_good
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30D heroism
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30E faerie_fire
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30F resistance
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage spell.invocation-damage-reduction spell.invocation-spell-hosted-weapon-attack
@@ -39,7 +40,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT59 monk_deflect_attacks
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT62 fighter_tactical_mind
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT65 bard_cutting_words
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-condition-save spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.scalar-buff
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 

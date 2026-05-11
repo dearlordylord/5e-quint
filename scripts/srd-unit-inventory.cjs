@@ -177,20 +177,6 @@ const spellUnitExecutableFollowUpBatches = [
       "Admit these authored Spell Definitions after adding runtime support for spell-chosen damage types, chained target selection, mixed attack-plus-area resolution, area condition application, and terrain/ground effects.",
     unitIds: ["grease"],
   },
-  {
-    id: "spell-buff-debuff-and-protection-runtime",
-    label: "Buff, debuff, and protection spell runtime",
-    nextAction:
-      "Admit these authored Spell Definitions after adding timed spell effects for D20 roll modifiers, AC and Speed adjustments, Temporary Hit Points, condition immunity/protection, per-turn damage reduction, and save/attack interdiction.",
-    unitIds: ["heroism"],
-  },
-  {
-    id: "spell-attack-rider-and-smite-runtime",
-    label: "Attack-rider and smite spell runtime",
-    nextAction:
-      "Admit these authored Spell Definitions after adding spell-hosted weapon attack riders, immediate hit-trigger Bonus Action casts, retargetable marks, ongoing start-turn damage, and spellcasting-ability weapon substitution.",
-    unitIds: ["ensnaring_strike"],
-  },
 ];
 
 const spellUnitExecutableFollowUps = new Map(
@@ -2100,6 +2086,18 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
   const srdinv31FTrueStrikeRows = spellRowsByUnitIds(["true_strike"]);
   const srdinv32AProduceFlameLightRows = spellRowsByUnitIds(["produce_flame"]);
   const srdinv32BProduceFlameHurlRows = spellRowsByUnitIds(["produce_flame"]);
+  const srdinv34StarryWispObjectTargetRows =
+    spellRowsByUnitIds(["starry_wisp"]);
+  const srdinv35DetectAuthoringRows = spellRowsByUnitIds([
+    "detect_evil_and_good",
+    "detect_poison_and_disease",
+  ]);
+  const srdinv36HellishRebukeReactionRows =
+    spellRowsByUnitIds(["hellish_rebuke"]);
+  const srdinv37CharmPersonRows = spellRowsByUnitIds(["charm_person"]);
+  const srdinv38SleepRows = spellRowsByUnitIds(["sleep"]);
+  const srdinv39EldritchBlastRows = spellRowsByUnitIds(["eldritch_blast"]);
+  const srdinv40GreaseRows = spellRowsByUnitIds(["grease"]);
 
   const batches = [
     makeBatch({
@@ -2788,6 +2786,102 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
         "Refresh spell Unit inventory metrics after the runtime-ready spell batch, then choose the next concrete frontier among installed unsupported spell evidence, missing Detect spell authoring, and remaining Spell Surface blockers; split any future task with multiple execution invariants before marking it runnable.",
       acceptance:
         "The next review records spell-runtime metrics and appends Ralph-sized follow-up work rather than a passive backlog list or omnibus runtime task.",
+    }),
+    makeBatch({
+      id: "SRDINV34",
+      title: "Promote Starry Wisp Object Target Runtime",
+      suggestedStatus: "blocked-on-SRDINV33",
+      intent:
+        "Promote the Starry Wisp creature-or-object target boundary before claiming object-target spell support.",
+      rows: srdinv34StarryWispObjectTargetRows,
+      nextAction:
+        "Add typed object target identity, caller-supplied range/spatial targetability facts, ranged spell attack hit/miss against object targets, object damage disposition, and an executable decision for Dim Light emission and Invisible-benefit denial.",
+      acceptance:
+        "Starry Wisp has promoted runtime evidence for the executable creature-or-object target subset, or any omitted object/rider clause remains checker-visible unsupported.",
+    }),
+    makeBatch({
+      id: "SRDINV35",
+      title: "Author Missing Detect Spell Records",
+      suggestedStatus: "blocked-on-SRDINV33",
+      intent:
+        "Author missing SRD Detect Evil and Good and Detect Poison and Disease Spell Definition records using existing detection Surface atoms.",
+      rows: srdinv35DetectAuthoringRows,
+      nextAction:
+        "Add SRD-provenance spell records for the two Detect spells without promoting detection, occlusion, or exploration runtime behavior.",
+      acceptance:
+        "Detect Evil and Good and Detect Poison and Disease no longer appear as missing-authored-record Spell Unit pressure, while detection execution remains outside promoted runtime support.",
+    }),
+    makeBatch({
+      id: "SRDINV36",
+      title: "Promote Hellish Rebuke Reaction Runtime",
+      suggestedStatus: "blocked-on-SRDINV33",
+      intent:
+        "Promote Hellish Rebuke as a damage-triggered Reaction spell with Dexterity save and half damage on success.",
+      rows: srdinv36HellishRebukeReactionRows,
+      nextAction:
+        "Model the taking-damage reaction window, visible-damager eligibility, Reaction and Spell Slot spend, Dexterity save, Fire damage, half damage on success, and slot scaling.",
+      acceptance:
+        "Hellish Rebuke has promoted runtime evidence for its reaction trigger and save-damage resolution without widening ordinary Action-time spell casting.",
+    }),
+    makeBatch({
+      id: "SRDINV37",
+      title: "Promote Charm Person Runtime",
+      suggestedStatus: "blocked-on-SRDINV33",
+      intent:
+        "Promote Charm Person as Humanoid-target Charmed application with hostile-target save Advantage and damage-break cleanup.",
+      rows: srdinv37CharmPersonRows,
+      nextAction:
+        "Model Humanoid target filtering, Wisdom save with hostile-target Advantage, Charmed condition ownership, one-hour duration, early ending when the caster or allies damage the target, and slot-scaled target count.",
+      acceptance:
+        "Charm Person has promoted runtime evidence for its SRD charm lifecycle without reusing Animal Friendship's Beast-specific target rule.",
+    }),
+    makeBatch({
+      id: "SRDINV38",
+      title: "Research Sleep Save Loop Runtime",
+      suggestedStatus: "blocked-on-SRDINV33",
+      intent:
+        "Research and split Sleep's save loop and Incapacitated/Unconscious lifecycle before claiming installed support.",
+      rows: srdinv38SleepRows,
+      nextAction:
+        "Design the point-origin target set, initial Wisdom save, next-turn repeat save, Incapacitated and Unconscious application, wake-up damage/help lifecycle, sleep-immunity and Exhaustion-immunity auto-success, and Concentration cleanup; split implementation if the save loop and condition lifecycle do not fit one Ralph task.",
+      acceptance:
+        "Sleep is either split into implementable vertical slices with no support claim, or has promoted runtime evidence for its save loop and condition lifecycle together.",
+    }),
+    makeBatch({
+      id: "SRDINV39",
+      title: "Promote Eldritch Blast Beam Runtime",
+      suggestedStatus: "blocked-on-SRDINV33",
+      intent:
+        "Promote Eldritch Blast as one or more independent ranged spell attack beams with cantrip scaling.",
+      rows: srdinv39EldritchBlastRows,
+      nextAction:
+        "Model per-beam target choice, attack roll, Force damage, cantrip beam-count scaling, independent hit/miss resolution, and one Magic action spell invocation spend.",
+      acceptance:
+        "Eldritch Blast has promoted runtime evidence for beam-by-beam attack resolution without conflating it with Chromatic Orb's chained continuation protocol.",
+    }),
+    makeBatch({
+      id: "SRDINV40",
+      title: "Research Grease Ground Hazard Runtime Retry",
+      suggestedStatus: "blocked-on-SRDINV33",
+      intent:
+        "Research and retry Grease's timed ground area with on-cast Prone and recurring enter/end-turn saves as its own hazard lifecycle.",
+      rows: srdinv40GreaseRows,
+      nextAction:
+        "Design the table-supplied ground-area membership boundary for on-cast creatures, later entering creatures, and end-turn occupants; split implementation before support if recurring hazard event hooks remain too broad.",
+      acceptance:
+        "Grease has either promoted runtime evidence for on-cast and recurring Prone saves, or a sharper split that keeps the authored spell unsupported without inert area metadata.",
+    }),
+    makeBatch({
+      id: "SRDINV41",
+      title: "Recursive SRD Inventory Planning Review",
+      suggestedStatus: "blocked-on-SRDINV34-SRDINV40",
+      intent:
+        "Review the object-target, Detect authoring, reaction, charm, Sleep, beam, and Grease retry batch before selecting the next remaining spell Surface frontier.",
+      rows: spellPressure,
+      nextAction:
+        "Refresh spell Unit inventory metrics, inspect any rejected partial-support findings, and append the next concrete Surface-blocker batch by execution invariant.",
+      acceptance:
+        "The review records refreshed spell metrics and appends concrete follow-up work rather than a passive backlog list.",
     }),
   ];
   return withActivePlanStatuses(batches, activePlanTaskStatuses);
