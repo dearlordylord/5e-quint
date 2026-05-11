@@ -164,13 +164,6 @@ const authoredSpellUnitCatalogOnlyClosures = new Map([
 
 const spellUnitExecutableFollowUpBatches = [
   {
-    id: "spell-attack-and-save-damage-runtime",
-    label: "Spell attack and save-damage runtime",
-    nextAction:
-      "Admit these authored Spell Definitions and add battle-runtime spell invocation/projection for attack rolls, saving throws, damage, cantrip scaling, slot-scaled damage, object targeting where SRD permits it, and simple rider outcomes.",
-    unitIds: ["starry_wisp"],
-  },
-  {
     id: "spell-area-chain-and-typed-damage-runtime",
     label: "Area, chain, and typed-damage spell runtime",
     nextAction:

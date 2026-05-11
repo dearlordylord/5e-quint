@@ -86,7 +86,11 @@ import {
   type CharacterBattleSpellcastingState,
 } from "./character-battle-resources.ts";
 import type { CharacterBattleClassLevel } from "./character-class-level.ts";
-import type { CharacterId, InitiativeScore } from "./identity.ts";
+import type {
+  BattleObjectId,
+  CharacterId,
+  InitiativeScore,
+} from "./identity.ts";
 import {
   BattleCombatantSide,
   BattleId,
@@ -983,6 +987,15 @@ export type BattleTargetSpatialFact =
       readonly spellId: SpellRecord["id"];
     }
   | {
+      readonly kind: "spellObjectTarget";
+      readonly casterId: CombatantId;
+      readonly objectId: BattleObjectId;
+      readonly spellId: SpellRecord["id"];
+      readonly rangeFeet: MovementFeet;
+      readonly armorClass: ArmorClass;
+      readonly damageDisposition: BattleObjectDamageDisposition;
+    }
+  | {
       readonly kind: "spellLeapTargetWithinRange";
       readonly previousTargetId: CombatantId;
       readonly targetId: CombatantId;
@@ -1084,6 +1097,9 @@ export type SaveGateFailureEffect = Extract<
 export type SpellTargeting =
   | {
       readonly kind: "singleCombatant";
+    }
+  | {
+      readonly kind: "singleCreatureOrObject";
     }
   | {
       readonly kind: "targetList";
@@ -1392,6 +1408,10 @@ export type HeldLightHurlSpellInvocation = DamageSpellSource & {
   readonly attackKind: Extract<SpellAttackKind, "ranged_spell_attack">;
   readonly attackBonus: AttackBonus;
 };
+export type SpellAttackDamageTargeting = Extract<
+  SpellTargeting,
+  { readonly kind: "singleCombatant" | "singleCreatureOrObject" }
+>;
 export type SpellHostedWeaponAttackInvocation = {
   readonly access: ClassCantripSpellAccess;
   readonly resource: NoSpellInvocationResource;
@@ -1435,10 +1455,7 @@ export type SupportedSpellInvocation =
   | (DamageSpellSource & {
       readonly procedure: "spellAttackDamage";
       readonly spell: SpellRecord;
-      readonly targeting: Extract<
-        SpellTargeting,
-        { readonly kind: "singleCombatant" }
-      >;
+      readonly targeting: SpellAttackDamageTargeting;
       readonly damage: {
         readonly expr: DiceExpr;
         readonly damageType: DamageType;
@@ -1985,10 +2002,47 @@ export type BattleTargetChoiceHole = Extract<
   readonly choices: readonly CombatantId[];
   readonly requiresTableSpatialFact?: boolean;
 };
+export type BattleObjectTargetChoiceHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "objectTargetChoice";
+  readonly label: string;
+  readonly requiresTableSpatialFact: true;
+};
 export type BattleSpellTargetAllocation = {
   readonly targetId: CombatantId;
   readonly count: number;
 };
+export type BattleObjectDamageDisposition =
+  | {
+      readonly kind: "hitPoints";
+      readonly hitPoints: Hp;
+    }
+  | {
+      readonly kind: "hitPointsWithDamageThreshold";
+      readonly hitPoints: Hp;
+      readonly damageThreshold: DamageAmount;
+    }
+  | {
+      readonly kind: "tableResolved";
+    };
+export type BattleObjectDamageOutcome =
+  | {
+      readonly kind: "hitPoints";
+      readonly objectId: BattleObjectId;
+      readonly damageType: DamageType;
+      readonly rolledDamage: DamageAmount;
+      readonly effectiveDamage: DamageAmount;
+      readonly priorHitPoints: Hp;
+      readonly nextHitPoints: Hp;
+      readonly destroyed: boolean;
+    }
+  | {
+      readonly kind: "tableResolved";
+      readonly objectId: BattleObjectId;
+      readonly damageType: DamageType;
+      readonly rolledDamage: DamageAmount;
+    };
 export type BattleSpellDamageTypeChoiceHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -2327,6 +2381,7 @@ export type BattleAttackDamageDispositionHole = {
 };
 export type BattleHole =
   | BattleTargetChoiceHole
+  | BattleObjectTargetChoiceHole
   | BattleSpellDamageTypeChoiceHole
   | BattleSpellTargetAllocationHole
   | BattleSpellTargetListHole
@@ -2405,6 +2460,15 @@ export type BattleFill =
       readonly holeId: BattleHoleId;
       readonly value: CombatantId;
       readonly spatialFacts?: readonly BattleTargetSpatialFact[];
+    }
+  | {
+      readonly kind: "objectTargetChoice";
+      readonly holeId: BattleHoleId;
+      readonly value: BattleObjectId;
+      readonly spatialFacts: readonly Extract<
+        BattleTargetSpatialFact,
+        { readonly kind: "spellObjectTarget" }
+      >[];
     }
   | {
       readonly kind: "spellTargetAllocation";
@@ -2590,6 +2654,7 @@ export type BattleResolutionResult =
       readonly tag: "resolved";
       readonly state: BattleState;
       readonly snapshot: BattleSnapshot;
+      readonly objectDamage?: BattleObjectDamageOutcome;
     }
   | {
       readonly tag: "needsHoles";
@@ -2787,5 +2852,6 @@ export {
   ActiveOngoingFeatureOccurrenceSnapshotSchema,
   BattleFillSchema,
   BattleHoleSchema,
+  BattleObjectDamageOutcomeSchema,
   BattleSnapshotSchema,
 } from "./battle-reducer/battle-codecs.ts";

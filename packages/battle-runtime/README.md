@@ -210,7 +210,9 @@ The support-profile parser surface should cover these profile families:
   a turn.
 - `SpellProfile.cantripSpellAttack`: an action-cast cantrip spell attack damage
   profile, with supported rider effects carried as profile data. Pure damage
-  cantrips such as Poison Spray carry an empty rider list.
+  cantrips such as Poison Spray carry an empty rider list. Creature-or-object
+  spell attacks may expose either a combatant target fill or a caller-supplied
+  object target fact with range, Armor Class, and object damage disposition.
 - `SpellProfile.cantripSaveGateDamage` / prepared save-gate damage: an
   action-cast save-gate damage profile for either single creature targets or
   admitted caller-supplied area target sets, currently point-origin Spheres and
@@ -606,7 +608,11 @@ Feature and spell resources:
   a concentration-owned AC bonus. Overlapping effects from the same spell do not
   stack on the same target;
 - pure damage spell attacks such as `poison_spray` use the same spell attack
-  damage replay without a post-damage rider;
+  damage replay without a post-damage rider. `starry_wisp` uses the
+  creature-or-object spell attack branch: combatant targets resolve through the
+  normal spell attack damage flow, while object targets require table-supplied
+  range, Armor Class, and Hit Point or table-resolved damage disposition facts.
+  Its Dim Light emission and Invisible-benefit denial riders remain deferred;
 - save-gate spells ask for target selection when the spell names one creature,
   or table-supplied affected targets when the spell uses an admitted area
   boundary such as `acid_splash`, `burning_hands`, or `color_spray`. Damage
@@ -756,11 +762,11 @@ vocabulary.
   used by damage and death-save recovery.
 - Action-time spell damage distinguishes prepared spells that spend Spell Slots
   from cantrips that do not for the implemented `magic_missile`, `ray_of_frost`,
-  `poison_spray`, `sacred_flame`, `acid_splash`, `inflict_wounds`,
-  `burning_hands`, `produce_flame`, and `chromatic_orb` lanes. Produce Flame's
-  later hurl is available only while the caster has the held flame active; the
-  current runtime executes the combatant-target subset and leaves object
-  targeting checker-visible unsupported.
+  `poison_spray`, `starry_wisp`, `sacred_flame`, `acid_splash`,
+  `inflict_wounds`, `burning_hands`, `produce_flame`, and `chromatic_orb`
+  lanes. Produce Flame's later hurl is available only while the caster has the
+  held flame active; the current runtime executes the combatant-target subset
+  and leaves Produce Flame object targeting checker-visible unsupported.
   Broad reaction, ritual, concentration, and unsupported area coverage remain
   outside this slice.
 - The armor-training spell gate matches the SRD/Core consequence that worn armor

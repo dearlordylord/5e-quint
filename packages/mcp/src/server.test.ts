@@ -3859,6 +3859,141 @@ describe("MCP server route", () => {
     expect(root.sessionStore.transientBattleFills).toBeNull();
   });
 
+  test("returns Starry Wisp object damage through MCP battle fills", () => {
+    const root = createMcpCompositionRoot();
+    const build = fighterCharacterBuild(root.unitLibrary);
+    const state = startBattleFromCharacterBuildAndStatBlockRight({
+      battleId: battleId("battle-root-starry-wisp-object"),
+      character: {
+        combatantId: fighterId,
+        characterId: characterId("fighter-character"),
+        displayName: "Starry Wisp Spellcaster",
+        initiative: initiativeScore(12),
+        side: partySide,
+        build: {
+          ...build,
+          progression: wizardProgression(root),
+          equipment: {
+            ...build.equipment,
+            loadout: {
+              shield: testCharacterEquipmentItemId(
+                "shield",
+                "equipment_shield",
+              ),
+            },
+          },
+          spellcasting: testWizardSpellcasting({
+            cantrips: ["starry_wisp"],
+            preparedSpells: [],
+            spellSlots: [{ spellLevel: 1, count: 2 }],
+          }),
+        },
+      },
+      statBlockBattleInput: {
+        combatantId: goblinId,
+        statBlock: root.statBlockCatalog.requireStatBlock(
+          "stat_block_goblin_warrior",
+        ),
+        initiative: initiativeScore(10),
+        side: oppositionSide,
+      },
+      unitLibrary: root.unitLibrary,
+    });
+    root.sessionStore.battleState = state;
+    root.sessionStore.transientBattleFills = null;
+
+    const discovered = readPayload(
+      handleToolCall(root, "discover_battle_acts", {}),
+    );
+    const act = discovered.snapshot.acts.find(
+      (candidate: {
+        readonly subject?: {
+          readonly invocation?: { readonly spellId?: string };
+        };
+      }) => candidate.subject?.invocation?.spellId === "starry_wisp",
+    );
+    if (act === undefined) {
+      throw new Error("Expected Starry Wisp battle act.");
+    }
+    const objectTarget = act.initialHoles.find(
+      (hole: { readonly kind?: string }) => hole.kind === "objectTargetChoice",
+    );
+    if (objectTarget === undefined) {
+      throw new Error("Expected Starry Wisp object target hole.");
+    }
+
+    const afterObjectTarget = readPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: act.subject,
+        fill: {
+          kind: "objectTargetChoice",
+          holeId: objectTarget.holeId,
+          value: "training-crystal",
+          spatialFacts: [
+            {
+              kind: "spellObjectTarget",
+              casterId: "fighter",
+              objectId: "training-crystal",
+              spellId: "starry_wisp",
+              rangeFeet: 60,
+              armorClass: 13,
+              damageDisposition: { kind: "hitPoints", hitPoints: 5 },
+            },
+          ],
+        },
+      }),
+    );
+    const attackRoll = afterObjectTarget.result.holes.find(
+      (hole: { readonly kind?: string }) => hole.kind === "attackRoll",
+    );
+    if (attackRoll === undefined) {
+      throw new Error("Expected Starry Wisp object attack roll hole.");
+    }
+
+    const afterAttackRoll = readPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: act.subject,
+        fill: {
+          kind: "attackRoll",
+          holeId: attackRoll.holeId,
+          value: { total: 18, naturalD20: 12 },
+        },
+      }),
+    );
+    const damage = afterAttackRoll.result.holes.find(
+      (hole: { readonly kind?: string }) => hole.kind === "rolledDice",
+    );
+    if (damage === undefined) {
+      throw new Error("Expected Starry Wisp object damage hole.");
+    }
+
+    const afterDamage = readPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: act.subject,
+        fill: {
+          kind: "rolledDice",
+          holeId: damage.holeId,
+          value: [{ results: [6] }],
+        },
+      }),
+    );
+
+    expect(afterDamage.result).toMatchObject({
+      tag: "resolved",
+      objectDamage: {
+        kind: "hitPoints",
+        objectId: "training-crystal",
+        damageType: "radiant",
+        rolledDamage: 6,
+        effectiveDamage: 6,
+        priorHitPoints: 5,
+        nextHitPoints: 0,
+        destroyed: true,
+      },
+    });
+    expect(root.sessionStore.transientBattleFills).toBeNull();
+  });
+
   test("preserves pending reaction state while MCP replays a readied spell procedure", () => {
     const root = createMcpCompositionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);

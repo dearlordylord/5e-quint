@@ -7,6 +7,7 @@ import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
   spellDamageTypeChoiceHole,
+  spellObjectTargetHole,
   spellSavingThrowOutcomeHole,
   spellTargetAllocationHole,
   spellTargetHole,
@@ -98,6 +99,15 @@ export function readiedSpellInitialHoles(
   }
   if (readied.invocation.procedure === "chainedSpellAttackDamage") {
     return [spellDamageTypeChoiceHole(readied.invocation)];
+  }
+  if (
+    readied.invocation.procedure === "spellAttackDamage" &&
+    readied.invocation.targeting.kind === "singleCreatureOrObject"
+  ) {
+    return [
+      spellTargetHole(state, casterId, readied.invocation),
+      spellObjectTargetHole(readied.invocation),
+    ];
   }
   return [spellTargetHole(state, casterId, readied.invocation)];
 }

@@ -8,12 +8,13 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { validateRolledDiceForDiceExpr } from "@dnd/shared-algebras/runtime-dice-algebra";
 import { isIncapacitated } from "@dnd/shared-algebras/conditions-algebra";
+import { damageAmount, Hp, type DamageAmount } from "@dnd/shared/types";
 import type {
   Ability,
   DamageType,
   SpellRecord,
 } from "@dnd/surface/surface/types";
-import type { CombatantId } from "../identity.ts";
+import type { BattleObjectId, CombatantId } from "../identity.ts";
 import type { SupportedUnitFeatureProfile } from "../unit-feature-support.ts";
 import {
   scalarBuffTemporaryHitPointsExpression,
@@ -47,6 +48,8 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleHoleId,
+  type BattleObjectDamageDisposition,
+  type BattleObjectDamageOutcome,
   type BattleSavingThrowRollModeProjection,
   type BattleSpellAttackRollHole,
   type BattleSpellDamageRollHole,
@@ -80,6 +83,34 @@ export function spellAttackRollHole(
   rollMode?: AttackRollMode,
 ): BattleSpellAttackRollHole {
   return {
+    ...spellAttackRollHoleBase(invocation, rollMode),
+    ...attackRollMissToHitReplacementHolePayload(state, attackerId),
+  };
+}
+
+export function spellObjectAttackRollHole(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spellAttackDamage" }
+  >,
+  rollMode?: AttackRollMode,
+): BattleSpellAttackRollHole {
+  return spellAttackRollHoleBase(invocation, rollMode);
+}
+
+function spellAttackRollHoleBase(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    {
+      readonly procedure:
+        | "attackBurstSaveDamage"
+        | "heldLightHurl"
+        | "spellAttackDamage";
+    }
+  >,
+  rollMode?: AttackRollMode,
+): BattleSpellAttackRollHole {
+  return {
     kind: "attackRoll",
     holeId: ATTACK_ROLL_HOLE_ID,
     holeInstanceKey: ATTACK_ROLL_HOLE_INSTANCE,
@@ -87,7 +118,6 @@ export function spellAttackRollHole(
     spell: invocation,
     attackBonus: invocation.attackBonus,
     ...(rollMode === undefined ? {} : { rollMode }),
-    ...attackRollMissToHitReplacementHolePayload(state, attackerId),
   };
 }
 
@@ -470,7 +500,9 @@ export function spellSavingThrowOutcomeHole(
       const targeting = spellSavingThrowTargeting(invocation);
       return targeting.kind === "singleCombatant"
         ? `${invocation.spell.name} Saving Throw outcome`
-        : `${invocation.spell.name} ${spellAreaTargetingLabel(targeting)} Saving Throw outcomes`;
+        : targeting.kind === "singleCreatureOrObject"
+          ? `${invocation.spell.name} Saving Throw outcome`
+          : `${invocation.spell.name} ${spellAreaTargetingLabel(targeting)} Saving Throw outcomes`;
     })(),
     spell: invocation,
     ability:
@@ -539,7 +571,10 @@ export function spellSavingThrowTargeting(
 }
 
 export function spellAreaTargetingLabel(
-  targeting: Exclude<SpellTargeting, { readonly kind: "singleCombatant" }>,
+  targeting: Exclude<
+    SpellTargeting,
+    { readonly kind: "singleCombatant" | "singleCreatureOrObject" }
+  >,
 ): string {
   return Match.value(targeting).pipe(
     Match.when({ kind: "pointOriginSphere" }, () => "point-origin Sphere"),
@@ -875,6 +910,97 @@ export function spellDamageByTypeForTarget(
     invocation.damage.damageType,
     saveAdjustedDamage,
   );
+}
+
+export function spellObjectDamageOutcome(input: {
+  readonly objectId: BattleObjectId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spellAttackDamage" }
+  >;
+  readonly damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>;
+  readonly critical: boolean;
+  readonly disposition: BattleObjectDamageDisposition;
+}): BattleObjectDamageOutcome {
+  const rolledDamage = spellObjectRolledDamage(
+    input.invocation,
+    input.damageRoll,
+    input.critical,
+  );
+  return Match.value(input.disposition).pipe(
+    Match.when({ kind: "tableResolved" }, () => ({
+      kind: "tableResolved" as const,
+      objectId: input.objectId,
+      damageType: input.invocation.damage.damageType,
+      rolledDamage: damageAmount(rolledDamage),
+    })),
+    Match.when({ kind: "hitPoints" }, (disposition) =>
+      objectHitPointDamageOutcome({
+        objectId: input.objectId,
+        damageType: input.invocation.damage.damageType,
+        rolledDamage,
+        priorHitPoints: disposition.hitPoints,
+        damageThreshold: null,
+      }),
+    ),
+    Match.when({ kind: "hitPointsWithDamageThreshold" }, (disposition) =>
+      objectHitPointDamageOutcome({
+        objectId: input.objectId,
+        damageType: input.invocation.damage.damageType,
+        rolledDamage,
+        priorHitPoints: disposition.hitPoints,
+        damageThreshold: disposition.damageThreshold,
+      }),
+    ),
+    Match.exhaustive,
+  );
+}
+
+export function spellObjectRolledDamage(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spellAttackDamage" }
+  >,
+  damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+  _critical: boolean,
+): number {
+  const diceTotal = damageRoll.value.reduce(
+    (total, group) =>
+      total +
+      group.results.reduce(
+        (groupTotal, dieResult) => groupTotal + Number(dieResult),
+        0,
+      ),
+    0,
+  );
+  return diceTotal + (invocation.damage.expr.flat ?? 0);
+}
+
+function objectHitPointDamageOutcome(input: {
+  readonly objectId: BattleObjectId;
+  readonly damageType: DamageType;
+  readonly rolledDamage: number;
+  readonly priorHitPoints: Hp;
+  readonly damageThreshold: DamageAmount | null;
+}): Extract<BattleObjectDamageOutcome, { readonly kind: "hitPoints" }> {
+  const effectiveDamage =
+    input.damageThreshold !== null &&
+    input.rolledDamage < Number(input.damageThreshold)
+      ? 0
+      : input.rolledDamage;
+  const nextHitPoints = Hp(
+    Math.max(0, Number(input.priorHitPoints) - effectiveDamage),
+  );
+  return {
+    kind: "hitPoints",
+    objectId: input.objectId,
+    damageType: input.damageType,
+    rolledDamage: damageAmount(input.rolledDamage),
+    effectiveDamage: damageAmount(effectiveDamage),
+    priorHitPoints: input.priorHitPoints,
+    nextHitPoints,
+    destroyed: nextHitPoints === 0,
+  };
 }
 
 export function spellBurstDamageAmountForTarget(

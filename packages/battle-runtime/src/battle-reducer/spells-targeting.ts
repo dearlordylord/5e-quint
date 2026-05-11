@@ -14,11 +14,28 @@ import {
   type BattleSpellTargetListHole,
   type BattleSpellTargetListSpatialFact,
   type BattleState,
+  type BattleObjectTargetChoiceHole,
   type BattleTargetChoiceHole,
   type BattleTargetSpatialFact,
   type SupportedSpellInvocation,
   type TargetListSpellInvocation,
 } from "../battle-reducer.ts";
+import type { BattleObjectId } from "../identity.ts";
+
+type SingleCreatureOrObjectSpellAttackDamageInvocation = Extract<
+  BattleTargetSpatialFact,
+  { readonly kind: "spellObjectTarget" }
+> extends infer ObjectFact
+  ? {
+      readonly procedure: "spellAttackDamage";
+      readonly spell: { readonly id: string; readonly name: string };
+      readonly rangeFeet: ObjectFact extends {
+        readonly rangeFeet: infer RangeFeet;
+      }
+        ? RangeFeet
+        : never;
+    }
+  : never;
 
 export function spellTargetHole(
   state: BattleState,
@@ -35,6 +52,25 @@ export function spellTargetHole(
       spellTargetHasNonSpatialPrerequisites(state, actorId, id, invocation),
     ),
   };
+}
+
+export function spellObjectTargetHole(
+  invocation: SingleCreatureOrObjectSpellAttackDamageInvocation,
+): BattleObjectTargetChoiceHole {
+  const holeKey = `battle:spell:object-target:${invocation.spell.id}`;
+  return {
+    kind: "objectTargetChoice",
+    holeId: holeId(holeKey),
+    holeInstanceKey: holeInstanceKey(holeKey),
+    label: `${invocation.spell.name} object target`,
+    requiresTableSpatialFact: true,
+  };
+}
+
+export function spellObjectTargetHoleId(
+  invocation: SingleCreatureOrObjectSpellAttackDamageInvocation,
+): BattleHoleId {
+  return holeId(`battle:spell:object-target:${invocation.spell.id}`);
 }
 
 export function spellTargetAllocationHoleId(
@@ -132,6 +168,28 @@ export function spellTargetSpatialFactMatches(
   return !(
     invocation.procedure === "directHitPointRestoration" &&
     invocation.targeting.kind === "pointOriginSphereTargetList"
+  );
+}
+
+export function spellObjectTargetFact(
+  facts: readonly Extract<
+    BattleTargetSpatialFact,
+    { readonly kind: "spellObjectTarget" }
+  >[],
+  actorId: CombatantId,
+  objectId: BattleObjectId,
+  invocation: SingleCreatureOrObjectSpellAttackDamageInvocation,
+):
+  | Extract<BattleTargetSpatialFact, { readonly kind: "spellObjectTarget" }>
+  | null {
+  return (
+    facts.find(
+      (fact) =>
+        fact.casterId === actorId &&
+        fact.objectId === objectId &&
+        fact.spellId === invocation.spell.id &&
+        fact.rangeFeet === invocation.rangeFeet,
+    ) ?? null
   );
 }
 

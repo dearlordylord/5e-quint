@@ -31,6 +31,7 @@ import {
 import {
   scalarBuffInitialHoles,
   spellDamageTypeChoiceHole,
+  spellObjectTargetHole,
   spellRollModifierSkillChoiceHole,
   spellSavingThrowAbility,
   spellSavingThrowOutcomeHole,
@@ -371,6 +372,30 @@ export function discoverSupportedSpellInvocations(
                 },
               ];
         return castActs;
+      }
+      if (
+        invocation.procedure === "spellAttackDamage" &&
+        invocation.targeting.kind === "singleCreatureOrObject"
+      ) {
+        const targetHole = spellTargetHole(state, actorId, invocation);
+        const initialHoles = [
+          ...(targetHole.choices.length === 0 ? [] : [targetHole]),
+          spellObjectTargetHole(invocation),
+        ];
+        const castActs = [
+          {
+            subject: {
+              tag: spellSubjectTagForInvocation(invocation),
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: invocation.spell.name,
+            summary: spellInvocationCastSummary(invocation),
+            initialHoles,
+          },
+        ];
+        return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
       }
       const targetHole =
         invocation.procedure === "repeatedDamageAllocation"

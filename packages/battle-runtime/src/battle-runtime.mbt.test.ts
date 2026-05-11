@@ -5,7 +5,10 @@ import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { Either, Match } from "effect";
 import { describe, expect, it } from "vitest";
 
-import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
+import {
+  armorClass,
+  defaultArmorClassState,
+} from "@dnd/shared-algebras/armor-class-algebra";
 import {
   DieRollResult,
   Hp,
@@ -35,6 +38,8 @@ import {
   battleUnitRefWithSupportProfiles,
   battleId,
   battleCombatantSide,
+  battleObjectId,
+  cantripSpellInvocationRef,
   characterBattleResourceUsage,
   characterId,
   combatantId,
@@ -65,6 +70,7 @@ function startBattleRight(
 
 type MbtHole =
   | "TargetChoice"
+  | "ObjectTargetChoice"
   | "SpellTargetAllocation"
   | "AttackRoll"
   | "DamageRoll"
@@ -126,9 +132,28 @@ type ScalarBuffMbtProjection = {
   readonly lastInvalidReason: MbtLastInvalidReason;
 };
 
+type ObjectDamageMbtProjection =
+  | { readonly tag: "none" }
+  | {
+      readonly tag: "hitPoints";
+      readonly rolledDamage: number;
+      readonly effectiveDamage: number;
+      readonly nextHitPoints: number;
+      readonly destroyed: boolean;
+    };
+
+type StarryWispObjectMbtProjection = {
+  readonly actionAvailable: boolean;
+  readonly holes: readonly MbtHole[];
+  readonly objectDamage: ObjectDamageMbtProjection;
+  readonly lastResult: MbtLastResult;
+  readonly lastInvalidReason: MbtLastInvalidReason;
+};
+
 const fighterId = combatantId("fighter");
 const skeletonId = combatantId("skeleton");
 const deathSavingThrowTargetId = combatantId("death-saving-throw-target");
+const starryWispObjectId = battleObjectId("starry-wisp-object");
 const partySide = battleCombatantSide("party");
 const oppositionSide = battleCombatantSide("opposition");
 const statBlockCatalogResult = buildStatBlockCatalog({
@@ -208,6 +233,18 @@ const adrenalineRushDriverSchema = {
 const scalarBuffDriverSchema = {
   init: {},
   doFillLongstriderTarget: {},
+  doRejectStaleAfterResolved: {},
+  step: {},
+} as const;
+
+const starryWispObjectDriverSchema = {
+  init: {},
+  doFillObjectTarget: {},
+  doRejectObjectWithoutFact: {},
+  doFillObjectAttackRollMiss: {},
+  doFillObjectAttackRollHit: {},
+  doFillObjectDamageLow: {},
+  doFillObjectDamageHigh: {},
   doRejectStaleAfterResolved: {},
   step: {},
 } as const;
@@ -572,6 +609,99 @@ function createScalarBuffDriver() {
   });
 }
 
+function createStarryWispObjectDriver() {
+  return defineDriver(starryWispObjectDriverSchema, () => {
+    let state = starryWispObjectBattle();
+    const subject = starryWispSubject();
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = discoverStarryWispHoles(state, subject);
+    let objectDamage: ObjectDamageMbtProjection = { tag: "none" };
+    let lastResult: StarryWispObjectMbtProjection["lastResult"] = "init";
+    let lastInvalidReason: StarryWispObjectMbtProjection["lastInvalidReason"] =
+      "";
+
+    function reset(): void {
+      state = starryWispObjectBattle();
+      fills = [];
+      holes = discoverStarryWispHoles(state, subject);
+      objectDamage = { tag: "none" };
+      lastResult = "init";
+      lastInvalidReason = "";
+    }
+
+    function recordResult(result: BattleResolutionResult): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        holes = [];
+        objectDamage = projectObjectDamage(result.objectDamage);
+        lastInvalidReason = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        holes = result.holes;
+        lastInvalidReason = "";
+        return;
+      }
+      lastInvalidReason = mbtInvalidReason(result.reason);
+    }
+
+    function submit(nextFills: readonly BattleFill[]): void {
+      fills = nextFills;
+      recordResult(resolveBattleSubject({ state, subject, fills }));
+    }
+
+    return {
+      init: reset,
+      doFillObjectTarget: () => {
+        const objectTarget = requireHole(holes, "objectTargetChoice");
+        submit([starryWispObjectTargetFill(objectTarget)]);
+      },
+      doRejectObjectWithoutFact: () => {
+        const objectTarget = requireHole(holes, "objectTargetChoice");
+        submit([
+          starryWispObjectTargetFill(objectTarget, { spatialFacts: [] }),
+        ]);
+      },
+      doFillObjectAttackRollMiss: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        submit([
+          ...fills,
+          attackRollFill(attackRoll, { total: 12, naturalD20: 7 }),
+        ]);
+      },
+      doFillObjectAttackRollHit: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        submit([
+          ...fills,
+          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        ]);
+      },
+      doFillObjectDamageLow: () => {
+        const damage = requireHole(holes, "rolledDice");
+        submit([...fills, damageRollFillWithGroups(damage, [[2, 2]])]);
+      },
+      doFillObjectDamageHigh: () => {
+        const damage = requireHole(holes, "rolledDice");
+        submit([...fills, damageRollFillWithGroups(damage, [[3, 3]])]);
+      },
+      doRejectStaleAfterResolved: () => {
+        recordResult(resolveBattleSubject({ state, subject, fills }));
+      },
+      step: () => {},
+      getState: () =>
+        projectStarryWispObjectMbtState({
+          state,
+          holes,
+          objectDamage,
+          lastResult,
+          lastInvalidReason,
+        }),
+    };
+  });
+}
+
 function createAdrenalineRushDriver() {
   return defineDriver(adrenalineRushDriverSchema, () => {
     let state = adrenalineRushBattle();
@@ -810,6 +940,20 @@ function normalizeScalarBuffQuintState(raw: unknown): ScalarBuffMbtProjection {
   };
 }
 
+function normalizeStarryWispObjectQuintState(
+  raw: unknown,
+): StarryWispObjectMbtProjection {
+  const state = quintStateRecord(raw);
+
+  return {
+    actionAvailable: booleanField(state, "qActionAvailable"),
+    holes: quintHoleSet(state["qHoles"]).map(holeName).sort(),
+    objectDamage: objectDamageFromQuint(state["qObjectDamage"]),
+    lastResult: mbtLastResult(state["qLastResult"]),
+    lastInvalidReason: mbtLastInvalidReason(state["qLastInvalidReason"]),
+  };
+}
+
 function compareState(spec: MbtProjection, impl: MbtProjection): boolean {
   expect(impl).toEqual(spec);
   return true;
@@ -862,6 +1006,16 @@ const adrenalineRushStateCheck = stateCheck(
 const scalarBuffStateCheck = stateCheck(
   normalizeScalarBuffQuintState,
   (spec: ScalarBuffMbtProjection, impl: ScalarBuffMbtProjection) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+const starryWispObjectStateCheck = stateCheck(
+  normalizeStarryWispObjectQuintState,
+  (
+    spec: StarryWispObjectMbtProjection,
+    impl: StarryWispObjectMbtProjection,
+  ) => {
     expect(impl).toEqual(spec);
     return true;
   },
@@ -942,6 +1096,22 @@ describe("battle-runtime MBT", () => {
       nTraces: Number(process.env["MBT_TRACES"] ?? 1),
       maxSteps: Number(process.env["MBT_STEPS"] ?? 2),
       stateCheck: scalarBuffStateCheck,
+    });
+  }, 120_000);
+
+  it("replays Starry Wisp object target attack and object damage outcomes", async () => {
+    await run({
+      spec: path.resolve(
+        import.meta.dirname,
+        "../battle-runtime-starry-wisp-object.mbt.qnt",
+      ),
+      init: "init",
+      step: "step",
+      driver: createStarryWispObjectDriver(),
+      backend: "typescript",
+      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
+      maxSteps: Number(process.env["MBT_STEPS"] ?? 4),
+      stateCheck: starryWispObjectStateCheck,
     });
   }, 120_000);
 
@@ -1116,6 +1286,25 @@ function projectScalarBuffMbtState(input: {
   };
 }
 
+function projectStarryWispObjectMbtState(input: {
+  readonly state: BattleState;
+  readonly holes: readonly BattleHole[];
+  readonly objectDamage: ObjectDamageMbtProjection;
+  readonly lastResult: StarryWispObjectMbtProjection["lastResult"];
+  readonly lastInvalidReason: StarryWispObjectMbtProjection["lastInvalidReason"];
+}): StarryWispObjectMbtProjection {
+  const snapshot = snapshotBattle(input.state);
+  return {
+    actionAvailable: snapshot.turn.actionResources.some(
+      (resource) => resource.source === "turn",
+    ),
+    holes: input.holes.map(projectHole).sort(),
+    objectDamage: input.objectDamage,
+    lastResult: input.lastResult,
+    lastInvalidReason: input.lastInvalidReason,
+  };
+}
+
 function discoverAttackHoles(
   state: BattleState,
   subject: Extract<
@@ -1165,6 +1354,23 @@ function discoverMagicMissileHoles(
   );
   if (act == null) {
     throw new Error("Expected Magic Missile spell act.");
+  }
+
+  return act.initialHoles;
+}
+
+function discoverStarryWispHoles(
+  state: BattleState,
+  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
+): readonly BattleHole[] {
+  const act = discoverBattleActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.actorId === subject.actorId &&
+      candidate.subject.invocation.spellId === subject.invocation.spellId,
+  );
+  if (act == null) {
+    throw new Error("Expected Starry Wisp spell act.");
   }
 
   return act.initialHoles;
@@ -1251,6 +1457,18 @@ function magicMissileSubject(): Extract<
   };
 }
 
+function starryWispSubject(): Extract<
+  BattleSubject,
+  { readonly tag: "actionSpell" }
+> {
+  return {
+    tag: "actionSpell",
+    actorId: fighterId,
+    invocation: cantripSpellInvocationRef("starry_wisp", "spellAttackDamage"),
+    mode: { tag: "cast" },
+  };
+}
+
 function longstriderSubject(): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
   return {
     tag: "actionSpell",
@@ -1302,6 +1520,16 @@ function scalarBuffBattle(): BattleState {
     battleId: battleId("battle-runtime-mbt-scalar-buff"),
     combatants: [
       scalarBuffCasterCreatureInit({ initiative: 20 }),
+      skeletonCreatureInit({ initiative: 10 }),
+    ],
+  });
+}
+
+function starryWispObjectBattle(): BattleState {
+  return startBattleRight({
+    battleId: battleId("battle-runtime-mbt-starry-wisp-object"),
+    combatants: [
+      starryWispCasterCreatureInit({ initiative: 20 }),
       skeletonCreatureInit({ initiative: 10 }),
     ],
   });
@@ -1541,6 +1769,44 @@ function scalarBuffCasterCreatureInit(input: {
   };
 }
 
+function starryWispCasterCreatureInit(input: {
+  readonly initiative: number;
+}): BattleCreatureInit {
+  const unit = unitLibrary.requireUnit("starry_wisp");
+  if (unit.kind !== "spell") {
+    throw new Error("Expected Starry Wisp spell Unit.");
+  }
+  return {
+    combatantId: fighterId,
+    displayName: "Starry Wisp Caster",
+    initiative: initiativeScore(input.initiative),
+    side: partySide,
+    creatureInit: {
+      kind: "character",
+      characterId: characterId("starry-wisp-caster-character"),
+      characterUnitRefs: [],
+      classLevels: [{ className: "fighter", level: 5 }],
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(12),
+      maxHp: Hp(12),
+      tempHp: Hp(0),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: baseUnarmedStrike(),
+      spellcasting: {
+        spellcastingAbilityModifier: 3,
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [unit],
+        preparedSpells: [],
+        spellSlots: [],
+      },
+    },
+  };
+}
+
 function extraAttackUnitRef(
   unit: UnitRecord,
 ): Extract<
@@ -1729,6 +1995,42 @@ function spellTargetChoiceFill(
   };
 }
 
+type ObjectTargetChoiceFill = Extract<
+  BattleFill,
+  { readonly kind: "objectTargetChoice" }
+>;
+
+function starryWispObjectTargetFill(
+  hole: BattleHole,
+  input: {
+    readonly spatialFacts?: ObjectTargetChoiceFill["spatialFacts"];
+  } = {},
+): ObjectTargetChoiceFill {
+  if (hole.kind !== "objectTargetChoice") {
+    throw new Error("Expected object target choice hole.");
+  }
+
+  return {
+    kind: "objectTargetChoice",
+    holeId: hole.holeId,
+    value: starryWispObjectId,
+    spatialFacts: input.spatialFacts ?? [
+      {
+        kind: "spellObjectTarget",
+        casterId: fighterId,
+        objectId: starryWispObjectId,
+        spellId: "starry_wisp",
+        rangeFeet: movementFeet(60),
+        armorClass: armorClass(13),
+        damageDisposition: {
+          kind: "hitPoints",
+          hitPoints: Hp(5),
+        },
+      },
+    ],
+  };
+}
+
 function movementFill(
   hole: BattleHole,
   value: { readonly movementCostFeet: number },
@@ -1844,9 +2146,64 @@ function rolledDiceGroup(
   };
 }
 
+function projectObjectDamage(
+  damage: Extract<
+    BattleResolutionResult,
+    { readonly tag: "resolved" }
+  >["objectDamage"],
+): ObjectDamageMbtProjection {
+  if (damage === undefined) {
+    return { tag: "none" };
+  }
+  if (damage.kind === "hitPoints") {
+    return {
+      tag: "hitPoints",
+      rolledDamage: Number(damage.rolledDamage),
+      effectiveDamage: Number(damage.effectiveDamage),
+      nextHitPoints: Number(damage.nextHitPoints),
+      destroyed: damage.destroyed,
+    };
+  }
+
+  throw new Error("Starry Wisp object MBT expected hit point object damage.");
+}
+
+function objectDamageFromQuint(raw: unknown): ObjectDamageMbtProjection {
+  const tag = quintVariantTag(raw);
+  if (tag === "NoObjectDamage") {
+    return { tag: "none" };
+  }
+  if (tag !== "SomeObjectDamage") {
+    throw new Error(`Unknown Quint object damage option: ${tag}`);
+  }
+
+  const damage = quintVariantValue(raw, "SomeObjectDamage");
+  if (quintVariantTag(damage) !== "ObjectHitPointDamage") {
+    throw new Error("Expected Quint object hit point damage.");
+  }
+  const fields = quintVariantRecordValue(damage, "ObjectHitPointDamage");
+  return {
+    tag: "hitPoints",
+    rolledDamage: numberFromQuintInt(fields["rolledDamage"], "rolledDamage"),
+    effectiveDamage: numberFromQuintInt(
+      fields["effectiveDamage"],
+      "effectiveDamage",
+    ),
+    nextHitPoints: numberFromQuintInt(
+      fields["nextHitPoints"],
+      "nextHitPoints",
+    ),
+    destroyed: booleanField(fields, "destroyed"),
+  };
+}
+
 function projectHole(hole: BattleHole): MbtHole {
   return Match.value(hole).pipe(
     Match.when({ kind: "targetChoice" }, () => "TargetChoice" as const),
+    Match.when(
+      { kind: "objectTargetChoice" },
+      () => "ObjectTargetChoice" as const,
+    ),
     Match.when(
       { kind: "spellTargetAllocation" },
       () => "SpellTargetAllocation" as const,
@@ -1856,12 +2213,7 @@ function projectHole(hole: BattleHole): MbtHole {
         "Battle runtime MBT does not model spell target-list holes.",
       );
     }),
-    Match.when({ kind: "attackRoll" }, (attackRoll) => {
-      if ("spell" in attackRoll) {
-        throw new Error(
-          "Battle runtime MBT expected a weapon attack roll hole.",
-        );
-      }
+    Match.when({ kind: "attackRoll" }, () => {
       return "AttackRoll" as const;
     }),
     Match.when({ kind: "rolledDice" }, (rolledDice) => {
@@ -1917,6 +2269,7 @@ function holeName(raw: unknown): MbtHole {
   const tag = quintVariantTag(raw);
   if (
     tag === "TargetChoice" ||
+    tag === "ObjectTargetChoice" ||
     tag === "SpellTargetAllocation" ||
     tag === "AttackRoll" ||
     tag === "DamageRoll" ||
@@ -2031,6 +2384,26 @@ function quintVariantTag(raw: unknown): string {
   }
 
   throw new Error(`Expected Quint variant tag, got ${String(raw)}.`);
+}
+
+function quintVariantValue(raw: unknown, tag: string): unknown {
+  if (isRecord(raw) && raw["tag"] === tag && "value" in raw) {
+    return raw["value"];
+  }
+
+  throw new Error(`Expected Quint ${tag} variant value.`);
+}
+
+function quintVariantRecordValue(
+  raw: unknown,
+  tag: string,
+): Readonly<Record<string, unknown>> {
+  const value = quintVariantValue(raw, tag);
+  if (isRecord(value)) {
+    return value;
+  }
+
+  throw new Error(`Expected Quint ${tag} variant record value.`);
 }
 
 function isRecord(raw: unknown): raw is Readonly<Record<string, unknown>> {

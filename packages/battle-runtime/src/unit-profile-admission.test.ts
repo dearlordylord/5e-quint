@@ -23,6 +23,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31F true_strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31B hunters_mark
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV32B produce_flame
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV34 starry_wisp
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT25 healing_word
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT32 cure_wounds mass_healing_word
@@ -209,6 +210,7 @@ const rayOfSicknessUnitId = "ray_of_sickness";
 const shieldUnitId = "shield";
 const shieldOfFaithUnitId = "shield_of_faith";
 const shockingGraspUnitId = "shocking_grasp";
+const starryWispUnitId = "starry_wisp";
 const viciousMockeryUnitId = "vicious_mockery";
 const paladinExtraAttackUnitId = "paladin_extra_attack";
 const rangerExtraAttackUnitId = "ranger_extra_attack";
@@ -3227,22 +3229,70 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     ).toBeUndefined();
   });
 
-  test("starry_wisp is not counted as deterministic admission while object targeting and visibility riders are unprojected", () => {
+  test("starry_wisp is admitted as creature-or-object ranged spell attack damage with visibility riders deferred", () => {
     const unit = decodeUnitRecordSync(starryWispInput);
 
     expect(unit.kind).toBe("spell");
     if (unit.kind !== "spell") return;
 
     const spell = unit;
-    expect(spell.id).toBe("starry_wisp");
+    expect(spell.id).toBe(starryWispUnitId);
     expect(spell.mechanics.family).toBe("activation");
     expect(spell.mechanics.level).toBe(0);
-    expect(
-      maybeSpellAct({
-        state: spellBattle({ cantrips: [spell] }),
-        spellId: spell.id,
+    const state = spellBattle({ cantrips: [spell] });
+    const act = spellAct({
+      state,
+      spellId: spell.id,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: cantripSpellInvocationRef(
+        starryWispUnitId,
+        "spellAttackDamage",
+      ),
+      mode: { tag: "cast" },
+    });
+    expect(act.initialHoles).toEqual([
+      expect.objectContaining({
+        kind: "targetChoice",
+        choices: expect.arrayContaining([spellTargetId]),
       }),
-    ).toBeUndefined();
+      expect.objectContaining({
+        kind: "objectTargetChoice",
+        requiresTableSpatialFact: true,
+      }),
+    ]);
+    const attackRoll = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          spellTargetFill(
+            requireHole(act.initialHoles, "targetChoice"),
+            starryWispUnitId,
+            spellCasterId,
+            spellTargetId,
+          ),
+        ],
+      }),
+      "attackRoll",
+    );
+    expect(spellHoleInvocation([attackRoll])).toEqual(
+      expect.objectContaining({
+        procedure: "spellAttackDamage",
+        spell,
+        targeting: { kind: "singleCreatureOrObject" },
+        attackKind: "ranged_spell_attack",
+        damage: {
+          expr: { dice: 1, dieSize: 8 },
+          damageType: "radiant",
+        },
+        rangeFeet: 60,
+        postDamageRiders: [],
+      }),
+    );
   });
 
   test("shield is admitted through catalog Spell Access and projected as a triggered Reaction spell", () => {

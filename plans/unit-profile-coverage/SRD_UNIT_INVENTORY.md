@@ -33,11 +33,11 @@ This is a Unit/catalog backlog denominator, not RAW span coverage and not an MBT
 ### Spell Unit Pressure by Disposition
 
 - catalog-authored-executable-follow-up: 2
-- catalog-installed-owner-evidence-present: 84
+- catalog-installed-owner-evidence-present: 86
 - catalog-installed-owner-evidence-required: 10
 - catalog-only/dead-for-now: 74
 - missing-authored-record: 6
-- needs-surface-widening: 35
+- needs-surface-widening: 33
 
 ## Recommended Ralph Batches
 
@@ -51,9 +51,9 @@ These batches are generated planning recommendations for a separate SRD inventor
 |SRDINV4|blocked-on-SRDINV1|112|Separate class-container-owned creation/progression facts from rows that require standalone authored records.|Level-1 hit dice, proficiencies, equipment, multiclass, and table-summary rows have class-container ownership or non-runtime closure classifications.|Character-creation rows distinguish class-container ownership from missing standalone records.|
 |SRDINV5A|blocked-on-SRDINV1|7|Keep class spell access/list facts separate from individual Spell Unit support.|Level-1 class Spellcasting/access rows have owner-specific classifications; keep Surface-widening blockers separate from individual Spell Unit pressure.|Level-1 spell access rows have owner-specific next actions and are not mixed with individual Spell Unit pressure.|
 |SRDINV5B|blocked-on-SRDINV1|6|Classify missing SRD cantrip and level-1 Spell Unit records without loading the whole spell-pressure backlog into one task.|Group missing Spell Unit rows by authoring readiness, Surface blockers, and runtime-support pressure.|Missing cantrip and level-1 Spell Unit pressure rows have sharper next actions than generic author-or-close wording.|
-|SRDINV5C|blocked-on-SRDINV1|116|Classify installed SRD cantrip and level-1 Spell Unit owner evidence separately from missing and catalog-only spell rows.|Installed Spell Unit pressure rows are classified by catalog admission, spell access, invocation/projection evidence, runtime-support requirements, Surface blockers, or catalog-only closure.|Installed cantrip and level-1 Spell Unit rows distinguish catalog evidence from operational owner evidence.|
+|SRDINV5C|blocked-on-SRDINV1|118|Classify installed SRD cantrip and level-1 Spell Unit owner evidence separately from missing and catalog-only spell rows.|Installed Spell Unit pressure rows are classified by catalog admission, spell access, invocation/projection evidence, runtime-support requirements, Surface blockers, or catalog-only closure.|Installed cantrip and level-1 Spell Unit rows distinguish catalog evidence from operational owner evidence.|
 |SRDINV5D|blocked-on-SRDINV1|76|Keep catalog-only spell pressure explicit and counted without forcing unrelated class or nonspell rows into the same task.|Catalog-only/dead-for-now closures are explicit; authored executable spell rows are promoted into named follow-up batches.|Catalog-only cantrip and level-1 Spell Unit rows remain counted deliberately, or become explicit follow-up work.|
-|SRDINV6|blocked-on-SRDINV1|35|Preserve catalog-only/dead-for-now rows and name missing Surface constructs for nonspell and spell Surface-widening blockers.|Either keep catalog-only rows explicitly catalog-only/dead-for-now or promote a named Surface-widening task for each blocker, including spell Surface pressure.|Catalog-only rows are counted deliberately, and every nonspell or spell Surface-widening row names the missing construct.|
+|SRDINV6|blocked-on-SRDINV1|33|Preserve catalog-only/dead-for-now rows and name missing Surface constructs for nonspell and spell Surface-widening blockers.|Either keep catalog-only rows explicitly catalog-only/dead-for-now or promote a named Surface-widening task for each blocker, including spell Surface pressure.|Catalog-only rows are counted deliberately, and every nonspell or spell Surface-widening row names the missing construct.|
 |SRDINV7|done|156|Reviewed SRDINV1-SRDINV6 findings and appended the next concrete Surface-widening batch.|Level-1 remains open; run SRDINV8-SRDINV10 before the next recursive SRDINV11 review.|SRDINV7 closed with inventory metrics and a concrete multi-task next batch, not a recursive-only continuation.|
 |SRDINV8|done|5|Widen class-container proficiency and multiclass-entry Surface facts.|Completed Bard and Druid tool proficiency blockers, Monk and Rogue tool plus property-filtered Martial weapon proficiency blockers, and Ranger fixed-plus-choice multiclass-entry blockers.|Class-container proficiency and multiclass-entry blockers are expressible in Surface without parallel runtime data.|
 |SRDINV9|done|0|Widen non-Wizard spell-access facts and own the shared Warlock Pact Magic source shape.|Cover non-Wizard list-prepared and prepared-half-caster Spell Access, Spell Slot projection, focus and replacement timing facts, plus Warlock Pact Magic and Pact Slot recovery source facts.|Non-Wizard Spell Access blockers are expressible in Surface, and Pact Magic has one shared source shape for downstream class-feature projections.|

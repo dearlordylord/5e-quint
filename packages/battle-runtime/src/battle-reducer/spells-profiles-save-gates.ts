@@ -422,7 +422,7 @@ export function supportedSaveGateDamageProfile(
   const rangeFeet =
     targeting?.kind === "singleCombatant"
       ? singleTargetSpellRangeFeet(spell.mechanics.range)
-      : targeting === null
+      : targeting === null || targeting.kind === "singleCreatureOrObject"
         ? null
         : areaSaveGateSpellRangeFeet(spell.mechanics.range, targeting);
   const failedSaveEffects =
@@ -525,7 +525,10 @@ export function saveGateTargeting(
 
 export function areaSaveGateSpellRangeFeet(
   range: SpellRecord["mechanics"]["range"],
-  targeting: Exclude<SpellTargeting, { readonly kind: "singleCombatant" }>,
+  targeting: Exclude<
+    SpellTargeting,
+    { readonly kind: "singleCombatant" | "singleCreatureOrObject" }
+  >,
 ): MovementFeet | null {
   return Match.value(targeting).pipe(
     Match.when({ kind: "pointOriginSphere" }, () =>

@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 348,
-      "numerator": 96,
-      "percent": "27.6%"
+      "numerator": 97,
+      "percent": "27.9%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 415,
-      "numerator": 120,
-      "percent": "28.9%"
+      "numerator": 121,
+      "percent": "29.2%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 121
+      "value": 122
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 62,
@@ -67,8 +67,8 @@
       "percent": "93.5%"
     },
     "profileClassificationCoverage": {
-      "denominator": 121,
-      "numerator": 121,
+      "denominator": 122,
+      "numerator": 122,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -97,9 +97,9 @@
       "percent": "16.1%"
     },
     "supportedProfileCoverage": {
-      "denominator": 97,
+      "denominator": 98,
       "numerator": 62,
-      "percent": "63.9%"
+      "percent": "63.3%"
     }
   },
   "metricSemantics": [
@@ -790,7 +790,8 @@
         "QCORE10",
         "QMBT5",
         "SRDINV29E",
-        "SRDINV32B"
+        "SRDINV32B",
+        "SRDINV34"
       ],
       "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
       "verificationOwners": [
@@ -1800,6 +1801,22 @@
         "spell.invocation-damage-save-or-attack"
       ],
       "taskId": "SRDINV32B"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Starry Wisp's Radiant spell attack damage, empty active-effect rider subset, and cantrip slot behavior.",
+      "profileIds": [
+        "spell.invocation-damage-save-or-attack"
+      ],
+      "taskId": "SRDINV34"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests for Starry Wisp's creature-or-object target boundary, caller-supplied object range/Armor Class/damage disposition facts, object hit/miss adjudication, and Radiant cantrip damage scaling with Dim Light and Invisible-denial riders deferred.",
+      "profileIds": [
+        "spell.invocation-damage-save-or-attack"
+      ],
+      "taskId": "SRDINV34"
     }
   ],
   "units": [
@@ -4030,7 +4047,8 @@
             "QCORE10",
             "QMBT5",
             "SRDINV29E",
-            "SRDINV32B"
+            "SRDINV32B",
+            "SRDINV34"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -4285,7 +4303,8 @@
             "QCORE10",
             "QMBT5",
             "SRDINV29E",
-            "SRDINV32B"
+            "SRDINV32B",
+            "SRDINV34"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -4385,7 +4404,8 @@
             "QCORE10",
             "QMBT5",
             "SRDINV29E",
-            "SRDINV32B"
+            "SRDINV32B",
+            "SRDINV34"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -5089,7 +5109,8 @@
             "QCORE10",
             "QMBT5",
             "SRDINV29E",
-            "SRDINV32B"
+            "SRDINV32B",
+            "SRDINV34"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -5302,7 +5323,8 @@
             "QCORE10",
             "QMBT5",
             "SRDINV29E",
-            "SRDINV32B"
+            "SRDINV32B",
+            "SRDINV34"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -5360,7 +5382,8 @@
             "QCORE10",
             "QMBT5",
             "SRDINV29E",
-            "SRDINV32B"
+            "SRDINV32B",
+            "SRDINV34"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -5517,7 +5540,8 @@
             "QCORE10",
             "QMBT5",
             "SRDINV29E",
-            "SRDINV32B"
+            "SRDINV32B",
+            "SRDINV34"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -5684,7 +5708,8 @@
             "QCORE10",
             "QMBT5",
             "SRDINV29E",
-            "SRDINV32B"
+            "SRDINV32B",
+            "SRDINV34"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -5742,7 +5767,8 @@
             "QCORE10",
             "QMBT5",
             "SRDINV29E",
-            "SRDINV32B"
+            "SRDINV32B",
+            "SRDINV34"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -5827,7 +5853,8 @@
             "QCORE10",
             "QMBT5",
             "SRDINV29E",
-            "SRDINV32B"
+            "SRDINV32B",
+            "SRDINV34"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -5966,7 +5993,8 @@
             "QCORE10",
             "QMBT5",
             "SRDINV29E",
-            "SRDINV32B"
+            "SRDINV32B",
+            "SRDINV34"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6105,7 +6133,8 @@
             "QCORE10",
             "QMBT5",
             "SRDINV29E",
-            "SRDINV32B"
+            "SRDINV32B",
+            "SRDINV34"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6157,6 +6186,80 @@
         "status": "installed"
       },
       "claim": {
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "SRDINV41",
+            "mechanic": "target emits Dim Light in a 10-foot radius until the end of the caster's next turn"
+          },
+          {
+            "followUpTaskId": "SRDINV41",
+            "mechanic": "target can't benefit from the Invisible condition until the end of the caster's next turn"
+          }
+        ],
+        "profileIds": [
+          "spell.invocation-damage-save-or-attack"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "creature-or-object target boundary with combatant target choice or typed caller-supplied object identity",
+          "caller-supplied object range, Armor Class, Hit Points or table-resolved damage disposition facts",
+          "ranged spell attack hit/miss adjudication against combatant and object targets",
+          "Radiant damage and cantrip damage scaling"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV34"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-damage-save-or-attack",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE10",
+            "QMBT5",
+            "SRDINV29E",
+            "SRDINV32B",
+            "SRDINV34"
+          ],
+          "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/starry_wisp.json",
+      "unitId": "starry_wisp"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "spell.invocation-damage-save-or-attack",
           "spell.readied-action-time-spell"
@@ -6190,7 +6293,8 @@
             "QCORE10",
             "QMBT5",
             "SRDINV29E",
-            "SRDINV32B"
+            "SRDINV32B",
+            "SRDINV34"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6293,7 +6397,8 @@
             "QCORE10",
             "QMBT5",
             "SRDINV29E",
-            "SRDINV32B"
+            "SRDINV32B",
+            "SRDINV34"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6378,7 +6483,8 @@
             "QCORE10",
             "QMBT5",
             "SRDINV29E",
-            "SRDINV32B"
+            "SRDINV32B",
+            "SRDINV34"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -11307,30 +11413,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/spiritual_weapon.json",
       "unitId": "spiritual_weapon"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "futureProfileOwner": "SRDINV34",
-        "issue": "SRDINV28E keeps Starry Wisp out of supported spell evidence because the SRD target is one creature or object within range, while promoted Spell Invocation target selection and damage application currently admit combatant targets only; object identity, object AC/HP damage disposition, Dim Light emission, and Invisible benefit denial are not executable runtime facts.",
-        "tag": "needs-surface-widening"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/starry_wisp.json",
-      "unitId": "starry_wisp"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

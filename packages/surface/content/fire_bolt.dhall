@@ -21,10 +21,9 @@
 -- worn/carried predicate, nor burning-object state. Core attack +
 -- damage authored here; ignition rider omitted.
 --
--- The "creature or object" target admission is collapsed to
--- `target / one` because Attachment has no object variant today (see
--- DEFERRED.md §B world-object discussion). The attack-roll-against-
--- object branch is session-resolved.
+-- The "creature or object" target is authored as a target-kind list. Runtime
+-- admission stays deferred until the object-ignition rider has an executable
+-- world-object boundary; Fire damage alone is not the support gate.
 
 let fireBolt =
       { kind = "spell"

@@ -165,6 +165,12 @@ module battleRuntime {
   //   Wounds, Burning Hands, Color Spray, Entangle, and the damage-only slice
   //   of Chill Touch are action-time spells with creature or table-supplied
   //   area targets, cantrip/slot scaling, and the listed attack/save outcomes.
+  //   Spells/Descriptions-S-Z.md lines 529-540: Starry Wisp targets one
+  //   creature or object within range, makes a ranged spell attack, and deals
+  //   Radiant damage on a hit. This object-target slice models caller-supplied
+  //   object identity, range legality, Armor Class, and damage disposition;
+  //   its Dim Light and Invisible-benefit riders are not modeled as durable
+  //   object illumination state in this battle runtime.
   //   Spells/Descriptions-E-L.md lines 1307-1318: Ice Knife is a level-1
   //   Action spell with a primary ranged spell attack, hit-only Piercing
   //   damage, and an unconditional primary-target-anchored burst Dexterity
@@ -205,8 +211,8 @@ module battleRuntime {
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | TrueStrike
-  type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | TrueStrike
+  type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | StarryWispSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack
   type ChainedSpellAttackDamageInvocation =
     | ChromaticOrbChainedSpellAttack
   type ChromaticOrbDamageTypeChoice = ChromaticOrbAcid | ChromaticOrbCold | ChromaticOrbFire | ChromaticOrbLightning | ChromaticOrbPoison | ChromaticOrbThunder
@@ -230,6 +236,27 @@ module battleRuntime {
   type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireAttackRollAdvantage | AnimalFriendshipCharmed({ durationTicks: int }) | ProtectionFromEvilAndGoodAttackDisadvantage | ProduceFlameHeldLight({ durationTicks: int })
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
   type RuntimeCreatureType = HumanoidCreature | BeastCreature | AberrationCreature | CelestialCreature | ElementalCreature | FeyCreature | FiendCreature | UndeadCreature
+  type ObjectTarget =
+    | StarryWispObjectTarget
+  type ObjectDamageDisposition =
+    | ObjectHitPoints({ hitPoints: int })
+    | ObjectHitPointsWithDamageThreshold({ hitPoints: int, damageThreshold: int })
+    | ObjectTableResolved
+  type ObjectDamageOutcome =
+    | ObjectHitPointDamage({
+        object: ObjectTarget,
+        damageType: DamageType,
+        rolledDamage: int,
+        effectiveDamage: int,
+        priorHitPoints: int,
+        nextHitPoints: int,
+        destroyed: bool,
+      })
+    | ObjectTableResolvedDamage({
+        object: ObjectTarget,
+        damageType: DamageType,
+        rolledDamage: int,
+      })
 
   type ChainedSpellAttackDamageHole =
     | ChainedSpellDamageTypeChoice
@@ -283,6 +310,7 @@ module battleRuntime {
 
   type Hole =
     | TargetChoice
+    | ObjectTargetChoice
     | SpellTargetAllocation
     | AttackRoll
     | DamageRoll
@@ -2834,6 +2862,7 @@ module battleRuntime {
       | AcidSplash => false
       | PoisonSpray => false
       | ChillTouch => false
+      | StarryWisp => false
       | SacredFlame => false
       | InflictWounds => true
       | BurningHands => true
@@ -2910,6 +2939,7 @@ module battleRuntime {
       | RayOfFrostSpellAttack => Cold
       | PoisonSpraySpellAttack => Poison
       | ChillTouchSpellAttack => Necrotic
+      | StarryWispSpellAttack => Radiant
       | ShockingGraspSpellAttack => Lightning
       | GuidingBoltSpellAttack => Radiant
       | RayOfSicknessSpellAttack => Poison
@@ -2921,11 +2951,95 @@ module battleRuntime {
       | RayOfFrostSpellAttack => Set(RayOfFrostSpeedDelta)
       | PoisonSpraySpellAttack => Set()
       | ChillTouchSpellAttack => Set()
+      | StarryWispSpellAttack => Set()
       | ShockingGraspSpellAttack => Set(ShockingGraspOpportunityAttackDenied)
       | GuidingBoltSpellAttack => Set(GuidingBoltNextAttackAdvantage)
       | RayOfSicknessSpellAttack => Set(RayOfSicknessPoisoned)
       | ProduceFlameHurlSpellAttack => Set()
     }
+
+  pure def spellAttackDamageSupportsObjectTarget(invocation: SpellAttackDamageInvocation): bool =
+    match invocation {
+      | StarryWispSpellAttack => true
+      | RayOfFrostSpellAttack => false
+      | PoisonSpraySpellAttack => false
+      | ChillTouchSpellAttack => false
+      | ShockingGraspSpellAttack => false
+      | GuidingBoltSpellAttack => false
+      | RayOfSicknessSpellAttack => false
+      | ProduceFlameHurlSpellAttack => false
+    }
+
+  pure def objectHitPointDamageOutcome(
+    object: ObjectTarget,
+    damageType: DamageType,
+    rolledDamage: int,
+    priorHitPoints: int,
+    damageThreshold: int,
+  ): ObjectDamageOutcome = {
+    val effectiveDamage = if (damageThreshold > 0 and rolledDamage < damageThreshold) 0 else rolledDamage
+    val nextHitPoints = if (priorHitPoints - effectiveDamage < 0) 0 else priorHitPoints - effectiveDamage
+
+    ObjectHitPointDamage({
+      object: object,
+      damageType: damageType,
+      rolledDamage: rolledDamage,
+      effectiveDamage: effectiveDamage,
+      priorHitPoints: priorHitPoints,
+      nextHitPoints: nextHitPoints,
+      destroyed: nextHitPoints == 0,
+    })
+  }
+
+  pure def spellObjectDamageOutcome(
+    invocation: SpellAttackDamageInvocation,
+    object: ObjectTarget,
+    damageRoll: int,
+    disposition: ObjectDamageDisposition,
+  ): ObjectDamageOutcome =
+    match disposition {
+      | ObjectTableResolved =>
+          ObjectTableResolvedDamage({
+            object: object,
+            damageType: spellAttackDamageType(invocation),
+            rolledDamage: damageRoll,
+          })
+      | ObjectHitPoints(fill) =>
+          objectHitPointDamageOutcome(
+            object,
+            spellAttackDamageType(invocation),
+            damageRoll,
+            fill.hitPoints,
+            0,
+          )
+      | ObjectHitPointsWithDamageThreshold(fill) =>
+          objectHitPointDamageOutcome(
+            object,
+            spellAttackDamageType(invocation),
+            damageRoll,
+            fill.hitPoints,
+            fill.damageThreshold,
+          )
+    }
+
+  pure def spellAttackDamageObjectReplayHoles(
+    invocation: SpellAttackDamageInvocation,
+    canCastSpells: bool,
+    objectTargetFilled: bool,
+    attackRollFilled: bool,
+    attackHitsObject: bool,
+    damageRollFilled: bool,
+  ): Set[Hole] =
+    if (not(canCastSpells) or not(spellAttackDamageSupportsObjectTarget(invocation)))
+      Set()
+    else if (not(objectTargetFilled))
+      Set(ObjectTargetChoice)
+    else if (not(attackRollFilled))
+      Set(AttackRoll)
+    else if (attackHitsObject and not(damageRollFilled))
+      Set(SpellDamageRoll)
+    else
+      Set()
 
   pure def chromaticOrbDamageTypeChoice(choice: ChromaticOrbDamageTypeChoice): DamageType =
     match choice {
@@ -4266,6 +4380,7 @@ module battleRuntime {
       assert(expendedSlotsAfterInvocation(AcidSplash, 0) == 0),
       assert(expendedSlotsAfterInvocation(PoisonSpray, 0) == 0),
       assert(expendedSlotsAfterInvocation(ChillTouch, 0) == 0),
+      assert(expendedSlotsAfterInvocation(StarryWisp, 0) == 0),
       assert(expendedSlotsAfterInvocation(SacredFlame, 0) == 0),
       assert(expendedSlotsAfterInvocation(InflictWounds, 0) == 1),
       assert(expendedSlotsAfterInvocation(BurningHands, 0) == 1),
@@ -4337,10 +4452,36 @@ module battleRuntime {
       assert(not(rayOfFrostSpeedEffectActive(true, Fighter, Fighter))),
       assert(spellAttackDamageType(PoisonSpraySpellAttack) == Poison),
       assert(spellAttackDamageType(ChillTouchSpellAttack) == Necrotic),
+      assert(spellAttackDamageType(StarryWispSpellAttack) == Radiant),
       assert(spellAttackDamageType(ShockingGraspSpellAttack) == Lightning),
       assert(spellAttackDamageType(GuidingBoltSpellAttack) == Radiant),
       assert(spellAttackDamageType(RayOfSicknessSpellAttack) == Poison),
       assert(spellAttackDamageActiveEffects(RayOfSicknessSpellAttack) == Set(RayOfSicknessPoisoned)),
+      assert(spellAttackDamageActiveEffects(StarryWispSpellAttack) == Set()),
+      assert(spellAttackDamageSupportsObjectTarget(StarryWispSpellAttack)),
+      assert(not(spellAttackDamageSupportsObjectTarget(ChillTouchSpellAttack))),
+      assert(spellAttackDamageObjectReplayHoles(StarryWispSpellAttack, true, false, false, false, false) == Set(ObjectTargetChoice)),
+      assert(spellAttackDamageObjectReplayHoles(StarryWispSpellAttack, true, true, false, false, false) == Set(AttackRoll)),
+      assert(spellAttackDamageObjectReplayHoles(StarryWispSpellAttack, true, true, true, true, false) == Set(SpellDamageRoll)),
+      assert(spellAttackDamageObjectReplayHoles(StarryWispSpellAttack, true, true, true, false, false) == Set()),
+      assert(spellObjectDamageOutcome(StarryWispSpellAttack, StarryWispObjectTarget, 6, ObjectHitPoints({ hitPoints: 5 })) == ObjectHitPointDamage({
+        object: StarryWispObjectTarget,
+        damageType: Radiant,
+        rolledDamage: 6,
+        effectiveDamage: 6,
+        priorHitPoints: 5,
+        nextHitPoints: 0,
+        destroyed: true,
+      })),
+      assert(spellObjectDamageOutcome(StarryWispSpellAttack, StarryWispObjectTarget, 6, ObjectHitPointsWithDamageThreshold({ hitPoints: 10, damageThreshold: 10 })) == ObjectHitPointDamage({
+        object: StarryWispObjectTarget,
+        damageType: Radiant,
+        rolledDamage: 6,
+        effectiveDamage: 0,
+        priorHitPoints: 10,
+        nextHitPoints: 10,
+        destroyed: false,
+      })),
       assert(spellAttackDamageActiveEffects(ShockingGraspSpellAttack) == Set(ShockingGraspOpportunityAttackDenied)),
       assert(spellAttackDamageActiveEffects(GuidingBoltSpellAttack) == Set(GuidingBoltNextAttackAdvantage)),
       assert(chainedSpellAttackDamageChoices(ChromaticOrbChainedSpellAttack) == Set(ChromaticOrbAcid, ChromaticOrbCold, ChromaticOrbFire, ChromaticOrbLightning, ChromaticOrbPoison, ChromaticOrbThunder)),

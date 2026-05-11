@@ -21,6 +21,9 @@ import {
   type BattleCreatureState,
   type DamageSpellSource,
   type PreparedDamageSpellSource,
+  type SpellActivationPhase,
+  type SpellAttackDamageTargeting,
+  type SpellAttackHitEffect,
   type SpellTargeting,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
@@ -254,7 +257,9 @@ export function supportedPreparedChainedSpellAttackDamageProfile(
     !supportedSpellAttackKind(leapPhase.attackKind) ||
     phase.attackKind !== leapPhase.attackKind ||
     targeting === null ||
+    targeting.kind !== "singleCombatant" ||
     leapTargeting === null ||
+    leapTargeting.kind !== "singleCombatant" ||
     phase.onHit.length !== 1 ||
     phase.onMiss.length !== 1 ||
     phase.onMiss[0]?.kind !== "none" ||
@@ -403,6 +408,7 @@ export function supportedAttackBurstSaveDamageProfile(
     burstPhase?.kind !== "save_gate" ||
     !supportedSpellAttackKind(attackPhase.attackKind) ||
     targeting === null ||
+    targeting.kind !== "singleCombatant" ||
     burstTargeting === null ||
     attackPhase.onHit.length !== 1 ||
     attackPhase.onMiss.length !== 1 ||
@@ -485,10 +491,10 @@ export function supportedSpellAttackDamageProfile(
     phase?.kind === "attack_roll"
       ? spellAttackDamageTargeting(phase.attachment)
       : null;
-  const rangeFeet =
-    targeting?.kind === "singleCombatant"
-      ? singleTargetSpellRangeFeet(spell.mechanics.range)
-      : null;
+  const rangeFeet = singleSpellAttackDamageRangeFeet(
+    targeting,
+    spell.mechanics.range,
+  );
   if (
     (input.access.tag === "classCantrip"
       ? spell.mechanics.level !== 0
@@ -509,6 +515,17 @@ export function supportedSpellAttackDamageProfile(
   if (
     damageEffect?.kind !== "damage" ||
     typeof damageEffect.damageType !== "string"
+  ) {
+    return [];
+  }
+  if (
+    spellAttackDamageHasUnprojectedObjectHitEffect({
+      spell,
+      phase,
+      targeting,
+      damageEffect,
+      postDamageEffects,
+    })
   ) {
     return [];
   }
@@ -550,9 +567,47 @@ export function supportedSpellAttackDamageProfile(
   return [{ ...damageSpellSource(input), ...attackDamageInvocation }];
 }
 
+function spellAttackDamageHasUnprojectedObjectHitEffect(input: {
+  readonly spell: SpellRecord;
+  readonly phase: Extract<
+    SpellActivationPhase,
+    { readonly kind: "attack_roll" }
+  >;
+  readonly targeting: SpellAttackDamageTargeting;
+  readonly damageEffect: SpellAttackHitEffect;
+  readonly postDamageEffects: readonly SpellAttackHitEffect[];
+}): boolean {
+  return (
+    input.targeting.kind === "singleCreatureOrObject" &&
+    isCanonicalSrdFireBoltWithDeferredObjectIgnition(input)
+  );
+}
+
+function isCanonicalSrdFireBoltWithDeferredObjectIgnition(input: {
+  readonly spell: SpellRecord;
+  readonly phase: Extract<
+    SpellActivationPhase,
+    { readonly kind: "attack_roll" }
+  >;
+  readonly damageEffect: SpellAttackHitEffect;
+  readonly postDamageEffects: readonly SpellAttackHitEffect[];
+}): boolean {
+  return (
+    input.spell.name === "Fire Bolt" &&
+    input.spell.provenance.kind === "srd-5.2.1" &&
+    input.spell.provenance.section === "Spells/Descriptions-E-L#Fire Bolt" &&
+    input.spell.mechanics.level === 0 &&
+    input.spell.mechanics.duration.kind === "instantaneous" &&
+    input.phase.attackKind === "ranged_spell_attack" &&
+    input.damageEffect.kind === "damage" &&
+    input.damageEffect.damageType === "fire" &&
+    input.postDamageEffects.length === 0
+  );
+}
+
 export function spellAttackDamageTargeting(
   attachment: Attachment,
-): Extract<SpellTargeting, { readonly kind: "singleCombatant" }> | null {
+): SpellAttackDamageTargeting | null {
   if (
     attachment.kind !== "hole" ||
     attachment.value.kind !== "target" ||
@@ -561,10 +616,23 @@ export function spellAttackDamageTargeting(
     return null;
   }
   const targetKinds = attachment.value.selection.targetKinds;
-  if (targetKinds !== undefined && !sameStringSet(targetKinds, ["creature"])) {
+  if (targetKinds === undefined || sameStringSet(targetKinds, ["creature"])) {
+    return { kind: "singleCombatant" };
+  }
+  if (sameStringSet(targetKinds, ["creature", "object"])) {
+    return { kind: "singleCreatureOrObject" };
+  }
+  return null;
+}
+
+export function singleSpellAttackDamageRangeFeet(
+  targeting: SpellAttackDamageTargeting | null,
+  range: SpellRecord["mechanics"]["range"],
+): ReturnType<typeof singleTargetSpellRangeFeet> {
+  if (targeting === null) {
     return null;
   }
-  return { kind: "singleCombatant" };
+  return singleTargetSpellRangeFeet(range);
 }
 
 export function primaryTargetOriginEmanationTargeting(

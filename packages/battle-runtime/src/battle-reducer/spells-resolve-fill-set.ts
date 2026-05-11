@@ -17,12 +17,13 @@ import {
   type SpellTargeting,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
-import type { CombatantId } from "../identity.ts";
+import type { BattleObjectId, CombatantId } from "../identity.ts";
 import { isSpellDamageReductionRollFill } from "./damage-helpers.ts";
 import {
   spellBurstDamageHole,
   spellDamageHole,
   spellDamageTypeChoiceHole,
+  spellObjectTargetHoleId,
   spellRollModifierSkillChoiceHoleId,
   spellSavingThrowOutcomeHoleId,
   spellTargetAllocationHoleId,
@@ -33,6 +34,15 @@ export type SpellFillSet =
   | {
       readonly tag: "ok";
       readonly targetId: CombatantId | undefined;
+      readonly objectTarget:
+        | {
+            readonly objectId: BattleObjectId;
+            readonly spatialFacts: readonly Extract<
+              BattleTargetSpatialFact,
+              { readonly kind: "spellObjectTarget" }
+            >[];
+          }
+        | undefined;
       readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
       readonly targetAllocation:
         | {
@@ -86,6 +96,15 @@ export function spellFillSet(
   invocation: SupportedSpellInvocation,
 ): SpellFillSet {
   let targetId: CombatantId | undefined;
+  let objectTarget:
+    | {
+        readonly objectId: BattleObjectId;
+        readonly spatialFacts: readonly Extract<
+          BattleTargetSpatialFact,
+          { readonly kind: "spellObjectTarget" }
+        >[];
+      }
+    | undefined;
   let targetSpatialFacts: readonly BattleTargetSpatialFact[] = [];
   let targetAllocation:
     | {
@@ -136,6 +155,36 @@ export function spellFillSet(
       }
       targetId = fill.value;
       targetSpatialFacts = fill.spatialFacts ?? [];
+      continue;
+    }
+
+    if (fill.kind === "objectTargetChoice") {
+      if (
+        invocation.procedure !== "spellAttackDamage" ||
+        invocation.targeting.kind !== "singleCreatureOrObject"
+      ) {
+        return {
+          tag: "invalid",
+          message: "Object target fill does not match this spell act.",
+        };
+      }
+      if (fill.holeId !== spellObjectTargetHoleId(invocation)) {
+        return {
+          tag: "invalid",
+          message:
+            "Object target fill must use the selected spell act object-target hole.",
+        };
+      }
+      if (objectTarget !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Spell object target was filled twice.",
+        };
+      }
+      objectTarget = {
+        objectId: fill.value,
+        spatialFacts: fill.spatialFacts,
+      };
       continue;
     }
 
@@ -440,6 +489,7 @@ export function spellFillSet(
   return {
     tag: "ok",
     targetId,
+    objectTarget,
     targetSpatialFacts,
     targetAllocation,
     targetList,

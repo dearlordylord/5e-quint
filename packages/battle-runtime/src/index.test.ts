@@ -24,6 +24,7 @@ import {
   battleReactionRollOrDamageReductionSupportForUnit,
   battleUnitSupportProfilesForUnit,
   battleId,
+  battleObjectId,
   cantripSpellInvocationRef,
   breakBattleConcentration,
   characterBattleResourceUsage,
@@ -59,6 +60,7 @@ import {
 } from "./index.ts";
 import {
   abilityModifier,
+  armorClass,
   defaultArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import type { ConditionState } from "@dnd/shared-algebras/conditions-algebra";
@@ -72,6 +74,7 @@ import {
 import {
   attackBonus,
   abilityModifier as battleAbilityModifier,
+  damageAmount,
   difficultyClass,
   DieRollResult,
   Hp,
@@ -98,6 +101,7 @@ import inflictWoundsInput from "../../surface/content/inflict_wounds.json";
 import shockingGraspInput from "../../surface/content/shocking_grasp.json";
 import guidingBoltInput from "../../surface/content/guiding_bolt.json";
 import rayOfSicknessInput from "../../surface/content/ray_of_sickness.json";
+import starryWispInput from "../../surface/content/starry_wisp.json";
 import viciousMockeryInput from "../../surface/content/vicious_mockery.json";
 import burningHandsInput from "../../surface/content/burning_hands.json";
 import colorSprayInput from "../../surface/content/color_spray.json";
@@ -226,6 +230,7 @@ const testSpellRecords = new Map(
     shockingGraspInput,
     guidingBoltInput,
     rayOfSicknessInput,
+    starryWispInput,
     viciousMockeryInput,
     burningHandsInput,
     colorSprayInput,
@@ -14241,6 +14246,402 @@ describe("battle runtime", () => {
     expect(expendedLevelOneSlots(requireResolved(result), wizardId)).toBe(0);
   });
 
+  test("Starry Wisp offers creature and table-supplied object targets with its light riders deferred", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-starry-wisp-creature"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          classLevel: 5,
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("starry_wisp")],
+            preparedSpells: [],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject = magicSubject("starry_wisp");
+    const act = findAct(state, subject);
+    expect(act.initialHoles).toEqual([
+      expect.objectContaining({
+        kind: "targetChoice",
+        choices: expect.arrayContaining([skeletonId]),
+      }),
+      expect.objectContaining({ kind: "objectTargetChoice" }),
+    ]);
+
+    const target = findHole(act.initialHoles, "targetChoice");
+    const attackRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFill(target, skeletonId)],
+      }),
+      "attackRoll",
+    );
+    const damage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(target, skeletonId),
+          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    expect(damage).toMatchObject({
+      label: "Starry Wisp damage (2d8-radiant)",
+      spell: expect.objectContaining({
+        targeting: { kind: "singleCreatureOrObject" },
+        attackKind: "ranged_spell_attack",
+        damage: {
+          expr: { dice: 2, dieSize: 8 },
+          damageType: "radiant",
+        },
+        postDamageRiders: [],
+      }),
+    });
+
+    const result = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFill(target, skeletonId),
+        attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        damageRollFillWithGroups(damage, [[5, 6]]),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId, hp: 12 },
+          { combatantId: skeletonId, hp: 2 },
+        ],
+        turn: { actionResources: [] },
+      },
+    });
+    expect("objectDamage" in requireResolved(result)).toBe(false);
+    expect(expendedLevelOneSlots(requireResolved(result), wizardId)).toBe(0);
+  });
+
+  test("Starry Wisp object targeting requires a matching caller-supplied object fact", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-starry-wisp-object-fact"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          classLevel: 5,
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("starry_wisp")],
+            preparedSpells: [],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject = magicSubject("starry_wisp");
+    const objectTarget = findHole(
+      findAct(state, subject).initialHoles,
+      "objectTargetChoice",
+    );
+
+    const result = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        objectTargetFill({
+          hole: objectTarget,
+          spellId: "starry_wisp",
+          rangeFeet: movementFeet(30),
+        }),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Spell object target must include a matching table-supplied range and object Armor Class fact.",
+    });
+  });
+
+  test("Starry Wisp object target miss spends the Magic action without object damage", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-starry-wisp-object-miss"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          classLevel: 5,
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("starry_wisp")],
+            preparedSpells: [],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject = magicSubject("starry_wisp");
+    const objectTarget = findHole(
+      findAct(state, subject).initialHoles,
+      "objectTargetChoice",
+    );
+    const targetFillForObject = objectTargetFill({
+      hole: objectTarget,
+      spellId: "starry_wisp",
+      armorClass: armorClass(13),
+    });
+    const attackRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFillForObject],
+      }),
+      "attackRoll",
+    );
+
+    const result = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFillForObject,
+        attackRollFill(attackRoll, { total: 12, naturalD20: 7 }),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId, hp: 12 },
+          { combatantId: skeletonId, hp: 13 },
+        ],
+        turn: { actionResources: [] },
+      },
+    });
+    expect("objectDamage" in requireResolved(result)).toBe(false);
+  });
+
+  test("Starry Wisp object attack rolls enforce attacker-wide disadvantage", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-starry-wisp-object-poisoned"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          classLevel: 5,
+          conditions: ["poisoned"],
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("starry_wisp")],
+            preparedSpells: [],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject = magicSubject("starry_wisp");
+    const objectTarget = findHole(
+      findAct(state, subject).initialHoles,
+      "objectTargetChoice",
+    );
+    const targetFillForObject = objectTargetFill({
+      hole: objectTarget,
+      spellId: "starry_wisp",
+      armorClass: armorClass(13),
+    });
+    const attackRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFillForObject],
+      }),
+      "attackRoll",
+    );
+    expect(attackRoll).toMatchObject({ rollMode: "disadvantage" });
+    expect(attackRoll).not.toHaveProperty("missToHitReplacements");
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFillForObject,
+          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Spell attack roll mode does not match the current attack-roll rule.",
+    });
+
+    const result = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFillForObject,
+        attackRollFill(attackRoll, {
+          total: 12,
+          naturalD20: 7,
+          rollMode: "disadvantage",
+        }),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId, hp: 12 },
+          { combatantId: skeletonId, hp: 13 },
+        ],
+        turn: { actionResources: [] },
+      },
+    });
+    expect("objectDamage" in requireResolved(result)).toBe(false);
+  });
+
+  test("Starry Wisp applies object hit point and damage-threshold disposition on a hit", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-starry-wisp-object-hit"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          classLevel: 5,
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("starry_wisp")],
+            preparedSpells: [],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject = magicSubject("starry_wisp");
+    const objectTarget = findHole(
+      findAct(state, subject).initialHoles,
+      "objectTargetChoice",
+    );
+    const objectId = battleObjectId("training-crystal");
+    const targetFillForObject = objectTargetFill({
+      hole: objectTarget,
+      objectId,
+      spellId: "starry_wisp",
+      damageDisposition: { kind: "hitPoints", hitPoints: Hp(5) },
+    });
+    const attackRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFillForObject],
+      }),
+      "attackRoll",
+    );
+    const damage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFillForObject,
+          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        ],
+      }),
+      "rolledDice",
+    );
+
+    const result = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFillForObject,
+        attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        damageRollFillWithGroups(damage, [[3, 3]]),
+      ],
+    });
+    expect(result).toMatchObject({
+      tag: "resolved",
+      objectDamage: {
+        kind: "hitPoints",
+        objectId,
+        damageType: "radiant",
+        rolledDamage: damageAmount(6),
+        effectiveDamage: damageAmount(6),
+        priorHitPoints: Hp(5),
+        nextHitPoints: Hp(0),
+        destroyed: true,
+      },
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId, hp: 12 },
+          { combatantId: skeletonId, hp: 13 },
+        ],
+        turn: { actionResources: [] },
+      },
+    });
+
+    const thresholdObjectId = battleObjectId("reinforced-training-crystal");
+    const thresholdTargetFill = objectTargetFill({
+      hole: objectTarget,
+      objectId: thresholdObjectId,
+      spellId: "starry_wisp",
+      damageDisposition: {
+        kind: "hitPointsWithDamageThreshold",
+        hitPoints: Hp(10),
+        damageThreshold: damageAmount(10),
+      },
+    });
+    const thresholdDamage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          thresholdTargetFill,
+          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    const thresholdResult = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        thresholdTargetFill,
+        attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        damageRollFillWithGroups(thresholdDamage, [[3, 3]]),
+      ],
+    });
+
+    expect(thresholdResult).toMatchObject({
+      tag: "resolved",
+      objectDamage: {
+        kind: "hitPoints",
+        objectId: thresholdObjectId,
+        rolledDamage: damageAmount(6),
+        effectiveDamage: damageAmount(0),
+        priorHitPoints: Hp(10),
+        nextHitPoints: Hp(10),
+        destroyed: false,
+      },
+    });
+  });
+
   test("Sacred Flame uses a creature target before Dexterity Saving Throw damage", () => {
     const state = startBattleRight({
       battleId: battleId("battle-sacred-flame"),
@@ -17351,6 +17752,47 @@ function targetFill(
   };
 }
 
+type ObjectTargetChoiceFill = Extract<
+  BattleFill,
+  { readonly kind: "objectTargetChoice" }
+>;
+type SpellObjectTargetFact = ObjectTargetChoiceFill["spatialFacts"][number];
+
+function objectTargetFill(input: {
+  readonly hole: BattleHole;
+  readonly objectId?: ObjectTargetChoiceFill["value"];
+  readonly casterId?: CombatantId;
+  readonly spellId: string;
+  readonly rangeFeet?: SpellObjectTargetFact["rangeFeet"];
+  readonly armorClass?: SpellObjectTargetFact["armorClass"];
+  readonly damageDisposition?: SpellObjectTargetFact["damageDisposition"];
+  readonly spatialFacts?: ObjectTargetChoiceFill["spatialFacts"];
+}): ObjectTargetChoiceFill {
+  if (input.hole.kind !== "objectTargetChoice") {
+    throw new Error("Expected objectTargetChoice hole.");
+  }
+  const objectId = input.objectId ?? battleObjectId("training-object");
+  return {
+    kind: "objectTargetChoice",
+    holeId: input.hole.holeId,
+    value: objectId,
+    spatialFacts: input.spatialFacts ?? [
+      {
+        kind: "spellObjectTarget",
+        casterId: input.casterId ?? wizardId,
+        objectId,
+        spellId: input.spellId,
+        rangeFeet: input.rangeFeet ?? movementFeet(60),
+        armorClass: input.armorClass ?? armorClass(13),
+        damageDisposition: input.damageDisposition ?? {
+          kind: "hitPoints",
+          hitPoints: Hp(5),
+        },
+      },
+    ],
+  };
+}
+
 function spellTargetAllocationFill(
   hole: BattleHole,
   allocations: readonly {
@@ -17467,6 +17909,7 @@ function spellIdFromTargetHoleLabel(label: string | undefined): string {
   if (label?.startsWith("Mage Armor") === true) return "mage_armor";
   if (label?.startsWith("Poison Spray") === true) return "poison_spray";
   if (label?.startsWith("Chill Touch") === true) return "chill_touch";
+  if (label?.startsWith("Starry Wisp") === true) return "starry_wisp";
   if (label?.startsWith("Sacred Flame") === true) return "sacred_flame";
   if (label?.startsWith("Inflict Wounds") === true) return "inflict_wounds";
   if (label?.startsWith("Shocking Grasp") === true) return "shocking_grasp";
@@ -19253,6 +19696,7 @@ function spellRecord(
     | "shocking_grasp"
     | "guiding_bolt"
     | "ray_of_sickness"
+    | "starry_wisp"
     | "vicious_mockery"
     | "burning_hands"
     | "color_spray"
@@ -19287,6 +19731,7 @@ function magicSubject(
     | "shocking_grasp"
     | "guiding_bolt"
     | "ray_of_sickness"
+    | "starry_wisp"
     | "vicious_mockery"
     | "burning_hands"
     | "color_spray"
@@ -19315,7 +19760,8 @@ function magicSubject(
                     : spellId === "ray_of_frost" ||
                         spellId === "poison_spray" ||
                         spellId === "chill_touch" ||
-                        spellId === "shocking_grasp"
+                        spellId === "shocking_grasp" ||
+                        spellId === "starry_wisp"
                       ? cantripSpellInvocationRef(spellId, "spellAttackDamage")
                       : cantripSpellInvocationRef(spellId, "saveGatedDamage"),
     mode: { tag: "cast" },

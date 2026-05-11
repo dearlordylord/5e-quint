@@ -9,9 +9,7 @@ import {
   isIncapacitated,
 } from "@dnd/shared-algebras/conditions-algebra";
 import type { CreatureType } from "@dnd/shared/game-facts";
-import type {
-  AttackRollMode,
-} from "@dnd/shared-algebras/runtime-hole-algebra";
+import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import type { CombatantId } from "../identity.ts";
 import type {
@@ -44,10 +42,7 @@ import {
   attackActionOptionName,
   attackRollMissToHitReplacementHolePayloadForAttacker,
 } from "./statblock-attacks.ts";
-import {
-  attackTargetRangeBand,
-  effectiveWalkSpeed,
-} from "./movement-speed.ts";
+import { attackTargetRangeBand, effectiveWalkSpeed } from "./movement-speed.ts";
 import {
   combatantCanSee,
   combatantsAreEnemies,
@@ -127,6 +122,35 @@ export function requiredAttackRollMode(
       "disadvantage",
       attack,
     );
+  return attackRollModeFromSources(hasAdvantage, hasDisadvantage);
+}
+
+export function requiredObjectTargetAttackRollMode(
+  state: BattleState,
+  attackerId: CombatantId,
+): AttackRollMode | undefined {
+  const attacker = state.combatants.get(attackerId);
+  const hasAdvantage = activeEffectGrantsAttackRollMode(
+    state,
+    attacker,
+    undefined,
+    "advantage",
+  );
+  const hasDisadvantage =
+    hasCondition(attacker?.conditions ?? EMPTY_CONDITION_STATE, "poisoned") ||
+    activeEffectGrantsAttackRollMode(
+      state,
+      attacker,
+      undefined,
+      "disadvantage",
+    );
+  return attackRollModeFromSources(hasAdvantage, hasDisadvantage);
+}
+
+function attackRollModeFromSources(
+  hasAdvantage: boolean,
+  hasDisadvantage: boolean,
+): AttackRollMode | undefined {
   if (hasAdvantage && !hasDisadvantage) return "advantage";
   if (hasDisadvantage && !hasAdvantage) return "disadvantage";
   return undefined;
@@ -396,24 +420,41 @@ export function consumeHelpAttackForAttackRoll(
   };
 }
 
+export function consumeSelfAttackRollEffects(
+  state: BattleState,
+  attackerId: CombatantId,
+): BattleState {
+  const attacker = state.combatants.get(attackerId);
+  if (attacker === undefined) {
+    return state;
+  }
+  const activeEffects = attacker.activeEffects.filter(
+    (effect) => effect.kind !== "nextAttackRollBySelf",
+  );
+  if (activeEffects.length === attacker.activeEffects.length) {
+    return state;
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(attackerId, {
+      ...attacker,
+      activeEffects,
+    }),
+  };
+}
+
 export function consumeOneShotAttackRollEffects(
   state: BattleState,
   attackerId: CombatantId,
   targetId: CombatantId,
 ): BattleState {
-  const attacker = state.combatants.get(attackerId);
+  const stateWithoutSelfEffects = consumeSelfAttackRollEffects(
+    state,
+    attackerId,
+  );
   const target = state.combatants.get(targetId);
-  const combatants = new Map(state.combatants);
+  const combatants = new Map(stateWithoutSelfEffects.combatants);
   let changed = false;
-  if (attacker !== undefined) {
-    const activeEffects = attacker.activeEffects.filter(
-      (effect) => effect.kind !== "nextAttackRollBySelf",
-    );
-    if (activeEffects.length !== attacker.activeEffects.length) {
-      changed = true;
-      combatants.set(attackerId, { ...attacker, activeEffects });
-    }
-  }
   if (target !== undefined) {
     const activeEffects = target.activeEffects.filter(
       (effect) => effect.kind !== "nextAttackRollAgainstSelf",
@@ -423,7 +464,9 @@ export function consumeOneShotAttackRollEffects(
       combatants.set(targetId, { ...target, activeEffects });
     }
   }
-  return changed ? { ...state, combatants } : state;
+  return changed
+    ? { ...stateWithoutSelfEffects, combatants }
+    : stateWithoutSelfEffects;
 }
 
 export function extendAttackRollOngoingFeatures(

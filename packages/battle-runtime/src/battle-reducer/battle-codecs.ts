@@ -3,10 +3,12 @@
 // while domain types remain exported by the reducer facade.
 
 import { ATTACK_ROLL_MODES } from "@dnd/shared-algebras/runtime-hole-algebra";
+import type { ArmorClass as BattleArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
 import {
   CONDITIONS as ALL_CONDITIONS,
   AbilityModifier,
+  ArmorClass as SharedArmorClass,
   AttackBonus,
   DamageAmount,
   DamageDieSizeSchema,
@@ -14,6 +16,7 @@ import {
   MovementDeltaFeet,
   MovementFeet,
   SpellSlotLevel,
+  type Hp,
 } from "@dnd/shared/types";
 import {
   AbilitySchema,
@@ -45,13 +48,33 @@ import {
   type BattleMovementSpeedKind,
   type SpellInvocationRefEncoded,
 } from "../battle-subjects.ts";
-import { BattleCombatantSide, BattleId, CombatantId } from "../identity.ts";
+import {
+  BattleCombatantSide,
+  BattleId,
+  BattleObjectId,
+  CombatantId,
+} from "../identity.ts";
 import {
   BATTLE_ATTACK_RANGE_BANDS,
   SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS,
 } from "./domain-constants.ts";
 
 const BATTLE_SURFACE_SKILLS = SURFACE_SKILLS;
+// Hp is a branded non-negative integer number. Effect Schema validates the
+// runtime number shape here; the brand is erased at runtime, and Schema has no
+// helper that preserves this repo's nominal brand through numeric filters.
+const HpSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(0),
+) as unknown as Schema.Schema<Hp, number, never>;
+// BattleArmorClass and shared ArmorClass are both runtime numbers validated by
+// the shared schema. Their brands are compile-time-only, so this cast narrows
+// the already-validated shared AC schema to the battle boundary's AC alias.
+const BattleArmorClassSchema = SharedArmorClass as unknown as Schema.Schema<
+  BattleArmorClass,
+  number,
+  never
+>;
 
 type WeaponDamageDiceRollChoiceSelection = "first" | "second";
 
@@ -188,6 +211,49 @@ const NoSpellInvocationResourceSchema = Schema.Struct({
   tag: Schema.Literal("none"),
 });
 
+const SpellAttackDamageTargetingSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("singleCombatant"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("singleCreatureOrObject"),
+  }),
+);
+
+const BattleObjectDamageDispositionSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("hitPoints"),
+    hitPoints: HpSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("hitPointsWithDamageThreshold"),
+    hitPoints: HpSchema,
+    damageThreshold: DamageAmount,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("tableResolved"),
+  }),
+);
+
+export const BattleObjectDamageOutcomeSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("hitPoints"),
+    objectId: BattleObjectId,
+    damageType: DamageTypeSchema,
+    rolledDamage: DamageAmount,
+    effectiveDamage: DamageAmount,
+    priorHitPoints: HpSchema,
+    nextHitPoints: HpSchema,
+    destroyed: Schema.Boolean,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("tableResolved"),
+    objectId: BattleObjectId,
+    damageType: DamageTypeSchema,
+    rolledDamage: DamageAmount,
+  }),
+);
+
 const SupportedHealingSpellInvocationSchema = Schema.Struct({
   access: PreparedSpellAccessSchema,
   resource: SpellSlotInvocationResourceSchema,
@@ -320,9 +386,7 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       resource: NoSpellInvocationResourceSchema,
       procedure: Schema.Literal("spellAttackDamage"),
       spell: BattleRuntimeObjectSchema,
-      targeting: Schema.Struct({
-        kind: Schema.Literal("singleCombatant"),
-      }),
+      targeting: SpellAttackDamageTargetingSchema,
       damage: Schema.Struct({
         expr: BattleRuntimeObjectSchema,
         damageType: Schema.String,
@@ -358,9 +422,7 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("spellAttackDamage"),
       spell: BattleRuntimeObjectSchema,
-      targeting: Schema.Struct({
-        kind: Schema.Literal("singleCombatant"),
-      }),
+      targeting: SpellAttackDamageTargetingSchema,
       damage: Schema.Struct({
         expr: BattleRuntimeObjectSchema,
         damageType: Schema.String,
@@ -802,6 +864,11 @@ export const BattleHoleSchema = Schema.Union(
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
+    kind: Schema.Literal("objectTargetChoice"),
+    requiresTableSpatialFact: Schema.Literal(true),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
     kind: Schema.Literal("damageTypeChoice"),
     spell: SupportedSpellInvocationSchema,
     choices: Schema.Array(DamageTypeSchema),
@@ -1127,6 +1194,22 @@ type BattleFillEncoded =
             readonly spellId: string;
           }
         | {
+            readonly kind: "spellObjectTarget";
+            readonly casterId: string;
+            readonly objectId: string;
+            readonly spellId: string;
+            readonly rangeFeet: number;
+            readonly armorClass: number;
+            readonly damageDisposition:
+              | { readonly kind: "hitPoints"; readonly hitPoints: number }
+              | {
+                  readonly kind: "hitPointsWithDamageThreshold";
+                  readonly hitPoints: number;
+                  readonly damageThreshold: number;
+                }
+              | { readonly kind: "tableResolved" };
+          }
+        | {
             readonly kind: "spellLeapTargetWithinRange";
             readonly previousTargetId: string;
             readonly targetId: string;
@@ -1180,6 +1263,27 @@ type BattleFillEncoded =
             readonly allyId: string;
           }
       )[];
+    }
+  | {
+      readonly kind: "objectTargetChoice";
+      readonly holeId: string;
+      readonly value: string;
+      readonly spatialFacts: readonly {
+        readonly kind: "spellObjectTarget";
+        readonly casterId: string;
+        readonly objectId: string;
+        readonly spellId: string;
+        readonly rangeFeet: number;
+        readonly armorClass: number;
+        readonly damageDisposition:
+          | { readonly kind: "hitPoints"; readonly hitPoints: number }
+          | {
+              readonly kind: "hitPointsWithDamageThreshold";
+              readonly hitPoints: number;
+              readonly damageThreshold: number;
+            }
+          | { readonly kind: "tableResolved" };
+      }[];
     }
   | {
       readonly kind: "damageTypeChoice";
@@ -1423,6 +1527,15 @@ export const BattleFillSchema: Schema.Schema<
               spellId: Schema.String,
             }),
             Schema.Struct({
+              kind: Schema.Literal("spellObjectTarget"),
+              casterId: CombatantId,
+              objectId: BattleObjectId,
+              spellId: Schema.String,
+              rangeFeet: MovementFeet,
+              armorClass: BattleArmorClassSchema,
+              damageDisposition: BattleObjectDamageDispositionSchema,
+            }),
+            Schema.Struct({
               kind: Schema.Literal("spellLeapTargetWithinRange"),
               previousTargetId: CombatantId,
               targetId: CombatantId,
@@ -1484,6 +1597,22 @@ export const BattleFillSchema: Schema.Schema<
           ),
         ),
         { exact: true },
+      ),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("objectTargetChoice"),
+      holeId: BattleHoleIdSchema,
+      value: BattleObjectId,
+      spatialFacts: Schema.Array(
+        Schema.Struct({
+          kind: Schema.Literal("spellObjectTarget"),
+          casterId: CombatantId,
+          objectId: BattleObjectId,
+          spellId: Schema.String,
+          rangeFeet: MovementFeet,
+          armorClass: BattleArmorClassSchema,
+          damageDisposition: BattleObjectDamageDispositionSchema,
+        }),
       ),
     }),
     Schema.Struct({

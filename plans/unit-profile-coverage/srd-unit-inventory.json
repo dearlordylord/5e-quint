@@ -160,19 +160,19 @@
       "non-runtime": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 228,
+      "catalog-installed-owner-evidence-present": 230,
       "non-runtime": 12,
       "catalog-only/dead-for-now": 74,
-      "needs-surface-widening": 35,
       "catalog-installed-owner-evidence-required": 10,
+      "needs-surface-widening": 33,
       "missing-authored-record": 6,
       "catalog-authored-executable-follow-up": 2
     },
     "spellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 74,
-      "needs-surface-widening": 35,
-      "catalog-installed-owner-evidence-present": 84,
+      "catalog-installed-owner-evidence-present": 86,
       "catalog-installed-owner-evidence-required": 10,
+      "needs-surface-widening": 33,
       "missing-authored-record": 6,
       "catalog-authored-executable-follow-up": 2
     },
@@ -529,10 +529,11 @@
       "title": "Classify Installed Cantrip and Level-1 Spell Units",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Classify installed SRD cantrip and level-1 Spell Unit owner evidence separately from missing and catalog-only spell rows.",
-      "rowCount": 116,
+      "rowCount": 118,
       "rowIds": [
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_light",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_minor_illusion",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_starry_wisp",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_true_strike",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_vicious_mockery",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_animal_friendship",
@@ -564,6 +565,7 @@
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_poison_spray",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_produce_flame",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_resistance",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_starry_wisp",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_animal_friendship",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_charm_person",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_cure_wounds",
@@ -743,9 +745,8 @@
       "title": "Review Catalog-Only and Surface-Widening Rows",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Preserve catalog-only/dead-for-now rows and name missing Surface constructs for nonspell and spell Surface-widening blockers.",
-      "rowCount": 35,
+      "rowCount": 33,
       "rowIds": [
-        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_starry_wisp",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_command",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_dissonant_whispers",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_feather_fall",
@@ -756,7 +757,6 @@
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_sanctuary",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_shillelagh",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_spare_the_dying",
-        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_starry_wisp",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_fog_cloud",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_jump",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_thunderwave",
@@ -4047,8 +4047,7 @@
       "detail": "Starry Wisp (Evocation; —)",
       "candidateUnitId": "starry_wisp",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "SRDINV28E keeps Starry Wisp out of supported spell evidence because the SRD target is one creature or object within range, while promoted Spell Invocation target selection and damage application currently admit combatant targets only; object identity, object AC/HP damage disposition, Dim Light emission, and Invisible benefit denial are not executable runtime facts."
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -4056,12 +4055,23 @@
         "sourceRecordPath": "packages/surface/content/starry_wisp.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "starry_wisp"
       },
-      "finalDisposition": "needs-surface-widening",
-      "ownerEvidence": [],
-      "nextAction": "Widen Surface: SRDINV28E keeps Starry Wisp out of supported spell evidence because the SRD target is one creature or object within range, while promoted Spell Invocation target selection and damage application currently admit combatant targets only; object identity, object AC/HP damage disposition, Dim Light emission, and Invisible benefit denial are not executable runtime facts."
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit starry_wisp is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV34 at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_true_strike",
@@ -7251,8 +7261,7 @@
       "detail": "Starry Wisp (Evocation; —)",
       "candidateUnitId": "starry_wisp",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "SRDINV28E keeps Starry Wisp out of supported spell evidence because the SRD target is one creature or object within range, while promoted Spell Invocation target selection and damage application currently admit combatant targets only; object identity, object AC/HP damage disposition, Dim Light emission, and Invisible benefit denial are not executable runtime facts."
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -7260,12 +7269,23 @@
         "sourceRecordPath": "packages/surface/content/starry_wisp.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "starry_wisp"
       },
-      "finalDisposition": "needs-surface-widening",
-      "ownerEvidence": [],
-      "nextAction": "Widen Surface: SRDINV28E keeps Starry Wisp out of supported spell evidence because the SRD target is one creature or object within range, while promoted Spell Invocation target selection and damage application currently admit combatant targets only; object identity, object AC/HP damage disposition, Dim Light emission, and Invisible benefit denial are not executable runtime facts."
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit starry_wisp is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV34 at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_animal_friendship",

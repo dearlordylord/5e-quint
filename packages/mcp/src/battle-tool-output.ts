@@ -1,6 +1,7 @@
 import {
   BattleFillSchema,
   BattleHoleSchema,
+  BattleObjectDamageOutcomeSchema,
   BattleSnapshotSchema,
   BattleSubjectSchema,
 } from "@dnd/battle-runtime";
@@ -33,6 +34,9 @@ const BattleResolutionResultSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("resolved"),
     snapshot: BattleSnapshotSchema,
+    objectDamage: Schema.optionalWith(BattleObjectDamageOutcomeSchema, {
+      exact: true,
+    }),
   }),
   Schema.Struct({
     tag: Schema.Literal("needsHoles"),

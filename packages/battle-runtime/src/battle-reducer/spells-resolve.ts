@@ -33,7 +33,9 @@ import {
   type BattleResolutionResult,
   type BonusActionSpellBattleResolutionInput,
   type SpellMarkedDamageRider,
+  type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
+import type { CombatantId } from "../identity.ts";
 import {
   damageDispositionFillFor,
   damageDispositionFillsValidation,
@@ -42,9 +44,11 @@ import {
 } from "./attack-damage-apply.ts";
 import {
   attackRollModeMatches,
+  consumeSelfAttackRollEffects,
   consumeHelpAttackForAttackRoll,
   recordAttackRollOngoingFeatures,
   requiredAttackRollMode,
+  requiredObjectTargetAttackRollMode,
 } from "./attack-roll.ts";
 import { activeEffectArmorClass } from "./creature-state.ts";
 import { concentrationSavingThrowHole } from "./damage-apply.ts";
@@ -67,10 +71,14 @@ import {
   applyPersistentSpellActiveEffect,
   applySpellActiveEffects,
   applySpellDamage,
+  spellObjectDamageOutcome,
+  spellObjectTargetFact,
+  spellObjectTargetHole,
   spellAttackRollHole,
   spellDamageByTypeForTarget,
   spellDamageHole,
   spellDamageTypes,
+  spellObjectAttackRollHole,
   spellTargetHole,
   spellTargetIsLegal,
   supportedSpellInvocationMatchesRef,
@@ -169,7 +177,7 @@ import {
   resolveSaveGateDamageSpellAct,
 } from "./spells-resolve-save-gates.ts";
 
-import { spellFillSet } from "./spells-resolve-fill-set.ts";
+import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
 
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import {
@@ -188,11 +196,13 @@ export function resolveSpellAct(
   const actor = input.state.combatants.get(subject.actorId);
   const invocation =
     actor?.origin.kind === "character"
-      ? supportedSpellActs(actor).find((candidate) =>
-          supportedSpellInvocationMatchesRef(candidate, subject.invocation) &&
-          (candidate.procedure !== "spellHostedWeaponAttack" ||
-            (subject.componentWeaponItemId !== undefined &&
-              candidate.componentWeapon.itemId === subject.componentWeaponItemId)),
+      ? supportedSpellActs(actor).find(
+          (candidate) =>
+            supportedSpellInvocationMatchesRef(candidate, subject.invocation) &&
+            (candidate.procedure !== "spellHostedWeaponAttack" ||
+              (subject.componentWeaponItemId !== undefined &&
+                candidate.componentWeapon.itemId ===
+                  subject.componentWeaponItemId)),
         )
       : undefined;
   if (actor?.origin.kind !== "character" || invocation == null) {
@@ -395,10 +405,47 @@ export function resolveSpellAct(
     });
   }
 
-  if (fillSet.targetId == null) {
+  if (fillSet.targetId !== undefined && fillSet.objectTarget !== undefined) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Spell target must choose either one combatant or one object, not both.",
+    );
+  }
+  if (fillSet.targetId == null && fillSet.objectTarget === undefined) {
     return needsHolesResult(castingState, input.subject, [
       spellTargetHole(castingState, subject.actorId, invocation),
+      ...(invocation.procedure === "spellAttackDamage" &&
+      invocation.targeting.kind === "singleCreatureOrObject"
+        ? [spellObjectTargetHole(invocation)]
+        : []),
     ]);
+  }
+  const objectTarget = fillSet.objectTarget;
+  if (objectTarget !== undefined) {
+    if (
+      invocation.procedure !== "spellAttackDamage" ||
+      invocation.targeting.kind !== "singleCreatureOrObject"
+    ) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Object target fill does not match this spell act.",
+      );
+    }
+    return resolveSpellAttackDamageObjectTarget({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet: { ...fillSet, objectTarget },
+    });
+  }
+  if (fillSet.targetId == null) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Spell target fill did not select a target.",
+    );
   }
   const target = input.state.combatants.get(fillSet.targetId);
   if (
@@ -836,6 +883,167 @@ export function resolveSpellAct(
     tag: "resolved",
     state: nextState,
     snapshot: snapshotBattle(nextState),
+  };
+}
+
+function resolveSpellAttackDamageObjectTarget(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spellAttackDamage" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }> & {
+    readonly objectTarget: NonNullable<
+      Extract<SpellFillSet, { readonly tag: "ok" }>["objectTarget"]
+    >;
+  };
+}): BattleResolutionResult {
+  const objectFact = spellObjectTargetFact(
+    input.fillSet.objectTarget.spatialFacts,
+    input.actorId,
+    input.fillSet.objectTarget.objectId,
+    input.invocation,
+  );
+  if (objectFact === null) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Spell object target must include a matching table-supplied range and object Armor Class fact.",
+    );
+  }
+
+  const spellCastReactionWindow = maybeOpenReactionWindow(
+    input.input.state,
+    {
+      trigger: "spellCast",
+      casterId: input.actorId,
+      spellId: input.invocation.spell.id,
+      targetIds: [],
+      continuation: {
+        kind: "replay",
+        subject: input.input.subject,
+        fills: input.input.fills,
+      },
+    },
+    input.input.suppressedReactionTrigger,
+  );
+  if (spellCastReactionWindow !== null) {
+    return spellCastReactionWindow;
+  }
+
+  const requiredRollMode = requiredObjectTargetAttackRollMode(
+    input.input.state,
+    input.actorId,
+  );
+  if (input.fillSet.attackRoll == null) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      spellObjectAttackRollHole(input.invocation, requiredRollMode),
+    ]);
+  }
+  if (!attackRollResultIsValid(input.fillSet.attackRoll)) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Spell attack roll result is outside the d20 attack-roll protocol.",
+    );
+  }
+  if (!attackRollModeMatches(input.fillSet.attackRoll, requiredRollMode)) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Spell attack roll mode does not match the current attack-roll rule.",
+    );
+  }
+  if (
+    input.fillSet.attackRoll.activatedOngoingFeatureUnitId !== undefined ||
+    input.fillSet.attackRoll.missToHitReplacementUnitId !== undefined
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Object-target spell attacks do not use combatant attack-roll feature selections.",
+    );
+  }
+
+  const hit = attackRollHits(input.fillSet.attackRoll, objectFact.armorClass);
+  const critical = attackRollIsCriticalHit(input.fillSet.attackRoll);
+  const attackRolledState = consumeSelfAttackRollEffects(
+    {
+      ...input.input.state,
+      currentTurnResources: {
+        ...input.input.state.currentTurnResources,
+        attackRollMadeThisTurn: true,
+      },
+    },
+    input.actorId,
+  );
+  if (
+    !hit &&
+    (input.fillSet.damageRoll != null ||
+      input.fillSet.damageDispositions.length > 0)
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Spell damage can only be filled after a hit.",
+    );
+  }
+  if (!hit) {
+    return spendSpellCastResources({
+      state: attackRolledState,
+      actorId: input.actorId,
+      invocation: input.invocation,
+      errorState: input.input.state,
+    });
+  }
+  if (input.fillSet.damageRoll == null) {
+    return needsHolesResult(attackRolledState, input.input.subject, [
+      spellDamageHole(input.invocation, critical),
+    ]);
+  }
+  const damageValidation = validateSpellDamageFill(
+    input.fillSet.damageRoll,
+    input.invocation,
+    critical,
+  );
+  if (damageValidation !== null) {
+    return invalidResult(input.input.state, "invalidFill", damageValidation);
+  }
+  if (
+    input.fillSet.concentrationSavingThrows.length > 0 ||
+    input.fillSet.damageDispositions.length > 0 ||
+    input.fillSet.spellDamageReductionRolls.length > 0
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Object-target spell damage does not use combatant damage, Concentration, or spell-reduction fills.",
+    );
+  }
+
+  const spentResources = spendSpellCastResources({
+    state: attackRolledState,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
+  if (spentResources.tag !== "resolved") {
+    return spentResources;
+  }
+  const objectDamage = spellObjectDamageOutcome({
+    objectId: input.fillSet.objectTarget.objectId,
+    invocation: input.invocation,
+    damageRoll: input.fillSet.damageRoll,
+    critical,
+    disposition: objectFact.damageDisposition,
+  });
+
+  return {
+    tag: "resolved",
+    state: spentResources.state,
+    snapshot: snapshotBattle(spentResources.state),
+    objectDamage,
   };
 }
 
