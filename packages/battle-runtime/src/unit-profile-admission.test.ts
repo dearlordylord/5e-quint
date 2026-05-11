@@ -18,6 +18,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31A divine_favor
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31C divine_smite
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31D ensnaring_strike
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31E searing_smite
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31B hunters_mark
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV32B produce_flame
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield
@@ -37,7 +38,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT59 monk_deflect_attacks
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT62 fighter_tactical_mind
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT65 bard_cutting_words
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-condition-save spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-condition-save spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.scalar-buff
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -163,6 +164,7 @@ const chromaticOrbUnitId = "chromatic_orb";
 const colorSprayUnitId = "color_spray";
 const entangleUnitId = "entangle";
 const ensnaringStrikeUnitId = "ensnaring_strike";
+const searingSmiteUnitId = "searing_smite";
 const iceKnifeUnitId = "ice_knife";
 const sleepUnitId = "sleep";
 const monkDeflectAttacksUnitId = "monk_deflect_attacks";
@@ -4790,7 +4792,7 @@ describe("SRDINV31A deterministic weapon damage rider Spell Unit admission", () 
   });
 });
 
-describe("SRDINV31C deterministic after-hit damage Spell Unit admission", () => {
+describe("SRDINV31 deterministic after-hit Spell Unit admission", () => {
   test("divine_smite is not offered as an ordinary Spell act", () => {
     const spell = spellRecord(divineSmiteUnitId);
     const state = spellBattle({
@@ -5123,9 +5125,10 @@ describe("SRDINV31C deterministic after-hit damage Spell Unit admission", () => 
       "rolledDice",
     );
     expect(turnStartDamage).toMatchObject({
-      spellConditionTurnStartDamage: {
+      spellTurnStartDamage: {
         sourceSpellId: ensnaringStrikeUnitId,
         targetId: spellTargetId,
+        trigger: { kind: "condition", condition: "restrained" },
         damage: { expr: { dice: 1, dieSize: 6 }, damageType: "piercing" },
       },
     });
@@ -5231,6 +5234,234 @@ describe("SRDINV31C deterministic after-hit damage Spell Unit admission", () => 
     expect(
       requireCombatant(helperEscaped.state, spellCasterId).concentration,
     ).toBeNull();
+  });
+
+  test("searing_smite adds Fire damage after a melee hit, burns at turn start, and a Constitution save ends it", () => {
+    const spell = spellRecord(searingSmiteUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+      attack: zeroAbilityWeaponAttack("weapon_longsword"),
+      targetHp: 30,
+      targetMaxHp: 30,
+    });
+    const subject = weaponAttackSubject("Longsword");
+    const target = requireResultHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const targetFill = attackTargetFill(
+      target,
+      spellCasterId,
+      spellTargetId,
+      "Longsword",
+    );
+    const roll = requireResultHole(
+      resolveBattleSubject({ state, subject, fills: [targetFill] }),
+      "attackRoll",
+    );
+    const rollFill = attackRollFill(roll, { total: 15, naturalD20: 10 });
+    const awaitingReaction = resolveBattleSubject({
+      state,
+      subject,
+      fills: [targetFill, rollFill],
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected Searing Smite attack-hit window.");
+    }
+    const choice = awaitingReaction.snapshot.pendingReaction?.choices.find(
+      (candidate) =>
+        candidate.kind === "castAttackHitBonusActionSpell" &&
+        candidate.invocation.spellId === searingSmiteUnitId,
+    );
+    if (
+      choice === undefined ||
+      choice.kind !== "castAttackHitBonusActionSpell"
+    ) {
+      throw new Error("Expected Searing Smite after-hit choice.");
+    }
+    expect(choice.invocation).toEqual(
+      spellSlotInvocationRef(
+        searingSmiteUnitId,
+        3,
+        "afterHitTimedDamageAndSave",
+      ),
+    );
+
+    const afterSearing = resolveBattleReaction({
+      state: awaitingReaction.state,
+      fill: reactionDecisionFill(
+        requireHole(awaitingReaction.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId: spellCasterId,
+          choice: {
+            kind: "castAttackHitBonusActionSpell",
+            invocation: choice.invocation,
+            fills: [],
+          },
+        },
+      ),
+    });
+    if (afterSearing.tag !== "needsHoles") {
+      throw new Error("Expected Searing Smite replay to need attack damage.");
+    }
+    const damage = requireHole(afterSearing.holes, "rolledDice");
+    expect(damage).toEqual(
+      expect.objectContaining({
+        spellWeaponDamageRiders: [
+          expect.objectContaining({
+            sourceSpellId: searingSmiteUnitId,
+            damage: {
+              expr: { dice: 3, dieSize: 6 },
+              damageType: "fire",
+            },
+          }),
+        ],
+      }),
+    );
+    const afterWeaponDamage = resolveBattleSubject({
+      state: afterSearing.state,
+      subject,
+      fills: [
+        targetFill,
+        rollFill,
+        damageRollFillWithGroups(damage, [[4], [1, 2, 3]]),
+      ],
+    });
+    if (afterWeaponDamage.tag !== "resolved") {
+      throw new Error("Expected Searing Smite host attack to resolve.");
+    }
+    expect(requireCombatant(afterWeaponDamage.state, spellTargetId).hp).toBe(
+      Hp(20),
+    );
+
+    const awaitingTurnStart = endTurn({
+      state: afterWeaponDamage.state,
+      actorId: spellCasterId,
+    });
+    const turnStartDamage = requireResultHole(awaitingTurnStart, "rolledDice");
+    expect(turnStartDamage).toMatchObject({
+      spellTurnStartDamage: {
+        sourceSpellId: searingSmiteUnitId,
+        targetId: spellTargetId,
+        trigger: {
+          kind: "saveToEnd",
+          ability: "con",
+          dc: { kind: "caster_spell_save_dc" },
+        },
+        damage: { expr: { dice: 3, dieSize: 6 }, damageType: "fire" },
+      },
+    });
+    const turnStartSave = requireResultHole(
+      awaitingTurnStart,
+      "savingThrowOutcome",
+    );
+    expect(turnStartSave).toMatchObject({
+      spellTurnStartSave: {
+        sourceSpellId: searingSmiteUnitId,
+        targetId: spellTargetId,
+        save: { ability: "con", dc: { kind: "caster_spell_save_dc" } },
+      },
+    });
+
+    const targetTurn = endTurn({
+      state: afterWeaponDamage.state,
+      actorId: spellCasterId,
+      fills: [
+        damageRollFillWithGroups(turnStartDamage, [[2, 3, 4]]),
+        savingThrowOutcomeFill(turnStartSave, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+      ],
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected Searing Smite turn-start damage to resolve.");
+    }
+    expect(requireCombatant(targetTurn.state, spellTargetId).hp).toBe(Hp(11));
+    expect(
+      requireCombatant(targetTurn.state, spellTargetId).activeEffects.some(
+        (effect) =>
+          effect.kind === "spellTurnStartDamageAndSave" &&
+          effect.sourceSpellId === searingSmiteUnitId,
+      ),
+    ).toBe(false);
+
+    const burnedTarget = requireCombatant(
+      afterWeaponDamage.state,
+      spellTargetId,
+    );
+    const oneRoundBurning = {
+      ...afterWeaponDamage.state,
+      combatants: new Map(afterWeaponDamage.state.combatants).set(
+        spellTargetId,
+        {
+          ...burnedTarget,
+          activeEffects: burnedTarget.activeEffects.map((effect) =>
+            effect.kind === "spellTurnStartDamageAndSave" &&
+            effect.sourceSpellId === searingSmiteUnitId
+              ? {
+                  ...effect,
+                  expiresAt: {
+                    kind: "duration" as const,
+                    durationTicks: elapsedTimeTicks(1),
+                  },
+                }
+              : effect,
+          ),
+        },
+      ),
+    };
+    const expiringTurnStart = endTurn({
+      state: oneRoundBurning,
+      actorId: spellCasterId,
+    });
+    const expiringDamage = requireResultHole(
+      expiringTurnStart,
+      "rolledDice",
+    );
+    const expiringSave = requireResultHole(
+      expiringTurnStart,
+      "savingThrowOutcome",
+    );
+    const failedSaveTargetTurn = endTurn({
+      state: oneRoundBurning,
+      actorId: spellCasterId,
+      fills: [
+        damageRollFillWithGroups(expiringDamage, [[1, 1, 1]]),
+        savingThrowOutcomeFill(expiringSave, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    if (failedSaveTargetTurn.tag !== "resolved") {
+      throw new Error("Expected Searing Smite failed save to resolve.");
+    }
+    expect(
+      requireCombatant(
+        failedSaveTargetTurn.state,
+        spellTargetId,
+      ).activeEffects.some(
+        (effect) =>
+          effect.kind === "spellTurnStartDamageAndSave" &&
+          effect.sourceSpellId === searingSmiteUnitId,
+      ),
+    ).toBe(true);
+
+    const durationExpired = endTurn({
+      state: failedSaveTargetTurn.state,
+      actorId: spellTargetId,
+    });
+    if (durationExpired.tag !== "resolved") {
+      throw new Error("Expected Searing Smite duration tick to resolve.");
+    }
+    expect(
+      requireCombatant(durationExpired.state, spellTargetId).activeEffects.some(
+        (effect) =>
+          effect.kind === "spellTurnStartDamageAndSave" &&
+          effect.sourceSpellId === searingSmiteUnitId,
+      ),
+    ).toBe(false);
   });
 
   test("divine_smite is admitted after a melee weapon hit and adds Radiant damage without replaying the base attack", () => {

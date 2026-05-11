@@ -29,6 +29,7 @@ import {
   type BattleCreatureState,
   type BattleD20RollModifierDelta,
   type BattleD20RollModifierKind,
+  type AfterHitTimedDamageAndSaveSpellInvocation,
   type ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation,
   type CreatureTypeProtectionSpellInvocation,
   type DamageReductionSpellInvocation,
@@ -522,6 +523,147 @@ export function supportedPreparedAfterHitSaveGatedConditionSpellProfile(
       },
     ];
   });
+}
+
+export function supportedPreparedAfterHitTimedDamageAndSaveSpellProfile(
+  actorId: CombatantId,
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  const projection = afterHitTimedDamageAndSaveSpellProjection(actorId, spell);
+  if (projection === null) {
+    return [];
+  }
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    const immediateDamageExpr = supportedDamageAmountExpr({
+      amount: projection.immediateDamageAmount,
+      spellLevel: spell.mechanics.level,
+      slotLevel: slot.spellLevel,
+    });
+    const turnStartDamageExpr = supportedDamageAmountExpr({
+      amount: projection.turnStartDamageAmount,
+      spellLevel: spell.mechanics.level,
+      slotLevel: slot.spellLevel,
+    });
+    if (immediateDamageExpr === null || turnStartDamageExpr === null) {
+      return [];
+    }
+    return [
+      {
+        access: { tag: "prepared" },
+        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        procedure: "afterHitTimedDamageAndSave",
+        spell,
+        actionCost: "bonusAction",
+        immediateDamage: {
+          expr: immediateDamageExpr,
+          damageType: projection.damageType,
+        },
+        activeEffect: {
+          kind: "spellTurnStartDamageAndSave",
+          sourceSpellId: spell.id,
+          sourceCombatantId: actorId,
+          damage: {
+            expr: turnStartDamageExpr,
+            damageType: projection.damageType,
+          },
+          save: {
+            ability: projection.saveAbility,
+            dc: projection.dc,
+            successEnds: "spell",
+          },
+          expiresAt: projection.expiresAt,
+        },
+      },
+    ];
+  });
+}
+
+export function afterHitTimedDamageAndSaveSpellProjection(
+  actorId: CombatantId,
+  spell: SpellRecord,
+): {
+  readonly immediateDamageAmount: SurfaceDiceAmount;
+  readonly turnStartDamageAmount: SurfaceDiceAmount;
+  readonly damageType: Extract<DamageType, "fire">;
+  readonly saveAbility: "con";
+  readonly dc: { readonly kind: "caster_spell_save_dc" };
+  readonly expiresAt: AfterHitTimedDamageAndSaveSpellInvocation["activeEffect"]["expiresAt"];
+} | null {
+  if (
+    spell.name !== "Searing Smite" ||
+    spell.provenance.kind !== "srd-5.2.1" ||
+    spell.provenance.section !== "Spells/Descriptions-S-Z#Searing Smite" ||
+    spell.mechanics.family !== "ongoing_effect" ||
+    spell.mechanics.level !== 1 ||
+    spell.mechanics.castingTime.kind !== "bonus_action" ||
+    spell.mechanics.castingTime.trigger?.kind !== "after_hit_with" ||
+    spell.mechanics.castingTime.trigger.attack !==
+      "melee_weapon_or_unarmed_strike" ||
+    spell.mechanics.range.kind !== "self" ||
+    spell.mechanics.duration.kind !== "timed" ||
+    spell.mechanics.duration.value.unit !== "minute" ||
+    spell.mechanics.duration.value.amount !== 1 ||
+    spell.mechanics.attachment.kind !== "hole" ||
+    spell.mechanics.attachment.value.kind !== "target" ||
+    spell.mechanics.attachment.value.selection.mode !== "one" ||
+    spell.mechanics.operations.length !== 1
+  ) {
+    return null;
+  }
+  const initialPhase = spell.mechanics.initialPhase;
+  const immediateDamage =
+    initialPhase?.kind === "direct" ? initialPhase.effects?.[0] : undefined;
+  const operation = spell.mechanics.operations[0];
+  const composite =
+    operation?.trigger.kind === "on_attached_turn_start" &&
+    operation.effect.kind === "composite_ongoing"
+      ? operation.effect
+      : null;
+  const turnStartDamage = composite?.effects.find(
+    (effect) => effect.kind === "damage",
+  );
+  const saveGate = composite?.effects.find(
+    (effect) => effect.kind === "save_gate",
+  );
+  const expiresAt = scalarBuffActiveEffectExpiration(
+    actorId,
+    spell.mechanics.duration,
+  );
+  if (
+    initialPhase?.kind !== "direct" ||
+    initialPhase.attachment.kind !== "hole" ||
+    initialPhase.attachment.value.kind !== "target" ||
+    initialPhase.attachment.value.selection.mode !== "one" ||
+    initialPhase.effects?.length !== 1 ||
+    immediateDamage?.kind !== "damage" ||
+    immediateDamage.damageType !== "fire" ||
+    immediateDamage.amount === undefined ||
+    composite === null ||
+    composite.effects.length !== 2 ||
+    turnStartDamage?.kind !== "damage" ||
+    turnStartDamage.damageType !== "fire" ||
+    turnStartDamage.amount === undefined ||
+    saveGate?.kind !== "save_gate" ||
+    saveGate.ability !== "con" ||
+    saveGate.dc.kind !== "caster_spell_save_dc" ||
+    saveGate.onFail.kind !== "none" ||
+    saveGate.onSuccess.kind !== "end_current_effect" ||
+    expiresAt === null
+  ) {
+    return null;
+  }
+  return {
+    immediateDamageAmount: immediateDamage.amount,
+    turnStartDamageAmount: turnStartDamage.amount,
+    damageType: "fire",
+    saveAbility: "con",
+    dc: { kind: "caster_spell_save_dc" },
+    expiresAt,
+  };
 }
 
 export function afterHitSaveGatedConditionSpellProjection(spell: SpellRecord): {

@@ -52,7 +52,7 @@ flowchart TD
   AttackOption["supported Attack action option<br/>source: character selected weapon or StatBlockRecord named attack<br/>why: attack bonus, damage, reach, normal/long range, and attack identity derive from authored inputs"]
   MonsterControl["monster control resources<br/>success: spend X/Day or Recharge; discover Legendary Actions after another turn; refresh Legendary Actions and recharge rolls at start turn; pending Multiattack dispatches expose matching dispatch attacks, Movement, and End Turn<br/>why: reusable Stat Block limited-use protocol"]
   UnitFeature["Unit feature activation/passive support<br/>source: retained Unit + runtime use-count, turn-resource, or support-profile state<br/>success: Action Surge grants one non-Magic action; Second Wind spends Bonus Action and heals; Defense admits a passive Armor Class bonus profile; Savage Attacker chooses weapon damage dice"]
-  SpellAct["spell act<br/>source: retained Spell Records + runtime Spell Slot/effect state<br/>success: action-time spells consume Magic action; Magic Missile allocates darts and spends the selected slot; direct healing spells restore selected targets, including Mass Cure Wounds point-origin Sphere choices; Shield spends Reaction + slot from trigger windows; Ray of Frost records Speed effect; Shocking Grasp denies Opportunity Attacks; Guiding Bolt, Ray of Sickness, and Vicious Mockery record source-owned timed attack-roll/condition riders; Animal Friendship, Ensnaring Strike, and Protection from Evil and Good record source-owned condition/protection effects; Poison Spray, damage-only Chill Touch, Sacred Flame, Acid Splash, and Inflict Wounds apply admitted spell damage"]
+  SpellAct["spell act<br/>source: retained Spell Records + runtime Spell Slot/effect state<br/>success: action-time spells consume Magic action; Magic Missile allocates darts and spends the selected slot; direct healing spells restore selected targets, including Mass Cure Wounds point-origin Sphere choices; Shield spends Reaction + slot from trigger windows; Ray of Frost records Speed effect; Shocking Grasp denies Opportunity Attacks; Guiding Bolt, Ray of Sickness, and Vicious Mockery record source-owned timed attack-roll/condition riders; Animal Friendship, Ensnaring Strike, and Protection from Evil and Good record source-owned condition/protection effects; Searing Smite records source-owned timed burn damage plus Constitution save-to-end; Poison Spray, damage-only Chill Touch, Sacred Flame, Acid Splash, and Inflict Wounds apply admitted spell damage"]
   AttackReplay["Attack replay<br/>subject carries attack name; needs target -> attack roll -> damage on hit<br/>success: miss spends action, hit applies damage then spends action<br/>why: staged holes match the SRD attack sequence without a second attack IR"]
   Damage["apply HP damage<br/>success: temp HP absorbed first, HP clamped at 0, zero-HP lifecycle or melee Knock Out applied<br/>why: one HP mutation boundary"]
   Hidden["Hidden state<br/>source: Hide/Search procedure<br/>data: discovery DC<br/>why: battle-owned execution fact for Invisible projection, Search, and reveal triggers"]
@@ -234,7 +234,11 @@ flowchart TD
   attack continuation. Ensnaring Strike is admitted from an already-hit weapon
   attack window, gates Restrained behind the target Strength save, records
   spell-owned turn-start Piercing damage, and uses the shared spell-restraint
-  escape action for the target or a table-positioned helper. Off-Hand Attack
+  escape action for the target or a table-positioned helper. Searing Smite is
+  admitted from an already-hit melee weapon or Unarmed Strike window, threads
+  immediate Fire damage through the interrupted attack continuation, records
+  timed turn-start Fire damage, and ends that spell effect on the target's
+  successful Constitution save. Off-Hand Attack
   uses the shared attack host Reaction windows before the Bonus Action resource
   is committed for damage replay. Broader generic Bonus Action subjects remain
   future width.

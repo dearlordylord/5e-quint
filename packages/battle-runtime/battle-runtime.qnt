@@ -1,8 +1,9 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-timed-damage-save
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-chained-attack-damage
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-damage spell.invocation-weapon-damage-rider
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-marked-damage-rider
@@ -198,7 +199,7 @@ module battleRuntime {
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | FaerieFire | AnimalFriendship | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack
   type ChainedSpellAttackDamageInvocation =
     | ChromaticOrbChainedSpellAttack
@@ -220,7 +221,7 @@ module battleRuntime {
   type RollModifierSpell = BaneRollModifier | BlessRollModifier | GuidanceRollModifier
   type SpellActionCost = SpellMagicAction | SpellBonusAction
 
-  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | FaerieFireAttackRollAdvantage | AnimalFriendshipCharmed({ durationTicks: int }) | ProtectionFromEvilAndGoodAttackDisadvantage | ProduceFlameHeldLight({ durationTicks: int })
+  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireAttackRollAdvantage | AnimalFriendshipCharmed({ durationTicks: int }) | ProtectionFromEvilAndGoodAttackDisadvantage | ProduceFlameHeldLight({ durationTicks: int })
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
   type RuntimeCreatureType = HumanoidCreature | BeastCreature | AberrationCreature | CelestialCreature | ElementalCreature | FeyCreature | FiendCreature | UndeadCreature
 
@@ -699,6 +700,7 @@ module battleRuntime {
       .map(effect => match effect {
         | DivineFavorWeaponDamageRider(data) => DivineFavorWeaponDamageRider({ durationTicks: data.durationTicks - 1 })
         | HuntersMarkDamageRider(data) => HuntersMarkDamageRider(data)
+        | SearingSmiteBurning(data) => SearingSmiteBurning({ damageDice: data.damageDice, durationTicks: data.durationTicks - 1 })
         | AnimalFriendshipCharmed(data) => AnimalFriendshipCharmed({ durationTicks: data.durationTicks - 1 })
         | ProduceFlameHeldLight(data) => ProduceFlameHeldLight({ durationTicks: data.durationTicks - 1 })
         | _ => effect
@@ -706,6 +708,7 @@ module battleRuntime {
       .filter(effect => match effect {
         | DivineFavorWeaponDamageRider(data) => data.durationTicks > 0
         | HuntersMarkDamageRider(_) => true
+        | SearingSmiteBurning(data) => data.durationTicks > 0
         | AnimalFriendshipCharmed(data) => data.durationTicks > 0
         | ProduceFlameHeldLight(data) => data.durationTicks > 0
         | _ => true
@@ -789,6 +792,7 @@ module battleRuntime {
         | ColorSprayBlinded => false
         | EntangleRestrained => false
         | EnsnaringStrikeRestrained(_) => false
+        | SearingSmiteBurning(_) => false
         | FaerieFireAttackRollAdvantage => false
         | AnimalFriendshipCharmed(_) => false
         | ProtectionFromEvilAndGoodAttackDisadvantage => false
@@ -1577,6 +1581,7 @@ module battleRuntime {
       .filter(effect => match effect {
         | HeroismTurnStartTemporaryHitPoints(_) => false
         | EnsnaringStrikeRestrained(_) => false
+        | SearingSmiteBurning(_) => false
         | ResistanceDamageReduction(_) => false
         | _ => true
       })
@@ -2199,6 +2204,86 @@ module battleRuntime {
       advanced
   }
 
+  pure def searingSmiteDamageDiceForSlot(slotLevel: int): int =
+    if (slotLevel < 1) 0 else slotLevel
+
+  pure def searingSmiteDurationTicks: int = 10
+
+  pure def activeEffectsWithoutSearingSmite(effects: Set[ActiveEffect]): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | SearingSmiteBurning(_) => false
+      | _ => true
+    })
+
+  pure def activeEffectsContainSearingSmite(effects: Set[ActiveEffect]): bool =
+    effects.exists(effect => match effect {
+      | SearingSmiteBurning(_) => true
+      | _ => false
+    })
+
+  pure def searingSmiteDamageDice(effects: Set[ActiveEffect]): int =
+    effects
+      .map(effect => match effect {
+        | SearingSmiteBurning(data) => data.damageDice
+        | _ => 0
+      })
+      .fold(0, (highest, dice) => if (highest > dice) highest else dice)
+
+  pure def resolveSearingSmiteAfterMeleeHit(
+    state: BattleState,
+    slotLevel: int,
+    smiteDamageRoll: int,
+    attackCritical: bool,
+    concentrationSaveSucceeded: bool,
+  ): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      slotLevel >= 1 and
+      state.bonusActionAvailable and
+      canExpendSpellSlotThisTurn(state) and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state))
+    )
+      {
+        ...state,
+        goblin: {
+          ...applyDamage(state.goblin, smiteDamageRoll * (if (attackCritical) 2 else 1), 1, concentrationSaveSucceeded),
+          activeEffects: activeEffectsWithoutSearingSmite(state.goblin.activeEffects)
+            .union(Set(SearingSmiteBurning({
+              damageDice: searingSmiteDamageDiceForSlot(slotLevel),
+              durationTicks: searingSmiteDurationTicks,
+            }))),
+        },
+        bonusActionAvailable: false,
+        spellSlotExpendedThisTurn: true,
+      }
+    else
+      state
+
+  pure def endTurnWithSearingSmiteDamageAndSave(
+    state: BattleState,
+    damageRoll: int,
+    saveSucceeded: bool,
+    concentrationSaveSucceeded: bool,
+  ): BattleState = {
+    val advanced = endTurn(state)
+    val damageDice = searingSmiteDamageDice(advanced.goblin.activeEffects)
+    if (currentActor(advanced) == Goblin and damageDice > 0)
+      {
+        val damagedGoblin = applyDamage(advanced.goblin, damageRoll, 1, concentrationSaveSucceeded)
+        {
+          ...advanced,
+          goblin: if (saveSucceeded)
+            { ...damagedGoblin, activeEffects: activeEffectsWithoutSearingSmite(damagedGoblin.activeEffects) }
+          else
+            damagedGoblin,
+        }
+      }
+    else
+      advanced
+  }
+
   pure def escapeEnsnaringStrike(
     state: BattleState,
     checkSucceeded: bool,
@@ -2665,6 +2750,7 @@ module battleRuntime {
       | ColorSpray => true
       | Entangle => true
       | EnsnaringStrike => true
+      | SearingSmite => true
       | FaerieFire => true
       | AnimalFriendship => true
       | ProtectionFromEvilAndGood => true
@@ -5048,6 +5134,39 @@ module battleRuntime {
       assert(ensnaringStrikeTargetHasSaveAdvantage(Large)),
       assert(not(ensnaringStrikeTargetHasSaveAdvantage(Medium))),
       assert(ensnaringStrikeDamageDiceForSlot(3) == 3),
+    }
+  }
+
+  run test_searing_smite_after_hit_burns_and_constitution_save_ends = {
+    val seared = resolveSearingSmiteAfterMeleeHit(initialState, 3, 6, false, true)
+    val stillBurning = endTurnWithSearingSmiteDamageAndSave(seared, 9, false, true)
+    val ended = endTurnWithSearingSmiteDamageAndSave(seared, 9, true, true)
+    all {
+      assert(seared.goblin.hp == initialState.goblin.hp - 6),
+      assert(seared.goblin.activeEffects.contains(SearingSmiteBurning({ damageDice: 3, durationTicks: searingSmiteDurationTicks }))),
+      assert(not(seared.bonusActionAvailable)),
+      assert(seared.spellSlotExpendedThisTurn),
+      assert(stillBurning.goblin.hp == 0),
+      assert(activeEffectsContainSearingSmite(stillBurning.goblin.activeEffects)),
+      assert(ended.goblin.hp == 0),
+      assert(not(activeEffectsContainSearingSmite(ended.goblin.activeEffects))),
+      assert(searingSmiteDamageDiceForSlot(3) == 3),
+    }
+  }
+
+  run test_searing_smite_burn_expires_after_duration_tick = {
+    val burning = {
+      ...initialState,
+      goblin: {
+        ...initialState.goblin,
+        activeEffects: Set(SearingSmiteBurning({ damageDice: 1, durationTicks: 1 })),
+      },
+    }
+    val stillSameRound = endTurn(burning)
+    val nextRound = endTurn(stillSameRound)
+    all {
+      assert(activeEffectsContainSearingSmite(stillSameRound.goblin.activeEffects)),
+      assert(not(activeEffectsContainSearingSmite(nextRound.goblin.activeEffects))),
     }
   }
 

@@ -53,6 +53,7 @@ import {
   supportedPreparedConditionImmunityAndTurnStartTemporaryHitPointsSpellProfile,
   supportedPreparedAfterHitDamageSpellProfile,
   supportedPreparedAfterHitSaveGatedConditionSpellProfile,
+  supportedPreparedAfterHitTimedDamageAndSaveSpellProfile,
   supportedPreparedCreatureTypeProtectionSpellProfile,
   supportedPreparedHealingSpellProfile,
   supportedPreparedMarkedDamageRiderSpellProfile,
@@ -189,6 +190,13 @@ export function supportedSpellActs(
     ),
     ...spellcasting.preparedSpells.flatMap((spell) =>
       supportedPreparedAfterHitSaveGatedConditionSpellProfile(
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...spellcasting.preparedSpells.flatMap((spell) =>
+      supportedPreparedAfterHitTimedDamageAndSaveSpellProfile(
+        actor.combatantId,
         spell,
         spellcasting.spellSlots,
       ),

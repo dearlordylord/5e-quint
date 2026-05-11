@@ -79,6 +79,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "weaponDamageRider",
   "afterHitDamage",
   "afterHitSaveGatedCondition",
+  "afterHitTimedDamageAndSave",
   "markedDamageRider",
   "persistentArmorEffect",
   "shieldReaction",

@@ -231,6 +231,7 @@ export function resolveSpellAct(
         "conditionImmunityAndTurnStartTemporaryHitPoints" ||
       invocation.procedure === "afterHitDamage" ||
       invocation.procedure === "afterHitSaveGatedCondition" ||
+      invocation.procedure === "afterHitTimedDamageAndSave" ||
       invocation.procedure === "saveGatedCondition" ||
       invocation.procedure === "saveGatedAttackRollAdvantage")
   ) {

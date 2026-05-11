@@ -714,6 +714,18 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("afterHitTimedDamageAndSave"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      immediateDamage: Schema.Struct({
+        expr: BattleRuntimeObjectSchema,
+        damageType: DamageTypeSchema,
+      }),
+      activeEffect: BattleRuntimeObjectSchema,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("markedDamageRider"),
       action: Schema.Literal("cast"),
       spell: BattleRuntimeObjectSchema,
@@ -892,7 +904,7 @@ export const BattleHoleSchema = Schema.Union(
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("rolledDice"),
-    spellConditionTurnStartDamage: BattleRuntimeObjectSchema,
+    spellTurnStartDamage: BattleRuntimeObjectSchema,
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -905,6 +917,21 @@ export const BattleHoleSchema = Schema.Union(
     label: Schema.String,
     spell: SupportedSpellInvocationSchema,
     choices: Schema.Array(Schema.Literal(...BATTLE_SURFACE_SKILLS)),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("savingThrowOutcome"),
+    label: Schema.String,
+    spellTurnStartSave: BattleRuntimeObjectSchema,
+    ability: AbilitySchema,
+    dc: DcSourceSchema,
+    areaChoices: Schema.Array(BattleRuntimeObjectSchema),
+    targetRollModes: Schema.Array(
+      Schema.Struct({
+        targetId: CombatantId,
+        rollMode: Schema.Literal(...ATTACK_ROLL_MODES),
+      }),
+    ),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,

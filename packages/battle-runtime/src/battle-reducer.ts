@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 import type {
   ActionEconomyState,
   RuntimeActionResource,
@@ -432,9 +432,14 @@ export type SpellConditionEscape =
   | {
       readonly kind: "targetDamagedByCasterOrAlly";
     };
-export type SpellConditionTurnStartDamage = {
+export type SpellTurnStartDamage = {
   readonly expr: DiceExpr;
   readonly damageType: DamageType;
+};
+export type SpellTurnStartDamageSave = {
+  readonly ability: Ability;
+  readonly dc: DcSource;
+  readonly successEnds: "spell";
 };
 export type BattleActiveEffect =
   | (BattleSpellEffectBase & {
@@ -460,7 +465,13 @@ export type BattleActiveEffect =
       readonly condition: Condition;
       readonly conditionHadNonSpellSource: boolean;
       readonly escape: SpellConditionEscape | null;
-      readonly turnStartDamage: SpellConditionTurnStartDamage | null;
+      readonly turnStartDamage: SpellTurnStartDamage | null;
+      readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "spellTurnStartDamageAndSave";
+      readonly damage: SpellTurnStartDamage;
+      readonly save: SpellTurnStartDamageSave;
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {
@@ -1133,7 +1144,7 @@ export type SpellFailedSaveConditionEffect = {
         readonly durationTicks: ElapsedTimeTicks;
       };
   readonly escape: SpellConditionEscape | null;
-  readonly turnStartDamage: SpellConditionTurnStartDamage | null;
+  readonly turnStartDamage: SpellTurnStartDamage | null;
 };
 export type SpellFailedSaveAttackRollEffect = Extract<
   BattleActiveEffect,
@@ -1298,6 +1309,21 @@ export type AfterHitSaveGatedConditionSpellInvocation = {
     { readonly kind: "singleCombatant" }
   >;
   readonly effect: SpellFailedSaveConditionEffect;
+};
+export type AfterHitTimedDamageAndSaveSpellInvocation = {
+  readonly access: PreparedSpellAccess;
+  readonly resource: SpellSlotInvocationResource;
+  readonly procedure: "afterHitTimedDamageAndSave";
+  readonly spell: SpellRecord;
+  readonly actionCost: "bonusAction";
+  readonly immediateDamage: {
+    readonly expr: DiceExpr;
+    readonly damageType: DamageType;
+  };
+  readonly activeEffect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "spellTurnStartDamageAndSave" }
+  >;
 };
 export type MarkedDamageRiderSpellInvocation =
   | {
@@ -1496,6 +1522,7 @@ export type SupportedSpellInvocation =
   | WeaponDamageRiderSpellInvocation
   | AfterHitDamageSpellInvocation
   | AfterHitSaveGatedConditionSpellInvocation
+  | AfterHitTimedDamageAndSaveSpellInvocation
   | MarkedDamageRiderSpellInvocation
   | {
       readonly access: PreparedSpellAccess;
@@ -1559,6 +1586,7 @@ export type SupportedDamageSpellInvocation = Exclude<
       | "weaponDamageRider"
       | "afterHitDamage"
       | "afterHitSaveGatedCondition"
+      | "afterHitTimedDamageAndSave"
       | "markedDamageRider"
       | "heldLight"
       | "shieldReaction"
@@ -2055,17 +2083,39 @@ export type BattleSpellDamageReductionRollHole = Extract<
 > & {
   readonly spellDamageReduction: SpellDamageReductionRoll;
 };
-export type BattleSpellConditionTurnStartDamageRollHole = Extract<
+export type BattleSpellTurnStartDamageRollHole = Extract<
   RuntimeHole,
   { readonly kind: "rolledDice" }
 > & {
-  readonly spellConditionTurnStartDamage: {
+  readonly spellTurnStartDamage: {
     readonly targetId: CombatantId;
     readonly sourceSpellId: SpellRecord["id"];
     readonly sourceCombatantId: CombatantId;
-    readonly condition: Condition;
-    readonly damage: SpellConditionTurnStartDamage;
+    readonly trigger:
+      | { readonly kind: "condition"; readonly condition: Condition }
+      | {
+          readonly kind: "saveToEnd";
+          readonly ability: Ability;
+          readonly dc: DcSource;
+        };
+    readonly damage: SpellTurnStartDamage;
   };
+};
+export type BattleSpellTurnStartSavingThrowOutcomeHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "savingThrowOutcome";
+  readonly label: string;
+  readonly spellTurnStartSave: {
+    readonly targetId: CombatantId;
+    readonly sourceSpellId: SpellRecord["id"];
+    readonly sourceCombatantId: CombatantId;
+    readonly save: SpellTurnStartDamageSave;
+  };
+  readonly ability: Ability;
+  readonly dc: DcSource;
+  readonly areaChoices: readonly [];
+  readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
 };
 export type BattleSpellHealingRollHole = Extract<
   RuntimeHole,
@@ -2255,10 +2305,11 @@ export type BattleHole =
   | BattleDamageRollHole
   | BattleSpellDamageRollHole
   | BattleSpellDamageReductionRollHole
-  | BattleSpellConditionTurnStartDamageRollHole
+  | BattleSpellTurnStartDamageRollHole
   | BattleSpellHealingRollHole
   | BattleSpellSkillChoiceHole
   | BattleSpellSavingThrowOutcomeHole
+  | BattleSpellTurnStartSavingThrowOutcomeHole
   | BattleUnitFeatureSavingThrowOutcomeHole
   | BattleUnitFeatureRollHole
   | BattleDeathSavingThrowHole

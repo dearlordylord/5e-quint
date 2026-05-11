@@ -232,7 +232,8 @@ export function discoverSupportedSpellInvocations(
       }
       if (
         invocation.procedure === "afterHitDamage" ||
-        invocation.procedure === "afterHitSaveGatedCondition"
+        invocation.procedure === "afterHitSaveGatedCondition" ||
+        invocation.procedure === "afterHitTimedDamageAndSave"
       ) {
         return [];
       }
@@ -412,6 +413,9 @@ export function spellInvocationCastSummary(
   if (invocation.procedure === "afterHitSaveGatedCondition") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot after a qualifying hit.`;
   }
+  if (invocation.procedure === "afterHitTimedDamageAndSave") {
+    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot after a qualifying hit.`;
+  }
   if (invocation.procedure === "markedDamageRider") {
     return invocation.action === "transfer"
       ? `Move ${invocation.spell.name} to a new target.`
@@ -473,7 +477,10 @@ export function spellSubjectTagForInvocation(
   if (invocation.procedure === "weaponDamageRider") {
     return "bonusActionSpell";
   }
-  if (invocation.procedure === "afterHitDamage") {
+  if (
+    invocation.procedure === "afterHitDamage" ||
+    invocation.procedure === "afterHitTimedDamageAndSave"
+  ) {
     return "bonusActionSpell";
   }
   if (invocation.procedure === "markedDamageRider") {
@@ -525,6 +532,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "weaponDamageRider" &&
     invocation.procedure !== "afterHitDamage" &&
     invocation.procedure !== "afterHitSaveGatedCondition" &&
+    invocation.procedure !== "afterHitTimedDamageAndSave" &&
     invocation.procedure !== "markedDamageRider" &&
     invocation.procedure !== "saveGatedCondition" &&
     invocation.procedure !== "saveGatedAttackRollAdvantage" &&
@@ -544,6 +552,9 @@ export function readiedSpellAct(
     invocation.procedure === "scalarBuff" ||
     invocation.procedure === "weaponDamageRider" ||
     invocation.procedure === "markedDamageRider" ||
+    invocation.procedure === "afterHitDamage" ||
+    invocation.procedure === "afterHitSaveGatedCondition" ||
+    invocation.procedure === "afterHitTimedDamageAndSave" ||
     invocation.procedure === "heldLight" ||
     invocation.procedure === "heldLightHurl" ||
     invocation.procedure === "rollModifier" ||
