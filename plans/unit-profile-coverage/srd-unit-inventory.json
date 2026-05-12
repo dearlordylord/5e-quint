@@ -154,6 +154,18 @@
     "totalRows": 367,
     "levelOneRows": 156,
     "spellPressureRows": 211,
+    "levelOneBattleReadiness": {
+      "denominator": 367,
+      "numerator": 276,
+      "percent": "75.2%",
+      "rowsByStatus": {
+        "accepted": 207,
+        "accepted-no-battle-effect": 69,
+        "battle-runtime-required": 38,
+        "partial-battle-runtime": 38,
+        "surface-widening-required": 15
+      }
+    },
     "levelOneClassContainers": 12,
     "levelOneRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 144,
@@ -3284,6 +3296,7 @@
         "state": "installed",
         "unitId": "class_barbarian"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -3325,6 +3338,7 @@
         "state": "installed",
         "unitId": "barbarian_rage"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -3366,6 +3380,7 @@
         "state": "installed",
         "unitId": "barbarian_unarmored_defense"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -3412,6 +3427,7 @@
         "owner": "not-applicable",
         "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "non-runtime",
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure."
@@ -3448,6 +3464,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/barbarian:level-1:class-container:barbarian_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -3495,6 +3512,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/barbarian:level-1:class-container:barbarian_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -3542,6 +3560,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/barbarian:level-1:class-container:barbarian_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -3589,6 +3608,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/barbarian:level-1:class-container:barbarian_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -3636,6 +3656,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/barbarian:level-1:class-container:barbarian_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -3683,6 +3704,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/barbarian:level-1:class-container:barbarian_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -3730,6 +3752,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/barbarian:level-1:class-container:barbarian_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -3771,6 +3794,7 @@
         "state": "installed",
         "unitId": "barbarian_weapon_mastery"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -3818,6 +3842,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/barbarian:level-1:class-container:barbarian_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -3859,6 +3884,7 @@
         "state": "installed",
         "unitId": "class_bard"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -3900,6 +3926,7 @@
         "state": "installed",
         "unitId": "bard_bardic_inspiration"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -3946,6 +3973,7 @@
         "owner": "not-applicable",
         "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "non-runtime",
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure."
@@ -3982,6 +4010,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -4029,6 +4058,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -4076,6 +4106,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -4123,6 +4154,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -4170,6 +4202,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -4217,6 +4250,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -4264,6 +4298,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -4311,6 +4346,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -4358,6 +4394,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/bard:level-1:class-container:bard_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -4399,6 +4436,7 @@
         "state": "installed",
         "unitId": "class_bard"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -4470,6 +4508,7 @@
         "state": "installed",
         "unitId": "light"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [
         {
@@ -4595,6 +4634,7 @@
         "state": "installed",
         "unitId": "minor_illusion"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [
         {
@@ -4664,6 +4704,7 @@
         "state": "installed",
         "unitId": "starry_wisp"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -4705,6 +4746,7 @@
         "state": "installed",
         "unitId": "true_strike"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -4746,6 +4788,7 @@
         "state": "installed",
         "unitId": "vicious_mockery"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -4787,6 +4830,7 @@
         "state": "installed",
         "unitId": "animal_friendship"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -4828,6 +4872,7 @@
         "state": "installed",
         "unitId": "bane"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -4869,6 +4914,7 @@
         "state": "installed",
         "unitId": "charm_person"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -4910,6 +4956,7 @@
         "state": "installed",
         "unitId": "color_spray"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -4951,6 +4998,7 @@
         "state": "installed",
         "unitId": "command"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -5022,6 +5070,7 @@
         "state": "installed",
         "unitId": "cure_wounds"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -5063,6 +5112,7 @@
         "state": "installed",
         "unitId": "detect_magic"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [
         {
@@ -5132,6 +5182,7 @@
         "state": "installed",
         "unitId": "dissonant_whispers"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -5173,6 +5224,7 @@
         "state": "installed",
         "unitId": "faerie_fire"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -5214,6 +5266,7 @@
         "state": "installed",
         "unitId": "feather_fall"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {
@@ -5255,6 +5308,7 @@
         "state": "installed",
         "unitId": "healing_word"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -5296,6 +5350,7 @@
         "state": "installed",
         "unitId": "heroism"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -5424,6 +5479,7 @@
         "state": "installed",
         "unitId": "longstrider"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -5495,6 +5551,7 @@
         "state": "installed",
         "unitId": "sleep"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -5566,6 +5623,7 @@
         "state": "installed",
         "unitId": "thunderwave"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -5635,6 +5693,7 @@
         "state": "installed",
         "unitId": "class_cleric"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -5676,6 +5735,7 @@
         "state": "installed",
         "unitId": "cleric_divine_order"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -5722,6 +5782,7 @@
         "owner": "not-applicable",
         "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "non-runtime",
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure."
@@ -5758,6 +5819,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/cleric:level-1:class-container:cleric_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -5805,6 +5867,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/cleric:level-1:class-container:cleric_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -5852,6 +5915,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/cleric:level-1:class-container:cleric_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -5899,6 +5963,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/cleric:level-1:class-container:cleric_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -5946,6 +6011,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/cleric:level-1:class-container:cleric_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -5993,6 +6059,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/cleric:level-1:class-container:cleric_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -6040,6 +6107,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/cleric:level-1:class-container:cleric_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -6087,6 +6155,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/cleric:level-1:class-container:cleric_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -6128,6 +6197,7 @@
         "state": "installed",
         "unitId": "class_cleric"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -6169,6 +6239,7 @@
         "state": "installed",
         "unitId": "guidance"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -6210,6 +6281,7 @@
         "state": "installed",
         "unitId": "light"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [
         {
@@ -6279,6 +6351,7 @@
         "state": "installed",
         "unitId": "resistance"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -6320,6 +6393,7 @@
         "state": "installed",
         "unitId": "sacred_flame"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -6418,6 +6492,7 @@
         "state": "installed",
         "unitId": "bane"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -6459,6 +6534,7 @@
         "state": "installed",
         "unitId": "bless"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -6500,6 +6576,7 @@
         "state": "installed",
         "unitId": "command"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -6569,6 +6646,7 @@
         "state": "installed",
         "unitId": "cure_wounds"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -6610,6 +6688,7 @@
         "state": "installed",
         "unitId": "detect_evil_and_good"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [
         {
@@ -6651,6 +6730,7 @@
         "state": "installed",
         "unitId": "detect_magic"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [
         {
@@ -6692,6 +6772,7 @@
         "state": "installed",
         "unitId": "detect_poison_and_disease"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [
         {
@@ -6733,6 +6814,7 @@
         "state": "installed",
         "unitId": "guiding_bolt"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -6774,6 +6856,7 @@
         "state": "installed",
         "unitId": "healing_word"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -6815,6 +6898,7 @@
         "state": "installed",
         "unitId": "inflict_wounds"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -6856,6 +6940,7 @@
         "state": "installed",
         "unitId": "protection_from_evil_and_good"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -6954,6 +7039,7 @@
         "state": "installed",
         "unitId": "shield_of_faith"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -6995,6 +7081,7 @@
         "state": "installed",
         "unitId": "class_druid"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -7036,6 +7123,7 @@
         "state": "installed",
         "unitId": "druid_druidic"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -7077,6 +7165,7 @@
         "state": "installed",
         "unitId": "druid_primal_order"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -7123,6 +7212,7 @@
         "owner": "not-applicable",
         "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "non-runtime",
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure."
@@ -7159,6 +7249,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -7206,6 +7297,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -7253,6 +7345,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -7300,6 +7393,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -7347,6 +7441,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -7394,6 +7489,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -7441,6 +7537,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -7488,6 +7585,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -7535,6 +7633,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/druid:level-1:class-container:druid_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -7576,6 +7675,7 @@
         "state": "installed",
         "unitId": "class_druid"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -7673,6 +7773,7 @@
         "state": "installed",
         "unitId": "guidance"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -7770,6 +7871,7 @@
         "state": "installed",
         "unitId": "poison_spray"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -7811,6 +7913,7 @@
         "state": "installed",
         "unitId": "produce_flame"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -7852,6 +7955,7 @@
         "state": "installed",
         "unitId": "resistance"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -7951,6 +8055,7 @@
         "state": "installed",
         "unitId": "starry_wisp"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -7992,6 +8097,7 @@
         "state": "installed",
         "unitId": "animal_friendship"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -8033,6 +8139,7 @@
         "state": "installed",
         "unitId": "charm_person"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -8102,6 +8209,7 @@
         "state": "installed",
         "unitId": "cure_wounds"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -8143,6 +8251,7 @@
         "state": "installed",
         "unitId": "detect_magic"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [
         {
@@ -8184,6 +8293,7 @@
         "state": "installed",
         "unitId": "detect_poison_and_disease"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [
         {
@@ -8225,6 +8335,7 @@
         "state": "installed",
         "unitId": "entangle"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -8266,6 +8377,7 @@
         "state": "installed",
         "unitId": "faerie_fire"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -8364,6 +8476,7 @@
         "state": "installed",
         "unitId": "healing_word"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -8405,6 +8518,7 @@
         "state": "installed",
         "unitId": "ice_knife"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -8446,6 +8560,7 @@
         "state": "installed",
         "unitId": "jump"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -8487,6 +8602,7 @@
         "state": "installed",
         "unitId": "longstrider"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -8528,6 +8644,7 @@
         "state": "installed",
         "unitId": "protection_from_evil_and_good"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -8627,6 +8744,7 @@
         "state": "installed",
         "unitId": "thunderwave"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -8668,6 +8786,7 @@
         "state": "installed",
         "unitId": "class_fighter"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -8709,6 +8828,7 @@
         "state": "installed",
         "unitId": "fighter_fighting_style"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -8750,6 +8870,7 @@
         "state": "installed",
         "unitId": "fighter_second_wind"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -8796,6 +8917,7 @@
         "owner": "not-applicable",
         "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "non-runtime",
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure."
@@ -8832,6 +8954,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/fighter:level-1:class-container:fighter_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -8879,6 +9002,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/fighter:level-1:class-container:fighter_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -8926,6 +9050,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/fighter:level-1:class-container:fighter_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -8973,6 +9098,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/fighter:level-1:class-container:fighter_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -9020,6 +9146,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/fighter:level-1:class-container:fighter_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -9067,6 +9194,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/fighter:level-1:class-container:fighter_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -9114,6 +9242,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/fighter:level-1:class-container:fighter_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -9155,6 +9284,7 @@
         "state": "installed",
         "unitId": "fighter_weapon_mastery"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -9202,6 +9332,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/fighter:level-1:class-container:fighter_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -9243,6 +9374,7 @@
         "state": "installed",
         "unitId": "class_monk"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -9284,6 +9416,7 @@
         "state": "installed",
         "unitId": "monk_martial_arts"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -9325,6 +9458,7 @@
         "state": "installed",
         "unitId": "monk_unarmored_defense"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -9371,6 +9505,7 @@
         "owner": "not-applicable",
         "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "non-runtime",
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure."
@@ -9407,6 +9542,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -9454,6 +9590,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -9501,6 +9638,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -9548,6 +9686,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -9595,6 +9734,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -9642,6 +9782,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -9689,6 +9830,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -9736,6 +9878,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -9783,6 +9926,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/monk:level-1:class-container:monk_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -9824,6 +9968,7 @@
         "state": "installed",
         "unitId": "class_paladin"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -9865,6 +10010,7 @@
         "state": "installed",
         "unitId": "paladin_lay_on_hands"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -9911,6 +10057,7 @@
         "owner": "not-applicable",
         "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "non-runtime",
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure."
@@ -9947,6 +10094,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/paladin:level-1:class-container:paladin_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -9994,6 +10142,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/paladin:level-1:class-container:paladin_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -10041,6 +10190,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/paladin:level-1:class-container:paladin_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -10088,6 +10238,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/paladin:level-1:class-container:paladin_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -10135,6 +10286,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/paladin:level-1:class-container:paladin_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -10182,6 +10334,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/paladin:level-1:class-container:paladin_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -10229,6 +10382,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/paladin:level-1:class-container:paladin_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -10270,6 +10424,7 @@
         "state": "installed",
         "unitId": "paladin_weapon_mastery"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -10317,6 +10472,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/paladin:level-1:class-container:paladin_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -10358,6 +10514,7 @@
         "state": "installed",
         "unitId": "class_paladin"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -10399,6 +10556,7 @@
         "state": "installed",
         "unitId": "bless"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -10440,6 +10598,7 @@
         "state": "installed",
         "unitId": "command"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -10481,6 +10640,7 @@
         "state": "installed",
         "unitId": "cure_wounds"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -10522,6 +10682,7 @@
         "state": "installed",
         "unitId": "detect_evil_and_good"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [
         {
@@ -10563,6 +10724,7 @@
         "state": "installed",
         "unitId": "detect_magic"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [
         {
@@ -10604,6 +10766,7 @@
         "state": "installed",
         "unitId": "detect_poison_and_disease"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [
         {
@@ -10645,6 +10808,7 @@
         "state": "installed",
         "unitId": "divine_favor"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -10686,6 +10850,7 @@
         "state": "installed",
         "unitId": "divine_smite"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -10727,6 +10892,7 @@
         "state": "installed",
         "unitId": "heroism"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -10768,6 +10934,7 @@
         "state": "installed",
         "unitId": "protection_from_evil_and_good"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -10837,6 +11004,7 @@
         "state": "installed",
         "unitId": "searing_smite"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -10878,6 +11046,7 @@
         "state": "installed",
         "unitId": "shield_of_faith"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -10919,6 +11088,7 @@
         "state": "installed",
         "unitId": "class_ranger"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -10960,6 +11130,7 @@
         "state": "installed",
         "unitId": "ranger_favored_enemy"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -11006,6 +11177,7 @@
         "owner": "not-applicable",
         "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "non-runtime",
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure."
@@ -11042,6 +11214,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/ranger:level-1:class-container:ranger_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -11089,6 +11262,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/ranger:level-1:class-container:ranger_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -11136,6 +11310,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/ranger:level-1:class-container:ranger_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -11183,6 +11358,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/ranger:level-1:class-container:ranger_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -11230,6 +11406,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/ranger:level-1:class-container:ranger_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -11277,6 +11454,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/ranger:level-1:class-container:ranger_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -11324,6 +11502,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/ranger:level-1:class-container:ranger_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -11365,6 +11544,7 @@
         "state": "installed",
         "unitId": "ranger_weapon_mastery"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -11412,6 +11592,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/ranger:level-1:class-container:ranger_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -11453,6 +11634,7 @@
         "state": "installed",
         "unitId": "class_ranger"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -11524,6 +11706,7 @@
         "state": "installed",
         "unitId": "animal_friendship"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -11565,6 +11748,7 @@
         "state": "installed",
         "unitId": "cure_wounds"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -11606,6 +11790,7 @@
         "state": "installed",
         "unitId": "detect_magic"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [
         {
@@ -11647,6 +11832,7 @@
         "state": "installed",
         "unitId": "detect_poison_and_disease"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [
         {
@@ -11688,6 +11874,7 @@
         "state": "installed",
         "unitId": "ensnaring_strike"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -11729,6 +11916,7 @@
         "state": "installed",
         "unitId": "entangle"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -11827,6 +12015,7 @@
         "state": "installed",
         "unitId": "hunters_mark"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -11868,6 +12057,7 @@
         "state": "installed",
         "unitId": "jump"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -11909,6 +12099,7 @@
         "state": "installed",
         "unitId": "longstrider"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -11980,6 +12171,7 @@
         "state": "installed",
         "unitId": "class_rogue"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -12021,6 +12213,7 @@
         "state": "installed",
         "unitId": "rogue_expertise"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -12062,6 +12255,7 @@
         "state": "installed",
         "unitId": "rogue_sneak_attack"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -12103,6 +12297,7 @@
         "state": "installed",
         "unitId": "rogue_thieves_cant"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -12149,6 +12344,7 @@
         "owner": "not-applicable",
         "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "non-runtime",
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure."
@@ -12185,6 +12381,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -12232,6 +12429,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -12279,6 +12477,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -12326,6 +12525,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -12373,6 +12573,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -12420,6 +12621,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -12467,6 +12669,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -12514,6 +12717,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -12555,6 +12759,7 @@
         "state": "installed",
         "unitId": "rogue_weapon_mastery"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -12602,6 +12807,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/rogue:level-1:class-container:rogue_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -12643,6 +12849,7 @@
         "state": "installed",
         "unitId": "class_sorcerer"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -12684,6 +12891,7 @@
         "state": "installed",
         "unitId": "sorcerer_innate_sorcery"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -12730,6 +12938,7 @@
         "owner": "not-applicable",
         "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "non-runtime",
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure."
@@ -12766,6 +12975,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -12813,6 +13023,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -12860,6 +13071,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -12907,6 +13119,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -12954,6 +13167,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -13001,6 +13215,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -13048,6 +13263,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -13095,6 +13311,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -13136,6 +13353,7 @@
         "state": "installed",
         "unitId": "class_sorcerer"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -13177,6 +13395,7 @@
         "state": "installed",
         "unitId": "acid_splash"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -13218,6 +13437,7 @@
         "state": "installed",
         "unitId": "chill_touch"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -13318,6 +13538,7 @@
         "state": "installed",
         "unitId": "fire_bolt"
       },
+      "unitProfileDisposition": "needs-surface-widening",
       "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [
         {
@@ -13359,6 +13580,7 @@
         "state": "installed",
         "unitId": "light"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [
         {
@@ -13484,6 +13706,7 @@
         "state": "installed",
         "unitId": "minor_illusion"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [
         {
@@ -13525,6 +13748,7 @@
         "state": "installed",
         "unitId": "poison_spray"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -13594,6 +13818,7 @@
         "state": "installed",
         "unitId": "ray_of_frost"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -13635,6 +13860,7 @@
         "state": "installed",
         "unitId": "shocking_grasp"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -13705,6 +13931,7 @@
         "state": "installed",
         "unitId": "true_strike"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -13746,6 +13973,7 @@
         "state": "installed",
         "unitId": "burning_hands"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -13787,6 +14015,7 @@
         "state": "installed",
         "unitId": "charm_person"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -13828,6 +14057,7 @@
         "state": "installed",
         "unitId": "chromatic_orb"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -13869,6 +14099,7 @@
         "state": "installed",
         "unitId": "color_spray"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -13940,6 +14171,7 @@
         "state": "installed",
         "unitId": "detect_magic"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [
         {
@@ -14009,6 +14241,7 @@
         "state": "installed",
         "unitId": "expeditious_retreat"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -14050,6 +14283,7 @@
         "state": "installed",
         "unitId": "false_life"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -14091,6 +14325,7 @@
         "state": "installed",
         "unitId": "feather_fall"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {
@@ -14161,6 +14396,7 @@
         "state": "installed",
         "unitId": "grease"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -14202,6 +14438,7 @@
         "state": "installed",
         "unitId": "ice_knife"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -14243,6 +14480,7 @@
         "state": "installed",
         "unitId": "jump"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -14284,6 +14522,7 @@
         "state": "installed",
         "unitId": "mage_armor"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -14325,6 +14564,7 @@
         "state": "installed",
         "unitId": "magic_missile"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -14366,6 +14606,7 @@
         "state": "installed",
         "unitId": "ray_of_sickness"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -14407,6 +14648,7 @@
         "state": "installed",
         "unitId": "shield"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -14478,6 +14720,7 @@
         "state": "installed",
         "unitId": "sleep"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -14519,6 +14762,7 @@
         "state": "installed",
         "unitId": "thunderwave"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -14560,6 +14804,7 @@
         "state": "installed",
         "unitId": "class_warlock"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -14601,6 +14846,7 @@
         "state": "installed",
         "unitId": "warlock_eldritch_invocations"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -14642,6 +14888,7 @@
         "state": "installed",
         "unitId": "class_warlock"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -14688,6 +14935,7 @@
         "owner": "not-applicable",
         "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "non-runtime",
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure."
@@ -14724,6 +14972,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/warlock:level-1:class-container:warlock_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -14771,6 +15020,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/warlock:level-1:class-container:warlock_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -14818,6 +15068,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/warlock:level-1:class-container:warlock_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -14865,6 +15116,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/warlock:level-1:class-container:warlock_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -14912,6 +15164,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/warlock:level-1:class-container:warlock_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -14959,6 +15212,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/warlock:level-1:class-container:warlock_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -15006,6 +15260,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/warlock:level-1:class-container:warlock_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -15053,6 +15308,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/warlock:level-1:class-container:warlock_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -15094,6 +15350,7 @@
         "state": "installed",
         "unitId": "chill_touch"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -15135,6 +15392,7 @@
         "state": "installed",
         "unitId": "eldritch_blast"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -15204,6 +15462,7 @@
         "state": "installed",
         "unitId": "minor_illusion"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [
         {
@@ -15245,6 +15504,7 @@
         "state": "installed",
         "unitId": "poison_spray"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -15314,6 +15574,7 @@
         "state": "installed",
         "unitId": "true_strike"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -15355,6 +15616,7 @@
         "state": "installed",
         "unitId": "bane"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -15396,6 +15658,7 @@
         "state": "installed",
         "unitId": "charm_person"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -15467,6 +15730,7 @@
         "state": "installed",
         "unitId": "detect_magic"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [
         {
@@ -15508,6 +15772,7 @@
         "state": "installed",
         "unitId": "expeditious_retreat"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -15549,6 +15814,7 @@
         "state": "installed",
         "unitId": "hellish_rebuke"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {
@@ -15676,6 +15942,7 @@
         "state": "installed",
         "unitId": "protection_from_evil_and_good"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -15775,6 +16042,7 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -15816,6 +16084,7 @@
         "state": "installed",
         "unitId": "wizard_arcane_recovery"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -15857,6 +16126,7 @@
         "state": "installed",
         "unitId": "wizard_ritual_adept"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -15903,6 +16173,7 @@
         "owner": "not-applicable",
         "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "non-runtime",
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure."
@@ -15939,6 +16210,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/wizard:level-1:class-container:wizard_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -15986,6 +16258,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/wizard:level-1:class-container:wizard_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -16033,6 +16306,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/wizard:level-1:class-container:wizard_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -16080,6 +16354,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/wizard:level-1:class-container:wizard_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -16127,6 +16402,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/wizard:level-1:class-container:wizard_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -16174,6 +16450,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/wizard:level-1:class-container:wizard_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -16221,6 +16498,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/wizard:level-1:class-container:wizard_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -16268,6 +16546,7 @@
         "evidenceBoundary": "Character-creation-runtime evidence is row-level only after the SRD class container is authored, installed, and exercised by a support profile.",
         "classContainerRowId": "srd521:classes/wizard:level-1:class-container:wizard_class_container"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -16309,6 +16588,7 @@
         "state": "installed",
         "unitId": "class_wizard"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -16350,6 +16630,7 @@
         "state": "installed",
         "unitId": "acid_splash"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -16391,6 +16672,7 @@
         "state": "installed",
         "unitId": "chill_touch"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -16491,6 +16773,7 @@
         "state": "installed",
         "unitId": "fire_bolt"
       },
+      "unitProfileDisposition": "needs-surface-widening",
       "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [
         {
@@ -16532,6 +16815,7 @@
         "state": "installed",
         "unitId": "light"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [
         {
@@ -16657,6 +16941,7 @@
         "state": "installed",
         "unitId": "minor_illusion"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [
         {
@@ -16698,6 +16983,7 @@
         "state": "installed",
         "unitId": "poison_spray"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -16767,6 +17053,7 @@
         "state": "installed",
         "unitId": "ray_of_frost"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -16808,6 +17095,7 @@
         "state": "installed",
         "unitId": "shocking_grasp"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -16849,6 +17137,7 @@
         "state": "installed",
         "unitId": "true_strike"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -16920,6 +17209,7 @@
         "state": "installed",
         "unitId": "burning_hands"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -16961,6 +17251,7 @@
         "state": "installed",
         "unitId": "charm_person"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -17002,6 +17293,7 @@
         "state": "installed",
         "unitId": "chromatic_orb"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -17043,6 +17335,7 @@
         "state": "installed",
         "unitId": "color_spray"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -17114,6 +17407,7 @@
         "state": "installed",
         "unitId": "detect_magic"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [
         {
@@ -17183,6 +17477,7 @@
         "state": "installed",
         "unitId": "expeditious_retreat"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -17224,6 +17519,7 @@
         "state": "installed",
         "unitId": "false_life"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -17265,6 +17561,7 @@
         "state": "installed",
         "unitId": "feather_fall"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {
@@ -17393,6 +17690,7 @@
         "state": "installed",
         "unitId": "grease"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -17463,6 +17761,7 @@
         "state": "installed",
         "unitId": "ice_knife"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -17562,6 +17861,7 @@
         "state": "installed",
         "unitId": "jump"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -17603,6 +17903,7 @@
         "state": "installed",
         "unitId": "longstrider"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -17644,6 +17945,7 @@
         "state": "installed",
         "unitId": "mage_armor"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -17685,6 +17987,7 @@
         "state": "installed",
         "unitId": "magic_missile"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -17726,6 +18029,7 @@
         "state": "installed",
         "unitId": "protection_from_evil_and_good"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -17767,6 +18071,7 @@
         "state": "installed",
         "unitId": "ray_of_sickness"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -17808,6 +18113,7 @@
         "state": "installed",
         "unitId": "shield"
       },
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -17879,6 +18185,7 @@
         "state": "installed",
         "unitId": "sleep"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -17920,6 +18227,7 @@
         "state": "installed",
         "unitId": "thunderwave"
       },
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {

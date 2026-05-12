@@ -172,6 +172,36 @@ const spellUnitExecutableFollowUps = new Map(
   ),
 );
 
+const levelOneBattleReadinessLevelBands = new Set([
+  "level-1",
+  "spell-level-0",
+  "spell-level-1",
+]);
+
+const battleRuntimeRelevantFeatureUnitIds = new Set([
+  "barbarian_weapon_mastery",
+  "bard_bardic_inspiration",
+  "fighter_fighting_style",
+  "fighter_weapon_mastery",
+  "monk_martial_arts",
+  "paladin_fighting_style",
+  "paladin_weapon_mastery",
+  "ranger_favored_enemy",
+  "ranger_weapon_mastery",
+  "rogue_weapon_mastery",
+  "sorcerer_innate_sorcery",
+  "warlock_eldritch_invocations",
+]);
+
+const battleRuntimeRelevantCatalogOnlySpellUnitIds = new Set([
+  "detect_evil_and_good",
+  "detect_magic",
+  "detect_poison_and_disease",
+  "find_familiar",
+  "light",
+  "minor_illusion",
+]);
+
 const classContainerSurfaceBlockers = new Map();
 
 const classFeatureSurfaceBlockers = new Map();
@@ -1602,6 +1632,9 @@ function isRecord(value) {
 function withState(rows, authored, installedIds, ownerEvidenceSources) {
   return rows.map((row) => {
     const authoredUnit = authoredUnitForRow(row, authored);
+    const unitClaim = row.candidateUnitId
+      ? ownerEvidenceSources.unitClaims.get(row.candidateUnitId)?.claim
+      : undefined;
     const gate = surfaceGate(row, ownerEvidenceSources, installedIds);
     const disposition = finalDisposition(
       row,
@@ -1631,6 +1664,7 @@ function withState(rows, authored, installedIds, ownerEvidenceSources) {
         : { state: "missing-authored-record" },
       catalogAdmission,
       characterCreationOwnership: characterCreationOwnership(row),
+      unitProfileDisposition: unitClaim?.tag,
       finalDisposition: disposition,
       ownerEvidence:
         catalogAdmission.state === "installed" &&
@@ -1706,6 +1740,106 @@ function countCharacterCreationOwnership(rows) {
       counts[value] = (counts[value] ?? 0) + 1;
       return counts;
     }, {});
+}
+
+function metricPercent(numerator, denominator) {
+  if (denominator === 0) return "n/a";
+  return `${Math.round((numerator / denominator) * 1000) / 10}%`;
+}
+
+function hasAcceptedOwnerEvidence(row, ownerPrefix) {
+  return row.ownerEvidence?.some(
+    (entry) =>
+      entry.status === "owner evidence present" &&
+      entry.owner.startsWith(ownerPrefix),
+  );
+}
+
+function isLevelOneBattleReadinessRow(row) {
+  return levelOneBattleReadinessLevelBands.has(row.levelBand);
+}
+
+function isBattleRuntimeRelevantFeatureRow(row) {
+  return (
+    row.rowKind === "mastery-pressure" ||
+    battleRuntimeRelevantFeatureUnitIds.has(row.candidateUnitId)
+  );
+}
+
+function isAcceptedNoBattleEffectSpellRow(row) {
+  return (
+    row.rowKind === "spell-unit-pressure" &&
+    row.finalDisposition === "catalog-only/dead-for-now" &&
+    !battleRuntimeRelevantCatalogOnlySpellUnitIds.has(row.candidateUnitId)
+  );
+}
+
+function battleReadinessStatus(row) {
+  if (!isLevelOneBattleReadinessRow(row)) return undefined;
+  if (row.finalDisposition === "non-runtime") {
+    return "accepted-no-battle-effect";
+  }
+  if (row.rowKind === "spell-unit-pressure") {
+    if (row.unitProfileDisposition === "supported-profile") {
+      return hasAcceptedOwnerEvidence(row, "battle-runtime")
+        ? "accepted"
+        : "battle-runtime-required";
+    }
+    if (row.unitProfileDisposition === "profile-subset-supported") {
+      return "partial-battle-runtime";
+    }
+    if (isAcceptedNoBattleEffectSpellRow(row)) {
+      return "accepted-no-battle-effect";
+    }
+    if (row.finalDisposition === "needs-surface-widening") {
+      return "surface-widening-required";
+    }
+    return "battle-runtime-required";
+  }
+  if (
+    (row.rowKind === "class-feature-grant" ||
+      row.rowKind === "mastery-pressure") &&
+    isBattleRuntimeRelevantFeatureRow(row)
+  ) {
+    if (
+      row.unitProfileDisposition === "supported-profile" &&
+      hasAcceptedOwnerEvidence(row, "battle-runtime")
+    ) {
+      return "accepted";
+    }
+    if (row.unitProfileDisposition === "profile-subset-supported") {
+      return "partial-battle-runtime";
+    }
+    return "battle-runtime-required";
+  }
+  if (row.finalDisposition === "catalog-installed-owner-evidence-present") {
+    return "accepted";
+  }
+  if (row.finalDisposition === "catalog-only/dead-for-now") {
+    return "accepted-no-battle-effect";
+  }
+  if (row.finalDisposition === "needs-surface-widening") {
+    return "surface-widening-required";
+  }
+  return "owner-evidence-required";
+}
+
+function countBattleReadiness(rows) {
+  const scopedRows = rows.filter(isLevelOneBattleReadinessRow);
+  const rowsByStatus = scopedRows.reduce((counts, row) => {
+    const status = battleReadinessStatus(row);
+    counts[status] = (counts[status] ?? 0) + 1;
+    return counts;
+  }, {});
+  const accepted =
+    (rowsByStatus.accepted ?? 0) +
+    (rowsByStatus["accepted-no-battle-effect"] ?? 0);
+  return {
+    denominator: scopedRows.length,
+    numerator: accepted,
+    percent: metricPercent(accepted, scopedRows.length),
+    rowsByStatus,
+  };
 }
 
 function rowRefs(rows) {
@@ -3065,6 +3199,7 @@ function buildSrdUnitInventory({
       totalRows: rows.length,
       levelOneRows: levelOneRows.length,
       spellPressureRows: spellPressureRows.length,
+      levelOneBattleReadiness: countBattleReadiness(rows),
       levelOneClassContainers: levelOneRows.filter(
         (row) => row.rowKind === "class-container",
       ).length,
@@ -3383,6 +3518,18 @@ function renderSrdUnitInventory(report) {
     `- Spell-list pressure rows for cantrips and level-1 spells: ${report.metrics.spellPressureRows}`,
     `- Missing level-1 class containers: ${report.metrics.missingClassContainers}${missingClassContainerDetail}`,
     "",
+    "### Default Progress Metric: Level-1 Battle Readiness",
+    "",
+    "This is the default `%` for level-1 readiness questions. A row counts only when the Unit/source fact is loaded, character-creation availability is covered where applicable, and battle-relevant behavior is fully usable in battle. Rows with no battle effect count as accepted only through explicit non-runtime or catalog-only closure.",
+    "",
+    `- Accepted: ${report.metrics.levelOneBattleReadiness.numerator}/${report.metrics.levelOneBattleReadiness.denominator} (${report.metrics.levelOneBattleReadiness.percent})`,
+    "",
+    "#### Level-1 Battle Readiness by Status",
+    "",
+    ...Object.entries(report.metrics.levelOneBattleReadiness.rowsByStatus)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, count]) => `- ${key}: ${count}`),
+    "",
     "### Level-1 Rows by Disposition",
     "",
     ...Object.entries(report.metrics.levelOneRowsByDisposition)
@@ -3430,8 +3577,8 @@ function renderSrdUnitInventory(report) {
     "",
     "## Level-1 Backlog Rows",
     "",
-    "| Row | Category | Creation ownership | Surface | Authored | Catalog | Disposition | Owner evidence | Next action | Source |",
-    "|---|---|---|---|---|---|---|---|---|---|",
+    "| Row | Category | Creation ownership | Surface | Authored | Catalog | Unit profile | Disposition | Owner evidence | Next action | Source |",
+    "|---|---|---|---|---|---|---|---|---|---|---|",
     ...levelOne.map((row) =>
       [
         row.concept,
@@ -3440,6 +3587,7 @@ function renderSrdUnitInventory(report) {
         row.surface.state,
         row.authoredContent.state,
         row.catalogAdmission.state,
+        row.unitProfileDisposition ?? "",
         row.finalDisposition,
         row.ownerEvidence
           .map((evidence) => `${evidence.owner}: ${evidence.status}`)

@@ -218,6 +218,14 @@ expected-inventory boundary. Passive profiles count in the executable profile
 evidence denominator when they have production runtime semantics, even though
 they do not create a player-selectable action.
 
+For level-1 planning, the default progress metric is not the broad Unit profile
+coverage percentage in `UNIT_REPORT.md`. Use `SRD_UNIT_INVENTORY.md`'s
+`Default Progress Metric: Level-1 Battle Readiness`: a row counts only when the
+Unit/source fact is loaded, character-creation availability is covered where
+applicable, and battle-relevant behavior is fully usable in battle. Rows with no
+battle effect count as accepted only through explicit non-runtime or
+catalog-only closure.
+
 ## SRDINV31 Attack-Rider Profile Policy
 
 `spell.invocation-weapon-damage-rider` is the Divine Favor procedure shape: a
