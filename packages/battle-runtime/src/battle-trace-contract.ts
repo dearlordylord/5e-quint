@@ -16,6 +16,7 @@ export const BATTLE_TRACE_HOLE_KINDS = [
   "attackRoll",
   "rolledDice",
   "skillChoice",
+  "commandOptionChoice",
   "savingThrowOutcome",
   "deathSavingThrow",
   "statBlockRechargeRoll",

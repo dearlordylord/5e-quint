@@ -19213,7 +19213,8 @@ function subjectName(
   | "castAttackHitBonusActionSpell"
   | "opportunityAttack"
   | "greaseGroundHazardSave"
-  | "jumpMovementReplacement" {
+  | "jumpMovementReplacement"
+  | "commandGrovel" {
   if (subject.tag === "action") {
     return subject.action;
   }

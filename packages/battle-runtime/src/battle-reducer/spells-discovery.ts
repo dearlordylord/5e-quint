@@ -31,6 +31,7 @@ import {
 import { representedMovementSpeedKinds } from "./movement-speed.ts";
 import {
   scalarBuffInitialHoles,
+  commandOptionChoiceHole,
   spellDamageTypeChoiceHole,
   spellBeamObjectTargetHole,
   spellBeamTargetHole,
@@ -75,6 +76,26 @@ export function discoverSupportedSpellInvocations(
         !spellActTurnResourceAvailable(state.currentTurnResources, invocation)
       ) {
         return [];
+      }
+      if (
+        invocation.procedure === "commandGrovel"
+      ) {
+        const targetHole = spellTargetListHole(state, actorId, invocation);
+        return targetHole.choices.length === 0
+          ? []
+          : [
+              {
+                subject: {
+                  tag: "actionSpell" as const,
+                  actorId,
+                  invocation: supportedSpellInvocationRef(invocation),
+                  mode: { tag: "cast" as const },
+                },
+                label: invocation.spell.name,
+                summary: `${spellActivationInvocationCastSummary(invocation)} Failed targets follow the selected command on their next turns.`,
+                initialHoles: [targetHole, commandOptionChoiceHole(invocation)],
+              },
+            ];
       }
       if (
         invocation.procedure === "saveGatedDamage" ||
@@ -581,6 +602,7 @@ export function spellActivationInvocationCastSummary(
         | "saveGatedCondition"
         | "saveGatedAttackRollAdvantage"
         | "sleepTargetAdmission"
+        | "commandGrovel"
         | "greaseGroundHazard"
         | "jumpMovementReplacement";
     }
@@ -678,6 +700,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "saveGatedCondition" &&
     invocation.procedure !== "saveGatedAttackRollAdvantage" &&
     invocation.procedure !== "sleepTargetAdmission" &&
+    invocation.procedure !== "commandGrovel" &&
     invocation.procedure !== "greaseGroundHazard" &&
     invocation.procedure !== "spellAttackBeamSequence" &&
     invocation.procedure !== "shieldReaction"
@@ -711,6 +734,7 @@ export function readiedSpellAct(
     invocation.procedure === "saveGatedCondition" ||
     invocation.procedure === "saveGatedAttackRollAdvantage" ||
     invocation.procedure === "sleepTargetAdmission" ||
+    invocation.procedure === "commandGrovel" ||
     invocation.procedure === "greaseGroundHazard" ||
     invocation.procedure === "shieldReaction" ||
     state.readiedSpells.has(actorId)

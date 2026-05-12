@@ -37,6 +37,7 @@ import {
   supportedDamageAmountExpr,
   supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedSaveGateConditionProfile,
+  supportedPreparedCommandGrovelProfile,
   supportedPreparedSaveGateDamageProfile,
   supportedPreparedGreaseGroundHazardProfile,
   supportedPreparedSleepTargetAdmissionProfile,
@@ -88,6 +89,7 @@ export {
   supportedFailedSavePostDamageRiders,
   supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedSaveGateConditionProfile,
+  supportedPreparedCommandGrovelProfile,
   supportedPreparedSaveGateDamageProfile,
   supportedPreparedGreaseGroundHazardProfile,
   supportedPreparedSleepTargetAdmissionProfile,
@@ -165,6 +167,9 @@ export function supportedSpellActs(
         spell,
         spellcasting.spellSlots,
       ),
+    ),
+    ...spellcasting.preparedSpells.flatMap((spell) =>
+      supportedPreparedCommandGrovelProfile(spell, spellcasting.spellSlots),
     ),
     ...spellcasting.preparedSpells.flatMap((spell) =>
       supportedPreparedScalarBuffSpellProfile(

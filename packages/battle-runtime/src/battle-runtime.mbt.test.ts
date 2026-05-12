@@ -2828,6 +2828,9 @@ function projectHole(hole: BattleHole): MbtHole {
     Match.when({ kind: "skillChoice" }, () => {
       throw new Error("Battle runtime MBT does not model skill choice holes.");
     }),
+    Match.when({ kind: "commandOptionChoice" }, () => {
+      throw new Error("Battle runtime MBT does not model Command option holes.");
+    }),
     Match.when({ kind: "concentrationSavingThrow" }, () => {
       throw new Error(
         "Battle runtime MBT does not model concentration saving throw holes.",

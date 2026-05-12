@@ -39,6 +39,7 @@ import { invalidResult } from "./result-helpers.ts";
 import { applyBattleMovement } from "./readied-release.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import {
+  applyCommandGrovelPendingEffects,
   applyFailedSaveAttackRollAdvantageEffects,
   applyGreaseGroundHazardCastEffects,
   applySleepPendingRepeatSaveEffects,
@@ -46,6 +47,7 @@ import {
   applyFailedSaveSpellConditionEffects,
   applySpellDamage,
   saveGateDamageResultForOutcome,
+  commandOptionChoiceHole,
   spellDamageAmountForTarget,
   spellDamageHole,
   spellSavingThrowOutcomeHole,
@@ -932,6 +934,151 @@ export function resolveSaveGateConditionSpellAct(input: {
     return resourced;
   }
   const effected = applyFailedSaveSpellConditionEffects(
+    resourced.state,
+    input.actorId,
+    failedTargets,
+    input.invocation,
+  );
+  const nextState = extendSavingThrowOngoingFeatures(
+    effected,
+    input.actorId,
+    selectedTargetIds,
+  );
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+export function resolveCommandGrovelSpellAct(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "commandGrovel" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  const targetHole = spellTargetListHole(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+  );
+  if (input.fillSet.targetId !== undefined) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Command requires a target list.",
+    );
+  }
+  if (input.fillSet.targetList === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      targetHole,
+    ]);
+  }
+  const targetListValidation = validateSpellTargetList(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+    input.fillSet.targetList.targetIds,
+    input.fillSet.targetList.spatialFacts,
+  );
+  if (targetListValidation !== null) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      targetListValidation,
+    );
+  }
+  if (input.fillSet.commandOptionChoice === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      commandOptionChoiceHole(input.invocation),
+    ]);
+  }
+  if (input.fillSet.commandOptionChoice !== "grovel") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Only Command: Grovel is supported by this runtime profile.",
+    );
+  }
+  if (
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.concentrationSavingThrows.length > 0 ||
+    input.fillSet.damageDispositions.length > 0
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Command does not use attack, damage, or Concentration fills.",
+    );
+  }
+  const savingThrowHole = spellSavingThrowOutcomeHole(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+  );
+  if (input.fillSet.savingThrowOutcomes === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      savingThrowHole,
+    ]);
+  }
+  const savingThrowOutcomes = input.fillSet.savingThrowOutcomes;
+  const savingThrowValidation = validateSavingThrowOutcomes(
+    savingThrowOutcomes,
+    savingThrowHole,
+    input.input.state,
+    input.actorId,
+    undefined,
+    input.fillSet.targetList.targetIds,
+  );
+  if (savingThrowValidation !== null) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      savingThrowValidation,
+    );
+  }
+
+  const selectedTargetIds = savingThrowOutcomes.outcomes.map(
+    (outcome) => outcome.targetId,
+  );
+  const failedTargets = savingThrowOutcomes.outcomes.flatMap((outcome) =>
+    outcome.succeeded ? [] : [outcome.targetId],
+  );
+  if (failedTargets.length > 0) {
+    const saveFailedReactionWindow = maybeOpenReactionWindow(
+      input.input.state,
+      {
+        trigger: "saveFailed",
+        targetId: failedTargets[0]!,
+        sourceSpellId: input.invocation.spell.id,
+        continuation: {
+          kind: "replay",
+          subject:
+            input.input.reactionContinuationSubject ?? input.input.subject,
+          fills: input.input.fills,
+        },
+      },
+      input.input.suppressedReactionTrigger,
+    );
+    if (saveFailedReactionWindow !== null) {
+      return saveFailedReactionWindow;
+    }
+  }
+
+  const resourced = spendSpellCastResources({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
+  if (resourced.tag === "invalid") {
+    return resourced;
+  }
+  const effected = applyCommandGrovelPendingEffects(
     resourced.state,
     input.actorId,
     failedTargets,

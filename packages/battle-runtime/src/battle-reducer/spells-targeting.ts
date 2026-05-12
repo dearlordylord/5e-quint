@@ -12,6 +12,7 @@ import {
   ATTACK_TARGET_HOLE_ID,
   ATTACK_TARGET_HOLE_INSTANCE,
   type BattleHoleId,
+  type BattleCommandOptionChoiceHole,
   type BattleSpellTargetAllocation,
   type BattleSpellTargetAllocationHole,
   type BattleSpellTargetListHole,
@@ -23,6 +24,7 @@ import {
   type SupportedSpellInvocation,
   type TargetListSpellInvocation,
 } from "../battle-reducer.ts";
+import { COMMAND_OPTIONS } from "./domain-constants.ts";
 import type { BattleObjectId } from "../identity.ts";
 
 type SingleCreatureOrObjectSpellAttackDamageInvocation =
@@ -213,6 +215,32 @@ export function spellTargetListHole(
       spellTargetHasNonSpatialPrerequisites(state, actorId, id, invocation),
     ),
   };
+}
+
+export function commandOptionChoiceHole(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "commandGrovel" }
+  >,
+): BattleCommandOptionChoiceHole {
+  const holeKey = `battle:spell:command-option:${invocation.spell.id}`;
+  return {
+    kind: "commandOptionChoice",
+    holeId: commandOptionChoiceHoleId(invocation),
+    holeInstanceKey: holeInstanceKey(holeKey),
+    label: `${invocation.spell.name} command option`,
+    spell: invocation,
+    choices: COMMAND_OPTIONS,
+  };
+}
+
+export function commandOptionChoiceHoleId(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "commandGrovel" }
+  >,
+): BattleHoleId {
+  return holeId(`battle:spell:command-option:${invocation.spell.id}`);
 }
 
 export function spellTargetIsLegal(

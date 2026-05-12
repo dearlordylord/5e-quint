@@ -187,6 +187,7 @@ import {
   REACTION_DECISION_HOLE_INSTANCE,
   activeOngoingFeaturesPreventSpellcasting,
   applyBattleMovement,
+  commandGrovelPendingEffectsForActor,
   currentActorHasOpenStatBlockMultiattackDispatch,
   discoverBattleActs,
   readiedMovementInitialHoles,
@@ -197,6 +198,7 @@ import {
   resolveDisengage,
   resolveDodge,
   resolveEndTurnCommand,
+  resolveCommandGrovelCommand,
   resolveGreaseGroundHazardSaveCommand,
   resolveEscapeGrapple,
   resolveEscapeSpellRestraint,
@@ -340,6 +342,32 @@ export function resolveBattleSubjectInternal(
       input.state,
       "missingCombatant",
       "Subject actor is not in this battle.",
+    );
+  }
+  const commandGrovelPendingEffects = commandGrovelPendingEffectsForActor(
+    input.state,
+    actorId,
+  );
+  const commandGrovelSubject =
+    input.subject.tag === "runtimeCommand" &&
+    input.subject.command === "commandGrovel"
+      ? input.subject
+      : null;
+  if (
+    commandGrovelPendingEffects.length > 0 &&
+    !(
+      commandGrovelSubject !== null &&
+      commandGrovelPendingEffects.some(
+        (effect) =>
+          effect.sourceCombatantId === commandGrovelSubject.sourceCombatantId &&
+          effect.sourceSpellId === commandGrovelSubject.sourceSpellId,
+      )
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "A pending Command Grovel effect must be resolved before other battle subjects.",
     );
   }
   if (
@@ -578,6 +606,12 @@ export function resolveBattleSubjectInternal(
     }
     if (subject.tag === "runtimeCommand" && subject.command === "endTurn") {
       return resolveEndTurnCommand(input);
+    }
+    if (
+      subject.tag === "runtimeCommand" &&
+      subject.command === "commandGrovel"
+    ) {
+      return resolveCommandGrovelCommand({ ...input, subject });
     }
     if (subject.tag === "runtimeCommand" && subject.command === "move") {
       return resolveMoveCommand(input);

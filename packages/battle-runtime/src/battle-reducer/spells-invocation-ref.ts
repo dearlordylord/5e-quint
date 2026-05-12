@@ -61,6 +61,14 @@ export function supportedSpellInvocationRef(
       procedure: "greaseGroundHazard",
     };
   }
+  if (invocation.procedure === "commandGrovel") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "commandGrovel",
+    };
+  }
   if (invocation.procedure === "spellAttackBeamSequence") {
     return {
       tag: "cantrip",

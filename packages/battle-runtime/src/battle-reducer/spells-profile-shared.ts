@@ -28,22 +28,29 @@ export function scalarBuffSpellTargetCount(
   spellLevel: number,
   slotLevel: SpellSlotLevel,
 ): number | null {
+  const countBySlot = scalarBuffSpellTargetCountBySlot(selection, spellLevel);
+  return countBySlot === null ? null : countBySlot(slotLevel);
+}
+
+export function scalarBuffSpellTargetCountBySlot(
+  selection: TargetSelection,
+  spellLevel: number,
+): ((slotLevel: SpellSlotLevel) => number) | null {
   if (selection.mode === "one") {
-    return 1;
+    return () => 1;
   }
   if (selection.mode !== "choose_up_to" || selection.count === undefined) {
     return null;
   }
   const count = selection.count;
   if (typeof count === "number") {
-    return count;
+    return () => count;
   }
   if (count.kind !== "linear") {
     return null;
   }
   const baseLevel = count.baseLevel ?? spellLevel;
-  return (
+  return (slotLevel) =>
     count.base +
-    Math.max(0, Number(slotLevel) - baseLevel) * count.perSlotAboveBase
-  );
+    Math.max(0, Number(slotLevel) - baseLevel) * count.perSlotAboveBase;
 }

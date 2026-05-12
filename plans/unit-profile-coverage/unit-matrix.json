@@ -72,23 +72,23 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 45,
-      "numerator": 45,
+      "denominator": 46,
+      "numerator": 46,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 45,
-      "numerator": 43,
-      "percent": "95.6%"
+      "denominator": 46,
+      "numerator": 44,
+      "percent": "95.7%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 45,
-      "numerator": 45,
+      "denominator": 46,
+      "numerator": 46,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 45,
-      "numerator": 45,
+      "denominator": 46,
+      "numerator": 46,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -928,6 +928,33 @@
         "SRDINV40"
       ],
       "title": "Spell invocation creates a timed Grease ground hazard with recurring Dexterity saves",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-command-grovel",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+      ],
+      "sourceBoundary": "This profile supports Command's cast shell, slot-scaled creature target list, Wisdom save, and the Grovel option only. Approach, Drop, Flee, Halt, held-object mutation, and route/pathfinding remain deferred and are not representable through this profile.",
+      "taskRefs": [
+        "SRDINV50A"
+      ],
+      "title": "Spell invocation records failed-save Command Grovel pending effects and resolves them at the target turn",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -2062,6 +2089,22 @@
         "spell.invocation-grease-ground-hazard"
       ],
       "taskId": "SRDINV40"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Command's Magic Action and Spell Slot spend, slot-scaled target count, Wisdom save failure pending effect, and Grovel Prone plus end-turn resolution.",
+      "profileIds": [
+        "spell.invocation-command-grovel"
+      ],
+      "taskId": "SRDINV50A"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Command target-list and Grovel-only option holes, Wisdom save replay, failed-save pending effect, target-turn Command Grovel discovery, Prone application, and end-turn cleanup; Approach, Drop, Flee, and Halt remain deferred.",
+      "profileIds": [
+        "spell.invocation-command-grovel"
+      ],
+      "taskId": "SRDINV50A"
     },
     {
       "claimKind": "qnt-proof",
@@ -4916,14 +4959,79 @@
         "status": "installed"
       },
       "claim": {
-        "reason": "Spell Definition is installed with typed next-turn Command option facts; runtime execution of the named options, route choice, held-item drop, and turn-ending clauses is not promoted yet.",
-        "tag": "unsupported-profile"
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "SRDINV50B",
+            "mechanic": "Halt option action, Bonus Action, and movement suppression"
+          },
+          {
+            "followUpTaskId": "SRDINV50C",
+            "mechanic": "Drop option held-object mutation"
+          },
+          {
+            "followUpTaskId": "SRDINV50D",
+            "mechanic": "Approach option route/pathfinding and end condition"
+          },
+          {
+            "followUpTaskId": "SRDINV50D",
+            "mechanic": "Flee option route/pathfinding"
+          }
+        ],
+        "profileIds": [
+          "spell.invocation-command-grovel"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action cast shell",
+          "Spell Slot spend",
+          "slot-scaled creature target list",
+          "Wisdom Saving Throw",
+          "failed-save pending next-turn Spell Effect",
+          "Grovel applies Prone and ends the target turn"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV50A"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-command-grovel",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+          ],
+          "sourceBoundary": "This profile supports Command's cast shell, slot-scaled creature target list, Wisdom save, and the Grovel option only. Approach, Drop, Flee, Halt, held-object mutation, and route/pathfinding remain deferred and are not representable through this profile.",
+          "taskRefs": [
+            "SRDINV50A"
+          ],
+          "title": "Spell invocation records failed-save Command Grovel pending effects and resolves them at the target turn",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/command.json",
       "unitId": "command"
     },

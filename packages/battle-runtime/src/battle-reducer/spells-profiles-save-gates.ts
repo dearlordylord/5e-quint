@@ -7,6 +7,7 @@ import {
 import {
   movementDeltaFeet,
   movementFeet,
+  spellSlotLevel,
   type MovementFeet,
   type SpellSlotLevel,
 } from "@dnd/shared/types";
@@ -47,6 +48,7 @@ import type { CombatantId } from "../identity.ts";
 import {
   sameStringSet,
   scalarBuffSpellTargetCount,
+  scalarBuffSpellTargetCountBySlot,
 } from "./spells-profile-shared.ts";
 
 export type SaveGateConditionSpell = {
@@ -98,6 +100,29 @@ type GreaseGroundHazardPhase = Extract<
       readonly shape: {
         readonly kind: "cube";
         readonly sideFeet: 10;
+      };
+    };
+  };
+};
+type CommandGrovelPhase = Extract<
+  ActivationPhase,
+  { readonly kind: "save_gate" }
+> & {
+  readonly ability: "wis";
+  readonly attachment: {
+    readonly kind: "hole";
+    readonly value: {
+      readonly kind: "target";
+      readonly selection: TargetSelection;
+    };
+  };
+  readonly onFail: {
+    readonly kind: "command_target_next_turn";
+    readonly execution: "target_next_turn";
+    readonly options: {
+      readonly grovel: {
+        readonly condition: "prone";
+        readonly afterward: "end_turn";
       };
     };
   };
@@ -262,6 +287,125 @@ export function supportedPreparedGreaseGroundHazardProfile(
       },
     ];
   });
+}
+
+export function supportedPreparedCommandGrovelProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  const command = commandGrovelSpell(spell);
+  if (command === null) {
+    return [];
+  }
+
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    return [
+      {
+        access: { tag: "prepared" },
+        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        procedure: "commandGrovel",
+        spell,
+        actionCost: "magicAction",
+        ability: command.phase.ability,
+        dc: command.phase.dc,
+        targeting: command.targeting(slot.spellLevel),
+        rangeFeet: command.rangeFeet,
+      },
+    ];
+  });
+}
+
+function commandGrovelSpell(spell: SpellRecord): {
+  readonly phase: CommandGrovelPhase;
+  readonly targeting: (
+    slotLevel: SpellSlotLevel,
+  ) => Extract<SpellTargeting, { readonly kind: "targetList" }>;
+  readonly rangeFeet: MovementFeet;
+} | null {
+  if (spell.mechanics.family !== "activation") {
+    return null;
+  }
+  const phase = spell.mechanics.phases[0];
+  if (
+    spell.name !== "Command" ||
+    spell.provenance.kind !== "srd-5.2.1" ||
+    spell.provenance.section !== "Spells/Descriptions-A-D#Command" ||
+    spell.mechanics.level !== 1 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "point" ||
+    spell.mechanics.range.feet !== 60 ||
+    spell.mechanics.duration.kind !== "instantaneous" ||
+    spell.mechanics.phases.length !== 1 ||
+    !isCommandGrovelPhase(phase)
+  ) {
+    return null;
+  }
+  const targetSelection = phase.attachment.value.selection;
+  const targetCountBySlot = commandGrovelTargetCountBySlot(
+    targetSelection,
+    spell.mechanics.level,
+  );
+  if (
+    targetSelection.mode !== "choose_up_to" ||
+    targetSelection.targetKinds?.length !== 1 ||
+    targetSelection.targetKinds[0] !== "creature" ||
+    targetCountBySlot === null ||
+    targetCountBySlot(spellSlotLevel(spell.mechanics.level)) !== 1
+  ) {
+    return null;
+  }
+
+  return {
+    phase,
+    targeting: (slotLevel) => ({
+      kind: "targetList",
+      minTargets: 1,
+      maxTargets: targetCountBySlot(slotLevel),
+    }),
+    rangeFeet: movementFeet(spell.mechanics.range.feet),
+  };
+}
+
+function isCommandGrovelPhase(
+  phase: ActivationPhase | undefined,
+): phase is CommandGrovelPhase {
+  const failedEffect = phase?.kind === "save_gate" ? phase.onFail : undefined;
+  return (
+    phase?.kind === "save_gate" &&
+    !("repeatSave" in phase) &&
+    phase.ability === "wis" &&
+    phase.dc.kind === "caster_spell_save_dc" &&
+    phase.onSuccess.kind === "none" &&
+    phase.attachment.kind === "hole" &&
+    phase.attachment.value.kind === "target" &&
+    failedEffect?.kind === "command_target_next_turn" &&
+    failedEffect.execution === "target_next_turn" &&
+    failedEffect.options.grovel.condition === "prone" &&
+    failedEffect.options.grovel.afterward === "end_turn"
+  );
+}
+
+function commandGrovelTargetCountBySlot(
+  selection: TargetSelection,
+  spellLevel: number,
+): ((slotLevel: SpellSlotLevel) => number) | null {
+  if (selection.mode !== "choose_up_to" || selection.count === undefined) {
+    return null;
+  }
+  const count = selection.count;
+  if (
+    typeof count === "number" ||
+    count.kind !== "linear" ||
+    count.base !== 1 ||
+    (count.baseLevel ?? spellLevel) !== spellLevel ||
+    count.perSlotAboveBase !== 1
+  ) {
+    return null;
+  }
+  return scalarBuffSpellTargetCountBySlot(selection, spellLevel);
 }
 
 function greaseGroundHazardSpell(spell: SpellRecord): {

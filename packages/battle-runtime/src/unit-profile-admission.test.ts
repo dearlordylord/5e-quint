@@ -26,6 +26,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV32B produce_flame
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV34 starry_wisp
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV38A sleep
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV50A command
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV39 eldritch_blast
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV40 grease
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield
@@ -49,7 +50,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT59 monk_deflect_attacks
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT62 fighter_tactical_mind
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT65 bard_cutting_words
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider spell.scalar-buff
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -207,6 +208,7 @@ const acidSplashUnitId = "acid_splash";
 const animalFriendshipUnitId = "animal_friendship";
 const charmPersonUnitId = "charm_person";
 const chillTouchUnitId = "chill_touch";
+const commandUnitId = "command";
 const fireBoltUnitId = "fire_bolt";
 const falseLifeUnitId = "false_life";
 const faerieFireUnitId = "faerie_fire";
@@ -3016,6 +3018,331 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
     expect(invocation).toEqual(
       spellSlotInvocationRef("sleep", 1, "sleepTargetAdmission"),
     );
+  });
+
+  test("command is admitted as a Grovel-only target-list save spell with slot-scaled targets", () => {
+    const spell = spellRecord(commandUnitId);
+    const secondTargetId = combatantId("unit-profile-command-target-2");
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [
+        { spellLevel: 1, count: 1 },
+        { spellLevel: 2, count: 1 },
+      ],
+      extraTargetIds: [secondTargetId],
+    });
+
+    const levelOne = spellAct({
+      state,
+      spellId: commandUnitId,
+      slotLevel: 1,
+    });
+    const levelTwo = spellAct({
+      state,
+      spellId: commandUnitId,
+      slotLevel: 2,
+    });
+
+    expect(levelOne.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(commandUnitId, 1, "commandGrovel"),
+      mode: { tag: "cast" },
+    });
+    expect(requireHole(levelOne.initialHoles, "spellTargetList")).toEqual(
+      expect.objectContaining({
+        minTargets: 1,
+        maxTargets: 1,
+        choices: expect.arrayContaining([spellTargetId, secondTargetId]),
+      }),
+    );
+    expect(requireHole(levelTwo.initialHoles, "spellTargetList")).toEqual(
+      expect.objectContaining({
+        minTargets: 1,
+        maxTargets: 2,
+      }),
+    );
+    expect(requireHole(levelTwo.initialHoles, "commandOptionChoice")).toEqual(
+      expect.objectContaining({
+        choices: ["grovel"],
+      }),
+    );
+    expect(spellActInvocation(levelTwo)).toEqual(
+      expect.objectContaining({
+        procedure: "commandGrovel",
+        spell,
+        actionCost: "magicAction",
+        resource: { tag: "spellSlot", slotLevel: 2 },
+        ability: "wis",
+        targeting: { kind: "targetList", minTargets: 1, maxTargets: 2 },
+        rangeFeet: 60,
+      }),
+    );
+  });
+
+  test("command Grovel records failed-save pending effects and resolves them on target turn", () => {
+    const spell = spellRecord(commandUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const act = spellAct({ state, spellId: commandUnitId, slotLevel: 1 });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+    const targetFill = spellTargetListFill(targetHole, spellCasterId, commandUnitId, [
+      spellTargetId,
+    ]);
+    const optionFill: Extract<
+      BattleFill,
+      { readonly kind: "commandOptionChoice" }
+    > = {
+      kind: "commandOptionChoice",
+      holeId: commandOption.holeId,
+      value: "grovel",
+    };
+    const needsSave = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill, optionFill],
+    });
+    const savingThrow = requireResultHole(needsSave, "savingThrowOutcome");
+
+    const cast = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        optionFill,
+        savingThrowOutcomeFill(savingThrow, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    expect(cast).toMatchObject({
+      tag: "resolved",
+      snapshot: { turn: { actionResources: [] } },
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Command cast to resolve.");
+    }
+    expect(requireCombatant(cast.state, spellTargetId).activeEffects).toEqual([
+      expect.objectContaining({
+        kind: "commandGrovelPending",
+        sourceSpellId: commandUnitId,
+        sourceCombatantId: spellCasterId,
+        expiresAt: {
+          kind: "endOfTurn",
+          combatantId: spellTargetId,
+          round: 1,
+        },
+      }),
+    ]);
+
+    const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+    const targetActs = discoverBattleActs(targetTurn.state);
+    expect(targetActs).toEqual([
+      expect.objectContaining({
+        subject: {
+          tag: "runtimeCommand",
+          actorId: spellTargetId,
+          command: "commandGrovel",
+          sourceCombatantId: spellCasterId,
+          sourceSpellId: spellId(commandUnitId),
+        },
+        initialHoles: [],
+      }),
+    ]);
+    const grovel = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: targetActs[0]!.subject,
+      fills: [],
+    });
+    expect(grovel).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        currentActorId: spellCasterId,
+        combatants: [
+          expect.anything(),
+          expect.objectContaining({
+            combatantId: spellTargetId,
+            conditions: expect.arrayContaining(["prone"]),
+          }),
+        ],
+      },
+    });
+    if (grovel.tag !== "resolved") {
+      throw new Error("Expected Command Grovel to resolve.");
+    }
+    expect(requireCombatant(grovel.state, spellTargetId).activeEffects).toEqual(
+      [],
+    );
+  });
+
+  test("command Grovel save success spends the cast without pending effects", () => {
+    const spell = spellRecord(commandUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const act = spellAct({ state, spellId: commandUnitId, slotLevel: 1 });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+    const targetFill = spellTargetListFill(targetHole, spellCasterId, commandUnitId, [
+      spellTargetId,
+    ]);
+    const optionFill: Extract<
+      BattleFill,
+      { readonly kind: "commandOptionChoice" }
+    > = {
+      kind: "commandOptionChoice",
+      holeId: commandOption.holeId,
+      value: "grovel",
+    };
+    const needsSave = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill, optionFill],
+    });
+    const savingThrow = requireResultHole(needsSave, "savingThrowOutcome");
+
+    const cast = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        optionFill,
+        savingThrowOutcomeFill(savingThrow, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+      ],
+    });
+
+    expect(cast).toMatchObject({
+      tag: "resolved",
+      snapshot: { turn: { actionResources: [] } },
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Command cast to resolve.");
+    }
+    expect(requireCombatant(cast.state, spellTargetId).activeEffects).toEqual(
+      [],
+    );
+  });
+
+  test("self-target command Grovel cannot resolve before the caster's next turn", () => {
+    const spell = spellRecord(commandUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const act = spellAct({ state, spellId: commandUnitId, slotLevel: 1 });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+    const targetFill = spellTargetListFill(targetHole, spellCasterId, commandUnitId, [
+      spellCasterId,
+    ]);
+    const optionFill: Extract<
+      BattleFill,
+      { readonly kind: "commandOptionChoice" }
+    > = {
+      kind: "commandOptionChoice",
+      holeId: commandOption.holeId,
+      value: "grovel",
+    };
+    const needsSave = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill, optionFill],
+    });
+    const savingThrow = requireResultHole(needsSave, "savingThrowOutcome");
+
+    const cast = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        optionFill,
+        savingThrowOutcomeFill(savingThrow, [
+          { targetId: spellCasterId, succeeded: false },
+        ]),
+      ],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected self-target Command cast to resolve.");
+    }
+    expect(requireCombatant(cast.state, spellCasterId).activeEffects).toEqual([
+      expect.objectContaining({
+        kind: "commandGrovelPending",
+        sourceSpellId: commandUnitId,
+        sourceCombatantId: spellCasterId,
+        expiresAt: {
+          kind: "endOfTurn",
+          combatantId: spellCasterId,
+          round: 2,
+        },
+      }),
+    ]);
+
+    const prematureGrovel = resolveBattleSubject({
+      state: cast.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellCasterId,
+        command: "commandGrovel",
+        sourceCombatantId: spellCasterId,
+        sourceSpellId: spellId(commandUnitId),
+      },
+      fills: [],
+    });
+    expect(prematureGrovel).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+    });
+
+    const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+    const nextCasterTurn = endTurn({
+      state: targetTurn.state,
+      actorId: spellTargetId,
+    });
+    if (nextCasterTurn.tag !== "resolved") {
+      throw new Error("Expected target End Turn to resolve.");
+    }
+    const casterActs = discoverBattleActs(nextCasterTurn.state);
+    const grovelAct = casterActs.find(
+      (candidate) =>
+        candidate.subject.tag === "runtimeCommand" &&
+        candidate.subject.command === "commandGrovel" &&
+        candidate.subject.actorId === spellCasterId,
+    );
+    expect(grovelAct).toBeDefined();
+    if (grovelAct === undefined) {
+      throw new Error("Expected self-target Command Grovel act.");
+    }
+
+    const grovel = resolveBattleSubject({
+      state: nextCasterTurn.state,
+      subject: grovelAct.subject,
+      fills: [],
+    });
+    expect(grovel).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        currentActorId: spellTargetId,
+        combatants: [
+          expect.objectContaining({
+            combatantId: spellCasterId,
+            conditions: expect.arrayContaining(["prone"]),
+          }),
+          expect.anything(),
+        ],
+      },
+    });
   });
 
   test("grease is admitted as a one-minute point-origin Cube ground hazard", () => {

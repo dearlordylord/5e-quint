@@ -584,6 +584,7 @@ export function spellSavingThrowOutcomeHole(
         | "saveGatedCondition"
         | "saveGatedAttackRollAdvantage"
         | "sleepTargetAdmission"
+        | "commandGrovel"
         | "greaseGroundHazard";
     }
   >,
@@ -644,6 +645,7 @@ export function spellSavingThrowAbility(
         | "saveGatedCondition"
         | "saveGatedAttackRollAdvantage"
         | "sleepTargetAdmission"
+        | "commandGrovel"
         | "greaseGroundHazard";
     }
   >,
@@ -668,6 +670,7 @@ export function spellSavingThrowTargeting(
         | "saveGatedCondition"
         | "saveGatedAttackRollAdvantage"
         | "sleepTargetAdmission"
+        | "commandGrovel"
         | "greaseGroundHazard";
     }
   >,

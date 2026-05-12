@@ -322,6 +322,73 @@ export function applyGreaseProneToTarget(
   };
 }
 
+export function applyCommandGrovelPendingEffects(
+  state: BattleState,
+  actorId: CombatantId,
+  targetIds: readonly CombatantId[],
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "commandGrovel" }
+  >,
+): BattleState {
+  const combatants = new Map(state.combatants);
+  for (const targetId of targetIds) {
+    const target = combatants.get(targetId);
+    if (target === undefined) {
+      continue;
+    }
+    combatants.set(targetId, {
+      ...target,
+      activeEffects: [
+        ...target.activeEffects.filter(
+          (effect) =>
+            !(
+              effect.kind === "commandGrovelPending" &&
+              effect.sourceSpellId === invocation.spell.id &&
+              effect.sourceCombatantId === actorId
+            ),
+        ),
+        {
+          kind: "commandGrovelPending",
+          sourceSpellId: invocation.spell.id,
+          sourceCombatantId: actorId,
+          expiresAt: endOfNextTurnExpiration(state, targetId),
+        },
+      ],
+    });
+  }
+  return { ...state, combatants };
+}
+
+export function applyCommandGrovelProneToTarget(
+  state: BattleState,
+  targetId: CombatantId,
+  effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "commandGrovelPending" }
+  >,
+): BattleState {
+  const target = state.combatants.get(targetId);
+  if (target === undefined) {
+    return state;
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(
+      targetId,
+      battleCreatureStateWithKnockOutPreservedConditions(
+        {
+          ...target,
+          activeEffects: target.activeEffects.filter(
+            (candidate) => candidate !== effect,
+          ),
+        },
+        applyCondition(target.conditions, "prone"),
+      ),
+    ),
+  };
+}
+
 function applyGreaseProneToCombatants(
   combatants: Map<CombatantId, BattleCreatureState>,
   targetIds: readonly CombatantId[],

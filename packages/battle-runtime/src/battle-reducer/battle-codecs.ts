@@ -58,6 +58,7 @@ import {
 } from "../identity.ts";
 import {
   BATTLE_ATTACK_RANGE_BANDS,
+  COMMAND_OPTIONS,
   ELDRITCH_BLAST_BEAM_COUNTS,
   SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS,
 } from "./domain-constants.ts";
@@ -807,6 +808,21 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       rangeFeet: MovementFeet,
     }),
     Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("commandGrovel"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      ability: Schema.Literal("wis"),
+      dc: DcSourceSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("targetList"),
+        minTargets: Schema.Literal(1),
+        maxTargets: Schema.Number,
+      }),
+      rangeFeet: MovementFeet,
+    }),
+    Schema.Struct({
       access: ClassCantripSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
       procedure: Schema.Literal("damageReduction"),
@@ -1195,6 +1211,13 @@ export const BattleHoleSchema = Schema.Union(
     label: Schema.String,
     spell: SupportedSpellInvocationSchema,
     choices: Schema.Array(Schema.Literal(...BATTLE_SURFACE_SKILLS)),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("commandOptionChoice"),
+    label: Schema.String,
+    spell: SupportedSpellInvocationSchema,
+    choices: Schema.Array(Schema.Literal(...COMMAND_OPTIONS)),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -1679,6 +1702,11 @@ type BattleFillEncoded =
       readonly value: Skill;
     }
   | {
+      readonly kind: "commandOptionChoice";
+      readonly holeId: string;
+      readonly value: (typeof COMMAND_OPTIONS)[number];
+    }
+  | {
       readonly kind: "rolledDice";
       readonly holeId: string;
       readonly selectedAttackDamageRiderUnitIds?: readonly string[];
@@ -2061,6 +2089,11 @@ export const BattleFillSchema: Schema.Schema<
       kind: Schema.Literal("skillChoice"),
       holeId: BattleHoleIdSchema,
       value: Schema.Literal(...BATTLE_SURFACE_SKILLS),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("commandOptionChoice"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Literal(...COMMAND_OPTIONS),
     }),
     Schema.Struct({
       kind: Schema.Literal("rolledDice"),

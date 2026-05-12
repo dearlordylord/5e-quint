@@ -32,8 +32,8 @@ This is a Unit/catalog backlog denominator, not RAW span coverage and not an MBT
 
 ### Spell Unit Pressure by Disposition
 
-- catalog-installed-owner-evidence-present: 109
-- catalog-installed-owner-evidence-required: 7
+- catalog-installed-owner-evidence-present: 112
+- catalog-installed-owner-evidence-required: 4
 - catalog-only/dead-for-now: 80
 - needs-surface-widening: 15
 

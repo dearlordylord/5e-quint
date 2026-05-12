@@ -3,7 +3,7 @@
 // intended.
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
 import { resetTurnActionEconomy } from "@dnd/shared-algebras/action-economy-algebra";
 
@@ -106,7 +106,10 @@ import { damageAmountAfterTargetAdjustments } from "./damage-helpers.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 
 import { applyPreparedSlotSpellDamage } from "./spells-damage-fills.ts";
-import { applyGreaseProneToTarget } from "./spells-active-effects.ts";
+import {
+  applyCommandGrovelProneToTarget,
+  applyGreaseProneToTarget,
+} from "./spells-active-effects.ts";
 
 import {
   attackActionOptionName,
@@ -532,6 +535,7 @@ type DurationActiveEffect = Extract<
     | Extract<BattleActiveEffect, { readonly kind: "sleepPendingRepeatSave" }>
     | Extract<BattleActiveEffect, { readonly kind: "sleepUnconscious" }>
     | Extract<BattleActiveEffect, { readonly kind: "spellDashBonusAction" }>
+    | Extract<BattleActiveEffect, { readonly kind: "commandGrovelPending" }>
   >,
   { readonly expiresAt: BattleActiveEffectExpiration }
 > & {
@@ -606,6 +610,93 @@ export type GreaseGroundHazardEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "greaseGroundHazard" }
 >;
+export type CommandGrovelPendingEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "commandGrovelPending" }
+>;
+
+export function commandGrovelPendingEffectForSubject(
+  state: BattleState,
+  subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "commandGrovel";
+    }
+  >,
+): CommandGrovelPendingEffect | null {
+  return (
+    commandGrovelPendingEffectsForActor(state, subject.actorId).find(
+      (effect) =>
+        effect.sourceSpellId === subject.sourceSpellId &&
+        effect.sourceCombatantId === subject.sourceCombatantId,
+    ) ?? null
+  );
+}
+
+export function commandGrovelPendingEffectsForActor(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly CommandGrovelPendingEffect[] {
+  const actor = state.combatants.get(actorId);
+  if (actor === undefined) {
+    return [];
+  }
+  return actor.activeEffects.filter(
+    (effect): effect is CommandGrovelPendingEffect =>
+      effect.kind === "commandGrovelPending" &&
+      effect.expiresAt.combatantId === actorId &&
+      effect.expiresAt.round === state.initiative.round,
+  );
+}
+
+export function resolveCommandGrovelCommand(
+  input: BattleResolutionInputForSubject<
+    Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "commandGrovel";
+      }
+    >
+  >,
+): BattleResolutionResult {
+  const effect = commandGrovelPendingEffectForSubject(input.state, input.subject);
+  if (effect === null) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Command Grovel is no longer pending for this actor.",
+    );
+  }
+  const unsupportedFill = input.fills.find(
+    (fill) => !endTurnFillKind(fill.kind),
+  );
+  if (unsupportedFill !== undefined) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Command Grovel only accepts End Turn fills.",
+    );
+  }
+  const proned = applyCommandGrovelProneToTarget(
+    input.state,
+    input.subject.actorId,
+    effect,
+  );
+  const endTurnResult = resolveEndTurnCommand({
+    state: proned,
+    subject: {
+      tag: "runtimeCommand",
+      actorId: input.subject.actorId,
+      command: "endTurn",
+    },
+    fills: input.fills,
+  });
+  return endTurnResult.tag === "needsHoles"
+    ? { ...endTurnResult, state: input.state, subject: input.subject }
+    : endTurnResult;
+}
 
 function greaseGroundHazardEffectFor(
   state: BattleState,

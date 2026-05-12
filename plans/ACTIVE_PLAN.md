@@ -244,25 +244,25 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 249,
       "id": "SRDINV50A",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Command Invocation and Grovel Runtime"
     },
     {
       "number": 250,
       "id": "SRDINV50B",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Promote Command Halt Runtime"
     },
     {
       "number": 251,
       "id": "SRDINV50C",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Promote Command Drop Held-Object Boundary"
     },
     {
       "number": 252,
       "id": "SRDINV50D",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Promote Command Approach and Flee Route Runtime"
     }
   ]
@@ -333,10 +333,10 @@ Keep it synchronized with the DAG table and task details.
 | 246   | SRDINV53 - Promote Jump Movement Replacement Runtime | done | SRDINV49 | SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Jump](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Jumping](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Jump is promoted as a Bonus Action Spell Slot invocation with touched willing creature targets, slot-scaled target count, one-minute spell-owned duration, once-per-target-turn use, exact 10-foot Movement spend for up to 30 feet of jump movement, caller-supplied legal landing facts, and Prone application for caller-supplied failed Difficult Terrain landing Acrobatics facts. |
 | 247   | SRDINV54 - Research Feather Fall Falling Runtime Boundary | done | SRDINV48 | SRDINV55 | [SRDINV54 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md), [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Feather Fall](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Falling](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: table-supplied fall-start and landing facts are enough for a focused Feather Fall runtime slice; generic falling simulation, fall-distance derivation, and map elevation are not prerequisites. |
 | 248   | SRDINV55 - Recursive SRD Inventory Planning Review | blocked | SRDINV49-SRDINV54, SRDINV50A-SRDINV50D | none | [SRDINV54 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md), [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Review SRDINV49-SRDINV54 plus the split Command runtime tasks, refresh spell Unit metrics, and append the next concrete spell Surface or runtime batch. |
-| 249   | SRDINV50A - Promote Command Invocation and Grovel Runtime | ready-for-implementation-after-light-research | SRDINV50 | SRDINV50B-SRDINV50D, SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote the shared Command invocation and pending next-turn effect with the Grovel option only: failed-save Prone plus end-turn cleanup. |
-| 250   | SRDINV50B - Promote Command Halt Runtime | blocked | SRDINV50A | SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Halt as target-turn Movement, Action, and Bonus Action suppression over the Command pending-effect shell after SRDINV50A lands. |
-| 251   | SRDINV50C - Promote Command Drop Held-Object Boundary | blocked | SRDINV50A | SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Drop as a caller-supplied held-object disposition boundary after SRDINV50A lands, then end the target's turn without adding duplicate inventory state. |
-| 252   | SRDINV50D - Promote Command Approach and Flee Route Runtime | blocked | SRDINV50A, SRDINV49 | SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [Speed](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Approach and Flee through caller-supplied route execution facts after SRDINV50A lands; no pathfinding derivation. |
+| 249   | SRDINV50A - Promote Command Invocation and Grovel Runtime | done | SRDINV50 | SRDINV50B-SRDINV50D, SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Command is promoted as a Grovel-only Spell Slot Magic Action with slot-scaled target count, Wisdom Saving Throw gate, failed-save pending next-turn Spell Effect, target-turn Prone application, end-turn cleanup, and explicit non-support for the remaining Command options. |
+| 250   | SRDINV50B - Promote Command Halt Runtime | ready-for-implementation-after-light-research | SRDINV50A | SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Halt as target-turn Movement, Action, and Bonus Action suppression over the Command pending-effect shell after SRDINV50A lands. |
+| 251   | SRDINV50C - Promote Command Drop Held-Object Boundary | ready-for-implementation-after-light-research | SRDINV50A | SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Drop as a caller-supplied held-object disposition boundary after SRDINV50A lands, then end the target's turn without adding duplicate inventory state. |
+| 252   | SRDINV50D - Promote Command Approach and Flee Route Runtime | ready-for-implementation-after-light-research | SRDINV50A, SRDINV49 | SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [Speed](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Approach and Flee through caller-supplied route execution facts after SRDINV50A lands; no pathfinding derivation. |
 
 ## Task Details
 ### Task 164 - QMBT69 - Recursive Unit Profile Planning Review
@@ -1341,7 +1341,7 @@ the final changeset is trivial.
 
 ### Task 249 - SRDINV50A - Promote Command Invocation and Grovel Runtime
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: SRDINV50
 
@@ -1354,11 +1354,11 @@ Research / plan:
 [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md),
 [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
 
-Scope: promote the shared Command Spell Invocation shell and the Grovel option:
-Magic Action and Spell Slot spend, slot-scaled creature target count, Wisdom
-Saving Throw gate, command-option fill narrowed to Grovel, failed-save pending
-next-turn Spell Effect, Prone application on the affected target's turn, and
-end-turn cleanup through the existing end-turn boundary.
+Result: Command is promoted as a Grovel-only Spell Slot Magic Action with
+slot-scaled creature target count, Wisdom Saving Throw gate, command-option
+fill narrowed to Grovel, failed-save pending next-turn Spell Effect, Prone
+application on the affected target's turn, and end-turn cleanup through the
+existing end-turn boundary.
 
 Out of scope: Approach, Drop, Flee, Halt, held-object inventory mutation,
 route/pathfinding derivation, and claiming full Command support.
@@ -1373,7 +1373,7 @@ changes require it.
 
 ### Task 250 - SRDINV50B - Promote Command Halt Runtime
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: SRDINV50A
 
@@ -1404,7 +1404,7 @@ require it.
 
 ### Task 251 - SRDINV50C - Promote Command Drop Held-Object Boundary
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: SRDINV50A
 
@@ -1438,7 +1438,7 @@ sequencing changes require it.
 
 ### Task 252 - SRDINV50D - Promote Command Approach and Flee Route Runtime
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: SRDINV50A, SRDINV49
 

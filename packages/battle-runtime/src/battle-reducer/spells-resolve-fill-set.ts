@@ -9,6 +9,7 @@ import {
   isScalarBuffTargetListInvocation,
   isTargetListSpellInvocation,
   type BattleAttackRollResult,
+  type BattleCommandOption,
   type BattleFill,
   type BattleHoleId,
   type BattleSpellSavingThrowOutcomeValue,
@@ -27,6 +28,7 @@ import {
   spellBeamDamageHoleId,
   spellBeamObjectTargetHoleId,
   spellBeamTargetHoleId,
+  commandOptionChoiceHoleId,
   spellDamageHole,
   spellDamageTypeChoiceHole,
   spellObjectTargetHoleId,
@@ -91,6 +93,7 @@ export type SpellFillSet =
         | BattleSpellSavingThrowOutcomeValue
         | undefined;
       readonly skillChoice: Skill | undefined;
+      readonly commandOptionChoice: BattleCommandOption | undefined;
       readonly damageTypeChoice:
         | Extract<BattleFill, { readonly kind: "damageTypeChoice" }>
         | undefined;
@@ -159,6 +162,7 @@ export function spellFillSet(
       : [];
   let savingThrowOutcomes: BattleSpellSavingThrowOutcomeValue | undefined;
   let skillChoice: Skill | undefined;
+  let commandOptionChoice: BattleCommandOption | undefined;
   let damageTypeChoice:
     | Extract<BattleFill, { readonly kind: "damageTypeChoice" }>
     | undefined;
@@ -326,6 +330,7 @@ export function spellFillSet(
         invocation.procedure !== "rollModifier" &&
         invocation.procedure !== "damageReduction" &&
         invocation.procedure !== "saveGatedCondition" &&
+        invocation.procedure !== "commandGrovel" &&
         invocation.procedure !== "jumpMovementReplacement" &&
         invocation.procedure !==
           "conditionImmunityAndTurnStartTemporaryHitPoints"
@@ -339,6 +344,8 @@ export function spellFillSet(
         (invocation.procedure === "scalarBuff" &&
           !isScalarBuffTargetListInvocation(invocation)) ||
         (invocation.procedure === "saveGatedCondition" &&
+          !isTargetListSpellInvocation(invocation)) ||
+        (invocation.procedure === "commandGrovel" &&
           !isTargetListSpellInvocation(invocation))
       ) {
         return {
@@ -413,6 +420,7 @@ export function spellFillSet(
         invocation.procedure !== "afterHitSaveGatedCondition" &&
         invocation.procedure !== "saveGatedAttackRollAdvantage" &&
         invocation.procedure !== "sleepTargetAdmission" &&
+        invocation.procedure !== "commandGrovel" &&
         invocation.procedure !== "greaseGroundHazard" &&
         !(
           invocation.procedure === "rollModifier" &&
@@ -489,6 +497,30 @@ export function spellFillSet(
         };
       }
       skillChoice = fill.value;
+      continue;
+    }
+
+    if (fill.kind === "commandOptionChoice") {
+      if (invocation.procedure !== "commandGrovel") {
+        return {
+          tag: "invalid",
+          message: "Command option choice does not match this spell act.",
+        };
+      }
+      if (fill.holeId !== commandOptionChoiceHoleId(invocation)) {
+        return {
+          tag: "invalid",
+          message:
+            "Command option choice must use the selected spell act command-option hole.",
+        };
+      }
+      if (commandOptionChoice !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Command option choice was filled twice.",
+        };
+      }
+      commandOptionChoice = fill.value;
       continue;
     }
 
@@ -678,6 +710,7 @@ export function spellFillSet(
     attackRoll,
     savingThrowOutcomes,
     skillChoice,
+    commandOptionChoice,
     damageTypeChoice,
     concentrationSavingThrows,
     damageDispositions,
@@ -699,6 +732,7 @@ export function spellFillSetSavingThrowTargeting(
         invocation.procedure === "afterHitSaveGatedCondition" ||
         invocation.procedure === "saveGatedAttackRollAdvantage" ||
         invocation.procedure === "sleepTargetAdmission" ||
+        invocation.procedure === "commandGrovel" ||
         invocation.procedure === "greaseGroundHazard"
       ? invocation.targeting
       : { kind: "singleCombatant" };
