@@ -261,9 +261,105 @@ Keep it synchronized with the DAG table and task details.
     },
     {
       "number": 252,
-      "id": "SRDINV50D",
+      "id": "SRDINV50D1",
       "status": "ready-for-implementation-after-light-research",
-      "title": "Promote Command Approach and Flee Route Runtime"
+      "title": "Promote Command Approach Route Runtime"
+    },
+    {
+      "number": 253,
+      "id": "SRDINV50D2",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote Command Flee Route Runtime"
+    },
+    {
+      "number": 254,
+      "id": "SRDINV56A",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote Feather Fall Reaction Invocation Runtime"
+    },
+    {
+      "number": 255,
+      "id": "SRDINV56B",
+      "status": "blocked",
+      "title": "Promote Feather Fall Landing Cleanup Runtime"
+    },
+    {
+      "number": 256,
+      "id": "SRDINV57",
+      "status": "blocked",
+      "title": "Promote Grease Difficult Terrain Movement Boundary"
+    },
+    {
+      "number": 257,
+      "id": "SRDINV58A",
+      "status": "blocked",
+      "title": "Promote Faerie Fire Invisible-Denial Runtime"
+    },
+    {
+      "number": 258,
+      "id": "SRDINV58B",
+      "status": "blocked",
+      "title": "Research Faerie Fire Object Outline and Dim Light Boundary"
+    },
+    {
+      "number": 259,
+      "id": "SRDINV59A",
+      "status": "blocked",
+      "title": "Promote Starry Wisp Dim Light Rider Runtime"
+    },
+    {
+      "number": 260,
+      "id": "SRDINV59B",
+      "status": "blocked",
+      "title": "Promote Starry Wisp Invisible-Denial Rider Runtime"
+    },
+    {
+      "number": 261,
+      "id": "SRDINV60A",
+      "status": "blocked",
+      "title": "Promote Protection from Evil and Good Condition Prevention"
+    },
+    {
+      "number": 262,
+      "id": "SRDINV60B",
+      "status": "blocked",
+      "title": "Promote Protection from Evil and Good Scoped Save Advantage"
+    },
+    {
+      "number": 263,
+      "id": "SRDINV61",
+      "status": "blocked",
+      "title": "Promote Animal Friendship Damage-Break Cleanup"
+    },
+    {
+      "number": 264,
+      "id": "SRDINV62",
+      "status": "blocked",
+      "title": "Promote Hunter's Mark Upcast Duration Maxima"
+    },
+    {
+      "number": 265,
+      "id": "SRDINV63",
+      "status": "blocked",
+      "title": "Research Hunter's Mark Finding-Advantage Boundary"
+    },
+    {
+      "number": 266,
+      "id": "SRDINV64",
+      "status": "blocked",
+      "title": "Promote Chill Touch Healing-Prevention Rider"
+    },
+    {
+      "number": 267,
+      "id": "SRDINV65",
+      "status": "blocked",
+      "title": "Promote Shocking Grasp Opportunity Attack Denial"
+    },
+    {
+      "number": 268,
+      "id": "SRDINV66",
+      "status": "blocked",
+      "title": "Recursive SRD Inventory Planning Review"
     }
   ]
 }
@@ -326,17 +422,33 @@ Keep it synchronized with the DAG table and task details.
 | 239   | SRDINV46 - Widen Jump Movement Replacement Surface | done | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Jump](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Jump is installed with typed touched willing targets, one-minute duration, slot-scaled additional targets, and once-per-turn jump movement replacement facts; runtime Movement spending, jump geometry, landing checks, and Difficult Terrain handling remain unpromoted. |
 | 240   | SRDINV47 - Widen Feather Fall Falling Reaction Surface | done | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Feather Fall](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Feather Fall is installed with a typed interrupting falling Reaction trigger, up-to-five falling creature targets, fall-rate cap, fall-damage prevention, and per-target landing cleanup; runtime falling simulation, fall-distance derivation, and landing geometry remain unpromoted. |
 | 241   | SRDINV48 - Recursive SRD Inventory Planning Review | done | SRDINV42-SRDINV47 | SRDINV49-SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: refreshed spell Unit metrics after SRDINV42-SRDINV47, confirmed movement/action Surface blockers are now owner-evidence-required runtime work, and appended SRDINV49-SRDINV55 movement/action runtime batch. |
-| 242   | SRDINV49 - Promote Expeditious Retreat Dash Runtime | done | SRDINV48 | SRDINV50D, SRDINV52-SRDINV53, SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Expeditious Retreat](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Dash](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Expeditious Retreat is promoted as a Bonus Action spell invocation that immediately resolves Dash through the existing movement/action owner, spends a Spell Slot, starts Concentration, and grants Concentration-owned later Bonus Action Dash permission without storing duplicate Speed or Movement facts. |
-| 243   | SRDINV50 - Research Command Option Runtime Split | done | SRDINV48 | SRDINV50A-SRDINV50D, SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Command runtime must split into shared invocation/Grovel, Halt action suppression, Drop held-object boundary, and Approach/Flee route boundary tasks before support can be claimed. |
+| 242   | SRDINV49 - Promote Expeditious Retreat Dash Runtime | done | SRDINV48 | SRDINV50D1-SRDINV50D2, SRDINV52-SRDINV53, SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Expeditious Retreat](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Dash](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Expeditious Retreat is promoted as a Bonus Action spell invocation that immediately resolves Dash through the existing movement/action owner, spends a Spell Slot, starts Concentration, and grants Concentration-owned later Bonus Action Dash permission without storing duplicate Speed or Movement facts. |
+| 243   | SRDINV50 - Research Command Option Runtime Split | done | SRDINV48 | SRDINV50A-SRDINV50D2, SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Command runtime must split into shared invocation/Grovel, Halt action suppression, Drop held-object boundary, and separate Approach/Flee route boundary tasks before support can be claimed. |
 | 244   | SRDINV51 - Promote Thunderwave Push Runtime Boundary | done | SRDINV48 | SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Thunderwave](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Cube](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote save damage plus caller-supplied creature push, unsecured-object push disposition, and audible-boom evidence without deriving push geometry inside battle runtime. |
 | 245   | SRDINV52 - Promote Dissonant Whispers Forced Reaction Movement Runtime | done | SRDINV49 | SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Dissonant Whispers](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Reaction](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [Opportunity Attacks](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Dissonant Whispers is promoted as Wisdom save Psychic damage with half damage on success, target Reaction spend on failed saves when available, caller-supplied safest-route movement, no-Reaction/no-movement fallbacks, and table-supplied Opportunity Attack windows from Reaction movement. |
 | 246   | SRDINV53 - Promote Jump Movement Replacement Runtime | done | SRDINV49 | SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Jump](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Jumping](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Jump is promoted as a Bonus Action Spell Slot invocation with touched willing creature targets, slot-scaled target count, one-minute spell-owned duration, once-per-target-turn use, exact 10-foot Movement spend for up to 30 feet of jump movement, caller-supplied legal landing facts, and Prone application for caller-supplied failed Difficult Terrain landing Acrobatics facts. |
-| 247   | SRDINV54 - Research Feather Fall Falling Runtime Boundary | done | SRDINV48 | SRDINV55 | [SRDINV54 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md), [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Feather Fall](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Falling](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: table-supplied fall-start and landing facts are enough for a focused Feather Fall runtime slice; generic falling simulation, fall-distance derivation, and map elevation are not prerequisites. |
-| 248   | SRDINV55 - Recursive SRD Inventory Planning Review | blocked | SRDINV49-SRDINV54, SRDINV50A-SRDINV50D | none | [SRDINV54 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md), [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Review SRDINV49-SRDINV54 plus the split Command runtime tasks, refresh spell Unit metrics, and append the next concrete spell Surface or runtime batch. |
-| 249   | SRDINV50A - Promote Command Invocation and Grovel Runtime | done | SRDINV50 | SRDINV50B-SRDINV50D, SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Command is promoted as a Grovel-only Spell Slot Magic Action with slot-scaled target count, Wisdom Saving Throw gate, failed-save pending next-turn Spell Effect, target-turn Prone application, end-turn cleanup, and explicit non-support for the remaining Command options. |
+| 247   | SRDINV54 - Research Feather Fall Falling Runtime Boundary | done | SRDINV48 | SRDINV56A, SRDINV55 | [SRDINV54 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md), [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Feather Fall](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Falling](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: table-supplied fall-start and landing facts are enough for a focused Feather Fall runtime slice; generic falling simulation, fall-distance derivation, and map elevation are not prerequisites. |
+| 248   | SRDINV55 - Recursive SRD Inventory Planning Review | blocked | SRDINV49-SRDINV54, SRDINV50A-SRDINV50D2, SRDINV56A-SRDINV56B | SRDINV57-SRDINV66 | [SRDINV54 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md), [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Review the closed Command, movement, and Feather Fall runtime batch, refresh spell Unit metrics, and unlock the pre-seeded deferred-clause batch only after verifying the frontier is clean. |
+| 249   | SRDINV50A - Promote Command Invocation and Grovel Runtime | done | SRDINV50 | SRDINV50B-SRDINV50D2, SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Command is promoted as a Grovel-only Spell Slot Magic Action with slot-scaled target count, Wisdom Saving Throw gate, failed-save pending next-turn Spell Effect, target-turn Prone application, end-turn cleanup, and explicit non-support for the remaining Command options. |
 | 250   | SRDINV50B - Promote Command Halt Runtime | done | SRDINV50A | SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Command Halt is promoted over the shared pending Command effect, suppresses target-turn Movement, Action, and Bonus Action through turn-resource state and stale-subject rejection, and clears at the target end-turn boundary. |
 | 251   | SRDINV50C - Promote Command Drop Held-Object Boundary | ready-for-implementation-after-light-research | SRDINV50A | SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Drop as a caller-supplied held-object disposition boundary after SRDINV50A lands, then end the target's turn without adding duplicate inventory state. |
-| 252   | SRDINV50D - Promote Command Approach and Flee Route Runtime | ready-for-implementation-after-light-research | SRDINV50A, SRDINV49 | SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [Speed](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Approach and Flee through caller-supplied route execution facts after SRDINV50A lands; no pathfinding derivation. |
+| 252   | SRDINV50D1 - Promote Command Approach Route Runtime | ready-for-implementation-after-light-research | SRDINV50A, SRDINV49 | SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [Speed](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Approach only through caller-supplied shortest/direct route execution facts and caller-supplied within-5-feet evidence; no pathfinding derivation. |
+| 253   | SRDINV50D2 - Promote Command Flee Route Runtime | ready-for-implementation-after-light-research | SRDINV50A, SRDINV49 | SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [Speed](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Opportunity Attacks](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Flee only through caller-supplied fastest-available moving-away route facts and actual movement-budget execution; no route AI. |
+| 254   | SRDINV56A - Promote Feather Fall Reaction Invocation Runtime | ready-for-implementation-after-light-research | SRDINV54 | SRDINV56B, SRDINV55 | [SRDINV54 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md), [Feather Fall](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Falling](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Reaction](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote table-supplied falling-trigger Reaction invocation, up-to-five falling target admission, spell effect creation, and active descent-cap projection; no falling simulator. |
+| 255   | SRDINV56B - Promote Feather Fall Landing Cleanup Runtime | blocked | SRDINV56A | SRDINV55 | [SRDINV54 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md), [Feather Fall](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Falling](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote table-supplied landing cleanup for Feather Fall effects, preventing fall damage and Falling-hazard Prone at the same landing boundary. |
+| 256   | SRDINV57 - Promote Grease Difficult Terrain Movement Boundary | blocked | SRDINV55 | SRDINV66 | [Grease](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Grease's ground as caller-supplied Difficult Terrain movement-cost evidence without deriving area geometry or pathfinding. |
+| 257   | SRDINV58A - Promote Faerie Fire Invisible-Denial Runtime | blocked | SRDINV55 | SRDINV58B, SRDINV66 | [Faerie Fire](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Invisible](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote the failed-save visible target rider that denies Invisible benefits for affected creatures while the outline persists. |
+| 258   | SRDINV58B - Research Faerie Fire Object Outline and Dim Light Boundary | blocked | SRDINV58A | SRDINV66 | [Faerie Fire](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Dim Light](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Decide whether noncarried object outlines and Dim Light emission are battle-runtime facts, Surface-only facts, or explicit out-of-scope environmental projection. |
+| 259   | SRDINV59A - Promote Starry Wisp Dim Light Rider Runtime | blocked | SRDINV55 | SRDINV59B, SRDINV66 | [Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Dim Light](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [SRDINV34 decision](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV28E_STARRY_WISP_OBJECT_TARGET_DECISION.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Starry Wisp's hit-applied Dim Light rider as a timed target-attached effect if the existing light model can execute it without duplicating visibility state. |
+| 260   | SRDINV59B - Promote Starry Wisp Invisible-Denial Rider Runtime | blocked | SRDINV59A | SRDINV66 | [Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Invisible](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote the hit-applied Starry Wisp rider that prevents the target from benefiting from Invisible until the spell's next-turn boundary. |
+| 261   | SRDINV60A - Promote Protection from Evil and Good Condition Prevention | blocked | SRDINV55 | SRDINV60B, SRDINV66 | [Protection from Evil and Good](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-M-P.md), [Charmed](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Frightened](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Possession](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote prevention of scoped-creature possession and new Charmed/Frightened application while reusing existing creature-type and condition ownership facts. |
+| 262   | SRDINV60B - Promote Protection from Evil and Good Scoped Save Advantage | blocked | SRDINV60A | SRDINV66 | [Protection from Evil and Good](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-M-P.md), [Saving Throw](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Advantage on new saves against already-applied scoped possession, Charmed, and Frightened effects without adding parallel save-modifier state. |
+| 263   | SRDINV61 - Promote Animal Friendship Damage-Break Cleanup | blocked | SRDINV55 | SRDINV66 | [Animal Friendship](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Charmed](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote caster-or-ally damage cleanup for Animal Friendship's Charmed effect through the existing damage/effect ownership boundary. |
+| 264   | SRDINV62 - Promote Hunter's Mark Upcast Duration Maxima | blocked | SRDINV55 | SRDINV63, SRDINV66 | [Hunter's Mark](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Concentration](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Hunter's Mark higher-slot duration maxima and concentration-owned expiration without changing the existing weapon-hit damage path. |
+| 265   | SRDINV63 - Research Hunter's Mark Finding-Advantage Boundary | blocked | SRDINV62 | SRDINV66 | [Hunter's Mark](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Ability Check](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Decide whether the Perception/Survival finding Advantage clause is battle-runtime roll behavior, exploration-only metadata, or a caller-supplied battle check modifier. |
+| 266   | SRDINV64 - Promote Chill Touch Healing-Prevention Rider | blocked | SRDINV55 | SRDINV66 | [Chill Touch](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Healing](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Chill Touch's hit-applied no-hit-point-regain rider through the existing healing resolution boundary until the caster's next turn. |
+| 267   | SRDINV65 - Promote Shocking Grasp Opportunity Attack Denial | blocked | SRDINV55 | SRDINV66 | [Shocking Grasp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Opportunity Attacks](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Reaction](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Shocking Grasp's hit-applied Opportunity Attack prevention until the target's next-turn boundary, scoped to Opportunity Attacks rather than all Reactions. |
+| 268   | SRDINV66 - Recursive SRD Inventory Planning Review | blocked | SRDINV57-SRDINV65 | none | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Review the deferred-clause batch, refresh spell Unit metrics, measure remaining level-1 battle-related gaps, and append the next concrete batch only after resolving or explicitly deferring any review notes. |
 
 ## Task Details
 ### Task 164 - QMBT69 - Recursive Unit Profile Planning Review
@@ -1096,7 +1208,7 @@ Status: `done`
 
 Depends on: SRDINV48
 
-Blocks: SRDINV50D, SRDINV52-SRDINV53, SRDINV55
+Blocks: SRDINV50D1-SRDINV50D2, SRDINV52-SRDINV53, SRDINV55
 
 Research / plan:
 [SRDINV48_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md),
@@ -1136,7 +1248,7 @@ Status: `done`
 
 Depends on: SRDINV48
 
-Blocks: SRDINV50A-SRDINV50D, SRDINV55
+Blocks: SRDINV50A-SRDINV50D2, SRDINV55
 
 Research / plan:
 [SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md),
@@ -1162,11 +1274,11 @@ Invocation, Spell Effect, Movement, Speed, Prone, and Object; active-plan
 consistency if follow-up tasks are appended or revised; no MBT unless behavior
 is implemented.
 
-Result: Command runtime is split into SRDINV50A-SRDINV50D. The split keeps the
+Result: Command runtime is split into SRDINV50A-SRDINV50D2. The split keeps the
 shared cast/save/pending-effect shell separate from Grovel, Halt action
-suppression, Drop held-object disposition, and Approach/Flee route execution.
-Route and held-object facts remain caller/table-supplied at their execution
-boundaries rather than being stored as duplicate battle-runtime state.
+suppression, Drop held-object disposition, and separate Approach/Flee route
+execution. Route and held-object facts remain caller/table-supplied at their
+execution boundaries rather than being stored as duplicate battle-runtime state.
 
 ### Task 244 - SRDINV51 - Promote Thunderwave Push Runtime Boundary
 
@@ -1276,7 +1388,7 @@ Status: `done`
 
 Depends on: SRDINV48
 
-Blocks: SRDINV55
+Blocks: SRDINV56A, SRDINV55
 
 Research / plan:
 [SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md),
@@ -1312,9 +1424,9 @@ simulation, fall-distance derivation, and map elevation remain out of scope.
 
 Status: `blocked`
 
-Depends on: SRDINV49-SRDINV54, SRDINV50A-SRDINV50D
+Depends on: SRDINV49-SRDINV54, SRDINV50A-SRDINV50D2, SRDINV56A-SRDINV56B
 
-Blocks: none
+Blocks: SRDINV57-SRDINV66
 
 Research / plan:
 [SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md),
@@ -1324,9 +1436,9 @@ Research / plan:
 [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md),
 [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
 
-Scope: review SRDINV49-SRDINV54 plus the split Command runtime results,
-refresh spell Unit metrics, and append the next concrete spell Surface or
-runtime batch.
+Scope: review the closed Command, movement, and Feather Fall runtime batch,
+refresh spell Unit metrics, and unlock SRDINV57-SRDINV66 only after verifying
+that support claims, deferred mechanics, and inventory pressure are honest.
 
 Out of scope: implementation work not captured by the newly appended batch and
 treating catalog admission alone as behavior support.
@@ -1345,7 +1457,7 @@ Status: `done`
 
 Depends on: SRDINV50
 
-Blocks: SRDINV50B-SRDINV50D, SRDINV55
+Blocks: SRDINV50B-SRDINV50D2, SRDINV55
 
 Research / plan:
 [SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md),
@@ -1437,12 +1549,43 @@ mutation boundary is added in this slice.
 Verification: RAW/source review for Command Drop, Object, held objects, and
 turn-ending clauses; focused tests for known empty held-object facts, known
 held-object facts, unknown/missing held-object facts as typed failure, dropped
-object outcomes, end-turn cleanup, and no duplicate inventory state; package-local
-Quint updates before runtime divergence; `pnpm unit-profile-coverage:check --write`
-if evidence changes; `pnpm quality`; MBT only if integrated object or turn
-sequencing changes require it.
+object outcomes, end-turn cleanup, and no duplicate inventory state;
+package-local Quint updates before runtime divergence; `pnpm
+unit-profile-coverage:check --write` if evidence changes; `pnpm quality`; MBT
+only if integrated object or turn sequencing changes require it.
 
-### Task 252 - SRDINV50D - Promote Command Approach and Flee Route Runtime
+### Task 252 - SRDINV50D1 - Promote Command Approach Route Runtime
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: SRDINV50A, SRDINV49
+
+Blocks: SRDINV55
+
+Research / plan:
+[SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md),
+[Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md),
+[Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md),
+[Speed](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Approach through caller-supplied shortest/direct route execution
+facts. Runtime consumes a supplied movement result and caller/table proximity
+evidence for whether the target moved within 5 feet of the caster; end the turn
+only when that predicate is true.
+
+Out of scope: automatic shortest/direct route derivation, map collision and
+terrain pathfinding, generic route choice AI, and Flee behavior.
+
+Verification: RAW/source review for Command Approach, Movement, Speed, and
+turn-ending clauses; focused tests for route fact consumption, Movement spend,
+proximity-gated end-turn behavior, and no duplicate route state; package-local
+Quint updates before runtime divergence; `pnpm unit-profile-coverage:check
+--write` if evidence changes; `pnpm quality`; `/simplify` convergence for
+significant changes; MBT only if integrated movement sequencing changes require
+it.
+
+### Task 253 - SRDINV50D2 - Promote Command Flee Route Runtime
 
 Status: `ready-for-implementation-after-light-research`
 
@@ -1458,22 +1601,430 @@ Research / plan:
 [Opportunity Attacks](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
 [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
 
-Scope: promote Approach and Flee through caller-supplied route execution facts.
-Approach consumes a supplied shortest/direct movement result and caller/table
-proximity evidence for whether the target moved within 5 feet of the caster;
-end the turn only when that predicate is true. Flee consumes supplied
-fastest-available moving-away facts through the existing Movement budget owner.
-Opportunity Attack eligibility should derive from actual movement through the
-existing movement/reaction boundary.
+Scope: promote Flee through caller-supplied fastest-available moving-away route
+facts and the existing Movement budget owner. Opportunity Attack eligibility
+must derive from actual movement through the existing movement/reaction
+boundary, not from route metadata.
 
-Out of scope: automatic shortest, direct, safest, or fastest route derivation;
-map collision and terrain pathfinding; generic route choice AI; and inventing
-non-RAW movement modes for "fastest available means."
+Out of scope: automatic fastest route derivation, route AI, map pathfinding,
+and inventing non-RAW movement modes for "fastest available means."
 
-Verification: RAW/source review for Command Approach/Flee, Movement, Speed,
-Opportunity Attacks, and turn-ending clauses; focused tests for route fact
-consumption, Movement spend, Approach proximity/end-turn behavior, Flee
-whole-turn movement obligation, and Opportunity Attack derivation from actual
-movement; package-local Quint updates before runtime divergence; `pnpm
-unit-profile-coverage:check --write` if evidence changes; `pnpm quality`; MBT
-only if integrated movement/reaction sequencing changes require it.
+Verification: RAW/source review for Command Flee, Movement, Speed, Opportunity
+Attacks, and turn-ending clauses; focused tests for route fact consumption,
+Movement spend, full movement obligation, turn end, and Opportunity Attack
+derivation from actual movement; package-local Quint updates before runtime
+divergence; `pnpm unit-profile-coverage:check --write` if evidence changes;
+`pnpm quality`; `/simplify` convergence for significant changes; MBT only if
+integrated movement/reaction sequencing changes require it.
+
+### Task 254 - SRDINV56A - Promote Feather Fall Reaction Invocation Runtime
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: SRDINV54
+
+Blocks: SRDINV56B, SRDINV55
+
+Research / plan:
+[SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md),
+[Feather Fall](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[Falling](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Reaction](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Feather Fall as a table-supplied falling-trigger Reaction
+invocation with up-to-five falling target admission, Spell Slot and Reaction
+spend, per-target spell effects, and active descent-cap projection.
+
+Out of scope: fall-distance derivation, falling hazard simulation, map
+elevation, and landing cleanup, which is SRDINV56B.
+
+Verification: RAW/source review for Feather Fall, Falling, Reaction, Target,
+Movement, and Spell Effect; focused tests for trigger facts, target cap,
+invalid non-falling targets, resource spend, effect creation, and descent-cap
+projection; package-local Quint updates before runtime divergence; `pnpm
+unit-profile-coverage:check --write` if evidence changes; `pnpm quality`;
+`/simplify` convergence for significant changes; MBT only if integrated
+reaction sequencing changes require it.
+
+### Task 255 - SRDINV56B - Promote Feather Fall Landing Cleanup Runtime
+
+Status: `blocked`
+
+Depends on: SRDINV56A
+
+Blocks: SRDINV55
+
+Research / plan:
+[SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md),
+[Feather Fall](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[Falling](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote table-supplied landing cleanup for Feather Fall effects. Landing
+must clear the affected target's effect and prevent both fall damage and the
+Falling hazard's Prone outcome at that same landing boundary.
+
+Out of scope: deriving when landing occurs, calculating fall damage, and
+general falling simulation.
+
+Verification: RAW/source review for Feather Fall landing, Falling, fall damage,
+and Prone clauses; focused tests for landing cleanup, fall-damage prevention,
+Prone prevention, unaffected falling creatures, and stale landing facts;
+package-local Quint updates before runtime divergence; `pnpm
+unit-profile-coverage:check --write` if evidence changes; `pnpm quality`;
+`/simplify` convergence for significant changes; MBT only if integrated hazard
+sequencing changes require it.
+
+### Task 256 - SRDINV57 - Promote Grease Difficult Terrain Movement Boundary
+
+Status: `blocked`
+
+Depends on: SRDINV55
+
+Blocks: SRDINV66
+
+Research / plan:
+[Grease](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md),
+[SRDINV41_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Grease's ground as caller-supplied Difficult Terrain
+movement-cost evidence wired into the Movement budget owner.
+
+Out of scope: automatic area membership, terrain pathfinding, and non-Grease
+hazard generalization.
+
+Verification: RAW/source review for Grease, Difficult Terrain, and Movement;
+focused tests for movement-cost application from supplied Grease area facts,
+cleanup at spell end, and no duplicate area geometry; package-local Quint
+updates before runtime divergence; `pnpm unit-profile-coverage:check --write`
+if evidence changes; `pnpm quality`; `/simplify` convergence for significant
+changes; MBT only if integrated movement sequencing changes require it.
+
+### Task 257 - SRDINV58A - Promote Faerie Fire Invisible-Denial Runtime
+
+Status: `blocked`
+
+Depends on: SRDINV55
+
+Blocks: SRDINV58B, SRDINV66
+
+Research / plan:
+[Faerie Fire](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[Invisible](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote the failed-save Faerie Fire rider that prevents affected
+creatures from benefiting from Invisible while outlined.
+
+Out of scope: noncarried object outlines, light emission, and automatic area
+membership.
+
+Verification: RAW/source review for Faerie Fire and Invisible; focused tests
+for save failure/success, Invisible benefit denial, concentration cleanup, and
+no duplicate visibility state; package-local Quint updates before runtime
+divergence; `pnpm unit-profile-coverage:check --write` if evidence changes;
+`pnpm quality`; `/simplify` convergence for significant changes; MBT only if
+visibility/attack sequencing changes require it.
+
+### Task 258 - SRDINV58B - Research Faerie Fire Object Outline and Dim Light Boundary
+
+Status: `blocked`
+
+Depends on: SRDINV58A
+
+Blocks: SRDINV66
+
+Research / plan:
+[Faerie Fire](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[Dim Light](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: decide whether object outlines and Dim Light emission are executable
+battle-runtime facts, Surface-only facts, or explicit environmental projection
+outside this battle runtime.
+
+Out of scope: implementing runtime behavior in this research task.
+
+Verification: RAW/source review for Faerie Fire, Object, Dim Light, visibility,
+and area vocabulary; active-plan consistency if follow-up tasks are appended;
+`/simplify` convergence if the plan changes are significant; no MBT.
+
+### Task 259 - SRDINV59A - Promote Starry Wisp Dim Light Rider Runtime
+
+Status: `blocked`
+
+Depends on: SRDINV55
+
+Blocks: SRDINV59B, SRDINV66
+
+Research / plan:
+[Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md),
+[Dim Light](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[SRDINV28E_STARRY_WISP_OBJECT_TARGET_DECISION.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV28E_STARRY_WISP_OBJECT_TARGET_DECISION.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Starry Wisp's hit-applied Dim Light rider as a timed
+target-attached effect if the current light/visibility model can execute it
+without duplicating environmental state.
+
+Out of scope: generic illumination simulation and object-target changes already
+owned by the earlier object-target decision.
+
+Verification: RAW/source review for Starry Wisp and Dim Light; focused tests
+for hit application, duration, cleanup, and interaction with existing light
+projection; package-local Quint updates before runtime divergence; `pnpm
+unit-profile-coverage:check --write` if evidence changes; `pnpm quality`;
+`/simplify` convergence for significant changes; MBT only if attack/visibility
+sequencing changes require it.
+
+### Task 260 - SRDINV59B - Promote Starry Wisp Invisible-Denial Rider Runtime
+
+Status: `blocked`
+
+Depends on: SRDINV59A
+
+Blocks: SRDINV66
+
+Research / plan:
+[Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md),
+[Invisible](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote the hit-applied Starry Wisp rider that prevents the target from
+benefiting from Invisible until the spell's next-turn boundary.
+
+Out of scope: Faerie Fire's area save and object outline behavior.
+
+Verification: RAW/source review for Starry Wisp and Invisible; focused tests
+for hit application, Invisible benefit denial, next-turn cleanup, and no broad
+condition removal; package-local Quint updates before runtime divergence; `pnpm
+unit-profile-coverage:check --write` if evidence changes; `pnpm quality`;
+`/simplify` convergence for significant changes; MBT only if attack/visibility
+sequencing changes require it.
+
+### Task 261 - SRDINV60A - Promote Protection from Evil and Good Condition Prevention
+
+Status: `blocked`
+
+Depends on: SRDINV55
+
+Blocks: SRDINV60B, SRDINV66
+
+Research / plan:
+[Protection from Evil and Good](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-M-P.md),
+[Charmed](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Frightened](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Possession](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote prevention of scoped-creature possession and new Charmed or
+Frightened application while reusing existing creature-type and condition
+ownership facts.
+
+Out of scope: existing-effect save Advantage, attack Disadvantage already
+covered by SRDINV30C, and social disposition behavior.
+
+Verification: RAW/source review for Protection from Evil and Good, Charmed,
+Frightened, Possession, and creature types; focused tests for scoped prevention,
+unscoped effect pass-through, concentration cleanup, and no parallel condition
+state; package-local Quint updates before runtime divergence; `pnpm
+unit-profile-coverage:check --write` if evidence changes; `pnpm quality`;
+`/simplify` convergence for significant changes; MBT only if integrated
+condition sequencing changes require it.
+
+### Task 262 - SRDINV60B - Promote Protection from Evil and Good Scoped Save Advantage
+
+Status: `blocked`
+
+Depends on: SRDINV60A
+
+Blocks: SRDINV66
+
+Research / plan:
+[Protection from Evil and Good](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-M-P.md),
+[Saving Throw](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Advantage on new saves against already-applied scoped
+possession, Charmed, and Frightened effects using the existing roll-modifier
+boundary.
+
+Out of scope: preventing new conditions, which is SRDINV60A, and broad save
+Advantage unrelated to the protected effect.
+
+Verification: RAW/source review for Protection from Evil and Good and Saving
+Throw; focused tests for scoped existing effects, unscoped effects, stale
+effects, concentration cleanup, and no duplicate save-modifier state;
+package-local Quint updates before runtime divergence; `pnpm
+unit-profile-coverage:check --write` if evidence changes; `pnpm quality`;
+`/simplify` convergence for significant changes; MBT only if integrated roll
+sequencing changes require it.
+
+### Task 263 - SRDINV61 - Promote Animal Friendship Damage-Break Cleanup
+
+Status: `blocked`
+
+Depends on: SRDINV55
+
+Blocks: SRDINV66
+
+Research / plan:
+[Animal Friendship](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md),
+[Charmed](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote caster-or-ally damage cleanup for Animal Friendship's Charmed
+effect through the existing damage/effect ownership boundary.
+
+Out of scope: friendly disposition, target knowledge, Beast-target admission
+already supported, and generic charm social memory.
+
+Verification: RAW/source review for Animal Friendship, Charmed, damage, and
+ally/caster wording; focused tests for caster damage cleanup, ally damage
+cleanup, unrelated damage pass-through, and no duplicate relationship state;
+package-local Quint updates before runtime divergence; `pnpm
+unit-profile-coverage:check --write` if evidence changes; `pnpm quality`;
+`/simplify` convergence for significant changes; MBT only if integrated damage
+cleanup sequencing changes require it.
+
+### Task 264 - SRDINV62 - Promote Hunter's Mark Upcast Duration Maxima
+
+Status: `blocked`
+
+Depends on: SRDINV55
+
+Blocks: SRDINV63, SRDINV66
+
+Research / plan:
+[Hunter's Mark](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[Concentration](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Hunter's Mark higher-slot duration maxima and
+Concentration-owned expiration without changing the existing weapon-hit damage
+path.
+
+Out of scope: finding-check Advantage and retargeting behavior beyond existing
+support.
+
+Verification: RAW/source review for Hunter's Mark, upcasting, duration, and
+Concentration; focused tests for slot-level duration boundaries, concentration
+cleanup, existing damage behavior preservation, and evidence regeneration;
+package-local Quint updates before runtime divergence; `pnpm
+unit-profile-coverage:check --write` if evidence changes; `pnpm quality`;
+`/simplify` convergence for significant changes; MBT only if integrated
+duration sequencing changes require it.
+
+### Task 265 - SRDINV63 - Research Hunter's Mark Finding-Advantage Boundary
+
+Status: `blocked`
+
+Depends on: SRDINV62
+
+Blocks: SRDINV66
+
+Research / plan:
+[Hunter's Mark](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[Ability Check](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: decide whether the finding Advantage clause is battle-runtime roll
+behavior, exploration-only metadata, or a caller-supplied battle check modifier
+for Perception/Survival-style checks.
+
+Out of scope: implementing runtime behavior in this research task.
+
+Verification: RAW/source review for Hunter's Mark and Ability Check terms;
+inspect existing roll-modifier boundaries; active-plan consistency if follow-up
+tasks are appended; `/simplify` convergence if the plan changes are
+significant; no MBT.
+
+### Task 266 - SRDINV64 - Promote Chill Touch Healing-Prevention Rider
+
+Status: `blocked`
+
+Depends on: SRDINV55
+
+Blocks: SRDINV66
+
+Research / plan:
+[Chill Touch](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md),
+[Healing](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Chill Touch's hit-applied no-hit-point-regain rider through the
+existing healing resolution boundary until the caster's next-turn boundary.
+
+Out of scope: object targeting and the damage-only spell attack support already
+owned by earlier profile work.
+
+Verification: RAW/source review for Chill Touch, Healing, Hit Points, and
+duration wording; focused tests for hit application, healing prevention, failed
+attack pass-through, next-turn cleanup, and no duplicate HP state;
+package-local Quint updates before runtime divergence; `pnpm
+unit-profile-coverage:check --write` if evidence changes; `pnpm quality`;
+`/simplify` convergence for significant changes; MBT only if integrated healing
+sequencing changes require it.
+
+### Task 267 - SRDINV65 - Promote Shocking Grasp Opportunity Attack Denial
+
+Status: `blocked`
+
+Depends on: SRDINV55
+
+Blocks: SRDINV66
+
+Research / plan:
+[Shocking Grasp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md),
+[Opportunity Attacks](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Reaction](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Shocking Grasp's hit-applied Opportunity Attack prevention until
+the target's next-turn boundary, scoped to Opportunity Attacks rather than all
+Reactions.
+
+Out of scope: generic Reaction lockout and damage-only spell attack support
+already owned by earlier profile work.
+
+Verification: RAW/source review for Shocking Grasp, Opportunity Attacks,
+Reaction, and duration wording; focused tests for hit application, Opportunity
+Attack denial, non-Opportunity Reaction pass-through, failed attack pass-through,
+and cleanup; package-local Quint updates before runtime divergence; `pnpm
+unit-profile-coverage:check --write` if evidence changes; `pnpm quality`;
+`/simplify` convergence for significant changes; MBT only if integrated
+reaction sequencing changes require it.
+
+### Task 268 - SRDINV66 - Recursive SRD Inventory Planning Review
+
+Status: `blocked`
+
+Depends on: SRDINV57-SRDINV65
+
+Blocks: none
+
+Research / plan:
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md),
+[ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: review SRDINV57-SRDINV65, refresh spell Unit metrics, measure remaining
+level-1 battle-related gaps, and append the next concrete batch only after
+resolving or explicitly deferring any reasonable review notes.
+
+Out of scope: implementation work not captured by the newly appended batch and
+claiming full level-1 battle support from catalog admission alone.
+
+Verification: RAW/source review for any appended rule slices plus
+`UBIQUITOUS_LANGUAGE.md` check; active-plan consistency across Ralph index, DAG
+table, and task details; regenerated inventory with `pnpm
+unit-profile-coverage:check --write` when evidence or inventory artifacts
+change; confirm remaining gaps are measured against battle-related level-1
+feature/spell behavior; `/simplify` convergence, minimum two rounds unless the
+final changeset is trivial.
