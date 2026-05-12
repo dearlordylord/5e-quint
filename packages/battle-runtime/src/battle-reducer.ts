@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-drop-held-object spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 import type {
   ActionEconomyState,
   RuntimeActionResource,
@@ -88,6 +88,7 @@ import {
 import type { CharacterBattleClassLevel } from "./character-class-level.ts";
 import type {
   BattleObjectId,
+  SpellId,
   BattleTablePositionId,
   CharacterId,
   InitiativeScore,
@@ -192,6 +193,7 @@ export {
   resetSpellDamageReductionsForNewTurn,
   resetStartOfTurnCombatant,
   resolveEndTurn,
+  resolveCommandDropCommand,
   resolveCommandGrovelCommand,
   resolveEndTurnCommand,
   resolveGreaseGroundHazardSaveCommand,
@@ -2283,6 +2285,13 @@ export type BattleObjectTargetChoiceHole = {
   readonly label: string;
   readonly requiresTableSpatialFact: true;
 };
+export type BattleHeldObjectFactsHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "heldObjectFacts";
+  readonly label: string;
+  readonly actorId: CombatantId;
+};
 export type BattleSpellTargetAllocation = {
   readonly targetId: CombatantId;
   readonly count: number;
@@ -2317,6 +2326,13 @@ export type BattleObjectDamageOutcome =
       readonly damageType: DamageType;
       readonly rolledDamage: DamageAmount;
     };
+export type BattleDroppedObjectOutcome = {
+  readonly kind: "heldObjectDropped";
+  readonly actorId: CombatantId;
+  readonly objectId: BattleObjectId;
+  readonly sourceCombatantId: CombatantId;
+  readonly sourceSpellId: SpellId;
+};
 export type BattleSpellDamageTypeChoiceHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -2746,6 +2762,7 @@ export type BattleAttackDamageDispositionHole = {
 export type BattleHole =
   | BattleTargetChoiceHole
   | BattleObjectTargetChoiceHole
+  | BattleHeldObjectFactsHole
   | BattleSpellDamageTypeChoiceHole
   | BattleSpellTargetAllocationHole
   | BattleSpellTargetListHole
@@ -2826,6 +2843,13 @@ export type BattleFill =
       readonly kind: "commandOptionChoice";
       readonly holeId: BattleHoleId;
       readonly value: BattleCommandOption;
+    }
+  | {
+      readonly kind: "heldObjectFacts";
+      readonly holeId: BattleHoleId;
+      readonly value: {
+        readonly objectIds: readonly BattleObjectId[];
+      };
     }
   | {
       readonly kind: "targetChoice";
@@ -3030,6 +3054,7 @@ export type BattleResolutionResult =
       readonly state: BattleState;
       readonly snapshot: BattleSnapshot;
       readonly objectDamages?: readonly BattleObjectDamageOutcome[];
+      readonly droppedObjects?: readonly BattleDroppedObjectOutcome[];
     }
   | {
       readonly tag: "needsHoles";

@@ -3,7 +3,7 @@
 // intended.
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-drop-held-object spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
 import { resetTurnActionEconomy } from "@dnd/shared-algebras/action-economy-algebra";
 
@@ -45,7 +45,11 @@ import {
 
 import { type BattleReactionTrigger } from "../battle-reaction-triggers.ts";
 
-import { CombatantId } from "../identity.ts";
+import {
+  battleObjectId,
+  type BattleObjectId,
+  CombatantId,
+} from "../identity.ts";
 
 import {
   damageDispositionFillFor,
@@ -128,9 +132,11 @@ import type {
   BattleAttackDamageDispositionHole,
   BattleCommandHaltTurnSuppression,
   BattleCreatureState,
+  BattleDroppedObjectOutcome,
   BattleFill,
   BattleGrappleLink,
   BattleGreaseGroundHazardSavingThrowOutcomeHole,
+  BattleHeldObjectFactsHole,
   BattleHoleId,
   BattleJumpMovementReplacementFact,
   BattleMovementHole,
@@ -696,14 +702,15 @@ export function commandPendingEffectForSubject(
     BattleSubject,
     {
       readonly tag: "runtimeCommand";
-      readonly command: "commandGrovel";
+      readonly command: "commandGrovel" | "commandDrop";
     }
   >,
+  option: CommandPendingEffect["option"],
 ): CommandPendingEffect | null {
   return (
     commandPendingEffectsForActor(state, subject.actorId).find(
       (effect) =>
-        effect.option === "grovel" &&
+        effect.option === option &&
         effect.sourceSpellId === subject.sourceSpellId &&
         effect.sourceCombatantId === subject.sourceCombatantId,
     ) ?? null
@@ -726,6 +733,62 @@ export function commandPendingEffectsForActor(
   );
 }
 
+const COMMAND_DROP_HELD_OBJECT_FACTS_HOLE_INSTANCE = holeInstanceKey(
+  "battle:command-drop:held-object-facts",
+);
+
+export function commandDropHeldObjectFactsHole(
+  subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "commandDrop";
+    }
+  >,
+): BattleHeldObjectFactsHole {
+  return {
+    holeInstanceKey: COMMAND_DROP_HELD_OBJECT_FACTS_HOLE_INSTANCE,
+    holeId: commandDropHeldObjectFactsHoleId(subject),
+    kind: "heldObjectFacts",
+    label: "Command Drop held-object facts",
+    actorId: subject.actorId,
+  };
+}
+
+function commandDropHeldObjectFactsHoleId(
+  subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "commandDrop";
+    }
+  >,
+): BattleHoleId {
+  return holeId(
+    `battle:command-drop:held-object-facts:${subject.actorId}:${subject.sourceCombatantId}:${subject.sourceSpellId}`,
+  );
+}
+
+export function canonicalHeldObjectIdsForActor(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly BattleObjectId[] | null {
+  const actor = state.combatants.get(actorId);
+  if (actor?.origin.kind !== "character") {
+    return null;
+  }
+  const loadout = actor.origin.selectedLoadout;
+  return [
+    ...(loadout.weapon === undefined
+      ? []
+      : [battleObjectId(loadout.weapon.itemId)]),
+    ...(loadout.offHandWeapon === undefined
+      ? []
+      : [battleObjectId(loadout.offHandWeapon.itemId)]),
+    ...(loadout.shield === undefined ? [] : [battleObjectId(loadout.shield)]),
+  ];
+}
+
 export function resolveCommandGrovelCommand(
   input: BattleResolutionInputForSubject<
     Extract<
@@ -737,7 +800,11 @@ export function resolveCommandGrovelCommand(
     >
   >,
 ): BattleResolutionResult {
-  const effect = commandPendingEffectForSubject(input.state, input.subject);
+  const effect = commandPendingEffectForSubject(
+    input.state,
+    input.subject,
+    "grovel",
+  );
   if (effect === null) {
     return invalidResult(
       input.state,
@@ -772,6 +839,140 @@ export function resolveCommandGrovelCommand(
   return endTurnResult.tag === "needsHoles"
     ? { ...endTurnResult, state: input.state, subject: input.subject }
     : endTurnResult;
+}
+
+export function resolveCommandDropCommand(
+  input: BattleResolutionInputForSubject<
+    Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "commandDrop";
+      }
+    >
+  >,
+): BattleResolutionResult {
+  const effect = commandPendingEffectForSubject(
+    input.state,
+    input.subject,
+    "drop",
+  );
+  if (effect === null) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Command Drop is no longer pending for this actor.",
+    );
+  }
+  const heldObjectFactFills = input.fills.filter(
+    (
+      fill,
+    ): fill is Extract<BattleFill, { readonly kind: "heldObjectFacts" }> =>
+      fill.kind === "heldObjectFacts",
+  );
+  if (heldObjectFactFills.length > 1) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Command Drop held-object facts were filled twice.",
+    );
+  }
+  const unsupportedFill = input.fills.find(
+    (fill) => fill.kind !== "heldObjectFacts" && !endTurnFillKind(fill.kind),
+  );
+  if (unsupportedFill !== undefined) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Command Drop only accepts held-object facts and End Turn fills.",
+    );
+  }
+
+  const canonicalObjectIds = canonicalHeldObjectIdsForActor(
+    input.state,
+    input.subject.actorId,
+  );
+  if (canonicalObjectIds !== null && heldObjectFactFills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Command Drop uses canonical character loadout facts for this actor.",
+    );
+  }
+  const heldObjectFactFill = heldObjectFactFills[0];
+  if (canonicalObjectIds === null && heldObjectFactFill === undefined) {
+    return needsHolesResult(input.state, input.subject, [
+      commandDropHeldObjectFactsHole(input.subject),
+    ]);
+  }
+  if (
+    heldObjectFactFill !== undefined &&
+    heldObjectFactFill.holeId !== commandDropHeldObjectFactsHoleId(input.subject)
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Command Drop held-object facts must use the selected Command Drop hole.",
+    );
+  }
+  const objectIds = canonicalObjectIds ?? heldObjectFactFill?.value.objectIds;
+  if (objectIds === undefined) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Command Drop requires known held-object facts.",
+    );
+  }
+  const uniqueObjectIds = new Set(objectIds);
+  if (uniqueObjectIds.size !== objectIds.length) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Command Drop held-object facts must not duplicate objects.",
+    );
+  }
+
+  const target = input.state.combatants.get(input.subject.actorId);
+  const withoutPending =
+    target === undefined
+      ? input.state
+      : {
+          ...input.state,
+          combatants: new Map(input.state.combatants).set(
+            input.subject.actorId,
+            {
+              ...target,
+              activeEffects: target.activeEffects.filter(
+                (candidate) => candidate !== effect,
+              ),
+            },
+          ),
+        };
+  const endTurnResult = resolveEndTurnCommand({
+    state: withoutPending,
+    subject: {
+      tag: "runtimeCommand",
+      actorId: input.subject.actorId,
+      command: "endTurn",
+    },
+    fills: input.fills.filter((fill) => fill.kind !== "heldObjectFacts"),
+  });
+  const droppedObjects: readonly BattleDroppedObjectOutcome[] = objectIds.map(
+    (objectId) => ({
+      kind: "heldObjectDropped",
+      actorId: input.subject.actorId,
+      objectId,
+      sourceCombatantId: input.subject.sourceCombatantId,
+      sourceSpellId: input.subject.sourceSpellId,
+    }),
+  );
+  if (endTurnResult.tag === "needsHoles") {
+    return { ...endTurnResult, state: input.state, subject: input.subject };
+  }
+  if (endTurnResult.tag === "invalid") {
+    return endTurnResult;
+  }
+  return { ...endTurnResult, droppedObjects };
 }
 
 function greaseGroundHazardEffectFor(

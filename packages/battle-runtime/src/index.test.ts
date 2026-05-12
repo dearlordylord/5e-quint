@@ -19226,7 +19226,8 @@ function subjectName(
   | "opportunityAttack"
   | "greaseGroundHazardSave"
   | "jumpMovementReplacement"
-  | "commandGrovel" {
+  | "commandGrovel"
+  | "commandDrop" {
   if (subject.tag === "action") {
     return subject.action;
   }

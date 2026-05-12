@@ -57,10 +57,11 @@ flowchart TD
   AttackRoll["attack-roll-algebra<br/>input: AttackRollResult + Armor Class<br/>success: SRD natural 1/20 and AC hit fact<br/>why: one d20 attack-roll adjudication path"]
   RuntimeDice["runtime-dice-algebra<br/>input: rolled dice groups + weapon damage dice expression<br/>success: validated dice count/range facts<br/>why: one dice-roll validation path"]
   Discover["discoverBattleActs(state)<br/>success: AvailableBattleAct[] = subject + label + summary + initial holes<br/>why: public act discovery API<br/>without: callers duplicate legality checks"]
-  Subject["BattleSubject<br/>action.attack, action.multiattack, generic combat actions, actionSpell, unitFeature, or runtimeCommand movement/turn/reaction commands<br/>why: stable caller-selected replay key, including turn-start Death Saving Throw fills"]
+  Subject["BattleSubject<br/>action.attack, action.multiattack, generic combat actions, actionSpell, unitFeature, or runtimeCommand movement/turn/reaction/Command follow-up commands<br/>why: stable caller-selected replay key, including turn-start Death Saving Throw and Command Drop fills"]
   FillSession["caller-owned BattleFill[]<br/>data: accumulated answers for a selected subject<br/>why: replay-from-root input<br/>without: partially answered forms become durable battle state"]
   Resolve["resolveBattleSubject(state, subject, fills)<br/>success: resolved next BattleState<br/>continuation: needsHoles<br/>invalid: stale subject, wrong actor, bad fill, unsupported subject/shape<br/>why: top-level replay/refill dispatcher"]
   EndTurn["End Turn resolution<br/>success: next initiative actor + reset turn action economy<br/>why: runtime command for turn advancement"]
+  CommandDrop["Command Drop follow-up<br/>input: canonical Character selected-loadout held objects or heldObjectFacts fill<br/>success: droppedObjects outcomes + pending effect cleanup + target End Turn<br/>why: Drop needs table/object facts without storing duplicate inventory"]
   Support["support gates/readers<br/>success: authored shape selects a supported procedure family<br/>invalid: unsupported authored shape fails before reducer replay"]
   AttackOption["supported Attack action option<br/>source: character selected weapon or StatBlockRecord named attack<br/>why: attack bonus, damage, reach, normal/long range, and attack identity derive from authored inputs"]
   MonsterControl["monster control resources<br/>success: spend X/Day or Recharge; discover Legendary Actions after another turn; refresh Legendary Actions and recharge rolls at start turn; pending Multiattack dispatches expose matching dispatch attacks, Movement, and End Turn<br/>why: reusable Stat Block limited-use protocol"]
@@ -84,6 +85,7 @@ flowchart TD
   Subject --> Resolve
   FillSession --> Resolve
   Resolve -->|runtimeCommand.endTurn| EndTurn --> State
+  Resolve -->|runtimeCommand.commandDrop| CommandDrop --> EndTurn
   Resolve --> Support
   Support -->|action.attack| AttackOption --> AttackReplay
   MonsterResources --> MonsterControl --> AttackReplay
@@ -98,16 +100,17 @@ flowchart TD
   ActionEconomy --> AttackReplay
 
   classDef implemented fill:#eef6ff,stroke:#2563eb,color:#172554;
-  class CharacterBuild,StatBlock,Init,State,Creature,Origin,MonsterResources,ArmorClass,ActionEconomy,AttackRoll,RuntimeDice,Discover,Subject,FillSession,Resolve,EndTurn,Support,AttackOption,MonsterControl,AttackReplay,UnitFeature,SpellAct,Damage,Snapshot implemented;
+  class CharacterBuild,StatBlock,Init,State,Creature,Origin,MonsterResources,ArmorClass,ActionEconomy,AttackRoll,RuntimeDice,Discover,Subject,FillSession,Resolve,EndTurn,CommandDrop,Support,AttackOption,MonsterControl,AttackReplay,UnitFeature,SpellAct,Damage,Snapshot implemented;
 ```
 
 ## Interpretation Graph
 
 ```mermaid
 flowchart TD
-  Subject["BattleSubject<br/>action.attack, action.multiattack, actionSpell, unitFeature, or runtimeCommand.endTurn"]
+  Subject["BattleSubject<br/>action.attack, action.multiattack, actionSpell, unitFeature, runtimeCommand.endTurn, or source-owned Command follow-up"]
   CurrentActor["actorId === currentActing(state.initiative)<br/>success: continue<br/>failure: invalid wrongActor<br/>why: subject legality is turn-local"]
   EndTurn["runtimeCommand.endTurn<br/>success: resolved next turn; asks for start-turn Death Saving Throw, recharge, or spell-condition damage fills when needed<br/>invalid: wrong actor, stale fills, or fills that do not match requested holes"]
+  CommandDrop["runtimeCommand.commandDrop<br/>success: consumes canonical held-object facts or heldObjectFacts fill, emits droppedObjects, then resolves End Turn<br/>invalid: stale pending Command, duplicate object ids, or mismatched fills"]
   Attack["action.attack + attackName<br/>success: staged target/roll/damage replay<br/>invalid: actor missing, unsupported shape, no action resource, bad fills"]
   UnitFeature["unitFeature<br/>success: spend retained feature resource and resolve supported Unit procedure<br/>invalid: no use remains, no Bonus Action, or already used this turn"]
   Magic["actionSpell + spellId<br/>success: staged action-time spell replay via Magic action, including supported attack, save, damage, mixed attack-plus-burst, scalar buff, and creature-type protection/charm spells<br/>invalid: unsupported spell shape, no Magic action, no slot for prepared spell"]
@@ -120,6 +123,7 @@ flowchart TD
 
   Subject --> CurrentActor
   CurrentActor --> EndTurn
+  CurrentActor --> CommandDrop --> EndTurn
   CurrentActor --> Attack --> AttackOption --> Target --> Roll --> HitCheck
   CurrentActor --> UnitFeature
   CurrentActor --> Magic
@@ -127,7 +131,7 @@ flowchart TD
   HitCheck -->|miss| Apply
 
   classDef implemented fill:#eef6ff,stroke:#2563eb,color:#172554;
-  class Subject,CurrentActor,EndTurn,Attack,UnitFeature,Magic,AttackOption,Target,Roll,HitCheck,DamageHole,Apply implemented;
+  class Subject,CurrentActor,EndTurn,CommandDrop,Attack,UnitFeature,Magic,AttackOption,Target,Roll,HitCheck,DamageHole,Apply implemented;
 ```
 
 ## Implemented Slice Boundaries
@@ -135,10 +139,14 @@ flowchart TD
 - Public subjects include `action.attack` with an authored `attackName`,
   `action.multiattack`, `actionSpell` with a retained Spell Record id,
   `unitFeature` with a retained Unit id, and runtime commands such as
-  `runtimeCommand.endTurn`. They select reusable runtime procedures; they are
-  not a projected executable taxonomy and are not one reducer branch per
+  `runtimeCommand.endTurn` and source-owned Command follow-ups such as
+  `runtimeCommand.commandDrop`. They select reusable runtime procedures; they
+  are not a projected executable taxonomy and are not one reducer branch per
   authored slug.
-- Fills are caller/session state, not durable `BattleState`.
+- Fills are caller/session state, not durable `BattleState`. Command Drop uses
+  a `heldObjectFacts` fill only when retained Character loadout facts do not
+  already establish the target's held objects; resolved `droppedObjects` are
+  outcomes, not durable object-placement or inventory state.
 - Reaction decisions are durable state transitions. A `needsHoles` result may
   return a `BattleState` with an `interruptStack`; MCP and other callers must
   store that state before filling the `reactionDecision` hole or any holes for

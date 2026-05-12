@@ -1071,6 +1071,11 @@ export const BattleHoleSchema = Schema.Union(
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
+    kind: Schema.Literal("heldObjectFacts"),
+    actorId: CombatantId,
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
     kind: Schema.Literal("damageTypeChoice"),
     spell: SupportedSpellInvocationSchema,
     choices: Schema.Array(DamageTypeSchema),
@@ -1707,6 +1712,13 @@ type BattleFillEncoded =
       readonly value: (typeof COMMAND_OPTIONS)[number];
     }
   | {
+      readonly kind: "heldObjectFacts";
+      readonly holeId: string;
+      readonly value: {
+        readonly objectIds: readonly string[];
+      };
+    }
+  | {
       readonly kind: "rolledDice";
       readonly holeId: string;
       readonly selectedAttackDamageRiderUnitIds?: readonly string[];
@@ -2094,6 +2106,13 @@ export const BattleFillSchema: Schema.Schema<
       kind: Schema.Literal("commandOptionChoice"),
       holeId: BattleHoleIdSchema,
       value: Schema.Literal(...COMMAND_OPTIONS),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("heldObjectFacts"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Struct({
+        objectIds: Schema.Array(BattleObjectId),
+      }),
     }),
     Schema.Struct({
       kind: Schema.Literal("rolledDice"),

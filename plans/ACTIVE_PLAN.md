@@ -256,7 +256,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 251,
       "id": "SRDINV50C",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Command Drop Held-Object Boundary"
     },
     {
@@ -551,7 +551,7 @@ Keep it synchronized with the DAG table and task details.
 | 248   | SRDINV55 - Recursive SRD Inventory Planning Review | blocked | SRDINV49-SRDINV54, SRDINV50A-SRDINV50D2, SRDINV56A-SRDINV56B | SRDINV57-SRDINV66 | [SRDINV54 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md), [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Review the closed Command, movement, and Feather Fall runtime batch, refresh spell Unit metrics, and unlock the pre-seeded deferred-clause batch only after verifying the frontier is clean. |
 | 249   | SRDINV50A - Promote Command Invocation and Grovel Runtime | done | SRDINV50 | SRDINV50B-SRDINV50D2, SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Command is promoted as a Grovel-only Spell Slot Magic Action with slot-scaled target count, Wisdom Saving Throw gate, failed-save pending next-turn Spell Effect, target-turn Prone application, end-turn cleanup, and explicit non-support for the remaining Command options. |
 | 250   | SRDINV50B - Promote Command Halt Runtime | done | SRDINV50A | SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Command Halt is promoted over the shared pending Command effect, suppresses target-turn Movement, Action, and Bonus Action through turn-resource state and stale-subject rejection, and clears at the target end-turn boundary. |
-| 251   | SRDINV50C - Promote Command Drop Held-Object Boundary | ready-for-implementation-after-light-research | SRDINV50A | SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Drop as a caller-supplied held-object disposition boundary after SRDINV50A lands, then end the target's turn without adding duplicate inventory state. |
+| 251   | SRDINV50C - Promote Command Drop Held-Object Boundary | done | SRDINV50A | SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Command Drop consumes canonical character loadout held-object facts or caller-supplied held-object facts, emits dropped-object outcomes, ends the target turn, and avoids duplicate inventory or loadout mutation state. |
 | 252   | SRDINV50D1 - Promote Command Approach Route Runtime | ready-for-implementation-after-light-research | SRDINV50A, SRDINV49 | SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [Speed](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Approach only through caller-supplied shortest/direct route execution facts and caller-supplied within-5-feet evidence; no pathfinding derivation. |
 | 253   | SRDINV50D2 - Promote Command Flee Route Runtime | ready-for-implementation-after-light-research | SRDINV50A, SRDINV49 | SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [Speed](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Opportunity Attacks](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Flee only through caller-supplied fastest-available moving-away route facts and actual movement-budget execution; no route AI. |
 | 254   | SRDINV56A - Promote Feather Fall Reaction Invocation Runtime | ready-for-implementation-after-light-research | SRDINV54 | SRDINV56B, SRDINV55 | [SRDINV54 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md), [Feather Fall](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Falling](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Reaction](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote table-supplied falling-trigger Reaction invocation, up-to-five falling target admission, spell effect creation, and active descent-cap projection; no falling simulator. |
@@ -1662,7 +1662,7 @@ boundary.
 
 ### Task 251 - SRDINV50C - Promote Command Drop Held-Object Boundary
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: SRDINV50A
 
@@ -1693,6 +1693,12 @@ object outcomes, end-turn cleanup, and no duplicate inventory state;
 package-local Quint updates before runtime divergence; `pnpm
 unit-profile-coverage:check --write` if evidence changes; `pnpm quality`; MBT
 only if integrated object or turn sequencing changes require it.
+
+Result: Command Drop is promoted through the shared Command pending-effect
+runtime. Character targets reuse selected-loadout held weapon/shield facts;
+other targets require a typed `heldObjectFacts` fill. Resolution emits
+`droppedObjects`, clears the pending Command effect, and ends the target's turn
+without adding object placement, inventory simulation, or loadout mutation.
 
 ### Task 252 - SRDINV50D1 - Promote Command Approach Route Runtime
 
