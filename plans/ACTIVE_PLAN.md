@@ -196,7 +196,49 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 241,
       "id": "SRDINV48",
+      "status": "done",
+      "title": "Recursive SRD Inventory Planning Review"
+    },
+    {
+      "number": 242,
+      "id": "SRDINV49",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote Expeditious Retreat Dash Runtime"
+    },
+    {
+      "number": 243,
+      "id": "SRDINV50",
       "status": "ready-for-research",
+      "title": "Research Command Option Runtime Split"
+    },
+    {
+      "number": 244,
+      "id": "SRDINV51",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote Thunderwave Push Runtime Boundary"
+    },
+    {
+      "number": 245,
+      "id": "SRDINV52",
+      "status": "blocked",
+      "title": "Promote Dissonant Whispers Forced Reaction Movement Runtime"
+    },
+    {
+      "number": 246,
+      "id": "SRDINV53",
+      "status": "blocked",
+      "title": "Promote Jump Movement Replacement Runtime"
+    },
+    {
+      "number": 247,
+      "id": "SRDINV54",
+      "status": "ready-for-research",
+      "title": "Research Feather Fall Falling Runtime Boundary"
+    },
+    {
+      "number": 248,
+      "id": "SRDINV55",
+      "status": "blocked",
       "title": "Recursive SRD Inventory Planning Review"
     }
   ]
@@ -259,7 +301,14 @@ Keep it synchronized with the DAG table and task details.
 | 238   | SRDINV45 - Widen Expeditious Retreat Dash Surface | done | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Expeditious Retreat](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Expeditious Retreat is installed with typed immediate Dash and Concentration-duration Bonus Action Dash facts; runtime Dash execution and Movement budget updates remain unpromoted and visible in the Unit matrix as owner-evidence-required work. |
 | 239   | SRDINV46 - Widen Jump Movement Replacement Surface | done | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Jump](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Jump is installed with typed touched willing targets, one-minute duration, slot-scaled additional targets, and once-per-turn jump movement replacement facts; runtime Movement spending, jump geometry, landing checks, and Difficult Terrain handling remain unpromoted. |
 | 240   | SRDINV47 - Widen Feather Fall Falling Reaction Surface | done | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Feather Fall](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Feather Fall is installed with a typed interrupting falling Reaction trigger, up-to-five falling creature targets, fall-rate cap, fall-damage prevention, and per-target landing cleanup; runtime falling simulation, fall-distance derivation, and landing geometry remain unpromoted. |
-| 241   | SRDINV48 - Recursive SRD Inventory Planning Review | ready-for-research | SRDINV42-SRDINV47 | none | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Review SRDINV42-SRDINV47 movement/action Surface widening results, refresh spell Unit metrics, and append the next concrete spell Surface or runtime batch. |
+| 241   | SRDINV48 - Recursive SRD Inventory Planning Review | done | SRDINV42-SRDINV47 | SRDINV49-SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: refreshed spell Unit metrics after SRDINV42-SRDINV47, confirmed movement/action Surface blockers are now owner-evidence-required runtime work, and appended SRDINV49-SRDINV55 movement/action runtime batch. |
+| 242   | SRDINV49 - Promote Expeditious Retreat Dash Runtime | ready-for-implementation-after-light-research | SRDINV48 | SRDINV52-SRDINV53, SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Expeditious Retreat](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Dash](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote the immediate Dash and Concentration-granted Bonus Action Dash over the existing action/movement budget owner without duplicating Speed or Movement state. |
+| 243   | SRDINV50 - Research Command Option Runtime Split | ready-for-research | SRDINV48 | SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Split Command's failed-save next-turn option execution by runtime invariant before claiming support for Approach, Drop, Flee, Grovel, Halt, or slot-scaled targets. |
+| 244   | SRDINV51 - Promote Thunderwave Push Runtime Boundary | ready-for-implementation-after-light-research | SRDINV48 | SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Thunderwave](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Cube](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote save damage plus caller-supplied creature push, unsecured-object push disposition, and audible-boom evidence without deriving push geometry inside battle runtime. |
+| 245   | SRDINV52 - Promote Dissonant Whispers Forced Reaction Movement Runtime | blocked | SRDINV49 | SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Dissonant Whispers](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Reaction](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [Opportunity Attacks](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | After SRDINV49 establishes the movement budget boundary, promote failed-save Reaction movement with caller-supplied safest route and Opportunity Attack eligibility. |
+| 246   | SRDINV53 - Promote Jump Movement Replacement Runtime | blocked | SRDINV49 | SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Jump](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Jumping](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | After SRDINV49 establishes the movement budget boundary, promote Jump's once-per-target-turn 10-foot Movement spend for up to 30 feet of jump movement with caller-supplied landing facts. |
+| 247   | SRDINV54 - Research Feather Fall Falling Runtime Boundary | ready-for-research | SRDINV48 | SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Feather Fall](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Falling](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Research the smallest executable falling-trigger, descent-rate, fall-damage prevention, and per-target landing cleanup boundary before runtime promotion. |
+| 248   | SRDINV55 - Recursive SRD Inventory Planning Review | blocked | SRDINV49-SRDINV54 | none | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Review SRDINV49-SRDINV54 runtime results, refresh spell Unit metrics, and append the next concrete spell Surface or runtime batch. |
 
 ## Task Details
 ### Task 164 - QMBT69 - Recursive Unit Profile Planning Review
@@ -983,21 +1032,240 @@ rounds.
 
 ### Task 241 - SRDINV48 - Recursive SRD Inventory Planning Review
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV42-SRDINV47
 
-Blocks: none
+Blocks: SRDINV49-SRDINV55
 
 Research / plan:
-[SRDINV41_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md),
+[SRDINV48_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md),
 [SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
 [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md),
 [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
 
-Scope: review SRDINV42-SRDINV47 movement/action Surface widening results,
-refresh spell Unit metrics, and append the next concrete spell Surface or
-runtime batch.
+Scope: completed review of SRDINV42-SRDINV47 movement/action Surface widening
+results, refreshed spell Unit metrics, confirmed the widened Spell Definitions
+now sit in owner-evidence-required runtime pressure rather than Surface
+pressure, and appended SRDINV49-SRDINV55 movement/action runtime follow-up.
+
+Out of scope: implementation work not captured by the newly appended batch and
+treating catalog admission alone as behavior support.
+
+Verification: RAW/source review for Command, Dissonant Whispers, Expeditious
+Retreat, Feather Fall, Jump, Thunderwave, Dash, Falling, Jumping, Movement,
+Opportunity Attacks, Reaction, and Cube; `UBIQUITOUS_LANGUAGE.md` checked for
+Spell Definition, Spell Invocation, Spell Effect, Magic Action, Reaction,
+Movement, Speed, Opportunity Attack, Falling, and Object; active-plan
+consistency across Ralph index, DAG table, and task details; regenerated
+inventory with `pnpm unit-profile-coverage:check --write`; `pnpm
+unit-profile-coverage:check`; `pnpm quality`; `/simplify` convergence recorded
+in two rounds in the review note.
+
+### Task 242 - SRDINV49 - Promote Expeditious Retreat Dash Runtime
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: SRDINV48
+
+Blocks: SRDINV52-SRDINV53, SRDINV55
+
+Research / plan:
+[SRDINV48_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md),
+[Expeditious Retreat](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[Dash](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Expeditious Retreat as a Bonus Action Spell Invocation that
+immediately grants Dash and creates a Concentration-owned permission to take
+Dash again as a Bonus Action until the spell ends. Reuse the existing
+action/movement owner for Movement budget changes; do not store duplicate
+Speed or Movement facts on the spell effect.
+
+Out of scope: generic alternate-action-cost rewrites, route/pathfinding state,
+and using this task to promote Command, Dissonant Whispers, Jump, or Feather
+Fall runtime behavior.
+
+Verification: RAW/source review for Expeditious Retreat, Dash, Bonus Action,
+Concentration, Movement, and Speed; focused admission/runtime tests for
+immediate Dash, later Bonus Action Dash, Concentration cleanup, and resource
+spend; package-local Quint updates before runtime divergence if the promoted
+model needs new facts; `pnpm unit-profile-coverage:check --write` if evidence
+changes; `pnpm quality`; MBT only if the behavior change touches integrated
+battle-runtime sequencing beyond focused reducer coverage.
+
+### Task 243 - SRDINV50 - Research Command Option Runtime Split
+
+Status: `ready-for-research`
+
+Depends on: SRDINV48
+
+Blocks: SRDINV55
+
+Research / plan:
+[SRDINV48_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md),
+[Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md),
+[Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md),
+[Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: research the runtime split for Command's failed-save next-turn effect:
+Approach, Drop, Flee, Grovel, Halt, turn-ending clauses, held-item drop, and
+slot-scaled target count. The output must split implementation tasks by
+execution invariant if Approach/Flee route facts, Drop held-object facts, and
+Halt action suppression cannot fit one Ralph task.
+
+Out of scope: implementing Command runtime in this research task, deriving
+pathfinding or safest/shortest route state, and treating Surface-installed
+option facts as operational support.
+
+Verification: RAW/source review for Command, Movement, Prone, held objects,
+and turn action vocabulary; `UBIQUITOUS_LANGUAGE.md` check for Spell
+Invocation, Spell Effect, Movement, Speed, Prone, and Object; active-plan
+consistency if follow-up tasks are appended or revised; no MBT unless behavior
+is implemented.
+
+### Task 244 - SRDINV51 - Promote Thunderwave Push Runtime Boundary
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: SRDINV48
+
+Blocks: SRDINV55
+
+Research / plan:
+[SRDINV48_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md),
+[Thunderwave](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md),
+[Cube](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Thunderwave's Constitution Saving Throw damage, half-damage
+success, slot scaling, failed-save creature push, unsecured-object push
+disposition, and audible-boom evidence. Push legality and final positions must
+come from caller/table facts; battle runtime must not derive or cache geometry.
+
+Out of scope: broad object inventory simulation, sound propagation simulation,
+generic forced-movement framework rewrites, and automatic Cube membership
+derivation.
+
+Verification: RAW/source review for Thunderwave, Cube, Saving Throw, Object,
+and forced movement/Opportunity Attack non-trigger clauses; focused
+admission/runtime tests for save outcomes, damage, push fact consumption,
+object/noise outcomes, and slot scaling; package-local Quint updates before
+runtime divergence; `pnpm unit-profile-coverage:check --write` if evidence
+changes; `pnpm quality`; MBT only if integrated sequencing changes require it.
+
+### Task 245 - SRDINV52 - Promote Dissonant Whispers Forced Reaction Movement Runtime
+
+Status: `blocked`
+
+Depends on: SRDINV49
+
+Blocks: SRDINV55
+
+Research / plan:
+[SRDINV48_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md),
+[Dissonant Whispers](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md),
+[Reaction](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md),
+[Opportunity Attacks](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: after SRDINV49 establishes the movement budget boundary, promote
+Dissonant Whispers failed-save Psychic damage plus forced Reaction movement.
+Runtime inputs must include Reaction availability and caller-supplied safest
+route movement result; Opportunity Attack eligibility should derive from the
+fact that the target moved using its Reaction, not from pathfinding.
+
+Out of scope: deriving safest routes, automatic reach-crossing geometry,
+generic route choice AI, and Command Flee/Approach runtime.
+
+Verification: RAW/source review for Dissonant Whispers, Reaction, Movement,
+Opportunity Attacks, and Spell Slot scaling; focused admission/runtime tests
+for save success/failure damage, no-Reaction fallback, Reaction spend,
+caller-supplied movement result, and Opportunity Attack eligibility;
+package-local Quint updates before runtime divergence; `pnpm
+unit-profile-coverage:check --write` if evidence changes; `pnpm quality`; MBT
+only if integrated reaction/movement sequencing changes require it.
+
+### Task 246 - SRDINV53 - Promote Jump Movement Replacement Runtime
+
+Status: `blocked`
+
+Depends on: SRDINV49
+
+Blocks: SRDINV55
+
+Research / plan:
+[SRDINV48_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md),
+[Jump](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[Jumping](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: after SRDINV49 establishes the movement budget boundary, promote Jump's
+touched willing targets, one-minute spell-owned duration, slot-scaled target
+count, once-per-target-turn use marker, and 10-foot Movement spend for up to 30
+feet of jump movement. Landing legality, jump arc, and Difficult Terrain
+landing checks must be caller-supplied facts.
+
+Out of scope: deriving jump trajectories, automatic map collision checks,
+generic special-speed movement, and Feather Fall/falling behavior.
+
+Verification: RAW/source review for Jump, Jumping, Movement, Speed, Target,
+and Difficult Terrain landing clauses; focused admission/runtime tests for
+targeting, duration, slot scaling, once-per-turn use, Movement spend, and
+caller-supplied landing facts; package-local Quint updates before runtime
+divergence; `pnpm unit-profile-coverage:check --write` if evidence changes;
+`pnpm quality`; MBT only if integrated movement sequencing changes require it.
+
+### Task 247 - SRDINV54 - Research Feather Fall Falling Runtime Boundary
+
+Status: `ready-for-research`
+
+Depends on: SRDINV48
+
+Blocks: SRDINV55
+
+Research / plan:
+[SRDINV48_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md),
+[Feather Fall](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[Falling](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Reaction](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: research the smallest executable boundary for Feather Fall's falling
+Reaction trigger, up-to-five falling target admission, descent-rate cap,
+fall-damage prevention, and per-target landing cleanup. The output must decide
+whether table-supplied fall/landing facts are enough for a promotion task or
+whether falling hazard runtime needs a narrower prerequisite.
+
+Out of scope: implementing Feather Fall runtime in this research task, broad
+physics simulation, map elevation state, and generic fall-distance derivation.
+
+Verification: RAW/source review for Feather Fall, Falling, Reaction, Target,
+fall damage, and Prone-on-landing clauses; `UBIQUITOUS_LANGUAGE.md` check for
+Reaction, Spell Invocation, Spell Effect, Falling, Movement, and Prone;
+active-plan consistency if follow-up tasks are appended or revised; no MBT
+unless behavior is implemented.
+
+### Task 248 - SRDINV55 - Recursive SRD Inventory Planning Review
+
+Status: `blocked`
+
+Depends on: SRDINV49-SRDINV54
+
+Blocks: none
+
+Research / plan:
+[SRDINV48_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md),
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: review SRDINV49-SRDINV54 movement/action runtime results, refresh spell
+Unit metrics, and append the next concrete spell Surface or runtime batch.
 
 Out of scope: implementation work not captured by the newly appended batch and
 treating catalog admission alone as behavior support.

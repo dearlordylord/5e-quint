@@ -2041,6 +2041,16 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
   ]);
   const srdinv46JumpRows = spellRowsByUnitIds(["jump"]);
   const srdinv47FeatherFallRows = spellRowsByUnitIds(["feather_fall"]);
+  const srdinv49ExpeditiousRetreatRuntimeRows = spellRowsByUnitIds([
+    "expeditious_retreat",
+  ]);
+  const srdinv50CommandRuntimeRows = spellRowsByUnitIds(["command"]);
+  const srdinv51ThunderwaveRuntimeRows = spellRowsByUnitIds(["thunderwave"]);
+  const srdinv52DissonantWhispersRuntimeRows = spellRowsByUnitIds([
+    "dissonant_whispers",
+  ]);
+  const srdinv53JumpRuntimeRows = spellRowsByUnitIds(["jump"]);
+  const srdinv54FeatherFallRuntimeRows = spellRowsByUnitIds(["feather_fall"]);
 
   const batches = [
     makeBatch({
@@ -2909,6 +2919,90 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
         "Refresh spell Unit inventory metrics after SRDINV42-SRDINV47, inspect remaining Surface blockers and deferred partial-support findings, and append the next concrete batch by execution invariant.",
       acceptance:
         "The next review records refreshed metrics and appends Ralph-sized follow-up work rather than an omnibus spell backlog.",
+    }),
+    makeBatch({
+      id: "SRDINV49",
+      title: "Promote Expeditious Retreat Dash Runtime",
+      suggestedStatus: "blocked-on-SRDINV48",
+      intent:
+        "Promote Expeditious Retreat's immediate Dash and Concentration-granted Bonus Action Dash as the smallest movement/action runtime slice.",
+      rows: srdinv49ExpeditiousRetreatRuntimeRows,
+      nextAction:
+        "Model the Bonus Action spell invocation, immediate Dash movement-budget increase, Concentration-owned later Bonus Action Dash permission, and cleanup without duplicating Speed or Movement state.",
+      acceptance:
+        "Expeditious Retreat has deterministic admission/projection and promoted runtime evidence for Dash grants, with Movement budget facts derived from the existing action/movement owner.",
+    }),
+    makeBatch({
+      id: "SRDINV50",
+      title: "Research Command Option Runtime Split",
+      suggestedStatus: "blocked-on-SRDINV48",
+      intent:
+        "Split Command's named next-turn option execution into implementable runtime slices before claiming support.",
+      rows: srdinv50CommandRuntimeRows,
+      nextAction:
+        "Design the failed-save next-turn command effect, per-option execution boundaries, turn-ending clauses, held-item drop fact, and caller-supplied route facts for Approach and Flee.",
+      acceptance:
+        "Command is either split into Ralph-sized executable option tasks or has a precise runtime support contract that keeps route/pathfinding ownership table-supplied.",
+    }),
+    makeBatch({
+      id: "SRDINV51",
+      title: "Promote Thunderwave Push Runtime Boundary",
+      suggestedStatus: "blocked-on-SRDINV48",
+      intent:
+        "Promote Thunderwave's failed-save creature push and object/noise outcomes without runtime-owned geometry derivation.",
+      rows: srdinv51ThunderwaveRuntimeRows,
+      nextAction:
+        "Model Constitution save damage, caller-supplied legal pushed positions or blocked-push outcomes, unsecured-object push disposition, audible-boom event evidence, and slot scaling.",
+      acceptance:
+        "Thunderwave has promoted runtime evidence for damage plus push/noise outcomes, and any push geometry remains caller/table-authored rather than stored as duplicate runtime spatial state.",
+    }),
+    makeBatch({
+      id: "SRDINV52",
+      title: "Promote Dissonant Whispers Forced Reaction Movement Runtime",
+      suggestedStatus: "blocked-on-SRDINV49",
+      intent:
+        "Promote Dissonant Whispers' failed-save forced Reaction movement using the movement budget boundary from SRDINV49.",
+      rows: srdinv52DissonantWhispersRuntimeRows,
+      nextAction:
+        "Model Wisdom save damage, failed-save Reaction availability and spend, caller-supplied safest-route movement result, no-Reaction fallback, and Opportunity Attack eligibility from Reaction-based movement.",
+      acceptance:
+        "Dissonant Whispers has promoted runtime evidence for forced Reaction movement without deriving safest routes or pathfinding inside battle runtime.",
+    }),
+    makeBatch({
+      id: "SRDINV53",
+      title: "Promote Jump Movement Replacement Runtime",
+      suggestedStatus: "blocked-on-SRDINV49",
+      intent:
+        "Promote Jump's once-per-turn movement replacement over the movement budget boundary from SRDINV49.",
+      rows: srdinv53JumpRuntimeRows,
+      nextAction:
+        "Model touched willing targets, spell-owned duration, once-per-target-turn use marker, 10-foot Movement spend for up to 30 feet of jump movement, caller-supplied landing facts, and slot-scaled target count.",
+      acceptance:
+        "Jump has promoted runtime evidence for its movement-spend replacement while jump arc geometry, landing legality, and Difficult Terrain checks remain caller-supplied facts.",
+    }),
+    makeBatch({
+      id: "SRDINV54",
+      title: "Research Feather Fall Falling Runtime Boundary",
+      suggestedStatus: "blocked-on-SRDINV48",
+      intent:
+        "Research the smallest executable falling boundary before promoting Feather Fall's Reaction mitigation.",
+      rows: srdinv54FeatherFallRuntimeRows,
+      nextAction:
+        "Design falling-trigger discovery, up-to-five falling target admission, descent-rate cap, fall-damage prevention, per-target landing cleanup, and interaction with Falling hazard damage and Prone clauses.",
+      acceptance:
+        "Feather Fall is either split into implementable runtime slices with table-supplied fall/landing facts or has promoted evidence for the full falling mitigation lifecycle.",
+    }),
+    makeBatch({
+      id: "SRDINV55",
+      title: "Recursive SRD Inventory Planning Review",
+      suggestedStatus: "blocked-on-SRDINV49-SRDINV54",
+      intent:
+        "Review the movement/action runtime batch before selecting the next spell Surface or runtime frontier.",
+      rows: spellPressure,
+      nextAction:
+        "Refresh spell Unit metrics after SRDINV49-SRDINV54, inspect remaining owner-evidence-required and Surface-widening rows, and append the next concrete batch by execution invariant.",
+      acceptance:
+        "The review records refreshed metrics and appends Ralph-sized follow-up work rather than collapsing remaining spell pressure into one backlog.",
     }),
   ];
   return withActivePlanStatuses(batches, activePlanTaskStatuses);
