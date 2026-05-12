@@ -427,6 +427,18 @@ when evidence or inventory artifacts change; confirm the appended result is
 Ralph-sized concrete work; `/simplify` convergence, minimum two rounds unless
 the final changeset is trivial.
 
+Retry Guidance:
+Before changing Shocking Grasp inventory claims or SRDINV65 status, reconcile
+the plan against existing promoted evidence: `battle-runtime.qnt` models
+`ShockingGraspOpportunityAttackDenied`,
+`packages/battle-runtime/src/unit-profile-admission.test.ts` admits the
+Opportunity Attack denial rider, and `packages/battle-runtime/src/index.test.ts`
+checks that the active effect suppresses Opportunity Attack windows. Do not
+demote `shocking_grasp` to `profile-subset-supported` unless there is a
+concrete reason that evidence is not authoritative; if SRDINV65 remains as
+runnable work, state the remaining executable gap and keep the Ralph index, DAG
+table, task detail, and generated inventory consistent with that gap.
+
 ### Task 252 - SRDINV50D1 - Promote Command Approach Route Runtime
 
 Status: `done`
