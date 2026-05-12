@@ -88,6 +88,7 @@ import {
 import type { CharacterBattleClassLevel } from "./character-class-level.ts";
 import type {
   BattleObjectId,
+  BattleTablePositionId,
   CharacterId,
   InitiativeScore,
 } from "./identity.ts";
@@ -1109,6 +1110,31 @@ export type BattleTargetSpatialFact =
       readonly targetId: CombatantId;
       readonly allyId: CombatantId;
     };
+export type BattleThunderwavePushDisposition =
+  | {
+      readonly kind: "pushed";
+      readonly distanceFeet: MovementFeet;
+      readonly destinationId: BattleTablePositionId;
+      readonly provokesOpportunityAttacks: false;
+    }
+  | {
+      readonly kind: "blocked";
+      readonly distanceFeet: MovementFeet;
+      readonly reason: "blocked" | "noLegalDestination";
+      readonly provokesOpportunityAttacks: false;
+    };
+export type BattleThunderwaveCreaturePushOutcome = {
+  readonly targetId: CombatantId;
+  readonly disposition: BattleThunderwavePushDisposition;
+};
+export type BattleThunderwaveUnsecuredObjectPushOutcome = {
+  readonly objectId: BattleObjectId;
+  readonly disposition: BattleThunderwavePushDisposition;
+};
+export type BattleThunderwaveAudibleBoom = {
+  readonly sound: "thunderous boom";
+  readonly audibleRadiusFeet: MovementFeet;
+};
 export type BattleAbilityCheckSpatialFact = Extract<
   BattleTargetSpatialFact,
   { readonly kind: "spellRestraintEscapeActorWithinTargetReach" }
@@ -1180,6 +1206,10 @@ export type SpellTargeting =
       readonly sideFeet: MovementFeet;
     }
   | {
+      readonly kind: "selfOriginCube";
+      readonly sideFeet: MovementFeet;
+    }
+  | {
       readonly kind: "selfOriginCone";
       readonly lengthFeet: MovementFeet;
     }
@@ -1214,6 +1244,19 @@ export type SpellFailedSavePostDamageRider = {
   readonly kind: "nextAttackRollByTarget";
   readonly mode: "disadvantage";
   readonly expiresAt: "endOfTargetNextTurn";
+};
+export type SpellPostSaveAreaEffect = {
+  readonly kind: "thunderwave";
+  readonly creaturePush: {
+    readonly distanceFeet: MovementFeet;
+    readonly originDirection: "away_from_caster";
+  };
+  readonly unsecuredObjectPush: {
+    readonly distanceFeet: MovementFeet;
+    readonly originDirection: "away_from_caster";
+    readonly objectLocation: "entirely_within_area";
+  };
+  readonly audibleBoom: BattleThunderwaveAudibleBoom;
 };
 export type SpellFailedSaveConditionEffect = {
   readonly condition: Condition;
@@ -1577,6 +1620,7 @@ export type SupportedSpellInvocation =
       readonly successDamage: "none" | "half";
       readonly rangeFeet: MovementFeet;
       readonly failedSavePostDamageRiders: readonly SpellFailedSavePostDamageRider[];
+      readonly postSaveAreaEffect?: SpellPostSaveAreaEffect;
     })
   | (PreparedDamageSpellSource & {
       readonly procedure: "attackBurstSaveDamage";
@@ -2429,6 +2473,12 @@ type BattleSpellAreaChoiceKind =
   | {
       readonly kind: "greaseGroundArea";
       readonly areaId: string;
+    }
+  | {
+      readonly kind: "thunderwaveArea";
+      readonly creaturePushes: readonly BattleThunderwaveCreaturePushOutcome[];
+      readonly unsecuredObjectPushes: readonly BattleThunderwaveUnsecuredObjectPushOutcome[];
+      readonly audibleBoom: BattleThunderwaveAudibleBoom;
     };
 export type BattleSleepNonSleeperFact = {
   readonly kind: "doesNotSleep";

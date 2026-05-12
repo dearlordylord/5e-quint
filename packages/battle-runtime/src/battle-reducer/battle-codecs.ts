@@ -53,6 +53,7 @@ import {
   BattleCombatantSide,
   BattleId,
   BattleObjectId,
+  BattleTablePositionId,
   CombatantId,
 } from "../identity.ts";
 import {
@@ -154,6 +155,39 @@ const BattleSleepNonSleeperFactSchema = Schema.Struct({
   kind: Schema.Literal("doesNotSleep"),
   targetId: CombatantId,
 });
+const BattleThunderwavePushDispositionSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("pushed"),
+    distanceFeet: MovementFeet,
+    destinationId: BattleTablePositionId,
+    provokesOpportunityAttacks: Schema.Literal(false),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("blocked"),
+    distanceFeet: MovementFeet,
+    reason: Schema.Literal("blocked", "noLegalDestination"),
+    provokesOpportunityAttacks: Schema.Literal(false),
+  }),
+);
+
+const BattleThunderwaveAudibleBoomSchema = Schema.Struct({
+  sound: Schema.Literal("thunderous boom"),
+  audibleRadiusFeet: MovementFeet,
+});
+
+const SpellPostSaveAreaEffectSchema = Schema.Struct({
+  kind: Schema.Literal("thunderwave"),
+  creaturePush: Schema.Struct({
+    distanceFeet: MovementFeet,
+    originDirection: Schema.Literal("away_from_caster"),
+  }),
+  unsecuredObjectPush: Schema.Struct({
+    distanceFeet: MovementFeet,
+    originDirection: Schema.Literal("away_from_caster"),
+    objectLocation: Schema.Literal("entirely_within_area"),
+  }),
+  audibleBoom: BattleThunderwaveAudibleBoomSchema,
+});
 
 const BattleSpellAreaChoiceBaseSchema = {
   originAnchorId: CombatantId,
@@ -177,6 +211,25 @@ const BattleSpellAreaChoiceSchema = Schema.Union(
     ...BattleSpellAreaChoiceBaseSchema,
     kind: Schema.Literal("greaseGroundArea"),
     areaId: Schema.String,
+    sleepNonSleeperFacts: Schema.optionalWith(Schema.Never, { exact: true }),
+  }),
+  Schema.Struct({
+    ...BattleSpellAreaChoiceBaseSchema,
+    kind: Schema.Literal("thunderwaveArea"),
+    creaturePushes: Schema.Array(
+      Schema.Struct({
+        targetId: CombatantId,
+        disposition: BattleThunderwavePushDispositionSchema,
+      }),
+    ),
+    unsecuredObjectPushes: Schema.Array(
+      Schema.Struct({
+        objectId: BattleObjectId,
+        disposition: BattleThunderwavePushDispositionSchema,
+      }),
+    ),
+    audibleBoom: BattleThunderwaveAudibleBoomSchema,
+    areaId: Schema.optionalWith(Schema.Never, { exact: true }),
     sleepNonSleeperFacts: Schema.optionalWith(Schema.Never, { exact: true }),
   }),
   // Effect Schema infers the exact-forbidden optional fields as broader
@@ -539,6 +592,10 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
           sideFeet: MovementFeet,
         }),
         Schema.Struct({
+          kind: Schema.Literal("selfOriginCube"),
+          sideFeet: MovementFeet,
+        }),
+        Schema.Struct({
           kind: Schema.Literal("selfOriginCone"),
           lengthFeet: MovementFeet,
         }),
@@ -556,6 +613,9 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
           expiresAt: Schema.Literal("endOfTargetNextTurn"),
         }),
       ),
+      postSaveAreaEffect: Schema.optionalWith(SpellPostSaveAreaEffectSchema, {
+        exact: true,
+      }),
     }),
     Schema.Struct({
       access: PreparedSpellAccessSchema,
@@ -603,6 +663,10 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
           sideFeet: MovementFeet,
         }),
         Schema.Struct({
+          kind: Schema.Literal("selfOriginCube"),
+          sideFeet: MovementFeet,
+        }),
+        Schema.Struct({
           kind: Schema.Literal("selfOriginCone"),
           lengthFeet: MovementFeet,
         }),
@@ -620,6 +684,9 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
           expiresAt: Schema.Literal("endOfTargetNextTurn"),
         }),
       ),
+      postSaveAreaEffect: Schema.optionalWith(SpellPostSaveAreaEffectSchema, {
+        exact: true,
+      }),
     }),
     Schema.Struct({
       access: PreparedSpellAccessSchema,
@@ -1317,6 +1384,47 @@ type BattleSpellAreaChoiceEncoded = {
   | {
       readonly kind: "greaseGroundArea";
       readonly areaId: string;
+      readonly sleepNonSleeperFacts?: never;
+    }
+  | {
+      readonly kind: "thunderwaveArea";
+      readonly creaturePushes: readonly {
+        readonly targetId: string;
+        readonly disposition:
+          | {
+              readonly kind: "pushed";
+              readonly distanceFeet: number;
+              readonly destinationId: string;
+              readonly provokesOpportunityAttacks: false;
+            }
+          | {
+              readonly kind: "blocked";
+              readonly distanceFeet: number;
+              readonly reason: "blocked" | "noLegalDestination";
+              readonly provokesOpportunityAttacks: false;
+            };
+      }[];
+      readonly unsecuredObjectPushes: readonly {
+        readonly objectId: string;
+        readonly disposition:
+          | {
+              readonly kind: "pushed";
+              readonly distanceFeet: number;
+              readonly destinationId: string;
+              readonly provokesOpportunityAttacks: false;
+            }
+          | {
+              readonly kind: "blocked";
+              readonly distanceFeet: number;
+              readonly reason: "blocked" | "noLegalDestination";
+              readonly provokesOpportunityAttacks: false;
+            };
+      }[];
+      readonly audibleBoom: {
+        readonly sound: "thunderous boom";
+        readonly audibleRadiusFeet: number;
+      };
+      readonly areaId?: never;
       readonly sleepNonSleeperFacts?: never;
     }
 );

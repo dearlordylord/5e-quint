@@ -791,7 +791,8 @@
         "QMBT5",
         "SRDINV29E",
         "SRDINV32B",
-        "SRDINV34"
+        "SRDINV34",
+        "SRDINV51"
       ],
       "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
       "verificationOwners": [
@@ -2024,6 +2025,22 @@
         "spell.invocation-expeditious-retreat-dash"
       ],
       "taskId": "SRDINV49"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Thunderwave's area save-damage profile: area targeting, Thunder slot scaling, half damage on successful saves, and failed-save 10-foot push.",
+      "profileIds": [
+        "spell.invocation-damage-save-or-attack"
+      ],
+      "taskId": "SRDINV51"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Thunderwave's self-origin Cube save damage, half-success damage, caller-supplied failed-save creature push facts, caller-supplied unsecured-object push disposition, and audible-boom evidence; runtime-owned geometry and sound propagation remain outside the boundary.",
+      "profileIds": [
+        "spell.invocation-damage-save-or-attack"
+      ],
+      "taskId": "SRDINV51"
     }
   ],
   "units": [
@@ -4255,7 +4272,8 @@
             "QMBT5",
             "SRDINV29E",
             "SRDINV32B",
-            "SRDINV34"
+            "SRDINV34",
+            "SRDINV51"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -4511,7 +4529,8 @@
             "QMBT5",
             "SRDINV29E",
             "SRDINV32B",
-            "SRDINV34"
+            "SRDINV34",
+            "SRDINV51"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -4612,7 +4631,8 @@
             "QMBT5",
             "SRDINV29E",
             "SRDINV32B",
-            "SRDINV34"
+            "SRDINV34",
+            "SRDINV51"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -5495,7 +5515,8 @@
             "QMBT5",
             "SRDINV29E",
             "SRDINV32B",
-            "SRDINV34"
+            "SRDINV34",
+            "SRDINV51"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -5709,7 +5730,8 @@
             "QMBT5",
             "SRDINV29E",
             "SRDINV32B",
-            "SRDINV34"
+            "SRDINV34",
+            "SRDINV51"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -5768,7 +5790,8 @@
             "QMBT5",
             "SRDINV29E",
             "SRDINV32B",
-            "SRDINV34"
+            "SRDINV34",
+            "SRDINV51"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -5944,7 +5967,8 @@
             "QMBT5",
             "SRDINV29E",
             "SRDINV32B",
-            "SRDINV34"
+            "SRDINV34",
+            "SRDINV51"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6112,7 +6136,8 @@
             "QMBT5",
             "SRDINV29E",
             "SRDINV32B",
-            "SRDINV34"
+            "SRDINV34",
+            "SRDINV51"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6171,7 +6196,8 @@
             "QMBT5",
             "SRDINV29E",
             "SRDINV32B",
-            "SRDINV34"
+            "SRDINV34",
+            "SRDINV51"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6257,7 +6283,8 @@
             "QMBT5",
             "SRDINV29E",
             "SRDINV32B",
-            "SRDINV34"
+            "SRDINV34",
+            "SRDINV51"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6397,7 +6424,8 @@
             "QMBT5",
             "SRDINV29E",
             "SRDINV32B",
-            "SRDINV34"
+            "SRDINV34",
+            "SRDINV51"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6537,7 +6565,8 @@
             "QMBT5",
             "SRDINV29E",
             "SRDINV32B",
-            "SRDINV34"
+            "SRDINV34",
+            "SRDINV51"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6638,7 +6667,8 @@
             "QMBT5",
             "SRDINV29E",
             "SRDINV32B",
-            "SRDINV34"
+            "SRDINV34",
+            "SRDINV51"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6697,7 +6727,8 @@
             "QMBT5",
             "SRDINV29E",
             "SRDINV32B",
-            "SRDINV34"
+            "SRDINV34",
+            "SRDINV51"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6837,7 +6868,8 @@
             "QMBT5",
             "SRDINV29E",
             "SRDINV32B",
-            "SRDINV34"
+            "SRDINV34",
+            "SRDINV51"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6923,7 +6955,8 @@
             "QMBT5",
             "SRDINV29E",
             "SRDINV32B",
-            "SRDINV34"
+            "SRDINV34",
+            "SRDINV51"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -7365,14 +7398,72 @@
         "status": "installed"
       },
       "claim": {
-        "reason": "Spell Definition is installed with typed self-origin Cube Constitution save damage, failed-save creature push, unsecured-object push, audible boom, and slot-scaled Thunder damage facts; runtime push resolution, object inventory simulation, and sound propagation are not promoted yet.",
-        "tag": "unsupported-profile"
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "SRDINV55",
+            "mechanic": "runtime-owned push geometry, collision/pathfinding, and final-position derivation"
+          },
+          {
+            "followUpTaskId": "SRDINV55",
+            "mechanic": "broad object inventory simulation and sound propagation simulation"
+          }
+        ],
+        "profileIds": [
+          "spell.invocation-damage-save-or-attack"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "self-origin 15-foot Cube Constitution Saving Throw boundary with table-supplied affected creatures",
+          "slot-scaled Thunder damage with half damage on successful saves",
+          "failed-save creature push consumed from caller-supplied legal destination or blocked-push facts",
+          "unsecured-object push disposition consumed from caller-supplied object facts",
+          "audible thunderous boom evidence within 300 feet"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV51"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-damage-save-or-attack",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE10",
+            "QMBT5",
+            "SRDINV29E",
+            "SRDINV32B",
+            "SRDINV34",
+            "SRDINV51"
+          ],
+          "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/thunderwave.json",
       "unitId": "thunderwave"
     },

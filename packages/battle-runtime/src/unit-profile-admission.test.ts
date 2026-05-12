@@ -33,6 +33,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT32 cure_wounds mass_healing_word
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT34 mass_cure_wounds
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV49 expeditious_retreat
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV51 thunderwave
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT21 mycelium_step
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT18 defense
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT27 feat_archery
@@ -102,7 +103,9 @@ import {
   PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
   battleCombatantSide,
   battleId,
+  battleObjectId,
   battleReactionRollOrDamageReductionSupportForUnit,
+  battleTablePositionId,
   battleUnitRefWithSupportProfiles,
   breakBattleConcentration,
   cantripSpellInvocationRef,
@@ -127,6 +130,7 @@ import {
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
+  type BattleSpellAreaChoice,
   type BattleState,
   type BattleSubject,
   type CombatantId,
@@ -185,6 +189,7 @@ const searingSmiteUnitId = "searing_smite";
 const trueStrikeUnitId = "true_strike";
 const iceKnifeUnitId = "ice_knife";
 const sleepUnitId = "sleep";
+const thunderwaveUnitId = "thunderwave";
 const monkDeflectAttacksUnitId = "monk_deflect_attacks";
 const defenseUnitId = "defense";
 const divineFavorUnitId = "divine_favor";
@@ -249,8 +254,10 @@ const combatProwessSupportProfile = {
 } as const;
 const spellCasterId = combatantId("unit-profile-spell-caster");
 const spellTargetId = combatantId("unit-profile-spell-target");
+const thunderwaveSecondTargetId = combatantId("unit-profile-thunderwave-target-2");
 const ensnaringStrikeHelperId = combatantId("unit-profile-ensnaring-helper");
 const greaseAreaId = "unit-profile-grease-ground-area";
+const thunderwaveObjectId = battleObjectId("unit-profile-thunderwave-object");
 const massHealingTargetIds = [
   spellTargetId,
   combatantId("unit-profile-spell-target-2"),
@@ -10229,10 +10236,419 @@ describe("QMBT53 deterministic Adrenaline Rush admission", () => {
   });
 });
 
+describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
+  test("thunderwave is admitted as self-origin Cube save damage with push and boom facts", () => {
+    const spell = spellRecord(thunderwaveUnitId);
+    const act = spellAct({
+      state: spellBattle({
+        preparedSpells: [spell],
+        spellSlots: [{ spellLevel: 2, count: 1 }],
+      }),
+      spellId: thunderwaveUnitId,
+      slotLevel: 2,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(
+        thunderwaveUnitId,
+        2,
+        "saveGatedDamage",
+      ),
+      mode: { tag: "cast" },
+    });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+    expect(savingThrow).toEqual(
+      expect.objectContaining({
+        label: "Thunderwave self-origin Cube Saving Throw outcomes",
+        ability: "con",
+        dc: { kind: "caster_spell_save_dc" },
+      }),
+    );
+    expect(spellHoleInvocation([savingThrow])).toEqual(
+      expect.objectContaining({
+        procedure: "saveGatedDamage",
+        spell,
+        resource: { tag: "spellSlot", slotLevel: 2 },
+        ability: "con",
+        targeting: { kind: "selfOriginCube", sideFeet: 15 },
+        damage: {
+          expr: { dice: 3, dieSize: 8 },
+          damageType: "thunder",
+        },
+        successDamage: "half",
+        rangeFeet: 0,
+        failedSavePostDamageRiders: [],
+        postSaveAreaEffect: {
+          kind: "thunderwave",
+          creaturePush: {
+            distanceFeet: 10,
+            originDirection: "away_from_caster",
+          },
+          unsecuredObjectPush: {
+            distanceFeet: 10,
+            originDirection: "away_from_caster",
+            objectLocation: "entirely_within_area",
+          },
+          audibleBoom: {
+            sound: "thunderous boom",
+            audibleRadiusFeet: 300,
+          },
+        },
+      }),
+    );
+  });
+
+  test("thunderwave consumes failed-save push, object push, and audible-boom facts while applying save damage", () => {
+    const spell = spellRecord(thunderwaveUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      targetHp: 30,
+      targetMaxHp: 30,
+      extraTargetIds: [thunderwaveSecondTargetId],
+    });
+    const act = spellAct({ state, spellId: thunderwaveUnitId });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+    const damageRoll = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          thunderwaveSavingThrowOutcomeFill(savingThrow, [
+            { targetId: spellTargetId, succeeded: false },
+            { targetId: thunderwaveSecondTargetId, succeeded: true },
+          ]),
+        ],
+      }),
+      "rolledDice",
+    );
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        thunderwaveSavingThrowOutcomeFill(savingThrow, [
+          { targetId: spellTargetId, succeeded: false },
+          { targetId: thunderwaveSecondTargetId, succeeded: true },
+        ]),
+        damageRollFillWithGroups(damageRoll, [[4, 4]]),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Thunderwave to resolve.");
+    }
+    expect(Number(requireCombatant(resolved.state, spellTargetId).hp)).toBe(22);
+    expect(
+      Number(requireCombatant(resolved.state, thunderwaveSecondTargetId).hp),
+    ).toBe(8);
+  });
+
+  test("thunderwave without object-push and audible-boom facts is not admitted", () => {
+    const spell = thunderwaveWithoutDirectPhase(
+      spellRecord(thunderwaveUnitId),
+      "thunderwave_missing_direct_phase",
+    );
+
+    expect(
+      maybeSpellAct({
+        state: spellBattle({ preparedSpells: [spell] }),
+        spellId: spell.id,
+      }),
+    ).toBeUndefined();
+  });
+
+  test("thunderwave without failed-save creature push is not admitted", () => {
+    const spell = thunderwaveWithoutFailedSavePush(
+      spellRecord(thunderwaveUnitId),
+      "thunderwave_missing_failed_push",
+    );
+
+    expect(
+      maybeSpellAct({
+        state: spellBattle({ preparedSpells: [spell] }),
+        spellId: spell.id,
+      }),
+    ).toBeUndefined();
+  });
+
+  test("thunderwave with a non-Cube save-gate area is not admitted", () => {
+    const spell = thunderwaveWithSaveGateCone(
+      spellRecord(thunderwaveUnitId),
+      "thunderwave_wrong_save_area",
+    );
+
+    expect(
+      maybeSpellAct({
+        state: spellBattle({ preparedSpells: [spell] }),
+        spellId: spell.id,
+      }),
+    ).toBeUndefined();
+  });
+
+  test("thunderwave with a non-Thunder failed-save damage type is not admitted", () => {
+    const spell = thunderwaveWithFailedSaveDamage(
+      spellRecord(thunderwaveUnitId),
+      "thunderwave_wrong_damage_type",
+      (damage) => ({ ...damage, damageType: "fire" }),
+    );
+
+    expect(
+      maybeSpellAct({
+        state: spellBattle({ preparedSpells: [spell] }),
+        spellId: spell.id,
+      }),
+    ).toBeUndefined();
+  });
+
+  test("thunderwave with the wrong failed-save base dice is not admitted", () => {
+    const spell = thunderwaveWithFailedSaveDamage(
+      spellRecord(thunderwaveUnitId),
+      "thunderwave_wrong_base_dice",
+      (damage) => {
+        if (damage.amount.kind !== "linear_per_level") {
+          throw new Error("Expected Thunderwave slot-scaled damage.");
+        }
+        return {
+          ...damage,
+          amount: {
+            ...damage.amount,
+            base: { ...damage.amount.base, dice: 3 },
+          },
+        };
+      },
+    );
+
+    expect(
+      maybeSpellAct({
+        state: spellBattle({ preparedSpells: [spell] }),
+        spellId: spell.id,
+      }),
+    ).toBeUndefined();
+  });
+
+  test("thunderwave without slot-scaled failed-save damage is not admitted", () => {
+    const spell = thunderwaveWithFailedSaveDamage(
+      spellRecord(thunderwaveUnitId),
+      "thunderwave_fixed_damage",
+      (damage) => ({
+        ...damage,
+        amount: { kind: "fixed", expr: { dice: 2, dieSize: 8 } },
+      }),
+    );
+
+    expect(
+      maybeSpellAct({
+        state: spellBattle({ preparedSpells: [spell] }),
+        spellId: spell.id,
+      }),
+    ).toBeUndefined();
+  });
+
+  test("thunderwave with incorrect slot scaling is not admitted", () => {
+    const spell = thunderwaveWithFailedSaveDamage(
+      spellRecord(thunderwaveUnitId),
+      "thunderwave_wrong_slot_scaling",
+      (damage) => {
+        if (damage.amount.kind !== "linear_per_level") {
+          throw new Error("Expected Thunderwave slot-scaled damage.");
+        }
+        return {
+          ...damage,
+          amount: {
+            ...damage.amount,
+            perLevel: { dice: 2 },
+          },
+        };
+      },
+    );
+
+    expect(
+      maybeSpellAct({
+        state: spellBattle({ preparedSpells: [spell] }),
+        spellId: spell.id,
+      }),
+    ).toBeUndefined();
+  });
+
+  test("thunderwave with a non-caster spell save DC is not admitted", () => {
+    const spell = thunderwaveWithFixedSaveDc(
+      spellRecord(thunderwaveUnitId),
+      "thunderwave_fixed_save_dc",
+    );
+
+    expect(
+      maybeSpellAct({
+        state: spellBattle({ preparedSpells: [spell] }),
+        spellId: spell.id,
+      }),
+    ).toBeUndefined();
+  });
+
+  test("thunderwave rejects missing failed-save creature push facts", () => {
+    const spell = spellRecord(thunderwaveUnitId);
+    const state = spellBattle({ preparedSpells: [spell] });
+    const act = spellAct({ state, spellId: thunderwaveUnitId });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+    const invalid = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        {
+          ...thunderwaveSavingThrowOutcomeFill(savingThrow, [
+            { targetId: spellTargetId, succeeded: false },
+          ]),
+          value: {
+            ...thunderwaveSavingThrowOutcomeFill(savingThrow, [
+              { targetId: spellTargetId, succeeded: false },
+            ]).value,
+            area: {
+              ...thunderwaveArea([spellTargetId], [spellTargetId]),
+              creaturePushes: [],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(invalid).toMatchObject({
+      tag: "invalid",
+      message:
+        "Thunderwave creature push facts must cover every failed-save target.",
+    });
+  });
+});
+
 function spellRecord(unitId: string): SpellRecord {
   const unit = unitLibrary.requireUnit(unitId);
   expect(unit.kind).toBe("spell");
   return unit as SpellRecord;
+}
+
+function thunderwaveWithoutDirectPhase(base: SpellRecord, id: string): SpellRecord {
+  if (base.mechanics.family !== "activation") {
+    throw new Error("Expected Thunderwave activation mechanics.");
+  }
+  const [phase] = base.mechanics.phases;
+  return {
+    ...base,
+    id,
+    mechanics: {
+      ...base.mechanics,
+      phases: [phase],
+    },
+  } as SpellRecord;
+}
+
+function thunderwaveWithoutFailedSavePush(
+  base: SpellRecord,
+  id: string,
+): SpellRecord {
+  const { phase, directPhase, damage } = thunderwaveSaveGateParts(base);
+  return {
+    ...base,
+    id,
+    mechanics: {
+      ...base.mechanics,
+      phases: [{ ...phase, onFail: damage }, directPhase],
+    },
+  } as SpellRecord;
+}
+
+function thunderwaveWithFailedSaveDamage(
+  base: SpellRecord,
+  id: string,
+  mutateDamage: (
+    damage: ReturnType<typeof thunderwaveSaveGateParts>["damage"],
+  ) => ReturnType<typeof thunderwaveSaveGateParts>["damage"],
+): SpellRecord {
+  const { phase, directPhase, damage, riders } = thunderwaveSaveGateParts(base);
+  return {
+    ...base,
+    id,
+    mechanics: {
+      ...base.mechanics,
+      phases: [
+        {
+          ...phase,
+          onFail: {
+            kind: "composite",
+            effects: [mutateDamage(damage), ...riders],
+          },
+        },
+        directPhase,
+      ],
+    },
+  } as SpellRecord;
+}
+
+function thunderwaveWithFixedSaveDc(
+  base: SpellRecord,
+  id: string,
+): SpellRecord {
+  const { phase, directPhase } = thunderwaveSaveGateParts(base);
+  return {
+    ...base,
+    id,
+    mechanics: {
+      ...base.mechanics,
+      phases: [{ ...phase, dc: { kind: "fixed", dc: 12 } }, directPhase],
+    },
+  } as SpellRecord;
+}
+
+function thunderwaveWithSaveGateCone(
+  base: SpellRecord,
+  id: string,
+): SpellRecord {
+  if (base.mechanics.family !== "activation") {
+    throw new Error("Expected Thunderwave activation mechanics.");
+  }
+  const [phase, directPhase] = base.mechanics.phases;
+  if (
+    phase?.kind !== "save_gate" ||
+    phase.attachment.kind !== "area" ||
+    directPhase === undefined
+  ) {
+    throw new Error("Expected Thunderwave area save gate and direct phase.");
+  }
+  return {
+    ...base,
+    id,
+    mechanics: {
+      ...base.mechanics,
+      phases: [
+        {
+          ...phase,
+          attachment: {
+            ...phase.attachment,
+            shape: { kind: "cone", lengthFeet: 15 },
+          },
+        },
+        directPhase,
+      ],
+    },
+  } as SpellRecord;
+}
+
+function thunderwaveSaveGateParts(base: SpellRecord) {
+  if (base.mechanics.family !== "activation") {
+    throw new Error("Expected Thunderwave activation mechanics.");
+  }
+  const [phase, directPhase] = base.mechanics.phases;
+  if (phase?.kind !== "save_gate" || directPhase === undefined) {
+    throw new Error("Expected Thunderwave save gate and direct phase.");
+  }
+  if (phase.onFail.kind !== "composite") {
+    throw new Error("Expected Thunderwave composite failed-save effect.");
+  }
+  const [damage, ...riders] = phase.onFail.effects;
+  if (damage?.kind !== "damage") {
+    throw new Error("Expected Thunderwave failed-save damage.");
+  }
+  return { phase, directPhase, damage, riders };
 }
 
 function eldritchBlastWithTargetCount(
@@ -11791,6 +12207,63 @@ function savingThrowOutcomeFill(
             outcomes,
           }
         : { outcomes },
+  };
+}
+
+function thunderwaveSavingThrowOutcomeFill(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+  outcomes: readonly {
+    readonly targetId: CombatantId;
+    readonly succeeded: boolean;
+  }[],
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value: {
+      area: thunderwaveArea(
+        outcomes.map((outcome) => outcome.targetId),
+        outcomes.flatMap((outcome) =>
+          outcome.succeeded ? [] : [outcome.targetId],
+        ),
+      ),
+      outcomes,
+    },
+  };
+}
+
+function thunderwaveArea(
+  affectedTargetIds: readonly CombatantId[],
+  failedTargetIds: readonly CombatantId[],
+): Extract<BattleSpellAreaChoice, { readonly kind: "thunderwaveArea" }> {
+  return {
+    kind: "thunderwaveArea",
+    originAnchorId: spellCasterId,
+    affectedTargetIds,
+    creaturePushes: failedTargetIds.map((targetId) => ({
+      targetId,
+      disposition: {
+        kind: "pushed" as const,
+        distanceFeet: movementFeet(10),
+        destinationId: battleTablePositionId(`pushed:${targetId}`),
+        provokesOpportunityAttacks: false as const,
+      },
+    })),
+    unsecuredObjectPushes: [
+      {
+        objectId: thunderwaveObjectId,
+        disposition: {
+          kind: "pushed",
+          distanceFeet: movementFeet(10),
+          destinationId: battleTablePositionId("pushed:thunderwave-object"),
+          provokesOpportunityAttacks: false,
+        },
+      },
+    ],
+    audibleBoom: {
+      sound: "thunderous boom",
+      audibleRadiusFeet: movementFeet(300),
+    },
   };
 }
 

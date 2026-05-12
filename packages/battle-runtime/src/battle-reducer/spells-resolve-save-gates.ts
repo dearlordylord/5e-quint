@@ -1,7 +1,10 @@
 // Save-gated spell resolution extracted from spells-resolve.ts.
 // Owns save-gated damage, condition, and attack-roll-advantage procedures.
 
-import { damageAmount as toDamageAmount } from "@dnd/shared/types";
+import {
+  damageAmount as toDamageAmount,
+  type MovementFeet,
+} from "@dnd/shared/types";
 import {
   isTargetListSpellInvocation,
   maybeOpenReactionWindow,
@@ -12,6 +15,7 @@ import {
   type BattleSpellAreaChoice,
   type BattleSpellSavingThrowOutcomeHole,
   type BattleSpellSavingThrowOutcomeValue,
+  type BattleThunderwavePushDisposition,
   type BattleState,
   type SaveDamageResult,
   type SupportedSpellInvocation,
@@ -383,12 +387,24 @@ export function resolveSaveGateDamageSpellAct(input: {
       savingThrowValidation,
     );
   }
+  const failedTargets = savingThrowOutcomes.outcomes.flatMap((outcome) =>
+    outcome.succeeded ? [] : [outcome.targetId],
+  );
+  const postSaveAreaEffectValidation = validatePostSaveAreaEffect({
+    area: "area" in savingThrowOutcomes ? savingThrowOutcomes.area : undefined,
+    failedTargetIds: failedTargets,
+    invocation: input.invocation,
+  });
+  if (postSaveAreaEffectValidation !== null) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      postSaveAreaEffectValidation,
+    );
+  }
 
   const selectedTargetIds = savingThrowOutcomes.outcomes.map(
     (outcome) => outcome.targetId,
-  );
-  const failedTargets = savingThrowOutcomes.outcomes.flatMap((outcome) =>
-    outcome.succeeded ? [] : [outcome.targetId],
   );
   const saveDamageResultByTargetId = new Map(
     savingThrowOutcomes.outcomes.map((outcome) => [
@@ -1024,10 +1040,11 @@ export function validateSavingThrowOutcomes(
     return "Save-gate spell area origin anchor must be a combatant in this battle.";
   }
   if (
-    targeting.kind === "selfOriginCone" &&
+    (targeting.kind === "selfOriginCone" ||
+      targeting.kind === "selfOriginCube") &&
     value.area.originAnchorId !== actorId
   ) {
-    return "Self-origin Cone save-gate spell area must originate from the caster.";
+    return "Self-origin save-gate spell area must originate from the caster.";
   }
   if (
     targeting.kind === "primaryTargetOriginEmanation" &&
@@ -1052,6 +1069,14 @@ export function validateSavingThrowOutcomes(
   ) {
     return "Entangle area affected targets must exclude the caster.";
   }
+  if (
+    "kind" in value.area &&
+    value.area.kind === "thunderwaveArea" &&
+    (!("postSaveAreaEffect" in hole.spell) ||
+      hole.spell.postSaveAreaEffect?.kind !== "thunderwave")
+  ) {
+    return "Thunderwave push facts are only valid for Thunderwave.";
+  }
   for (const targetId of affectedTargets) {
     if (!state.combatants.has(targetId)) {
       return "Save-gate spell area affected target must be a combatant in this battle.";
@@ -1070,6 +1095,102 @@ export function validateSavingThrowOutcomes(
   }
   if (seenTargets.size !== affectedTargets.size) {
     return "Save-gate spell Saving Throw outcomes must cover every table-supplied area affected target.";
+  }
+  return null;
+}
+
+function validatePostSaveAreaEffect(input: {
+  readonly area: BattleSpellAreaChoice | undefined;
+  readonly failedTargetIds: readonly CombatantId[];
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "saveGatedDamage" }
+  >;
+}): string | null {
+  if (input.invocation.postSaveAreaEffect === undefined) {
+    return input.area !== undefined &&
+      "kind" in input.area &&
+      input.area.kind === "thunderwaveArea"
+      ? "Thunderwave push facts are only valid for Thunderwave."
+      : null;
+  }
+  if (input.invocation.postSaveAreaEffect.kind === "thunderwave") {
+    return validateThunderwaveAreaEffect(input);
+  }
+  return null;
+}
+
+function validateThunderwaveAreaEffect(input: {
+  readonly area: BattleSpellAreaChoice | undefined;
+  readonly failedTargetIds: readonly CombatantId[];
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "saveGatedDamage" }
+  >;
+}): string | null {
+  const effect = input.invocation.postSaveAreaEffect;
+  if (effect?.kind !== "thunderwave") {
+    return "Thunderwave area effect validation requires a Thunderwave effect.";
+  }
+  if (input.area === undefined || input.area.kind !== "thunderwaveArea") {
+    return "Thunderwave requires caller-supplied push, object, and audible-boom area facts.";
+  }
+  const failedTargetIds = new Set(input.failedTargetIds);
+  const pushedTargetIds = new Set<CombatantId>();
+  for (const push of input.area.creaturePushes) {
+    if (!failedTargetIds.has(push.targetId)) {
+      return "Thunderwave creature push facts must match failed-save targets.";
+    }
+    if (pushedTargetIds.has(push.targetId)) {
+      return "Thunderwave creature push facts must not duplicate targets.";
+    }
+    pushedTargetIds.add(push.targetId);
+    const dispositionValidation = validateThunderwavePushDisposition(
+      push.disposition,
+      effect.creaturePush.distanceFeet,
+    );
+    if (dispositionValidation !== null) {
+      return dispositionValidation;
+    }
+  }
+  if (pushedTargetIds.size !== failedTargetIds.size) {
+    return "Thunderwave creature push facts must cover every failed-save target.";
+  }
+  const objectIds = new Set<string>();
+  for (const push of input.area.unsecuredObjectPushes) {
+    if (objectIds.has(push.objectId)) {
+      return "Thunderwave unsecured-object push facts must not duplicate objects.";
+    }
+    objectIds.add(push.objectId);
+    const dispositionValidation = validateThunderwavePushDisposition(
+      push.disposition,
+      effect.unsecuredObjectPush.distanceFeet,
+    );
+    if (dispositionValidation !== null) {
+      return dispositionValidation;
+    }
+  }
+  return input.area.audibleBoom.sound === effect.audibleBoom.sound &&
+    input.area.audibleBoom.audibleRadiusFeet ===
+      effect.audibleBoom.audibleRadiusFeet
+    ? null
+    : "Thunderwave audible-boom fact must match the spell's thunderous boom within 300 feet.";
+}
+
+function validateThunderwavePushDisposition(
+  disposition: BattleThunderwavePushDisposition,
+  distanceFeet: MovementFeet,
+): string | null {
+  if (disposition.distanceFeet !== distanceFeet) {
+    return "Thunderwave push disposition must use the spell's 10-foot distance.";
+  }
+  if (disposition.provokesOpportunityAttacks !== false) {
+    return "Thunderwave push disposition must not provoke Opportunity Attacks.";
+  }
+  if (disposition.kind === "pushed") {
+    return disposition.destinationId.length === 0
+      ? "Thunderwave pushed destinations must be caller-supplied non-empty table positions."
+      : null;
   }
   return null;
 }

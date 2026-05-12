@@ -78,3 +78,4 @@
 {"unitId":"eldritch_blast","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV39","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"grease","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV40","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"expeditious_retreat","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV49","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
+{"unitId":"thunderwave","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV51","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}

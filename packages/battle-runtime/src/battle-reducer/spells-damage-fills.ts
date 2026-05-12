@@ -690,6 +690,7 @@ export function spellAreaTargetingLabel(
       () => "point-origin Cube",
     ),
     Match.when({ kind: "pointOriginCube" }, () => "point-origin Cube"),
+    Match.when({ kind: "selfOriginCube" }, () => "self-origin Cube"),
     Match.when({ kind: "selfOriginCone" }, () => "self-origin Cone"),
     Match.when(
       { kind: "primaryTargetOriginEmanation" },

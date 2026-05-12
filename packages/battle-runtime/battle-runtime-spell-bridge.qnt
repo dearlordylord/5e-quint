@@ -31,6 +31,7 @@ module battleRuntimeSpellBridge {
     | BattleRuntimeInflictWoundsSaveDamage
     | BattleRuntimeBurningHandsSaveDamage
     | BattleRuntimeViciousMockerySaveDamage
+    | BattleRuntimeThunderwaveSaveDamage
 
   type BattleRuntimeSaveGatedConditionProfile =
     | BattleRuntimeColorSpraySaveCondition
@@ -55,6 +56,7 @@ module battleRuntimeSpellBridge {
 
   type BattleRuntimeSaveGatedFailedEffect =
     | BattleRuntimeViciousMockeryNextAttackDisadvantageEffect
+    | BattleRuntimeThunderwavePush10FeetEffect
     | BattleRuntimeColorSprayBlindedEffect
     | BattleRuntimeEntangleRestrainedEffect
     | BattleRuntimeAnimalFriendshipCharmedEffect({ durationTicks: int })
@@ -194,6 +196,7 @@ module battleRuntimeSpellBridge {
       | BattleRuntimeInflictWoundsSaveDamage => InflictWoundsSaveDamageProfile
       | BattleRuntimeBurningHandsSaveDamage => BurningHandsSaveDamageProfile
       | BattleRuntimeViciousMockerySaveDamage => ViciousMockerySaveDamageProfile
+      | BattleRuntimeThunderwaveSaveDamage => ThunderwaveSaveDamageProfile
     }
 
   pure def battleRuntimeSaveGatedConditionProfile(
@@ -264,6 +267,7 @@ module battleRuntimeSpellBridge {
   ): BattleRuntimeSaveGatedFailedEffect =
     match effect {
       | ViciousMockeryNextAttackDisadvantageEffect => BattleRuntimeViciousMockeryNextAttackDisadvantageEffect
+      | ThunderwavePush10FeetEffect => BattleRuntimeThunderwavePush10FeetEffect
       | ColorSprayBlindedEffect => BattleRuntimeColorSprayBlindedEffect
       | EntangleRestrainedEffect => BattleRuntimeEntangleRestrainedEffect
       | AnimalFriendshipCharmedEffect(data) => BattleRuntimeAnimalFriendshipCharmedEffect({ durationTicks: data.durationMinutes })
@@ -669,9 +673,13 @@ module battleRuntimeSpellBridge {
       assert(battleRuntimeSaveGatedDamageTargeting(BattleRuntimeSacredFlameSaveDamage) == BattleRuntimeSingleSaveTarget),
       assert(battleRuntimeSaveGatedDamageTargeting(BattleRuntimeBurningHandsSaveDamage) == BattleRuntimeAreaSaveTargets),
       assert(battleRuntimeSaveGatedDamageSuccess(BattleRuntimeInflictWoundsSaveDamage) == BattleRuntimeHalfDamageOnSaveSuccess),
+      assert(battleRuntimeSaveGatedDamageSuccess(BattleRuntimeThunderwaveSaveDamage) == BattleRuntimeHalfDamageOnSaveSuccess),
       assert(battleRuntimeSaveGatedDamageType(BattleRuntimeViciousMockerySaveDamage) == PsychicDamage),
+      assert(battleRuntimeSaveGatedDamageType(BattleRuntimeThunderwaveSaveDamage) == ThunderDamage),
       assert(battleRuntimeSaveGatedDamageRequiresSlot(BattleRuntimeBurningHandsSaveDamage)),
+      assert(battleRuntimeSaveGatedDamageRequiresSlot(BattleRuntimeThunderwaveSaveDamage)),
       assert(not(battleRuntimeSaveGatedDamageRequiresSlot(BattleRuntimeAcidSplashSaveDamage))),
+      assert(battleRuntimeSaveGatedDamageFailedSaveEffects(BattleRuntimeThunderwaveSaveDamage) == Set(BattleRuntimeThunderwavePush10FeetEffect)),
       assert(battleRuntimeSaveGatedDamageFailedSaveEffects(BattleRuntimeViciousMockerySaveDamage) == Set(BattleRuntimeViciousMockeryNextAttackDisadvantageEffect)),
       assert(battleRuntimeSaveGatedConditionTargeting(BattleRuntimeColorSpraySaveCondition) == BattleRuntimeAreaSaveTargets),
       assert(battleRuntimeSaveGatedTargetMaxTargets(animalTargets, 2) == 2),

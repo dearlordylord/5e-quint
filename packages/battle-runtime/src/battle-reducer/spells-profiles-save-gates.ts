@@ -36,6 +36,7 @@ import {
   type SpellFailedSaveAttackRollEffect,
   type SpellFailedSaveConditionEffect,
   type SpellFailedSavePostDamageRider,
+  type SpellPostSaveAreaEffect,
   type SpellPostDamageRider,
   type SpellSavingThrowRollModeRule,
   type SpellTargeting,
@@ -694,6 +695,10 @@ export function supportedSaveGateDamageProfile(
     return [];
   }
   const phase = spell.mechanics.phases[0];
+  const postSaveAreaEffect =
+    phase?.kind === "save_gate"
+      ? thunderwavePostSaveAreaEffect(spell, phase, spell.mechanics.phases[1])
+      : null;
   const targeting =
     phase?.kind === "save_gate" ? saveGateTargeting(phase.attachment) : null;
   const rangeFeet =
@@ -704,7 +709,12 @@ export function supportedSaveGateDamageProfile(
         : areaSaveGateSpellRangeFeet(spell.mechanics.range, targeting);
   const failedSaveEffects =
     phase?.kind === "save_gate"
-      ? supportedSaveGateFailedSaveEffects(spell, phase, phase.onFail)
+      ? supportedSaveGateFailedSaveEffects(
+          spell,
+          phase,
+          phase.onFail,
+          postSaveAreaEffect,
+        )
       : null;
   if (
     (input.access.tag === "classCantrip"
@@ -712,7 +722,9 @@ export function supportedSaveGateDamageProfile(
       : spell.mechanics.level < 1) ||
     spell.mechanics.castingTime.kind !== "action" ||
     rangeFeet === null ||
-    spell.mechanics.phases.length !== 1 ||
+    (postSaveAreaEffect === null
+      ? spell.mechanics.phases.length !== 1
+      : spell.mechanics.phases.length !== 2) ||
     phase?.kind !== "save_gate" ||
     targeting === null ||
     (phase.onSuccess.kind !== "none" &&
@@ -747,6 +759,7 @@ export function supportedSaveGateDamageProfile(
       : "none") as "half" | "none",
     rangeFeet,
     failedSavePostDamageRiders: failedSaveEffects.postDamageRiders,
+    ...(postSaveAreaEffect === null ? {} : { postSaveAreaEffect }),
   };
 
   return [{ ...damageSpellSource(input), ...saveGatedInvocation }];
@@ -789,6 +802,17 @@ export function saveGateTargeting(
   if (
     value.kind === "area" &&
     value.origin.kind === "self" &&
+    value.shape.kind === "cube" &&
+    value.shape.sideFeet === 15
+  ) {
+    return {
+      kind: "selfOriginCube",
+      sideFeet: movementFeet(value.shape.sideFeet),
+    };
+  }
+  if (
+    value.kind === "area" &&
+    value.origin.kind === "self" &&
     value.shape.kind === "cone" &&
     value.shape.lengthFeet === SUPPORTED_SELF_CONE_SAVE_GATE_LENGTH_FEET
   ) {
@@ -816,6 +840,9 @@ export function areaSaveGateSpellRangeFeet(
     ),
     Match.when({ kind: "pointOriginCube" }, () =>
       range.kind === "point" ? movementFeet(range.feet) : null,
+    ),
+    Match.when({ kind: "selfOriginCube" }, () =>
+      range.kind === "self" ? movementFeet(0) : null,
     ),
     Match.when({ kind: "selfOriginCone" }, () =>
       range.kind === "self" ? movementFeet(0) : null,
@@ -965,10 +992,14 @@ export function supportedSaveGateFailedSaveEffects(
   spell: SpellRecord,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
   effect: SaveGateFailureEffect,
+  postSaveAreaEffect: SpellPostSaveAreaEffect | null = null,
 ): {
   readonly damage: Extract<SaveGateFailureEffect, { readonly kind: "damage" }>;
   readonly postDamageRiders: readonly SpellFailedSavePostDamageRider[];
 } | null {
+  if (postSaveAreaEffect?.kind === "thunderwave" && effect.kind === "damage") {
+    return null;
+  }
   if (effect.kind === "damage") {
     return { damage: effect, postDamageRiders: [] };
   }
@@ -979,10 +1010,25 @@ export function supportedSaveGateFailedSaveEffects(
   if (damage?.kind !== "damage") {
     return null;
   }
+  if (
+    postSaveAreaEffect?.kind === "thunderwave" &&
+    !isThunderwaveFailedSaveDamageShape(damage)
+  ) {
+    return null;
+  }
+  if (
+    postSaveAreaEffect?.kind === "thunderwave" &&
+    riders.filter((rider) =>
+      isThunderwaveCreaturePushRiderShape(spell, phase, rider),
+    ).length !== 1
+  ) {
+    return null;
+  }
   const postDamageRiders = supportedFailedSavePostDamageRiders(
     spell,
     phase,
     riders,
+    postSaveAreaEffect,
   );
   return postDamageRiders === null ? null : { damage, postDamageRiders };
 }
@@ -991,9 +1037,16 @@ export function supportedFailedSavePostDamageRiders(
   spell: SpellRecord,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
   effects: readonly SaveGateFailureEffect[],
+  postSaveAreaEffect: SpellPostSaveAreaEffect | null = null,
 ): readonly SpellFailedSavePostDamageRider[] | null {
   const riders: SpellFailedSavePostDamageRider[] = [];
   for (const effect of effects) {
+    if (
+      postSaveAreaEffect?.kind === "thunderwave" &&
+      isThunderwaveCreaturePushRiderShape(spell, phase, effect)
+    ) {
+      continue;
+    }
     if (
       effect.kind !== "modify_roll_advantage" ||
       effect.mode !== "disadvantage" ||
@@ -1012,6 +1065,103 @@ export function supportedFailedSavePostDamageRiders(
     });
   }
   return riders;
+}
+
+function thunderwavePostSaveAreaEffect(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
+  directPhase: SpellActivationPhase | undefined,
+): SpellPostSaveAreaEffect | null {
+  if (
+    spell.name !== "Thunderwave" ||
+    spell.provenance.kind !== "srd-5.2.1" ||
+    spell.provenance.section !== "Spells/Descriptions-S-Z#Thunderwave" ||
+    spell.mechanics.level !== 1 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "self" ||
+    spell.mechanics.duration.kind !== "instantaneous" ||
+    phase.ability !== "con" ||
+    phase.dc.kind !== "caster_spell_save_dc" ||
+    phase.onSuccess.kind !== "half_damage" ||
+    phase.attachment.kind !== "area" ||
+    phase.attachment.origin.kind !== "self" ||
+    phase.attachment.shape.kind !== "cube" ||
+    phase.attachment.shape.sideFeet !== 15 ||
+    directPhase?.kind !== "direct" ||
+    directPhase.attachment.kind !== "area" ||
+    directPhase.attachment.origin.kind !== "self" ||
+    directPhase.attachment.shape.kind !== "cube" ||
+    directPhase.attachment.shape.sideFeet !== 15 ||
+    directPhase.effects?.length !== 2
+  ) {
+    return null;
+  }
+  const [objectPush, audibleBoom] = directPhase.effects;
+  if (
+    objectPush?.kind !== "push_unsecured_objects" ||
+    objectPush.objectLocation !== "entirely_within_area" ||
+    objectPush.originDirection !== "away_from_caster" ||
+    objectPush.distanceFeet !== 10 ||
+    audibleBoom?.kind !== "audible" ||
+    audibleBoom.sound !== "thunderous boom" ||
+    audibleBoom.audibleRadiusFeet !== 300
+  ) {
+    return null;
+  }
+  return {
+    kind: "thunderwave",
+    creaturePush: {
+      distanceFeet: movementFeet(10),
+      originDirection: "away_from_caster",
+    },
+    unsecuredObjectPush: {
+      distanceFeet: movementFeet(10),
+      originDirection: "away_from_caster",
+      objectLocation: "entirely_within_area",
+    },
+    audibleBoom: {
+      sound: "thunderous boom",
+      audibleRadiusFeet: movementFeet(300),
+    },
+  };
+}
+
+function isThunderwaveCreaturePushRiderShape(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
+  effect: SaveGateFailureEffect,
+): boolean {
+  return (
+    spell.name === "Thunderwave" &&
+    spell.provenance.kind === "srd-5.2.1" &&
+    spell.provenance.section === "Spells/Descriptions-S-Z#Thunderwave" &&
+    phase.ability === "con" &&
+    phase.onSuccess.kind === "half_damage" &&
+    effect.kind === "force_move" &&
+    effect.movementKind === "push" &&
+    effect.originDirection === "away_from_caster" &&
+    effect.distanceFeet === 10
+  );
+}
+
+function isThunderwaveFailedSaveDamageShape(
+  effect: Extract<SaveGateFailureEffect, { readonly kind: "damage" }>,
+): boolean {
+  const amount = effect.amount;
+  return (
+    effect.damageType === "thunder" &&
+    amount.kind === "linear_per_level" &&
+    amount.axis === "slot" &&
+    amount.startingAtLevel === 1 &&
+    amount.base.dice === 2 &&
+    amount.base.dieSize === 8 &&
+    amount.base.flat === undefined &&
+    amount.base.spellcastingMod === undefined &&
+    amount.base.abilityModifier === undefined &&
+    amount.perLevel.dice === 1 &&
+    amount.perLevel.dieSize === undefined &&
+    amount.perLevel.flat === undefined
+  );
 }
 
 export function isViciousMockeryNextAttackRiderShape(

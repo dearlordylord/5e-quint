@@ -76,6 +76,7 @@ module spellProcedureProfiles {
     | InflictWoundsSaveDamageProfile
     | BurningHandsSaveDamageProfile
     | ViciousMockerySaveDamageProfile
+    | ThunderwaveSaveDamageProfile
 
   type SpellSaveGatedConditionProfile =
     | ColorSpraySaveConditionProfile
@@ -86,6 +87,7 @@ module spellProcedureProfiles {
 
   type SpellSaveGatedFailedEffect =
     | ViciousMockeryNextAttackDisadvantageEffect
+    | ThunderwavePush10FeetEffect
     | ColorSprayBlindedEffect
     | EntangleRestrainedEffect
     | AnimalFriendshipCharmedEffect({ durationMinutes: int })
@@ -385,6 +387,7 @@ module spellProcedureProfiles {
       | InflictWoundsSaveDamageProfile => SpellSingleSaveTarget
       | BurningHandsSaveDamageProfile => SpellAreaSaveTargets
       | ViciousMockerySaveDamageProfile => SpellSingleSaveTarget
+      | ThunderwaveSaveDamageProfile => SpellAreaSaveTargets
     }
 
   pure def spellSaveGatedDamageSuccess(profile: SpellSaveGatedDamageProfile): SpellSaveGatedDamageSuccess =
@@ -394,6 +397,7 @@ module spellProcedureProfiles {
       | InflictWoundsSaveDamageProfile => SpellHalfDamageOnSaveSuccess
       | BurningHandsSaveDamageProfile => SpellHalfDamageOnSaveSuccess
       | ViciousMockerySaveDamageProfile => SpellNoDamageOnSaveSuccess
+      | ThunderwaveSaveDamageProfile => SpellHalfDamageOnSaveSuccess
     }
 
   pure def spellSaveGatedDamageType(profile: SpellSaveGatedDamageProfile): RuleDamageType =
@@ -403,6 +407,7 @@ module spellProcedureProfiles {
       | InflictWoundsSaveDamageProfile => NecroticDamage
       | BurningHandsSaveDamageProfile => FireDamage
       | ViciousMockerySaveDamageProfile => PsychicDamage
+      | ThunderwaveSaveDamageProfile => ThunderDamage
     }
 
   pure def spellSaveGatedDamageRequiresSlot(profile: SpellSaveGatedDamageProfile): bool =
@@ -412,11 +417,13 @@ module spellProcedureProfiles {
       | InflictWoundsSaveDamageProfile => true
       | BurningHandsSaveDamageProfile => true
       | ViciousMockerySaveDamageProfile => false
+      | ThunderwaveSaveDamageProfile => true
     }
 
   pure def spellSaveGatedDamageFailedSaveEffects(profile: SpellSaveGatedDamageProfile): Set[SpellSaveGatedFailedEffect] =
     match profile {
       | ViciousMockerySaveDamageProfile => Set(ViciousMockeryNextAttackDisadvantageEffect)
+      | ThunderwaveSaveDamageProfile => Set(ThunderwavePush10FeetEffect)
       | _ => Set()
     }
 
@@ -1174,9 +1181,13 @@ module spellProcedureProfiles {
       assert(spellSaveGatedDamageTargeting(BurningHandsSaveDamageProfile) == SpellAreaSaveTargets),
       assert(spellSaveGatedDamageSuccess(InflictWoundsSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
       assert(spellSaveGatedDamageSuccess(ViciousMockerySaveDamageProfile) == SpellNoDamageOnSaveSuccess),
+      assert(spellSaveGatedDamageSuccess(ThunderwaveSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
       assert(spellSaveGatedDamageType(ViciousMockerySaveDamageProfile) == PsychicDamage),
+      assert(spellSaveGatedDamageType(ThunderwaveSaveDamageProfile) == ThunderDamage),
       assert(spellSaveGatedDamageRequiresSlot(BurningHandsSaveDamageProfile)),
+      assert(spellSaveGatedDamageRequiresSlot(ThunderwaveSaveDamageProfile)),
       assert(not(spellSaveGatedDamageRequiresSlot(AcidSplashSaveDamageProfile))),
+      assert(spellSaveGatedDamageFailedSaveEffects(ThunderwaveSaveDamageProfile) == Set(ThunderwavePush10FeetEffect)),
       assert(spellSaveGatedDamageFailedSaveEffects(ViciousMockerySaveDamageProfile) == Set(ViciousMockeryNextAttackDisadvantageEffect)),
       assert(spellSaveGatedConditionTargeting(ColorSpraySaveConditionProfile) == SpellAreaSaveTargets),
       assert(spellSaveGatedTargetMaxTargets(animalTargets, 1) == 1),
