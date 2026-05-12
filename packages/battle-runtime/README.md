@@ -566,8 +566,12 @@ Available acts:
 - Grease ground hazards record the spell-owned area id and one-minute duration.
   Callers choose `entersArea` when table geometry says a creature enters the
   area. `endsTurnInArea` is an End Turn boundary: the Dexterity save and any
-  Prone result resolve before the turn advances. The Difficult Terrain
-  movement-cost increase remains part of the submitted Movement cost.
+  Prone result resolve before the turn advances. Movement through Grease's
+  Difficult Terrain uses explicit caller-supplied total-distance and
+  Grease-distance facts on the Movement fill; the Movement parser validates that
+  the fact matches an active Grease ground hazard and spends the total distance
+  plus 1 extra foot for every foot moved through the area. The runtime stores no
+  area geometry or path membership.
 - discover Escape Grapple for a Grappled current actor and Release Grapple for a
   grappler. Release spends no action; Escape spends the action on success or
   failure.

@@ -1082,9 +1082,18 @@ export type BattleMovementFillValue = {
   readonly speedKind: BattleMovementSpeedKind;
   readonly movementCostFeet: MovementFeet;
   readonly provokedOpportunityAttacks: readonly BattleOpportunityAttackThreat[];
+  readonly greaseGroundDifficultTerrain?: BattleGreaseGroundDifficultTerrainMovementFact;
   readonly jumpMovementReplacement?: BattleJumpMovementReplacementFact;
   readonly commandApproach?: BattleCommandApproachMovementFact;
   readonly commandFlee?: BattleCommandFleeMovementFact;
+};
+export type BattleGreaseGroundDifficultTerrainMovementFact = {
+  readonly kind: "greaseGroundDifficultTerrain";
+  readonly sourceCombatantId: CombatantId;
+  readonly sourceSpellId: SpellRecord["id"];
+  readonly areaId: string;
+  readonly totalDistanceFeet: MovementFeet;
+  readonly greaseDistanceFeet: MovementFeet;
 };
 export type BattleCommandApproachMovementFact = {
   readonly kind: "commandApproachShortestDirectRouteTowardCaster";

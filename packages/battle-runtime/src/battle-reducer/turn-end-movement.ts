@@ -137,6 +137,7 @@ import type {
   BattleCreatureState,
   BattleDroppedObjectOutcome,
   BattleFill,
+  BattleGreaseGroundDifficultTerrainMovementFact,
   BattleGrappleLink,
   BattleGreaseGroundHazardSavingThrowOutcomeHole,
   BattleHeldObjectFactsHole,
@@ -2828,6 +2829,18 @@ export function parseBattleMovement(
       message: "Movement cost must be a positive integer.",
     };
   }
+  const greaseGroundDifficultTerrainValidation =
+    validateGreaseGroundDifficultTerrainMovementFact(
+      state,
+      fill.value.greaseGroundDifficultTerrain,
+      fill.value.movementCostFeet,
+    );
+  if (greaseGroundDifficultTerrainValidation !== null) {
+    return {
+      tag: "invalid",
+      message: greaseGroundDifficultTerrainValidation,
+    };
+  }
   const jumpMovementValidation = validateJumpMovementReplacementFact(
     fill.value.jumpMovementReplacement,
     options.jumpMovementReplacement,
@@ -2927,6 +2940,51 @@ export function parseBattleMovement(
         : { jumpMovementReplacement: fill.value.jumpMovementReplacement }),
     },
   };
+}
+
+function validateGreaseGroundDifficultTerrainMovementFact(
+  state: BattleState,
+  fact: BattleGreaseGroundDifficultTerrainMovementFact | undefined,
+  movementCostFeet: MovementFeet,
+): string | null {
+  if (fact === undefined) {
+    return null;
+  }
+  if (fact.kind !== "greaseGroundDifficultTerrain") {
+    return "Grease Difficult Terrain movement fact has the wrong kind.";
+  }
+  if (
+    !Number.isInteger(fact.totalDistanceFeet) ||
+    fact.totalDistanceFeet <= 0
+  ) {
+    return "Grease Difficult Terrain total distance must be a positive integer.";
+  }
+  if (
+    !Number.isInteger(fact.greaseDistanceFeet) ||
+    fact.greaseDistanceFeet <= 0
+  ) {
+    return "Grease Difficult Terrain distance must be a positive integer.";
+  }
+  if (Number(fact.greaseDistanceFeet) > Number(fact.totalDistanceFeet)) {
+    return "Grease Difficult Terrain distance cannot exceed total Movement distance.";
+  }
+  const source = state.combatants.get(fact.sourceCombatantId);
+  const activeGrease = source?.activeEffects.some(
+    (effect) =>
+      effect.kind === "greaseGroundHazard" &&
+      effect.sourceCombatantId === fact.sourceCombatantId &&
+      effect.sourceSpellId === fact.sourceSpellId &&
+      effect.areaId === fact.areaId,
+  );
+  if (activeGrease !== true) {
+    return "Grease Difficult Terrain movement fact does not match an active Grease ground hazard.";
+  }
+  const expectedCostFeet = movementFeet(
+    Number(fact.totalDistanceFeet) + Number(fact.greaseDistanceFeet),
+  );
+  return Number(movementCostFeet) === Number(expectedCostFeet)
+    ? null
+    : "Grease Difficult Terrain movement must spend total distance plus 1 extra foot for every foot moved through the area.";
 }
 
 function validateJumpMovementReplacementFact(

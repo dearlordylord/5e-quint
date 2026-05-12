@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-beam-sequence spell.invocation-condition-save spell.invocation-marked-damage-rider spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-beam-sequence spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-marked-damage-rider spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider
 import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
@@ -111,6 +111,7 @@ import viciousMockeryInput from "../../surface/content/vicious_mockery.json";
 import burningHandsInput from "../../surface/content/burning_hands.json";
 import colorSprayInput from "../../surface/content/color_spray.json";
 import iceKnifeInput from "../../surface/content/ice_knife.json";
+import greaseInput from "../../surface/content/grease.json";
 import huntersMarkInput from "../../surface/content/hunters_mark.json";
 import healingWordInput from "../../surface/content/healing_word.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
@@ -244,6 +245,7 @@ const testSpellRecords = new Map(
     burningHandsInput,
     colorSprayInput,
     iceKnifeInput,
+    greaseInput,
     huntersMarkInput,
     healingWordInput,
   ]
@@ -688,6 +690,131 @@ describe("battle runtime", () => {
         ],
       }),
     ).toMatchObject({ tag: "resolved", snapshot: { pendingReaction: null } });
+  });
+
+  test("Grease Difficult Terrain facts add extra Movement cost without storing geometry", () => {
+    const areaId = "test-grease-area";
+    const greased = castGreaseGroundHazardForMovementTest(areaId);
+    const subject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: wizardId,
+      command: "move",
+    };
+    const hole = requireHole(
+      resolveBattleSubject({ state: greased, subject, fills: [] }),
+      "movement",
+    );
+    const greaseGroundDifficultTerrain = {
+      kind: "greaseGroundDifficultTerrain" as const,
+      sourceCombatantId: wizardId,
+      sourceSpellId: spellRecord("grease").id,
+      areaId,
+      totalDistanceFeet: movementFeet(10),
+      greaseDistanceFeet: movementFeet(5),
+    };
+
+    expect(
+      resolveBattleSubject({
+        state: greased,
+        subject,
+        fills: [
+          movementFill(hole, {
+            movementCostFeet: 10,
+            provokedOpportunityAttacks: [],
+            greaseGroundDifficultTerrain,
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Grease Difficult Terrain movement must spend total distance plus 1 extra foot for every foot moved through the area.",
+    });
+
+    const moved = requireResolved(
+      resolveBattleSubject({
+        state: greased,
+        subject,
+        fills: [
+          movementFill(hole, {
+            movementCostFeet: 15,
+            provokedOpportunityAttacks: [],
+            greaseGroundDifficultTerrain,
+          }),
+        ],
+      }),
+    ).state;
+
+    expect(moved.combatants.get(wizardId)).toMatchObject({
+      movementSpentFeet: movementFeet(15),
+    });
+    const effect = moved.combatants
+      .get(wizardId)
+      ?.activeEffects.find(
+        (candidate) => candidate.kind === "greaseGroundHazard",
+      );
+    expect(effect).toMatchObject({ kind: "greaseGroundHazard", areaId });
+    expect(effect).not.toHaveProperty("originAnchorId");
+    expect(effect).not.toHaveProperty("affectedTargetIds");
+    expect(effect).not.toHaveProperty("shape");
+  });
+
+  test("Grease Difficult Terrain movement facts expire with the Grease ground hazard", () => {
+    const areaId = "test-expiring-grease-area";
+    const greased = castGreaseGroundHazardForMovementTest(areaId);
+    let expired = greased;
+    for (let i = 0; i < 20; i += 1) {
+      expired = requireResolved(
+        endTurn({
+          state: expired,
+          actorId: snapshotBattle(expired).currentActorId,
+        }),
+      ).state;
+    }
+
+    expect(
+      expired.combatants
+        .get(wizardId)
+        ?.activeEffects.some(
+          (effect) =>
+            effect.kind === "greaseGroundHazard" && effect.areaId === areaId,
+        ),
+    ).toBe(false);
+
+    const subject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: wizardId,
+      command: "move",
+    };
+    const hole = requireHole(
+      resolveBattleSubject({ state: expired, subject, fills: [] }),
+      "movement",
+    );
+
+    expect(
+      resolveBattleSubject({
+        state: expired,
+        subject,
+        fills: [
+          movementFill(hole, {
+            movementCostFeet: 10,
+            provokedOpportunityAttacks: [],
+            greaseGroundDifficultTerrain: {
+              kind: "greaseGroundDifficultTerrain",
+              sourceCombatantId: wizardId,
+              sourceSpellId: spellRecord("grease").id,
+              areaId,
+              totalDistanceFeet: movementFeet(10),
+              greaseDistanceFeet: movementFeet(5),
+            },
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Grease Difficult Terrain movement fact does not match an active Grease ground hazard.",
+    });
   });
 
   test("Ready holds executable Reaction movement until its trigger", () => {
@@ -20128,6 +20255,10 @@ function movementFill(
       readonly reactorId: CombatantId;
       readonly attackName: string;
     }[];
+    readonly greaseGroundDifficultTerrain?: Extract<
+      BattleFill,
+      { readonly kind: "movement" }
+    >["value"]["greaseGroundDifficultTerrain"];
   },
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   if (hole.kind !== "movement") {
@@ -20140,6 +20271,67 @@ function movementFill(
       speedKind: value.speedKind ?? "walk",
       movementCostFeet: movementFeet(value.movementCostFeet),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
+      ...(value.greaseGroundDifficultTerrain === undefined
+        ? {}
+        : { greaseGroundDifficultTerrain: value.greaseGroundDifficultTerrain }),
+    },
+  };
+}
+
+function castGreaseGroundHazardForMovementTest(areaId: string): BattleState {
+  const state = startBattleRight({
+    battleId: battleId(`battle-grease-movement-${areaId}`),
+    combatants: [
+      characterSeed({
+        combatantId: wizardId,
+        displayName: "Wizard",
+        initiative: 20,
+        attack: null,
+        spellcasting: wizardSpellcasting({
+          preparedSpells: [spellRecord("grease")],
+          spellSlots: [{ spellLevel: 1, count: 1 }],
+        }),
+      }),
+      statBlockCreatureInit({ initiative: 10 }),
+    ],
+  });
+  const subject: BattleSubject = {
+    tag: "actionSpell",
+    actorId: wizardId,
+    invocation: spellSlotInvocationRef("grease", 1, "greaseGroundHazard"),
+    mode: { tag: "cast" },
+  };
+  const save = requireHole(
+    resolveBattleSubject({ state, subject, fills: [] }),
+    "savingThrowOutcome",
+  );
+  return requireResolved(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [greaseGroundAreaSavingThrowFill(save, areaId)],
+    }),
+  ).state;
+}
+
+function greaseGroundAreaSavingThrowFill(
+  hole: BattleHole,
+  areaId: string,
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  if (hole.kind !== "savingThrowOutcome") {
+    throw new Error("Expected savingThrowOutcome hole.");
+  }
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value: {
+      area: {
+        kind: "greaseGroundArea",
+        originAnchorId: wizardId,
+        affectedTargetIds: [],
+        areaId,
+      },
+      outcomes: [],
     },
   };
 }
@@ -21837,6 +22029,7 @@ function spellRecord(
     | "burning_hands"
     | "color_spray"
     | "ice_knife"
+    | "grease"
     | "entangle"
     | "sleep"
     | "hunters_mark"

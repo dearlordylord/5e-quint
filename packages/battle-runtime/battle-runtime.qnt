@@ -5064,6 +5064,20 @@ module battleRuntime {
       | _ => false
     })
 
+  pure def greaseGroundDifficultTerrainMovementCost(state: BattleState, areaId: int, totalDistanceFeet: int, greaseDistanceFeet: int): int =
+    if (greaseGroundHazardActive(state, areaId) and totalDistanceFeet > 0 and greaseDistanceFeet > 0 and greaseDistanceFeet <= totalDistanceFeet)
+      totalDistanceFeet + greaseDistanceFeet
+    else
+      0
+
+  pure def moveFighterThroughGreaseGroundDifficultTerrain(state: BattleState, areaId: int, totalDistanceFeet: int, greaseDistanceFeet: int, provokedByTable: bool): BattleState = {
+    val movementCost = greaseGroundDifficultTerrainMovementCost(state, areaId, totalDistanceFeet, greaseDistanceFeet)
+    if (movementCost == 0)
+      state
+    else
+      moveFighter(state, movementCost, provokedByTable)
+  }
+
   pure def resolveGreaseGroundHazardSave(
     state: BattleState,
     targetActor: Actor,
@@ -6273,6 +6287,17 @@ module battleRuntime {
     all {
       assert(entryFailed.goblin.prone),
       assert(currentActor(entryFailed) == Fighter),
+    }
+  }
+
+  run test_grease_difficult_terrain_movement_cost_adds_extra_grease_distance = {
+    val resolved = resolveGrease(initialState, false, true)
+    val moved = moveFighterThroughGreaseGroundDifficultTerrain(resolved, greaseAreaId, 10, 5, false)
+    val expired = { ...resolved, fighter: { ...resolved.fighter, activeEffects: Set() } }
+    all {
+      assert(greaseGroundDifficultTerrainMovementCost(resolved, greaseAreaId, 10, 5) == 15),
+      assert(moved.fighter.movementSpent == 15),
+      assert(greaseGroundDifficultTerrainMovementCost(expired, greaseAreaId, 10, 5) == 0),
     }
   }
 

@@ -923,9 +923,10 @@
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
       ],
-      "sourceBoundary": "Caller-supplied Grease ground-area identity and per-trigger membership; movement-cost accounting for Difficult Terrain stays at the Movement fill boundary.",
+      "sourceBoundary": "Caller-supplied Grease ground-area identity and per-trigger membership; caller-supplied total-distance and Grease-distance Movement facts for Difficult Terrain cost. Automatic area membership, pathfinding, and grid geometry remain outside the runtime boundary.",
       "taskRefs": [
-        "SRDINV40"
+        "SRDINV40",
+        "SRDINV57"
       ],
       "title": "Spell invocation creates a timed Grease ground hazard with recurring Dexterity saves",
       "verificationOwners": [
@@ -936,6 +937,10 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/index.test.ts"
         }
       ]
     },
@@ -2198,11 +2203,27 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime admission and reducer tests cover Grease's ground-area id fill, hazard duration, on-cast Dexterity save, entry/end-turn save commands, and Prone application; automatic Difficult Terrain movement-cost derivation remains outside the runtime geometry boundary.",
+      "note": "Focused battle-runtime admission and reducer tests cover Grease's ground-area id fill, hazard duration, on-cast Dexterity save, entry/end-turn save commands, and Prone application; automatic Grease area membership, pathfinding, and grid geometry remain outside the runtime boundary.",
       "profileIds": [
         "spell.invocation-grease-ground-hazard"
       ],
       "taskId": "SRDINV40"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for caller-supplied Grease Difficult Terrain movement evidence: active hazard identity, total movement distance, Grease distance, and Movement cost equal to total distance plus the extra Grease distance.",
+      "profileIds": [
+        "spell.invocation-grease-ground-hazard"
+      ],
+      "taskId": "SRDINV57"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime reducer tests cover mixed ordinary-plus-Grease Movement fills, active-hazard validation, spell-end cleanup rejection, and no stored area geometry for Grease Difficult Terrain movement facts.",
+      "profileIds": [
+        "spell.invocation-grease-ground-hazard"
+      ],
+      "taskId": "SRDINV57"
     },
     {
       "claimKind": "qnt-proof",
@@ -6014,8 +6035,8 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "SRDINV41",
-            "mechanic": "automatic Difficult Terrain movement-cost derivation, pathfinding, and grid geometry; movement cost remains caller-authored at the Movement boundary"
+            "followUpTaskId": "SRDINV66",
+            "mechanic": "automatic area membership, pathfinding, and grid geometry derivation for Grease movement"
           }
         ],
         "profileIds": [
@@ -6028,7 +6049,8 @@
           "one-minute Grease ground hazard lifecycle keyed by caller-supplied ground-area id",
           "on-cast Dexterity Saving Throw for caller-supplied affected creatures",
           "Prone application on failed Grease saves",
-          "table-triggered enter-area and end-turn-in-area Dexterity save procedures"
+          "table-triggered enter-area and end-turn-in-area Dexterity save procedures",
+          "caller-supplied Grease Difficult Terrain movement facts that validate active hazard identity and spend total Movement distance plus one extra foot per foot moved through Grease"
         ],
         "tag": "profile-subset-supported"
       },
@@ -6054,9 +6076,10 @@
             "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
             "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
           ],
-          "sourceBoundary": "Caller-supplied Grease ground-area identity and per-trigger membership; movement-cost accounting for Difficult Terrain stays at the Movement fill boundary.",
+          "sourceBoundary": "Caller-supplied Grease ground-area identity and per-trigger membership; caller-supplied total-distance and Grease-distance Movement facts for Difficult Terrain cost. Automatic area membership, pathfinding, and grid geometry remain outside the runtime boundary.",
           "taskRefs": [
-            "SRDINV40"
+            "SRDINV40",
+            "SRDINV57"
           ],
           "title": "Spell invocation creates a timed Grease ground hazard with recurring Dexterity saves",
           "verificationOwners": [
@@ -6067,6 +6090,10 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/index.test.ts"
             }
           ]
         }

@@ -1859,6 +1859,14 @@ type BattleFillEncoded =
           readonly reactorId: string;
           readonly attackName: string;
         }[];
+        readonly greaseGroundDifficultTerrain?: {
+          readonly kind: "greaseGroundDifficultTerrain";
+          readonly sourceCombatantId: string;
+          readonly sourceSpellId: string;
+          readonly areaId: string;
+          readonly totalDistanceFeet: number;
+          readonly greaseDistanceFeet: number;
+        };
         readonly commandApproach?: {
           readonly kind: "commandApproachShortestDirectRouteTowardCaster";
           readonly movedWithinFiveFeetOfCaster: boolean;
@@ -2303,6 +2311,17 @@ export const BattleFillSchema: Schema.Schema<
             reactorId: CombatantId,
             attackName: Schema.String,
           }),
+        ),
+        greaseGroundDifficultTerrain: Schema.optionalWith(
+          Schema.Struct({
+            kind: Schema.Literal("greaseGroundDifficultTerrain"),
+            sourceCombatantId: CombatantId,
+            sourceSpellId: Schema.String,
+            areaId: Schema.String,
+            totalDistanceFeet: MovementFeet,
+            greaseDistanceFeet: MovementFeet,
+          }),
+          { exact: true },
         ),
         commandApproach: Schema.optionalWith(
           Schema.Struct({
