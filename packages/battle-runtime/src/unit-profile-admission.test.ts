@@ -26,7 +26,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV32B produce_flame
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV34 starry_wisp
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV38A sleep
-// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV50D1 command
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV50D2 command
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV39 eldritch_blast
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV40 grease
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield
@@ -50,7 +50,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT59 monk_deflect_attacks
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT62 fighter_tactical_mind
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT65 bard_cutting_words
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider spell.scalar-buff
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -3067,7 +3067,7 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
     );
     expect(requireHole(levelTwo.initialHoles, "commandOptionChoice")).toEqual(
       expect.objectContaining({
-        choices: ["grovel", "halt", "drop", "approach"],
+        choices: ["grovel", "halt", "drop", "approach", "flee"],
       }),
     );
     expect(spellActInvocation(levelTwo)).toEqual(
@@ -3897,6 +3897,344 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
           candidate.subject.command === "endTurn",
       ),
     ).toBe(true);
+  });
+
+  test("command Flee consumes supplied full movement budget and ends the target turn", () => {
+    const spell = spellRecord(commandUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const act = spellAct({ state, spellId: commandUnitId, slotLevel: 1 });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+    const targetFill = spellTargetListFill(
+      targetHole,
+      spellCasterId,
+      commandUnitId,
+      [spellTargetId],
+    );
+    const optionFill: Extract<
+      BattleFill,
+      { readonly kind: "commandOptionChoice" }
+    > = {
+      kind: "commandOptionChoice",
+      holeId: commandOption.holeId,
+      value: "flee",
+    };
+    const savingThrow = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill, optionFill],
+      }),
+      "savingThrowOutcome",
+    );
+    const cast = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        optionFill,
+        savingThrowOutcomeFill(savingThrow, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Command Flee cast to resolve.");
+    }
+    const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+    const fleeAct = discoverBattleActs(targetTurn.state)[0];
+    expect(fleeAct).toEqual(
+      expect.objectContaining({
+        subject: expect.objectContaining({
+          tag: "runtimeCommand",
+          actorId: spellTargetId,
+          command: "commandFlee",
+        }),
+        initialHoles: [expect.objectContaining({ kind: "movement" })],
+      }),
+    );
+    if (
+      fleeAct === undefined ||
+      fleeAct.subject.tag !== "runtimeCommand" ||
+      fleeAct.subject.command !== "commandFlee"
+    ) {
+      throw new Error("Expected Command Flee act.");
+    }
+    const movement = requireHole(fleeAct.initialHoles, "movement");
+    const fled = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: fleeAct.subject,
+      fills: [
+        commandFleeMovementFill(movement, {
+          movementCostFeet: 30,
+          provokedOpportunityAttacks: [],
+        }),
+      ],
+    });
+    expect(fled).toMatchObject({
+      tag: "resolved",
+      snapshot: { currentActorId: spellCasterId },
+    });
+    if (fled.tag !== "resolved") {
+      throw new Error("Expected Command Flee to resolve.");
+    }
+    expect(requireCombatant(fled.state, spellTargetId)).toMatchObject({
+      movementSpentFeet: movementFeet(30),
+      activeEffects: [],
+    });
+  });
+
+  test("command Flee rejects partial movement when movement is available", () => {
+    const spell = spellRecord(commandUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const act = spellAct({ state, spellId: commandUnitId, slotLevel: 1 });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+    const targetFill = spellTargetListFill(
+      targetHole,
+      spellCasterId,
+      commandUnitId,
+      [spellTargetId],
+    );
+    const optionFill: Extract<
+      BattleFill,
+      { readonly kind: "commandOptionChoice" }
+    > = {
+      kind: "commandOptionChoice",
+      holeId: commandOption.holeId,
+      value: "flee",
+    };
+    const savingThrow = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill, optionFill],
+      }),
+      "savingThrowOutcome",
+    );
+    const cast = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        optionFill,
+        savingThrowOutcomeFill(savingThrow, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Command Flee cast to resolve.");
+    }
+    const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+    const fleeAct = discoverBattleActs(targetTurn.state)[0];
+    if (
+      fleeAct === undefined ||
+      fleeAct.subject.tag !== "runtimeCommand" ||
+      fleeAct.subject.command !== "commandFlee"
+    ) {
+      throw new Error("Expected Command Flee act.");
+    }
+    const movement = requireHole(fleeAct.initialHoles, "movement");
+    expect(
+      resolveBattleSubject({
+        state: targetTurn.state,
+        subject: fleeAct.subject,
+        fills: [
+          commandFleeMovementFill(movement, {
+            movementCostFeet: 10,
+            provokedOpportunityAttacks: [],
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+  });
+
+  test("command Flee clears the pending effect and ends turn when no movement is available", () => {
+    const spell = spellRecord(commandUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const act = spellAct({ state, spellId: commandUnitId, slotLevel: 1 });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+    const targetFill = spellTargetListFill(
+      targetHole,
+      spellCasterId,
+      commandUnitId,
+      [spellTargetId],
+    );
+    const optionFill: Extract<
+      BattleFill,
+      { readonly kind: "commandOptionChoice" }
+    > = {
+      kind: "commandOptionChoice",
+      holeId: commandOption.holeId,
+      value: "flee",
+    };
+    const savingThrow = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill, optionFill],
+      }),
+      "savingThrowOutcome",
+    );
+    const cast = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        optionFill,
+        savingThrowOutcomeFill(savingThrow, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Command Flee cast to resolve.");
+    }
+    const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+    const grappledTargetTurn: BattleState = {
+      ...targetTurn.state,
+      grapples: [
+        {
+          grapplerId: spellCasterId,
+          targetId: spellTargetId,
+          escapeDc: difficultyClass(12),
+          reachFeet: movementFeet(5),
+          hand: "left",
+          targetExemptFromDragCost: false,
+        },
+      ],
+    };
+    const fleeAct = discoverBattleActs(grappledTargetTurn)[0];
+    expect(fleeAct).toEqual(
+      expect.objectContaining({
+        subject: expect.objectContaining({
+          tag: "runtimeCommand",
+          actorId: spellTargetId,
+          command: "commandFlee",
+        }),
+        initialHoles: [],
+      }),
+    );
+    if (
+      fleeAct === undefined ||
+      fleeAct.subject.tag !== "runtimeCommand" ||
+      fleeAct.subject.command !== "commandFlee"
+    ) {
+      throw new Error("Expected no-movement Command Flee act.");
+    }
+    const fled = resolveBattleSubject({
+      state: grappledTargetTurn,
+      subject: fleeAct.subject,
+      fills: [],
+    });
+    expect(fled).toMatchObject({
+      tag: "resolved",
+      snapshot: { currentActorId: spellCasterId },
+    });
+    if (fled.tag !== "resolved") {
+      throw new Error("Expected no-movement Command Flee to resolve.");
+    }
+    expect(requireCombatant(fled.state, spellTargetId)).toMatchObject({
+      movementSpentFeet: movementFeet(0),
+      activeEffects: [],
+    });
+  });
+
+  test("command Flee Opportunity Attack eligibility comes from actual movement", () => {
+    const spell = spellRecord(commandUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const act = spellAct({ state, spellId: commandUnitId, slotLevel: 1 });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+    const targetFill = spellTargetListFill(
+      targetHole,
+      spellCasterId,
+      commandUnitId,
+      [spellTargetId],
+    );
+    const optionFill: Extract<
+      BattleFill,
+      { readonly kind: "commandOptionChoice" }
+    > = {
+      kind: "commandOptionChoice",
+      holeId: commandOption.holeId,
+      value: "flee",
+    };
+    const savingThrow = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill, optionFill],
+      }),
+      "savingThrowOutcome",
+    );
+    const cast = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        optionFill,
+        savingThrowOutcomeFill(savingThrow, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Command Flee cast to resolve.");
+    }
+    const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+    const fleeAct = discoverBattleActs(targetTurn.state)[0];
+    if (
+      fleeAct === undefined ||
+      fleeAct.subject.tag !== "runtimeCommand" ||
+      fleeAct.subject.command !== "commandFlee"
+    ) {
+      throw new Error("Expected Command Flee act.");
+    }
+    const movement = requireHole(fleeAct.initialHoles, "movement");
+    const fled = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: fleeAct.subject,
+      fills: [
+        commandFleeMovementFill(movement, {
+          movementCostFeet: 30,
+          provokedOpportunityAttacks: [
+            { reactorId: spellCasterId, attackName: "Unarmed Strike" },
+          ],
+        }),
+      ],
+    });
+    const reaction = requireResultHole(fled, "reactionDecision");
+    expect(reaction.trigger).toBe("opportunityAttack");
   });
 
   test("command Grovel save success spends the cast without pending effects", () => {
@@ -14144,6 +14482,30 @@ function commandApproachMovementFill(
       commandApproach: {
         kind: "commandApproachShortestDirectRouteTowardCaster",
         movedWithinFiveFeetOfCaster: value.movedWithinFiveFeetOfCaster,
+      },
+    },
+  };
+}
+
+function commandFleeMovementFill(
+  hole: Extract<BattleHole, { readonly kind: "movement" }>,
+  value: {
+    readonly movementCostFeet: number;
+    readonly provokedOpportunityAttacks: readonly {
+      readonly reactorId: CombatantId;
+      readonly attackName: string;
+    }[];
+  },
+): Extract<BattleFill, { readonly kind: "movement" }> {
+  return {
+    kind: "movement",
+    holeId: hole.holeId,
+    value: {
+      speedKind: "walk",
+      movementCostFeet: movementFeet(value.movementCostFeet),
+      provokedOpportunityAttacks: value.provokedOpportunityAttacks,
+      commandFlee: {
+        kind: "commandFleeFastestAvailableRouteAwayFromCaster",
       },
     },
   };

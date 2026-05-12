@@ -15,14 +15,14 @@ This is a Unit/catalog backlog denominator, not RAW span coverage and not an MBT
 
 This is the default `%` for level-1 readiness questions. A row counts only when the Unit/source fact is loaded, character-creation availability is covered where applicable, and battle-relevant behavior is fully usable in battle. Rows with no battle effect count as accepted only through explicit non-runtime or catalog-only closure.
 
-- Accepted: 276/367 (75.2%)
+- Accepted: 279/367 (76%)
 
 #### Level-1 Battle Readiness by Status
 
-- accepted: 207
+- accepted: 210
 - accepted-no-battle-effect: 69
 - battle-runtime-required: 38
-- partial-battle-runtime: 38
+- partial-battle-runtime: 35
 - surface-widening-required: 15
 
 ### Level-1 Rows by Disposition

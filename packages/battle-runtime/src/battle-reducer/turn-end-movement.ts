@@ -3,7 +3,7 @@
 // intended.
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
 import { resetTurnActionEconomy } from "@dnd/shared-algebras/action-economy-algebra";
 
@@ -132,6 +132,7 @@ import type {
   BattleActiveEffectExpiration,
   BattleAttackDamageDispositionHole,
   BattleCommandApproachMovementFact,
+  BattleCommandFleeMovementFact,
   BattleCommandHaltTurnSuppression,
   BattleCreatureState,
   BattleDroppedObjectOutcome,
@@ -706,7 +707,11 @@ export function commandPendingEffectForSubject(
     BattleSubject,
     {
       readonly tag: "runtimeCommand";
-      readonly command: "commandGrovel" | "commandDrop" | "commandApproach";
+      readonly command:
+        | "commandGrovel"
+        | "commandDrop"
+        | "commandApproach"
+        | "commandFlee";
     }
   >,
   option: CommandPendingEffect["option"],
@@ -1156,6 +1161,185 @@ export function resolveCommandApproachAfterMovement(input: {
       snapshot: snapshotBattle(moved),
     };
   }
+  const endTurnResult = resolveEndTurnCommand({
+    state: moved,
+    subject: {
+      tag: "runtimeCommand",
+      actorId: input.subject.actorId,
+      command: "endTurn",
+    },
+    fills: input.endTurnFills,
+  });
+  return endTurnResult.tag === "needsHoles"
+    ? { ...endTurnResult, state: input.state, subject: input.subject }
+    : endTurnResult;
+}
+
+export function resolveCommandFleeCommand(
+  input: BattleResolutionInputForSubject<
+    Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "commandFlee";
+      }
+    >
+  >,
+): BattleResolutionResult {
+  const effect = commandPendingEffectForSubject(
+    input.state,
+    input.subject,
+    "flee",
+  );
+  if (effect === null) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Command Flee is no longer pending for this actor.",
+    );
+  }
+  const movementFills = input.fills.filter(
+    (fill): fill is Extract<BattleFill, { readonly kind: "movement" }> =>
+      fill.kind === "movement",
+  );
+  const unsupportedFill = input.fills.find(
+    (fill) => fill.kind !== "movement" && !endTurnFillKind(fill.kind),
+  );
+  if (unsupportedFill !== undefined) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Command Flee only accepts Movement and End Turn fills.",
+    );
+  }
+  if (movementFills.length === 0) {
+    if (!combatantCanMoveInState(input.state, input.subject.actorId)) {
+      const withoutPending = stateWithoutCommandPendingEffect(
+        input.state,
+        input.subject.actorId,
+        effect,
+      );
+      const endTurnResult = resolveEndTurnCommand({
+        state: withoutPending,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: input.subject.actorId,
+          command: "endTurn",
+        },
+        fills: input.fills,
+      });
+      return endTurnResult.tag === "needsHoles"
+        ? { ...endTurnResult, state: input.state, subject: input.subject }
+        : endTurnResult;
+    }
+    return needsHolesResult(input.state, input.subject, [
+      movementHole(input.state, input.subject.actorId),
+    ]);
+  }
+  if (movementFills.length > 1) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Command Flee accepts one Movement fill.",
+    );
+  }
+  const movementFill = movementFills[0]!;
+  if (movementFill.holeId !== MOVEMENT_HOLE_ID) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Movement fill does not match the requested Command Flee hole.",
+    );
+  }
+  const fleeFact = movementFill.value.commandFlee;
+  if (fleeFact === undefined) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Command Flee requires caller-supplied fastest-available moving-away route facts.",
+    );
+  }
+  const movementBudgetFeet = battleMovementBudgetForActor(
+    input.state,
+    input.subject.actorId,
+    movementFill.value.speedKind,
+  ).remainingFeet;
+  if (movementFill.value.movementCostFeet !== movementBudgetFeet) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Command Flee must spend the selected remaining Movement budget.",
+    );
+  }
+  const movement = parseBattleMovement(
+    input.state,
+    input.subject.actorId,
+    movementFill,
+    {
+      commandFlee: fleeFact,
+    },
+  );
+  if (movement.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", movement.message);
+  }
+  const endTurnFills = input.fills.filter((fill) => fill.kind !== "movement");
+  const threats = opportunityAttackThreatsForMovement(
+    input.state,
+    movement.movement,
+  );
+  if (threats.length > 0) {
+    const reactionWindow = maybeOpenReactionWindow(
+      input.state,
+      {
+        trigger: "opportunityAttack",
+        moverId: input.subject.actorId,
+        threats,
+        continuation: {
+          kind: "commandFleeMovement",
+          subject: input.subject,
+          movement: movement.movement,
+          endTurnFills,
+        },
+      },
+      undefined,
+    );
+    if (reactionWindow !== null) return reactionWindow;
+  }
+  return resolveCommandFleeAfterMovement({
+    state: input.state,
+    subject: input.subject,
+    movement: movement.movement,
+    endTurnFills,
+  });
+}
+
+export function resolveCommandFleeAfterMovement(input: {
+  readonly state: BattleState;
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "runtimeCommand"; readonly command: "commandFlee" }
+  >;
+  readonly movement: BattleResolvedMovement;
+  readonly endTurnFills: readonly BattleFill[];
+}): BattleResolutionResult {
+  const effect = commandPendingEffectForSubject(
+    input.state,
+    input.subject,
+    "flee",
+  );
+  if (effect === null) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Command Flee is no longer pending for this actor.",
+    );
+  }
+  const withoutPending = stateWithoutCommandPendingEffect(
+    input.state,
+    input.subject.actorId,
+    effect,
+  );
+  const moved = applyBattleMovement(withoutPending, input.movement);
   const endTurnResult = resolveEndTurnCommand({
     state: moved,
     subject: {
@@ -2613,6 +2797,7 @@ export function parseBattleMovement(
     readonly spendsTurnMovement?: boolean;
     readonly jumpMovementReplacement?: JumpMovementReplacementEffect;
     readonly commandApproach?: BattleCommandApproachMovementFact;
+    readonly commandFlee?: BattleCommandFleeMovementFact;
   } = {},
 ):
   | { readonly tag: "ok"; readonly movement: BattleResolvedMovement }
@@ -2662,6 +2847,16 @@ export function parseBattleMovement(
     return {
       tag: "invalid",
       message: commandApproachValidation,
+    };
+  }
+  const commandFleeValidation = validateCommandFleeMovementFact(
+    fill.value.commandFlee,
+    options.commandFlee,
+  );
+  if (commandFleeValidation !== null) {
+    return {
+      tag: "invalid",
+      message: commandFleeValidation,
     };
   }
   const movementCost = ordinaryMovementCost(
@@ -2785,6 +2980,23 @@ function validateCommandApproachMovementFact(
   return fact.kind === "commandApproachShortestDirectRouteTowardCaster"
     ? null
     : "Command Approach route fact has the wrong kind.";
+}
+
+function validateCommandFleeMovementFact(
+  fact: BattleCommandFleeMovementFact | undefined,
+  expected: BattleCommandFleeMovementFact | undefined,
+): string | null {
+  if (expected === undefined) {
+    return fact === undefined
+      ? null
+      : "Command Flee route facts cannot be supplied for ordinary Movement.";
+  }
+  if (fact === undefined) {
+    return "Command Flee requires caller-supplied route facts.";
+  }
+  return fact.kind === "commandFleeFastestAvailableRouteAwayFromCaster"
+    ? null
+    : "Command Flee route fact has the wrong kind.";
 }
 
 export function resetStartOfTurnCombatant(

@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points
@@ -15,6 +15,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-command-halt-grovel
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-command-drop-held-object
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-command-approach-route
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-command-flee-route
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-expeditious-retreat-dash
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-forced-reaction-movement
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-jump-movement-replacement
@@ -214,6 +215,14 @@ module battleRuntime {
   //   minute, and forces Dexterity Saving Throws when the grease appears, when
   //   a creature enters the area, and when a creature ends its turn there; a
   //   failed save gives the Prone condition.
+  //   Spells/Descriptions-A-D.md lines 820-835, Playing-the-Game.md lines
+  //   533-551 and 634-640, Rules-Glossary.md lines 738-740 and 904-910,
+  //   and UBIQUITOUS_LANGUAGE.md: Command is a level-1 Action spell whose
+  //   failed Wisdom save makes the target follow the chosen command on its
+  //   next turn. The Flee option spends the target's turn moving away by the
+  //   fastest available means. This spec consumes caller-supplied route facts,
+  //   spends the target's current Movement budget, and opens Opportunity
+  //   Attack windows only from actual movement.
   //   Spells/Descriptions-S-Z.md lines 1024-1035: True Strike is an Action
   //   cantrip whose material component is a proficient weapon worth at least
   //   1 CP, immediately makes one attack with that weapon, uses the
@@ -280,7 +289,7 @@ module battleRuntime {
   type ScalarBuffSpell = FalseLifeScalarBuff | LongstriderScalarBuff | ShieldOfFaithScalarBuff
   type RollModifierSpell = BaneRollModifier | BlessRollModifier | GuidanceRollModifier
   type SpellActionCost = SpellMagicAction | SpellBonusAction
-  type CommandOption = CommandGrovelOption | CommandHaltOption | CommandDropOption | CommandApproachOption
+  type CommandOption = CommandGrovelOption | CommandHaltOption | CommandDropOption | CommandApproachOption | CommandFleeOption
 
   type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireAttackRollAdvantage | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodAttackDisadvantage | ProduceFlameHeldLight({ durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
@@ -414,6 +423,7 @@ module battleRuntime {
     | ResumeSaveGateDamage
     | ResumeAfterDamage
     | ResumeMovement({ speedKind: MovementSpeedKind, movementCost: int })
+    | ResumeCommandFleeMovement({ speedKind: MovementSpeedKind, movementCost: int })
     | ResumeDissonantWhispersMovementThenAfterDamage({ speedKind: MovementSpeedKind, movementCost: int })
 
   type DissonantWhispersForcedMovementReplay =
@@ -467,6 +477,7 @@ module battleRuntime {
       | ResumeSaveGateDamage => BattleRuntimeSaveGateContinuation
       | ResumeAfterDamage => BattleRuntimeAfterDamageContinuation
       | ResumeMovement(_) => BattleRuntimeMovementContinuation
+      | ResumeCommandFleeMovement(_) => BattleRuntimeMovementContinuation
       | ResumeDissonantWhispersMovementThenAfterDamage(_) => BattleRuntimeMovementContinuation
     }
 
@@ -1378,6 +1389,7 @@ module battleRuntime {
       | ResumeSaveGateDamage => resolveAcidSplash(state, false, true, 4, true, true)
       | ResumeAfterDamage => state
       | ResumeMovement(movement) => applyFighterMovementWithSpeedKind(state, movement.speedKind, movement.movementCost)
+      | ResumeCommandFleeMovement(movement) => followCommandFlee(state, movement.speedKind, movement.movementCost, false)
       | ResumeDissonantWhispersMovementThenAfterDamage(_) => openDissonantWhispersAfterDamageSequence(state)
     }
 
@@ -5143,6 +5155,92 @@ module battleRuntime {
     else
       state
 
+  pure def commandFleeMovementRemaining(state: BattleState, actor: Actor, speedKind: MovementSpeedKind): int =
+    match actor {
+      | Fighter => battleRuntimeMovementRemaining(movementProjectionForFighter(state, speedKind))
+      | Goblin => battleRuntimeMovementRemaining(movementProjectionForGoblin(state, speedKind))
+    }
+
+  pure def commandFleeCanSpendMovement(
+    state: BattleState,
+    actor: Actor,
+    speedKind: MovementSpeedKind,
+    movementCost: int,
+  ): bool =
+    match actor {
+      | Fighter => battleRuntimeCanSpendMovement(movementProjectionForFighter(state, speedKind), movementCost)
+      | Goblin => battleRuntimeCanSpendMovement(movementProjectionForGoblin(state, speedKind), movementCost)
+    }
+
+  pure def commandFleeActorHasMovementAvailable(state: BattleState, actor: Actor): bool =
+    commandFleeCanSpendMovement(state, actor, WalkSpeedKind, 1)
+      or commandFleeCanSpendMovement(state, actor, ClimbSpeedKind, 1)
+      or commandFleeCanSpendMovement(state, actor, SwimSpeedKind, 1)
+
+  pure def stateWithoutCommandFleePending(state: BattleState, actor: Actor): BattleState =
+    match actor {
+      | Fighter => {
+          ...state,
+          fighter: {
+            ...state.fighter,
+            activeEffects: state.fighter.activeEffects.exclude(commandPendingEffectsForActor(state, Fighter, CommandFleeOption)),
+          },
+        }
+      | Goblin => {
+          ...state,
+          goblin: {
+            ...state.goblin,
+            activeEffects: state.goblin.activeEffects.exclude(commandPendingEffectsForActor(state, Goblin, CommandFleeOption)),
+          },
+        }
+    }
+
+  pure def stateWithCommandFleeMovement(state: BattleState, actor: Actor, speedKind: MovementSpeedKind, movementCost: int): BattleState =
+    match actor {
+      | Fighter =>
+          stateWithFighterMovementStep(
+            state,
+            battleRuntimeSpendMovement(movementProjectionForFighter(state, speedKind), movementCost),
+          )
+      | Goblin =>
+          stateWithGoblinMovementStep(
+            state,
+            battleRuntimeSpendMovement(movementProjectionForGoblin(state, speedKind), movementCost),
+          )
+    }
+
+  pure def followCommandFlee(
+    state: BattleState,
+    speedKind: MovementSpeedKind,
+    movementCost: int,
+    provokesOpportunityAttack: bool,
+  ): BattleState =
+    if (commandPendingEffectsForActor(state, currentActor(state), CommandFleeOption).size() > 0) {
+      val actor = currentActor(state)
+      val withoutPending = stateWithoutCommandFleePending(state, actor)
+      if (not(commandFleeActorHasMovementAvailable(state, actor)))
+        endTurn(withoutPending)
+      else if (
+        movementCost != commandFleeMovementRemaining(state, actor, speedKind)
+          or not(commandFleeCanSpendMovement(state, actor, speedKind, movementCost))
+      )
+        state
+      else if (provokesOpportunityAttack)
+        openReactionWindow(state, {
+          trigger: OpportunityAttack,
+          eligibleReactors: if (actor == Fighter) Set(Goblin) else Set(Fighter),
+          offeredReactors: Set(),
+          continuation: ResumeCommandFleeMovement({
+            speedKind: speedKind,
+            movementCost: movementCost,
+          }),
+        })
+      else
+        endTurn(stateWithCommandFleeMovement(withoutPending, actor, speedKind, movementCost))
+    } else {
+      state
+    }
+
   pure def followCommandHalt(state: BattleState): BattleState =
     if (commandPendingEffectsForActor(state, currentActor(state), CommandHaltOption).size() > 0)
       match currentActor(state) {
@@ -6201,6 +6299,74 @@ module battleRuntime {
         expiresAtActor: Goblin,
         expiresAtRound: 1,
       })))),
+    }
+  }
+
+  run test_command_flee_spends_full_supplied_movement_and_ends_turn = {
+    val resolved = resolveCommand(initialState, Set(Goblin), Set(Goblin), 1, CommandFleeOption)
+    val goblinTurn = endTurn(resolved)
+    val followed = followCommandFlee(goblinTurn, WalkSpeedKind, 30, false)
+    all {
+      assert(currentActor(followed) == Fighter),
+      assert(followed.goblin.movementSpent == 30),
+      assert(not(followed.goblin.activeEffects.contains(CommandPending({
+        source: Fighter,
+        option: CommandFleeOption,
+        expiresAtActor: Goblin,
+        expiresAtRound: 1,
+      })))),
+    }
+  }
+
+  run test_command_flee_rejects_partial_movement_budget = {
+    val resolved = resolveCommand(initialState, Set(Goblin), Set(Goblin), 1, CommandFleeOption)
+    val goblinTurn = endTurn(resolved)
+    val followed = followCommandFlee(goblinTurn, WalkSpeedKind, 10, false)
+    all {
+      assert(currentActor(followed) == Goblin),
+      assert(followed.goblin.movementSpent == 0),
+      assert(followed.goblin.activeEffects.contains(CommandPending({
+        source: Fighter,
+        option: CommandFleeOption,
+        expiresAtActor: Goblin,
+        expiresAtRound: 1,
+      }))),
+    }
+  }
+
+  run test_command_flee_no_movement_clears_pending_and_ends_turn = {
+    val resolved = resolveCommand(initialState, Set(Goblin), Set(Goblin), 1, CommandFleeOption)
+    val goblinTurn = endTurn(resolved)
+    val immobile = { ...goblinTurn, goblin: { ...goblinTurn.goblin, speed: 0 } }
+    val followed = followCommandFlee(immobile, WalkSpeedKind, 30, false)
+    all {
+      assert(currentActor(followed) == Fighter),
+      assert(followed.goblin.movementSpent == 0),
+      assert(not(followed.goblin.activeEffects.contains(CommandPending({
+        source: Fighter,
+        option: CommandFleeOption,
+        expiresAtActor: Goblin,
+        expiresAtRound: 1,
+      })))),
+    }
+  }
+
+  run test_command_flee_movement_threat_opens_opportunity_attack_window = {
+    val resolved = resolveCommand(initialState, Set(Goblin), Set(Goblin), 1, CommandFleeOption)
+    val goblinTurn = endTurn(resolved)
+    val followed = followCommandFlee(goblinTurn, WalkSpeedKind, 30, true)
+    all {
+      assert(currentActor(followed) == Goblin),
+      assert(followed.interruptStack.length() == 1),
+      assert(pendingReactionFrame(followed.interruptStack[0]) == HasPendingReactionFrame({
+        trigger: OpportunityAttack,
+        eligibleReactors: Set(Fighter),
+        offeredReactors: Set(),
+        continuation: ResumeCommandFleeMovement({
+          speedKind: WalkSpeedKind,
+          movementCost: 30,
+        }),
+      })),
     }
   }
 

@@ -19228,7 +19228,8 @@ function subjectName(
   | "jumpMovementReplacement"
   | "commandGrovel"
   | "commandDrop"
-  | "commandApproach" {
+  | "commandApproach"
+  | "commandFlee" {
   if (subject.tag === "action") {
     return subject.action;
   }

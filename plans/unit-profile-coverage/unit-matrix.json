@@ -62,9 +62,9 @@
       "value": 130
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 65,
-      "numerator": 61,
-      "percent": "93.8%"
+      "denominator": 66,
+      "numerator": 62,
+      "percent": "93.9%"
     },
     "profileClassificationCoverage": {
       "denominator": 130,
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 65,
+      "denominator": 66,
       "numerator": 10,
-      "percent": "15.4%"
+      "percent": "15.2%"
     },
     "supportedProfileCoverage": {
       "denominator": 106,
-      "numerator": 65,
-      "percent": "61.3%"
+      "numerator": 66,
+      "percent": "62.3%"
     }
   },
   "metricSemantics": [
@@ -951,7 +951,7 @@
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
       ],
-      "sourceBoundary": "This profile supports Command's cast shell, slot-scaled creature target list, Wisdom save, and the Grovel and Halt options. Drop is represented by spell.invocation-command-drop-held-object; Approach is represented by spell.invocation-command-approach-route; Flee route/pathfinding remains deferred and is not representable through this profile.",
+      "sourceBoundary": "This profile supports Command's cast shell, slot-scaled creature target list, Wisdom save, and the Grovel and Halt options. Drop is represented by spell.invocation-command-drop-held-object; Approach is represented by spell.invocation-command-approach-route; Flee is represented by spell.invocation-command-flee-route.",
       "taskRefs": [
         "SRDINV50A",
         "SRDINV50B"
@@ -1008,11 +1008,39 @@
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
       ],
-      "sourceBoundary": "This profile supports Command Approach by consuming caller-supplied route/proximity facts on the existing Movement fill when movement is available, spending the target's movement through the normal movement reducer, and ending the target turn only when that supplied route reaches within 5 feet of the caster. If the target has no available movement, it clears the pending Approach effect without ending the turn. It does not add pathfinding, route storage, or Flee behavior.",
+      "sourceBoundary": "This profile supports Command Approach by consuming caller-supplied route/proximity facts on the existing Movement fill when movement is available, spending the target's movement through the normal movement reducer, and ending the target turn only when that supplied route reaches within 5 feet of the caster. If the target has no available movement, it clears the pending Approach effect without ending the turn. It does not add pathfinding or route storage.",
       "taskRefs": [
         "SRDINV50D1"
       ],
       "title": "Spell invocation resolves Command Approach through caller-supplied shortest-direct-route movement facts",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-command-flee-route",
+      "profileKind": "table-caller",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+      ],
+      "sourceBoundary": "This profile supports Command Flee by consuming caller-supplied fastest-available moving-away route facts on the existing Movement fill, requiring the selected remaining Movement budget to be spent when movement is available, clearing the pending effect, and ending the target turn. If the target has no available movement, it clears the pending Flee effect and ends the turn without a Movement fill. Opportunity Attack eligibility is derived from the Movement fill's actual provoked-threat facts, not from Command route metadata. It does not add pathfinding, route storage, or route choice AI.",
+      "taskRefs": [
+        "SRDINV50D2"
+      ],
+      "title": "Spell invocation resolves Command Flee through caller-supplied fastest-available moving-away route facts",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -2211,6 +2239,22 @@
         "spell.invocation-command-approach-route"
       ],
       "taskId": "SRDINV50D1"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Command Flee pending effects, full selected Movement budget spend, target-turn end after movement, no-movement pending cleanup with end turn, partial-movement rejection, and Opportunity Attack interruption from actual movement.",
+      "profileIds": [
+        "spell.invocation-command-flee-route"
+      ],
+      "taskId": "SRDINV50D2"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Command Flee option holes, failed-save pending effects, caller-supplied fastest-available moving-away route facts on the Movement fill, full selected Movement budget spending through the shared movement reducer, end-turn cleanup, no-movement cleanup with End Turn, partial-movement rejection, and Opportunity Attack windows from Movement threat facts.",
+      "profileIds": [
+        "spell.invocation-command-flee-route"
+      ],
+      "taskId": "SRDINV50D2"
     },
     {
       "claimKind": "qnt-proof",
@@ -5065,39 +5109,25 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "followUpTaskId": "SRDINV50D2",
-            "mechanic": "Flee option route/pathfinding"
-          }
-        ],
         "profileIds": [
           "spell.invocation-command-halt-grovel",
           "spell.invocation-command-drop-held-object",
-          "spell.invocation-command-approach-route"
+          "spell.invocation-command-approach-route",
+          "spell.invocation-command-flee-route"
         ],
         "rawRequirementIds": [
-          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001",
+          "RAW-QCORE7-MOVEMENT-GRAPPLE-001",
+          "RAW-PTG-REACTIONS-004"
         ],
-        "supportedMechanics": [
-          "Magic Action cast shell",
-          "Spell Slot spend",
-          "slot-scaled creature target list",
-          "Wisdom Saving Throw",
-          "failed-save pending next-turn Spell Effect",
-          "Grovel applies Prone and ends the target turn",
-          "Halt suppresses Movement, Action, and Bonus Action on the target turn",
-          "Drop consumes canonical or caller-supplied held-object facts, emits dropped-object outcomes, and ends the target turn without duplicating inventory state",
-          "Approach consumes caller-supplied shortest/direct route movement facts when movement is available, ends the target turn only when the supplied route reaches within 5 feet of the caster, and clears without ending the turn when no movement is available"
-        ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
-          "taskId": "SRDINV50D1"
+          "taskId": "SRDINV50D2"
         }
       ],
       "executableMechanics": true,
@@ -5115,7 +5145,7 @@
             "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
             "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
           ],
-          "sourceBoundary": "This profile supports Command's cast shell, slot-scaled creature target list, Wisdom save, and the Grovel and Halt options. Drop is represented by spell.invocation-command-drop-held-object; Approach is represented by spell.invocation-command-approach-route; Flee route/pathfinding remains deferred and is not representable through this profile.",
+          "sourceBoundary": "This profile supports Command's cast shell, slot-scaled creature target list, Wisdom save, and the Grovel and Halt options. Drop is represented by spell.invocation-command-drop-held-object; Approach is represented by spell.invocation-command-approach-route; Flee is represented by spell.invocation-command-flee-route.",
           "taskRefs": [
             "SRDINV50A",
             "SRDINV50B"
@@ -5172,11 +5202,39 @@
             "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
             "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
           ],
-          "sourceBoundary": "This profile supports Command Approach by consuming caller-supplied route/proximity facts on the existing Movement fill when movement is available, spending the target's movement through the normal movement reducer, and ending the target turn only when that supplied route reaches within 5 feet of the caster. If the target has no available movement, it clears the pending Approach effect without ending the turn. It does not add pathfinding, route storage, or Flee behavior.",
+          "sourceBoundary": "This profile supports Command Approach by consuming caller-supplied route/proximity facts on the existing Movement fill when movement is available, spending the target's movement through the normal movement reducer, and ending the target turn only when that supplied route reaches within 5 feet of the caster. If the target has no available movement, it clears the pending Approach effect without ending the turn. It does not add pathfinding or route storage.",
           "taskRefs": [
             "SRDINV50D1"
           ],
           "title": "Spell invocation resolves Command Approach through caller-supplied shortest-direct-route movement facts",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "spell.invocation-command-flee-route",
+          "profileKind": "table-caller",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+          ],
+          "sourceBoundary": "This profile supports Command Flee by consuming caller-supplied fastest-available moving-away route facts on the existing Movement fill, requiring the selected remaining Movement budget to be spent when movement is available, clearing the pending effect, and ending the target turn. If the target has no available movement, it clears the pending Flee effect and ends the turn without a Movement fill. Opportunity Attack eligibility is derived from the Movement fill's actual provoked-threat facts, not from Command route metadata. It does not add pathfinding, route storage, or route choice AI.",
+          "taskRefs": [
+            "SRDINV50D2"
+          ],
+          "title": "Spell invocation resolves Command Flee through caller-supplied fastest-available moving-away route facts",
           "verificationOwners": [
             {
               "kind": "qnt-proof",

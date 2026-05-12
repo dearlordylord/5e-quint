@@ -46,6 +46,7 @@ export const BATTLE_RUNTIME_COMMANDS = [
   "commandGrovel",
   "commandDrop",
   "commandApproach",
+  "commandFlee",
 ] as const;
 export type BattleRuntimeCommand = (typeof BATTLE_RUNTIME_COMMANDS)[number];
 export const BATTLE_MOVEMENT_SPEED_KINDS = ["walk", "climb", "swim"] as const;
@@ -420,6 +421,13 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("commandApproach"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("commandFlee"),
     sourceCombatantId: CombatantId,
     sourceSpellId: SpellId,
   }),

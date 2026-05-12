@@ -1829,6 +1829,9 @@ type BattleFillEncoded =
           readonly kind: "commandApproachShortestDirectRouteTowardCaster";
           readonly movedWithinFiveFeetOfCaster: boolean;
         };
+        readonly commandFlee?: {
+          readonly kind: "commandFleeFastestAvailableRouteAwayFromCaster";
+        };
         readonly jumpMovementReplacement?: {
           readonly kind: "jumpMovementReplacement";
           readonly distanceFeet: number;
@@ -2250,6 +2253,14 @@ export const BattleFillSchema: Schema.Schema<
               "commandApproachShortestDirectRouteTowardCaster",
             ),
             movedWithinFiveFeetOfCaster: Schema.Boolean,
+          }),
+          { exact: true },
+        ),
+        commandFlee: Schema.optionalWith(
+          Schema.Struct({
+            kind: Schema.Literal(
+              "commandFleeFastestAvailableRouteAwayFromCaster",
+            ),
           }),
           { exact: true },
         ),
