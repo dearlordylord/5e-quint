@@ -163,14 +163,14 @@
       "catalog-installed-owner-evidence-present": 241,
       "non-runtime": 12,
       "catalog-only/dead-for-now": 80,
-      "catalog-installed-owner-evidence-required": 9,
-      "needs-surface-widening": 25
+      "catalog-installed-owner-evidence-required": 12,
+      "needs-surface-widening": 22
     },
     "spellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 80,
       "catalog-installed-owner-evidence-present": 97,
-      "catalog-installed-owner-evidence-required": 9,
-      "needs-surface-widening": 25
+      "catalog-installed-owner-evidence-required": 12,
+      "needs-surface-widening": 22
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -518,7 +518,7 @@
       "title": "Classify Installed Cantrip and Level-1 Spell Units",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Classify installed SRD cantrip and level-1 Spell Unit owner evidence separately from missing and catalog-only spell rows.",
-      "rowCount": 130,
+      "rowCount": 133,
       "rowIds": [
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_light",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_minor_illusion",
@@ -606,6 +606,7 @@
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_chromatic_orb",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_color_spray",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_detect_magic",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_expeditious_retreat",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_false_life",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_grease",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_ice_knife",
@@ -623,6 +624,7 @@
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_bane",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_charm_person",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_detect_magic",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_expeditious_retreat",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hellish_rebuke",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_protection_from_evil_and_good",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_acid_splash",
@@ -639,6 +641,7 @@
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_chromatic_orb",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_color_spray",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_detect_magic",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_expeditious_retreat",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_false_life",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_grease",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_ice_knife",
@@ -750,7 +753,7 @@
       "title": "Review Catalog-Only and Surface-Widening Rows",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Preserve catalog-only/dead-for-now rows and name missing Surface constructs for nonspell and spell Surface-widening blockers.",
-      "rowCount": 25,
+      "rowCount": 22,
       "rowIds": [
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_feather_fall",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_hideous_laughter",
@@ -764,15 +767,12 @@
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_jump",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_fire_bolt",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_sorcerous_burst",
-        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_expeditious_retreat",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_feather_fall",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_fog_cloud",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_jump",
-        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_expeditious_retreat",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hex",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hideous_laughter",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_fire_bolt",
-        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_expeditious_retreat",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_feather_fall",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_fog_cloud",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_hideous_laughter",
@@ -2688,7 +2688,7 @@
     {
       "id": "SRDINV45",
       "title": "Widen Expeditious Retreat Dash Surface",
-      "suggestedStatus": "ready-for-research",
+      "suggestedStatus": "done",
       "intent": "Widen Surface for Expeditious Retreat's immediate and ongoing Dash grants.",
       "rowCount": 3,
       "rowIds": [
@@ -13656,19 +13656,31 @@
       "detail": "Expeditious Retreat (Transmutation; C)",
       "candidateUnitId": "expeditious_retreat",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "Spell Definition Dash grant: immediate Dash on Bonus Action casting plus ongoing Bonus Action Dash while Concentration lasts"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "expeditious_retreat",
+        "sourceRecordPath": "packages/surface/content/expeditious_retreat.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "expeditious_retreat"
       },
-      "finalDisposition": "needs-surface-widening",
-      "ownerEvidence": [],
-      "nextAction": "Widen Surface: Spell Definition Dash grant: immediate Dash on Bonus Action casting plus ongoing Bonus Action Dash while Concentration lasts."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit expeditious_retreat is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Unit matrix records unsupported-profile: Spell Definition is installed with typed immediate Dash and Concentration-duration Bonus Action Dash facts; runtime Dash execution and Movement budget updates are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Unit matrix records unsupported-profile: Spell Definition is installed with typed immediate Dash and Concentration-duration Bonus Action Dash facts; runtime Dash execution and Movement budget updates are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_false_life",
@@ -15119,19 +15131,31 @@
       "detail": "Expeditious Retreat (Transmutation; C)",
       "candidateUnitId": "expeditious_retreat",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "Spell Definition Dash grant: immediate Dash on Bonus Action casting plus ongoing Bonus Action Dash while Concentration lasts"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "expeditious_retreat",
+        "sourceRecordPath": "packages/surface/content/expeditious_retreat.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "expeditious_retreat"
       },
-      "finalDisposition": "needs-surface-widening",
-      "ownerEvidence": [],
-      "nextAction": "Widen Surface: Spell Definition Dash grant: immediate Dash on Bonus Action casting plus ongoing Bonus Action Dash while Concentration lasts."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit expeditious_retreat is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Unit matrix records unsupported-profile: Spell Definition is installed with typed immediate Dash and Concentration-duration Bonus Action Dash facts; runtime Dash execution and Movement budget updates are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Unit matrix records unsupported-profile: Spell Definition is installed with typed immediate Dash and Concentration-duration Bonus Action Dash facts; runtime Dash execution and Movement budget updates are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hellish_rebuke",
@@ -16782,19 +16806,31 @@
       "detail": "Expeditious Retreat (Transmutation; C)",
       "candidateUnitId": "expeditious_retreat",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "Spell Definition Dash grant: immediate Dash on Bonus Action casting plus ongoing Bonus Action Dash while Concentration lasts"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "expeditious_retreat",
+        "sourceRecordPath": "packages/surface/content/expeditious_retreat.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "expeditious_retreat"
       },
-      "finalDisposition": "needs-surface-widening",
-      "ownerEvidence": [],
-      "nextAction": "Widen Surface: Spell Definition Dash grant: immediate Dash on Bonus Action casting plus ongoing Bonus Action Dash while Concentration lasts."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit expeditious_retreat is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Unit matrix records unsupported-profile: Spell Definition is installed with typed immediate Dash and Concentration-duration Bonus Action Dash facts; runtime Dash execution and Movement budget updates are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Unit matrix records unsupported-profile: Spell Definition is installed with typed immediate Dash and Concentration-duration Bonus Action Dash facts; runtime Dash execution and Movement budget updates are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_false_life",

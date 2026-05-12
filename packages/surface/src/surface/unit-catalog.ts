@@ -41,6 +41,7 @@ import druidPrimalOrderInput from "../../content/druid_primal_order.json";
 import eldritchBlastInput from "../../content/eldritch_blast.json";
 import ensnaringStrikeInput from "../../content/ensnaring_strike.json";
 import entangleInput from "../../content/entangle.json";
+import expeditiousRetreatInput from "../../content/expeditious_retreat.json";
 import faerieFireInput from "../../content/faerie_fire.json";
 import equipmentShieldInput from "../../content/equipment_shield.json";
 import featAbilityScoreImprovementInput from "../../content/feat_ability_score_improvement.json";
@@ -310,6 +311,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     divineSmiteInput,
     ensnaringStrikeInput,
     entangleInput,
+    expeditiousRetreatInput,
     faerieFireInput,
     falseLifeInput,
     fireBoltInput,

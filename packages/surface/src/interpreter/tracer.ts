@@ -599,6 +599,26 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "take_standard_action": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "take_standard_action",
+        label: `take_standard_action\n${e.action}\ncost: ${e.cost}`,
+      });
+      return id;
+    }
+    case "grant_alternate_action_cost": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "grant_alternate_action_cost",
+        label: `grant_alternate_action_cost\n${e.from.actions.join(", ")}\nas ${e.to.kind}`,
+      });
+      return id;
+    }
     case "grant_extra_action": {
       const id = ids("eff");
       nodes.push({
@@ -2115,6 +2135,8 @@ function traceEffectAtomScaling(
     case "end_current_effect":
     case "repeat_save_for_condition":
     case "condition_persists_after_full_duration":
+    case "take_standard_action":
+    case "grant_alternate_action_cost":
     case "modify_roll_numeric":
     case "modify_damage_numeric":
     case "modify_roll_advantage":

@@ -3,6 +3,7 @@ import type { ClassName } from "@dnd/shared/game-facts";
 
 import {
   AbilitySchema,
+  AlternateActionCostSchema,
   ArmorCategorySchema,
   ArmorTrainingCategorySchema,
   BackgroundRecordKindSchema,
@@ -423,13 +424,7 @@ export const ClassFeatureActivationMechanicsSchema =
 
 export const AlternateActionCostMechanicsSchema = Schema.Struct({
   family: Schema.Literal("alternate_action_cost"),
-  from: Schema.Struct({
-    kind: Schema.Literal("standard_action"),
-    actions: Schema.NonEmptyArray(StandardActionKindSchema),
-  }),
-  to: Schema.Struct({
-    kind: Schema.Literal("bonus_action"),
-  }),
+  ...AlternateActionCostSchema.fields,
 });
 
 const BuildTimeFeatureChoiceChangeSchema = Schema.Union(

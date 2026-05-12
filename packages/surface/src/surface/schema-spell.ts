@@ -3,6 +3,7 @@ import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type { ClassName } from "@dnd/shared/game-facts";
 import {
   AbilitySchema,
+  AlternateActionCostSchema,
   ClassLevelChoiceCountSchema,
   CLASS_SPELLCASTING_CLASS_NAMES,
   ClassNameSchema,
@@ -252,6 +253,8 @@ type SavingThrowSourceFilter = Schema.Schema.Type<
 >;
 type ActionRestriction = Schema.Schema.Type<typeof ActionRestrictionSchema>;
 type ActionEconomyKind = "action" | "bonus_action" | "reaction";
+type StandardActionKind = Schema.Schema.Type<typeof StandardActionKindSchema>;
+type AlternateActionCost = Schema.Schema.Type<typeof AlternateActionCostSchema>;
 type ExileDestination =
   | "demiplane"
   | "astral_plane"
@@ -503,6 +506,14 @@ type EffectAtom =
       readonly damageType: DamageTypeRef;
       readonly amount: DiceAmount;
     }
+  | {
+      readonly kind: "take_standard_action";
+      readonly action: StandardActionKind;
+      readonly cost: "included_in_effect";
+    }
+  | ({
+      readonly kind: "grant_alternate_action_cost";
+    } & AlternateActionCost)
   | {
       readonly kind: "grant_extra_action";
       readonly restriction: ActionRestriction;
@@ -1786,6 +1797,15 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         target: Schema.Literal("triggering_attacker"),
         damageType: DamageTypeRefSchema,
         amount: DiceAmountSchema,
+      }),
+      strictStruct({
+        kind: Schema.Literal("take_standard_action"),
+        action: StandardActionKindSchema,
+        cost: Schema.Literal("included_in_effect"),
+      }),
+      strictStruct({
+        kind: Schema.Literal("grant_alternate_action_cost"),
+        ...AlternateActionCostSchema.fields,
       }),
       Schema.Struct({
         kind: Schema.Literal("grant_extra_action"),

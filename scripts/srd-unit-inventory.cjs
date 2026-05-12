@@ -212,14 +212,6 @@ const spellUnitMissingClassifications = new Map([
     },
   ],
   [
-    "expeditious_retreat",
-    {
-      kind: "needs-surface-widening",
-      missingConstruct:
-        "Spell Definition Dash grant: immediate Dash on Bonus Action casting plus ongoing Bonus Action Dash while Concentration lasts",
-    },
-  ],
-  [
     "feather_fall",
     {
       kind: "needs-surface-widening",

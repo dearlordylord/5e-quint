@@ -95,6 +95,7 @@ const requiredFirstVerticalUnitIds = [
   "charm_person",
   "command",
   "dissonant_whispers",
+  "expeditious_retreat",
   "hellish_rebuke",
   "armor_chain_mail",
   "equipment_shield",
@@ -384,6 +385,81 @@ describe("SRD Unit catalog boundary", () => {
           kind: "force_move",
           direction: "away_from_caster",
           distanceFeet: 10,
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test("decodes Expeditious Retreat as immediate and ongoing Dash facts", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const expeditiousRetreat = result.catalog.requireUnit(
+        "expeditious_retreat",
+      );
+      expect(expeditiousRetreat.kind).toBe("spell");
+      if (expeditiousRetreat.kind !== "spell") return;
+      expect(expeditiousRetreat.mechanics.family).toBe("ongoing_effect");
+      if (expeditiousRetreat.mechanics.family !== "ongoing_effect") return;
+
+      expect(expeditiousRetreat.mechanics.castingTime).toEqual({
+        kind: "bonus_action",
+      });
+      expect(expeditiousRetreat.mechanics.duration).toEqual({
+        kind: "concentration",
+        upTo: { unit: "minute", amount: 10 },
+      });
+      expect(expeditiousRetreat.mechanics.initialPhase).toEqual({
+        kind: "direct",
+        attachment: { kind: "self" },
+        effects: [
+          {
+            kind: "take_standard_action",
+            action: "dash",
+            cost: "included_in_effect",
+          },
+        ],
+      });
+      expect(expeditiousRetreat.mechanics.operations).toEqual([
+        {
+          trigger: { kind: "passive" },
+          effect: {
+            kind: "grant_alternate_action_cost",
+            from: { kind: "standard_action", actions: ["dash"] },
+            to: { kind: "bonus_action" },
+          },
+        },
+      ]);
+    }
+  });
+
+  test("rejects malformed Expeditious Retreat action economy facts", () => {
+    const decodeEffectAtom = Schema.decodeUnknownEither(EffectAtomSchema);
+
+    expect(
+      Either.isLeft(
+        decodeEffectAtom({
+          kind: "take_standard_action",
+          action: "dash",
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decodeEffectAtom({
+          kind: "take_standard_action",
+          action: "dash",
+          cost: "action_resource",
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decodeEffectAtom({
+          kind: "grant_alternate_action_cost",
+          from: { kind: "standard_action", actions: ["dash"] },
+          to: { kind: "action" },
         }),
       ),
     ).toBe(true);

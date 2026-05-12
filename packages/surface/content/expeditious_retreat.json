@@ -1,0 +1,68 @@
+{
+  "description": "You take the Dash action, and until the spell ends, you can take that action again as a Bonus Action.",
+  "id": "expeditious_retreat",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "kind": "self"
+    },
+    "castingTime": {
+      "kind": "bonus_action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 10,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "initialPhase": {
+      "attachment": {
+        "kind": "self"
+      },
+      "effects": [
+        {
+          "action": "dash",
+          "cost": "included_in_effect",
+          "kind": "take_standard_action"
+        }
+      ],
+      "kind": "direct"
+    },
+    "level": 1,
+    "operations": [
+      {
+        "effect": {
+          "from": {
+            "actions": [
+              "dash"
+            ],
+            "kind": "standard_action"
+          },
+          "kind": "grant_alternate_action_cost",
+          "to": {
+            "kind": "bonus_action"
+          }
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      }
+    ],
+    "range": {
+      "kind": "self"
+    },
+    "school": "transmutation"
+  },
+  "name": "Expeditious Retreat",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Expeditious Retreat"
+  }
+}

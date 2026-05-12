@@ -113,6 +113,16 @@ export const StandardActionKindSchema = Schema.Literal(
   ...STANDARD_ACTION_KINDS,
 );
 
+export const AlternateActionCostSchema = Schema.Struct({
+  from: Schema.Struct({
+    kind: Schema.Literal("standard_action"),
+    actions: Schema.NonEmptyArray(StandardActionKindSchema),
+  }),
+  to: Schema.Struct({
+    kind: Schema.Literal("bonus_action"),
+  }),
+});
+
 export const CLASS_NAMES = SHARED_CLASS_NAMES;
 
 type NonEmptyReadonlyArray<T> = readonly [T, ...T[]];
