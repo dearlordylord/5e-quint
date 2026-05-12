@@ -64,7 +64,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 248,
       "id": "SRDINV55",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Recursive SRD Inventory Planning Review"
     },
     {
@@ -88,7 +88,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 255,
       "id": "SRDINV56B",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Feather Fall Landing Cleanup Runtime"
     },
     {
@@ -327,11 +327,11 @@ Keep it synchronized with the DAG table and task details.
 | Order | Task                                                      | Status             | Depends on | Blocks | Research / plan | Next action |
 | ----- | --------------------------------------------------------- | ------------------ | ---------- | ------ | --------------- | ----------- |
 | 164   | QMBT69 - Recursive Unit Profile Planning Review | deferred | completed baseline | none | [QMBT66 review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT66_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Still parked by the SRD inventory frontier instruction; completed baseline is complete, but the older QMBT queue remains deferred until that frontier resumes it. |
-| 248   | SRDINV55 - Recursive SRD Inventory Planning Review | blocked | SRDINV50D1, SRDINV50D2, SRDINV56A, SRDINV56B | SRDINV57, SRDINV58A, SRDINV58B, SRDINV59A, SRDINV59B, SRDINV60A, SRDINV60B, SRDINV61, SRDINV62, SRDINV63, SRDINV64, SRDINV65, SRDINV66 | [SRDINV54 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md), [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Review the closed Command, movement, and Feather Fall runtime batch, refresh spell Unit metrics, and unlock the pre-seeded deferred-clause batch only after verifying the frontier is clean. |
+| 248   | SRDINV55 - Recursive SRD Inventory Planning Review | ready-for-research | SRDINV50D1, SRDINV50D2, SRDINV56A, SRDINV56B | SRDINV57, SRDINV58A, SRDINV58B, SRDINV59A, SRDINV59B, SRDINV60A, SRDINV60B, SRDINV61, SRDINV62, SRDINV63, SRDINV64, SRDINV65, SRDINV66 | [SRDINV54 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md), [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Review the closed Command, movement, and Feather Fall runtime batch, refresh spell Unit metrics, and unlock the pre-seeded deferred-clause batch only after verifying the frontier is clean. |
 | 252   | SRDINV50D1 - Promote Command Approach Route Runtime | done | none | SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [Speed](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promoted Approach through caller-supplied shortest/direct route execution facts and caller-supplied within-5-feet evidence; no pathfinding derivation. |
 | 253   | SRDINV50D2 - Promote Command Flee Route Runtime | done | none | SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [Speed](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Opportunity Attacks](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Flee only through caller-supplied fastest-available moving-away route facts and actual movement-budget execution; no route AI. |
 | 254   | SRDINV56A - Promote Feather Fall Reaction Invocation Runtime | done | none | SRDINV56B, SRDINV55 | [SRDINV54 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md), [Feather Fall](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Falling](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Reaction](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promoted table-supplied falling-trigger Reaction invocation, up-to-five falling target admission, spell effect creation, and active descent-cap projection; no falling simulator. |
-| 255   | SRDINV56B - Promote Feather Fall Landing Cleanup Runtime | ready-for-implementation-after-light-research | SRDINV56A | SRDINV55 | [SRDINV54 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md), [Feather Fall](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Falling](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote table-supplied landing cleanup for Feather Fall effects, preventing fall damage and Falling-hazard Prone at the same landing boundary. |
+| 255   | SRDINV56B - Promote Feather Fall Landing Cleanup Runtime | done | SRDINV56A | SRDINV55 | [SRDINV54 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md), [Feather Fall](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Falling](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promoted caller-supplied landing cleanup for Feather Fall effects, preventing fall damage and Falling-hazard Prone at the same landing boundary. |
 | 256   | SRDINV57 - Promote Grease Difficult Terrain Movement Boundary | blocked | SRDINV55 | SRDINV66 | [Grease](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Grease's ground as caller-supplied Difficult Terrain movement-cost evidence without deriving area geometry or pathfinding. |
 | 257   | SRDINV58A - Promote Faerie Fire Invisible-Denial Runtime | blocked | SRDINV55 | SRDINV58B, SRDINV66 | [Faerie Fire](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Invisible](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote the failed-save visible target rider that denies Invisible benefits for affected creatures while the outline persists. |
 | 258   | SRDINV58B - Research Faerie Fire Object Outline and Dim Light Boundary | blocked | SRDINV58A | SRDINV66 | [Faerie Fire](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Dim Light](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Decide whether noncarried object outlines and Dim Light emission are battle-runtime facts, Surface-only facts, or explicit out-of-scope environmental projection. |
@@ -398,7 +398,7 @@ changeset is trivial.
 
 ### Task 248 - SRDINV55 - Recursive SRD Inventory Planning Review
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: SRDINV50D1, SRDINV50D2, SRDINV56A, SRDINV56B
 
@@ -522,7 +522,7 @@ reaction sequencing changes require it.
 
 ### Task 255 - SRDINV56B - Promote Feather Fall Landing Cleanup Runtime
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: SRDINV56A
 

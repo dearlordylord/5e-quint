@@ -318,6 +318,7 @@ export {
   resolveBattleSubject,
   resolveBattleSubjectInternal,
   resolveCastTriggeredReactionSpellCommand,
+  resolveFeatherFallLanding,
   resolveReactionRollOrDamageReduction,
   resolveReplayContinuation,
   resolveReplayContinuationFromState,
@@ -3157,6 +3158,30 @@ export type BattleResolutionResult =
       readonly reason: BattleInvalidReasonCode;
       readonly message: string;
       readonly snapshot: BattleSnapshot;
+    };
+export type BattleFeatherFallLandingResult =
+  | {
+      readonly tag: "mitigated";
+      readonly state: BattleState;
+      readonly snapshot: BattleSnapshot;
+      readonly targetId: CombatantId;
+      readonly fallDamagePrevented: true;
+      readonly fallingPronePrevented: true;
+    }
+  | {
+      readonly tag: "unmitigated";
+      readonly state: BattleState;
+      readonly snapshot: BattleSnapshot;
+      readonly targetId: CombatantId;
+      readonly fallDamagePrevented: false;
+      readonly fallingPronePrevented: false;
+    }
+  | {
+      readonly tag: "invalid";
+      readonly state: BattleState;
+      readonly snapshot: BattleSnapshot;
+      readonly reason: "missingCombatant";
+      readonly message: string;
     };
 
 export type BattleSnapshot = {

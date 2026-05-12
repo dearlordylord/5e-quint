@@ -27,6 +27,7 @@ import {
   initiativeScore,
   openCreatureFallsReactionWindow,
   resolveBattleReaction,
+  resolveFeatherFallLanding,
   startBattle,
   type BattleCreatureInit,
   type BattleFill,
@@ -135,6 +136,76 @@ describe("Feather Fall Reaction spell", () => {
         FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
       );
     }
+  });
+
+  test("clears mitigation on landing and prevents fall damage plus Falling Prone", () => {
+    const mitigatedState = castFeatherFallOn([fallingAId, fallingBId]);
+
+    const landing = resolveFeatherFallLanding({
+      state: mitigatedState,
+      targetId: fallingAId,
+    });
+
+    expect(landing).toMatchObject({
+      tag: "mitigated",
+      targetId: fallingAId,
+      fallDamagePrevented: true,
+      fallingPronePrevented: true,
+    });
+    if (landing.tag !== "mitigated") {
+      throw new Error("Expected Feather Fall landing mitigation.");
+    }
+    const landedTarget = requireCombatant(landing.state, fallingAId);
+    expect(activeFeatherFallDescentRateCapFeetPerRound(landedTarget)).toBe(
+      null,
+    );
+    expect(landing.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: fallingAId,
+          conditions: expect.not.arrayContaining(["prone"]),
+        }),
+      ]),
+    );
+
+    const stillFallingTarget = requireCombatant(landing.state, fallingBId);
+    expect(
+      activeFeatherFallDescentRateCapFeetPerRound(stillFallingTarget),
+    ).toBe(FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND);
+  });
+
+  test("leaves unaffected and stale landing facts to normal Falling resolution", () => {
+    const unaffected = resolveFeatherFallLanding({
+      state: battleWithFeatherFall(),
+      targetId: fallingAId,
+    });
+    expect(unaffected).toMatchObject({
+      tag: "unmitigated",
+      targetId: fallingAId,
+      fallDamagePrevented: false,
+      fallingPronePrevented: false,
+    });
+
+    const mitigatedState = castFeatherFallOn([fallingAId]);
+    const firstLanding = resolveFeatherFallLanding({
+      state: mitigatedState,
+      targetId: fallingAId,
+    });
+    if (firstLanding.tag !== "mitigated") {
+      throw new Error("Expected first landing to consume Feather Fall.");
+    }
+    const staleLanding = resolveFeatherFallLanding({
+      state: firstLanding.state,
+      targetId: fallingAId,
+    });
+
+    expect(staleLanding).toMatchObject({
+      tag: "unmitigated",
+      targetId: fallingAId,
+      fallDamagePrevented: false,
+      fallingPronePrevented: false,
+    });
+    expect(staleLanding.state).toBe(firstLanding.state);
   });
 
   test("does not offer Feather Fall without the falling-trigger fact", () => {
@@ -253,6 +324,54 @@ function battleWithFeatherFall(): BattleState {
     throw new Error(result.left.message);
   }
   return result.right;
+}
+
+function castFeatherFallOn(
+  targetIds: readonly [CombatantId, ...CombatantId[]],
+): BattleState {
+  const awaitingReaction = openFeatherFallWindow(
+    battleWithFeatherFall(),
+    targetIds[0],
+    true,
+  );
+  if (awaitingReaction.tag !== "needsHoles") {
+    throw new Error("Expected Feather Fall falling-trigger Reaction window.");
+  }
+  const choice = awaitingReaction.snapshot.pendingReaction?.choices.find(
+    (candidate) =>
+      candidate.kind === "castTriggeredReactionSpell" &&
+      candidate.invocation.tag === "spellSlot" &&
+      candidate.invocation.spellId === featherFallUnitId &&
+      candidate.invocation.procedure === "featherFallMitigation",
+  );
+  if (choice === undefined || choice.kind !== "castTriggeredReactionSpell") {
+    throw new Error("Expected Feather Fall Reaction choice.");
+  }
+  const resolved = resolveBattleReaction({
+    state: awaitingReaction.state,
+    fill: reactionDecisionFill(
+      requireHole(awaitingReaction.holes, "reactionDecision"),
+      {
+        kind: "resolve",
+        reactorId: casterId,
+        choice: {
+          kind: "castTriggeredReactionSpell",
+          invocation: choice.invocation,
+          fills: [
+            featherFallTargetListFill(
+              requireHole(choice.initialHoles, "spellTargetList"),
+              casterId,
+              targetIds,
+            ),
+          ],
+        },
+      },
+    ),
+  });
+  if (resolved.tag !== "resolved") {
+    throw new Error("Expected Feather Fall Reaction to resolve.");
+  }
+  return resolved.state;
 }
 
 function characterCreature(

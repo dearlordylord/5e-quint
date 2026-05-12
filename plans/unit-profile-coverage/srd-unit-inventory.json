@@ -3049,7 +3049,7 @@
     {
       "id": "SRDINV55",
       "title": "Recursive SRD Inventory Planning Review",
-      "suggestedStatus": "blocked",
+      "suggestedStatus": "ready-for-research",
       "intent": "Review the movement/action runtime batch before selecting the next spell Surface or runtime frontier.",
       "rowCount": 211,
       "rowIds": [

@@ -118,6 +118,7 @@ import {
   applyFailedSaveSpellConditionEffects,
   applySpellDamage,
   applyShieldReactionSpellActiveEffect,
+  featherFallLandingCleanupForCombatant,
   sameSpellInvocationRef,
   saveGateDamageResultForOutcome,
   spellDamageAmountForTarget,
@@ -158,6 +159,7 @@ import type {
   BattleConcentrationSavingThrowHole,
   BattleCreatureState,
   BattleFill,
+  BattleFeatherFallLandingResult,
   BattleInterruptFrame,
   BattleInterruptedProcedure,
   BattleOpportunityAttackThreat,
@@ -909,6 +911,48 @@ export function openCreatureFallsReactionWindow(input: {
       snapshot: snapshotBattle(input.state),
     }
   );
+}
+
+export function resolveFeatherFallLanding(input: {
+  readonly state: BattleState;
+  readonly targetId: CombatantId;
+}): BattleFeatherFallLandingResult {
+  const target = input.state.combatants.get(input.targetId);
+  if (target === undefined) {
+    return {
+      tag: "invalid",
+      state: input.state,
+      snapshot: snapshotBattle(input.state),
+      reason: "missingCombatant",
+      message: "Feather Fall landing target is not in this battle.",
+    };
+  }
+  const cleanup = featherFallLandingCleanupForCombatant(target);
+  if (cleanup.tag === "unmitigated") {
+    return {
+      tag: "unmitigated",
+      state: input.state,
+      snapshot: snapshotBattle(input.state),
+      targetId: input.targetId,
+      fallDamagePrevented: false,
+      fallingPronePrevented: false,
+    };
+  }
+  const nextState = {
+    ...input.state,
+    combatants: new Map(input.state.combatants).set(
+      input.targetId,
+      cleanup.combatant,
+    ),
+  };
+  return {
+    tag: "mitigated",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+    targetId: input.targetId,
+    fallDamagePrevented: true,
+    fallingPronePrevented: true,
+  };
 }
 
 export function resolveBattleReaction(input: {

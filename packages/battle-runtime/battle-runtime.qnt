@@ -636,6 +636,10 @@ module battleRuntime {
     usesRemaining: int,
   }
 
+  type FeatherFallLandingResult =
+    | FeatherFallLandingMitigated({ state: BattleState })
+    | FeatherFallLandingUnmitigated({ state: BattleState })
+
   type AttackReplay =
     | AttackNeedsTarget
     | AttackNeedsAttackRoll
@@ -2517,6 +2521,36 @@ module battleRuntime {
       | _ => false
     })) 60 else 0
 
+  pure def activeEffectsWithoutFeatherFallMitigation(effects: Set[ActiveEffect]): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | FeatherFallMitigation(_) => false
+      | _ => true
+    })
+
+  pure def activeEffectsContainFeatherFallMitigation(effects: Set[ActiveEffect]): bool =
+    effects.exists(effect => match effect {
+      | FeatherFallMitigation(_) => true
+      | _ => false
+    })
+
+  pure def featherFallLandingState(result: FeatherFallLandingResult): BattleState =
+    match result {
+      | FeatherFallLandingMitigated(data) => data.state
+      | FeatherFallLandingUnmitigated(data) => data.state
+    }
+
+  pure def featherFallLandingFallDamagePrevented(result: FeatherFallLandingResult): bool =
+    match result {
+      | FeatherFallLandingMitigated(_) => true
+      | FeatherFallLandingUnmitigated(_) => false
+    }
+
+  pure def featherFallLandingFallingPronePrevented(result: FeatherFallLandingResult): bool =
+    match result {
+      | FeatherFallLandingMitigated(_) => true
+      | FeatherFallLandingUnmitigated(_) => false
+    }
+
   pure def resolveFeatherFallSpell(
     state: BattleState,
     reactor: Actor,
@@ -2549,6 +2583,37 @@ module battleRuntime {
     } else {
       state
     }
+
+  pure def resolveFeatherFallLanding(state: BattleState, target: Actor): FeatherFallLandingResult =
+    val targetEffects = match target {
+      | Fighter => state.fighter.activeEffects
+      | Goblin => state.goblin.activeEffects
+    }
+    val mitigated = activeEffectsContainFeatherFallMitigation(targetEffects)
+    val nextState = if (mitigated) {
+      match target {
+        | Fighter => {
+            ...state,
+            fighter: {
+              ...state.fighter,
+              activeEffects: activeEffectsWithoutFeatherFallMitigation(state.fighter.activeEffects),
+            },
+          }
+        | Goblin => {
+            ...state,
+            goblin: {
+              ...state.goblin,
+              activeEffects: activeEffectsWithoutFeatherFallMitigation(state.goblin.activeEffects),
+            },
+          }
+      }
+    } else {
+      state
+    }
+    if (mitigated)
+      FeatherFallLandingMitigated({ state: nextState })
+    else
+      FeatherFallLandingUnmitigated({ state: nextState })
 
   pure def jumpMovementReplacementLandingIsLegal(landing: JumpMovementLandingFact): bool =
     landing != JumpIllegalLanding
@@ -7651,6 +7716,29 @@ module battleRuntime {
       assert(noReaction == { ...initialState, fighter: { ...initialState.fighter, reactionAvailable: false } }),
       assert(nonFallingTarget == initialState),
       assert(tooMany == initialState),
+    }
+  }
+
+  run test_feather_fall_landing_cleanup_prevents_falling_outcomes = {
+    val resolved = resolveFeatherFallSpell(initialState, Fighter, Set(Fighter, Goblin), Set(Fighter, Goblin), 2)
+    val fighterLanding = resolveFeatherFallLanding(resolved, Fighter)
+    val fighterLandingState = featherFallLandingState(fighterLanding)
+    val staleLanding = resolveFeatherFallLanding(fighterLandingState, Fighter)
+    val staleLandingState = featherFallLandingState(staleLanding)
+    val unaffectedLanding = resolveFeatherFallLanding(initialState, Goblin)
+    val unaffectedLandingState = featherFallLandingState(unaffectedLanding)
+    all {
+      assert(featherFallLandingFallDamagePrevented(fighterLanding)),
+      assert(featherFallLandingFallingPronePrevented(fighterLanding)),
+      assert(not(fighterLandingState.fighter.activeEffects.contains(FeatherFallMitigation({ durationTicks: 10 })))),
+      assert(fighterLandingState.goblin.activeEffects.contains(FeatherFallMitigation({ durationTicks: 10 }))),
+      assert(not(fighterLandingState.fighter.prone)),
+      assert(not(featherFallLandingFallDamagePrevented(staleLanding))),
+      assert(not(featherFallLandingFallingPronePrevented(staleLanding))),
+      assert(staleLandingState == fighterLandingState),
+      assert(not(featherFallLandingFallDamagePrevented(unaffectedLanding))),
+      assert(not(featherFallLandingFallingPronePrevented(unaffectedLanding))),
+      assert(unaffectedLandingState == initialState),
     }
   }
 

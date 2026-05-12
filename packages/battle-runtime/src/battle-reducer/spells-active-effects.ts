@@ -47,6 +47,23 @@ export function activeFeatherFallDescentRateCapFeetPerRound(
     : null;
 }
 
+export function featherFallLandingCleanupForCombatant(
+  combatant: BattleCreatureState,
+):
+  | { readonly tag: "mitigated"; readonly combatant: BattleCreatureState }
+  | { readonly tag: "unmitigated"; readonly combatant: BattleCreatureState } {
+  const activeEffects = combatant.activeEffects.filter(
+    (effect) => effect.kind !== "featherFallMitigation",
+  );
+  if (activeEffects.length === combatant.activeEffects.length) {
+    return { tag: "unmitigated", combatant };
+  }
+  return {
+    tag: "mitigated",
+    combatant: battleCreatureWithSpellActiveEffects(combatant, activeEffects),
+  };
+}
+
 export function applySpellActiveEffects(
   state: BattleState,
   actorId: CombatantId,
