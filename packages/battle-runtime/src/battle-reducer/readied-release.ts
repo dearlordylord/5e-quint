@@ -3,6 +3,7 @@
 import type { BattleReactionTrigger } from "../battle-reaction-triggers.ts";
 import { sameBattleSubject, type BattleSubject } from "../battle-subjects.ts";
 import { movementFeet } from "@dnd/shared/types";
+import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
@@ -25,6 +26,7 @@ import {
   readiedMovementHole,
   readiedMovementBudgetForActor,
 } from "./turn-end-movement.ts";
+import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state.ts";
 import { normalizeBattleGrapples } from "./creature-state-leaves.ts";
 import { breakBattleConcentration } from "./damage-apply.ts";
 import {
@@ -77,7 +79,18 @@ export function applyBattleMovement(
         ),
       }
     : mover;
-  const combatants = new Map(state.combatants).set(movement.moverId, nextMover);
+  const landedMover =
+    movement.jumpMovementReplacement?.landing.difficultTerrainAcrobatics ===
+    "failed"
+      ? battleCreatureStateWithKnockOutPreservedConditions(
+          nextMover,
+          applyCondition(nextMover.conditions, "prone"),
+        )
+      : nextMover;
+  const combatants = new Map(state.combatants).set(
+    movement.moverId,
+    landedMover,
+  );
   return normalizeBattleGrapples({
     ...state,
     combatants,

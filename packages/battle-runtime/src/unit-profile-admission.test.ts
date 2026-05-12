@@ -33,6 +33,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT32 cure_wounds mass_healing_word
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT34 mass_cure_wounds
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV49 expeditious_retreat
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV53 jump
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV51 thunderwave
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV52 dissonant_whispers
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT21 mycelium_step
@@ -48,7 +49,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT59 monk_deflect_attacks
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT62 fighter_tactical_mind
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT65 bard_cutting_words
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider spell.scalar-buff
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -186,6 +187,7 @@ const entangleUnitId = "entangle";
 const eldritchBlastUnitId = "eldritch_blast";
 const ensnaringStrikeUnitId = "ensnaring_strike";
 const expeditiousRetreatUnitId = "expeditious_retreat";
+const jumpUnitId = "jump";
 const searingSmiteUnitId = "searing_smite";
 const trueStrikeUnitId = "true_strike";
 const iceKnifeUnitId = "ice_knife";
@@ -10052,6 +10054,268 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
   });
 });
 
+describe("SRDINV53 deterministic Jump movement replacement admission", () => {
+  test("jump casts as a touched willing target-list Bonus Action spell with slot-scaled targets", () => {
+    const spell = spellRecord(jumpUnitId);
+    const extraTargetId = combatantId("unit-profile-jump-target-2");
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [
+        { spellLevel: 1, count: 1 },
+        { spellLevel: 2, count: 1 },
+      ],
+      extraTargetIds: [extraTargetId],
+    });
+    const jumpActs = discoverBattleActs(state).filter(
+      (candidate): candidate is BonusActionSpellAct =>
+        candidate.subject.tag === "bonusActionSpell" &&
+        candidate.subject.invocation.spellId === jumpUnitId,
+    );
+
+    expect(jumpActs.map((act) => act.subject.invocation)).toEqual(
+      expect.arrayContaining([
+        spellSlotInvocationRef(jumpUnitId, 1, "jumpMovementReplacement"),
+        spellSlotInvocationRef(jumpUnitId, 2, "jumpMovementReplacement"),
+      ]),
+    );
+    const levelTwo = jumpActs.find(
+      (act) =>
+        act.subject.invocation.tag === "spellSlot" &&
+        Number(act.subject.invocation.slotLevel) === 2,
+    );
+    expect(levelTwo).toBeDefined();
+    if (levelTwo === undefined) {
+      throw new Error("Expected level 2 Jump act.");
+    }
+    const targets = requireHole(levelTwo.initialHoles, "spellTargetList");
+    expect(targets).toMatchObject({
+      minTargets: 1,
+      maxTargets: 2,
+      choices: expect.arrayContaining([spellCasterId, spellTargetId]),
+    });
+  });
+
+  test("jump installs a one-minute per-target movement replacement and spends 10 Movement for up to 30 feet", () => {
+    const spell = spellRecord(jumpUnitId);
+    const state = spellBattle({ preparedSpells: [spell] });
+    const castAct = bonusSpellAct({ state, spellId: jumpUnitId });
+    const targetHole = requireHole(castAct.initialHoles, "spellTargetList");
+    const cast = resolveBattleSubject({
+      state,
+      subject: castAct.subject,
+      fills: [
+        jumpSpellTargetListFill(targetHole, spellCasterId, jumpUnitId, [
+          spellCasterId,
+        ]),
+      ],
+    });
+    expect(cast).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        turn: {
+          bonusActionAvailable: false,
+          spellSlotExpendedThisTurn: true,
+        },
+      },
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Jump to resolve.");
+    }
+    expect(cast.state.combatants.get(spellCasterId)?.activeEffects).toEqual([
+      expect.objectContaining({
+        kind: "jumpMovementReplacement",
+        sourceSpellId: jumpUnitId,
+        sourceCombatantId: spellCasterId,
+        movementCostFeet: movementFeet(10),
+        maxJumpDistanceFeet: movementFeet(30),
+        usedThisTurn: false,
+        expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
+      }),
+    ]);
+
+    const jumpAct = jumpMovementReplacementAct(cast.state);
+    const movement = requireHole(jumpAct.initialHoles, "movement");
+    const jumped = resolveBattleSubject({
+      state: cast.state,
+      subject: jumpAct.subject,
+      fills: [
+        movementFill(movement, {
+          movementCostFeet: 10,
+          provokedOpportunityAttacks: [],
+          jumpMovementReplacement: {
+            kind: "jumpMovementReplacement",
+            distanceFeet: movementFeet(30),
+            landing: {
+              kind: "legalLanding",
+              difficultTerrainAcrobatics: "notRequired",
+            },
+          },
+        }),
+      ],
+    });
+
+    expect(jumped).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: spellCasterId,
+            movement: expect.objectContaining({
+              spentFeet: 10,
+              remainingFeet: 20,
+            }),
+          }),
+        ]),
+      },
+    });
+    if (jumped.tag !== "resolved") {
+      throw new Error("Expected Jump movement replacement to resolve.");
+    }
+    expect(
+      jumped.state.combatants.get(spellCasterId)?.activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "jumpMovementReplacement",
+        usedThisTurn: true,
+      }),
+    );
+    expect(maybeJumpMovementReplacementAct(jumped.state)).toBeUndefined();
+
+    const targetTurn = endTurn({ state: jumped.state, actorId: spellCasterId });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected target turn after Jump.");
+    }
+    const nextCasterTurn = endTurn({
+      state: targetTurn.state,
+      actorId: spellTargetId,
+    });
+    if (nextCasterTurn.tag !== "resolved") {
+      throw new Error("Expected next caster turn after Jump.");
+    }
+    expect(maybeJumpMovementReplacementAct(nextCasterTurn.state)).toBeDefined();
+  });
+
+  test("jump rejects non-willing target facts and malformed movement replacement fills", () => {
+    const spell = spellRecord(jumpUnitId);
+    const state = spellBattle({ preparedSpells: [spell] });
+    const castAct = bonusSpellAct({ state, spellId: jumpUnitId });
+    const targetHole = requireHole(castAct.initialHoles, "spellTargetList");
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: castAct.subject,
+        fills: [
+          spellTargetListFill(targetHole, spellCasterId, jumpUnitId, [
+            spellTargetId,
+          ]),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+
+    const cast = resolveBattleSubject({
+      state,
+      subject: castAct.subject,
+      fills: [
+        jumpSpellTargetListFill(targetHole, spellCasterId, jumpUnitId, [
+          spellCasterId,
+        ]),
+      ],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Jump to resolve.");
+    }
+    const jumpAct = jumpMovementReplacementAct(cast.state);
+    const movement = requireHole(jumpAct.initialHoles, "movement");
+
+    expect(
+      resolveBattleSubject({
+        state: cast.state,
+        subject: jumpAct.subject,
+        fills: [
+          movementFill(movement, {
+            movementCostFeet: 10,
+            provokedOpportunityAttacks: [],
+          }),
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+    expect(
+      resolveBattleSubject({
+        state: cast.state,
+        subject: jumpAct.subject,
+        fills: [
+          movementFill(movement, {
+            movementCostFeet: 5,
+            provokedOpportunityAttacks: [],
+            jumpMovementReplacement: {
+              kind: "jumpMovementReplacement",
+              distanceFeet: movementFeet(30),
+              landing: {
+                kind: "legalLanding",
+                difficultTerrainAcrobatics: "passed",
+              },
+            },
+          }),
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+    expect(
+      resolveBattleSubject({
+        state: cast.state,
+        subject: jumpAct.subject,
+        fills: [
+          movementFill(movement, {
+            movementCostFeet: 10,
+            provokedOpportunityAttacks: [],
+            jumpMovementReplacement: {
+              kind: "jumpMovementReplacement",
+              distanceFeet: movementFeet(35),
+              landing: {
+                kind: "legalLanding",
+                difficultTerrainAcrobatics: "passed",
+              },
+            },
+          }),
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+
+    const failedLanding = resolveBattleSubject({
+      state: cast.state,
+      subject: jumpAct.subject,
+      fills: [
+        movementFill(movement, {
+          movementCostFeet: 10,
+          provokedOpportunityAttacks: [],
+          jumpMovementReplacement: {
+            kind: "jumpMovementReplacement",
+            distanceFeet: movementFeet(30),
+            landing: {
+              kind: "legalLanding",
+              difficultTerrainAcrobatics: "failed",
+            },
+          },
+        }),
+      ],
+    });
+    expect(failedLanding).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: spellCasterId,
+            conditions: expect.arrayContaining(["prone"]),
+          }),
+        ]),
+      },
+    });
+  });
+});
+
 describe("QMBT53 deterministic Adrenaline Rush admission", () => {
   test("orc_adrenaline_rush is admitted as Bonus Action Dash Temporary Hit Points", () => {
     const unit = unitLibrary.requireUnit(orcAdrenalineRushUnitId);
@@ -12305,6 +12569,46 @@ function bonusActionDashSpellAct(input: {
   return act;
 }
 
+function jumpMovementReplacementAct(state: BattleState): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "runtimeCommand"; readonly command: "jumpMovementReplacement" }
+  >;
+} {
+  const act = maybeJumpMovementReplacementAct(state);
+  expect(act).toBeDefined();
+  if (act === undefined) {
+    throw new Error("Expected Jump movement replacement act.");
+  }
+  return act;
+}
+
+function maybeJumpMovementReplacementAct(
+  state: BattleState,
+): (AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "runtimeCommand"; readonly command: "jumpMovementReplacement" }
+  >;
+}) | undefined {
+  return discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "jumpMovementReplacement";
+        }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "jumpMovementReplacement" &&
+      candidate.subject.sourceSpellId === jumpUnitId,
+  );
+}
+
 function requireHole<K extends BattleHole["kind"]>(
   holes: readonly BattleHole[],
   kind: K,
@@ -12484,6 +12788,10 @@ function movementFill(
       readonly reactorId: CombatantId;
       readonly attackName: string;
     }[];
+    readonly jumpMovementReplacement?: Extract<
+      BattleFill,
+      { readonly kind: "movement" }
+    >["value"]["jumpMovementReplacement"];
   },
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   return {
@@ -12493,6 +12801,9 @@ function movementFill(
       speedKind: value.speedKind ?? "walk",
       movementCostFeet: movementFeet(value.movementCostFeet),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
+      ...(value.jumpMovementReplacement === undefined
+        ? {}
+        : { jumpMovementReplacement: value.jumpMovementReplacement }),
     },
   };
 }
@@ -12551,6 +12862,33 @@ function spellTargetListFill(
       targetId,
       spellId,
     })),
+  };
+}
+
+function jumpSpellTargetListFill(
+  hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
+  casterId: CombatantId,
+  spellId: string,
+  targetIds: readonly CombatantId[],
+): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
+  return {
+    kind: "spellTargetList",
+    holeId: hole.holeId,
+    value: { targetIds },
+    spatialFacts: targetIds.flatMap((targetId) => [
+      {
+        kind: "spellTarget" as const,
+        casterId,
+        targetId,
+        spellId,
+      },
+      {
+        kind: "spellTargetKnownWilling" as const,
+        casterId,
+        targetId,
+        spellId,
+      },
+    ]),
   };
 }
 

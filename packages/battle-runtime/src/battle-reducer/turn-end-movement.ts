@@ -3,7 +3,7 @@
 // intended.
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
 import { resetTurnActionEconomy } from "@dnd/shared-algebras/action-economy-algebra";
 
@@ -127,9 +127,11 @@ import type {
   BattleFill,
   BattleGreaseGroundHazardSavingThrowOutcomeHole,
   BattleHoleId,
+  BattleJumpMovementReplacementFact,
   BattleMovementHole,
   BattleOpportunityAttackThreat,
   BattleResolutionInput,
+  BattleResolutionInputForSubject,
   BattleResolutionResult,
   BattleResolvedMovement,
   BattleSleepRepeatSavingThrowOutcomeHole,
@@ -298,7 +300,9 @@ export function resetSpellDamageReductionsForNewTurn(
   return new Map(
     [...combatants].map(([id, combatant]) => {
       const activeEffects = combatant.activeEffects.map((effect) =>
-        effect.kind === "spellDamageReduction" && effect.usedThisTurn
+        (effect.kind === "spellDamageReduction" ||
+          effect.kind === "jumpMovementReplacement") &&
+        effect.usedThisTurn
           ? { ...effect, usedThisTurn: false }
           : effect,
       );
@@ -1766,6 +1770,147 @@ export function resolveMoveCommand(
   };
 }
 
+type JumpMovementReplacementEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "jumpMovementReplacement" }
+>;
+
+export function resolveJumpMovementReplacementCommand(
+  input: BattleResolutionInputForSubject<
+    Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "jumpMovementReplacement";
+      }
+    >
+  >,
+): BattleResolutionResult {
+  const effect = jumpMovementReplacementEffectForSubject(
+    input.state,
+    input.subject,
+  );
+  if (effect === null) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Jump movement replacement is not available.",
+    );
+  }
+  if (input.fills.length === 0) {
+    return needsHolesResult(input.state, input.subject, [
+      movementHole(input.state, input.subject.actorId),
+    ]);
+  }
+  if (input.fills.length > 1 || input.fills[0]?.kind !== "movement") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Jump movement replacement requires exactly one Movement fill.",
+    );
+  }
+  const fill = input.fills[0];
+  if (fill.holeId !== MOVEMENT_HOLE_ID) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Movement fill does not match the requested Jump movement replacement hole.",
+    );
+  }
+  const movement = parseBattleMovement(
+    input.state,
+    input.subject.actorId,
+    fill,
+    { jumpMovementReplacement: effect },
+  );
+  if (movement.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", movement.message);
+  }
+
+  const consumedState = markJumpMovementReplacementUsed(
+    input.state,
+    input.subject.actorId,
+    effect,
+  );
+  const threats = opportunityAttackThreatsForMovement(
+    consumedState,
+    movement.movement,
+  );
+  if (threats.length > 0) {
+    const reactionWindow = maybeOpenReactionWindow(
+      consumedState,
+      {
+        trigger: "opportunityAttack",
+        moverId: input.subject.actorId,
+        threats,
+        continuation: {
+          kind: "movement",
+          subject: input.subject,
+          movement: movement.movement,
+        },
+      },
+      undefined,
+    );
+    if (reactionWindow !== null) return reactionWindow;
+  }
+  const nextState = applyBattleMovement(consumedState, movement.movement);
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function jumpMovementReplacementEffectForSubject(
+  state: BattleState,
+  subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "jumpMovementReplacement";
+    }
+  >,
+): JumpMovementReplacementEffect | null {
+  const actor = state.combatants.get(subject.actorId);
+  if (actor === undefined) {
+    return null;
+  }
+  return (
+    actor.activeEffects.find(
+      (effect): effect is JumpMovementReplacementEffect =>
+        effect.kind === "jumpMovementReplacement" &&
+        effect.sourceCombatantId === subject.sourceCombatantId &&
+        effect.sourceSpellId === subject.sourceSpellId &&
+        !effect.usedThisTurn,
+    ) ?? null
+  );
+}
+
+function markJumpMovementReplacementUsed(
+  state: BattleState,
+  actorId: CombatantId,
+  consumedEffect: JumpMovementReplacementEffect,
+): BattleState {
+  const actor = state.combatants.get(actorId);
+  if (actor === undefined) {
+    return state;
+  }
+  const activeEffects = actor.activeEffects.map((effect) =>
+    effect.kind === "jumpMovementReplacement" &&
+    effect.sourceCombatantId === consumedEffect.sourceCombatantId &&
+    effect.sourceSpellId === consumedEffect.sourceSpellId
+      ? { ...effect, usedThisTurn: true }
+      : effect,
+  );
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(actorId, {
+      ...actor,
+      activeEffects,
+    }),
+  };
+}
+
 export function resolveStandFromProneCommand(
   input: BattleResolutionInput,
 ): BattleResolutionResult {
@@ -1902,6 +2047,7 @@ export function parseBattleMovement(
   options: {
     readonly movementBudgetFeet?: MovementFeet;
     readonly spendsTurnMovement?: boolean;
+    readonly jumpMovementReplacement?: JumpMovementReplacementEffect;
   } = {},
 ):
   | { readonly tag: "ok"; readonly movement: BattleResolvedMovement }
@@ -1930,6 +2076,17 @@ export function parseBattleMovement(
     return {
       tag: "invalid",
       message: "Movement cost must be a positive integer.",
+    };
+  }
+  const jumpMovementValidation = validateJumpMovementReplacementFact(
+    fill.value.jumpMovementReplacement,
+    options.jumpMovementReplacement,
+    fill.value.movementCostFeet,
+  );
+  if (jumpMovementValidation !== null) {
+    return {
+      tag: "invalid",
+      message: jumpMovementValidation,
     };
   }
   const movementCost = ordinaryMovementCost(
@@ -1995,8 +2152,47 @@ export function parseBattleMovement(
       movementCostFeet: movementCost.costFeet,
       provokedOpportunityAttacks,
       spendsTurnMovement: options.spendsTurnMovement ?? true,
+      ...(fill.value.jumpMovementReplacement === undefined
+        ? {}
+        : { jumpMovementReplacement: fill.value.jumpMovementReplacement }),
     },
   };
+}
+
+function validateJumpMovementReplacementFact(
+  fact: BattleJumpMovementReplacementFact | undefined,
+  effect: JumpMovementReplacementEffect | undefined,
+  movementCostFeet: MovementFeet,
+): string | null {
+  if (effect === undefined) {
+    return fact === undefined
+      ? null
+      : "Jump movement replacement facts cannot be supplied for ordinary Movement.";
+  }
+  if (fact === undefined) {
+    return "Jump movement replacement requires caller-supplied jump distance and landing facts.";
+  }
+  if (fact.kind !== "jumpMovementReplacement") {
+    return "Jump movement replacement fact has the wrong kind.";
+  }
+  if (movementCostFeet !== effect.movementCostFeet) {
+    return "Jump movement replacement must spend exactly the spell's Movement cost.";
+  }
+  if (!Number.isInteger(fact.distanceFeet) || fact.distanceFeet <= 0) {
+    return "Jump movement replacement distance must be a positive integer.";
+  }
+  if (Number(fact.distanceFeet) > Number(effect.maxJumpDistanceFeet)) {
+    return "Jump movement replacement distance exceeds the spell's maximum.";
+  }
+  if (
+    fact.landing.kind !== "legalLanding" ||
+    (fact.landing.difficultTerrainAcrobatics !== "notRequired" &&
+      fact.landing.difficultTerrainAcrobatics !== "passed" &&
+      fact.landing.difficultTerrainAcrobatics !== "failed")
+  ) {
+    return "Jump movement replacement requires caller-supplied legal landing facts.";
+  }
+  return null;
 }
 
 export function resetStartOfTurnCombatant(

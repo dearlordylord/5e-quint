@@ -32,6 +32,7 @@ import {
 applyConditionImmunityAndTurnStartTemporaryHitPointsEffects,
 applyCreatureTypeProtectionSpellEffect,
 applyDamageReductionSpellEffect,
+applyJumpMovementReplacementSpellEffect,
 applyRollModifierSpellEffect,
 applyScalarBuffSpellEffect,
 spellDamageTypeChoiceHole,
@@ -39,6 +40,8 @@ spellHealingRollHole,
 spellScalarBuffRollHole,
 spellTargetHole,
 spellTargetIsLegal,
+spellTargetListHole,
+validateSpellTargetList,
 validateScalarBuffTemporaryHitPointsFill,
 validateSpellHealingFill
 } from "./spells-holes-fills.ts";
@@ -622,6 +625,110 @@ export function resolveDamageReductionSpellAct(input: {
         state: resourced.state,
         snapshot: snapshotBattle(resourced.state),
       };
+}
+
+export function resolveJumpMovementReplacementSpellAct(input: {
+  readonly input: BonusActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "jumpMovementReplacement" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  if (
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.targetAllocation !== undefined ||
+    input.fillSet.targetId !== undefined ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.attackBurstDamageRoll !== undefined ||
+    input.fillSet.healingRoll !== undefined ||
+    input.fillSet.skillChoice !== undefined ||
+    input.fillSet.damageTypeChoice !== undefined ||
+    input.fillSet.savingThrowOutcomes !== undefined ||
+    input.fillSet.damageDispositions.length > 0 ||
+    input.fillSet.concentrationSavingThrows.length > 0
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Jump uses a target-list fill only.",
+    );
+  }
+
+  if (input.fillSet.targetList === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      spellTargetListHole(input.input.state, input.actorId, input.invocation),
+    ]);
+  }
+  const validation = validateSpellTargetList(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+    input.fillSet.targetList.targetIds,
+    input.fillSet.targetList.spatialFacts,
+  );
+  if (validation !== null) {
+    return invalidResult(input.input.state, "invalidFill", validation);
+  }
+
+  const spellCastReactionWindow = maybeOpenReactionWindow(
+    input.input.state,
+    {
+      trigger: "spellCast",
+      casterId: input.actorId,
+      spellId: input.invocation.spell.id,
+      targetIds: input.fillSet.targetList.targetIds,
+      continuation: {
+        kind: "replay",
+        subject: input.input.subject,
+        fills: input.input.fills,
+      },
+    },
+    input.input.suppressedReactionTrigger,
+  );
+  if (spellCastReactionWindow !== null) {
+    return spellCastReactionWindow;
+  }
+
+  const effected = applyJumpMovementReplacementSpellEffect(
+    input.input.state,
+    input.actorId,
+    input.fillSet.targetList.targetIds,
+    input.invocation,
+  );
+  const spent = spendActivationResource(effected.currentTurnResources, {
+    kind: "bonusAction",
+  });
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.input.state,
+      "staleSubject",
+      "Bonus Action spell is no longer available for the current actor.",
+    );
+  }
+  const slotTurnResources = markSpellSlotExpendedThisTurn(spent.right);
+  if (Either.isLeft(slotTurnResources)) {
+    return invalidResult(
+      input.input.state,
+      "staleSubject",
+      "This turn has already expended a Spell Slot.",
+    );
+  }
+  const slotted = expendSpellSlot(
+    effected,
+    input.actorId,
+    input.invocation.resource.slotLevel,
+  );
+  const nextState = {
+    ...slotted,
+    currentTurnResources: slotTurnResources.right,
+  };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
 }
 
 export function resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct(input: {

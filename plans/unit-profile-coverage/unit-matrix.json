@@ -72,23 +72,23 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 44,
-      "numerator": 44,
+      "denominator": 45,
+      "numerator": 45,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 44,
-      "numerator": 42,
-      "percent": "95.5%"
+      "denominator": 45,
+      "numerator": 43,
+      "percent": "95.6%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 44,
-      "numerator": 44,
+      "denominator": 45,
+      "numerator": 45,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 44,
-      "numerator": 44,
+      "denominator": 45,
+      "numerator": 45,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -953,6 +953,33 @@
         "SRDINV49"
       ],
       "title": "Spell invocation immediately resolves Dash and grants Concentration-owned Bonus Action Dash",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-jump-movement-replacement",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+      ],
+      "sourceBoundary": "The runtime owns touched willing target admission, one-minute active effect duration, per-target-turn use reset, the 10-foot Movement spend for up to 30 feet of jump movement, and the Prone outcome for caller-supplied failed Difficult Terrain landing Acrobatics facts; path, jump arc, final-position derivation, landing legality derivation, and landing-check derivation remain caller-supplied facts.",
+      "taskRefs": [
+        "SRDINV53"
+      ],
+      "title": "Spell invocation grants once-per-target-turn jump movement replacement",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -2085,6 +2112,22 @@
         "spell.invocation-forced-reaction-movement"
       ],
       "taskId": "SRDINV52"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Jump target count scaling with willing target facts, one-minute active effect, once-per-target-turn use marker reset, exact 10-foot Movement spend, maximum 30-foot jump distance, caller-supplied landing legality, and failed Difficult Terrain landing Acrobatics applying Prone.",
+      "profileIds": [
+        "spell.invocation-jump-movement-replacement"
+      ],
+      "taskId": "SRDINV53"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Jump Bonus Action target-list casting, touched willing target facts, slot-scaled target count, active effect duration, once-per-target-turn use, reset on the next target turn, exact Movement spend, maximum jump distance, caller-supplied landing facts, and failed Difficult Terrain landing Acrobatics applying Prone.",
+      "profileIds": [
+        "spell.invocation-jump-movement-replacement"
+      ],
+      "taskId": "SRDINV53"
     }
   ],
   "units": [
@@ -5965,14 +6008,74 @@
         "status": "installed"
       },
       "claim": {
-        "reason": "Spell Definition is installed with typed touched willing target count, one-minute duration, and once-per-turn jump movement replacement facts; runtime movement execution, jump arc geometry, and landing checks are not promoted yet.",
-        "tag": "unsupported-profile"
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "SRDINV55",
+            "mechanic": "runtime-owned jump arc, pathfinding, collision, and final-position derivation"
+          },
+          {
+            "followUpTaskId": "SRDINV55",
+            "mechanic": "runtime-owned Difficult Terrain landing Acrobatics check derivation"
+          }
+        ],
+        "profileIds": [
+          "spell.invocation-jump-movement-replacement"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001",
+          "RAW-QCORE7-MOVEMENT-GRAPPLE-001"
+        ],
+        "supportedMechanics": [
+          "Bonus Action Spell Slot casting",
+          "touched willing creature targets",
+          "slot-scaled target count",
+          "one-minute spell-owned duration",
+          "once on each target turn use marker",
+          "10-foot Movement spend for up to 30 feet of jump movement",
+          "caller-supplied legal landing facts",
+          "Prone outcome for caller-supplied failed Difficult Terrain landing Acrobatics facts"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV53"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-jump-movement-replacement",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+          ],
+          "sourceBoundary": "The runtime owns touched willing target admission, one-minute active effect duration, per-target-turn use reset, the 10-foot Movement spend for up to 30 feet of jump movement, and the Prone outcome for caller-supplied failed Difficult Terrain landing Acrobatics facts; path, jump arc, final-position derivation, landing legality derivation, and landing-check derivation remain caller-supplied facts.",
+          "taskRefs": [
+            "SRDINV53"
+          ],
+          "title": "Spell invocation grants once-per-target-turn jump movement replacement",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/jump.json",
       "unitId": "jump"
     },

@@ -1009,6 +1009,20 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("jumpMovementReplacement"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      targeting: Schema.Struct({
+        kind: Schema.Literal("targetList"),
+        minTargets: Schema.Literal(1),
+        maxTargets: Schema.Number,
+      }),
+      activeEffect: BattleRuntimeObjectSchema,
+      rangeFeet: MovementFeet,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("persistentArmorEffect"),
       spell: BattleRuntimeObjectSchema,
       rangeFeet: MovementFeet,
@@ -1462,6 +1476,12 @@ type BattleFillEncoded =
             readonly spellId: string;
           }
         | {
+            readonly kind: "spellTargetKnownWilling";
+            readonly casterId: string;
+            readonly targetId: string;
+            readonly spellId: string;
+          }
+        | {
             readonly kind: "spellObjectTarget";
             readonly casterId: string;
             readonly objectId: string;
@@ -1604,6 +1624,12 @@ type BattleFillEncoded =
       readonly spatialFacts: readonly (
         | {
             readonly kind: "spellTarget";
+            readonly casterId: string;
+            readonly targetId: string;
+            readonly spellId: string;
+          }
+        | {
+            readonly kind: "spellTargetKnownWilling";
             readonly casterId: string;
             readonly targetId: string;
             readonly spellId: string;
@@ -1759,6 +1785,23 @@ type BattleFillEncoded =
           readonly reactorId: string;
           readonly attackName: string;
         }[];
+        readonly jumpMovementReplacement?: {
+          readonly kind: "jumpMovementReplacement";
+          readonly distanceFeet: number;
+          readonly landing:
+            | {
+                readonly kind: "legalLanding";
+                readonly difficultTerrainAcrobatics: "notRequired";
+              }
+            | {
+                readonly kind: "legalLanding";
+                readonly difficultTerrainAcrobatics: "passed";
+              }
+            | {
+                readonly kind: "legalLanding";
+                readonly difficultTerrainAcrobatics: "failed";
+              };
+        };
       };
     }
   | {
@@ -1809,6 +1852,12 @@ export const BattleFillSchema: Schema.Schema<
             }),
             Schema.Struct({
               kind: Schema.Literal("spellTarget"),
+              casterId: CombatantId,
+              targetId: CombatantId,
+              spellId: Schema.String,
+            }),
+            Schema.Struct({
+              kind: Schema.Literal("spellTargetKnownWilling"),
               casterId: CombatantId,
               targetId: CombatantId,
               spellId: Schema.String,
@@ -1953,6 +2002,12 @@ export const BattleFillSchema: Schema.Schema<
         Schema.Union(
           Schema.Struct({
             kind: Schema.Literal("spellTarget"),
+            casterId: CombatantId,
+            targetId: CombatantId,
+            spellId: Schema.String,
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("spellTargetKnownWilling"),
             casterId: CombatantId,
             targetId: CombatantId,
             spellId: Schema.String,
@@ -2132,6 +2187,27 @@ export const BattleFillSchema: Schema.Schema<
             reactorId: CombatantId,
             attackName: Schema.String,
           }),
+        ),
+        jumpMovementReplacement: Schema.optionalWith(
+          Schema.Struct({
+            kind: Schema.Literal("jumpMovementReplacement"),
+            distanceFeet: MovementFeet,
+            landing: Schema.Union(
+              Schema.Struct({
+                kind: Schema.Literal("legalLanding"),
+                difficultTerrainAcrobatics: Schema.Literal("notRequired"),
+              }),
+              Schema.Struct({
+                kind: Schema.Literal("legalLanding"),
+                difficultTerrainAcrobatics: Schema.Literal("passed"),
+              }),
+              Schema.Struct({
+                kind: Schema.Literal("legalLanding"),
+                difficultTerrainAcrobatics: Schema.Literal("failed"),
+              }),
+            ),
+          }),
+          { exact: true },
         ),
       }),
     }),

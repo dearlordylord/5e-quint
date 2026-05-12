@@ -326,6 +326,7 @@ export function spellFillSet(
         invocation.procedure !== "rollModifier" &&
         invocation.procedure !== "damageReduction" &&
         invocation.procedure !== "saveGatedCondition" &&
+        invocation.procedure !== "jumpMovementReplacement" &&
         invocation.procedure !==
           "conditionImmunityAndTurnStartTemporaryHitPoints"
       ) {

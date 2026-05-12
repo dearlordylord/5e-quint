@@ -56,7 +56,8 @@ export function isTargetListSpellInvocation(
     (invocation.procedure === "saveGatedCondition" &&
       invocation.targeting.kind === "targetList") ||
     invocation.procedure === "creatureTypeProtection" ||
-    invocation.procedure === "conditionImmunityAndTurnStartTemporaryHitPoints"
+    invocation.procedure === "conditionImmunityAndTurnStartTemporaryHitPoints" ||
+    invocation.procedure === "jumpMovementReplacement"
   );
 }
 

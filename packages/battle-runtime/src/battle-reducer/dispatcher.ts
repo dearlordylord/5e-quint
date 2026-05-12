@@ -203,6 +203,7 @@ import {
   resolveGrapple,
   resolveHelpAttack,
   resolveHide,
+  resolveJumpMovementReplacementCommand,
   resolveMoveCommand,
   resolveMultiattack,
   resolveOffHandAttack,
@@ -580,6 +581,12 @@ export function resolveBattleSubjectInternal(
     }
     if (subject.tag === "runtimeCommand" && subject.command === "move") {
       return resolveMoveCommand(input);
+    }
+    if (
+      subject.tag === "runtimeCommand" &&
+      subject.command === "jumpMovementReplacement"
+    ) {
+      return resolveJumpMovementReplacementCommand({ ...input, subject });
     }
     if (
       subject.tag === "runtimeCommand" &&

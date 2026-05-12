@@ -19212,7 +19212,8 @@ function subjectName(
   | "castTriggeredReactionSpell"
   | "castAttackHitBonusActionSpell"
   | "opportunityAttack"
-  | "greaseGroundHazardSave" {
+  | "greaseGroundHazardSave"
+  | "jumpMovementReplacement" {
   if (subject.tag === "action") {
     return subject.action;
   }

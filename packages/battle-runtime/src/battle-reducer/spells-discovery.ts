@@ -283,6 +283,24 @@ export function discoverSupportedSpellInvocations(
           initialHoles: [],
         }));
       }
+      if (invocation.procedure === "jumpMovementReplacement") {
+        const targetHole = spellTargetListHole(state, actorId, invocation);
+        return targetHole.choices.length === 0
+          ? []
+          : [
+              {
+                subject: {
+                  tag: "bonusActionSpell" as const,
+                  actorId,
+                  invocation: supportedSpellInvocationRef(invocation),
+                  mode: { tag: "cast" as const },
+                },
+                label: invocation.spell.name,
+                summary: spellInvocationCastSummary(invocation),
+                initialHoles: [targetHole],
+              },
+            ];
+      }
       if (invocation.procedure === "chainedSpellAttackDamage") {
         const castActs = [
           {
@@ -529,6 +547,9 @@ export function spellInvocationCastSummary(
   if (invocation.procedure === "expeditiousRetreatDash") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot, immediately Dash, and keep Dash available as a Bonus Action while Concentration lasts.`;
   }
+  if (invocation.procedure === "jumpMovementReplacement") {
+    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+  }
   if (invocation.procedure === "persistentArmorEffect") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
@@ -560,7 +581,8 @@ export function spellActivationInvocationCastSummary(
         | "saveGatedCondition"
         | "saveGatedAttackRollAdvantage"
         | "sleepTargetAdmission"
-        | "greaseGroundHazard";
+        | "greaseGroundHazard"
+        | "jumpMovementReplacement";
     }
   >,
 ): string {
@@ -588,6 +610,9 @@ export function spellSubjectTagForInvocation(
     return "bonusActionSpell";
   }
   if (invocation.procedure === "weaponDamageRider") {
+    return "bonusActionSpell";
+  }
+  if (invocation.procedure === "jumpMovementReplacement") {
     return "bonusActionSpell";
   }
   if (
@@ -649,6 +674,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "afterHitTimedDamageAndSave" &&
     invocation.procedure !== "markedDamageRider" &&
     invocation.procedure !== "expeditiousRetreatDash" &&
+    invocation.procedure !== "jumpMovementReplacement" &&
     invocation.procedure !== "saveGatedCondition" &&
     invocation.procedure !== "saveGatedAttackRollAdvantage" &&
     invocation.procedure !== "sleepTargetAdmission" &&
@@ -672,6 +698,7 @@ export function readiedSpellAct(
     invocation.procedure === "weaponDamageRider" ||
     invocation.procedure === "markedDamageRider" ||
     invocation.procedure === "expeditiousRetreatDash" ||
+    invocation.procedure === "jumpMovementReplacement" ||
     invocation.procedure === "afterHitDamage" ||
     invocation.procedure === "spellAttackBeamSequence" ||
     invocation.procedure === "afterHitSaveGatedCondition" ||

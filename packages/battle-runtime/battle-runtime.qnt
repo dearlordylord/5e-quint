@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points
@@ -14,6 +14,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-grease-ground-hazard
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-expeditious-retreat-dash
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-forced-reaction-movement
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-jump-movement-replacement
 module battleRuntime {
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
@@ -271,12 +272,13 @@ module battleRuntime {
     | TargetListSaveTargets({ minTargets: int, baseSlotLevel: int, baseTargets: int, additionalTargetsPerSlotLevel: int })
   type SaveGatedDamageSuccess = NoDamageOnSaveSuccess | HalfDamageOnSaveSuccess
   type MovementSpeedKind = WalkSpeedKind | ClimbSpeedKind | SwimSpeedKind
+  type JumpMovementLandingFact = JumpLegalLandingNoCheck | JumpLegalLandingAcrobaticsPassed | JumpLegalLandingAcrobaticsFailed | JumpIllegalLanding
   type DirectHitPointRestorationSpell = HealingWordRestoration | CureWoundsRestoration | MassHealingWordRestoration
   type ScalarBuffSpell = FalseLifeScalarBuff | LongstriderScalarBuff | ShieldOfFaithScalarBuff
   type RollModifierSpell = BaneRollModifier | BlessRollModifier | GuidanceRollModifier
   type SpellActionCost = SpellMagicAction | SpellBonusAction
 
-  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireAttackRollAdvantage | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodAttackDisadvantage | ProduceFlameHeldLight({ durationTicks: int }) | ExpeditiousRetreatDashBonusAction | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | GreaseGroundHazard({ areaId: int, durationTicks: int })
+  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireAttackRollAdvantage | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodAttackDisadvantage | ProduceFlameHeldLight({ durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | GreaseGroundHazard({ areaId: int, durationTicks: int })
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
   type RuntimeCreatureType = HumanoidCreature | BeastCreature | AberrationCreature | CelestialCreature | ElementalCreature | FeyCreature | FiendCreature | UndeadCreature
   type ObjectTarget =
@@ -826,6 +828,10 @@ module battleRuntime {
           ...data,
           usedThisTurn: battleRuntimeOncePerTurnSpellEffectUsedAtTurnStart,
         })
+      | JumpMovementReplacement(data) => JumpMovementReplacement({
+          ...data,
+          usedThisTurn: battleRuntimeOncePerTurnSpellEffectUsedAtTurnStart,
+        })
       | _ => effect
     })
 
@@ -885,6 +891,10 @@ module battleRuntime {
         | ProduceFlameHeldLight(data) => ProduceFlameHeldLight({
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
+        | JumpMovementReplacement(data) => JumpMovementReplacement({
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+            usedThisTurn: data.usedThisTurn,
+          })
         | GreaseGroundHazard(data) => GreaseGroundHazard({
             areaId: data.areaId,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
@@ -898,6 +908,7 @@ module battleRuntime {
         | AnimalFriendshipCharmed(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | CharmPersonCharmed(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | ProduceFlameHeldLight(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | JumpMovementReplacement(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | GreaseGroundHazard(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | _ => true
       })
@@ -987,6 +998,7 @@ module battleRuntime {
         | ProtectionFromEvilAndGoodAttackDisadvantage => false
         | ProduceFlameHeldLight(_) => false
         | ExpeditiousRetreatDashBonusAction => false
+        | JumpMovementReplacement(_) => false
         | SleepPendingRepeatSave(_) => false
         | SleepUnconscious(_) => false
         | GreaseGroundHazard(_) => false
@@ -2430,6 +2442,88 @@ module battleRuntime {
 
   pure def activeEffectsContainExpeditiousRetreatDashBonusAction(effects: Set[ActiveEffect]): bool =
     effects.contains(ExpeditiousRetreatDashBonusAction)
+
+  pure def jumpMovementReplacementMaxTargets(slotLevel: int): int =
+    if (slotLevel < 1) 0 else slotLevel
+
+  pure def jumpMovementReplacementActiveEffect(): ActiveEffect =
+    JumpMovementReplacement({ durationTicks: 10, usedThisTurn: false })
+
+  pure def jumpMovementReplacementLandingIsLegal(landing: JumpMovementLandingFact): bool =
+    landing != JumpIllegalLanding
+
+  pure def jumpMovementReplacementLandingAppliesProne(landing: JumpMovementLandingFact): bool =
+    landing == JumpLegalLandingAcrobaticsFailed
+
+  pure def resolveJumpMovementReplacementSpell(state: BattleState, targets: Set[Actor], willingTargets: Set[Actor], slotLevel: int): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      state.bonusActionAvailable and
+      canExpendSpellSlotThisTurn(state) and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state)) and
+      targets.size() >= 1 and
+      targets.forall(target => willingTargets.contains(target)) and
+      targets.size() <= jumpMovementReplacementMaxTargets(slotLevel)
+    ) {
+      val effect = jumpMovementReplacementActiveEffect
+      {
+        ...state,
+        fighter: if (targets.contains(Fighter))
+          { ...state.fighter, activeEffects: state.fighter.activeEffects.union(Set(effect)) }
+        else
+          state.fighter,
+        goblin: if (targets.contains(Goblin))
+          { ...state.goblin, activeEffects: state.goblin.activeEffects.union(Set(effect)) }
+        else
+          state.goblin,
+        bonusActionAvailable: false,
+        spellSlotExpendedThisTurn: true,
+      }
+    } else {
+      state
+    }
+
+  pure def activeEffectsContainAvailableJumpMovementReplacement(effects: Set[ActiveEffect]): bool =
+    effects.exists(effect => match effect {
+      | JumpMovementReplacement(data) => not(data.usedThisTurn)
+      | _ => false
+    })
+
+  pure def activeEffectsAfterJumpMovementReplacementUse(effects: Set[ActiveEffect]): Set[ActiveEffect] =
+    effects.map(effect => match effect {
+      | JumpMovementReplacement(data) => JumpMovementReplacement({ ...data, usedThisTurn: true })
+      | _ => effect
+    })
+
+  pure def jumpMovementReplacementFighter(
+    state: BattleState,
+    movementCost: int,
+    jumpDistance: int,
+    landing: JumpMovementLandingFact
+  ): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      movementCost == 10 and
+      jumpDistance > 0 and
+      jumpDistance <= 30 and
+      jumpMovementReplacementLandingIsLegal(landing) and
+      activeEffectsContainAvailableJumpMovementReplacement(state.fighter.activeEffects) and
+      fighterCanMoveWithSpeedKind(state, WalkSpeedKind, movementCost)
+    ) {
+      val moved = applyFighterMovementWithSpeedKind(state, WalkSpeedKind, movementCost)
+      {
+        ...moved,
+        fighter: {
+          ...moved.fighter,
+          activeEffects: activeEffectsAfterJumpMovementReplacementUse(moved.fighter.activeEffects),
+          prone: moved.fighter.prone or jumpMovementReplacementLandingAppliesProne(landing),
+        },
+      }
+    } else {
+      state
+    }
 
   pure def resolveExpeditiousRetreatDash(state: BattleState, speedKind: MovementSpeedKind): BattleState =
     if (
@@ -5770,6 +5864,9 @@ module battleRuntime {
       assert(magicMissileDartCount(2) == 4),
       assert(magicMissileAllocatedDamage(3, 3, 1) == 6),
       assert(magicMissileAllocatedDamage(4, 1, 1) == 5),
+      assert(jumpMovementReplacementMaxTargets(1) == 1),
+      assert(jumpMovementReplacementMaxTargets(2) == 2),
+      assert(jumpMovementReplacementActiveEffect == JumpMovementReplacement({ durationTicks: 10, usedThisTurn: false })),
       assert(rayOfFrostSpeedEffectActive(true, Goblin, Fighter)),
       assert(not(rayOfFrostSpeedEffectActive(true, Fighter, Fighter))),
       assert(spellAttackDamageType(PoisonSpraySpellAttack) == Poison),
@@ -6912,6 +7009,52 @@ module battleRuntime {
       assert(not(broken.fighter.concentrating)),
       assert(not(broken.fighter.activeEffects.contains(ExpeditiousRetreatDashBonusAction))),
       assert(attempted == nextFighterTurn),
+    }
+  }
+
+  run test_jump_movement_replacement_cast_targets_and_slot_scaling = {
+    val firstSlot = resolveJumpMovementReplacementSpell(initialState, Set(Fighter), Set(Fighter), 1)
+    val secondSlot = resolveJumpMovementReplacementSpell(initialState, Set(Fighter, Goblin), Set(Fighter, Goblin), 2)
+    val unwillingTarget = resolveJumpMovementReplacementSpell(initialState, Set(Fighter, Goblin), Set(Fighter), 2)
+    val tooMany = resolveJumpMovementReplacementSpell(initialState, Set(Fighter, Goblin), Set(Fighter, Goblin), 1)
+    all {
+      assert(not(firstSlot.bonusActionAvailable)),
+      assert(firstSlot.spellSlotExpendedThisTurn),
+      assert(firstSlot.fighter.activeEffects.contains(JumpMovementReplacement({ durationTicks: 10, usedThisTurn: false }))),
+      assert(secondSlot.fighter.activeEffects.contains(JumpMovementReplacement({ durationTicks: 10, usedThisTurn: false }))),
+      assert(secondSlot.goblin.activeEffects.contains(JumpMovementReplacement({ durationTicks: 10, usedThisTurn: false }))),
+      assert(unwillingTarget == initialState),
+      assert(tooMany == initialState),
+    }
+  }
+
+  run test_jump_movement_replacement_spends_ten_movement_once_per_target_turn = {
+    val cast = resolveJumpMovementReplacementSpell(initialState, Set(Fighter), Set(Fighter), 1)
+    val jumped = jumpMovementReplacementFighter(cast, 10, 30, JumpLegalLandingNoCheck)
+    val secondSameTurn = jumpMovementReplacementFighter(jumped, 10, 30, JumpLegalLandingNoCheck)
+    val nextFighterTurn = endTurn(endTurn(jumped))
+    val nextTurnJumped = jumpMovementReplacementFighter(nextFighterTurn, 10, 30, JumpLegalLandingNoCheck)
+    all {
+      assert(jumped.fighter.movementSpent == 10),
+      assert(jumped.fighter.activeEffects.contains(JumpMovementReplacement({ durationTicks: 10, usedThisTurn: true }))),
+      assert(secondSameTurn == jumped),
+      assert(nextFighterTurn.fighter.activeEffects.contains(JumpMovementReplacement({ durationTicks: 9, usedThisTurn: false }))),
+      assert(nextTurnJumped.fighter.movementSpent == 10),
+      assert(nextTurnJumped.fighter.activeEffects.contains(JumpMovementReplacement({ durationTicks: 9, usedThisTurn: true }))),
+    }
+  }
+
+  run test_jump_movement_replacement_rejects_invalid_distance_cost_and_landing = {
+    val cast = resolveJumpMovementReplacementSpell(initialState, Set(Fighter), Set(Fighter), 1)
+    val tooCheap = jumpMovementReplacementFighter(cast, 5, 30, JumpLegalLandingAcrobaticsPassed)
+    val tooFar = jumpMovementReplacementFighter(cast, 10, 35, JumpLegalLandingAcrobaticsPassed)
+    val illegalLanding = jumpMovementReplacementFighter(cast, 10, 30, JumpIllegalLanding)
+    val failedLanding = jumpMovementReplacementFighter(cast, 10, 30, JumpLegalLandingAcrobaticsFailed)
+    all {
+      assert(tooCheap == cast),
+      assert(tooFar == cast),
+      assert(illegalLanding == cast),
+      assert(failedLanding.fighter.prone),
     }
   }
 

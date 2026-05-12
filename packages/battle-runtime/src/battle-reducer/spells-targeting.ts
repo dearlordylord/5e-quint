@@ -385,6 +385,18 @@ export function validateSpellTargetList(
     ) {
       return "Spell targets must be combatants within the selected spell's supported range.";
     }
+    if (
+      invocation.procedure === "jumpMovementReplacement" &&
+      !facts.some(
+        (fact) =>
+          fact.kind === "spellTargetKnownWilling" &&
+          fact.casterId === actorId &&
+          fact.targetId === targetId &&
+          fact.spellId === invocation.spell.id,
+      )
+    ) {
+      return "Jump targets must be known willing combatants.";
+    }
   }
   if (
     invocation.procedure === "directHitPointRestoration" &&

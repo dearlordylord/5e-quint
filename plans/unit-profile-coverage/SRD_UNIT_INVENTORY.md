@@ -32,8 +32,8 @@ This is a Unit/catalog backlog denominator, not RAW span coverage and not an MBT
 
 ### Spell Unit Pressure by Disposition
 
-- catalog-installed-owner-evidence-present: 105
-- catalog-installed-owner-evidence-required: 11
+- catalog-installed-owner-evidence-present: 109
+- catalog-installed-owner-evidence-required: 7
 - catalog-only/dead-for-now: 80
 - needs-surface-widening: 15
 
@@ -118,7 +118,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |SRDINV50|done|3|Split Command's named next-turn option execution into implementable runtime slices before claiming support.|Design the failed-save next-turn command effect, per-option execution boundaries, turn-ending clauses, held-item drop fact, and caller-supplied route facts for Approach and Flee.|Command is either split into Ralph-sized executable option tasks or has a precise runtime support contract that keeps route/pathfinding ownership table-supplied.|
 |SRDINV51|done|4|Promote Thunderwave's failed-save creature push and object/noise outcomes without runtime-owned geometry derivation.|Model Constitution save damage, caller-supplied legal pushed positions or blocked-push outcomes, unsecured-object push disposition, audible-boom event evidence, and slot scaling.|Thunderwave has promoted runtime evidence for damage plus push/noise outcomes, and any push geometry remains caller/table-authored rather than stored as duplicate runtime spatial state.|
 |SRDINV52|done|1|Promote Dissonant Whispers' failed-save forced Reaction movement using the movement budget boundary from SRDINV49.|Model Wisdom save damage, failed-save Reaction availability and spend, caller-supplied safest-route movement result, no-Reaction fallback, and Opportunity Attack eligibility from Reaction-based movement.|Dissonant Whispers has promoted runtime evidence for forced Reaction movement without deriving safest routes or pathfinding inside battle runtime.|
-|SRDINV53|ready-for-implementation-after-light-research|4|Promote Jump's once-per-turn movement replacement over the movement budget boundary from SRDINV49.|Model touched willing targets, spell-owned duration, once-per-target-turn use marker, 10-foot Movement spend for up to 30 feet of jump movement, caller-supplied landing facts, and slot-scaled target count.|Jump has promoted runtime evidence for its movement-spend replacement while jump arc geometry, landing legality, and Difficult Terrain checks remain caller-supplied facts.|
+|SRDINV53|done|4|Promote Jump's once-per-turn movement replacement over the movement budget boundary from SRDINV49.|Model touched willing targets, spell-owned duration, once-per-target-turn use marker, 10-foot Movement spend for up to 30 feet of jump movement, caller-supplied landing facts, and slot-scaled target count.|Jump has promoted runtime evidence for its movement-spend replacement while jump arc geometry, landing legality, and Difficult Terrain checks remain caller-supplied facts.|
 |SRDINV54|ready-for-research|3|Research the smallest executable falling boundary before promoting Feather Fall's Reaction mitigation.|Design falling-trigger discovery, up-to-five falling target admission, descent-rate cap, fall-damage prevention, per-target landing cleanup, and interaction with Falling hazard damage and Prone clauses.|Feather Fall is either split into implementable runtime slices with table-supplied fall/landing facts or has promoted evidence for the full falling mitigation lifecycle.|
 |SRDINV55|blocked|211|Review the movement/action runtime batch before selecting the next spell Surface or runtime frontier.|Refresh spell Unit metrics after SRDINV49-SRDINV54, inspect remaining owner-evidence-required and Surface-widening rows, and append the next concrete batch by execution invariant.|The review records refreshed metrics and appends Ralph-sized follow-up work rather than collapsing remaining spell pressure into one backlog.|
 

@@ -42,6 +42,7 @@ export const BATTLE_RUNTIME_COMMANDS = [
   "releaseGrapple",
   "opportunityAttack",
   "greaseGroundHazardSave",
+  "jumpMovementReplacement",
 ] as const;
 export type BattleRuntimeCommand = (typeof BATTLE_RUNTIME_COMMANDS)[number];
 export const BATTLE_MOVEMENT_SPEED_KINDS = ["walk", "climb", "swim"] as const;
@@ -88,6 +89,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "afterHitTimedDamageAndSave",
   "markedDamageRider",
   "expeditiousRetreatDash",
+  "jumpMovementReplacement",
   "persistentArmorEffect",
   "shieldReaction",
 ] as const;
@@ -388,6 +390,13 @@ export const BattleSubjectSchema = Schema.Union(
     sourceSpellId: SpellId,
     areaId: BattleSubjectTextSchema,
     trigger: Schema.Literal("entersArea", "endsTurnInArea"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("jumpMovementReplacement"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
   }),
 );
 export type BattleSubject = typeof BattleSubjectSchema.Type;

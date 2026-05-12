@@ -149,6 +149,7 @@ export {
   resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
   resolveCreatureTypeProtectionSpellAct,
   resolveDamageReductionSpellAct,
+  resolveJumpMovementReplacementSpellAct,
   resolvePreparedHealingSpellAct,
   resolveRollModifierSpellAct,
   resolveScalarBuffSpellAct,
@@ -174,6 +175,7 @@ import {
   resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
   resolveCreatureTypeProtectionSpellAct,
   resolveDamageReductionSpellAct,
+  resolveJumpMovementReplacementSpellAct,
   resolvePreparedHealingSpellAct,
   resolveRollModifierSpellAct,
   resolveScalarBuffSpellAct,
@@ -1151,6 +1153,14 @@ export function resolveBonusActionSpellAct(
         "Bonus Action spell subject requires a supported Bonus Action spell act.",
       );
     }
+  } else if (invocation.procedure === "jumpMovementReplacement") {
+    if (invocation.actionCost !== "bonusAction") {
+      return invalidResult(
+        input.state,
+        "unsupportedSubject",
+        "Bonus Action spell subject requires a supported Bonus Action spell act.",
+      );
+    }
   } else if (
     invocation.procedure !== "directHitPointRestoration" ||
     invocation.actionCost !== "bonusAction"
@@ -1223,6 +1233,14 @@ export function resolveBonusActionSpellAct(
   }
   if (invocation.procedure === "markedDamageRider") {
     return resolveMarkedDamageRiderSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "jumpMovementReplacement") {
+    return resolveJumpMovementReplacementSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

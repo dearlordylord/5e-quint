@@ -76,6 +76,14 @@ export function supportedSpellInvocationRef(
       procedure: "expeditiousRetreatDash",
     };
   }
+  if (invocation.procedure === "jumpMovementReplacement") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "jumpMovementReplacement",
+    };
+  }
   return Match.value(invocation).pipe(
     Match.when({ procedure: "heldLight" }, (cantrip) => ({
       tag: "cantrip" as const,

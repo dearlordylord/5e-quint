@@ -226,7 +226,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 246,
       "id": "SRDINV53",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Jump Movement Replacement Runtime"
     },
     {
@@ -330,7 +330,7 @@ Keep it synchronized with the DAG table and task details.
 | 243   | SRDINV50 - Research Command Option Runtime Split | done | SRDINV48 | SRDINV50A-SRDINV50D, SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Command runtime must split into shared invocation/Grovel, Halt action suppression, Drop held-object boundary, and Approach/Flee route boundary tasks before support can be claimed. |
 | 244   | SRDINV51 - Promote Thunderwave Push Runtime Boundary | done | SRDINV48 | SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Thunderwave](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Cube](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote save damage plus caller-supplied creature push, unsecured-object push disposition, and audible-boom evidence without deriving push geometry inside battle runtime. |
 | 245   | SRDINV52 - Promote Dissonant Whispers Forced Reaction Movement Runtime | done | SRDINV49 | SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Dissonant Whispers](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Reaction](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [Opportunity Attacks](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Dissonant Whispers is promoted as Wisdom save Psychic damage with half damage on success, target Reaction spend on failed saves when available, caller-supplied safest-route movement, no-Reaction/no-movement fallbacks, and table-supplied Opportunity Attack windows from Reaction movement. |
-| 246   | SRDINV53 - Promote Jump Movement Replacement Runtime | ready-for-implementation-after-light-research | SRDINV49 | SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Jump](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Jumping](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | After SRDINV49 establishes the movement budget boundary, promote Jump's once-per-target-turn 10-foot Movement spend for up to 30 feet of jump movement with caller-supplied landing facts. |
+| 246   | SRDINV53 - Promote Jump Movement Replacement Runtime | done | SRDINV49 | SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Jump](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Jumping](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Jump is promoted as a Bonus Action Spell Slot invocation with touched willing creature targets, slot-scaled target count, one-minute spell-owned duration, once-per-target-turn use, exact 10-foot Movement spend for up to 30 feet of jump movement, caller-supplied legal landing facts, and Prone application for caller-supplied failed Difficult Terrain landing Acrobatics facts. |
 | 247   | SRDINV54 - Research Feather Fall Falling Runtime Boundary | ready-for-research | SRDINV48 | SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Feather Fall](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Falling](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Research the smallest executable falling-trigger, descent-rate, fall-damage prevention, and per-target landing cleanup boundary before runtime promotion. |
 | 248   | SRDINV55 - Recursive SRD Inventory Planning Review | blocked | SRDINV49-SRDINV54, SRDINV50A-SRDINV50D | none | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Review SRDINV49-SRDINV54 plus the split Command runtime tasks, refresh spell Unit metrics, and append the next concrete spell Surface or runtime batch. |
 | 249   | SRDINV50A - Promote Command Invocation and Grovel Runtime | ready-for-implementation-after-light-research | SRDINV50 | SRDINV50B-SRDINV50D, SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote the shared Command invocation and pending next-turn effect with the Grovel option only: failed-save Prone plus end-turn cleanup. |
@@ -1232,7 +1232,7 @@ were updated before runtime support was claimed.
 
 ### Task 246 - SRDINV53 - Promote Jump Movement Replacement Runtime
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: SRDINV49
 
@@ -1260,6 +1260,15 @@ targeting, duration, slot scaling, once-per-turn use, Movement spend, and
 caller-supplied landing facts; package-local Quint updates before runtime
 divergence; `pnpm unit-profile-coverage:check --write` if evidence changes;
 `pnpm quality`; MBT only if integrated movement sequencing changes require it.
+
+Completed: Jump is promoted as a Bonus Action Spell Slot invocation with
+touched willing creature targets, slot-scaled target count, one-minute
+spell-owned duration, once-per-target-turn use reset, exact 10-foot Movement
+spend for up to 30 feet of jump movement, caller-supplied legal landing facts,
+and Prone application for caller-supplied failed Difficult Terrain landing
+Acrobatics facts. Runtime-owned jump arc, pathfinding, collision,
+final-position derivation, and Difficult Terrain landing check derivation remain
+owned by SRDINV55.
 
 ### Task 247 - SRDINV54 - Research Feather Fall Falling Runtime Boundary
 
