@@ -3023,7 +3023,7 @@
     {
       "id": "SRDINV54",
       "title": "Research Feather Fall Falling Runtime Boundary",
-      "suggestedStatus": "ready-for-research",
+      "suggestedStatus": "done",
       "intent": "Research the smallest executable falling boundary before promoting Feather Fall's Reaction mitigation.",
       "rowCount": 3,
       "rowIds": [
@@ -3031,8 +3031,8 @@
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_feather_fall",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_feather_fall"
       ],
-      "nextAction": "Design falling-trigger discovery, up-to-five falling target admission, descent-rate cap, fall-damage prevention, per-target landing cleanup, and interaction with Falling hazard damage and Prone clauses.",
-      "acceptance": "Feather Fall is either split into implementable runtime slices with table-supplied fall/landing facts or has promoted evidence for the full falling mitigation lifecycle."
+      "nextAction": "Completed: use table-supplied fall-start and landing facts for a focused Feather Fall runtime slice covering falling-trigger discovery, up-to-five falling target admission, descent-rate cap projection, fall-damage prevention, per-target landing cleanup, and Falling-Prone suppression.",
+      "acceptance": "Feather Fall does not need a generic falling hazard simulator before promotion; fall distance, map elevation, and landing geometry remain caller/table-owned."
     },
     {
       "id": "SRDINV55",

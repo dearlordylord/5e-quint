@@ -2983,14 +2983,14 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
     makeBatch({
       id: "SRDINV54",
       title: "Research Feather Fall Falling Runtime Boundary",
-      suggestedStatus: "blocked-on-SRDINV48",
+      suggestedStatus: "done",
       intent:
         "Research the smallest executable falling boundary before promoting Feather Fall's Reaction mitigation.",
       rows: srdinv54FeatherFallRuntimeRows,
       nextAction:
-        "Design falling-trigger discovery, up-to-five falling target admission, descent-rate cap, fall-damage prevention, per-target landing cleanup, and interaction with Falling hazard damage and Prone clauses.",
+        "Completed: use table-supplied fall-start and landing facts for a focused Feather Fall runtime slice covering falling-trigger discovery, up-to-five falling target admission, descent-rate cap projection, fall-damage prevention, per-target landing cleanup, and Falling-Prone suppression.",
       acceptance:
-        "Feather Fall is either split into implementable runtime slices with table-supplied fall/landing facts or has promoted evidence for the full falling mitigation lifecycle.",
+        "Feather Fall does not need a generic falling hazard simulator before promotion; fall distance, map elevation, and landing geometry remain caller/table-owned.",
     }),
     makeBatch({
       id: "SRDINV55",

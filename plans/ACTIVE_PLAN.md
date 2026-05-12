@@ -232,7 +232,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 247,
       "id": "SRDINV54",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Research Feather Fall Falling Runtime Boundary"
     },
     {
@@ -331,8 +331,8 @@ Keep it synchronized with the DAG table and task details.
 | 244   | SRDINV51 - Promote Thunderwave Push Runtime Boundary | done | SRDINV48 | SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Thunderwave](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Cube](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote save damage plus caller-supplied creature push, unsecured-object push disposition, and audible-boom evidence without deriving push geometry inside battle runtime. |
 | 245   | SRDINV52 - Promote Dissonant Whispers Forced Reaction Movement Runtime | done | SRDINV49 | SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Dissonant Whispers](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Reaction](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [Opportunity Attacks](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Dissonant Whispers is promoted as Wisdom save Psychic damage with half damage on success, target Reaction spend on failed saves when available, caller-supplied safest-route movement, no-Reaction/no-movement fallbacks, and table-supplied Opportunity Attack windows from Reaction movement. |
 | 246   | SRDINV53 - Promote Jump Movement Replacement Runtime | done | SRDINV49 | SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Jump](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Jumping](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Jump is promoted as a Bonus Action Spell Slot invocation with touched willing creature targets, slot-scaled target count, one-minute spell-owned duration, once-per-target-turn use, exact 10-foot Movement spend for up to 30 feet of jump movement, caller-supplied legal landing facts, and Prone application for caller-supplied failed Difficult Terrain landing Acrobatics facts. |
-| 247   | SRDINV54 - Research Feather Fall Falling Runtime Boundary | ready-for-research | SRDINV48 | SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Feather Fall](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Falling](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Research the smallest executable falling-trigger, descent-rate, fall-damage prevention, and per-target landing cleanup boundary before runtime promotion. |
-| 248   | SRDINV55 - Recursive SRD Inventory Planning Review | blocked | SRDINV49-SRDINV54, SRDINV50A-SRDINV50D | none | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Review SRDINV49-SRDINV54 plus the split Command runtime tasks, refresh spell Unit metrics, and append the next concrete spell Surface or runtime batch. |
+| 247   | SRDINV54 - Research Feather Fall Falling Runtime Boundary | done | SRDINV48 | SRDINV55 | [SRDINV54 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md), [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Feather Fall](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Falling](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: table-supplied fall-start and landing facts are enough for a focused Feather Fall runtime slice; generic falling simulation, fall-distance derivation, and map elevation are not prerequisites. |
+| 248   | SRDINV55 - Recursive SRD Inventory Planning Review | blocked | SRDINV49-SRDINV54, SRDINV50A-SRDINV50D | none | [SRDINV54 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md), [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Review SRDINV49-SRDINV54 plus the split Command runtime tasks, refresh spell Unit metrics, and append the next concrete spell Surface or runtime batch. |
 | 249   | SRDINV50A - Promote Command Invocation and Grovel Runtime | ready-for-implementation-after-light-research | SRDINV50 | SRDINV50B-SRDINV50D, SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote the shared Command invocation and pending next-turn effect with the Grovel option only: failed-save Prone plus end-turn cleanup. |
 | 250   | SRDINV50B - Promote Command Halt Runtime | blocked | SRDINV50A | SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Halt as target-turn Movement, Action, and Bonus Action suppression over the Command pending-effect shell after SRDINV50A lands. |
 | 251   | SRDINV50C - Promote Command Drop Held-Object Boundary | blocked | SRDINV50A | SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Drop as a caller-supplied held-object disposition boundary after SRDINV50A lands, then end the target's turn without adding duplicate inventory state. |
@@ -1272,13 +1272,14 @@ owned by SRDINV55.
 
 ### Task 247 - SRDINV54 - Research Feather Fall Falling Runtime Boundary
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV48
 
 Blocks: SRDINV55
 
 Research / plan:
+[SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md),
 [SRDINV48_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md),
 [Feather Fall](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
 [Falling](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
@@ -1300,6 +1301,13 @@ Reaction, Spell Invocation, Spell Effect, Falling, Movement, and Prone;
 active-plan consistency if follow-up tasks are appended or revised; no MBT
 unless behavior is implemented.
 
+Completed: Feather Fall can be promoted from table-supplied fall-start and
+landing facts. The future runtime slice should own falling-trigger Reaction
+invocation, up-to-five falling target admission, per-target timed mitigation
+effects, active descent-cap projection, and landing cleanup that prevents both
+fall damage and the Falling hazard's Prone outcome. Generic falling hazard
+simulation, fall-distance derivation, and map elevation remain out of scope.
+
 ### Task 248 - SRDINV55 - Recursive SRD Inventory Planning Review
 
 Status: `blocked`
@@ -1309,6 +1317,7 @@ Depends on: SRDINV49-SRDINV54, SRDINV50A-SRDINV50D
 Blocks: none
 
 Research / plan:
+[SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md),
 [SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md),
 [SRDINV48_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md),
 [SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
