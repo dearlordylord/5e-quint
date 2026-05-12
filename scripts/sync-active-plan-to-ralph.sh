@@ -9,7 +9,7 @@ Usage:
 Behavior:
   - Copies the source ACTIVE_PLAN.md into the active Ralph launcher worktree.
   - Commits the synced plan on the launcher's current branch.
-  - Auto-detects the launcher worktree from a live `scripts/ralph-dual-run.sh` process when --target is omitted.
+  - Auto-detects the launcher worktree from a live `scripts/ralph-run.sh` process when --target is omitted.
 
 Notes:
   - This script syncs the live Ralph branch only. Commit the source plan on master first if
@@ -56,7 +56,7 @@ fi
 detect_target_worktree() {
   local -a pids=()
   local pid cwd
-  mapfile -t pids < <(ps -eo pid=,args= | awk '/scripts\/ralph-dual-run\.sh/ && $0 !~ /awk/ {print $1}')
+  mapfile -t pids < <(ps -eo pid=,args= | awk '/scripts\/ralph-run\.sh/ && $0 !~ /awk/ {print $1}')
   if [[ ${#pids[@]} -eq 0 ]]; then
     echo "No live Ralph harness process found; pass --target explicitly." >&2
     return 1

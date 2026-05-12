@@ -3,16 +3,15 @@ set -Eeuo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: scripts/ralph-dual-run.sh <plan.md> [options]
+Usage: scripts/ralph-run.sh <plan.md> [options]
 
 Runs a Ralph-style fresh-context loop:
   1. Parse the plan's ralph-task-index and matching ### Task N sections.
   2. Create an integration branch from the current base HEAD, unless --commit-to-base is set.
   3. Refresh the live plan snapshot every iteration.
-  4. Ask Codex to choose the next runnable task from the refreshed plan.
+  4. Choose the next runnable task from the refreshed plan.
   5. For the chosen task, create disposable worktree(s) from the current integration HEAD.
-  6. By default, run Claude and Codex implementers in parallel, then parallel reviews, then a Codex decider.
-     With --codex-only or --claude-only, run only one implementer pipeline and let the Codex decider act as the gatekeeper.
+  6. Run one implementation pipeline, review it immediately, and hand it back until review accepts.
   7. Let the decider either land the task or explicitly reject/update the plan.
   8. Keep looping until the chooser reports there is no next meaningful runnable task.
 
@@ -32,15 +31,11 @@ Options:
   --task <n>              Run only Task n. May be repeated; tasks run in
                           the order provided.
   --keep-worktrees        Leave temporary worktrees in place.
-  --codex-only            Run only the Codex implementer path; skip Claude
-                          implementation and review.
-  --claude-only           Run only the Claude implementer path; skip Codex
-                          implementation and review.
   --codex-model <model>   Model passed to codex exec --model. Overrides
                           RALPH_CODEX_MODEL.
   --implementation-runner <codex|opencode>
-                          Runner for the Codex implementer path only.
-                          Reviews, chooser, and decider always use Codex.
+                          Runner for the implementer.
+                          Reviews, optional model chooser, and decider use Codex.
                           Default: codex
   --opencode-model <model>
                           Model passed to opencode run --model when
@@ -60,20 +55,22 @@ Options:
                           Wall-clock timeout for each OpenCode implementer
                           round. Overrides RALPH_OPENCODE_TIMEOUT_SECONDS.
                           Default: 600
+  --implementation-round-limit <n>
+                          Safety cap for implement/review convergence rounds.
+                          0 means no harness cap. Default: 0
+  --model-chooser        Use Codex to choose among multiple runnable tasks.
+                          Default is deterministic first-runnable selection.
   --skip-decider          Stop each task after implementation and review.
   -h, --help              Show this help.
 
 Environment:
-  RALPH_CLAUDE_MODEL      Optional model passed to claude --model.
   RALPH_CODEX_MODEL       Optional model passed to codex exec --model.
   RALPH_IMPLEMENTATION_RUNNER
-                          codex or opencode for the Codex implementer path.
+                          codex or opencode for the implementer.
   RALPH_OPENCODE_MODEL    Optional model passed to opencode run --model.
   RALPH_OPENCODE_OLLAMA_BASE_URL
                           Ollama base URL pinged before OpenCode runs when
                           the model uses the ollama/ provider.
-                          Ollama-backed OpenCode implementers get 5
-                          implement/review rounds; other implementers get 3.
   RALPH_OPENCODE_AGENT    OpenCode primary agent for implementation.
                           Default should deny task/subagent delegation.
   RALPH_OPENCODE_TIMEOUT_SECONDS
@@ -81,6 +78,11 @@ Environment:
                           round. Timed-out rounds are reviewed from the
                           current worktree diff instead of blocking forever.
                           Default: 600.
+  RALPH_MODEL_CHOOSER     Set to 1 to use Codex for multi-candidate task
+                          selection. Default: 0.
+  RALPH_IMPLEMENTATION_ROUND_LIMIT
+                          Safety cap for implement/review convergence rounds.
+                          0 means no harness cap. Default: 0.
   RALPH_STREAM_LOGS       Set to 1 to stream full model logs to the terminal.
                           Default is quiet: persist logs to files only.
 EOF
@@ -92,7 +94,7 @@ die() {
 }
 
 log() {
-  printf '[ralph-dual] %s\n' "$*" >&2
+  printf '[ralph] %s\n' "$*" >&2
 }
 
 contains_attempt_specific_plan_notes() {
@@ -187,64 +189,17 @@ test_command="pnpm quality"
 max_task_attempts=3
 keep_worktrees=false
 skip_decider=false
-codex_only=false
-claude_only=false
 codex_model="${RALPH_CODEX_MODEL:-}"
 implementation_runner="${RALPH_IMPLEMENTATION_RUNNER:-codex}"
 opencode_model="${RALPH_OPENCODE_MODEL:-ollama/qwen3.6:35b-a3b-64k}"
 opencode_ollama_base_url="${RALPH_OPENCODE_OLLAMA_BASE_URL:-http://host.docker.internal:11434/v1}"
 opencode_agent="${RALPH_OPENCODE_AGENT:-ralph-implementer}"
 opencode_timeout_seconds="${RALPH_OPENCODE_TIMEOUT_SECONDS:-600}"
-candidate_round_limit=3
+model_chooser="${RALPH_MODEL_CHOOSER:-0}"
+implementation_round_limit="${RALPH_IMPLEMENTATION_ROUND_LIMIT:-0}"
 selected_tasks=()
-child_pids=()
 task_branches=()
 active_worktrees=()
-
-collect_descendant_pids() {
-  local root_pid="$1"
-  local child_pid
-
-  pgrep -P "$root_pid" 2>/dev/null || true
-  while read -r child_pid; do
-    [[ -n "$child_pid" ]] || continue
-    collect_descendant_pids "$child_pid"
-  done < <(pgrep -P "$root_pid" 2>/dev/null || true)
-}
-
-kill_process_group() {
-  local pgid="$1"
-
-  [[ -n "$pgid" ]] || return 0
-  kill -TERM -- "-$pgid" >/dev/null 2>&1 || true
-  sleep 1
-  kill -0 -- "-$pgid" >/dev/null 2>&1 && kill -KILL -- "-$pgid" >/dev/null 2>&1 || true
-}
-
-kill_process_tree() {
-  local root_pid="$1"
-  local descendants=""
-
-  [[ -n "$root_pid" ]] || return 0
-  kill -0 "$root_pid" >/dev/null 2>&1 || return 0
-
-  descendants="$(collect_descendant_pids "$root_pid")"
-  if [[ -n "$descendants" ]]; then
-    while read -r pid; do
-      [[ -n "$pid" ]] || continue
-      kill "$pid" >/dev/null 2>&1 || true
-    done <<<"$descendants"
-  fi
-  kill "$root_pid" >/dev/null 2>&1 || true
-  sleep 1
-  if [[ -n "$descendants" ]]; then
-    while read -r pid; do
-      [[ -n "$pid" ]] || continue
-      kill -0 "$pid" >/dev/null 2>&1 && kill -9 "$pid" >/dev/null 2>&1 || true
-    done <<<"$descendants"
-  fi
-  kill -0 "$root_pid" >/dev/null 2>&1 && kill -9 "$root_pid" >/dev/null 2>&1 || true
-}
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -287,14 +242,6 @@ while [[ $# -gt 0 ]]; do
       keep_worktrees=true
       shift
       ;;
-    --codex-only)
-      codex_only=true
-      shift
-      ;;
-    --claude-only)
-      claude_only=true
-      shift
-      ;;
     --codex-model)
       [[ $# -ge 2 ]] || die "--codex-model requires a value"
       codex_model="$2"
@@ -325,6 +272,15 @@ while [[ $# -gt 0 ]]; do
       [[ "$2" =~ ^[1-9][0-9]*$ ]] || die "--opencode-timeout-seconds must be a positive integer"
       opencode_timeout_seconds="$2"
       shift 2
+      ;;
+    --implementation-round-limit)
+      [[ $# -ge 2 ]] || die "--implementation-round-limit requires a value"
+      implementation_round_limit="$2"
+      shift 2
+      ;;
+    --model-chooser)
+      model_chooser=1
+      shift
       ;;
     --skip-decider)
       skip_decider=true
@@ -357,14 +313,6 @@ require_cmd pnpm
 
 load_openrouter_key_from_dotenv
 
-if [[ "$codex_only" == true && "$claude_only" == true ]]; then
-  die "--codex-only and --claude-only are mutually exclusive"
-fi
-
-if [[ "$codex_only" != true ]]; then
-  require_cmd claude
-fi
-
 case "$implementation_runner" in
   codex|opencode)
     ;;
@@ -380,6 +328,9 @@ if [[ "$implementation_runner" == "opencode" ]]; then
   [[ "$opencode_timeout_seconds" =~ ^[1-9][0-9]*$ ]] || die "RALPH_OPENCODE_TIMEOUT_SECONDS must be a positive integer"
   ping_opencode_ollama_model
 fi
+
+[[ "$model_chooser" == "0" || "$model_chooser" == "1" ]] || die "RALPH_MODEL_CHOOSER must be 0 or 1"
+[[ "$implementation_round_limit" =~ ^[0-9]+$ ]] || die "RALPH_IMPLEMENTATION_ROUND_LIMIT must be a non-negative integer"
 
 [[ -f "$plan_file" ]] || die "plan file not found: $plan_file"
 plan_file="$(realpath "$plan_file")"
@@ -437,6 +388,8 @@ write_state() {
     printf 'PLAN_SNAPSHOT=%q\n' "$plan_snapshot"
     printf 'TASK_INDEX=%q\n' "$task_index"
     printf 'MAX_TASK_ATTEMPTS=%q\n' "$max_task_attempts"
+    printf 'MODEL_CHOOSER=%q\n' "$model_chooser"
+    printf 'IMPLEMENTATION_ROUND_LIMIT=%q\n' "$implementation_round_limit"
     printf 'IMPLEMENTATION_RUNNER=%q\n' "$implementation_runner"
     printf 'OPENCODE_MODEL=%q\n' "$opencode_model"
     printf 'OPENCODE_AGENT=%q\n' "$opencode_agent"
@@ -947,13 +900,6 @@ cleanup_active_worktrees() {
 
 cleanup() {
   local status=$?
-  local pid
-
-  for pid in "${child_pids[@]}"; do
-    [[ -n "$pid" ]] || continue
-    kill_process_tree "$pid"
-  done
-  wait >/dev/null 2>&1 || true
 
   cleanup_active_worktrees
 
@@ -980,6 +926,7 @@ write_prompt() {
   local task_file="$5"
   local task_base_ref="$6"
   local task_base_sha="$7"
+  local context_file="$8"
 
   cat >"$output_file" <<EOF
 You are the $role agent in a Ralph-style fresh-context implementation run for this repository.
@@ -993,6 +940,7 @@ Base ref: $task_base_ref
 Base SHA: $task_base_sha
 Plan file: $plan_snapshot
 Current task file: $task_file
+Task context packet: $context_file
 Current task: Task $task_no
 Verification command: $test_command
 
@@ -1014,7 +962,7 @@ Read AGENTS.md/CLAUDE.md first and follow the repo instructions. Important local
 - Broad verification is diagnostic, not an automatic scope-expander. If lint/typecheck/test verification surfaces a confirmed unrelated baseline failure outside the touched ownership surface, stop broad verification immediately, record that baseline noise, and do not continue repo-wide cleanup inside this task. Only keep fixing failures that are caused by your task diff itself.
 
 Task:
-Implement Task $task_no only. Read the full plan for context, but do not start later tasks. Make focused code and documentation changes needed to satisfy Task $task_no success criteria. Run the verification command if it is appropriate for the task scope, or explain why a narrower repo-approved verification was used. Leave your changes in this worktree; committing is allowed but not required.
+Implement Task $task_no only. Read the current task file and task context packet first; use the full plan only for dependency and future-work checks. Do not start later tasks. Make focused code and documentation changes needed to satisfy Task $task_no success criteria. Run the verification command if it is appropriate for the task scope, or explain why a narrower repo-approved verification was used. Leave your changes in this worktree; committing is allowed but not required.
 
 At the end, write a concise final status including:
 - Files changed
@@ -1036,6 +984,7 @@ write_review_prompt() {
   local task_no="$5"
   local task_file="$6"
   local task_base_sha="$7"
+  local context_file="$8"
 
   cat >"$output_file" <<EOF
 You are reviewing the $implementation implementation for Task $task_no in this Ralph run.
@@ -1049,12 +998,21 @@ Base ref: $base_ref
 Base SHA: $task_base_sha
 Plan file: $plan_snapshot
 Current task file: $task_file
+Task context packet: $context_file
 Review report output path: $report
 
-Review the implementation diff against $task_base_sha. Do not modify repository files. Focus on correctness, Task $task_no coverage, repo instruction violations, missing verification, duplicated state, and SRD/UBIQUITOUS_LANGUAGE traceability for modeled rules. Flag any changes that implement later tasks prematurely. If you decide verification requires MBT, first check for existing vitest/quint_evaluator processes per AGENTS.md and do not launch a second MBT run while one is alive.
+Review the implementation diff against $task_base_sha. Do not modify repository files. Read the task file and context packet first; use the full plan only for dependency/follow-up checks. Focus on correctness, Task $task_no coverage, repo instruction violations, missing verification, duplicated state, and SRD/UBIQUITOUS_LANGUAGE traceability for modeled rules. Flag any changes that implement later tasks prematurely. If you decide verification requires MBT, first check for existing vitest/quint_evaluator processes per AGENTS.md and do not launch a second MBT run while one is alive.
 Do not edit the main repo worktree at $repo_root or any sibling task worktree.
 Treat unrelated repo-wide baseline failures as noise unless the reviewed diff clearly causes them. A task should not be rejected merely for not repairing pre-existing broad verification failures outside its touched ownership surface.
 Ralph task worktrees replace the shared fuzz / overnight verification scripts with hard-fail stubs before implementers start. Treat diffs to \`scripts/mbt-fuzz*.sh\`, \`scripts/fuzz-*.sh\`, \`scripts/escalate-fuzz.sh\`, and \`scripts/measure-tier-timing.sh\` as harness-injected noise unless the implementation made additional edits beyond the standard stub content.
+
+Strict review checklist:
+- Task-only scope: no later-task implementation unless the task explicitly requires it.
+- RAW/UBIQUITOUS_LANGUAGE traceability for every modeled rule.
+- No redundant state or catalog/runtime support claims from inert metadata.
+- Generated artifacts, matrix disposition, and follow-up tasks stay honest.
+- Verification is focused and any omitted broad check is justified.
+- Reject only for actionable issues. If no reasonable actionable review notes remain, use Verdict: accept.
 
 Your final answer is the review report. The harness saves it to the output path above. Write markdown with these sections:
 - Verdict: accept | accept-with-fixes | reject
@@ -1065,7 +1023,7 @@ Your final answer is the review report. The harness saves it to the output path 
 EOF
 }
 
-write_candidate_prompt() {
+write_implementation_prompt() {
   local role="$1"
   local output_file="$2"
   local workspace="$3"
@@ -1073,11 +1031,12 @@ write_candidate_prompt() {
   local task_file="$5"
   local task_base_ref="$6"
   local task_base_sha="$7"
-  local feedback_file="${8:-}"
-  local round_label="${9:-1}"
-  local runner="${10:-codex}"
+  local context_file="$8"
+  local feedback_file="${9:-}"
+  local round_label="${10:-1}"
+  local runner="${11:-codex}"
 
-  write_prompt "$role" "$output_file" "$workspace" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha"
+  write_prompt "$role" "$output_file" "$workspace" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha" "$context_file"
   if [[ "$runner" == "opencode" ]]; then
     cat >>"$output_file" <<EOF
 
@@ -1103,7 +1062,7 @@ EOF
 Revision round: $round_label
 
 You are rerunning the same task in the same Ralph attempt after reviewer feedback.
-Address the findings below before you finish. Keep the work scoped to Task $task_no and update the existing worktree rather than starting a fresh design.
+Address the findings below before you finish. Continue from the prior implementer context in this same task worktree when the runner supports session resume. Keep the work scoped to Task $task_no and update the existing worktree rather than starting a fresh design.
 
 Reviewer feedback file: $feedback_file
 
@@ -1136,15 +1095,14 @@ write_decider_prompt() {
   local task_no="$2"
   local task_file="$3"
   local task_base_sha="$4"
-  local claude_worktree="$5"
-  local codex_worktree="$6"
-  local attempt_root="$7"
-  local mode_label="${8:-dual}"
-  local attempt_no="${9:-1}"
-  local final_attempt="${10:-false}"
+  local implementation_worktree="$5"
+  local attempt_root="$6"
+  local attempt_no="${7:-1}"
+  local final_attempt="${8:-false}"
+  local context_file="${9:-}"
 
   cat >"$output_file" <<EOF
-You are the master merge/decider agent for Task $task_no in a Ralph-style dual implementation run.
+You are the master merge/decider agent for Task $task_no in a Ralph implementation run.
 
 Main worktree: $repo_root
 Base ref: $base_ref
@@ -1152,31 +1110,27 @@ Base SHA: $task_base_sha
 Output branch: $output_branch
 Plan file: $plan_snapshot
 Current task file: $task_file
-Run mode: $mode_label
-Claude worktree: $claude_worktree
-Codex worktree: $codex_worktree
-Claude implementer exit: $attempt_root/claude-implementer.exit
-Codex implementer exit: $attempt_root/codex-implementer.exit
-Codex implementer runner: $implementation_runner
-Claude review: $attempt_root/claude-review.md
-Codex review: $attempt_root/codex-review.md
-Claude review exit: $attempt_root/claude-review.exit
-Codex review exit: $attempt_root/codex-review.exit
+Task context packet: $context_file
+Implementation worktree: $implementation_worktree
+Implementer exit: $attempt_root/implementation-implementer.exit
+Implementer runner: $implementation_runner
+Review: $attempt_root/implementation-review.md
+Review exit: $attempt_root/implementation-review.exit
 Verification command: $test_command
 Attempt number for this task in this Ralph run: $attempt_no
 Final allowed attempt in this Ralph run: $final_attempt
 
-Read AGENTS.md/CLAUDE.md first and follow the repo instructions. The implementation worktree inputs are not final output. Inspect the available Task $task_no diff(s) and review report(s). In a single-candidate mode ('codex-only' or 'claude-only'), the other candidate's paths are placeholders and you should evaluate the live candidate directly against the task brief. Apply the best final implementation for Task $task_no to the main worktree, combining useful parts when appropriate and rejecting broken or off-plan changes. Do not implement later tasks.
+Read AGENTS.md/CLAUDE.md first and follow the repo instructions. The implementation worktree inputs are not final output. Inspect the Task $task_no diff and review report. Apply the final implementation for Task $task_no to the main worktree, or reject it when it is broken or off-plan. Do not implement later tasks.
 
 Requirements:
 - Keep the main worktree on $output_branch; do not merge branches blindly.
 - Preserve repo constraints: pnpm only, no redundant state, Quint parity, SRD traceability for modeled rules, scarce MBT usage.
 - Before any MBT run, check for existing vitest and quint_evaluator processes per AGENTS.md. Kill stale quint_evaluator processes, and do not launch a second MBT while another vitest/MBT run is alive.
 - Never run ./scripts/mbt-fuzz.sh, ./scripts/fuzz-all.sh, ./scripts/fuzz-overnight.sh, or any MBT command with MBT_DEV=1 or MBT_SAVE_TRACES=1 in a Ralph task run. If verification needs MBT, stay on Tier 1 / Tier 1b unless the task explicitly requires a higher tier.
-- Ralph task worktrees replace the shared fuzz / overnight verification scripts with hard-fail stubs before implementers start. Treat those script diffs as harness noise, not task-owned changes, unless a candidate went beyond the standard stub content.
+- Ralph task worktrees replace the shared fuzz / overnight verification scripts with hard-fail stubs before implementers start. Treat those script diffs as harness noise, not task-owned changes, unless the implementation went beyond the standard stub content.
 - Run appropriate verification after applying the final result, using "$test_command" unless a narrower repo-approved command is justified.
 - If broader verification surfaces a confirmed unrelated baseline failure outside the touched ownership surface, stop broad verification at that point and record the baseline noise instead of continuing repo-wide cleanup.
-- Inspect both implementations and both reviews for Plan Impact. Update the source plan file at $plan_file only when you learned a genuinely new durable planning fact. Do not add attempt-numbered notes or parser-error reminders to the plan. Keep attempt-specific rejection detail in the decider final and review artifacts instead. If no durable plan update is needed, say so explicitly in the final Plan Impact section.
+- Inspect the implementation and review for Plan Impact. Update the source plan file at $plan_file only when you learned a genuinely new durable planning fact. Do not add attempt-numbered notes or parser-error reminders to the plan. Keep attempt-specific rejection detail in the decider final and review artifacts instead. If no durable plan update is needed, say so explicitly in the final Plan Impact section.
 - Preserve task surface as executable tasks, not only status prose. If you accept a task by narrowing or splitting its original scope, any excluded still-desired work must be added or revised as concrete follow-up tasks in $plan_file before you commit. A note that work "remains support-gated", "is deferred", or "belongs to a later family" is not sufficient unless the corresponding Ralph Task Index, DAG table, and task-detail entries already keep that work visible and dependency-ordered.
 - Before editing $plan_file, answer a New Information Gate in the decider final:
   - What new fact was learned?
@@ -1207,7 +1161,7 @@ Requirements:
 - Do not write to the memory system.
 
 At the end, report:
-- Which implementation(s) you used
+- Whether you used or rejected the implementation
 - Files changed in the main worktree
 - Verification commands run and results
 - Any remaining risks
@@ -1230,30 +1184,28 @@ At the end, report:
 EOF
 }
 
-run_candidate_pipeline() {
-  local candidate_name="$1"
-  local runner="$2"
-  local workspace="$3"
-  local attempt_root="$4"
-  local task_no="$5"
-  local task_file="$6"
-  local task_base_ref="$7"
-  local task_base_sha="$8"
+run_implementation_pipeline() {
+  local runner="$1"
+  local workspace="$2"
+  local attempt_root="$3"
+  local task_no="$4"
+  local task_file="$5"
+  local task_base_ref="$6"
+  local task_base_sha="$7"
+  local context_file="$8"
 
-  local slug="${candidate_name,,}"
+  local slug="implementation"
   local round=1
   local previous_review=""
   local verdict="reject"
-  local implementer_role="$candidate_name implementer"
-  local round_limit="$candidate_round_limit"
+  local implementer_role="Implementer"
+  local round_limit="$implementation_round_limit"
+  local session_file="$attempt_root/$slug-implementer.session"
   if [[ "$runner" == "opencode" ]]; then
-    implementer_role="$candidate_name implementer (running on OpenCode)"
-    if is_opencode_ollama_model; then
-      round_limit=5
-    fi
+    implementer_role="Implementer (running on OpenCode)"
   fi
 
-  while (( round <= round_limit )); do
+  while (( round_limit == 0 || round <= round_limit )); do
     local round_prefix="$attempt_root/$slug-round-$round"
     local implementer_prompt="$round_prefix-implementer.prompt.md"
     local implementer_log="$round_prefix-implementer.log"
@@ -1266,38 +1218,37 @@ run_candidate_pipeline() {
     local diff_file="$round_prefix.diff"
     local after_review_diff="$round_prefix.after-review.diff"
 
-    note "task" "candidate-start task=$task_no candidate=$slug round=$round"
-    write_candidate_prompt "$implementer_role" "$implementer_prompt" "$workspace" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha" "$previous_review" "$round" "$runner"
+    note "task" "implementation-start task=$task_no round=$round"
+    write_implementation_prompt "$implementer_role" "$implementer_prompt" "$workspace" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha" "$context_file" "$previous_review" "$round" "$runner"
 
     local implementer_status=0
-    if [[ "$runner" == "claude" ]]; then
-      run_claude "$workspace" "$implementer_prompt" "$implementer_log" || implementer_status=$?
-    elif [[ "$runner" == "opencode" ]]; then
+    if [[ "$runner" == "opencode" ]]; then
       run_opencode "$workspace" "$implementer_prompt" "$implementer_log" "$implementer_final" || implementer_status=$?
     else
-      run_codex "$workspace" "$implementer_prompt" "$implementer_log" "$implementer_final" || implementer_status=$?
+      run_codex_implementer "$workspace" "$implementer_prompt" "$implementer_log" "$implementer_final" "$session_file" || implementer_status=$?
     fi
     printf '%s\n' "$implementer_status" >"$implementer_exit"
     save_diff "$workspace" "$diff_file" "$task_base_sha"
-    note "task" "candidate-implemented task=$task_no candidate=$slug round=$round status=$implementer_status"
+    note "task" "implementation-finished task=$task_no round=$round status=$implementer_status"
 
-    write_review_prompt "$candidate_name" "$workspace" "$review_report" "$review_prompt" "$task_no" "$task_file" "$task_base_sha"
+    write_review_prompt "Implementation" "$workspace" "$review_report" "$review_prompt" "$task_no" "$task_file" "$task_base_sha" "$context_file"
     local review_status=0
     run_codex "$workspace" "$review_prompt" "$review_log" "$review_report" || review_status=$?
     printf '%s\n' "$review_status" >"$review_exit"
     save_diff "$workspace" "$after_review_diff" "$task_base_sha"
     verdict="$(parse_review_verdict "$review_report")"
-    note "task" "candidate-reviewed task=$task_no candidate=$slug round=$round verdict=$verdict status=$review_status"
+    note "task" "implementation-reviewed task=$task_no round=$round verdict=$verdict status=$review_status"
 
     if [[ "$verdict" == "accept" ]]; then
       break
     fi
-    if (( round >= round_limit )); then
+    if (( round_limit != 0 && round >= round_limit )); then
+      note "task" "implementation-review-safety-cap task=$task_no round=$round limit=$round_limit verdict=$verdict"
       break
     fi
 
     previous_review="$review_report"
-    note "task" "candidate-handoff task=$task_no candidate=$slug round=$round next_round=$((round + 1)) verdict=$verdict"
+    note "task" "implementation-handoff task=$task_no round=$round next_round=$((round + 1)) verdict=$verdict"
     ((round++))
   done
 
@@ -1310,7 +1261,7 @@ run_candidate_pipeline() {
   cp -f "$attempt_root/$slug-round-$round-review.md" "$attempt_root/$slug-review.md"
   cp -f "$attempt_root/$slug-round-$round-review.exit" "$attempt_root/$slug-review.exit"
   cp -f "$attempt_root/$slug-round-$round.after-review.diff" "$attempt_root/$slug.after-review.diff"
-  if [[ "$runner" != "claude" && -f "$attempt_root/$slug-round-$round-implementer.final.md" ]]; then
+  if [[ -f "$attempt_root/$slug-round-$round-implementer.final.md" ]]; then
     cp -f "$attempt_root/$slug-round-$round-implementer.final.md" "$attempt_root/$slug-implementer.final.md"
   fi
 }
@@ -1386,6 +1337,111 @@ run_codex() {
   return "$status"
 }
 
+extract_codex_session_id() {
+  local log_file="$1"
+  node - "$log_file" <<'NODE'
+const fs = require("fs")
+const path = process.argv[2]
+if (!fs.existsSync(path)) process.exit(1)
+const candidateObjects = (event) => [event, event.msg, event.event, event.payload, event.params].filter(Boolean)
+const sessionIdFrom = (event) => {
+  for (const candidate of candidateObjects(event)) {
+    if (candidate.type === "session_configured" && typeof candidate.session_id === "string") {
+      return candidate.session_id
+    }
+    if (candidate.type === "thread.started" && typeof candidate.thread_id === "string") {
+      return candidate.thread_id
+    }
+    if (typeof candidate.session_id === "string") {
+      return candidate.session_id
+    }
+    if (typeof candidate.thread_id === "string") {
+      return candidate.thread_id
+    }
+  }
+  return ""
+}
+for (const line of fs.readFileSync(path, "utf8").split(/\r?\n/)) {
+  if (!line.trim()) continue
+  try {
+    const event = JSON.parse(line)
+    const sessionId = sessionIdFrom(event)
+    if (sessionId) {
+      process.stdout.write(sessionId)
+      process.exit(0)
+    }
+  } catch {
+    // ignore non-JSON log lines
+  }
+}
+process.exit(1)
+NODE
+}
+
+run_codex_implementer() {
+  local workspace="$1"
+  local prompt="$2"
+  local log_file="$3"
+  local output_file="$4"
+  local session_file="$5"
+  local status=0
+  local session_id=""
+  local -a args=()
+
+  if [[ -s "$session_file" ]]; then
+    session_id="$(<"$session_file")"
+    args=(exec resume --json --dangerously-bypass-approvals-and-sandbox -o "$output_file")
+    if [[ -n "$codex_model" ]]; then
+      args+=("--model" "$codex_model")
+    fi
+    args+=("$session_id" -)
+    log "codex-resume: $(quote_cmd codex "${args[@]}") < $prompt"
+    set +e
+    if [[ "${RALPH_STREAM_LOGS:-0}" == "1" ]]; then
+      (cd "$workspace" && codex "${args[@]}" <"$prompt" 2>&1 | tee "$log_file" >&2)
+      status=${PIPESTATUS[0]}
+    else
+      (cd "$workspace" && codex "${args[@]}" <"$prompt" >"$log_file" 2>&1)
+      status=$?
+    fi
+    set -e
+  else
+    args=(exec --json --dangerously-bypass-approvals-and-sandbox -C "$workspace" -o "$output_file")
+    if [[ -n "$codex_model" ]]; then
+      args+=("--model" "$codex_model")
+    fi
+    log "codex-persistent: $(quote_cmd codex "${args[@]}" -)"
+    set +e
+    if [[ "${RALPH_STREAM_LOGS:-0}" == "1" ]]; then
+      codex "${args[@]}" - <"$prompt" 2>&1 | tee "$log_file" >&2
+      status=${PIPESTATUS[0]}
+    else
+      codex "${args[@]}" - <"$prompt" >"$log_file" 2>&1
+      status=$?
+    fi
+    set -e
+  fi
+
+  local observed_session_id=""
+  observed_session_id="$(extract_codex_session_id "$log_file" || true)"
+  if [[ -n "$observed_session_id" ]]; then
+    if [[ -s "$session_file" && "$observed_session_id" != "$session_id" ]]; then
+      log "codex resume returned unexpected session id: expected $session_id got $observed_session_id"
+    else
+      printf '%s\n' "$observed_session_id" >"$session_file"
+    fi
+  elif [[ ! -s "$session_file" ]]; then
+    log "codex persistent implementer did not expose a session id in $log_file"
+  fi
+
+  if [[ "$status" -ne 0 ]]; then
+    log "codex implementer exited $status; full log: $log_file"
+  else
+    log "codex implementer completed; final: $output_file log: $log_file session: ${session_file}"
+  fi
+  return "$status"
+}
+
 run_opencode() {
   local workspace="$1"
   local prompt="$2"
@@ -1422,34 +1478,6 @@ run_opencode() {
   else
     log "opencode completed; final: $output_file log: $log_file"
   fi
-  return "$status"
-}
-
-run_claude() {
-  local workspace="$1"
-  local prompt="$2"
-  local log_file="$3"
-  local status=0
-  local session_pid=""
-  local session_pgid=""
-  local -a args=(--dangerously-skip-permissions --print --verbose --output-format stream-json --effort max)
-
-  if [[ -n "${RALPH_CLAUDE_MODEL:-}" ]]; then
-    args+=("--model" "$RALPH_CLAUDE_MODEL")
-  fi
-
-  log "claude: $(quote_cmd claude "${args[@]}") < $prompt"
-  (
-    cd "$workspace"
-    exec setsid claude "${args[@]}" <"$prompt" >"$log_file" 2>&1
-  ) &
-  session_pid=$!
-  session_pgid="$(ps -o pgid= -p "$session_pid" | tr -d '[:space:]')"
-  set +e
-  wait "$session_pid"
-  status=$?
-  set -e
-  kill_process_group "${session_pgid:-$session_pid}"
   return "$status"
 }
 
@@ -1741,6 +1769,307 @@ disposition_from_task_status() {
   esac
 }
 
+write_task_context() {
+  local output_file="$1"
+  local task_no="$2"
+  local task_id="$3"
+  local task_file="$4"
+
+  node - "$repo_root" "$plan_snapshot" "$task_file" "$task_no" "$task_id" "$output_file" <<'NODE'
+const fs = require("fs")
+const path = require("path")
+
+const [repoRoot, planPath, taskPath, taskNo, taskId, outputPath] = process.argv.slice(2)
+const read = (p) => fs.existsSync(p) ? fs.readFileSync(p, "utf8") : ""
+const readJson = (p) => {
+  try {
+    return JSON.parse(read(p))
+  } catch {
+    return null
+  }
+}
+const normalize = (value) => String(value ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "")
+const taskText = read(taskPath)
+const taskNeedle = normalize(`${taskId}\n${taskText}`)
+const title = taskText.match(/^### Task [^\n]+-\s*(.+)$/m)?.[1]?.trim() ?? `Task ${taskNo}`
+const taskType = (() => {
+  const text = `${title}\n${taskText}`.toLowerCase()
+  if (/recursive|review/.test(text)) return "review/planning"
+  if (/widen surface|surface/.test(text)) return "surface-widening"
+  if (/author|spell records|record/.test(text)) return "content-authoring"
+  if (/runtime|promote/.test(text)) return "runtime-promotion"
+  if (/research/.test(text)) return "research"
+  return "implementation"
+})()
+
+const inventory = readJson(path.join(repoRoot, "plans/unit-profile-coverage/srd-unit-inventory.json"))
+const matrix = readJson(path.join(repoRoot, "plans/unit-profile-coverage/unit-matrix.json"))
+const rows = Array.isArray(inventory?.rows) ? inventory.rows : []
+const units = Array.isArray(matrix?.units) ? matrix.units : []
+const batches = Array.isArray(inventory?.recommendedBatches) ? inventory.recommendedBatches : []
+const batch = batches.find((entry) => entry.id === taskId)
+const rowMatchesTask = (row) => {
+  const serialized = JSON.stringify(row)
+  if (serialized.includes(taskId)) return true
+  const candidates = [
+    row.candidateUnitId,
+    row.concept,
+    String(row.candidateUnitId ?? "").replace(/_/g, " "),
+  ].map(normalize).filter((value) => value.length >= 4)
+  return candidates.some((value) => taskNeedle.includes(value))
+}
+let matchedRows = rows.filter(rowMatchesTask)
+let unitIds = [...new Set(matchedRows.map((row) => row.candidateUnitId).filter(Boolean))]
+let matchedUnits = units.filter((unit) => unitIds.includes(unit.unitId))
+
+if (taskType === "review/planning" && matchedRows.length < 8) {
+  matchedRows = rows.filter((row) =>
+    row.finalDisposition === "needs-surface-widening" ||
+    row.finalDisposition === "catalog-installed-owner-evidence-required"
+  )
+  unitIds = [...new Set(matchedRows.map((row) => row.candidateUnitId).filter(Boolean))]
+  matchedUnits = units.filter((unit) =>
+    unit.catalogAdmission?.status === "installed" &&
+    unit.executableMechanics === true &&
+    !["supported-profile", "profile-subset-supported"].includes(unit.claim?.tag)
+  )
+}
+
+const cap = (array, n) => array.slice(0, n)
+const fmt = (value) => String(value ?? "").replace(/\s+/g, " ").trim().replace(/\|/g, "\\|")
+const ownerEvidence = (row) => Array.isArray(row.ownerEvidence)
+  ? row.ownerEvidence.map((entry) => `${entry.owner}: ${entry.status}`).join("; ")
+  : ""
+const claimText = (claim) => {
+  if (!claim) return ""
+  if (claim.reason) return claim.reason
+  if (claim.issue) return claim.issue
+  if (Array.isArray(claim.supportedMechanics)) {
+    const deferred = Array.isArray(claim.deferredMechanics)
+      ? claim.deferredMechanics.map((entry) => entry.mechanic).join("; ")
+      : ""
+    return `supported: ${claim.supportedMechanics.join("; ")}${deferred ? `; deferred: ${deferred}` : ""}`
+  }
+  return JSON.stringify(claim)
+}
+const checklistByType = {
+  "surface-widening": [
+    "Read local RAW and UBIQUITOUS_LANGUAGE before changing rule shapes.",
+    "Search existing Surface mechanics before adding fields or variants.",
+    "Make invalid states unrepresentable; do not encode runtime support as metadata.",
+    "Update Dhall source, generated JSON/trace artifacts, catalog admission, and matrix/report artifacts as required.",
+    "If runtime behavior remains desired, keep it visible as owner-evidence-required follow-up work."
+  ],
+  "content-authoring": [
+    "Author SRD-provenance content only from .references/srd-5.2.1.",
+    "Prefer existing Surface atoms and schemas; do not widen runtime behavior while authoring records unless the task says so.",
+    "Regenerate JSON/trace artifacts and run focused catalog/inventory checks.",
+    "Keep unsupported runtime classifications honest."
+  ],
+  "runtime-promotion": [
+    "Read RAW plus UBIQUITOUS_LANGUAGE and inspect the authoritative package-local QNT/spec owner.",
+    "Update spec/model and runtime together when behavior changes.",
+    "Add focused admission/projection/runtime tests before broad verification.",
+    "Run MBT only when the completed behavior change needs integrated parity."
+  ],
+  "review/planning": [
+    "Refresh generated matrix/inventory artifacts if task results changed them.",
+    "Turn remaining desired work into concrete executable tasks, not prose-only backlog.",
+    "Keep status/index/DAG/task details synchronized.",
+    "Do not mark support from catalog admission alone."
+  ],
+  "research": [
+    "Read source/RAW first; avoid broad implementation until the split is clear.",
+    "Prefer concrete follow-up tasks by execution invariant.",
+    "Record durable findings only; keep attempt-local notes out of ACTIVE_PLAN."
+  ],
+  "implementation": [
+    "Keep scope to this task.",
+    "Read closest examples before adding new patterns.",
+    "Run focused verification and record any narrower command used."
+  ]
+}
+const fileFamilies = {
+  "surface-widening": [
+    "packages/surface/src/surface/types.ts",
+    "packages/surface/src/surface/schema.ts",
+    "packages/surface/src/surface/schema.test.ts",
+    "packages/surface/src/surface/unit-catalog.ts",
+    "packages/surface/content/<unit>.dhall",
+    "packages/surface/content/<unit>.json",
+    "plans/unit-profile-coverage/*"
+  ],
+  "content-authoring": [
+    "packages/surface/content/<unit>.dhall",
+    "packages/surface/content/<unit>.json",
+    "packages/surface/src/surface/unit-catalog.ts",
+    "packages/surface/src/surface/unit-catalog.test.ts",
+    "plans/unit-profile-coverage/*"
+  ],
+  "runtime-promotion": [
+    "packages/battle-runtime/battle-runtime.qnt",
+    "packages/battle-runtime/src/**",
+    "packages/battle-runtime/src/*test.ts",
+    "packages/battle-runtime/README.md",
+    "packages/battle-runtime/ARCHITECTURE_GRAPH.md",
+    "plans/unit-profile-coverage/*"
+  ],
+  "review/planning": [
+    "plans/ACTIVE_PLAN.md",
+    "plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md",
+    "plans/unit-profile-coverage/srd-unit-inventory.json",
+    "plans/unit-profile-coverage/UNIT_REPORT.md",
+    "plans/unit-profile-coverage/unit-matrix.json"
+  ],
+  "implementation": []
+}
+
+const lines = []
+lines.push("# Ralph Task Context Packet", "")
+lines.push(`- Task: ${taskNo} / ${taskId} - ${title}`)
+lines.push(`- Inferred task type: ${taskType}`)
+lines.push(`- Plan snapshot: ${planPath}`)
+lines.push(`- Task body: ${taskPath}`)
+if (batch) {
+  lines.push(`- Inventory batch rows: ${batch.rows ?? "unknown"}`)
+  lines.push(`- Batch intent: ${fmt(batch.intent)}`)
+  lines.push(`- Batch acceptance: ${fmt(batch.acceptance)}`)
+}
+lines.push("", "## Current Metrics")
+if (inventory?.metrics) {
+  lines.push("```json", JSON.stringify(inventory.metrics, null, 2), "```")
+} else {
+  lines.push("No SRD inventory metrics artifact found.")
+}
+if (matrix?.metrics) {
+  lines.push("", "Unit matrix metrics:", "```json", JSON.stringify(matrix.metrics, null, 2), "```")
+}
+lines.push("", "## Task-Specific Inventory Rows")
+if (matchedRows.length === 0) {
+  lines.push("No direct inventory rows matched the task id/title. Use the task body and repo search.")
+} else {
+  lines.push("| Concept | Unit | Disposition | Owner evidence | Next action |")
+  lines.push("|---|---|---|---|---|")
+  for (const row of cap(matchedRows, 60)) {
+    lines.push(`| ${fmt(row.concept)} | ${fmt(row.candidateUnitId)} | ${fmt(row.finalDisposition)} | ${fmt(ownerEvidence(row))} | ${fmt(row.nextAction)} |`)
+  }
+  if (matchedRows.length > 60) {
+    lines.push(`| ... | ... | ... | ... | ${matchedRows.length - 60} more rows omitted; inspect srd-unit-inventory.json. |`)
+  }
+}
+lines.push("", "## Matched Unit Claims")
+if (matchedUnits.length === 0) {
+  lines.push("No direct Unit matrix claims matched. Search `plans/unit-profile-coverage/unit-matrix.json` if needed.")
+} else {
+  lines.push("| Unit | Kind | Executable | Claim | Source |")
+  lines.push("|---|---|---:|---|---|")
+  for (const unit of cap(matchedUnits, 40)) {
+    lines.push(`| ${fmt(unit.unitId)} | ${fmt(unit.kind)} | ${unit.executableMechanics ? "yes" : "no"} | ${fmt(unit.claim?.tag)}: ${fmt(claimText(unit.claim))} | ${fmt(unit.sourceRecordPath)} |`)
+  }
+  if (matchedUnits.length > 40) {
+    lines.push(`| ... | ... | ... | ... | ${matchedUnits.length - 40} more Units omitted; inspect unit-matrix.json. |`)
+  }
+}
+lines.push("", "## Expected File Families")
+for (const family of (fileFamilies[taskType] ?? fileFamilies.implementation)) {
+  lines.push(`- ${family}`)
+}
+lines.push("", "## Checklist")
+for (const item of (checklistByType[taskType] ?? checklistByType.implementation)) {
+  lines.push(`- ${item}`)
+}
+lines.push("", "## Suggested First Reads")
+lines.push("- AGENTS.md / CLAUDE.md")
+lines.push("- UBIQUITOUS_LANGUAGE.md")
+lines.push("- Relevant `.references/srd-5.2.1/` file(s) named by the task body")
+if (unitIds.length > 0) {
+  lines.push(`- Search affected units: ${unitIds.map((id) => `\`${id}\``).join(", ")}`)
+}
+lines.push("- For generated matrix changes, run or inspect `pnpm unit-profile-coverage:check --write` / `pnpm unit-profile-coverage:check` as appropriate.")
+
+fs.writeFileSync(outputPath, `${lines.join("\n")}\n`)
+NODE
+}
+
+write_matrix_progress_snapshot() {
+  local output_file="$1"
+  node - "$repo_root" "$output_file" <<'NODE'
+const fs = require("fs")
+const path = require("path")
+const [repoRoot, outputPath] = process.argv.slice(2)
+const readJson = (p) => {
+  try {
+    return JSON.parse(fs.readFileSync(p, "utf8"))
+  } catch {
+    return null
+  }
+}
+const inventory = readJson(path.join(repoRoot, "plans/unit-profile-coverage/srd-unit-inventory.json"))
+const matrix = readJson(path.join(repoRoot, "plans/unit-profile-coverage/unit-matrix.json"))
+fs.writeFileSync(outputPath, JSON.stringify({
+  generatedAt: new Date().toISOString(),
+  srdInventory: inventory?.metrics ?? null,
+  unitMatrix: matrix?.metrics ?? null,
+}, null, 2) + "\n")
+NODE
+}
+
+write_matrix_progress_delta() {
+  local before_file="$1"
+  local after_file="$2"
+  local output_file="$3"
+  node - "$before_file" "$after_file" "$output_file" <<'NODE'
+const fs = require("fs")
+const [beforePath, afterPath, outputPath] = process.argv.slice(2)
+const readJson = (p) => {
+  try {
+    return JSON.parse(fs.readFileSync(p, "utf8"))
+  } catch {
+    return null
+  }
+}
+const before = readJson(beforePath) ?? {}
+const after = readJson(afterPath) ?? {}
+const get = (obj, keys) => keys.reduce((value, key) => value?.[key], obj)
+const rows = []
+const addMap = (label, keys) => {
+  const left = get(before, keys) ?? {}
+  const right = get(after, keys) ?? {}
+  for (const key of [...new Set([...Object.keys(left), ...Object.keys(right)])].sort()) {
+    const a = Number(left[key] ?? 0)
+    const b = Number(right[key] ?? 0)
+    if (a !== b) rows.push([label, key, a, b, b - a])
+  }
+}
+const addMetric = (label, keys) => {
+  const left = get(before, keys)
+  const right = get(after, keys)
+  const fmt = (value) => typeof value === "object" && value
+    ? `${value.numerator ?? value.value ?? "?"}${value.denominator ? `/${value.denominator}` : ""}${value.percent ? ` ${value.percent}` : ""}`
+    : JSON.stringify(value)
+  const a = fmt(left)
+  const b = fmt(right)
+  if (a !== b) rows.push([label, keys[keys.length - 1], a, b, ""])
+}
+addMap("SRD all rows", ["srdInventory", "allRowsByDisposition"])
+addMap("SRD spell pressure", ["srdInventory", "spellPressureRowsByDisposition"])
+addMetric("Unit matrix", ["unitMatrix", "supportedProfileCoverage"])
+addMetric("Unit matrix", ["unitMatrix", "authoredSurfaceUnitCatalogAdmissionCoverage"])
+addMetric("Unit matrix", ["unitMatrix", "authoredSurfaceExecutableCatalogAdmissionCoverage"])
+const lines = ["# Matrix Progress Delta", ""]
+if (rows.length === 0) {
+  lines.push("No matrix metric changes detected.")
+} else {
+  lines.push("| Area | Metric | Before | After | Delta |")
+  lines.push("|---|---|---:|---:|---:|")
+  for (const [area, metric, a, b, delta] of rows) {
+    lines.push(`| ${area} | ${metric} | ${a} | ${b} | ${delta} |`)
+  }
+}
+fs.writeFileSync(outputPath, `${lines.join("\n")}\n`)
+NODE
+}
+
 choose_next_task() {
   local iteration="$1"
   local chooser_root="$iterations_root/iteration-$iteration"
@@ -1784,6 +2113,14 @@ choose_next_task() {
     only_task="$(cat "$ready_tasks_file")"
     note "chooser" "single-runnable-task task=$only_task"
     printf '%s\n' "$only_task"
+    return 0
+  fi
+
+  if [[ "$model_chooser" != "1" ]]; then
+    local first_task
+    first_task="$(head -n 1 "$ready_tasks_file")"
+    note "chooser" "deterministic-first-runnable task=$first_task ready_count=$ready_count"
+    printf '%s\n' "$first_task"
     return 0
   fi
 
@@ -1844,27 +2181,23 @@ run_task_attempt() {
   local task_root="$run_root/task-$task_no"
   local attempt_root="$task_root/attempt-$attempt_no"
   local task_file="$attempt_root/task.md"
-  local claude_worktree="$worktree_root/task-$task_no-attempt-$attempt_no/claude"
-  local codex_worktree="$worktree_root/task-$task_no-attempt-$attempt_no/codex"
-  local claude_branch="ralph/$run_id/task-$task_no/attempt-$attempt_no/claude"
-  local codex_branch="ralph/$run_id/task-$task_no/attempt-$attempt_no/codex"
+  local task_context_file="$attempt_root/task-context.md"
+  local matrix_before_file="$attempt_root/matrix-before.json"
+  local matrix_after_file="$attempt_root/matrix-after.json"
+  local matrix_delta_file="$attempt_root/matrix-delta.md"
+  local implementation_worktree="$worktree_root/task-$task_no-attempt-$attempt_no/implementation"
+  local implementation_branch="ralph/$run_id/task-$task_no/attempt-$attempt_no/implementation"
   local task_base_ref="$output_branch"
   local task_base_sha
   task_base_sha="$(git rev-parse HEAD)"
 
-  mkdir -p "$attempt_root" "$(dirname "$claude_worktree")"
+  mkdir -p "$attempt_root" "$(dirname "$implementation_worktree")"
   sed -n "${task_start},${task_end}p" "$plan_snapshot" >"$task_file"
+  write_task_context "$task_context_file" "$task_no" "$task_id" "$task_file"
+  write_matrix_progress_snapshot "$matrix_before_file"
 
-  if [[ "$codex_only" == true ]]; then
-    task_branches+=("$codex_branch")
-    active_worktrees+=("$codex_worktree")
-  elif [[ "$claude_only" == true ]]; then
-    task_branches+=("$claude_branch")
-    active_worktrees+=("$claude_worktree")
-  else
-    task_branches+=("$claude_branch" "$codex_branch")
-    active_worktrees+=("$claude_worktree" "$codex_worktree")
-  fi
+  task_branches+=("$implementation_branch")
+  active_worktrees+=("$implementation_worktree")
 
   log "task $task_no attempt $attempt_no: $task_title"
   note "task" "start iteration=$iteration task=$task_no id=$task_id attempt=$attempt_no status=$status base=$task_base_sha"
@@ -1872,91 +2205,16 @@ run_task_attempt() {
   kill_stray_mbt_processes
   cleanup_mbt_artifacts
 
-  if [[ "$codex_only" != true ]]; then
-    git worktree add -B "$claude_branch" "$claude_worktree" "$task_base_sha"
-  fi
-  if [[ "$claude_only" != true ]]; then
-    git worktree add -B "$codex_branch" "$codex_worktree" "$task_base_sha"
-  fi
-  if [[ "$codex_only" != true ]]; then
-    bootstrap_worktree_install "$claude_worktree"
-  fi
-  if [[ "$claude_only" != true ]]; then
-    bootstrap_worktree_install "$codex_worktree"
-  fi
-  if [[ "$codex_only" != true ]]; then
-    disable_fuzz_scripts_in_worktree "$claude_worktree"
-  fi
-  if [[ "$claude_only" != true ]]; then
-    disable_fuzz_scripts_in_worktree "$codex_worktree"
-  fi
+  git worktree add -B "$implementation_branch" "$implementation_worktree" "$task_base_sha"
+  bootstrap_worktree_install "$implementation_worktree"
+  disable_fuzz_scripts_in_worktree "$implementation_worktree"
 
-  if [[ "$codex_only" != true && "$claude_only" != true ]]; then
-    : >"$attempt_root/claude-implementer.log"
-    : >"$attempt_root/claude-implementer.exit"
-    : >"$attempt_root/claude.diff"
-    : >"$attempt_root/claude-review.log"
-    : >"$attempt_root/claude-review.md"
-    : >"$attempt_root/claude-review.exit"
-    : >"$attempt_root/claude.after-review.diff"
-    : >"$attempt_root/codex-implementer.log"
-    : >"$attempt_root/codex-implementer.exit"
-    : >"$attempt_root/codex.diff"
-    : >"$attempt_root/codex-review.log"
-    : >"$attempt_root/codex-review.md"
-    : >"$attempt_root/codex-review.exit"
-    : >"$attempt_root/codex.after-review.diff"
-  elif [[ "$codex_only" == true ]]; then
-    printf 'codex-only\n' >"$attempt_root/claude-implementer.exit"
-    : >"$attempt_root/claude-implementer.log"
-    : >"$attempt_root/claude.diff"
-    : >"$attempt_root/claude-review.log"
-    : >"$attempt_root/claude-review.md"
-    printf 'codex-only\n' >"$attempt_root/claude-review.exit"
-    : >"$attempt_root/claude.after-review.diff"
-  else
-    printf 'claude-only\n' >"$attempt_root/codex-implementer.exit"
-    : >"$attempt_root/codex-implementer.log"
-    : >"$attempt_root/codex.diff"
-    : >"$attempt_root/codex-review.log"
-    : >"$attempt_root/codex-review.md"
-    printf 'claude-only\n' >"$attempt_root/codex-review.exit"
-    : >"$attempt_root/codex.after-review.diff"
-  fi
-
-  local claude_pid=""
-  if [[ "$codex_only" != true ]]; then
-    run_candidate_pipeline "Claude" "claude" "$claude_worktree" "$attempt_root" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha" &
-    claude_pid=$!
-    child_pids+=("$claude_pid")
-  fi
-  local codex_pid=""
-  if [[ "$claude_only" != true ]]; then
-    run_candidate_pipeline "Codex" "$implementation_runner" "$codex_worktree" "$attempt_root" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha" &
-    codex_pid=$!
-    child_pids+=("$codex_pid")
-  fi
-
-  local claude_status=0
-  local codex_status=0
-  if [[ "$codex_only" != true ]]; then
-    wait "$claude_pid" || claude_status=$?
-  fi
-  if [[ "$claude_only" != true ]]; then
-    wait "$codex_pid" || codex_status=$?
-  fi
-  child_pids=()
-
-  if [[ "$codex_only" != true && "$claude_status" -ne 0 ]]; then
-    printf 'candidate pipeline failed for task %s attempt %s: claude\n' "$task_no" "$attempt_no" >"$last_error_file"
-    note "task" "fatal-candidate-pipeline task=$task_no attempt=$attempt_no candidate=claude"
-    append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-candidate-pipeline" "-" "claude pipeline failed"
-    return 2
-  fi
-  if [[ "$claude_only" != true && "$codex_status" -ne 0 ]]; then
-    printf 'candidate pipeline failed for task %s attempt %s: codex\n' "$task_no" "$attempt_no" >"$last_error_file"
-    note "task" "fatal-candidate-pipeline task=$task_no attempt=$attempt_no candidate=codex"
-    append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-candidate-pipeline" "-" "codex pipeline failed"
+  local implementation_status=0
+  run_implementation_pipeline "$implementation_runner" "$implementation_worktree" "$attempt_root" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha" "$task_context_file" || implementation_status=$?
+  if [[ "$implementation_status" -ne 0 ]]; then
+    printf 'implementation pipeline failed for task %s attempt %s\n' "$task_no" "$attempt_no" >"$last_error_file"
+    note "task" "fatal-implementation-pipeline task=$task_no attempt=$attempt_no"
+    append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-implementation-pipeline" "-" "implementation pipeline failed"
     return 2
   fi
 
@@ -1966,13 +2224,7 @@ run_task_attempt() {
     return 0
   fi
 
-  local mode_label="dual"
-  if [[ "$codex_only" == true ]]; then
-    mode_label="codex-only"
-  elif [[ "$claude_only" == true ]]; then
-    mode_label="claude-only"
-  fi
-  write_decider_prompt "$attempt_root/decider.prompt.md" "$task_no" "$task_file" "$task_base_sha" "$claude_worktree" "$codex_worktree" "$attempt_root" "$mode_label" "$attempt_no" "$final_attempt"
+  write_decider_prompt "$attempt_root/decider.prompt.md" "$task_no" "$task_file" "$task_base_sha" "$implementation_worktree" "$attempt_root" "$attempt_no" "$final_attempt" "$task_context_file"
   if ! run_codex "$repo_root" "$attempt_root/decider.prompt.md" "$attempt_root/decider.log" "$attempt_root/decider.final.md"; then
     printf 'decider failed for task %s attempt %s\n' "$task_no" "$attempt_no" >"$last_error_file"
     note "task" "fatal-decider-failure task=$task_no attempt=$attempt_no"
@@ -2011,6 +2263,10 @@ run_task_attempt() {
       return 2
     fi
   fi
+
+  write_matrix_progress_snapshot "$matrix_after_file"
+  write_matrix_progress_delta "$matrix_before_file" "$matrix_after_file" "$matrix_delta_file"
+  note "task" "matrix-delta task=$task_no attempt=$attempt_no file=$matrix_delta_file"
 
   if contains_attempt_specific_plan_notes "$plan_file"; then
     printf 'task %s attempt %s introduced attempt-specific notes into %s\n' "$task_no" "$attempt_no" "$plan_file" >"$last_error_file"
@@ -2130,31 +2386,11 @@ run_task_attempt() {
   append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "completed" "$new_head" "$task_title"
 
   if [[ "$keep_worktrees" == false ]]; then
-    if [[ "$codex_only" != true ]]; then
-      git worktree remove --force "$claude_worktree" >/dev/null 2>&1 || true
-    fi
-    if [[ "$claude_only" != true ]]; then
-      git worktree remove --force "$codex_worktree" >/dev/null 2>&1 || true
-    fi
-    if [[ "$codex_only" != true ]]; then
-      git branch -D "$claude_branch" >/dev/null 2>&1 || true
-    fi
-    if [[ "$claude_only" != true ]]; then
-      git branch -D "$codex_branch" >/dev/null 2>&1 || true
-    fi
-    if [[ "$codex_only" != true ]]; then
-      active_worktrees=("${active_worktrees[@]/$claude_worktree}")
-    fi
-    if [[ "$claude_only" != true ]]; then
-      active_worktrees=("${active_worktrees[@]/$codex_worktree}")
-    fi
-    if [[ "$codex_only" != true ]]; then
-      task_branches=("${task_branches[@]/$claude_branch}")
-    fi
-    if [[ "$claude_only" != true ]]; then
-      task_branches=("${task_branches[@]/$codex_branch}")
-    fi
-    rmdir "$(dirname "$claude_worktree")" >/dev/null 2>&1 || true
+    git worktree remove --force "$implementation_worktree" >/dev/null 2>&1 || true
+    git branch -D "$implementation_branch" >/dev/null 2>&1 || true
+    active_worktrees=("${active_worktrees[@]/$implementation_worktree}")
+    task_branches=("${task_branches[@]/$implementation_branch}")
+    rmdir "$(dirname "$implementation_worktree")" >/dev/null 2>&1 || true
   fi
 
   return 0

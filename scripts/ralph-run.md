@@ -1,22 +1,20 @@
 # Ralph Loop Harness
 
-`scripts/ralph-dual-run.sh` runs a per-task fresh-context implementation harness for a plan file:
+`scripts/ralph-run.sh` runs a per-task fresh-context implementation harness for a plan file:
 
 1. Parses the plan's `ralph-task-index` JSON block and uses `### Task N` headings only as body anchors.
 2. Creates an integration branch from the current main `HEAD`.
 3. Refreshes the live plan snapshot every iteration.
-4. Asks Codex to choose the next runnable task from the refreshed plan instead of hard-coding earliest-runnable selection.
+4. Selects the next runnable task from the refreshed plan. By default this is deterministic first-runnable selection; set `RALPH_MODEL_CHOOSER=1` or pass `--model-chooser` to ask Codex to choose among multiple runnable tasks.
 5. For the chosen task, creates disposable worktree(s) from the current integration branch `HEAD`.
 6. Links the main workspace install into each task worktree so `pnpm` and package-local test commands resolve the same dependency graph as the main repo.
-7. By default, runs Claude in one worktree with `claude --dangerously-skip-permissions --effort max`.
-8. By default, runs Codex in the other with `codex exec --dangerously-bypass-approvals-and-sandbox`.
-9. Each implementation is reviewed as soon as that implementer finishes, without waiting for the other implementer.
-10. A rejecting or `accept-with-fixes` review is handed back to the same implementer for another round in the same worktree before the decider phase.
-11. Runs a Codex decider from the main worktree to apply, verify, and either land the task or reject it while updating the plan for the next rerun.
-12. With `--codex-only` or `--claude-only`, only one implementer pipeline runs; it still gets immediate review and the decider still acts as final gatekeeper.
-13. Refreshes the plan snapshot again and repeats until the chooser says there is no meaningful runnable work left.
+7. Runs one implementation pipeline with Codex by default, or OpenCode when `--implementation-runner opencode` is set.
+8. Reviews the implementation as soon as it finishes.
+9. A rejecting or `accept-with-fixes` review is handed back to the same implementer for another round in the same worktree before the decider phase. The loop continues until the reviewer returns `accept`; operators can set a numeric safety cap when they want one.
+10. Runs a Codex decider from the main worktree to apply, verify, and either land the task or reject it while updating the plan for the next rerun.
+11. Refreshes the plan snapshot again and repeats until task selection finds no meaningful runnable work left.
 
-Runtime logs, prompts, review reports, chooser outputs, and diffs are written under ignored `.ralph/runs/<run-id>/`.
+Runtime logs, prompts, task context packets, review reports, chooser outputs, matrix progress snapshots, and diffs are written under ignored `.ralph/runs/<run-id>/`.
 The supplied plan is copied to `.ralph/runs/<run-id>/plan.md` and agents read that snapshot. The snapshot is refreshed from the source plan file after every decider run, so a task can update future planning when it discovers new information. Unfiltered runs rescan the refreshed `ralph-task-index` after every task, so newly added runnable tasks and newly unblocked tasks are picked up automatically. Explicit `--task` selections still run in the requested order because the operator has deliberately selected them.
 When auto-unblocking dependency-blocked tasks, the harness expands same-prefix dependency ranges such as `QMBT40-QMBT42` and same-number letter ranges such as `SRDINV28A-SRDINV28E` into their concrete task IDs before checking whether all dependencies are `done`.
 
@@ -24,21 +22,27 @@ If Ralph finds no runnable tasks but a blocked task depends only on completed or
 
 If `OPENROUTER_API_KEY` is not already exported in the shell, the harness loads it from repo-root `.env` before launching agents.
 
-Ralph is quiet by default: Codex/Claude stdout and stderr are persisted to the
+Ralph is quiet by default: Codex/OpenCode stdout and stderr are persisted to the
 per-attempt log files instead of streamed through the supervisor terminal. This
 keeps live run observation from copying full model transcripts into the
 supervising context window. Set `RALPH_STREAM_LOGS=1` only for short diagnostic
 runs where terminal streaming is explicitly worth the context cost.
 
 Post-mortem inspection should start from `events.tsv`, `history.tsv`,
-`*-implementer.final.md`, `*-review.md`, `decider.final.md`, and `git diff
+`task-context.md`, `matrix-delta.md`, `*-implementer.final.md`, `*-review.md`, `decider.final.md`, and `git diff
 --stat` over saved diffs. Open full `*.log` files or large `*.diff` files only
 after narrowing to a concrete failure. In particular, standard Ralph fuzz-script
 stub diffs are harness noise and should not be pasted into model context.
 
-Important queue contract: unfiltered Ralph runs are phase-capable. A numbered task may update later tasks, unblock later tasks, add new later tasks, reorder the future queue, or turn itself back into a runnable state after a research/plan pass. After every decider refresh, the harness asks the chooser to pick again from the live runnable set, including reruns of the same numbered task when the plan clearly intends that.
+Important queue contract: unfiltered Ralph runs are phase-capable. A numbered task may update later tasks, unblock later tasks, add new later tasks, reorder the future queue, or turn itself back into a runnable state after a research/plan pass. After every decider refresh, the harness selects again from the live runnable set, including reruns of the same numbered task when the plan clearly intends that.
 
-The harness persists per-attempt history in `.ralph/runs/<run-id>/history.tsv` and gives that history to the chooser so the model can avoid blindly repeating unproductive attempts while still allowing intentional reruns. It also enforces a per-task attempt cap within a single Ralph run: by default a task may reach the decider at most 3 times.
+The harness persists per-attempt history in `.ralph/runs/<run-id>/history.tsv` and gives that history to the chooser when model selection is enabled so the model can avoid blindly repeating unproductive attempts while still allowing intentional reruns. It also enforces a per-task attempt cap within a single Ralph run: by default a task may reach the decider at most 3 times.
+
+Each task attempt also gets a generated `task-context.md` packet. It summarizes current inventory/matrix metrics, task-specific rows, matching Unit claims, likely file families, and a task-type checklist. Implementers and reviewers are prompted to read the task file plus this packet first; the full plan remains available mainly for dependency and follow-up checks.
+
+Codex implementer rounds intentionally keep one stable session per task attempt. The first round runs non-ephemerally and stores the exact Codex session id in `implementation-implementer.session`; later review rounds resume that id. Chooser, reviewer, and decider sessions remain fresh-context so they can still catch stale assumptions and shared blind spots. The harness never resumes with `--last`.
+
+After the decider returns, Ralph writes `matrix-before.json`, `matrix-after.json`, and `matrix-delta.md` for the attempt. This is diagnostic: it shows whether generated inventory/matrix metrics moved, but it does not by itself decide task success.
 
 On non-final attempts, the decider may classify the task as `retry-same-task` and leave it runnable. On the final allowed attempt, the decider must choose one of:
 
@@ -196,7 +200,7 @@ consistency, and commit the corrected closeout manually.
 ## Usage
 
 ```bash
-scripts/ralph-dual-run.sh plans/some-plan.md
+scripts/ralph-run.sh plans/some-plan.md
 ```
 
 By default, the script checks out an integration branch named `ralph/<run-id>/integration` and commits reconciled task results there. `master` stays unchanged until you explicitly merge or rebase the integration branch.
@@ -204,13 +208,13 @@ By default, the script checks out an integration branch named `ralph/<run-id>/in
 Useful options:
 
 ```bash
-scripts/ralph-dual-run.sh plans/some-plan.md \
+scripts/ralph-run.sh plans/some-plan.md \
   --task 3 \
-  --codex-only \
   --implementation-runner opencode \
   --opencode-model ollama/qwen3.6:35b-a3b-64k \
   --opencode-agent ralph-implementer \
   --opencode-timeout-seconds 600 \
+  --model-chooser \
   --codex-model gpt-5.3-codex-spark \
   --max-task-attempts 3 \
   --test-command "pnpm --filter @dnd/mcp test" \
@@ -219,11 +223,7 @@ scripts/ralph-dual-run.sh plans/some-plan.md \
   --keep-worktrees
 ```
 
-`--codex-only` keeps the normal chooser and decider flow, but only the Codex implementer pipeline runs for each task. No Claude worktree is launched in that mode.
-
-`--claude-only` is the symmetric mode: only the Claude implementer pipeline runs for each task, while the Codex decider remains the final gatekeeper. Ralph-launched Claude roles use `--effort max`.
-
-`--implementation-runner opencode` swaps only the Codex-path implementer onto OpenCode. The Codex-path review, queue chooser, and final decider still run through Codex. This is most useful with `--codex-only` when you want a single OpenCode implementation candidate with Codex review/decider gates. For `ollama/*` OpenCode models, the harness pings the configured Ollama OpenAI-compatible `/models` endpoint before starting; the default is `http://host.docker.internal:11434/v1`. Ollama-backed OpenCode implementers get up to 5 implement/review handback rounds; other implementers keep the normal 3-round limit. Each OpenCode implementer round has a wall-clock timeout, defaulting to 600 seconds, so a stalled local model produces an artifacted timeout and Ralph continues to review the current worktree diff instead of blocking forever.
+`--implementation-runner opencode` swaps the implementer onto OpenCode. Review, optional model chooser, and final decider still run through Codex. For `ollama/*` OpenCode models, the harness pings the configured Ollama OpenAI-compatible `/models` endpoint before starting; the default is `http://host.docker.internal:11434/v1`. Implement/review handback rounds continue until review accepts, unless a positive safety cap is configured. Each OpenCode implementer round has a wall-clock timeout, defaulting to 600 seconds, so a stalled local model produces an artifacted timeout and Ralph continues to review the current worktree diff instead of blocking forever.
 
 OpenCode implementer prompts inline the selected task body and add local-model guardrails to keep the implementation focused on that task, use absolute workspace-root paths for repo/RAW reads, avoid todo-tool schema churn, avoid spawned explore/subagents, avoid clarification questions, and prefer a small task-relevant product diff over long planning. The default OpenCode agent is `ralph-implementer`; configure it with `permission.task: deny` and `permission.question: deny` so OpenCode removes subagent delegation and user-question exits from the implementation tool surface.
 
@@ -231,21 +231,21 @@ For Qwen-family OpenCode models, Ralph prefixes implementation prompts with `/no
 
 `--max-task-attempts` bounds how many full decider-level attempts the same task may consume in one Ralph run. The final allowed attempt is special: the decider must either land the task or make it non-runnable in the plan. If it still tries to leave the task runnable, the harness treats that as a decider/harness contract failure.
 
-Candidate execution is pipeline-based. In dual mode, Claude and Codex still run in parallel, but each candidate follows:
+Implementation execution is pipeline-based:
 
 1. implement;
 2. immediate review;
-3. same-candidate handback if the review says `accept-with-fixes` or `reject`;
-4. decider only after the active candidate pipelines settle.
+3. same-worktree handback if the review says `accept-with-fixes` or `reject`;
+4. decider only after the implementation pipeline settles.
 
-This lets review start as soon as an implementer finishes.
+This lets review start as soon as an implementer finishes. By default, the handback loop has no harness cap and relies on reviewer convergence. Set `RALPH_IMPLEMENTATION_ROUND_LIMIT=N` or pass `--implementation-round-limit N` to enforce a positive cap for a diagnostic run.
 
 The output branch must not already exist. This avoids silently resetting an existing run branch.
 
 To commit reconciled results directly to `master`, pass:
 
 ```bash
-scripts/ralph-dual-run.sh plans/some-plan.md --commit-to-master
+scripts/ralph-run.sh plans/some-plan.md --commit-to-master
 ```
 
 The script refuses to start unless the main worktree is clean and `HEAD` matches `master` (or the `--base` ref) at run start. Each implementer and reviewer prompt also includes the repo-specific branch-base check:
@@ -268,13 +268,13 @@ git rebase master
 Set these when you want to force a model:
 
 ```bash
-RALPH_CLAUDE_MODEL=opus RALPH_CODEX_MODEL=gpt-5.4 scripts/ralph-dual-run.sh plans/some-plan.md
+RALPH_CODEX_MODEL=gpt-5.4 scripts/ralph-run.sh plans/some-plan.md
 ```
 
 For Codex, the equivalent command-line option is:
 
 ```bash
-scripts/ralph-dual-run.sh plans/some-plan.md --codex-model gpt-5.3-codex-spark
+scripts/ralph-run.sh plans/some-plan.md --codex-model gpt-5.3-codex-spark
 ```
 
 For OpenCode-backed implementation:
@@ -285,7 +285,7 @@ RALPH_OPENCODE_MODEL=ollama/qwen3.6:35b-a3b-64k \
 RALPH_OPENCODE_AGENT=ralph-implementer \
 RALPH_OPENCODE_TIMEOUT_SECONDS=600 \
 RALPH_OPENCODE_OLLAMA_BASE_URL=http://host.docker.internal:11434/v1 \
-scripts/ralph-dual-run.sh plans/some-plan.md --codex-only
+scripts/ralph-run.sh plans/some-plan.md
 ```
 
 Default verification is `pnpm quality`. Override it per plan with `--test-command` when the plan has a narrower repo-approved command.
