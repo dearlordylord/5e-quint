@@ -85,6 +85,8 @@ Environment:
                           0 means no harness cap. Default: 0.
   RALPH_STREAM_LOGS       Set to 1 to stream full model logs to the terminal.
                           Default is quiet: persist logs to files only.
+  RALPH_HEARTBEAT_SECONDS Seconds between supervisor heartbeats while a model
+                          or long command is running. Default: 60.
 EOF
 }
 
@@ -116,6 +118,8 @@ note() {
   local now
   now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   printf '%s\t%s\t%s\n' "$now" "$phase" "$message" | tee -a "$events_file" >/dev/null
+  printf 'LAST_EVENT_TIME=%q\nLAST_EVENT_PHASE=%q\nLAST_EVENT_MESSAGE=%q\n' \
+    "$now" "$phase" "$message" >"$run_root/live-status.env"
 }
 
 quote_cmd() {
@@ -197,6 +201,7 @@ opencode_agent="${RALPH_OPENCODE_AGENT:-ralph-implementer}"
 opencode_timeout_seconds="${RALPH_OPENCODE_TIMEOUT_SECONDS:-600}"
 model_chooser="${RALPH_MODEL_CHOOSER:-0}"
 implementation_round_limit="${RALPH_IMPLEMENTATION_ROUND_LIMIT:-0}"
+heartbeat_seconds="${RALPH_HEARTBEAT_SECONDS:-60}"
 selected_tasks=()
 task_branches=()
 active_worktrees=()
@@ -310,6 +315,7 @@ require_cmd git
 require_cmd codex
 require_cmd node
 require_cmd pnpm
+require_cmd rg
 
 load_openrouter_key_from_dotenv
 
@@ -331,6 +337,7 @@ fi
 
 [[ "$model_chooser" == "0" || "$model_chooser" == "1" ]] || die "RALPH_MODEL_CHOOSER must be 0 or 1"
 [[ "$implementation_round_limit" =~ ^[0-9]+$ ]] || die "RALPH_IMPLEMENTATION_ROUND_LIMIT must be a non-negative integer"
+[[ "$heartbeat_seconds" =~ ^[1-9][0-9]*$ ]] || die "RALPH_HEARTBEAT_SECONDS must be a positive integer"
 
 [[ -f "$plan_file" ]] || die "plan file not found: $plan_file"
 plan_file="$(realpath "$plan_file")"
@@ -374,6 +381,7 @@ events_file="$run_root/events.tsv"
 history_file="$run_root/history.tsv"
 state_file="$run_root/state.env"
 last_error_file="$run_root/last-error.txt"
+run_report_file="$run_root/run-report.md"
 
 : >"$events_file"
 printf 'iteration\ttask_no\ttask_id\tattempt\tresult\tcommit\tmessage\n' >"$history_file"
@@ -390,6 +398,7 @@ write_state() {
     printf 'MAX_TASK_ATTEMPTS=%q\n' "$max_task_attempts"
     printf 'MODEL_CHOOSER=%q\n' "$model_chooser"
     printf 'IMPLEMENTATION_ROUND_LIMIT=%q\n' "$implementation_round_limit"
+    printf 'HEARTBEAT_SECONDS=%q\n' "$heartbeat_seconds"
     printf 'IMPLEMENTATION_RUNNER=%q\n' "$implementation_runner"
     printf 'OPENCODE_MODEL=%q\n' "$opencode_model"
     printf 'OPENCODE_AGENT=%q\n' "$opencode_agent"
@@ -912,11 +921,100 @@ cleanup() {
     note "run" "aborted status=$status"
   fi
 
+  write_run_report "$status" || true
+
   exit "$status"
 }
 trap cleanup EXIT
 trap 'printf "interrupted\n" >"$last_error_file"; exit 130' INT
 trap 'printf "terminated\n" >"$last_error_file"; exit 143' TERM
+
+wait_with_heartbeat() {
+  local pid="$1"
+  local phase="$2"
+  local log_file="$3"
+  local output_file="${4:-}"
+  local start
+  local elapsed
+  local log_bytes
+  local output_bytes
+  start="$(date +%s)"
+
+  while kill -0 "$pid" >/dev/null 2>&1; do
+    sleep "$heartbeat_seconds"
+    if ! kill -0 "$pid" >/dev/null 2>&1; then
+      break
+    fi
+    elapsed=$(( $(date +%s) - start ))
+    log_bytes=0
+    output_bytes=0
+    [[ -f "$log_file" ]] && log_bytes="$(wc -c <"$log_file" 2>/dev/null || printf '0')"
+    [[ -n "$output_file" && -f "$output_file" ]] && output_bytes="$(wc -c <"$output_file" 2>/dev/null || printf '0')"
+    note "heartbeat" "phase=$phase elapsed=${elapsed}s pid=$pid log=$log_file log_bytes=$log_bytes output=$output_file output_bytes=$output_bytes"
+    log "heartbeat phase=$phase elapsed=${elapsed}s pid=$pid log=$log_file"
+  done
+
+  wait "$pid"
+}
+
+write_run_report() {
+  local status="$1"
+  local head=""
+  local branch=""
+  local clean="unknown"
+  branch="$(git branch --show-current 2>/dev/null || true)"
+  head="$(git rev-parse --short HEAD 2>/dev/null || true)"
+  if git diff --quiet >/dev/null 2>&1 && git diff --cached --quiet >/dev/null 2>&1; then
+    clean="yes"
+  else
+    clean="no"
+  fi
+
+  {
+    printf '# Ralph Run Report\n\n'
+    printf '- Run id: `%s`\n' "$run_id"
+    printf '- Exit status: `%s`\n' "$status"
+    printf '- Branch: `%s`\n' "$branch"
+    printf '- HEAD: `%s`\n' "$head"
+    printf '- Base: `%s` `%s`\n' "$base_ref" "$base_sha"
+    printf '- Output branch: `%s`\n' "$output_branch"
+    printf '- Main worktree clean: `%s`\n' "$clean"
+    printf '\n## Last Error\n\n'
+    if [[ -s "$last_error_file" ]]; then
+      sed -n '1,80p' "$last_error_file"
+    else
+      printf 'none\n'
+    fi
+    printf '\n## History\n\n'
+    if [[ -s "$history_file" ]]; then
+      tail -n 40 "$history_file"
+    else
+      printf 'none\n'
+    fi
+    printf '\n## Recent Events\n\n'
+    if [[ -s "$events_file" ]]; then
+      tail -n 80 "$events_file"
+    else
+      printf 'none\n'
+    fi
+  } >"$run_report_file"
+}
+
+write_process_snapshot() {
+  local output_file="$1"
+  {
+    printf '# Ralph Process Snapshot\n\n'
+    printf 'Generated: `%s`\n\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    printf '## Ralph / Codex / OpenCode\n\n'
+    ps -eo pid,ppid,etimes,stat,cmd |
+      rg 'ralph-run|codex exec|opencode run' |
+      rg -v 'rg ' || true
+    printf '\n## MBT / Quint\n\n'
+    ps -eo pid,ppid,etimes,stat,cmd |
+      rg 'vitest|quint_evaluator|mbt-fuzz|fuzz-all|fuzz-overnight|escalate-fuzz' |
+      rg -v 'rg ' || true
+  } >"$output_file"
+}
 
 write_prompt() {
   local role="$1"
@@ -1216,7 +1314,9 @@ run_implementation_pipeline() {
     local review_report="$round_prefix-review.md"
     local review_exit="$round_prefix-review.exit"
     local diff_file="$round_prefix.diff"
+    local full_diff_file="$round_prefix.full.diff"
     local after_review_diff="$round_prefix.after-review.diff"
+    local after_review_full_diff="$round_prefix.after-review.full.diff"
 
     note "task" "implementation-start task=$task_no round=$round"
     write_implementation_prompt "$implementer_role" "$implementer_prompt" "$workspace" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha" "$context_file" "$previous_review" "$round" "$runner"
@@ -1228,6 +1328,7 @@ run_implementation_pipeline() {
       run_codex_implementer "$workspace" "$implementer_prompt" "$implementer_log" "$implementer_final" "$session_file" || implementer_status=$?
     fi
     printf '%s\n' "$implementer_status" >"$implementer_exit"
+    save_full_diff "$workspace" "$full_diff_file" "$task_base_sha"
     save_diff "$workspace" "$diff_file" "$task_base_sha"
     note "task" "implementation-finished task=$task_no round=$round status=$implementer_status"
 
@@ -1235,6 +1336,7 @@ run_implementation_pipeline() {
     local review_status=0
     run_codex "$workspace" "$review_prompt" "$review_log" "$review_report" || review_status=$?
     printf '%s\n' "$review_status" >"$review_exit"
+    save_full_diff "$workspace" "$after_review_full_diff" "$task_base_sha"
     save_diff "$workspace" "$after_review_diff" "$task_base_sha"
     verdict="$(parse_review_verdict "$review_report")"
     note "task" "implementation-reviewed task=$task_no round=$round verdict=$verdict status=$review_status"
@@ -1256,11 +1358,13 @@ run_implementation_pipeline() {
   cp -f "$attempt_root/$slug-round-$round-implementer.log" "$attempt_root/$slug-implementer.log"
   cp -f "$attempt_root/$slug-round-$round-implementer.exit" "$attempt_root/$slug-implementer.exit"
   cp -f "$attempt_root/$slug-round-$round.diff" "$attempt_root/$slug.diff"
+  cp -f "$attempt_root/$slug-round-$round.full.diff" "$attempt_root/$slug.full.diff"
   cp -f "$attempt_root/$slug-round-$round-review.prompt.md" "$attempt_root/$slug-review.prompt.md"
   cp -f "$attempt_root/$slug-round-$round-review.log" "$attempt_root/$slug-review.log"
   cp -f "$attempt_root/$slug-round-$round-review.md" "$attempt_root/$slug-review.md"
   cp -f "$attempt_root/$slug-round-$round-review.exit" "$attempt_root/$slug-review.exit"
   cp -f "$attempt_root/$slug-round-$round.after-review.diff" "$attempt_root/$slug.after-review.diff"
+  cp -f "$attempt_root/$slug-round-$round.after-review.full.diff" "$attempt_root/$slug.after-review.full.diff"
   if [[ -f "$attempt_root/$slug-round-$round-implementer.final.md" ]]; then
     cp -f "$attempt_root/$slug-round-$round-implementer.final.md" "$attempt_root/$slug-implementer.final.md"
   fi
@@ -1324,7 +1428,8 @@ run_codex() {
     codex "${args[@]}" - <"$prompt" 2>&1 | tee "$log_file" >&2
     status=${PIPESTATUS[0]}
   else
-    codex "${args[@]}" - <"$prompt" >"$log_file" 2>&1
+    codex "${args[@]}" - <"$prompt" >"$log_file" 2>&1 &
+    wait_with_heartbeat "$!" "codex" "$log_file" "$output_file"
     status=$?
   fi
   set -e
@@ -1401,7 +1506,8 @@ run_codex_implementer() {
       (cd "$workspace" && codex "${args[@]}" <"$prompt" 2>&1 | tee "$log_file" >&2)
       status=${PIPESTATUS[0]}
     else
-      (cd "$workspace" && codex "${args[@]}" <"$prompt" >"$log_file" 2>&1)
+      (cd "$workspace" && codex "${args[@]}" <"$prompt" >"$log_file" 2>&1) &
+      wait_with_heartbeat "$!" "codex-implementer-resume" "$log_file" "$output_file"
       status=$?
     fi
     set -e
@@ -1416,7 +1522,8 @@ run_codex_implementer() {
       codex "${args[@]}" - <"$prompt" 2>&1 | tee "$log_file" >&2
       status=${PIPESTATUS[0]}
     else
-      codex "${args[@]}" - <"$prompt" >"$log_file" 2>&1
+      codex "${args[@]}" - <"$prompt" >"$log_file" 2>&1 &
+      wait_with_heartbeat "$!" "codex-implementer" "$log_file" "$output_file"
       status=$?
     fi
     set -e
@@ -1463,7 +1570,8 @@ run_opencode() {
     "${timeout_args[@]}" opencode "${args[@]}" "$message" 2>&1 | tee "$log_file" "$output_file" >&2
     status=${PIPESTATUS[0]}
   else
-    "${timeout_args[@]}" opencode "${args[@]}" "$message" >"$output_file" 2>"$log_file"
+    "${timeout_args[@]}" opencode "${args[@]}" "$message" >"$output_file" 2>"$log_file" &
+    wait_with_heartbeat "$!" "opencode-implementer" "$log_file" "$output_file"
     status=$?
   fi
   set -e
@@ -1482,6 +1590,19 @@ run_opencode() {
 }
 
 save_diff() {
+  local workspace="$1"
+  local output_file="$2"
+  local diff_base_sha="$3"
+  git -C "$workspace" diff --binary "$diff_base_sha" -- . \
+    ':(exclude)scripts/mbt-fuzz.sh' \
+    ':(exclude)scripts/mbt-fuzz-timed.sh' \
+    ':(exclude)scripts/fuzz-all.sh' \
+    ':(exclude)scripts/fuzz-overnight.sh' \
+    ':(exclude)scripts/escalate-fuzz.sh' \
+    ':(exclude)scripts/measure-tier-timing.sh' >"$output_file"
+}
+
+save_full_diff() {
   local workspace="$1"
   local output_file="$2"
   local diff_base_sha="$3"
@@ -2201,6 +2322,7 @@ run_task_attempt() {
 
   log "task $task_no attempt $attempt_no: $task_title"
   note "task" "start iteration=$iteration task=$task_no id=$task_id attempt=$attempt_no status=$status base=$task_base_sha"
+  write_process_snapshot "$attempt_root/process-before.md"
 
   kill_stray_mbt_processes
   cleanup_mbt_artifacts
@@ -2379,6 +2501,7 @@ run_task_attempt() {
   esac
   kill_stray_mbt_processes
   cleanup_mbt_artifacts
+  write_process_snapshot "$attempt_root/process-after.md"
 
   local new_head
   new_head="$(git rev-parse HEAD)"
@@ -2403,6 +2526,7 @@ log "base $base_ref is $base_sha"
 log "output branch: $output_branch"
 log "run state: $run_root"
 note "run" "start base=$base_ref sha=$base_sha output=$output_branch"
+write_process_snapshot "$run_root/process-start.md"
 
 kill_stray_mbt_processes
 cleanup_mbt_artifacts
@@ -2467,3 +2591,4 @@ while true; do
 done
 
 log "done. run state: $run_root"
+write_process_snapshot "$run_root/process-end.md"

@@ -18,6 +18,15 @@ Runtime logs, prompts, task context packets, review reports, chooser outputs, ma
 The supplied plan is copied to `.ralph/runs/<run-id>/plan.md` and agents read that snapshot. The snapshot is refreshed from the source plan file after every decider run, so a task can update future planning when it discovers new information. Unfiltered runs rescan the refreshed `ralph-task-index` after every task, so newly added runnable tasks and newly unblocked tasks are picked up automatically. Explicit `--task` selections still run in the requested order because the operator has deliberately selected them.
 When auto-unblocking dependency-blocked tasks, the harness expands same-prefix dependency ranges such as `QMBT40-QMBT42` and same-number letter ranges such as `SRDINV28A-SRDINV28E` into their concrete task IDs before checking whether all dependencies are `done`.
 
+For unattended runs, Ralph emits supervisor heartbeats while Codex/OpenCode
+children are quiet. Heartbeats are appended to `events.tsv`, mirrored to
+`live-status.env`, and printed as concise `[ralph] heartbeat ...` lines. Set
+`RALPH_HEARTBEAT_SECONDS=N` to tune the interval; the default is 60 seconds.
+Every run also writes `run-report.md` on both success and failure, plus
+`process-start.md`, `process-end.md`, and per-attempt process snapshots so a
+later operator can tell whether the run finished cleanly, failed, or left
+relevant MBT/model processes behind.
+
 If Ralph finds no runnable tasks but a blocked task depends only on completed or missing historical task IDs, the run fails loudly instead of reporting normal completion. That state usually means the active queue removed completed dependencies without unblocking the follow-up task; repair the plan by unblocking the task, restoring dependency tasks to the active index, or recording an explicit owner-decision blocker.
 
 If `OPENROUTER_API_KEY` is not already exported in the shell, the harness loads it from repo-root `.env` before launching agents.
@@ -28,11 +37,14 @@ keeps live run observation from copying full model transcripts into the
 supervising context window. Set `RALPH_STREAM_LOGS=1` only for short diagnostic
 runs where terminal streaming is explicitly worth the context cost.
 
-Post-mortem inspection should start from `events.tsv`, `history.tsv`,
-`task-context.md`, `matrix-delta.md`, `*-implementer.final.md`, `*-review.md`, `decider.final.md`, and `git diff
---stat` over saved diffs. Open full `*.log` files or large `*.diff` files only
-after narrowing to a concrete failure. In particular, standard Ralph fuzz-script
-stub diffs are harness noise and should not be pasted into model context.
+Post-mortem inspection should start from `run-report.md`, `events.tsv`,
+`live-status.env`, `history.tsv`, `task-context.md`, `matrix-delta.md`,
+`*-implementer.final.md`, `*-review.md`, `decider.final.md`, and `git diff
+--stat` over saved diffs. Saved `*.diff` and `*.after-review.diff` artifacts are
+task-owned views that exclude Ralph's standard fuzz-script stubs. The
+corresponding `*.full.diff` artifacts keep the raw worktree diff for harness
+debugging. Open full `*.log` files or large `*.full.diff` files only after
+narrowing to a concrete failure.
 
 Important queue contract: unfiltered Ralph runs are phase-capable. A numbered task may update later tasks, unblock later tasks, add new later tasks, reorder the future queue, or turn itself back into a runnable state after a research/plan pass. After every decider refresh, the harness selects again from the live runnable set, including reruns of the same numbered task when the plan clearly intends that.
 
