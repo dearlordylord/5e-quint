@@ -972,13 +972,13 @@ write_run_report() {
 
   {
     printf '# Ralph Run Report\n\n'
-    printf '- Run id: `%s`\n' "$run_id"
-    printf '- Exit status: `%s`\n' "$status"
-    printf '- Branch: `%s`\n' "$branch"
-    printf '- HEAD: `%s`\n' "$head"
-    printf '- Base: `%s` `%s`\n' "$base_ref" "$base_sha"
-    printf '- Output branch: `%s`\n' "$output_branch"
-    printf '- Main worktree clean: `%s`\n' "$clean"
+    printf -- '- Run id: `%s`\n' "$run_id"
+    printf -- '- Exit status: `%s`\n' "$status"
+    printf -- '- Branch: `%s`\n' "$branch"
+    printf -- '- HEAD: `%s`\n' "$head"
+    printf -- '- Base: `%s` `%s`\n' "$base_ref" "$base_sha"
+    printf -- '- Output branch: `%s`\n' "$output_branch"
+    printf -- '- Main worktree clean: `%s`\n' "$clean"
     printf '\n## Last Error\n\n'
     if [[ -s "$last_error_file" ]]; then
       sed -n '1,80p' "$last_error_file"
