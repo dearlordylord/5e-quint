@@ -9,14 +9,24 @@ import {
   removeCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
 import type { ConditionState } from "@dnd/shared-algebras/conditions-algebra";
+import type { CreatureType } from "@dnd/shared/game-facts";
 import type { Condition } from "@dnd/shared/types";
 import type { SpellId } from "../identity.ts";
 import type { CombatantId } from "../identity.ts";
 import type {
   BattleActiveEffect,
   BattleCreatureState,
+  BattlePossessionAttemptDisposition,
   BattleState,
+  ProtectionFromEvilAndGoodPreventedCondition,
 } from "../battle-reducer.ts";
+import { battleCreatureType } from "./domain-helpers.ts";
+
+export type BattlePossessionAttemptInput = {
+  readonly state: BattleState;
+  readonly sourceCombatantId: CombatantId;
+  readonly targetId: CombatantId;
+};
 
 export function conditionHasNonSpellSource(
   combatant: BattleCreatureState,
@@ -42,6 +52,117 @@ export function conditionHadNonSpellSourceBeforeSpellEffect(
         "conditionHadNonSpellSource" in effect &&
         effect.conditionHadNonSpellSource,
     )
+  );
+}
+
+export function conditionApplicationPreventedByCreatureTypeProtection(
+  state: BattleState,
+  sourceCombatantId: CombatantId,
+  target: BattleCreatureState,
+  condition: Condition,
+): boolean {
+  if (!isProtectionFromEvilAndGoodPreventedCondition(condition)) {
+    return false;
+  }
+  const sourceCreatureType = battleCreatureTypeForCombatant(
+    state,
+    sourceCombatantId,
+  );
+  return (
+    sourceCreatureType !== null &&
+    target.activeEffects.some(
+      (effect) =>
+        creatureTypeProtectionAppliesToSource(effect, sourceCreatureType) &&
+        effect.preventedConditions.includes(condition),
+    )
+  );
+}
+
+export function resolveBattlePossessionAttempt({
+  state,
+  sourceCombatantId,
+  targetId,
+}: BattlePossessionAttemptInput): BattlePossessionAttemptDisposition {
+  const source = state.combatants.get(sourceCombatantId);
+  if (source === undefined) {
+    return {
+      tag: "invalid",
+      reason: "unknownSourceCombatant",
+      sourceCombatantId,
+      targetId,
+    };
+  }
+  const target = state.combatants.get(targetId);
+  if (target === undefined) {
+    return {
+      tag: "invalid",
+      reason: "unknownTargetCombatant",
+      sourceCombatantId,
+      targetId,
+    };
+  }
+
+  const sourceCreatureType = battleCreatureType(source);
+  if (sourceCreatureType === null) {
+    return {
+      tag: "invalid",
+      reason: "unknownSourceCreatureType",
+      sourceCombatantId,
+      targetId,
+    };
+  }
+
+  if (
+    possessionApplicationPreventedByCreatureTypeProtection(
+      sourceCreatureType,
+      target,
+    )
+  ) {
+    return {
+      tag: "prevented",
+      prevention: "creatureTypeProtection",
+      sourceCombatantId,
+      targetId,
+    };
+  }
+  return { tag: "unprevented", sourceCombatantId, targetId };
+}
+
+function battleCreatureTypeForCombatant(
+  state: BattleState,
+  combatantId: CombatantId,
+): CreatureType | null {
+  const combatant = state.combatants.get(combatantId);
+  return combatant === undefined ? null : battleCreatureType(combatant);
+}
+
+function isProtectionFromEvilAndGoodPreventedCondition(
+  condition: Condition,
+): condition is ProtectionFromEvilAndGoodPreventedCondition {
+  return condition === "charmed" || condition === "frightened";
+}
+
+function possessionApplicationPreventedByCreatureTypeProtection(
+  sourceCreatureType: CreatureType,
+  target: BattleCreatureState,
+): boolean {
+  return target.activeEffects.some(
+    (effect) =>
+      creatureTypeProtectionAppliesToSource(effect, sourceCreatureType) &&
+      effect.preventsPossession,
+  );
+}
+
+function creatureTypeProtectionAppliesToSource(
+  effect: BattleActiveEffect,
+  sourceCreatureType: CreatureType,
+): effect is Extract<
+  BattleActiveEffect,
+  { readonly kind: "creatureTypeProtection" }
+> {
+  return (
+    effect.kind === "creatureTypeProtection" &&
+    effect.protectedAgainstCreatureTypes.includes(sourceCreatureType)
   );
 }
 

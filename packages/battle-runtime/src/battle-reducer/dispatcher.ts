@@ -73,7 +73,7 @@ import {
   attackDamageEventEntries,
   damageAmountByTypeEntriesAfterScalarReduction,
 } from "./attack-damage-events.ts";
-import { battleCreatureType } from "./attack-roll.ts";
+import { battleCreatureType } from "./domain-helpers.ts";
 import {
   reactionModifierReductionRoll,
   reactionRollOrDamageReductionChoices,

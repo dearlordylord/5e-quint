@@ -11,7 +11,8 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29F3 chromatic_orb
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30A false_life longstrider shield_of_faith
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30B bane bless guidance
-// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30C animal_friendship protection_from_evil_and_good
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30C animal_friendship
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV60A protection_from_evil_and_good
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV37 charm_person
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30D heroism
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30E faerie_fire
@@ -119,6 +120,7 @@ import {
   initiativeScore,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   resolveBattleReaction,
+  resolveBattlePossessionAttempt,
   resolveBattleSubject,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   sameBattleSubject,
@@ -140,6 +142,8 @@ import {
   type SupportedSpellInvocation,
 } from "./index.ts";
 import { characterBattleResourceForUnit } from "./character-battle-resources.ts";
+import { conditionApplicationPreventedByCreatureTypeProtection } from "./battle-reducer/spell-condition-effects-helpers.ts";
+import { applyFailedSaveSpellConditionEffects } from "./battle-reducer/spells-active-effects.ts";
 import {
   ALTERNATE_ACTION_COST_ACTIONS,
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
@@ -9876,11 +9880,11 @@ describe("SRDINV30C deterministic protection and charm Spell Unit admission", ()
       resolved.state.combatants.get(spellTargetId)?.activeEffects,
     ).toContainEqual(
       expect.objectContaining({
-        kind: "attackerTypeScopedAttackRollAgainstSelf",
+        kind: "creatureTypeProtection",
         sourceSpellId: protectionFromEvilAndGoodUnitId,
         sourceCombatantId: spellCasterId,
-        mode: "disadvantage",
-        attackerCreatureTypes: [
+        attackRollMode: "disadvantage",
+        protectedAgainstCreatureTypes: [
           "aberration",
           "celestial",
           "elemental",
@@ -9888,6 +9892,8 @@ describe("SRDINV30C deterministic protection and charm Spell Unit admission", ()
           "fiend",
           "undead",
         ],
+        preventedConditions: ["charmed", "frightened"],
+        preventsPossession: true,
         expiresAt: { kind: "concentration", combatantId: spellCasterId },
       }),
     );
@@ -9963,6 +9969,205 @@ describe("SRDINV30C deterministic protection and charm Spell Unit admission", ()
       "attackRoll",
     );
     expect(humanoidRoll.rollMode).toBeUndefined();
+  });
+
+  test("protection from evil and good prevents new Charmed or Frightened from scoped creature types only", () => {
+    const protection = spellRecord(protectionFromEvilAndGoodUnitId);
+    const charmPerson = spellRecord(charmPersonUnitId);
+    const feySourceId = combatantId("unit-profile-protection-fey-source");
+    const state = spellBattle({
+      preparedSpells: [protection, charmPerson],
+      statBlockTargets: [
+        {
+          combatantId: feySourceId,
+          statBlock: statBlockWithCreatureType("fey"),
+          initiative: 9,
+        },
+      ],
+    });
+    const protectionAct = spellAct({
+      state,
+      spellId: protectionFromEvilAndGoodUnitId,
+    });
+    const protectionTarget = requireHole(
+      protectionAct.initialHoles,
+      "targetChoice",
+    );
+    const protectedResult = resolveBattleSubject({
+      state,
+      subject: protectionAct.subject,
+      fills: [
+        spellTargetFill(
+          protectionTarget,
+          protectionFromEvilAndGoodUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+      ],
+    });
+    expect(protectedResult).toMatchObject({ tag: "resolved" });
+    if (protectedResult.tag !== "resolved") {
+      throw new Error("Expected Protection from Evil and Good to resolve.");
+    }
+
+    const charmInvocation = spellActInvocation(
+      spellAct({ state, spellId: charmPersonUnitId }),
+    );
+    if (charmInvocation.procedure !== "saveGatedCondition") {
+      throw new Error("Expected Charm Person to be a save-gated condition.");
+    }
+    const protectedTarget = requireCombatant(
+      protectedResult.state,
+      spellTargetId,
+    );
+    expect(
+      conditionApplicationPreventedByCreatureTypeProtection(
+        protectedResult.state,
+        feySourceId,
+        protectedTarget,
+        "frightened",
+      ),
+    ).toBe(true);
+    expect(
+      resolveBattlePossessionAttempt({
+        state: protectedResult.state,
+        sourceCombatantId: feySourceId,
+        targetId: spellTargetId,
+      }),
+    ).toEqual({
+      tag: "prevented",
+      prevention: "creatureTypeProtection",
+      sourceCombatantId: feySourceId,
+      targetId: spellTargetId,
+    });
+    expect(
+      resolveBattlePossessionAttempt({
+        state: protectedResult.state,
+        sourceCombatantId: spellCasterId,
+        targetId: spellTargetId,
+      }),
+    ).toEqual({
+      tag: "unprevented",
+      sourceCombatantId: spellCasterId,
+      targetId: spellTargetId,
+    });
+
+    const scopedSourceApplied = applyFailedSaveSpellConditionEffects(
+      protectedResult.state,
+      feySourceId,
+      [spellTargetId],
+      charmInvocation,
+    );
+    expect(requireCombatant(scopedSourceApplied, spellTargetId)).toMatchObject({
+      conditions: expect.not.objectContaining({ charmed: true }),
+      activeEffects: expect.not.arrayContaining([
+        expect.objectContaining({
+          kind: "spellCondition",
+          condition: "charmed",
+        }),
+      ]),
+    });
+
+    const unscopedSourceApplied = applyFailedSaveSpellConditionEffects(
+      protectedResult.state,
+      spellCasterId,
+      [spellTargetId],
+      charmInvocation,
+    );
+    expect(
+      requireCombatant(unscopedSourceApplied, spellTargetId),
+    ).toMatchObject({
+      conditions: expect.objectContaining({ charmed: true }),
+      activeEffects: expect.arrayContaining([
+        expect.objectContaining({
+          kind: "spellCondition",
+          sourceCombatantId: spellCasterId,
+          condition: "charmed",
+        }),
+      ]),
+    });
+  });
+
+  test("protection from evil and good condition prevention ends with Concentration", () => {
+    const protection = spellRecord(protectionFromEvilAndGoodUnitId);
+    const charmPerson = spellRecord(charmPersonUnitId);
+    const undeadSourceId = combatantId("unit-profile-protection-undead-source");
+    const state = spellBattle({
+      preparedSpells: [protection, charmPerson],
+      statBlockTargets: [
+        {
+          combatantId: undeadSourceId,
+          statBlock: statBlockWithCreatureType("undead"),
+          initiative: 9,
+        },
+      ],
+    });
+    const protectionAct = spellAct({
+      state,
+      spellId: protectionFromEvilAndGoodUnitId,
+    });
+    const targetHole = requireHole(protectionAct.initialHoles, "targetChoice");
+    const protectedResult = resolveBattleSubject({
+      state,
+      subject: protectionAct.subject,
+      fills: [
+        spellTargetFill(
+          targetHole,
+          protectionFromEvilAndGoodUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+      ],
+    });
+    if (protectedResult.tag !== "resolved") {
+      throw new Error("Expected Protection from Evil and Good to resolve.");
+    }
+    const charmInvocation = spellActInvocation(
+      spellAct({ state, spellId: charmPersonUnitId }),
+    );
+    if (charmInvocation.procedure !== "saveGatedCondition") {
+      throw new Error("Expected Charm Person to be a save-gated condition.");
+    }
+
+    const concentrationBroken = breakBattleConcentration(
+      protectedResult.state,
+      spellCasterId,
+    );
+    expect(
+      requireCombatant(concentrationBroken, spellTargetId).activeEffects,
+    ).toEqual(
+      expect.not.arrayContaining([
+        expect.objectContaining({ kind: "creatureTypeProtection" }),
+      ]),
+    );
+    expect(
+      resolveBattlePossessionAttempt({
+        state: concentrationBroken,
+        sourceCombatantId: undeadSourceId,
+        targetId: spellTargetId,
+      }),
+    ).toEqual({
+      tag: "unprevented",
+      sourceCombatantId: undeadSourceId,
+      targetId: spellTargetId,
+    });
+
+    const afterScopedSource = applyFailedSaveSpellConditionEffects(
+      concentrationBroken,
+      undeadSourceId,
+      [spellTargetId],
+      charmInvocation,
+    );
+    expect(requireCombatant(afterScopedSource, spellTargetId)).toMatchObject({
+      conditions: expect.objectContaining({ charmed: true }),
+      activeEffects: expect.arrayContaining([
+        expect.objectContaining({
+          kind: "spellCondition",
+          sourceCombatantId: undeadSourceId,
+          condition: "charmed",
+        }),
+      ]),
+    });
   });
 });
 

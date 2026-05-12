@@ -18,6 +18,7 @@ import {
 import { scalarBuffTemporaryHitPointsAmount } from "./spell-effects.ts";
 import {
   conditionsAfterApplyingSpellConditionEffects,
+  conditionApplicationPreventedByCreatureTypeProtection,
   conditionHadNonSpellSourceBeforeSpellEffect,
 } from "./spell-condition-effects-helpers.ts";
 import {
@@ -200,6 +201,16 @@ export function applyFailedSaveSpellConditionEffects(
   for (const targetId of targetIds) {
     const target = combatants.get(targetId);
     if (target === undefined) {
+      continue;
+    }
+    if (
+      conditionApplicationPreventedByCreatureTypeProtection(
+        state,
+        actorId,
+        target,
+        invocation.effect.condition,
+      )
+    ) {
       continue;
     }
     const replacing = target.activeEffects.filter(
@@ -869,7 +880,7 @@ export function applyCreatureTypeProtectionSpellEffect(
       ...target.activeEffects.filter(
         (effect) =>
           !(
-            effect.kind === "attackerTypeScopedAttackRollAgainstSelf" &&
+            effect.kind === "creatureTypeProtection" &&
             effect.sourceSpellId === invocation.spell.id &&
             effect.sourceCombatantId === actorId
           ),

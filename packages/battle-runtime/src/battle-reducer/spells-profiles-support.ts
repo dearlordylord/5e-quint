@@ -46,7 +46,10 @@ import {
 import type { CharacterBattleSpellcastingState } from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
 import { activeMarkedDamageRiderEffect } from "./damage-helpers.ts";
-import { PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES } from "./domain-constants.ts";
+import {
+  PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES,
+  PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS,
+} from "./domain-constants.ts";
 import { supportedDamageAmountExpr } from "./spells-profiles-save-gates.ts";
 import {
   sameStringSet,
@@ -536,11 +539,17 @@ export function creatureTypeProtectionSpellProjection(
   return {
     targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
     activeEffect: {
-      kind: "attackerTypeScopedAttackRollAgainstSelf",
+      kind: "creatureTypeProtection",
       sourceSpellId: spell.id,
       sourceCombatantId: actorId,
-      mode: "disadvantage",
-      attackerCreatureTypes: [...PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES],
+      attackRollMode: "disadvantage",
+      protectedAgainstCreatureTypes: [
+        ...PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES,
+      ],
+      preventedConditions: [
+        ...PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS,
+      ],
+      preventsPossession: true,
       expiresAt,
     },
     rangeFeet: movementFeet(5),

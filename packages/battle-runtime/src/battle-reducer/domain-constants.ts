@@ -7,7 +7,7 @@ import {
   holeId,
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
-import type { CreatureType } from "@dnd/shared/game-facts";
+import type { Condition, CreatureType } from "@dnd/shared/game-facts";
 import { movementFeet } from "@dnd/shared/types";
 import type { DamageType, SpellRecord } from "@dnd/surface/surface/types";
 
@@ -73,3 +73,7 @@ export const PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES = [
   "fiend",
   "undead",
 ] as const satisfies ReadonlyArray<CreatureType>;
+export const PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS = [
+  "charmed",
+  "frightened",
+] as const satisfies ReadonlyArray<Condition>;

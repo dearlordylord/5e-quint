@@ -172,6 +172,7 @@ export {
   type BattleObjectDamageDisposition,
   type BattleObjectDamageOutcome,
   type BattleObjectTargetChoiceHole,
+  type BattlePossessionAttemptDisposition,
   type BattleReactionDecision,
   type BattleReactionDecisionHole,
   type BattleReactionFrame,
@@ -211,6 +212,10 @@ export {
   type SuccessfulAbilityCheckReactionReductionResolutionInput,
   type SuccessfulAbilityCheckReactionReductionResolutionResult,
 } from "./battle-reducer.ts";
+export {
+  resolveBattlePossessionAttempt,
+  type BattlePossessionAttemptInput,
+} from "./battle-reducer/spell-condition-effects-helpers.ts";
 export {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,

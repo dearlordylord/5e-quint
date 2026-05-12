@@ -78,8 +78,8 @@
     },
     "qntProofCoverage": {
       "denominator": 47,
-      "numerator": 45,
-      "percent": "95.7%"
+      "numerator": 46,
+      "percent": "97.9%"
     },
     "runtimeMappingCoverage": {
       "denominator": 47,
@@ -1491,10 +1491,15 @@
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
       "taskRefs": [
-        "SRDINV30C"
+        "SRDINV30C",
+        "SRDINV60A"
       ],
       "title": "Spell invocation applies creature-type-scoped Charmed or attack-roll protection active effects",
       "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
@@ -1996,11 +2001,27 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime admission and reducer tests for Animal Friendship Beast-target Charmed application and Protection from Evil and Good attacker-creature-type attack Disadvantage. Damage-break, possession, condition-immunity, and already-applied-effect save-Advantage clauses remain checker-visible deferred mechanics.",
+      "note": "Focused battle-runtime admission and reducer tests for Animal Friendship Beast-target Charmed application and Protection from Evil and Good attacker-creature-type attack Disadvantage. Animal Friendship damage-break and Protection from Evil and Good already-applied-effect save-Advantage clauses remain checker-visible deferred mechanics.",
       "profileIds": [
         "spell.creature-type-protection-and-charm"
       ],
       "taskId": "SRDINV30C"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Protection from Evil and Good scoped-creature possession-attempt prevention and new Charmed/Frightened condition prevention.",
+      "profileIds": [
+        "spell.creature-type-protection-and-charm"
+      ],
+      "taskId": "SRDINV60A"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime reducer tests cover Protection from Evil and Good scoped possession-attempt disposition, scoped Charmed/Frightened prevention, unscoped pass-through, and concentration cleanup.",
+      "profileIds": [
+        "spell.creature-type-protection-and-charm"
+      ],
+      "taskId": "SRDINV60A"
     },
     {
       "claimKind": "qnt-proof",
@@ -4745,10 +4766,15 @@
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
           "taskRefs": [
-            "SRDINV30C"
+            "SRDINV30C",
+            "SRDINV60A"
           ],
           "title": "Spell invocation applies creature-type-scoped Charmed or attack-roll protection active effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
@@ -6727,15 +6753,7 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "SRDINV33",
-            "mechanic": "target can't be possessed by scoped creatures"
-          },
-          {
-            "followUpTaskId": "SRDINV33",
-            "mechanic": "target can't gain Charmed or Frightened from scoped creatures"
-          },
-          {
-            "followUpTaskId": "SRDINV33",
+            "followUpTaskId": "SRDINV60B",
             "mechanic": "Advantage on new saves against already-applied possession, Charmed, or Frightened effects from scoped creatures"
           }
         ],
@@ -6749,7 +6767,9 @@
           "one touched target",
           "concentration active effect",
           "Aberration/Celestial/Elemental/Fey/Fiend/Undead attacker creature-type filter",
-          "attack-roll Disadvantage against the protected target"
+          "attack-roll Disadvantage against the protected target",
+          "target can't be possessed by scoped creatures",
+          "target can't gain Charmed or Frightened from scoped creatures"
         ],
         "tag": "profile-subset-supported"
       },
@@ -6758,7 +6778,7 @@
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
-          "taskId": "SRDINV30C"
+          "taskId": "SRDINV60A"
         }
       ],
       "executableMechanics": true,
@@ -6774,10 +6794,15 @@
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
           "taskRefs": [
-            "SRDINV30C"
+            "SRDINV30C",
+            "SRDINV60A"
           ],
           "title": "Spell invocation applies creature-type-scoped Charmed or attack-roll protection active effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
@@ -8366,10 +8391,15 @@
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
           "taskRefs": [
-            "SRDINV30C"
+            "SRDINV30C",
+            "SRDINV60A"
           ],
           "title": "Spell invocation applies creature-type-scoped Charmed or attack-roll protection active effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"

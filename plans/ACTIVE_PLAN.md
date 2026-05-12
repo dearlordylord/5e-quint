@@ -124,13 +124,13 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 261,
       "id": "SRDINV60A",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Protection from Evil and Good Condition Prevention"
     },
     {
       "number": 262,
       "id": "SRDINV60B",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Promote Protection from Evil and Good Scoped Save Advantage"
     },
     {
@@ -343,8 +343,8 @@ Keep it synchronized with the DAG table and task details.
 | 258   | SRDINV58B - Research Faerie Fire Object Outline and Dim Light Boundary | done | SRDINV58A | SRDINV66 | [SRDINV58B research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV58B_FAERIE_FIRE_OBJECT_LIGHT_BOUNDARY_RESEARCH.md), [Faerie Fire](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Dim Light](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Object outline is a future object-target runtime slice using caller-supplied object and sight facts; Dim Light remains shared illumination/environment projection pending SRDINV70A. |
 | 259   | SRDINV59A - Promote Starry Wisp Dim Light Rider Runtime | blocked | SRDINV70A | SRDINV78 | [Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Dim Light](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [SRDINV58B research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV58B_FAERIE_FIRE_OBJECT_LIGHT_BOUNDARY_RESEARCH.md), [SRDINV34 decision](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV28E_STARRY_WISP_OBJECT_TARGET_DECISION.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Blocked until SRDINV70A decides the shared illumination runtime boundary; do not add Starry-Wisp-specific Dim Light state. |
 | 260   | SRDINV59B - Promote Starry Wisp Invisible-Denial Rider Runtime | blocked | SRDINV59A | SRDINV78 | [Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Invisible](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote the hit-applied Starry Wisp rider that prevents the target from benefiting from Invisible until the spell's next-turn boundary. |
-| 261   | SRDINV60A - Promote Protection from Evil and Good Condition Prevention | ready-for-implementation-after-light-research | SRDINV55 | SRDINV60B, SRDINV66 | [Protection from Evil and Good](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-M-P.md), [Charmed](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Frightened](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Possession](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote prevention of scoped-creature possession and new Charmed/Frightened application while reusing existing creature-type and condition ownership facts. |
-| 262   | SRDINV60B - Promote Protection from Evil and Good Scoped Save Advantage | blocked | SRDINV60A | SRDINV66 | [Protection from Evil and Good](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-M-P.md), [Saving Throw](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Advantage on new saves against already-applied scoped possession, Charmed, and Frightened effects without adding parallel save-modifier state. |
+| 261   | SRDINV60A - Promote Protection from Evil and Good Condition Prevention | done | SRDINV55 | SRDINV60B, SRDINV66 | [Protection from Evil and Good](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-M-P.md), [Charmed](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Frightened](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Possession](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promoted scoped-creature possession-attempt prevention and new Charmed/Frightened condition prevention through the creature-type protection active effect. |
+| 262   | SRDINV60B - Promote Protection from Evil and Good Scoped Save Advantage | ready-for-implementation-after-light-research | SRDINV60A | SRDINV66 | [Protection from Evil and Good](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-M-P.md), [Saving Throw](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Advantage on new saves against already-applied scoped possession, Charmed, and Frightened effects without adding parallel save-modifier state. |
 | 263   | SRDINV61 - Promote Animal Friendship Damage-Break Cleanup | ready-for-implementation-after-light-research | SRDINV55 | SRDINV66 | [Animal Friendship](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Charmed](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote caster-or-ally damage cleanup for Animal Friendship's Charmed effect through the existing damage/effect ownership boundary. |
 | 264   | SRDINV62 - Promote Hunter's Mark Upcast Duration Maxima | ready-for-implementation-after-light-research | SRDINV55 | SRDINV63, SRDINV66 | [Hunter's Mark](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Concentration](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Hunter's Mark higher-slot duration maxima and concentration-owned expiration without changing the existing weapon-hit damage path. |
 | 265   | SRDINV63 - Research Hunter's Mark Finding-Advantage Boundary | blocked | SRDINV62 | SRDINV66 | [Hunter's Mark](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Ability Check](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Decide whether the Perception/Survival finding Advantage clause is battle-runtime roll behavior, exploration-only metadata, or a caller-supplied battle check modifier. |
@@ -722,7 +722,7 @@ sequencing changes require it.
 
 ### Task 261 - SRDINV60A - Promote Protection from Evil and Good Condition Prevention
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: SRDINV55
 
@@ -739,6 +739,10 @@ Scope: promote prevention of scoped-creature possession and new Charmed or
 Frightened application while reusing existing creature-type and condition
 ownership facts.
 
+Result: promoted scoped-creature possession-attempt prevention and new Charmed
+or Frightened condition prevention through the existing creature-type protection
+active effect, with package-local Quint and deterministic runtime evidence.
+
 Out of scope: existing-effect save Advantage, attack Disadvantage already
 covered by SRDINV30C, and social disposition behavior.
 
@@ -752,7 +756,7 @@ condition sequencing changes require it.
 
 ### Task 262 - SRDINV60B - Promote Protection from Evil and Good Scoped Save Advantage
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: SRDINV60A
 

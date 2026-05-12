@@ -3,8 +3,12 @@
 // imports and exported types from battle-reducer.
 
 import * as Either from "effect/Either";
+import type { CreatureType } from "@dnd/shared/game-facts";
 import { difficultyClass, type DifficultyClass } from "@dnd/shared/types";
-import type { BattleStateInitIssue } from "../battle-reducer.ts";
+import type {
+  BattleCreatureState,
+  BattleStateInitIssue,
+} from "../battle-reducer.ts";
 
 export function scoreModifier(score: number): number {
   return Math.floor((score - 10) / 2);
@@ -22,4 +26,14 @@ export function battleStateInitIssue(
   message: string,
 ): Either.Either<never, BattleStateInitIssue> {
   return Either.left({ tag: "battleStateInitIssue", message });
+}
+
+export function battleCreatureType(
+  combatant: BattleCreatureState,
+): CreatureType | null {
+  if (combatant.origin.kind !== "statBlock") {
+    return "humanoid";
+  }
+  const creatureType = combatant.origin.statBlock.statBlock.creatureType;
+  return typeof creatureType === "string" ? creatureType : null;
 }

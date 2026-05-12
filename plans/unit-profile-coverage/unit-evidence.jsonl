@@ -59,7 +59,7 @@
 {"unitId":"guidance","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV30B","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"animal_friendship","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV30C","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"charm_person","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV37","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
-{"unitId":"protection_from_evil_and_good","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV30C","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
+{"unitId":"protection_from_evil_and_good","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV60A","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"false_life","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV30A","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"heroism","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV30D","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"longstrider","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV30A","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}

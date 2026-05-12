@@ -5,7 +5,7 @@ import {
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type { CombatantId } from "../identity.ts";
-import { battleCreatureType } from "./attack-roll.ts";
+import { battleCreatureType } from "./domain-helpers.ts";
 import {
   KNOWN_WILLING_TARGET_DAMAGE_REDUCTION_SPELL_IDS,
   KNOWN_WILLING_TARGET_ROLL_MODIFIER_SPELL_IDS,

@@ -8,7 +8,6 @@ import {
   hasCondition,
   isIncapacitated,
 } from "@dnd/shared-algebras/conditions-algebra";
-import type { CreatureType } from "@dnd/shared/game-facts";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import type { CombatantId } from "../identity.ts";
@@ -55,6 +54,7 @@ import {
   extendOngoingFeatureToEndOfNextTurn,
   ongoingFeatureProfileHasExtensionTrigger,
 } from "./ongoing-feature-helpers.ts";
+import { battleCreatureType } from "./domain-helpers.ts";
 
 export function attackRollHole(
   attacker: BattleCreatureState | undefined,
@@ -345,22 +345,12 @@ export function activeEffectGrantsAttackRollMode(
           attacker !== undefined &&
           target !== undefined &&
           combatantCanSee(state, attacker.combatantId, target.combatantId)) ||
-        (effect.kind === "attackerTypeScopedAttackRollAgainstSelf" &&
-          effect.mode === mode &&
+        (effect.kind === "creatureTypeProtection" &&
+          effect.attackRollMode === mode &&
           attackerCreatureType !== null &&
-          effect.attackerCreatureTypes.includes(attackerCreatureType)),
+          effect.protectedAgainstCreatureTypes.includes(attackerCreatureType)),
     ) === true
   );
-}
-
-export function battleCreatureType(
-  combatant: BattleCreatureState,
-): CreatureType | null {
-  if (combatant.origin.kind !== "statBlock") {
-    return "humanoid";
-  }
-  const creatureType = combatant.origin.statBlock.statBlock.creatureType;
-  return typeof creatureType === "string" ? creatureType : null;
 }
 
 export function attackAbilityMatchesModifier(

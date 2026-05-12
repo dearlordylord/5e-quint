@@ -115,6 +115,7 @@ import {
   COMMAND_OPTIONS,
   CRITICAL_HIT_THRESHOLDS,
   type EldritchBlastBeamCount,
+  PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS,
   SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS,
 } from "./battle-reducer/domain-constants.ts";
 export {
@@ -448,6 +449,29 @@ type BattleSpellEffectBase = {
 };
 export type SpellConditionAbilityCheckSuccessEnd =
   (typeof SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS)[number];
+export type ProtectionFromEvilAndGoodPreventedCondition =
+  (typeof PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS)[number];
+export type BattlePossessionAttemptDisposition =
+  | {
+      readonly tag: "prevented";
+      readonly prevention: "creatureTypeProtection";
+      readonly sourceCombatantId: CombatantId;
+      readonly targetId: CombatantId;
+    }
+  | {
+      readonly tag: "unprevented";
+      readonly sourceCombatantId: CombatantId;
+      readonly targetId: CombatantId;
+    }
+  | {
+      readonly tag: "invalid";
+      readonly reason:
+        | "unknownSourceCombatant"
+        | "unknownSourceCreatureType"
+        | "unknownTargetCombatant";
+      readonly sourceCombatantId: CombatantId;
+      readonly targetId: CombatantId;
+    };
 export type SpellConditionEscape =
   | {
       readonly kind: "abilityCheck";
@@ -566,9 +590,11 @@ export type BattleActiveEffect =
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {
-      readonly kind: "attackerTypeScopedAttackRollAgainstSelf";
-      readonly mode: "disadvantage";
-      readonly attackerCreatureTypes: readonly CreatureType[];
+      readonly kind: "creatureTypeProtection";
+      readonly attackRollMode: "disadvantage";
+      readonly protectedAgainstCreatureTypes: readonly CreatureType[];
+      readonly preventedConditions: readonly ProtectionFromEvilAndGoodPreventedCondition[];
+      readonly preventsPossession: true;
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {
@@ -1507,7 +1533,7 @@ export type CreatureTypeProtectionSpellInvocation = {
   readonly targeting: RollModifierSpellTargeting;
   readonly activeEffect: Extract<
     BattleActiveEffect,
-    { readonly kind: "attackerTypeScopedAttackRollAgainstSelf" }
+    { readonly kind: "creatureTypeProtection" }
   >;
   readonly rangeFeet: MovementFeet;
 };

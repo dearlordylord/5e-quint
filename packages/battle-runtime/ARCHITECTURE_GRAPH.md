@@ -248,9 +248,10 @@ flowchart TD
   annotates hostile targets' Wisdom saves with Advantage, and both Charmed
   effects end when the caster or an ally damages the target.
   `protection_from_evil_and_good` adds a concentration protection active effect
-  whose attacker creature-type filter feeds attack-roll Disadvantage;
-  possession, condition-immunity, and already-applied-effect save-Advantage
-  clauses stay unsupported.
+  whose attacker creature-type filter feeds attack-roll Disadvantage, prevents
+  scoped-creature possession attempts, and prevents scoped-creature Charmed or
+  Frightened condition application. Already-applied-effect save-Advantage
+  remains unsupported.
 - Stat Block damage vulnerabilities, resistances, and immunities are read from
   the retained `StatBlockRecord` at the HP mutation boundary.
 - Optional attack damage riders are retained feature profiles, not named

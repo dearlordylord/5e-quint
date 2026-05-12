@@ -20,6 +20,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-feather-fall-mitigation
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-forced-reaction-movement
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-jump-movement-replacement
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.creature-type-protection-and-charm
 module battleRuntime {
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
@@ -249,7 +250,8 @@ module battleRuntime {
   //   Humanoid-only Wisdom-save spell whose failed save grants Charmed for 1
   //   hour with hostile-target save Advantage, and Protection from Evil and
   //   Good applies a Concentration protection whose scoped creature types have
-  //   Disadvantage on attack rolls against the target.
+  //   Disadvantage on attack rolls against the target, can't possess the
+  //   target, and can't apply Charmed or Frightened to the target.
   //
   // This is the canonical package-local spec for implemented
   // @dnd/battle-runtime behavior. Old root battle.qnt is legacy/Core broad
@@ -292,7 +294,9 @@ module battleRuntime {
   type SpellActionCost = SpellMagicAction | SpellBonusAction
   type CommandOption = CommandGrovelOption | CommandHaltOption | CommandDropOption | CommandApproachOption | CommandFleeOption
 
-  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodAttackDisadvantage | ProduceFlameHeldLight({ durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
+  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodCreatureTypeProtection | ProduceFlameHeldLight({ durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
+  type PreventedProtectionCondition = PreventedCharmed | PreventedFrightened
+  type PossessionAttemptDisposition = PossessionPreventedByCreatureTypeProtection | PossessionUnprevented
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
   type RuntimeCreatureType = HumanoidCreature | BeastCreature | AberrationCreature | CelestialCreature | ElementalCreature | FeyCreature | FiendCreature | UndeadCreature
   type ObjectTarget =
@@ -1019,7 +1023,7 @@ module battleRuntime {
         | FaerieFireOutline => false
         | AnimalFriendshipCharmed(_) => false
         | CharmPersonCharmed(_) => false
-        | ProtectionFromEvilAndGoodAttackDisadvantage => false
+        | ProtectionFromEvilAndGoodCreatureTypeProtection => false
         | ProduceFlameHeldLight(_) => false
         | ExpeditiousRetreatDashBonusAction => false
         | JumpMovementReplacement(_) => false
@@ -1996,7 +2000,7 @@ module battleRuntime {
   }
 
   pure def spellEffectConcentrationActiveEffects(): Set[ActiveEffect] =
-    Set(ShieldOfFaithArmorClassBonus, HeroismFrightenedImmunity, BaneD20RollPenalty, BlessD20RollBonus, GuidanceAbilityCheckBonus, EntangleRestrained, FaerieFireOutline, ProtectionFromEvilAndGoodAttackDisadvantage, ExpeditiousRetreatDashBonusAction)
+    Set(ShieldOfFaithArmorClassBonus, HeroismFrightenedImmunity, BaneD20RollPenalty, BlessD20RollBonus, GuidanceAbilityCheckBonus, EntangleRestrained, FaerieFireOutline, ProtectionFromEvilAndGoodCreatureTypeProtection, ExpeditiousRetreatDashBonusAction)
 
   pure def activeEffectsWithoutSpellEffectConcentration(effects: Set[ActiveEffect]): Set[ActiveEffect] =
     effects
@@ -4535,7 +4539,7 @@ module battleRuntime {
     val hasDisadvantage =
       attackerEffects.contains(ViciousMockeryNextAttackDisadvantage)
       or (
-        targetEffects.contains(ProtectionFromEvilAndGoodAttackDisadvantage)
+        targetEffects.contains(ProtectionFromEvilAndGoodCreatureTypeProtection)
         and protectionFromEvilAndGoodCreatureTypeIsScoped(attackerCreatureType)
       )
     if (hasAdvantage and not(hasDisadvantage))
@@ -4545,6 +4549,48 @@ module battleRuntime {
     else
       NormalSpellAttackRoll
   }
+
+  pure def protectionFromEvilAndGoodConditionIsPrevented(condition: PreventedProtectionCondition): bool =
+    condition == PreventedCharmed or condition == PreventedFrightened
+
+  pure def protectionFromEvilAndGoodPreventsConditionFromCreatureType(
+    sourceCreatureType: RuntimeCreatureType,
+    targetEffects: Set[ActiveEffect],
+    condition: PreventedProtectionCondition,
+  ): bool =
+    targetEffects.contains(ProtectionFromEvilAndGoodCreatureTypeProtection) and
+    protectionFromEvilAndGoodCreatureTypeIsScoped(sourceCreatureType) and
+    protectionFromEvilAndGoodConditionIsPrevented(condition)
+
+  pure def protectionFromEvilAndGoodPreventsPossessionFromCreatureType(
+    sourceCreatureType: RuntimeCreatureType,
+    targetEffects: Set[ActiveEffect],
+  ): bool =
+    targetEffects.contains(ProtectionFromEvilAndGoodCreatureTypeProtection) and
+    protectionFromEvilAndGoodCreatureTypeIsScoped(sourceCreatureType)
+
+  pure def possessionAttemptDispositionFromCreatureTypeProtection(
+    sourceCreatureType: RuntimeCreatureType,
+    targetEffects: Set[ActiveEffect],
+  ): PossessionAttemptDisposition =
+    if (protectionFromEvilAndGoodPreventsPossessionFromCreatureType(sourceCreatureType, targetEffects))
+      PossessionPreventedByCreatureTypeProtection
+    else
+      PossessionUnprevented
+
+  pure def saveGatedConditionPreventedByCreatureTypeProtection(
+    invocation: SaveGatedConditionInvocation,
+    sourceCreatureType: RuntimeCreatureType,
+    targetEffects: Set[ActiveEffect],
+  ): bool =
+    match invocation {
+      | AnimalFriendshipSaveGate =>
+          protectionFromEvilAndGoodPreventsConditionFromCreatureType(sourceCreatureType, targetEffects, PreventedCharmed)
+      | CharmPersonSaveGate =>
+          protectionFromEvilAndGoodPreventsConditionFromCreatureType(sourceCreatureType, targetEffects, PreventedCharmed)
+      | ColorSpraySaveGate => false
+      | EntangleSaveGate => false
+    }
 
   pure def rayOfFrostSpeedEffectActive(
     hit: bool,
@@ -4850,8 +4896,9 @@ module battleRuntime {
     target: Combatant,
     savingThrowSucceeded: bool,
     source: Actor,
+    sourceCreatureType: RuntimeCreatureType,
   ): Combatant =
-    if (savingThrowSucceeded)
+    if (savingThrowSucceeded or saveGatedConditionPreventedByCreatureTypeProtection(invocation, sourceCreatureType, target.activeEffects))
       target
     else
       { ...target, activeEffects: target.activeEffects.union(saveGatedConditionFailedSaveActiveEffects(invocation, source)) }
@@ -5456,8 +5503,8 @@ module battleRuntime {
     else
       {
         ...state,
-        fighter: if (fighterTargeted) saveGatedConditionTarget(invocation, state.fighter, fighterSavingThrowSucceeded, Fighter) else state.fighter,
-        goblin: if (goblinTargeted) saveGatedConditionTarget(invocation, state.goblin, goblinSavingThrowSucceeded, Fighter) else state.goblin,
+        fighter: if (fighterTargeted) saveGatedConditionTarget(invocation, state.fighter, fighterSavingThrowSucceeded, Fighter, HumanoidCreature) else state.fighter,
+        goblin: if (goblinTargeted) saveGatedConditionTarget(invocation, state.goblin, goblinSavingThrowSucceeded, Fighter, HumanoidCreature) else state.goblin,
         actionAvailable: false,
         spellSlotExpendedThisTurn: true,
       }
@@ -5472,8 +5519,8 @@ module battleRuntime {
     else
       {
         ...state,
-        fighter: saveGatedConditionTarget(ColorSpraySaveGate, state.fighter, fighterSavingThrowSucceeded, Fighter),
-        goblin: saveGatedConditionTarget(ColorSpraySaveGate, state.goblin, goblinSavingThrowSucceeded, Fighter),
+        fighter: saveGatedConditionTarget(ColorSpraySaveGate, state.fighter, fighterSavingThrowSucceeded, Fighter, HumanoidCreature),
+        goblin: saveGatedConditionTarget(ColorSpraySaveGate, state.goblin, goblinSavingThrowSucceeded, Fighter, HumanoidCreature),
         actionAvailable: false,
         spellSlotExpendedThisTurn: true,
       }
@@ -5544,7 +5591,7 @@ module battleRuntime {
       {
         ...withoutPrior,
         fighter: { ...withoutPrior.fighter, concentrating: true },
-        goblin: saveGatedConditionTarget(EntangleSaveGate, withoutPrior.goblin, goblinSavingThrowSucceeded, Fighter),
+        goblin: saveGatedConditionTarget(EntangleSaveGate, withoutPrior.goblin, goblinSavingThrowSucceeded, Fighter, HumanoidCreature),
         actionAvailable: false,
         spellSlotExpendedThisTurn: true,
       }
@@ -6658,11 +6705,22 @@ module battleRuntime {
       assert(spellAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), Set(), true) == DisadvantageSpellAttackRoll),
       assert(spellAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), Set(GuidingBoltNextAttackAdvantage), true) == NormalSpellAttackRoll),
       assert(spellAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), Set(FaerieFireOutline), true) == NormalSpellAttackRoll),
-      assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(ProtectionFromEvilAndGoodAttackDisadvantage), true) == DisadvantageSpellAttackRoll),
-      assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(GuidingBoltNextAttackAdvantage, ProtectionFromEvilAndGoodAttackDisadvantage), false) == NormalSpellAttackRoll),
-      assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(FaerieFireOutline, ProtectionFromEvilAndGoodAttackDisadvantage), true) == NormalSpellAttackRoll),
-      assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(FaerieFireOutline, ProtectionFromEvilAndGoodAttackDisadvantage), false) == DisadvantageSpellAttackRoll),
-      assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(HumanoidCreature, Set(), Set(ProtectionFromEvilAndGoodAttackDisadvantage), true) == NormalSpellAttackRoll),
+      assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(ProtectionFromEvilAndGoodCreatureTypeProtection), true) == DisadvantageSpellAttackRoll),
+      assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(GuidingBoltNextAttackAdvantage, ProtectionFromEvilAndGoodCreatureTypeProtection), false) == NormalSpellAttackRoll),
+      assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(FaerieFireOutline, ProtectionFromEvilAndGoodCreatureTypeProtection), true) == NormalSpellAttackRoll),
+      assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(FaerieFireOutline, ProtectionFromEvilAndGoodCreatureTypeProtection), false) == DisadvantageSpellAttackRoll),
+      assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(HumanoidCreature, Set(), Set(ProtectionFromEvilAndGoodCreatureTypeProtection), true) == NormalSpellAttackRoll),
+      assert(protectionFromEvilAndGoodPreventsConditionFromCreatureType(UndeadCreature, Set(ProtectionFromEvilAndGoodCreatureTypeProtection), PreventedCharmed)),
+      assert(protectionFromEvilAndGoodPreventsConditionFromCreatureType(FeyCreature, Set(ProtectionFromEvilAndGoodCreatureTypeProtection), PreventedFrightened)),
+      assert(not(protectionFromEvilAndGoodPreventsConditionFromCreatureType(HumanoidCreature, Set(ProtectionFromEvilAndGoodCreatureTypeProtection), PreventedCharmed))),
+      assert(not(protectionFromEvilAndGoodPreventsConditionFromCreatureType(UndeadCreature, Set(), PreventedFrightened))),
+      assert(protectionFromEvilAndGoodPreventsPossessionFromCreatureType(UndeadCreature, Set(ProtectionFromEvilAndGoodCreatureTypeProtection))),
+      assert(not(protectionFromEvilAndGoodPreventsPossessionFromCreatureType(HumanoidCreature, Set(ProtectionFromEvilAndGoodCreatureTypeProtection)))),
+      assert(not(protectionFromEvilAndGoodPreventsPossessionFromCreatureType(FeyCreature, Set()))),
+      assert(possessionAttemptDispositionFromCreatureTypeProtection(FeyCreature, Set(ProtectionFromEvilAndGoodCreatureTypeProtection)) == PossessionPreventedByCreatureTypeProtection),
+      assert(possessionAttemptDispositionFromCreatureTypeProtection(HumanoidCreature, Set(ProtectionFromEvilAndGoodCreatureTypeProtection)) == PossessionUnprevented),
+      assert(saveGatedConditionTarget(CharmPersonSaveGate, { ...initialState.goblin, activeEffects: Set(ProtectionFromEvilAndGoodCreatureTypeProtection) }, false, Fighter, FeyCreature).activeEffects == Set(ProtectionFromEvilAndGoodCreatureTypeProtection)),
+      assert(saveGatedConditionTarget(CharmPersonSaveGate, { ...initialState.goblin, activeEffects: Set(ProtectionFromEvilAndGoodCreatureTypeProtection) }, false, Fighter, HumanoidCreature).activeEffects == Set(ProtectionFromEvilAndGoodCreatureTypeProtection, CharmPersonCharmed({ source: Fighter, durationTicks: charmPersonCharmedDurationTicks }))),
       assert(saveGatedTargeting(SacredFlameSaveGate) == SingleSaveTarget),
       assert(saveGatedDamageSuccess(SacredFlameSaveGate) == NoDamageOnSaveSuccess),
       assert(saveGatedDamageType(SacredFlameSaveGate) == Radiant),
