@@ -72,23 +72,23 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 46,
-      "numerator": 46,
+      "denominator": 47,
+      "numerator": 47,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 46,
-      "numerator": 44,
+      "denominator": 47,
+      "numerator": 45,
       "percent": "95.7%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 46,
-      "numerator": 46,
+      "denominator": 47,
+      "numerator": 47,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 46,
-      "numerator": 46,
+      "denominator": 47,
+      "numerator": 47,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -1074,6 +1074,33 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-feather-fall-mitigation",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/reaction-triggered-spells.ts"
+      ],
+      "sourceBoundary": "The runtime consumes caller-supplied falling trigger and falling target facts, spends the caster's Reaction and Spell Slot, admits up to five falling targets within range, creates one-minute per-target mitigation effects, and exposes the 60-foot descent-rate cap projection. Fall-distance derivation, map elevation, landing geometry, landing cleanup, fall-damage prevention outcome emission, and Falling-Prone suppression remain caller/table-owned or deferred to SRDINV56B.",
+      "taskRefs": [
+        "SRDINV56A"
+      ],
+      "title": "Spell invocation reacts to falling creatures with per-target Feather Fall mitigation",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/feather-fall-reaction-spell.test.ts"
         }
       ]
     },
@@ -2271,6 +2298,22 @@
         "spell.invocation-expeditious-retreat-dash"
       ],
       "taskId": "SRDINV49"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Feather Fall's falling Reaction, Reaction and level-1 Spell Slot spend, up-to-five falling target admission, per-target mitigation effects, one-minute duration, and active descent-rate cap projection.",
+      "profileIds": [
+        "spell.invocation-feather-fall-mitigation"
+      ],
+      "taskId": "SRDINV56A"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Feather Fall falling-trigger Reaction discovery from table-supplied trigger facts, missing-trigger rejection, falling target-list admission, non-falling target rejection, five-target cap rejection, Reaction and Spell Slot spend, per-target mitigation effects, and descent-rate cap projection. Landing cleanup remains deferred to SRDINV56B.",
+      "profileIds": [
+        "spell.invocation-feather-fall-mitigation"
+      ],
+      "taskId": "SRDINV56A"
     },
     {
       "claimKind": "qnt-proof",
@@ -5752,14 +5795,71 @@
         "status": "installed"
       },
       "claim": {
-        "reason": "Spell Definition is installed with typed falling Reaction trigger, up-to-five falling creature targets, fall-rate cap, fall-damage prevention, and per-target landing cleanup facts; runtime falling simulation, fall-distance derivation, and landing geometry are not promoted yet.",
-        "tag": "unsupported-profile"
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "SRDINV56B",
+            "mechanic": "landing cleanup that ends the spell for the landed target, emits no-fall-damage outcome, and suppresses Falling-Prone when Feather Fall prevents damage"
+          },
+          {
+            "followUpTaskId": "SRDINV55",
+            "mechanic": "fall-distance derivation, map elevation, and landing geometry simulation remain outside the runtime boundary"
+          }
+        ],
+        "profileIds": [
+          "spell.invocation-feather-fall-mitigation"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001",
+          "RAW-PTG-REACTIONS-002"
+        ],
+        "supportedMechanics": [
+          "caller-supplied falling Reaction trigger for the caster or a visible creature within 60 feet",
+          "up-to-five falling creature target admission using caller-supplied falling and range facts",
+          "Reaction and level-1 Spell Slot spend",
+          "one-minute per-target Feather Fall mitigation effect",
+          "active 60-foot-per-round descent-rate cap projection"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/feather-fall-reaction-spell.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV56A"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-feather-fall-mitigation",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+            "packages/battle-runtime/src/battle-reducer/reaction-triggered-spells.ts"
+          ],
+          "sourceBoundary": "The runtime consumes caller-supplied falling trigger and falling target facts, spends the caster's Reaction and Spell Slot, admits up to five falling targets within range, creates one-minute per-target mitigation effects, and exposes the 60-foot descent-rate cap projection. Fall-distance derivation, map elevation, landing geometry, landing cleanup, fall-damage prevention outcome emission, and Falling-Prone suppression remain caller/table-owned or deferred to SRDINV56B.",
+          "taskRefs": [
+            "SRDINV56A"
+          ],
+          "title": "Spell invocation reacts to falling creatures with per-target Feather Fall mitigation",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/feather-fall-reaction-spell.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/feather_fall.json",
       "unitId": "feather_fall"
     },

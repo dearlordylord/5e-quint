@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points
@@ -17,6 +17,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-command-approach-route
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-command-flee-route
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-expeditious-retreat-dash
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-feather-fall-mitigation
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-forced-reaction-movement
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-jump-movement-replacement
 module battleRuntime {
@@ -261,7 +262,7 @@ module battleRuntime {
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | EldritchBlast | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | TrueStrike | Grease | Command | DissonantWhispers
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | EldritchBlast | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | TrueStrike | Grease | Command | DissonantWhispers | FeatherFall
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | StarryWispSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack
   type SpellAttackBeamSequenceInvocation =
     | EldritchBlastBeamSequence
@@ -291,7 +292,7 @@ module battleRuntime {
   type SpellActionCost = SpellMagicAction | SpellBonusAction
   type CommandOption = CommandGrovelOption | CommandHaltOption | CommandDropOption | CommandApproachOption | CommandFleeOption
 
-  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireAttackRollAdvantage | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodAttackDisadvantage | ProduceFlameHeldLight({ durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
+  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireAttackRollAdvantage | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodAttackDisadvantage | ProduceFlameHeldLight({ durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
   type RuntimeCreatureType = HumanoidCreature | BeastCreature | AberrationCreature | CelestialCreature | ElementalCreature | FeyCreature | FiendCreature | UndeadCreature
   type ObjectTarget =
@@ -910,6 +911,9 @@ module battleRuntime {
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
             usedThisTurn: data.usedThisTurn,
           })
+        | FeatherFallMitigation(data) => FeatherFallMitigation({
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | GreaseGroundHazard(data) => GreaseGroundHazard({
             areaId: data.areaId,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
@@ -924,6 +928,7 @@ module battleRuntime {
         | CharmPersonCharmed(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | ProduceFlameHeldLight(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | JumpMovementReplacement(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | FeatherFallMitigation(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | GreaseGroundHazard(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | _ => true
       })
@@ -1014,6 +1019,7 @@ module battleRuntime {
         | ProduceFlameHeldLight(_) => false
         | ExpeditiousRetreatDashBonusAction => false
         | JumpMovementReplacement(_) => false
+        | FeatherFallMitigation(_) => false
         | SleepPendingRepeatSave(_) => false
         | SleepUnconscious(_) => false
         | GreaseGroundHazard(_) => false
@@ -2502,6 +2508,48 @@ module battleRuntime {
   pure def jumpMovementReplacementActiveEffect(): ActiveEffect =
     JumpMovementReplacement({ durationTicks: 10, usedThisTurn: false })
 
+  pure def featherFallMitigationActiveEffect(): ActiveEffect =
+    FeatherFallMitigation({ durationTicks: 10 })
+
+  pure def activeFeatherFallDescentRateCapFeetPerRound(effects: Set[ActiveEffect]): int =
+    if (effects.exists(effect => match effect {
+      | FeatherFallMitigation(_) => true
+      | _ => false
+    })) 60 else 0
+
+  pure def resolveFeatherFallSpell(
+    state: BattleState,
+    reactor: Actor,
+    targets: Set[Actor],
+    fallingTargets: Set[Actor],
+    targetCount: int,
+  ): BattleState =
+    if (
+      reactorCanReact(state, reactor) and
+      canExpendSpellSlotThisTurn(state) and
+      targets.size() >= 1 and
+      targetCount == targets.size() and
+      targetCount <= 5 and
+      targets.forall(target => fallingTargets.contains(target))
+    ) {
+      val spentReaction = spendReaction(state, reactor)
+      val effect = featherFallMitigationActiveEffect
+      {
+        ...spentReaction,
+        fighter: if (targets.contains(Fighter))
+          { ...spentReaction.fighter, activeEffects: spentReaction.fighter.activeEffects.union(Set(effect)) }
+        else
+          spentReaction.fighter,
+        goblin: if (targets.contains(Goblin))
+          { ...spentReaction.goblin, activeEffects: spentReaction.goblin.activeEffects.union(Set(effect)) }
+        else
+          spentReaction.goblin,
+        spellSlotExpendedThisTurn: true,
+      }
+    } else {
+      state
+    }
+
   pure def jumpMovementReplacementLandingIsLegal(landing: JumpMovementLandingFact): bool =
     landing != JumpIllegalLanding
 
@@ -3868,6 +3916,7 @@ module battleRuntime {
       | Grease => true
       | Command => true
       | DissonantWhispers => true
+      | FeatherFall => true
     }
 
   pure def canExpendSpellSlotThisTurn(state: BattleState): bool =
@@ -6425,6 +6474,8 @@ module battleRuntime {
       assert(jumpMovementReplacementMaxTargets(1) == 1),
       assert(jumpMovementReplacementMaxTargets(2) == 2),
       assert(jumpMovementReplacementActiveEffect == JumpMovementReplacement({ durationTicks: 10, usedThisTurn: false })),
+      assert(featherFallMitigationActiveEffect == FeatherFallMitigation({ durationTicks: 10 })),
+      assert(activeFeatherFallDescentRateCapFeetPerRound(Set(FeatherFallMitigation({ durationTicks: 10 }))) == 60),
       assert(rayOfFrostSpeedEffectActive(true, Goblin, Fighter)),
       assert(not(rayOfFrostSpeedEffectActive(true, Fighter, Fighter))),
       assert(spellAttackDamageType(PoisonSpraySpellAttack) == Poison),
@@ -7582,6 +7633,23 @@ module battleRuntime {
       assert(secondSlot.fighter.activeEffects.contains(JumpMovementReplacement({ durationTicks: 10, usedThisTurn: false }))),
       assert(secondSlot.goblin.activeEffects.contains(JumpMovementReplacement({ durationTicks: 10, usedThisTurn: false }))),
       assert(unwillingTarget == initialState),
+      assert(tooMany == initialState),
+    }
+  }
+
+  run test_feather_fall_reaction_targets_slot_and_descent_cap = {
+    val resolved = resolveFeatherFallSpell(initialState, Fighter, Set(Fighter, Goblin), Set(Fighter, Goblin), 2)
+    val noReaction = resolveFeatherFallSpell({ ...initialState, fighter: { ...initialState.fighter, reactionAvailable: false } }, Fighter, Set(Fighter), Set(Fighter), 1)
+    val nonFallingTarget = resolveFeatherFallSpell(initialState, Fighter, Set(Fighter, Goblin), Set(Fighter), 2)
+    val tooMany = resolveFeatherFallSpell(initialState, Fighter, Set(Fighter, Goblin), Set(Fighter, Goblin), 6)
+    all {
+      assert(not(resolved.fighter.reactionAvailable)),
+      assert(resolved.spellSlotExpendedThisTurn),
+      assert(resolved.fighter.activeEffects.contains(FeatherFallMitigation({ durationTicks: 10 }))),
+      assert(resolved.goblin.activeEffects.contains(FeatherFallMitigation({ durationTicks: 10 }))),
+      assert(activeFeatherFallDescentRateCapFeetPerRound(resolved.fighter.activeEffects) == 60),
+      assert(noReaction == { ...initialState, fighter: { ...initialState.fighter, reactionAvailable: false } }),
+      assert(nonFallingTarget == initialState),
       assert(tooMany == initialState),
     }
   }

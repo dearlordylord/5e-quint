@@ -4,7 +4,7 @@
 // behavior change intended.
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-feather-fall-mitigation spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
 import {
   canSpendAction,
@@ -81,6 +81,7 @@ import {
 } from "./reaction-modifiers.ts";
 import {
   triggeredReactionSpellChoices,
+  featherFallReactionSpellMatchesTrigger,
   hellishRebukeReactionSpellMatchesTrigger,
   reactionSpellTargetFactsForAfterDamage,
   triggeredReactionSpellTurnResourceAvailable,
@@ -122,9 +123,11 @@ import {
   spellDamageAmountForTarget,
   spellDamageHole,
   spellSavingThrowOutcomeHole,
+  spellTargetListHole,
   supportedSpellInvocationRef,
   supportedSpellInvocationMatchesRef,
   validateSpellDamageFill,
+  validateSpellTargetList,
 } from "./spells-holes-fills.ts";
 
 import {
@@ -740,6 +743,16 @@ export function resolveBattleSubjectInternal(
         pendingAttackDamageReductions: options.pendingAttackDamageReductions,
       });
     }
+    if (
+      subject.tag === "runtimeCommand" &&
+      subject.command === "creatureFalls"
+    ) {
+      return {
+        tag: "resolved" as const,
+        state: input.state,
+        snapshot: snapshotBattle(input.state),
+      };
+    }
     const _exhaustive: never = subject;
     return _exhaustive;
   })();
@@ -864,6 +877,38 @@ export function reactionInterruptFrame(
   frame: BattleReactionFrame,
 ): BattleReactionInterruptFrame {
   return { kind: "reaction", frame };
+}
+
+export function openCreatureFallsReactionWindow(input: {
+  readonly state: BattleState;
+  readonly fallingCreatureId: CombatantId;
+  readonly reactionSpellTargetFacts: readonly BattleTargetSpatialFact[];
+}): BattleResolutionResult {
+  const reactionWindow = maybeOpenReactionWindow(
+    input.state,
+    {
+      trigger: "creatureFalls",
+      fallingCreatureId: input.fallingCreatureId,
+      reactionSpellTargetFacts: input.reactionSpellTargetFacts,
+      continuation: {
+        kind: "resolved",
+        subject: {
+          tag: "runtimeCommand",
+          actorId: currentActorId(input.state),
+          command: "creatureFalls",
+          fallingCreatureId: input.fallingCreatureId,
+        },
+      },
+    },
+    undefined,
+  );
+  return (
+    reactionWindow ?? {
+      tag: "resolved",
+      state: input.state,
+      snapshot: snapshotBattle(input.state),
+    }
+  );
 }
 
 export function resolveBattleReaction(input: {
@@ -1134,7 +1179,8 @@ export function resolveCastTriggeredReactionSpellCommand(
       ? supportedSpellActs(reactor).find(
           (candidate) =>
             (candidate.procedure === "shieldReaction" ||
-              candidate.procedure === "saveGatedDamage") &&
+              candidate.procedure === "saveGatedDamage" ||
+              candidate.procedure === "featherFallMitigation") &&
             supportedSpellInvocationMatchesRef(
               candidate,
               input.subject.invocation,
@@ -1144,7 +1190,8 @@ export function resolveCastTriggeredReactionSpellCommand(
   if (
     (frame?.trigger !== "attackHit" &&
       frame?.trigger !== "spellCast" &&
-      frame?.trigger !== "afterDamage") ||
+      frame?.trigger !== "afterDamage" &&
+      frame?.trigger !== "creatureFalls") ||
     activeReaction === undefined ||
     activeReaction.reactorId !== input.subject.reactorId ||
     !sameBattleSubject(activeReaction.subject, input.subject)
@@ -1158,7 +1205,8 @@ export function resolveCastTriggeredReactionSpellCommand(
   if (
     reactor?.origin.kind !== "character" ||
     (invocation?.procedure !== "shieldReaction" &&
-      invocation?.procedure !== "saveGatedDamage")
+      invocation?.procedure !== "saveGatedDamage" &&
+      invocation?.procedure !== "featherFallMitigation")
   ) {
     return invalidResult(
       input.state,
@@ -1203,6 +1251,13 @@ export function resolveCastTriggeredReactionSpellCommand(
       );
     }
     return resolveHellishRebukeReactionSpellCommand({
+      ...input,
+      frame,
+      invocation,
+    });
+  }
+  if (invocation.procedure === "featherFallMitigation") {
+    return resolveFeatherFallReactionSpellCommand({
       ...input,
       frame,
       invocation,
@@ -1266,6 +1321,119 @@ function isPreparedSlottedSaveGatedDamageInvocation(
     invocation.access.tag === "prepared" &&
     invocation.resource.tag === "spellSlot"
   );
+}
+
+function resolveFeatherFallReactionSpellCommand(
+  input: BattleResolutionInputForSubject<
+    Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "castTriggeredReactionSpell";
+      }
+    >
+  > & {
+    readonly frame: BattleReactionFrame;
+    readonly invocation: Extract<
+      ReturnType<typeof supportedSpellActs>[number],
+      { readonly procedure: "featherFallMitigation" }
+    >;
+  },
+): BattleResolutionResult {
+  if (
+    input.frame.trigger !== "creatureFalls" ||
+    !featherFallReactionSpellMatchesTrigger(input.invocation, input.frame)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Feather Fall requires a matching falling Reaction trigger.",
+    );
+  }
+  const fillSet = spellFillSet(input.fills, input.invocation);
+  if (fillSet.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", fillSet.message);
+  }
+  if (
+    fillSet.targetId !== undefined ||
+    fillSet.attackRoll !== undefined ||
+    fillSet.targetAllocation !== undefined ||
+    fillSet.damageRoll !== undefined ||
+    fillSet.damageDispositions.length > 0 ||
+    fillSet.savingThrowOutcomes !== undefined ||
+    fillSet.concentrationSavingThrows.length > 0
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Feather Fall uses only falling target-list fills.",
+    );
+  }
+  if (fillSet.targetList === undefined) {
+    return needsHolesResult(input.state, input.subject, [
+      spellTargetListHole(
+        input.state,
+        input.subject.reactorId,
+        input.invocation,
+      ),
+    ]);
+  }
+  const targetValidation = validateSpellTargetList(
+    input.state,
+    input.subject.reactorId,
+    input.invocation,
+    fillSet.targetList.targetIds,
+    fillSet.targetList.spatialFacts,
+  );
+  if (targetValidation !== null) {
+    return invalidResult(input.state, "invalidFill", targetValidation);
+  }
+  const castingState = spellRequiresVerbal(input.invocation.spell)
+    ? revealHidden(input.state, input.subject.reactorId)
+    : input.state;
+  const effected: BattleState = fillSet.targetList.targetIds.reduce(
+    (state, targetId) => {
+      const target = state.combatants.get(targetId);
+      return target === undefined
+        ? state
+        : {
+            ...state,
+            combatants: new Map(state.combatants).set(targetId, {
+              ...target,
+              activeEffects: [
+                ...target.activeEffects,
+                input.invocation.activeEffect,
+              ],
+            }),
+          };
+    },
+    castingState,
+  );
+  const slotted = expendSpellSlot(
+    effected,
+    input.subject.reactorId,
+    input.invocation.resource.slotLevel,
+  );
+  const nextTurnResources =
+    input.subject.reactorId === currentActorId(slotted)
+      ? markSpellSlotExpendedThisTurn(slotted.currentTurnResources)
+      : Either.right(slotted.currentTurnResources);
+  if (Either.isLeft(nextTurnResources)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "This turn has already expended a Spell Slot.",
+    );
+  }
+  const nextState = {
+    ...slotted,
+    currentTurnResources: nextTurnResources.right,
+  };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
 }
 
 function resolveHellishRebukeReactionSpellCommand(
@@ -2885,6 +3053,7 @@ export function reactionTriggerLabel(trigger: BattleReactionTrigger): string {
     Match.when("spellCast", () => "Spell cast"),
     Match.when("saveFailed", () => "Failed save"),
     Match.when("afterDamage", () => "After damage"),
+    Match.when("creatureFalls", () => "Creature falls"),
     Match.when("opportunityAttack", () => "Opportunity Attack"),
     Match.exhaustive,
   );
@@ -2951,6 +3120,10 @@ function maybeOpenReactionWindowWithChoices(
       ...frameCommon,
     })),
     Match.when({ trigger: "afterDamage" }, (triggerFrame) => ({
+      ...triggerFrame,
+      ...frameCommon,
+    })),
+    Match.when({ trigger: "creatureFalls" }, (triggerFrame) => ({
       ...triggerFrame,
       ...frameCommon,
     })),

@@ -291,6 +291,13 @@ export function resolveSpellAct(
       "Triggered Reaction spells must use the pending Reaction decision.",
     );
   }
+  if (invocation.procedure === "featherFallMitigation") {
+    return invalidResult(
+      input.state,
+      "unsupportedSubject",
+      "Triggered Reaction spells must use the pending Reaction decision.",
+    );
+  }
   if (invocation.spell.mechanics.family === "triggered_reaction") {
     return invalidResult(
       input.state,

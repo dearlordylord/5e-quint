@@ -47,6 +47,7 @@ export const BATTLE_RUNTIME_COMMANDS = [
   "commandDrop",
   "commandApproach",
   "commandFlee",
+  "creatureFalls",
 ] as const;
 export type BattleRuntimeCommand = (typeof BATTLE_RUNTIME_COMMANDS)[number];
 export const BATTLE_MOVEMENT_SPEED_KINDS = ["walk", "climb", "swim"] as const;
@@ -97,6 +98,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "jumpMovementReplacement",
   "persistentArmorEffect",
   "shieldReaction",
+  "featherFallMitigation",
 ] as const;
 export type SpellSlotProcedure = (typeof SPELL_SLOT_PROCEDURES)[number];
 
@@ -430,6 +432,12 @@ export const BattleSubjectSchema = Schema.Union(
     command: Schema.Literal("commandFlee"),
     sourceCombatantId: CombatantId,
     sourceSpellId: SpellId,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("creatureFalls"),
+    fallingCreatureId: CombatantId,
   }),
 );
 export type BattleSubject = typeof BattleSubjectSchema.Type;

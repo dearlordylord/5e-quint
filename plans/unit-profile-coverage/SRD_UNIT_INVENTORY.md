@@ -21,8 +21,8 @@ This is the default `%` for level-1 readiness questions. A row counts only when 
 
 - accepted: 210
 - accepted-no-battle-effect: 69
-- battle-runtime-required: 38
-- partial-battle-runtime: 35
+- battle-runtime-required: 35
+- partial-battle-runtime: 38
 - surface-widening-required: 15
 
 ### Level-1 Rows by Disposition
@@ -46,8 +46,8 @@ This is the default `%` for level-1 readiness questions. A row counts only when 
 
 ### Spell Unit Pressure by Disposition
 
-- catalog-installed-owner-evidence-present: 112
-- catalog-installed-owner-evidence-required: 4
+- catalog-installed-owner-evidence-present: 115
+- catalog-installed-owner-evidence-required: 1
 - catalog-only/dead-for-now: 80
 - needs-surface-widening: 15
 

@@ -1039,6 +1039,19 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("featherFallMitigation"),
+      spell: BattleRuntimeObjectSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("targetList"),
+        minTargets: Schema.Literal(1),
+        maxTargets: Schema.Literal(5),
+      }),
+      activeEffect: BattleRuntimeObjectSchema,
+      rangeFeet: MovementFeet,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("persistentArmorEffect"),
       spell: BattleRuntimeObjectSchema,
       rangeFeet: MovementFeet,
@@ -1570,6 +1583,20 @@ type BattleFillEncoded =
             readonly rangeFeet: number;
           }
         | {
+            readonly kind: "featherFallTriggerSelfOrVisibleCreatureWithinRange";
+            readonly reactorId: string;
+            readonly fallingCreatureId: string;
+            readonly spellId: string;
+            readonly rangeFeet: number;
+          }
+        | {
+            readonly kind: "featherFallTargetFallingWithinRange";
+            readonly casterId: string;
+            readonly targetId: string;
+            readonly spellId: string;
+            readonly rangeFeet: number;
+          }
+        | {
             readonly kind: "grappleTargetWithinReach";
             readonly grapplerId: string;
             readonly targetId: string;
@@ -1669,6 +1696,13 @@ type BattleFillEncoded =
             readonly areaId: string;
             readonly radiusFeet: number;
             readonly targetIds: readonly string[];
+          }
+        | {
+            readonly kind: "featherFallTargetFallingWithinRange";
+            readonly casterId: string;
+            readonly targetId: string;
+            readonly spellId: string;
+            readonly rangeFeet: number;
           }
       )[];
     }
@@ -1967,6 +2001,22 @@ export const BattleFillSchema: Schema.Schema<
               rangeFeet: MovementFeet,
             }),
             Schema.Struct({
+              kind: Schema.Literal(
+                "featherFallTriggerSelfOrVisibleCreatureWithinRange",
+              ),
+              reactorId: CombatantId,
+              fallingCreatureId: CombatantId,
+              spellId: Schema.String,
+              rangeFeet: MovementFeet,
+            }),
+            Schema.Struct({
+              kind: Schema.Literal("featherFallTargetFallingWithinRange"),
+              casterId: CombatantId,
+              targetId: CombatantId,
+              spellId: Schema.String,
+              rangeFeet: MovementFeet,
+            }),
+            Schema.Struct({
               kind: Schema.Literal("grappleTargetWithinReach"),
               grapplerId: CombatantId,
               targetId: CombatantId,
@@ -2066,6 +2116,13 @@ export const BattleFillSchema: Schema.Schema<
             areaId: Schema.String,
             radiusFeet: MovementFeet,
             targetIds: Schema.Array(CombatantId),
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("featherFallTargetFallingWithinRange"),
+            casterId: CombatantId,
+            targetId: CombatantId,
+            spellId: Schema.String,
+            rangeFeet: MovementFeet,
           }),
         ),
       ),

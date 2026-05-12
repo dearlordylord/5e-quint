@@ -80,5 +80,6 @@
 {"unitId":"grease","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV40","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"expeditious_retreat","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV49","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"jump","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV53","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
+{"unitId":"feather_fall","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV56A","ownerPath":"packages/battle-runtime/src/feather-fall-reaction-spell.test.ts"}}
 {"unitId":"thunderwave","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV51","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"dissonant_whispers","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV52","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}

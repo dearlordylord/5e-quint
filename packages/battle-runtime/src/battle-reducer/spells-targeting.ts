@@ -266,6 +266,15 @@ export function spellTargetSpatialFactMatches(
   targetId: CombatantId,
   invocation: SupportedSpellInvocation,
 ): boolean {
+  if (invocation.procedure === "featherFallMitigation") {
+    return (
+      fact.kind === "featherFallTargetFallingWithinRange" &&
+      fact.casterId === actorId &&
+      fact.targetId === targetId &&
+      fact.spellId === invocation.spell.id &&
+      fact.rangeFeet === invocation.rangeFeet
+    );
+  }
   if (fact.kind !== "spellTarget") {
     return false;
   }

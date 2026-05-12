@@ -1,7 +1,7 @@
 // Triggered reaction spell discovery and trigger matching extracted from dispatcher.ts.
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-feather-fall-mitigation spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
 import { CombatantId } from "../identity.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
@@ -15,6 +15,7 @@ import {
 import {
   spellDamageHole,
   spellSavingThrowOutcomeHole,
+  spellTargetListHole,
   supportedSpellInvocationRef,
 } from "./spells-holes-fills.ts";
 import type {
@@ -33,7 +34,8 @@ export function triggeredReactionSpellChoices(
   if (
     frame.trigger !== "attackHit" &&
     frame.trigger !== "spellCast" &&
-    frame.trigger !== "afterDamage"
+    frame.trigger !== "afterDamage" &&
+    frame.trigger !== "creatureFalls"
   ) {
     return [];
   }
@@ -42,7 +44,9 @@ export function triggeredReactionSpellChoices(
       ? [frame.targetId]
       : frame.trigger === "afterDamage"
         ? [frame.damagedId]
-        : frame.targetIds;
+        : frame.trigger === "creatureFalls"
+          ? featherFallTriggerReactors(frame)
+          : frame.targetIds;
   return reactorIds.flatMap(
     (reactorId): readonly BattleReactionProcedureChoice[] => {
       const reactor = state.combatants.get(reactorId);
@@ -57,7 +61,8 @@ export function triggeredReactionSpellChoices(
         (invocation): readonly BattleReactionProcedureChoice[] => {
           if (
             (invocation.procedure !== "shieldReaction" &&
-              invocation.procedure !== "saveGatedDamage") ||
+              invocation.procedure !== "saveGatedDamage" &&
+              invocation.procedure !== "featherFallMitigation") ||
             !spellHasAvailableSpend(reactor, invocation) ||
             !triggeredReactionSpellTurnResourceAvailable(
               state,
@@ -76,7 +81,9 @@ export function triggeredReactionSpellChoices(
                   spellSavingThrowOutcomeHole(state, reactorId, invocation),
                   spellDamageHole(invocation),
                 ]
-              : [];
+              : invocation.procedure === "featherFallMitigation"
+                ? [spellTargetListHole(state, reactorId, invocation)]
+                : [];
           return [
             {
               kind: "castTriggeredReactionSpell" as const,
@@ -103,7 +110,12 @@ export function triggeredReactionSpellTurnResourceAvailable(
   reactorId: CombatantId,
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "shieldReaction" | "saveGatedDamage" }
+    {
+      readonly procedure:
+        | "shieldReaction"
+        | "saveGatedDamage"
+        | "featherFallMitigation";
+    }
   >,
   frame: BattleReactionFrameInput,
 ): boolean {
@@ -120,7 +132,12 @@ export function currentActorHasPendingSlottedSpellCast(
   state: BattleState,
   reactionInvocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "shieldReaction" | "saveGatedDamage" }
+    {
+      readonly procedure:
+        | "shieldReaction"
+        | "saveGatedDamage"
+        | "featherFallMitigation";
+    }
   >,
   frame: BattleReactionFrameInput,
 ): boolean {
@@ -167,13 +184,22 @@ export function shieldReactionSpellMatchesTrigger(
 export function triggeredReactionSpellMatchesTrigger(
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "shieldReaction" | "saveGatedDamage" }
+    {
+      readonly procedure:
+        | "shieldReaction"
+        | "saveGatedDamage"
+        | "featherFallMitigation";
+    }
   >,
   frame: BattleReactionFrameInput,
 ): boolean {
-  return invocation.procedure === "shieldReaction"
-    ? shieldReactionSpellMatchesTrigger(invocation, frame)
-    : hellishRebukeReactionSpellMatchesTrigger(invocation, frame);
+  if (invocation.procedure === "shieldReaction") {
+    return shieldReactionSpellMatchesTrigger(invocation, frame);
+  }
+  if (invocation.procedure === "saveGatedDamage") {
+    return hellishRebukeReactionSpellMatchesTrigger(invocation, frame);
+  }
+  return featherFallReactionSpellMatchesTrigger(invocation, frame);
 }
 
 export function hellishRebukeReactionSpellMatchesTrigger(
@@ -219,4 +245,50 @@ export function reactionSpellTargetFactsForAfterDamage(input: {
         (fact.reactorId === input.damageSourceId &&
           fact.damageSourceId === input.damagedId)),
   );
+}
+
+export function featherFallReactionSpellMatchesTrigger(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "featherFallMitigation" }
+  >,
+  frame: BattleReactionFrameInput,
+): boolean {
+  const castingTime = invocation.spell.mechanics.castingTime;
+  return (
+    frame.trigger === "creatureFalls" &&
+    invocation.spell.name === "Feather Fall" &&
+    invocation.spell.provenance.kind === "srd-5.2.1" &&
+    invocation.spell.provenance.section ===
+      "Spells/Descriptions-E-L#Feather Fall" &&
+    invocation.spell.mechanics.family === "triggered_reaction" &&
+    castingTime.kind === "reaction" &&
+    castingTime.trigger.kind === "self_or_visible_creature_falls" &&
+    frame.reactionSpellTargetFacts.some(
+      (fact) =>
+        fact.kind === "featherFallTriggerSelfOrVisibleCreatureWithinRange" &&
+        fact.reactorId === invocation.activeEffect.sourceCombatantId &&
+        fact.fallingCreatureId === frame.fallingCreatureId &&
+        fact.spellId === invocation.spell.id &&
+        fact.rangeFeet === invocation.rangeFeet,
+    )
+  );
+}
+
+function featherFallTriggerReactors(
+  frame: Extract<
+    BattleReactionFrameInput,
+    { readonly trigger: "creatureFalls" }
+  >,
+): readonly CombatantId[] {
+  return [
+    ...new Set(
+      frame.reactionSpellTargetFacts.flatMap((fact): readonly CombatantId[] =>
+        fact.kind === "featherFallTriggerSelfOrVisibleCreatureWithinRange" &&
+        fact.fallingCreatureId === frame.fallingCreatureId
+          ? [fact.reactorId]
+          : [],
+      ),
+    ),
+  ];
 }

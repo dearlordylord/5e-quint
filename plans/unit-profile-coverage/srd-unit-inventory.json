@@ -161,8 +161,8 @@
       "rowsByStatus": {
         "accepted": 210,
         "accepted-no-battle-effect": 69,
-        "battle-runtime-required": 38,
-        "partial-battle-runtime": 35,
+        "battle-runtime-required": 35,
+        "partial-battle-runtime": 38,
         "surface-widening-required": 15
       }
     },
@@ -172,17 +172,17 @@
       "non-runtime": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 256,
+      "catalog-installed-owner-evidence-present": 259,
       "non-runtime": 12,
       "catalog-only/dead-for-now": 80,
-      "catalog-installed-owner-evidence-required": 4,
-      "needs-surface-widening": 15
+      "needs-surface-widening": 15,
+      "catalog-installed-owner-evidence-required": 1
     },
     "spellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 80,
-      "catalog-installed-owner-evidence-present": 112,
-      "catalog-installed-owner-evidence-required": 4,
-      "needs-surface-widening": 15
+      "catalog-installed-owner-evidence-present": 115,
+      "needs-surface-widening": 15,
+      "catalog-installed-owner-evidence-required": 1
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -5266,8 +5266,8 @@
         "state": "installed",
         "unitId": "feather_fall"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -5276,11 +5276,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Unit matrix records unsupported-profile: Spell Definition is installed with typed falling Reaction trigger, up-to-five falling creature targets, fall-rate cap, fall-damage prevention, and per-target landing cleanup facts; runtime falling simulation, fall-distance derivation, and landing geometry are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV56A at packages/battle-runtime/src/feather-fall-reaction-spell.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Unit matrix records unsupported-profile: Spell Definition is installed with typed falling Reaction trigger, up-to-five falling creature targets, fall-rate cap, fall-damage prevention, and per-target landing cleanup facts; runtime falling simulation, fall-distance derivation, and landing geometry are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_healing_word",
@@ -14325,8 +14325,8 @@
         "state": "installed",
         "unitId": "feather_fall"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -14335,11 +14335,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Unit matrix records unsupported-profile: Spell Definition is installed with typed falling Reaction trigger, up-to-five falling creature targets, fall-rate cap, fall-damage prevention, and per-target landing cleanup facts; runtime falling simulation, fall-distance derivation, and landing geometry are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV56A at packages/battle-runtime/src/feather-fall-reaction-spell.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Unit matrix records unsupported-profile: Spell Definition is installed with typed falling Reaction trigger, up-to-five falling creature targets, fall-rate cap, fall-damage prevention, and per-target landing cleanup facts; runtime falling simulation, fall-distance derivation, and landing geometry are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_fog_cloud",
@@ -17561,8 +17561,8 @@
         "state": "installed",
         "unitId": "feather_fall"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -17571,11 +17571,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Unit matrix records unsupported-profile: Spell Definition is installed with typed falling Reaction trigger, up-to-five falling creature targets, fall-rate cap, fall-damage prevention, and per-target landing cleanup facts; runtime falling simulation, fall-distance derivation, and landing geometry are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV56A at packages/battle-runtime/src/feather-fall-reaction-spell.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Unit matrix records unsupported-profile: Spell Definition is installed with typed falling Reaction trigger, up-to-five falling creature targets, fall-rate cap, fall-damage prevention, and per-target landing cleanup facts; runtime falling simulation, fall-distance derivation, and landing geometry are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_find_familiar",

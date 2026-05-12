@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 import type {
   ActionEconomyState,
   RuntimeActionResource,
@@ -300,6 +300,7 @@ export {
   maybeOpenReactionWindow,
   openAfterDamageSequenceReactionWindow,
   openBattleReactionWindow,
+  openCreatureFallsReactionWindow,
   opportunityAttackReactionChoices,
   pendingReactionSnapshot,
   reactionChoices,
@@ -382,6 +383,10 @@ export {
   isScalarBuffTargetListInvocation,
   isTargetListSpellInvocation,
 } from "./battle-reducer/spells-invocation-guards.ts";
+export {
+  activeFeatherFallDescentRateCapFeetPerRound,
+  FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
+} from "./battle-reducer/spells-active-effects.ts";
 export const BATTLE_SPECIAL_SPEED_KINDS = [
   "climb",
   "swim",
@@ -620,6 +625,13 @@ export type BattleActiveEffect =
       readonly movementCostFeet: MovementFeet;
       readonly maxJumpDistanceFeet: MovementFeet;
       readonly usedThisTurn: boolean;
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "duration" }
+      >;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "featherFallMitigation";
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
         { readonly kind: "duration" }
@@ -989,6 +1001,11 @@ export type BattleReactionFrame =
       readonly reactionSpellTargetFacts: readonly BattleTargetSpatialFact[];
     })
   | (BattleReactionFrameWithContinuationBase & {
+      readonly trigger: "creatureFalls";
+      readonly fallingCreatureId: CombatantId;
+      readonly reactionSpellTargetFacts: readonly BattleTargetSpatialFact[];
+    })
+  | (BattleReactionFrameWithContinuationBase & {
       readonly trigger: "opportunityAttack";
       readonly moverId: CombatantId;
       readonly threats: readonly BattleOpportunityAttackThreat[];
@@ -1173,6 +1190,20 @@ export type BattleTargetSpatialFact =
       readonly kind: "reactionSpellDamagerVisibleWithinRange";
       readonly reactorId: CombatantId;
       readonly damageSourceId: CombatantId;
+      readonly spellId: SpellRecord["id"];
+      readonly rangeFeet: MovementFeet;
+    }
+  | {
+      readonly kind: "featherFallTriggerSelfOrVisibleCreatureWithinRange";
+      readonly reactorId: CombatantId;
+      readonly fallingCreatureId: CombatantId;
+      readonly spellId: SpellRecord["id"];
+      readonly rangeFeet: MovementFeet;
+    }
+  | {
+      readonly kind: "featherFallTargetFallingWithinRange";
+      readonly casterId: CombatantId;
+      readonly targetId: CombatantId;
       readonly spellId: SpellRecord["id"];
       readonly rangeFeet: MovementFeet;
     }
@@ -1412,6 +1443,10 @@ export type TargetListSpellInvocation =
   | Extract<
       SupportedSpellInvocation,
       { readonly procedure: "jumpMovementReplacement" }
+    >
+  | Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "featherFallMitigation" }
     >
   | Extract<SupportedSpellInvocation, { readonly procedure: "command" }>
   | Extract<
@@ -1866,6 +1901,21 @@ export type SupportedSpellInvocation =
   | {
       readonly access: PreparedSpellAccess;
       readonly resource: SpellSlotInvocationResource;
+      readonly procedure: "featherFallMitigation";
+      readonly spell: SpellRecord;
+      readonly targeting: Extract<
+        SpellTargeting,
+        { readonly kind: "targetList" }
+      >;
+      readonly activeEffect: Extract<
+        BattleActiveEffect,
+        { readonly kind: "featherFallMitigation" }
+      >;
+      readonly rangeFeet: MovementFeet;
+    }
+  | {
+      readonly access: PreparedSpellAccess;
+      readonly resource: SpellSlotInvocationResource;
       readonly procedure: "persistentArmorEffect";
       readonly spell: SpellRecord;
       readonly rangeFeet: MovementFeet;
@@ -1930,6 +1980,7 @@ export type SupportedDamageSpellInvocation = Exclude<
       | "markedDamageRider"
       | "expeditiousRetreatDash"
       | "jumpMovementReplacement"
+      | "featherFallMitigation"
       | "heldLight"
       | "shieldReaction"
       | "saveGatedCondition"
@@ -2399,10 +2450,15 @@ export type BattleSpellTargetAllocationSpatialFact = Extract<
     readonly kind: "spellTarget" | "reactionSpellDamagerVisibleWithinRange";
   }
 >;
+type BattleFeatherFallTargetSpatialFact = Extract<
+  BattleTargetSpatialFact,
+  { readonly kind: "featherFallTargetFallingWithinRange" }
+>;
 export type BattleSpellTargetListSpatialFact =
   | BattleSpellTargetSpatialFact
   | BattlePointOriginSphereSpellTargetsSpatialFact
-  | BattleKnownWillingSpellTargetSpatialFact;
+  | BattleKnownWillingSpellTargetSpatialFact
+  | BattleFeatherFallTargetSpatialFact;
 export type BattleSpellTargetAllocationHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -2430,6 +2486,7 @@ export type BattleSpellTargetListHole = {
         | "scalarBuff"
         | "conditionImmunityAndTurnStartTemporaryHitPoints"
         | "jumpMovementReplacement"
+        | "featherFallMitigation"
         | "command";
     }
   >;

@@ -330,6 +330,7 @@ export function spellFillSet(
         invocation.procedure !== "saveGatedCondition" &&
         invocation.procedure !== "command" &&
         invocation.procedure !== "jumpMovementReplacement" &&
+        invocation.procedure !== "featherFallMitigation" &&
         invocation.procedure !==
           "conditionImmunityAndTurnStartTemporaryHitPoints"
       ) {

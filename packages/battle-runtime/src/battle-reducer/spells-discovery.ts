@@ -569,6 +569,9 @@ export function spellInvocationCastSummary(
   if (invocation.procedure === "jumpMovementReplacement") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
+  if (invocation.procedure === "featherFallMitigation") {
+    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+  }
   if (invocation.procedure === "persistentArmorEffect") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
@@ -602,7 +605,8 @@ export function spellActivationInvocationCastSummary(
         | "sleepTargetAdmission"
         | "command"
         | "greaseGroundHazard"
-        | "jumpMovementReplacement";
+        | "jumpMovementReplacement"
+        | "featherFallMitigation";
     }
   >,
 ): string {

@@ -35,6 +35,18 @@ import {
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 
+export const FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND = 60;
+
+export function activeFeatherFallDescentRateCapFeetPerRound(
+  combatant: BattleCreatureState,
+): typeof FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND | null {
+  return combatant.activeEffects.some(
+    (effect) => effect.kind === "featherFallMitigation",
+  )
+    ? FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND
+    : null;
+}
+
 export function applySpellActiveEffects(
   state: BattleState,
   actorId: CombatantId,

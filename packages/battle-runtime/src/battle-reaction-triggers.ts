@@ -6,6 +6,7 @@ export const BATTLE_REACTION_TRIGGERS = [
   "spellCast",
   "saveFailed",
   "afterDamage",
+  "creatureFalls",
   "opportunityAttack",
 ] as const;
 export type BattleReactionTrigger = (typeof BATTLE_REACTION_TRIGGERS)[number];
