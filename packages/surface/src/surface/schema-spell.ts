@@ -207,6 +207,12 @@ export const JumpMovementReplacementSchema = strictStruct({
   movementCostFeet: PositiveIntegerSchema,
 });
 
+export const FeatherFallMitigationSchema = strictStruct({
+  kind: Schema.Literal("feather_fall_mitigation"),
+  descentRateCapFeetPerRound: Schema.Literal(60),
+  landingOutcome: Schema.Literal("no_fall_damage_and_end_for_target"),
+});
+
 export const AudibleEffectSchema = strictStruct({
   kind: Schema.Literal("audible"),
   sound: Schema.String,
@@ -317,6 +323,9 @@ type ForcedReactionMovement = Schema.Schema.Type<
 type JumpMovementReplacement = Schema.Schema.Type<
   typeof JumpMovementReplacementSchema
 >;
+type FeatherFallMitigation = Schema.Schema.Type<
+  typeof FeatherFallMitigationSchema
+>;
 type ForceMoveEffect = Schema.Schema.Type<typeof ForceMoveEffectSchema>;
 type AudibleEffect = Schema.Schema.Type<typeof AudibleEffectSchema>;
 type AreaPushUnsecuredObjects = Schema.Schema.Type<
@@ -353,6 +362,7 @@ type ReactionTrigger =
       readonly requiresVisibleCreature?: true;
       readonly rangeFeet?: number;
     }
+  | { readonly kind: "self_or_visible_creature_falls"; readonly rangeFeet: 60 }
   | { readonly kind: "targeted_by_named_spell"; readonly spellId: string }
   | {
       readonly kind: "creature_casts_spell";
@@ -487,6 +497,7 @@ type EffectAtom =
     }
   | ForcedReactionMovement
   | JumpMovementReplacement
+  | FeatherFallMitigation
   | AudibleEffect
   | {
       readonly kind: "remove_condition";
@@ -1160,6 +1171,10 @@ export const ReactionTriggerSchema: Schema.suspend<
       rangeFeet: optionalExact(Schema.Number),
     }),
     Schema.Struct({
+      kind: Schema.Literal("self_or_visible_creature_falls"),
+      rangeFeet: Schema.Literal(60),
+    }),
+    Schema.Struct({
       kind: Schema.Literal("targeted_by_named_spell"),
       spellId: Schema.String,
     }),
@@ -1282,6 +1297,7 @@ export const TargetCountSlotScalingSchema = Schema.Struct({
 
 export const TargetKindSchema = Schema.Literal("creature", "object");
 export const TargetDispositionSchema = Schema.Literal("willing");
+export const TargetStateFilterSchema = nonEmpty(Schema.Literal("falling"));
 const CreatureTargetKindsSchema = nonEmpty(Schema.Literal("creature"));
 
 export const TargetSelectionSchema = Schema.Union(
@@ -1293,8 +1309,15 @@ export const TargetSelectionSchema = Schema.Union(
   strictStruct({
     mode: Schema.Literal("one"),
     targetKinds: CreatureTargetKindsSchema,
+    typeFilter: optionalExact(TargetTypeFilterSchema),
+    stateFilter: TargetStateFilterSchema,
+  }),
+  strictStruct({
+    mode: Schema.Literal("one"),
+    targetKinds: CreatureTargetKindsSchema,
     disposition: TargetDispositionSchema,
     typeFilter: optionalExact(TargetTypeFilterSchema),
+    stateFilter: optionalExact(TargetStateFilterSchema),
   }),
   strictStruct({
     mode: Schema.Literal("choose_up_to"),
@@ -1316,8 +1339,21 @@ export const TargetSelectionSchema = Schema.Union(
     ),
     repeatsAllowed: optionalExact(Schema.Literal(true)),
     targetKinds: CreatureTargetKindsSchema,
+    typeFilter: optionalExact(TargetTypeFilterSchema),
+    stateFilter: TargetStateFilterSchema,
+  }),
+  strictStruct({
+    mode: Schema.Literal("choose_up_to"),
+    count: Schema.Union(
+      PositiveIntegerSchema,
+      TargetCountSlotScalingSchema,
+      TargetCountThresholdTiersSchema,
+    ),
+    repeatsAllowed: optionalExact(Schema.Literal(true)),
+    targetKinds: CreatureTargetKindsSchema,
     disposition: TargetDispositionSchema,
     typeFilter: optionalExact(TargetTypeFilterSchema),
+    stateFilter: optionalExact(TargetStateFilterSchema),
   }),
   strictStruct({
     mode: Schema.Literal("any_number"),
@@ -1327,8 +1363,15 @@ export const TargetSelectionSchema = Schema.Union(
   strictStruct({
     mode: Schema.Literal("any_number"),
     targetKinds: CreatureTargetKindsSchema,
+    typeFilter: optionalExact(TargetTypeFilterSchema),
+    stateFilter: TargetStateFilterSchema,
+  }),
+  strictStruct({
+    mode: Schema.Literal("any_number"),
+    targetKinds: CreatureTargetKindsSchema,
     disposition: TargetDispositionSchema,
     typeFilter: optionalExact(TargetTypeFilterSchema),
+    stateFilter: optionalExact(TargetStateFilterSchema),
   }),
 );
 
@@ -1804,6 +1847,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       }),
       ForcedReactionMovementSchema,
       JumpMovementReplacementSchema,
+      FeatherFallMitigationSchema,
       AudibleEffectSchema,
       Schema.Struct({
         kind: Schema.Literal("remove_condition"),

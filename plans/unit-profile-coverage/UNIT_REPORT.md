@@ -8,16 +8,16 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Metric | Value |
 | --- | ---: |
-| Installed collection inventory count | 129 Units |
+| Installed collection inventory count | 130 Units |
 
 ## Coverage Metrics
 
 | Metric | Covered | Percent |
 | --- | ---: | ---: |
-| Authored Surface Unit catalog admission | 128/421 | 30.4% |
-| Authored Surface executable catalog admission | 104/354 | 29.4% |
-| Installed Unit profile classification coverage | 129/129 | 100% |
-| Supported executable Unit coverage | 63/105 | 60% |
+| Authored Surface Unit catalog admission | 129/422 | 30.6% |
+| Authored Surface executable catalog admission | 105/355 | 29.6% |
+| Installed Unit profile classification coverage | 130/130 | 100% |
+| Supported executable Unit coverage | 63/106 | 59.4% |
 | QNT profile modeling coverage | 42/42 | 100% |
 | QNT proof coverage | 40/42 | 95.2% |
 | Runtime mapping coverage | 42/42 | 100% |
@@ -888,6 +888,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `dissonant_whispers` | unsupported-profile | Spell Definition is installed with typed save-gated Psychic damage and failed-save forced Reaction movement facts; runtime execution of forced Reaction movement, route choice, and Opportunity Attack derivation is not promoted yet. |
 | `expeditious_retreat` | unsupported-profile | Spell Definition is installed with typed immediate Dash and Concentration-duration Bonus Action Dash facts; runtime Dash execution and Movement budget updates are not promoted yet. |
 | `faerie_fire` | profile-subset-supported | supported subset: 20-foot point-origin Cube affected-creature boundary with table-supplied area membership; Dexterity save-gated affected creatures; Concentration-owned attack-roll Advantage against failed-save affected creatures when the attacker can see them; deferred: object outline and object attack-roll Advantage (SRDINV33); Dim Light emitted by affected creatures and objects (SRDINV33); affected creatures and objects can't benefit from the Invisible condition (SRDINV33) |
+| `feather_fall` | unsupported-profile | Spell Definition is installed with typed falling Reaction trigger, up-to-five falling creature targets, fall-rate cap, fall-damage prevention, and per-target landing cleanup facts; runtime falling simulation, fall-distance derivation, and landing geometry are not promoted yet. |
 | `fire_bolt` | needs-surface-widening | QMBT23 keeps SRD Fire Bolt out of supported spell evidence until promoted spell invocation has an explicit object-target branch and object-ignition effect outcome; table-supplied object facts are required but are not a complete runtime boundary. |
 | `grease` | profile-subset-supported | supported subset: one-minute Grease ground hazard lifecycle keyed by caller-supplied ground-area id; on-cast Dexterity Saving Throw for caller-supplied affected creatures; Prone application on failed Grease saves; table-triggered enter-area and end-turn-in-area Dexterity save procedures; deferred: automatic Difficult Terrain movement-cost derivation, pathfinding, and grid geometry; movement cost remains caller-authored at the Movement boundary (SRDINV41) |
 | `hunters_mark` | profile-subset-supported | supported subset: Bonus Action cast with level-1 Spell Slot spend; Concentration-owned mark identity on one combatant target; extra Force damage when the caster hits the marked target with an Attack Roll; Bonus Action transfer only after the marked target drops to 0 Hit Points; Concentration cleanup removes the marked-target damage rider; deferred: Wisdom (Perception or Survival) Advantage to find the marked target (SRDINV33); slot-scaled Concentration maximum of 8 hours at slots 3-4 and 24 hours at slots 5+ (SRDINV33) |
@@ -917,7 +918,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
-| srd-5.2.1 | unassigned | unsupported-profile | 55 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `bard_bardic_inspiration`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `monk_martial_arts`, `ranger_favored_enemy`, `rogue_expertise`, `rogue_thieves_cant`, `sorcerer_innate_sorcery`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `mastery_sap`, `orc_darkvision`, `command`, `dissonant_whispers`, `expeditious_retreat`, `jump`, `light`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `thunderwave`, `minor_illusion`, `hellish_rebuke`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
+| srd-5.2.1 | unassigned | unsupported-profile | 56 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `bard_bardic_inspiration`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `monk_martial_arts`, `ranger_favored_enemy`, `rogue_expertise`, `rogue_thieves_cant`, `sorcerer_innate_sorcery`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `mastery_sap`, `orc_darkvision`, `command`, `dissonant_whispers`, `expeditious_retreat`, `feather_fall`, `jump`, `light`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `thunderwave`, `minor_illusion`, `hellish_rebuke`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
 | srd-5.2.1 | unassigned | profile-subset-supported | 10 | `animal_friendship`, `chill_touch`, `faerie_fire`, `grease`, `hunters_mark`, `protection_from_evil_and_good`, `produce_flame`, `starry_wisp`, `sleep`, `charm_person` |
 | srd-5.2.1 | QCORE10 | needs-surface-widening | 1 | `fire_bolt` |
 

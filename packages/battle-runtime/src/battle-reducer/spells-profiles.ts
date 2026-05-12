@@ -594,6 +594,7 @@ export function reactionTriggerNamedSpellIdsFromTrigger(
   return Match.value(trigger).pipe(
     Match.when({ kind: "hit_by_attack_roll" }, () => []),
     Match.when({ kind: "takes_damage_from_creature" }, () => []),
+    Match.when({ kind: "self_or_visible_creature_falls" }, () => []),
     Match.when({ kind: "targeted_by_named_spell" }, (namedSpell) => [
       namedSpell.spellId,
     ]),

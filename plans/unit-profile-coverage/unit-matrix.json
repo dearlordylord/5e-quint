@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 354,
-      "numerator": 104,
-      "percent": "29.4%"
+      "denominator": 355,
+      "numerator": 105,
+      "percent": "29.6%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 421,
-      "numerator": 128,
-      "percent": "30.4%"
+      "denominator": 422,
+      "numerator": 129,
+      "percent": "30.6%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 129
+      "value": 130
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 63,
@@ -67,8 +67,8 @@
       "percent": "93.7%"
     },
     "profileClassificationCoverage": {
-      "denominator": 129,
-      "numerator": 129,
+      "denominator": 130,
+      "numerator": 130,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -97,9 +97,9 @@
       "percent": "15.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 105,
+      "denominator": 106,
       "numerator": 63,
-      "percent": "60%"
+      "percent": "59.4%"
     }
   },
   "metricSemantics": [
@@ -5161,6 +5161,24 @@
       ],
       "sourceRecordPath": "packages/surface/content/faerie_fire.json",
       "unitId": "faerie_fire"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Spell Definition is installed with typed falling Reaction trigger, up-to-five falling creature targets, fall-rate cap, fall-damage prevention, and per-target landing cleanup facts; runtime falling simulation, fall-distance derivation, and landing geometry are not promoted yet.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/feather_fall.json",
+      "unitId": "feather_fall"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

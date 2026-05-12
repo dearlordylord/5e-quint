@@ -9,6 +9,7 @@ import {
   decodeUnitRecordEither,
   decodeUnitRecordSync,
   EffectAtomSchema,
+  FeatherFallMitigationSchema,
   JumpMovementReplacementSchema,
   OnHitTriggerMechanicsSchema,
   TargetSelectionSchema,
@@ -98,6 +99,7 @@ const requiredFirstVerticalUnitIds = [
   "command",
   "dissonant_whispers",
   "expeditious_retreat",
+  "feather_fall",
   "jump",
   "hellish_rebuke",
   "armor_chain_mail",
@@ -518,6 +520,103 @@ describe("SRD Unit catalog boundary", () => {
         },
       ]);
     }
+  });
+
+  test("decodes Feather Fall as a falling-trigger Reaction mitigation", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const featherFall = result.catalog.requireUnit("feather_fall");
+      expect(featherFall.kind).toBe("spell");
+      if (featherFall.kind !== "spell") return;
+      expect(featherFall.mechanics.family).toBe("triggered_reaction");
+      if (featherFall.mechanics.family !== "triggered_reaction") return;
+
+      expect(featherFall.mechanics.castingTime).toEqual({
+        kind: "reaction",
+        trigger: { kind: "self_or_visible_creature_falls", rangeFeet: 60 },
+      });
+      expect(featherFall.mechanics.range).toEqual({ kind: "point", feet: 60 });
+      expect(featherFall.mechanics.duration).toEqual({
+        kind: "timed",
+        value: { unit: "minute", amount: 1 },
+      });
+      expect(featherFall.mechanics.interruptsTrigger).toBe(true);
+
+      const phase = featherFall.mechanics.phases[0];
+      expect(phase?.kind).toBe("direct");
+      if (phase?.kind !== "direct") return;
+
+      expect(phase.attachment).toEqual({
+        kind: "hole",
+        holeId: "feather_fall_targets",
+        label: "falling targets",
+        value: {
+          kind: "target",
+          selection: {
+            mode: "choose_up_to",
+            count: 5,
+            targetKinds: ["creature"],
+            stateFilter: ["falling"],
+          },
+        },
+      });
+      expect(phase.effects).toEqual([
+        {
+          kind: "feather_fall_mitigation",
+          descentRateCapFeetPerRound: 60,
+          landingOutcome: "no_fall_damage_and_end_for_target",
+        },
+      ]);
+    }
+  });
+
+  test("rejects malformed Feather Fall mitigation facts", () => {
+    const decode = Schema.decodeUnknownEither(FeatherFallMitigationSchema);
+
+    expect(
+      Either.isLeft(
+        decode({
+          kind: "feather_fall_mitigation",
+          descentRateCapFeetPerRound: 30,
+          landingOutcome: "no_fall_damage_and_end_for_target",
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          kind: "feather_fall_mitigation",
+          descentRateCapFeetPerRound: 60,
+          landingOutcome: "no_fall_damage",
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test("rejects falling target state without creature targets", () => {
+    const decode = Schema.decodeUnknownEither(TargetSelectionSchema);
+
+    expect(
+      Either.isLeft(
+        decode({
+          mode: "choose_up_to",
+          count: 5,
+          stateFilter: ["falling"],
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          mode: "choose_up_to",
+          count: 5,
+          targetKinds: ["object"],
+          stateFilter: ["falling"],
+        }),
+      ),
+    ).toBe(true);
   });
 
   test("rejects malformed Jump movement replacement facts", () => {

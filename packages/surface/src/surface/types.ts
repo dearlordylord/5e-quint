@@ -244,6 +244,9 @@ export type ForcedReactionMovement = Schema.Schema.Type<
 export type JumpMovementReplacement = Schema.Schema.Type<
   typeof SurfaceSchema.JumpMovementReplacementSchema
 >;
+export type FeatherFallMitigation = Schema.Schema.Type<
+  typeof SurfaceSchema.FeatherFallMitigationSchema
+>;
 export type ForceMoveEffect = Schema.Schema.Type<
   typeof SurfaceSchema.ForceMoveEffectSchema
 >;

@@ -190,7 +190,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 240,
       "id": "SRDINV47",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Widen Feather Fall Falling Reaction Surface"
     },
     {
@@ -258,7 +258,7 @@ Keep it synchronized with the DAG table and task details.
 | 237   | SRDINV44 - Widen Thunderwave Push Surface | done | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Thunderwave](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Thunderwave is installed with typed self-origin Cube Constitution save damage, failed-save creature push, unsecured-object push, audible boom, and slot-scaled Thunder damage facts; runtime push resolution, object inventory simulation, and sound propagation remain unpromoted and visible in the Unit matrix as owner-evidence-required work. |
 | 238   | SRDINV45 - Widen Expeditious Retreat Dash Surface | done | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Expeditious Retreat](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Expeditious Retreat is installed with typed immediate Dash and Concentration-duration Bonus Action Dash facts; runtime Dash execution and Movement budget updates remain unpromoted and visible in the Unit matrix as owner-evidence-required work. |
 | 239   | SRDINV46 - Widen Jump Movement Replacement Surface | done | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Jump](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Jump is installed with typed touched willing targets, one-minute duration, slot-scaled additional targets, and once-per-turn jump movement replacement facts; runtime Movement spending, jump geometry, landing checks, and Difficult Terrain handling remain unpromoted. |
-| 240   | SRDINV47 - Widen Feather Fall Falling Reaction Surface | ready-for-research | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Feather Fall](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface for falling Reaction trigger, up-to-five falling creature targets, fall-rate cap, fall-damage prevention, and per-target landing cleanup. |
+| 240   | SRDINV47 - Widen Feather Fall Falling Reaction Surface | done | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Feather Fall](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Feather Fall is installed with a typed interrupting falling Reaction trigger, up-to-five falling creature targets, fall-rate cap, fall-damage prevention, and per-target landing cleanup; runtime falling simulation, fall-distance derivation, and landing geometry remain unpromoted. |
 | 241   | SRDINV48 - Recursive SRD Inventory Planning Review | ready-for-research | SRDINV42-SRDINV47 | none | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Review SRDINV42-SRDINV47 movement/action Surface widening results, refresh spell Unit metrics, and append the next concrete spell Surface or runtime batch. |
 
 ## Task Details
@@ -956,7 +956,7 @@ trivial.
 
 ### Task 240 - SRDINV47 - Widen Feather Fall Falling Reaction Surface
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV41
 
@@ -967,18 +967,19 @@ Research / plan:
 [Feather Fall](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
 [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
 
-Scope: widen Surface for falling Reaction trigger, up-to-five falling creature
-targets, fall-rate cap, fall-damage prevention, and per-target landing cleanup.
+Scope: completed Surface widening for an interrupting falling Reaction trigger,
+up-to-five falling creature targets, fall-rate cap, fall-damage prevention, and
+per-target landing cleanup.
 
 Out of scope: runtime falling simulation, fall-distance derivation, and table
 geometry for landing.
 
 Verification: RAW/source review for Feather Fall, Falling, Reaction, Target,
-Movement, and damage terms plus `UBIQUITOUS_LANGUAGE.md` check, confirming all
-modeled rules trace to specific SRD text; Surface parser/schema tests; generated
-content refresh if Dhall/JSON content changes; `pnpm unit-profile-coverage:check --write`;
-`/simplify` convergence, minimum two rounds unless the final changeset is
-trivial.
+Movement, and damage terms plus `UBIQUITOUS_LANGUAGE.md` check completed;
+Surface parser/schema tests passed; generated content and inventory artifacts
+refreshed; `pnpm unit-profile-coverage:check --write`; `pnpm quality`; local
+Surface trace generated and inspected; `/simplify` convergence recorded in two
+rounds.
 
 ### Task 241 - SRDINV48 - Recursive SRD Inventory Planning Review
 

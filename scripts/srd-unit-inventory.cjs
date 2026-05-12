@@ -212,14 +212,6 @@ const spellUnitMissingClassifications = new Map([
     },
   ],
   [
-    "feather_fall",
-    {
-      kind: "needs-surface-widening",
-      missingConstruct:
-        "Spell Definition falling Reaction trigger, up-to-five falling creature targets, fall-rate cap, fall-damage prevention, and per-target early end on landing",
-    },
-  ],
-  [
     "floating_disk",
     {
       kind: "catalog-only-closure",

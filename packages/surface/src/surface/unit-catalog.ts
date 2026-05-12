@@ -43,6 +43,7 @@ import ensnaringStrikeInput from "../../content/ensnaring_strike.json";
 import entangleInput from "../../content/entangle.json";
 import expeditiousRetreatInput from "../../content/expeditious_retreat.json";
 import faerieFireInput from "../../content/faerie_fire.json";
+import featherFallInput from "../../content/feather_fall.json";
 import equipmentShieldInput from "../../content/equipment_shield.json";
 import featAbilityScoreImprovementInput from "../../content/feat_ability_score_improvement.json";
 import featArcheryInput from "../../content/feat_archery.json";
@@ -314,6 +315,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     entangleInput,
     expeditiousRetreatInput,
     faerieFireInput,
+    featherFallInput,
     falseLifeInput,
     fireBoltInput,
     guidanceInput,

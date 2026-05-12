@@ -549,6 +549,20 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "feather_fall_mitigation": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "feather_fall_mitigation",
+        label: [
+          "feather_fall_mitigation",
+          `descent cap: ${e.descentRateCapFeetPerRound} ft/round`,
+          e.landingOutcome,
+        ].join("\n"),
+      });
+      return id;
+    }
     case "audible": {
       const id = ids("eff");
       nodes.push({
@@ -2143,6 +2157,7 @@ function traceEffectAtomScaling(
     case "command_target_next_turn":
     case "forced_reaction_movement":
     case "jump_movement_replacement":
+    case "feather_fall_mitigation":
     case "audible":
     case "push_unsecured_objects":
     case "remove_condition":
@@ -2774,6 +2789,8 @@ function describeReactionTrigger(t: ReactionTrigger): string {
         t.rangeFeet === undefined ? "" : `, within ${t.rangeFeet} ft`;
       return `takes damage from creature${visible}${range}`;
     }
+    case "self_or_visible_creature_falls":
+      return `self or visible creature falls, within ${t.rangeFeet} ft`;
     case "targeted_by_named_spell":
       return `targeted by ${t.spellId}`;
     case "creature_casts_spell": {
@@ -4810,13 +4827,19 @@ function describeTargetSelection(s: TargetSelection): string {
     s.typeFilter !== undefined && s.typeFilter.length > 0
       ? `\ntype: ${s.typeFilter.join("/")}`
       : "";
+  const stateFilter =
+    "stateFilter" in s &&
+    s.stateFilter !== undefined &&
+    s.stateFilter.length > 0
+      ? `\nstate: ${s.stateFilter.join("/")}`
+      : "";
   const disposition =
     "disposition" in s ? `\ndisposition: ${s.disposition}` : "";
-  if (s.mode === "one") return `one${typeFilter}${disposition}`;
+  if (s.mode === "one") return `one${typeFilter}${stateFilter}${disposition}`;
   if (s.mode === "any_number")
-    return `any_number${typeFilter}${disposition}`;
+    return `any_number${typeFilter}${stateFilter}${disposition}`;
   const repeats = s.repeatsAllowed === true ? " (repeats allowed)" : "";
-  return `choose_up_to: ${describeScaling(s.count)}${repeats}${typeFilter}${disposition}`;
+  return `choose_up_to: ${describeScaling(s.count)}${repeats}${typeFilter}${stateFilter}${disposition}`;
 }
 
 function describeAreaOrigin(

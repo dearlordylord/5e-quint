@@ -1,0 +1,69 @@
+{
+  "description": "Choose up to five falling creatures within range. A falling creature's rate of descent slows to 60 feet per round until the spell ends. If a creature lands before the spell ends, the creature takes no damage from the fall, and the spell ends for that creature.",
+  "id": "feather_fall",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "reaction",
+      "trigger": {
+        "kind": "self_or_visible_creature_falls",
+        "rangeFeet": 60
+      }
+    },
+    "components": {
+      "m": "a small feather or piece of down",
+      "s": false,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "triggered_reaction",
+    "interruptsTrigger": true,
+    "level": 1,
+    "phases": [
+      {
+        "attachment": {
+          "holeId": "feather_fall_targets",
+          "kind": "hole",
+          "label": "falling targets",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "count": 5,
+              "mode": "choose_up_to",
+              "stateFilter": [
+                "falling"
+              ],
+              "targetKinds": [
+                "creature"
+              ]
+            }
+          }
+        },
+        "effects": [
+          {
+            "descentRateCapFeetPerRound": 60,
+            "kind": "feather_fall_mitigation",
+            "landingOutcome": "no_fall_damage_and_end_for_target"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "feet": 60,
+      "kind": "point"
+    },
+    "school": "transmutation"
+  },
+  "name": "Feather Fall",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Feather Fall"
+  }
+}

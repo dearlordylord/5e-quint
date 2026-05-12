@@ -55,6 +55,7 @@ export {
   DurationEndTriggerSchema,
   DurationSchema,
   EffectAtomSchema,
+  FeatherFallMitigationSchema,
   ForceMoveAnyDirectionEffectSchema,
   ForceMoveEffectSchema,
   ForceMovePullSlideEffectSchema,
@@ -112,6 +113,7 @@ export {
   TargetCountThresholdTiersSchema,
   TargetDispositionSchema,
   TargetSelectionSchema,
+  TargetStateFilterSchema,
   TargetTypeFilterSchema,
   TriggeredReactionMechanicsSchema,
 } from "./schema-spell.ts";
