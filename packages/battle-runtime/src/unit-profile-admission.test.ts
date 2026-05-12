@@ -26,7 +26,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV32B produce_flame
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV34 starry_wisp
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV38A sleep
-// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV50B command
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV50D1 command
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV39 eldritch_blast
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV40 grease
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield
@@ -50,7 +50,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT59 monk_deflect_attacks
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT62 fighter_tactical_mind
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT65 bard_cutting_words
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-drop-held-object spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider spell.scalar-buff
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -3067,7 +3067,7 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
     );
     expect(requireHole(levelTwo.initialHoles, "commandOptionChoice")).toEqual(
       expect.objectContaining({
-        choices: ["grovel", "halt", "drop"],
+        choices: ["grovel", "halt", "drop", "approach"],
       }),
     );
     expect(spellActInvocation(levelTwo)).toEqual(
@@ -3470,9 +3470,9 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
     if (dropped.tag !== "resolved") {
       throw new Error("Expected Command Drop to resolve.");
     }
-    expect(requireCombatant(dropped.state, spellTargetId).activeEffects).toEqual(
-      [],
-    );
+    expect(
+      requireCombatant(dropped.state, spellTargetId).activeEffects,
+    ).toEqual([]);
     const targetAfterDrop = requireCombatant(dropped.state, spellTargetId);
     expect(
       targetAfterDrop.origin.kind === "character"
@@ -3483,7 +3483,9 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
 
   test("command Drop requires table held-object facts when no canonical loadout facts exist", () => {
     const spell = spellRecord(commandUnitId);
-    const statBlockTargetId = combatantId("unit-profile-command-drop-statblock");
+    const statBlockTargetId = combatantId(
+      "unit-profile-command-drop-statblock",
+    );
     const state = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 1, count: 1 }],
@@ -3565,7 +3567,10 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
       holes: [expect.objectContaining({ kind: "heldObjectFacts" })],
     });
 
-    const heldObjectFacts = requireHole(dropAct.initialHoles, "heldObjectFacts");
+    const heldObjectFacts = requireHole(
+      dropAct.initialHoles,
+      "heldObjectFacts",
+    );
     const knownEmpty = resolveBattleSubject({
       state: targetTurn.state,
       subject: dropAct.subject,
@@ -3611,6 +3616,287 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
       ],
       snapshot: { currentActorId: spellTargetId },
     });
+  });
+
+  test("command Approach consumes supplied route movement and continues when not within five feet", () => {
+    const spell = spellRecord(commandUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const act = spellAct({ state, spellId: commandUnitId, slotLevel: 1 });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+    const targetFill = spellTargetListFill(
+      targetHole,
+      spellCasterId,
+      commandUnitId,
+      [spellTargetId],
+    );
+    const optionFill: Extract<
+      BattleFill,
+      { readonly kind: "commandOptionChoice" }
+    > = {
+      kind: "commandOptionChoice",
+      holeId: commandOption.holeId,
+      value: "approach",
+    };
+    const savingThrow = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill, optionFill],
+      }),
+      "savingThrowOutcome",
+    );
+    const cast = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        optionFill,
+        savingThrowOutcomeFill(savingThrow, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Command Approach cast to resolve.");
+    }
+    const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+    const approachAct = discoverBattleActs(targetTurn.state)[0];
+    expect(approachAct).toEqual(
+      expect.objectContaining({
+        subject: expect.objectContaining({
+          tag: "runtimeCommand",
+          actorId: spellTargetId,
+          command: "commandApproach",
+        }),
+        initialHoles: [expect.objectContaining({ kind: "movement" })],
+      }),
+    );
+    if (
+      approachAct === undefined ||
+      approachAct.subject.tag !== "runtimeCommand" ||
+      approachAct.subject.command !== "commandApproach"
+    ) {
+      throw new Error("Expected Command Approach act.");
+    }
+    const movement = requireHole(approachAct.initialHoles, "movement");
+    const approached = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: approachAct.subject,
+      fills: [
+        commandApproachMovementFill(movement, {
+          movementCostFeet: 10,
+          movedWithinFiveFeetOfCaster: false,
+        }),
+      ],
+    });
+    expect(approached).toMatchObject({
+      tag: "resolved",
+      snapshot: { currentActorId: spellTargetId },
+    });
+    if (approached.tag !== "resolved") {
+      throw new Error("Expected Command Approach to resolve.");
+    }
+    expect(requireCombatant(approached.state, spellTargetId)).toMatchObject({
+      movementSpentFeet: movementFeet(10),
+      activeEffects: [],
+    });
+    expect(
+      requireCombatant(approached.state, spellTargetId),
+    ).not.toHaveProperty("commandApproach");
+  });
+
+  test("command Approach ends the target turn when supplied proximity reaches the caster", () => {
+    const spell = spellRecord(commandUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const act = spellAct({ state, spellId: commandUnitId, slotLevel: 1 });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+    const targetFill = spellTargetListFill(
+      targetHole,
+      spellCasterId,
+      commandUnitId,
+      [spellTargetId],
+    );
+    const optionFill: Extract<
+      BattleFill,
+      { readonly kind: "commandOptionChoice" }
+    > = {
+      kind: "commandOptionChoice",
+      holeId: commandOption.holeId,
+      value: "approach",
+    };
+    const savingThrow = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill, optionFill],
+      }),
+      "savingThrowOutcome",
+    );
+    const cast = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        optionFill,
+        savingThrowOutcomeFill(savingThrow, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Command Approach cast to resolve.");
+    }
+    const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+    const approachAct = discoverBattleActs(targetTurn.state)[0];
+    if (
+      approachAct === undefined ||
+      approachAct.subject.tag !== "runtimeCommand" ||
+      approachAct.subject.command !== "commandApproach"
+    ) {
+      throw new Error("Expected Command Approach act.");
+    }
+    const movement = requireHole(approachAct.initialHoles, "movement");
+    const approached = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: approachAct.subject,
+      fills: [
+        commandApproachMovementFill(movement, {
+          movementCostFeet: 10,
+          movedWithinFiveFeetOfCaster: true,
+        }),
+      ],
+    });
+    expect(approached).toMatchObject({
+      tag: "resolved",
+      snapshot: { currentActorId: spellCasterId },
+    });
+    if (approached.tag !== "resolved") {
+      throw new Error("Expected Command Approach to resolve.");
+    }
+    expect(requireCombatant(approached.state, spellTargetId)).toMatchObject({
+      movementSpentFeet: movementFeet(10),
+      activeEffects: [],
+    });
+  });
+
+  test("command Approach clears the pending effect without a Movement fill when no movement is available", () => {
+    const spell = spellRecord(commandUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const act = spellAct({ state, spellId: commandUnitId, slotLevel: 1 });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+    const targetFill = spellTargetListFill(
+      targetHole,
+      spellCasterId,
+      commandUnitId,
+      [spellTargetId],
+    );
+    const optionFill: Extract<
+      BattleFill,
+      { readonly kind: "commandOptionChoice" }
+    > = {
+      kind: "commandOptionChoice",
+      holeId: commandOption.holeId,
+      value: "approach",
+    };
+    const savingThrow = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill, optionFill],
+      }),
+      "savingThrowOutcome",
+    );
+    const cast = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        optionFill,
+        savingThrowOutcomeFill(savingThrow, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Command Approach cast to resolve.");
+    }
+    const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+    const grappledTargetTurn: BattleState = {
+      ...targetTurn.state,
+      grapples: [
+        {
+          grapplerId: spellCasterId,
+          targetId: spellTargetId,
+          escapeDc: difficultyClass(12),
+          reachFeet: movementFeet(5),
+          hand: "left",
+          targetExemptFromDragCost: false,
+        },
+      ],
+    };
+    const approachAct = discoverBattleActs(grappledTargetTurn)[0];
+    expect(approachAct).toEqual(
+      expect.objectContaining({
+        subject: expect.objectContaining({
+          tag: "runtimeCommand",
+          actorId: spellTargetId,
+          command: "commandApproach",
+        }),
+        initialHoles: [],
+      }),
+    );
+    if (
+      approachAct === undefined ||
+      approachAct.subject.tag !== "runtimeCommand" ||
+      approachAct.subject.command !== "commandApproach"
+    ) {
+      throw new Error("Expected no-movement Command Approach act.");
+    }
+    const approached = resolveBattleSubject({
+      state: grappledTargetTurn,
+      subject: approachAct.subject,
+      fills: [],
+    });
+    expect(approached).toMatchObject({
+      tag: "resolved",
+      snapshot: { currentActorId: spellTargetId },
+    });
+    if (approached.tag !== "resolved") {
+      throw new Error("Expected no-movement Command Approach to resolve.");
+    }
+    expect(requireCombatant(approached.state, spellTargetId)).toMatchObject({
+      movementSpentFeet: movementFeet(0),
+      activeEffects: [],
+    });
+    expect(
+      discoverBattleActs(approached.state).some(
+        (candidate) =>
+          candidate.subject.actorId === spellTargetId &&
+          candidate.subject.tag === "runtimeCommand" &&
+          candidate.subject.command === "endTurn",
+      ),
+    ).toBe(true);
   });
 
   test("command Grovel save success spends the cast without pending effects", () => {
@@ -13838,6 +14124,28 @@ function singleTargetSavingThrowOutcomeFill(
     kind: "savingThrowOutcome",
     holeId: hole.holeId,
     value: { outcomes: [{ targetId, succeeded }] },
+  };
+}
+
+function commandApproachMovementFill(
+  hole: Extract<BattleHole, { readonly kind: "movement" }>,
+  value: {
+    readonly movementCostFeet: number;
+    readonly movedWithinFiveFeetOfCaster: boolean;
+  },
+): Extract<BattleFill, { readonly kind: "movement" }> {
+  return {
+    kind: "movement",
+    holeId: hole.holeId,
+    value: {
+      speedKind: "walk",
+      movementCostFeet: movementFeet(value.movementCostFeet),
+      provokedOpportunityAttacks: [],
+      commandApproach: {
+        kind: "commandApproachShortestDirectRouteTowardCaster",
+        movedWithinFiveFeetOfCaster: value.movedWithinFiveFeetOfCaster,
+      },
+    },
   };
 }
 

@@ -4,7 +4,7 @@
 // behavior change intended.
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-drop-held-object spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
 import {
   canSpendAction,
@@ -198,6 +198,8 @@ import {
   resolveDisengage,
   resolveDodge,
   resolveEndTurnCommand,
+  resolveCommandApproachAfterMovement,
+  resolveCommandApproachCommand,
   resolveCommandDropCommand,
   resolveCommandGrovelCommand,
   resolveGreaseGroundHazardSaveCommand,
@@ -348,7 +350,12 @@ export function resolveBattleSubjectInternal(
   const commandPendingEffects = commandPendingEffectsForActor(
     input.state,
     actorId,
-  ).filter((effect) => effect.option === "grovel" || effect.option === "drop");
+  ).filter(
+    (effect) =>
+      effect.option === "grovel" ||
+      effect.option === "drop" ||
+      effect.option === "approach",
+  );
   const commandGrovelSubject =
     input.subject.tag === "runtimeCommand" &&
     input.subject.command === "commandGrovel"
@@ -359,18 +366,24 @@ export function resolveBattleSubjectInternal(
     input.subject.command === "commandDrop"
       ? input.subject
       : null;
+  const commandApproachSubject =
+    input.subject.tag === "runtimeCommand" &&
+    input.subject.command === "commandApproach"
+      ? input.subject
+      : null;
   if (
     commandPendingEffects.length > 0 &&
-    !(
-      commandPendingEffects.some(
-        (effect) =>
-          ((commandGrovelSubject !== null && effect.option === "grovel") ||
-            (commandDropSubject !== null && effect.option === "drop")) &&
-          effect.sourceCombatantId ===
-            (commandGrovelSubject ?? commandDropSubject)?.sourceCombatantId &&
-          effect.sourceSpellId ===
-            (commandGrovelSubject ?? commandDropSubject)?.sourceSpellId,
-      )
+    !commandPendingEffects.some(
+      (effect) =>
+        ((commandGrovelSubject !== null && effect.option === "grovel") ||
+          (commandDropSubject !== null && effect.option === "drop") ||
+          (commandApproachSubject !== null && effect.option === "approach")) &&
+        effect.sourceCombatantId ===
+          (commandGrovelSubject ?? commandDropSubject ?? commandApproachSubject)
+            ?.sourceCombatantId &&
+        effect.sourceSpellId ===
+          (commandGrovelSubject ?? commandDropSubject ?? commandApproachSubject)
+            ?.sourceSpellId,
     )
   ) {
     return invalidResult(
@@ -635,6 +648,12 @@ export function resolveBattleSubjectInternal(
     }
     if (subject.tag === "runtimeCommand" && subject.command === "commandDrop") {
       return resolveCommandDropCommand({ ...input, subject });
+    }
+    if (
+      subject.tag === "runtimeCommand" &&
+      subject.command === "commandApproach"
+    ) {
+      return resolveCommandApproachCommand({ ...input, subject });
     }
     if (subject.tag === "runtimeCommand" && subject.command === "move") {
       return resolveMoveCommand(input);
@@ -2258,6 +2277,15 @@ export function resumeInterruptedProcedure(
         suppressedReactionTrigger === "afterDamage"
           ? undefined
           : suppressedReactionTrigger,
+    });
+  }
+  if (continuation.kind === "commandApproachMovement") {
+    return resolveCommandApproachAfterMovement({
+      state,
+      subject: continuation.subject,
+      movement: continuation.movement,
+      movedWithinFiveFeetOfCaster: continuation.movedWithinFiveFeetOfCaster,
+      endTurnFills: continuation.endTurnFills,
     });
   }
   if (continuation.kind === "attackDamage") {

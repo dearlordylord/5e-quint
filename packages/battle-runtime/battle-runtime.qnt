@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-drop-held-object spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points
@@ -14,6 +14,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-grease-ground-hazard
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-command-halt-grovel
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-command-drop-held-object
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-command-approach-route
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-expeditious-retreat-dash
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-forced-reaction-movement
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-jump-movement-replacement
@@ -279,7 +280,7 @@ module battleRuntime {
   type ScalarBuffSpell = FalseLifeScalarBuff | LongstriderScalarBuff | ShieldOfFaithScalarBuff
   type RollModifierSpell = BaneRollModifier | BlessRollModifier | GuidanceRollModifier
   type SpellActionCost = SpellMagicAction | SpellBonusAction
-  type CommandOption = CommandGrovelOption | CommandHaltOption | CommandDropOption
+  type CommandOption = CommandGrovelOption | CommandHaltOption | CommandDropOption | CommandApproachOption
 
   type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireAttackRollAdvantage | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodAttackDisadvantage | ProduceFlameHeldLight({ durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
@@ -2258,6 +2259,26 @@ module battleRuntime {
     grappleEscapeDc: 0,
   }
 
+  pure def movementProjectionForGoblin(state: BattleState, speedKind: MovementSpeedKind): BattleRuntimeMovementProjection = {
+    currentActorOwnsTurn:
+      currentActor(state) == Goblin
+        and not(state.goblin.unconscious)
+        and not(state.goblin.incapacitated),
+    actionAvailable: state.actionAvailable,
+    bonusActionAvailable: state.bonusActionAvailable,
+    reactionAvailable: state.goblin.reactionAvailable,
+    dashMovementBonus: state.dashMovementBonus,
+    disengaged: state.disengaged,
+    dodging: state.goblin.dodging,
+    hidden: false,
+    helpAttackHeld: false,
+    readiedMovementHeld: false,
+    speedFeet: movementSpeed(state.goblin, speedKind),
+    movementSpentFeet: state.goblin.movementSpent,
+    prone: state.goblin.prone,
+    grappleEscapeDc: 0,
+  }
+
   pure def movementProjectionForGrappledGoblin(state: BattleState): BattleRuntimeMovementProjection =
     match state.grapple {
       | NoGrapple => {
@@ -2404,6 +2425,22 @@ module battleRuntime {
       fighterReadiedMovementHeld: step.readiedMovementHeld,
       fighter: {
         ...state.fighter,
+        reactionAvailable: step.reactionAvailable,
+        movementSpent: step.movementSpentFeet,
+        prone: step.prone,
+        dodging: step.dodging,
+      },
+    }
+
+  pure def stateWithGoblinMovementStep(state: BattleState, step: BattleRuntimeMovementStep): BattleState =
+    {
+      ...state,
+      actionAvailable: step.actionAvailable,
+      bonusActionAvailable: step.bonusActionAvailable,
+      dashMovementBonus: step.dashMovementBonus,
+      disengaged: step.disengaged,
+      goblin: {
+        ...state.goblin,
         reactionAvailable: step.reactionAvailable,
         movementSpent: step.movementSpentFeet,
         prone: step.prone,
@@ -5044,6 +5081,68 @@ module battleRuntime {
     else
       state
 
+  pure def commandApproachFighterHasMovementAvailable(state: BattleState): bool =
+    battleRuntimeCanSpendMovement(movementProjectionForFighter(state, WalkSpeedKind), 1)
+      or battleRuntimeCanSpendMovement(movementProjectionForFighter(state, ClimbSpeedKind), 1)
+      or battleRuntimeCanSpendMovement(movementProjectionForFighter(state, SwimSpeedKind), 1)
+
+  pure def commandApproachGoblinHasMovementAvailable(state: BattleState): bool =
+    battleRuntimeCanSpendMovement(movementProjectionForGoblin(state, WalkSpeedKind), 1)
+      or battleRuntimeCanSpendMovement(movementProjectionForGoblin(state, ClimbSpeedKind), 1)
+      or battleRuntimeCanSpendMovement(movementProjectionForGoblin(state, SwimSpeedKind), 1)
+
+  pure def followCommandApproach(
+    state: BattleState,
+    speedKind: MovementSpeedKind,
+    movementCost: int,
+    movedWithinFiveFeetOfCaster: bool,
+  ): BattleState =
+    if (commandPendingEffectsForActor(state, currentActor(state), CommandApproachOption).size() > 0)
+      match currentActor(state) {
+        | Fighter => {
+            val withoutPending = {
+              ...state,
+              fighter: {
+                ...state.fighter,
+                activeEffects: state.fighter.activeEffects.exclude(commandPendingEffectsForActor(state, Fighter, CommandApproachOption)),
+              },
+            }
+            if (not(commandApproachFighterHasMovementAvailable(state)))
+              withoutPending
+            else if (not(battleRuntimeCanSpendMovement(movementProjectionForFighter(state, speedKind), movementCost)))
+              state
+            else {
+              val moved = stateWithFighterMovementStep(
+                withoutPending,
+                battleRuntimeSpendMovement(movementProjectionForFighter(state, speedKind), movementCost),
+              )
+              if (movedWithinFiveFeetOfCaster) endTurn(moved) else moved
+            }
+          }
+        | Goblin => {
+            val withoutPending = {
+              ...state,
+              goblin: {
+                ...state.goblin,
+                activeEffects: state.goblin.activeEffects.exclude(commandPendingEffectsForActor(state, Goblin, CommandApproachOption)),
+              },
+            }
+            if (not(commandApproachGoblinHasMovementAvailable(state)))
+              withoutPending
+            else if (not(battleRuntimeCanSpendMovement(movementProjectionForGoblin(state, speedKind), movementCost)))
+              state
+            else {
+              val moved = stateWithGoblinMovementStep(
+                withoutPending,
+                battleRuntimeSpendMovement(movementProjectionForGoblin(state, speedKind), movementCost),
+              )
+              if (movedWithinFiveFeetOfCaster) endTurn(moved) else moved
+            }
+          }
+      }
+    else
+      state
+
   pure def followCommandHalt(state: BattleState): BattleState =
     if (commandPendingEffectsForActor(state, currentActor(state), CommandHaltOption).size() > 0)
       match currentActor(state) {
@@ -6053,6 +6152,55 @@ module battleRuntime {
     all {
       assert(commandDropOutcomeCount(goblinTurn, 0) == 0),
       assert(currentActor(followed) == Fighter),
+    }
+  }
+
+  run test_command_approach_spends_supplied_movement_and_continues_when_not_within_five_feet = {
+    val resolved = resolveCommand(initialState, Set(Goblin), Set(Goblin), 1, CommandApproachOption)
+    val goblinTurn = endTurn(resolved)
+    val followed = followCommandApproach(goblinTurn, WalkSpeedKind, 10, false)
+    all {
+      assert(currentActor(followed) == Goblin),
+      assert(followed.goblin.movementSpent == 10),
+      assert(not(followed.goblin.activeEffects.contains(CommandPending({
+        source: Fighter,
+        option: CommandApproachOption,
+        expiresAtActor: Goblin,
+        expiresAtRound: 1,
+      })))),
+    }
+  }
+
+  run test_command_approach_ends_turn_when_supplied_proximity_reached = {
+    val resolved = resolveCommand(initialState, Set(Goblin), Set(Goblin), 1, CommandApproachOption)
+    val goblinTurn = endTurn(resolved)
+    val followed = followCommandApproach(goblinTurn, WalkSpeedKind, 10, true)
+    all {
+      assert(currentActor(followed) == Fighter),
+      assert(followed.goblin.movementSpent == 10),
+      assert(not(followed.goblin.activeEffects.contains(CommandPending({
+        source: Fighter,
+        option: CommandApproachOption,
+        expiresAtActor: Goblin,
+        expiresAtRound: 1,
+      })))),
+    }
+  }
+
+  run test_command_approach_no_movement_clears_pending_and_continues_turn = {
+    val resolved = resolveCommand(initialState, Set(Goblin), Set(Goblin), 1, CommandApproachOption)
+    val goblinTurn = endTurn(resolved)
+    val immobile = { ...goblinTurn, goblin: { ...goblinTurn.goblin, speed: 0 } }
+    val followed = followCommandApproach(immobile, WalkSpeedKind, 10, false)
+    all {
+      assert(currentActor(followed) == Goblin),
+      assert(followed.goblin.movementSpent == 0),
+      assert(not(followed.goblin.activeEffects.contains(CommandPending({
+        source: Fighter,
+        option: CommandApproachOption,
+        expiresAtActor: Goblin,
+        expiresAtRound: 1,
+      })))),
     }
   }
 

@@ -3,7 +3,7 @@
 // intended.
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-drop-held-object spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
 import { resetTurnActionEconomy } from "@dnd/shared-algebras/action-economy-algebra";
 
@@ -90,6 +90,7 @@ import { applyBattleMovement } from "./readied-release.ts";
 
 import {
   battleMovementBudgetForActor,
+  combatantCanMoveInState,
   combatantCanMoveWithBudget,
   effectiveMovementSpeed,
   effectiveWalkSpeed,
@@ -130,6 +131,7 @@ import type {
   BattleActiveEffect,
   BattleActiveEffectExpiration,
   BattleAttackDamageDispositionHole,
+  BattleCommandApproachMovementFact,
   BattleCommandHaltTurnSuppression,
   BattleCreatureState,
   BattleDroppedObjectOutcome,
@@ -284,7 +286,9 @@ export function resolveEndTurn(
         );
   const combatantsAfterDamageReductionReset =
     resetSpellDamageReductionsForNewTurn(combatantsAfterRecharge);
-  const resetTurnResources = resetBattleTurnResources(state.currentTurnResources);
+  const resetTurnResources = resetBattleTurnResources(
+    state.currentTurnResources,
+  );
   const commandHalt = commandHaltTurnSuppressionForActor(
     combatantsAfterDamageReductionReset,
     nextActorId,
@@ -702,7 +706,7 @@ export function commandPendingEffectForSubject(
     BattleSubject,
     {
       readonly tag: "runtimeCommand";
-      readonly command: "commandGrovel" | "commandDrop";
+      readonly command: "commandGrovel" | "commandDrop" | "commandApproach";
     }
   >,
   option: CommandPendingEffect["option"],
@@ -789,6 +793,25 @@ export function canonicalHeldObjectIdsForActor(
   ];
 }
 
+function stateWithoutCommandPendingEffect(
+  state: BattleState,
+  actorId: CombatantId,
+  effect: CommandPendingEffect,
+): BattleState {
+  const target = state.combatants.get(actorId);
+  return target === undefined
+    ? state
+    : {
+        ...state,
+        combatants: new Map(state.combatants).set(actorId, {
+          ...target,
+          activeEffects: target.activeEffects.filter(
+            (candidate) => candidate !== effect,
+          ),
+        }),
+      };
+}
+
 export function resolveCommandGrovelCommand(
   input: BattleResolutionInputForSubject<
     Extract<
@@ -865,9 +888,7 @@ export function resolveCommandDropCommand(
     );
   }
   const heldObjectFactFills = input.fills.filter(
-    (
-      fill,
-    ): fill is Extract<BattleFill, { readonly kind: "heldObjectFacts" }> =>
+    (fill): fill is Extract<BattleFill, { readonly kind: "heldObjectFacts" }> =>
       fill.kind === "heldObjectFacts",
   );
   if (heldObjectFactFills.length > 1) {
@@ -907,7 +928,8 @@ export function resolveCommandDropCommand(
   }
   if (
     heldObjectFactFill !== undefined &&
-    heldObjectFactFill.holeId !== commandDropHeldObjectFactsHoleId(input.subject)
+    heldObjectFactFill.holeId !==
+      commandDropHeldObjectFactsHoleId(input.subject)
   ) {
     return invalidResult(
       input.state,
@@ -932,22 +954,11 @@ export function resolveCommandDropCommand(
     );
   }
 
-  const target = input.state.combatants.get(input.subject.actorId);
-  const withoutPending =
-    target === undefined
-      ? input.state
-      : {
-          ...input.state,
-          combatants: new Map(input.state.combatants).set(
-            input.subject.actorId,
-            {
-              ...target,
-              activeEffects: target.activeEffects.filter(
-                (candidate) => candidate !== effect,
-              ),
-            },
-          ),
-        };
+  const withoutPending = stateWithoutCommandPendingEffect(
+    input.state,
+    input.subject.actorId,
+    effect,
+  );
   const endTurnResult = resolveEndTurnCommand({
     state: withoutPending,
     subject: {
@@ -973,6 +984,190 @@ export function resolveCommandDropCommand(
     return endTurnResult;
   }
   return { ...endTurnResult, droppedObjects };
+}
+
+export function resolveCommandApproachCommand(
+  input: BattleResolutionInputForSubject<
+    Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "commandApproach";
+      }
+    >
+  >,
+): BattleResolutionResult {
+  const effect = commandPendingEffectForSubject(
+    input.state,
+    input.subject,
+    "approach",
+  );
+  if (effect === null) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Command Approach is no longer pending for this actor.",
+    );
+  }
+  const movementFills = input.fills.filter(
+    (fill): fill is Extract<BattleFill, { readonly kind: "movement" }> =>
+      fill.kind === "movement",
+  );
+  if (movementFills.length === 0) {
+    if (!combatantCanMoveInState(input.state, input.subject.actorId)) {
+      if (input.fills.length > 0) {
+        return invalidResult(
+          input.state,
+          "invalidFill",
+          "Command Approach cannot apply fills when no movement is available.",
+        );
+      }
+      const withoutPending = stateWithoutCommandPendingEffect(
+        input.state,
+        input.subject.actorId,
+        effect,
+      );
+      return {
+        tag: "resolved",
+        state: withoutPending,
+        snapshot: snapshotBattle(withoutPending),
+      };
+    }
+    return needsHolesResult(input.state, input.subject, [
+      movementHole(input.state, input.subject.actorId),
+    ]);
+  }
+  if (movementFills.length > 1) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Command Approach accepts one Movement fill.",
+    );
+  }
+  const unsupportedFill = input.fills.find(
+    (fill) => fill.kind !== "movement" && !endTurnFillKind(fill.kind),
+  );
+  if (unsupportedFill !== undefined) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Command Approach only accepts Movement and End Turn fills.",
+    );
+  }
+  const movementFill = movementFills[0]!;
+  if (movementFill.holeId !== MOVEMENT_HOLE_ID) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Movement fill does not match the requested Command Approach hole.",
+    );
+  }
+  const approachFact = movementFill.value.commandApproach;
+  if (approachFact === undefined) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Command Approach requires caller-supplied shortest/direct route and proximity facts.",
+    );
+  }
+  const movement = parseBattleMovement(
+    input.state,
+    input.subject.actorId,
+    movementFill,
+    {
+      commandApproach: approachFact,
+    },
+  );
+  if (movement.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", movement.message);
+  }
+  const endTurnFills = input.fills.filter((fill) => fill.kind !== "movement");
+  const threats = opportunityAttackThreatsForMovement(
+    input.state,
+    movement.movement,
+  );
+  if (threats.length > 0) {
+    const reactionWindow = maybeOpenReactionWindow(
+      input.state,
+      {
+        trigger: "opportunityAttack",
+        moverId: input.subject.actorId,
+        threats,
+        continuation: {
+          kind: "commandApproachMovement",
+          subject: input.subject,
+          movement: movement.movement,
+          movedWithinFiveFeetOfCaster: approachFact.movedWithinFiveFeetOfCaster,
+          endTurnFills,
+        },
+      },
+      undefined,
+    );
+    if (reactionWindow !== null) return reactionWindow;
+  }
+  return resolveCommandApproachAfterMovement({
+    state: input.state,
+    subject: input.subject,
+    movement: movement.movement,
+    movedWithinFiveFeetOfCaster: approachFact.movedWithinFiveFeetOfCaster,
+    endTurnFills,
+  });
+}
+
+export function resolveCommandApproachAfterMovement(input: {
+  readonly state: BattleState;
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "runtimeCommand"; readonly command: "commandApproach" }
+  >;
+  readonly movement: BattleResolvedMovement;
+  readonly movedWithinFiveFeetOfCaster: boolean;
+  readonly endTurnFills: readonly BattleFill[];
+}): BattleResolutionResult {
+  const effect = commandPendingEffectForSubject(
+    input.state,
+    input.subject,
+    "approach",
+  );
+  if (effect === null) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Command Approach is no longer pending for this actor.",
+    );
+  }
+  const withoutPending = stateWithoutCommandPendingEffect(
+    input.state,
+    input.subject.actorId,
+    effect,
+  );
+  const moved = applyBattleMovement(withoutPending, input.movement);
+  if (!input.movedWithinFiveFeetOfCaster) {
+    if (input.endTurnFills.length > 0) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Command Approach did not end the turn, so End Turn fills do not apply.",
+      );
+    }
+    return {
+      tag: "resolved",
+      state: moved,
+      snapshot: snapshotBattle(moved),
+    };
+  }
+  const endTurnResult = resolveEndTurnCommand({
+    state: moved,
+    subject: {
+      tag: "runtimeCommand",
+      actorId: input.subject.actorId,
+      command: "endTurn",
+    },
+    fills: input.endTurnFills,
+  });
+  return endTurnResult.tag === "needsHoles"
+    ? { ...endTurnResult, state: input.state, subject: input.subject }
+    : endTurnResult;
 }
 
 function greaseGroundHazardEffectFor(
@@ -2417,6 +2612,7 @@ export function parseBattleMovement(
     readonly movementBudgetFeet?: MovementFeet;
     readonly spendsTurnMovement?: boolean;
     readonly jumpMovementReplacement?: JumpMovementReplacementEffect;
+    readonly commandApproach?: BattleCommandApproachMovementFact;
   } = {},
 ):
   | { readonly tag: "ok"; readonly movement: BattleResolvedMovement }
@@ -2456,6 +2652,16 @@ export function parseBattleMovement(
     return {
       tag: "invalid",
       message: jumpMovementValidation,
+    };
+  }
+  const commandApproachValidation = validateCommandApproachMovementFact(
+    fill.value.commandApproach,
+    options.commandApproach,
+  );
+  if (commandApproachValidation !== null) {
+    return {
+      tag: "invalid",
+      message: commandApproachValidation,
     };
   }
   const movementCost = ordinaryMovementCost(
@@ -2562,6 +2768,23 @@ function validateJumpMovementReplacementFact(
     return "Jump movement replacement requires caller-supplied legal landing facts.";
   }
   return null;
+}
+
+function validateCommandApproachMovementFact(
+  fact: BattleCommandApproachMovementFact | undefined,
+  expected: BattleCommandApproachMovementFact | undefined,
+): string | null {
+  if (expected === undefined) {
+    return fact === undefined
+      ? null
+      : "Command Approach route facts cannot be supplied for ordinary Movement.";
+  }
+  if (fact === undefined) {
+    return "Command Approach requires caller-supplied route facts.";
+  }
+  return fact.kind === "commandApproachShortestDirectRouteTowardCaster"
+    ? null
+    : "Command Approach route fact has the wrong kind.";
 }
 
 export function resetStartOfTurnCombatant(

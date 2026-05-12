@@ -17,7 +17,7 @@ export const SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS = [
   "condition",
   "spell",
 ] as const;
-export const COMMAND_OPTIONS = ["grovel", "halt", "drop"] as const;
+export const COMMAND_OPTIONS = ["grovel", "halt", "drop", "approach"] as const;
 // Required SRD cross-record reference: Shield explicitly also triggers when
 // targeted by the Magic Missile spell.
 export const SHIELD_MAGIC_MISSILE_SPELL_ID =

@@ -62,6 +62,7 @@ flowchart TD
   Resolve["resolveBattleSubject(state, subject, fills)<br/>success: resolved next BattleState<br/>continuation: needsHoles<br/>invalid: stale subject, wrong actor, bad fill, unsupported subject/shape<br/>why: top-level replay/refill dispatcher"]
   EndTurn["End Turn resolution<br/>success: next initiative actor + reset turn action economy<br/>why: runtime command for turn advancement"]
   CommandDrop["Command Drop follow-up<br/>input: canonical Character selected-loadout held objects or heldObjectFacts fill<br/>success: droppedObjects outcomes + pending effect cleanup + target End Turn<br/>why: Drop needs table/object facts without storing duplicate inventory"]
+  CommandApproach["Command Approach follow-up<br/>input: Movement fill with caller-supplied route/proximity facts<br/>success: Movement spend + pending effect cleanup; target End Turn only if within 5 ft<br/>why: Approach needs table route facts without storing pathfinding state"]
   Support["support gates/readers<br/>success: authored shape selects a supported procedure family<br/>invalid: unsupported authored shape fails before reducer replay"]
   AttackOption["supported Attack action option<br/>source: character selected weapon or StatBlockRecord named attack<br/>why: attack bonus, damage, reach, normal/long range, and attack identity derive from authored inputs"]
   MonsterControl["monster control resources<br/>success: spend X/Day or Recharge; discover Legendary Actions after another turn; refresh Legendary Actions and recharge rolls at start turn; pending Multiattack dispatches expose matching dispatch attacks, Movement, and End Turn<br/>why: reusable Stat Block limited-use protocol"]
@@ -86,6 +87,7 @@ flowchart TD
   FillSession --> Resolve
   Resolve -->|runtimeCommand.endTurn| EndTurn --> State
   Resolve -->|runtimeCommand.commandDrop| CommandDrop --> EndTurn
+  Resolve -->|runtimeCommand.commandApproach| CommandApproach --> EndTurn
   Resolve --> Support
   Support -->|action.attack| AttackOption --> AttackReplay
   MonsterResources --> MonsterControl --> AttackReplay
@@ -100,7 +102,7 @@ flowchart TD
   ActionEconomy --> AttackReplay
 
   classDef implemented fill:#eef6ff,stroke:#2563eb,color:#172554;
-  class CharacterBuild,StatBlock,Init,State,Creature,Origin,MonsterResources,ArmorClass,ActionEconomy,AttackRoll,RuntimeDice,Discover,Subject,FillSession,Resolve,EndTurn,CommandDrop,Support,AttackOption,MonsterControl,AttackReplay,UnitFeature,SpellAct,Damage,Snapshot implemented;
+  class CharacterBuild,StatBlock,Init,State,Creature,Origin,MonsterResources,ArmorClass,ActionEconomy,AttackRoll,RuntimeDice,Discover,Subject,FillSession,Resolve,EndTurn,CommandDrop,CommandApproach,Support,AttackOption,MonsterControl,AttackReplay,UnitFeature,SpellAct,Damage,Snapshot implemented;
 ```
 
 ## Interpretation Graph
@@ -111,6 +113,7 @@ flowchart TD
   CurrentActor["actorId === currentActing(state.initiative)<br/>success: continue<br/>failure: invalid wrongActor<br/>why: subject legality is turn-local"]
   EndTurn["runtimeCommand.endTurn<br/>success: resolved next turn; asks for start-turn Death Saving Throw, recharge, or spell-condition damage fills when needed<br/>invalid: wrong actor, stale fills, or fills that do not match requested holes"]
   CommandDrop["runtimeCommand.commandDrop<br/>success: consumes canonical held-object facts or heldObjectFacts fill, emits droppedObjects, then resolves End Turn<br/>invalid: stale pending Command, duplicate object ids, or mismatched fills"]
+  CommandApproach["runtimeCommand.commandApproach<br/>success: consumes Movement route/proximity facts, spends Movement, clears pending Command, conditionally resolves End Turn<br/>invalid: stale pending Command, missing route fact, or mismatched fills"]
   Attack["action.attack + attackName<br/>success: staged target/roll/damage replay<br/>invalid: actor missing, unsupported shape, no action resource, bad fills"]
   UnitFeature["unitFeature<br/>success: spend retained feature resource and resolve supported Unit procedure<br/>invalid: no use remains, no Bonus Action, or already used this turn"]
   Magic["actionSpell + spellId<br/>success: staged action-time spell replay via Magic action, including supported attack, save, damage, mixed attack-plus-burst, scalar buff, and creature-type protection/charm spells<br/>invalid: unsupported spell shape, no Magic action, no slot for prepared spell"]
@@ -124,6 +127,7 @@ flowchart TD
   Subject --> CurrentActor
   CurrentActor --> EndTurn
   CurrentActor --> CommandDrop --> EndTurn
+  CurrentActor --> CommandApproach --> EndTurn
   CurrentActor --> Attack --> AttackOption --> Target --> Roll --> HitCheck
   CurrentActor --> UnitFeature
   CurrentActor --> Magic
@@ -131,7 +135,7 @@ flowchart TD
   HitCheck -->|miss| Apply
 
   classDef implemented fill:#eef6ff,stroke:#2563eb,color:#172554;
-  class Subject,CurrentActor,EndTurn,CommandDrop,Attack,UnitFeature,Magic,AttackOption,Target,Roll,HitCheck,DamageHole,Apply implemented;
+  class Subject,CurrentActor,EndTurn,CommandDrop,CommandApproach,Attack,UnitFeature,Magic,AttackOption,Target,Roll,HitCheck,DamageHole,Apply implemented;
 ```
 
 ## Implemented Slice Boundaries
@@ -140,7 +144,7 @@ flowchart TD
   `action.multiattack`, `actionSpell` with a retained Spell Record id,
   `unitFeature` with a retained Unit id, and runtime commands such as
   `runtimeCommand.endTurn` and source-owned Command follow-ups such as
-  `runtimeCommand.commandDrop`. They select reusable runtime procedures; they
+  `runtimeCommand.commandDrop` and `runtimeCommand.commandApproach`. They select reusable runtime procedures; they
   are not a projected executable taxonomy and are not one reducer branch per
   authored slug.
 - Fills are caller/session state, not durable `BattleState`. Command Drop uses

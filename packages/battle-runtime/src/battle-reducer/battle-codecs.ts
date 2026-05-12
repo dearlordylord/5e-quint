@@ -1825,6 +1825,10 @@ type BattleFillEncoded =
           readonly reactorId: string;
           readonly attackName: string;
         }[];
+        readonly commandApproach?: {
+          readonly kind: "commandApproachShortestDirectRouteTowardCaster";
+          readonly movedWithinFiveFeetOfCaster: boolean;
+        };
         readonly jumpMovementReplacement?: {
           readonly kind: "jumpMovementReplacement";
           readonly distanceFeet: number;
@@ -2239,6 +2243,15 @@ export const BattleFillSchema: Schema.Schema<
             reactorId: CombatantId,
             attackName: Schema.String,
           }),
+        ),
+        commandApproach: Schema.optionalWith(
+          Schema.Struct({
+            kind: Schema.Literal(
+              "commandApproachShortestDirectRouteTowardCaster",
+            ),
+            movedWithinFiveFeetOfCaster: Schema.Boolean,
+          }),
+          { exact: true },
         ),
         jumpMovementReplacement: Schema.optionalWith(
           Schema.Struct({
