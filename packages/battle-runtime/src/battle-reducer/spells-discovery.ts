@@ -77,9 +77,7 @@ export function discoverSupportedSpellInvocations(
       ) {
         return [];
       }
-      if (
-        invocation.procedure === "commandGrovel"
-      ) {
+      if (invocation.procedure === "command") {
         const targetHole = spellTargetListHole(state, actorId, invocation);
         return targetHole.choices.length === 0
           ? []
@@ -602,7 +600,7 @@ export function spellActivationInvocationCastSummary(
         | "saveGatedCondition"
         | "saveGatedAttackRollAdvantage"
         | "sleepTargetAdmission"
-        | "commandGrovel"
+        | "command"
         | "greaseGroundHazard"
         | "jumpMovementReplacement";
     }
@@ -700,7 +698,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "saveGatedCondition" &&
     invocation.procedure !== "saveGatedAttackRollAdvantage" &&
     invocation.procedure !== "sleepTargetAdmission" &&
-    invocation.procedure !== "commandGrovel" &&
+    invocation.procedure !== "command" &&
     invocation.procedure !== "greaseGroundHazard" &&
     invocation.procedure !== "spellAttackBeamSequence" &&
     invocation.procedure !== "shieldReaction"
@@ -734,7 +732,7 @@ export function readiedSpellAct(
     invocation.procedure === "saveGatedCondition" ||
     invocation.procedure === "saveGatedAttackRollAdvantage" ||
     invocation.procedure === "sleepTargetAdmission" ||
-    invocation.procedure === "commandGrovel" ||
+    invocation.procedure === "command" ||
     invocation.procedure === "greaseGroundHazard" ||
     invocation.procedure === "shieldReaction" ||
     state.readiedSpells.has(actorId)

@@ -220,7 +220,7 @@ export function spellTargetListHole(
 export function commandOptionChoiceHole(
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "commandGrovel" }
+    { readonly procedure: "command" }
   >,
 ): BattleCommandOptionChoiceHole {
   const holeKey = `battle:spell:command-option:${invocation.spell.id}`;
@@ -237,7 +237,7 @@ export function commandOptionChoiceHole(
 export function commandOptionChoiceHoleId(
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "commandGrovel" }
+    { readonly procedure: "command" }
   >,
 ): BattleHoleId {
   return holeId(`battle:spell:command-option:${invocation.spell.id}`);

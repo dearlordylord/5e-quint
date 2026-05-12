@@ -177,9 +177,7 @@ export function spellFillSet(
   let damageRoll:
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
     | undefined;
-  let movement:
-    | Extract<BattleFill, { readonly kind: "movement" }>
-    | undefined;
+  let movement: Extract<BattleFill, { readonly kind: "movement" }> | undefined;
   const spellDamageReductionRolls: Extract<
     BattleFill,
     { readonly kind: "rolledDice" }
@@ -330,7 +328,7 @@ export function spellFillSet(
         invocation.procedure !== "rollModifier" &&
         invocation.procedure !== "damageReduction" &&
         invocation.procedure !== "saveGatedCondition" &&
-        invocation.procedure !== "commandGrovel" &&
+        invocation.procedure !== "command" &&
         invocation.procedure !== "jumpMovementReplacement" &&
         invocation.procedure !==
           "conditionImmunityAndTurnStartTemporaryHitPoints"
@@ -345,7 +343,7 @@ export function spellFillSet(
           !isScalarBuffTargetListInvocation(invocation)) ||
         (invocation.procedure === "saveGatedCondition" &&
           !isTargetListSpellInvocation(invocation)) ||
-        (invocation.procedure === "commandGrovel" &&
+        (invocation.procedure === "command" &&
           !isTargetListSpellInvocation(invocation))
       ) {
         return {
@@ -420,7 +418,7 @@ export function spellFillSet(
         invocation.procedure !== "afterHitSaveGatedCondition" &&
         invocation.procedure !== "saveGatedAttackRollAdvantage" &&
         invocation.procedure !== "sleepTargetAdmission" &&
-        invocation.procedure !== "commandGrovel" &&
+        invocation.procedure !== "command" &&
         invocation.procedure !== "greaseGroundHazard" &&
         !(
           invocation.procedure === "rollModifier" &&
@@ -501,7 +499,7 @@ export function spellFillSet(
     }
 
     if (fill.kind === "commandOptionChoice") {
-      if (invocation.procedure !== "commandGrovel") {
+      if (invocation.procedure !== "command") {
         return {
           tag: "invalid",
           message: "Command option choice does not match this spell act.",
@@ -732,7 +730,7 @@ export function spellFillSetSavingThrowTargeting(
         invocation.procedure === "afterHitSaveGatedCondition" ||
         invocation.procedure === "saveGatedAttackRollAdvantage" ||
         invocation.procedure === "sleepTargetAdmission" ||
-        invocation.procedure === "commandGrovel" ||
+        invocation.procedure === "command" ||
         invocation.procedure === "greaseGroundHazard"
       ? invocation.targeting
       : { kind: "singleCombatant" };

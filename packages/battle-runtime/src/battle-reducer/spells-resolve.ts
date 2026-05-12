@@ -138,7 +138,7 @@ export {
   startSpellEffectConcentration,
 } from "./spells-resolve-resources.ts";
 export {
-  resolveCommandGrovelSpellAct,
+  resolveCommandSpellAct,
   resolveGreaseGroundHazardSpellAct,
   resolveSaveGateAttackRollAdvantageSpellAct,
   resolveSaveGateConditionSpellAct,
@@ -187,7 +187,7 @@ import { resolvePreparedSlotSpellAct } from "./spells-resolve-prepared-slot.ts";
 import { resolveAttackBurstSaveDamageSpellAct } from "./spells-resolve-attack-burst.ts";
 
 import {
-  resolveCommandGrovelSpellAct,
+  resolveCommandSpellAct,
   resolveGreaseGroundHazardSpellAct,
   resolveSaveGateAttackRollAdvantageSpellAct,
   resolveSaveGateConditionSpellAct,
@@ -268,7 +268,7 @@ export function resolveSpellAct(
       invocation.procedure === "afterHitTimedDamageAndSave" ||
       invocation.procedure === "saveGatedCondition" ||
       invocation.procedure === "saveGatedAttackRollAdvantage" ||
-      invocation.procedure === "commandGrovel" ||
+      invocation.procedure === "command" ||
       invocation.procedure === "spellAttackBeamSequence")
   ) {
     return invalidResult(
@@ -398,8 +398,8 @@ export function resolveSpellAct(
       fillSet,
     });
   }
-  if (invocation.procedure === "commandGrovel") {
-    return resolveCommandGrovelSpellAct({
+  if (invocation.procedure === "command") {
+    return resolveCommandSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
@@ -1397,10 +1397,7 @@ export function resolveBonusActionDashSpellAct(
   const effected = {
     ...slotted,
     currentTurnResources: slotTurnResources.right,
-    combatants: new Map(slotted.combatants).set(
-      subject.actorId,
-      effectedActor,
-    ),
+    combatants: new Map(slotted.combatants).set(subject.actorId, effectedActor),
   };
   const dashed = applyDashToActor(
     effected,

@@ -3,16 +3,16 @@
 // vocabulary while the reducer facade continues to own the public type surface.
 
 import type {
-BattleCreatureState,
-DamageSpellSource,
-PreparedDamageSpellSource,
-ScalarBuffSpellTargeting,
-SupportedSpellInvocation,
-TargetListSpellInvocation
+  BattleCreatureState,
+  DamageSpellSource,
+  PreparedDamageSpellSource,
+  ScalarBuffSpellTargeting,
+  SupportedSpellInvocation,
+  TargetListSpellInvocation,
 } from "../battle-reducer.ts";
 import {
-activeOngoingFeatureOccurrencesForCombatant,
-ongoingFeatureProfileForSourceKey,
+  activeOngoingFeatureOccurrencesForCombatant,
+  ongoingFeatureProfileForSourceKey,
 } from "./creature-state.ts";
 
 export function isPreparedDamageSpellSource(
@@ -21,7 +21,9 @@ export function isPreparedDamageSpellSource(
   return source.access.tag === "prepared";
 }
 
-export function damageSpellSource(source: DamageSpellSource): DamageSpellSource {
+export function damageSpellSource(
+  source: DamageSpellSource,
+): DamageSpellSource {
   return isPreparedDamageSpellSource(source)
     ? { access: source.access, resource: source.resource }
     : { access: source.access, resource: source.resource };
@@ -55,9 +57,10 @@ export function isTargetListSpellInvocation(
     invocation.procedure === "damageReduction" ||
     (invocation.procedure === "saveGatedCondition" &&
       invocation.targeting.kind === "targetList") ||
-    invocation.procedure === "commandGrovel" ||
+    invocation.procedure === "command" ||
     invocation.procedure === "creatureTypeProtection" ||
-    invocation.procedure === "conditionImmunityAndTurnStartTemporaryHitPoints" ||
+    invocation.procedure ===
+      "conditionImmunityAndTurnStartTemporaryHitPoints" ||
     invocation.procedure === "jumpMovementReplacement"
   );
 }

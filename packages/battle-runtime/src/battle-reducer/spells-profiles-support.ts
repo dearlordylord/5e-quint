@@ -155,6 +155,7 @@ function jumpMovementReplacementSpellProjection(
     !("disposition" in selection) ||
     selection.disposition !== "willing" ||
     !("targetKinds" in selection) ||
+    selection.targetKinds === undefined ||
     !sameStringSet(selection.targetKinds, ["creature"]) ||
     phase.effects?.length !== 1 ||
     effect?.kind !== "jump_movement_replacement" ||
@@ -208,10 +209,12 @@ function jumpMovementReplacementTargetCount(
 function expeditiousRetreatDashActiveEffect(
   actorId: CombatantId,
   spell: SpellRecord,
-): Extract<
-  SupportedSpellInvocation,
-  { readonly procedure: "expeditiousRetreatDash" }
->["activeEffect"] | null {
+):
+  | Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "expeditiousRetreatDash" }
+    >["activeEffect"]
+  | null {
   if (spell.mechanics.family !== "ongoing_effect") {
     return null;
   }

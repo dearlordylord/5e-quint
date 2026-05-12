@@ -250,7 +250,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 250,
       "id": "SRDINV50B",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Command Halt Runtime"
     },
     {
@@ -334,7 +334,7 @@ Keep it synchronized with the DAG table and task details.
 | 247   | SRDINV54 - Research Feather Fall Falling Runtime Boundary | done | SRDINV48 | SRDINV55 | [SRDINV54 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md), [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Feather Fall](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Falling](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: table-supplied fall-start and landing facts are enough for a focused Feather Fall runtime slice; generic falling simulation, fall-distance derivation, and map elevation are not prerequisites. |
 | 248   | SRDINV55 - Recursive SRD Inventory Planning Review | blocked | SRDINV49-SRDINV54, SRDINV50A-SRDINV50D | none | [SRDINV54 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md), [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Review SRDINV49-SRDINV54 plus the split Command runtime tasks, refresh spell Unit metrics, and append the next concrete spell Surface or runtime batch. |
 | 249   | SRDINV50A - Promote Command Invocation and Grovel Runtime | done | SRDINV50 | SRDINV50B-SRDINV50D, SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Command is promoted as a Grovel-only Spell Slot Magic Action with slot-scaled target count, Wisdom Saving Throw gate, failed-save pending next-turn Spell Effect, target-turn Prone application, end-turn cleanup, and explicit non-support for the remaining Command options. |
-| 250   | SRDINV50B - Promote Command Halt Runtime | ready-for-implementation-after-light-research | SRDINV50A | SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Halt as target-turn Movement, Action, and Bonus Action suppression over the Command pending-effect shell after SRDINV50A lands. |
+| 250   | SRDINV50B - Promote Command Halt Runtime | done | SRDINV50A | SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Command Halt is promoted over the shared pending Command effect, suppresses target-turn Movement, Action, and Bonus Action through turn-resource state and stale-subject rejection, and clears at the target end-turn boundary. |
 | 251   | SRDINV50C - Promote Command Drop Held-Object Boundary | ready-for-implementation-after-light-research | SRDINV50A | SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Drop as a caller-supplied held-object disposition boundary after SRDINV50A lands, then end the target's turn without adding duplicate inventory state. |
 | 252   | SRDINV50D - Promote Command Approach and Flee Route Runtime | ready-for-implementation-after-light-research | SRDINV50A, SRDINV49 | SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [Speed](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Approach and Flee through caller-supplied route execution facts after SRDINV50A lands; no pathfinding derivation. |
 
@@ -1373,7 +1373,7 @@ changes require it.
 
 ### Task 250 - SRDINV50B - Promote Command Halt Runtime
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: SRDINV50A
 
@@ -1401,6 +1401,12 @@ start-turn/end-turn obligations still run; package-local Quint updates before
 runtime divergence; `pnpm unit-profile-coverage:check --write` if evidence
 changes; `pnpm quality`; MBT only if integrated action sequencing changes
 require it.
+
+Result: Command Halt is promoted over the shared Command pending-effect shell.
+The target turn carries typed `commandHalt` turn-resource suppression, action
+discovery and direct subject resolution both reject Movement, Action, and Bonus
+Action subjects, and the pending effect clears at the halted target's end-turn
+boundary.
 
 ### Task 251 - SRDINV50C - Promote Command Drop Held-Object Boundary
 

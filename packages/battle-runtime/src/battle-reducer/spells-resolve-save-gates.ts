@@ -39,7 +39,7 @@ import { invalidResult } from "./result-helpers.ts";
 import { applyBattleMovement } from "./readied-release.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import {
-  applyCommandGrovelPendingEffects,
+  applyCommandPendingEffects,
   applyFailedSaveAttackRollAdvantageEffects,
   applyGreaseGroundHazardCastEffects,
   applySleepPendingRepeatSaveEffects,
@@ -673,7 +673,10 @@ function resolveFailedSaveForcedReactionMovement(input: {
     { readonly procedure: "saveGatedDamage" }
   >;
   readonly movementFill:
-    | Extract<ActionSpellBattleResolutionInput["fills"][number], { readonly kind: "movement" }>
+    | Extract<
+        ActionSpellBattleResolutionInput["fills"][number],
+        { readonly kind: "movement" }
+      >
     | undefined;
   readonly afterDamageEvents: readonly BattleAfterDamageEvent[];
   readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
@@ -739,14 +742,19 @@ function resolveFailedSaveForcedReactionMovement(input: {
   if (input.movementFill === undefined) {
     return needsHolesResult(input.state, input.subject, [movementHole]);
   }
-  const parsedMovement = parseBattleMovement(input.state, targetId, input.movementFill, {
-    movementBudgetFeet: readiedMovementBudgetForActor(
-      input.state,
-      targetId,
-      input.movementFill.value.speedKind,
-    ),
-    spendsTurnMovement: false,
-  });
+  const parsedMovement = parseBattleMovement(
+    input.state,
+    targetId,
+    input.movementFill,
+    {
+      movementBudgetFeet: readiedMovementBudgetForActor(
+        input.state,
+        targetId,
+        input.movementFill.value.speedKind,
+      ),
+      spendsTurnMovement: false,
+    },
+  );
   if (parsedMovement.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", parsedMovement.message);
   }
@@ -773,7 +781,10 @@ function resolveFailedSaveForcedReactionMovement(input: {
     }
   }
   return openAfterDamageSequenceReactionWindow({
-    state: applyBattleMovement(stateAfterReactionSpend, parsedMovement.movement),
+    state: applyBattleMovement(
+      stateAfterReactionSpend,
+      parsedMovement.movement,
+    ),
     subject: input.subject,
     events: input.afterDamageEvents,
     suppressedReactionTrigger: input.suppressedReactionTrigger,
@@ -951,12 +962,12 @@ export function resolveSaveGateConditionSpellAct(input: {
   };
 }
 
-export function resolveCommandGrovelSpellAct(input: {
+export function resolveCommandSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "commandGrovel" }
+    { readonly procedure: "command" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
 }): BattleResolutionResult {
@@ -995,13 +1006,6 @@ export function resolveCommandGrovelSpellAct(input: {
     return needsHolesResult(input.input.state, input.input.subject, [
       commandOptionChoiceHole(input.invocation),
     ]);
-  }
-  if (input.fillSet.commandOptionChoice !== "grovel") {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Only Command: Grovel is supported by this runtime profile.",
-    );
   }
   if (
     input.fillSet.attackRoll !== undefined ||
@@ -1078,11 +1082,12 @@ export function resolveCommandGrovelSpellAct(input: {
   if (resourced.tag === "invalid") {
     return resourced;
   }
-  const effected = applyCommandGrovelPendingEffects(
+  const effected = applyCommandPendingEffects(
     resourced.state,
     input.actorId,
     failedTargets,
     input.invocation,
+    input.fillSet.commandOptionChoice,
   );
   const nextState = extendSavingThrowOngoingFeatures(
     effected,

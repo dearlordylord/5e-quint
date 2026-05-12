@@ -23,6 +23,7 @@ import {
 import {
   type BattleActiveEffect,
   type BattleActiveEffectExpiration,
+  type BattleCommandOption,
   type BattleCreatureState,
   type BattleFill,
   type BattleSpellAreaChoice,
@@ -322,14 +323,15 @@ export function applyGreaseProneToTarget(
   };
 }
 
-export function applyCommandGrovelPendingEffects(
+export function applyCommandPendingEffects(
   state: BattleState,
   actorId: CombatantId,
   targetIds: readonly CombatantId[],
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "commandGrovel" }
+    { readonly procedure: "command" }
   >,
+  option: BattleCommandOption,
 ): BattleState {
   const combatants = new Map(state.combatants);
   for (const targetId of targetIds) {
@@ -343,13 +345,14 @@ export function applyCommandGrovelPendingEffects(
         ...target.activeEffects.filter(
           (effect) =>
             !(
-              effect.kind === "commandGrovelPending" &&
+              effect.kind === "commandPending" &&
               effect.sourceSpellId === invocation.spell.id &&
               effect.sourceCombatantId === actorId
             ),
         ),
         {
-          kind: "commandGrovelPending",
+          kind: "commandPending",
+          option,
           sourceSpellId: invocation.spell.id,
           sourceCombatantId: actorId,
           expiresAt: endOfNextTurnExpiration(state, targetId),
@@ -363,10 +366,7 @@ export function applyCommandGrovelPendingEffects(
 export function applyCommandGrovelProneToTarget(
   state: BattleState,
   targetId: CombatantId,
-  effect: Extract<
-    BattleActiveEffect,
-    { readonly kind: "commandGrovelPending" }
-  >,
+  effect: Extract<BattleActiveEffect, { readonly kind: "commandPending" }>,
 ): BattleState {
   const target = state.combatants.get(targetId);
   if (target === undefined) {

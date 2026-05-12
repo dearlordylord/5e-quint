@@ -940,7 +940,7 @@
       ]
     },
     {
-      "id": "spell.invocation-command-grovel",
+      "id": "spell.invocation-command-halt-grovel",
       "profileKind": "spell-invocation",
       "qntOwners": [
         "packages/battle-runtime/battle-runtime.qnt"
@@ -948,13 +948,15 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts",
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
       ],
-      "sourceBoundary": "This profile supports Command's cast shell, slot-scaled creature target list, Wisdom save, and the Grovel option only. Approach, Drop, Flee, Halt, held-object mutation, and route/pathfinding remain deferred and are not representable through this profile.",
+      "sourceBoundary": "This profile supports Command's cast shell, slot-scaled creature target list, Wisdom save, and the Grovel and Halt options. Drop, Approach, Flee, held-object mutation, and route/pathfinding remain deferred and are not representable through this profile.",
       "taskRefs": [
-        "SRDINV50A"
+        "SRDINV50A",
+        "SRDINV50B"
       ],
-      "title": "Spell invocation records failed-save Command Grovel pending effects and resolves them at the target turn",
+      "title": "Spell invocation records failed-save Command Grovel and Halt pending effects and resolves them at the target turn",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -2094,17 +2096,33 @@
       "claimKind": "qnt-proof",
       "note": "Promoted battle-runtime Quint facts for Command's Magic Action and Spell Slot spend, slot-scaled target count, Wisdom save failure pending effect, and Grovel Prone plus end-turn resolution.",
       "profileIds": [
-        "spell.invocation-command-grovel"
+        "spell.invocation-command-halt-grovel"
       ],
       "taskId": "SRDINV50A"
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime admission and reducer tests cover Command target-list and Grovel-only option holes, Wisdom save replay, failed-save pending effect, target-turn Command Grovel discovery, Prone application, and end-turn cleanup; Approach, Drop, Flee, and Halt remain deferred.",
+      "note": "Focused battle-runtime admission and reducer tests cover Command target-list and Grovel option holes, Wisdom save replay, failed-save pending effect, target-turn Command Grovel discovery, Prone application, and end-turn cleanup; Approach, Drop, and Flee remain deferred.",
       "profileIds": [
-        "spell.invocation-command-grovel"
+        "spell.invocation-command-halt-grovel"
       ],
       "taskId": "SRDINV50A"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Command Halt failed-save pending effects, target-turn Action and Bonus Action suppression, Movement suppression, and end-turn cleanup.",
+      "profileIds": [
+        "spell.invocation-command-halt-grovel"
+      ],
+      "taskId": "SRDINV50B"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Command Halt option holes, failed-save pending effects, target-turn discovery suppression for Movement, Actions, and Bonus Actions, direct-resolution stale-subject rejection, and end-turn cleanup; Approach, Drop, and Flee remain deferred.",
+      "profileIds": [
+        "spell.invocation-command-halt-grovel"
+      ],
+      "taskId": "SRDINV50B"
     },
     {
       "claimKind": "qnt-proof",
@@ -4961,10 +4979,6 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "SRDINV50B",
-            "mechanic": "Halt option action, Bonus Action, and movement suppression"
-          },
-          {
             "followUpTaskId": "SRDINV50C",
             "mechanic": "Drop option held-object mutation"
           },
@@ -4978,7 +4992,7 @@
           }
         ],
         "profileIds": [
-          "spell.invocation-command-grovel"
+          "spell.invocation-command-halt-grovel"
         ],
         "rawRequirementIds": [
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
@@ -4989,7 +5003,8 @@
           "slot-scaled creature target list",
           "Wisdom Saving Throw",
           "failed-save pending next-turn Spell Effect",
-          "Grovel applies Prone and ends the target turn"
+          "Grovel applies Prone and ends the target turn",
+          "Halt suppresses Movement, Action, and Bonus Action on the target turn"
         ],
         "tag": "profile-subset-supported"
       },
@@ -4998,14 +5013,14 @@
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
-          "taskId": "SRDINV50A"
+          "taskId": "SRDINV50B"
         }
       ],
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [
         {
-          "id": "spell.invocation-command-grovel",
+          "id": "spell.invocation-command-halt-grovel",
           "profileKind": "spell-invocation",
           "qntOwners": [
             "packages/battle-runtime/battle-runtime.qnt"
@@ -5013,13 +5028,15 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts",
             "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
             "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
           ],
-          "sourceBoundary": "This profile supports Command's cast shell, slot-scaled creature target list, Wisdom save, and the Grovel option only. Approach, Drop, Flee, Halt, held-object mutation, and route/pathfinding remain deferred and are not representable through this profile.",
+          "sourceBoundary": "This profile supports Command's cast shell, slot-scaled creature target list, Wisdom save, and the Grovel and Halt options. Drop, Approach, Flee, held-object mutation, and route/pathfinding remain deferred and are not representable through this profile.",
           "taskRefs": [
-            "SRDINV50A"
+            "SRDINV50A",
+            "SRDINV50B"
           ],
-          "title": "Spell invocation records failed-save Command Grovel pending effects and resolves them at the target turn",
+          "title": "Spell invocation records failed-save Command Grovel and Halt pending effects and resolves them at the target turn",
           "verificationOwners": [
             {
               "kind": "qnt-proof",

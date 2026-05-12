@@ -38,6 +38,7 @@ export const INITIAL_ROUND: RoundType = Round(1);
 export const INITIAL_TURN_RESOURCES = resetTurnActionEconomy({
   actionResources: [],
   currentHasBonusAction: false,
+  commandHalt: null,
   spellSlotExpendedThisTurn: false,
   attackRollMadeThisTurn: false,
   attackDamageRidersUsedThisTurn: [],

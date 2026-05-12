@@ -104,10 +104,7 @@ type GreaseGroundHazardPhase = Extract<
     };
   };
 };
-type CommandGrovelPhase = Extract<
-  ActivationPhase,
-  { readonly kind: "save_gate" }
-> & {
+type CommandPhase = Extract<ActivationPhase, { readonly kind: "save_gate" }> & {
   readonly ability: "wis";
   readonly attachment: {
     readonly kind: "hole";
@@ -123,6 +120,12 @@ type CommandGrovelPhase = Extract<
       readonly grovel: {
         readonly condition: "prone";
         readonly afterward: "end_turn";
+      };
+      readonly halt: {
+        readonly movement: "none";
+        readonly action: "none";
+        readonly bonusAction: "none";
+        readonly duration: "target_turn";
       };
     };
   };
@@ -289,11 +292,11 @@ export function supportedPreparedGreaseGroundHazardProfile(
   });
 }
 
-export function supportedPreparedCommandGrovelProfile(
+export function supportedPreparedCommandProfile(
   spell: SpellRecord,
   spellSlots: CharacterBattleSpellcastingState["spellSlots"],
 ): readonly SupportedSpellInvocation[] {
-  const command = commandGrovelSpell(spell);
+  const command = commandSpell(spell);
   if (command === null) {
     return [];
   }
@@ -306,7 +309,7 @@ export function supportedPreparedCommandGrovelProfile(
       {
         access: { tag: "prepared" },
         resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-        procedure: "commandGrovel",
+        procedure: "command",
         spell,
         actionCost: "magicAction",
         ability: command.phase.ability,
@@ -318,8 +321,8 @@ export function supportedPreparedCommandGrovelProfile(
   });
 }
 
-function commandGrovelSpell(spell: SpellRecord): {
-  readonly phase: CommandGrovelPhase;
+function commandSpell(spell: SpellRecord): {
+  readonly phase: CommandPhase;
   readonly targeting: (
     slotLevel: SpellSlotLevel,
   ) => Extract<SpellTargeting, { readonly kind: "targetList" }>;
@@ -339,12 +342,12 @@ function commandGrovelSpell(spell: SpellRecord): {
     spell.mechanics.range.feet !== 60 ||
     spell.mechanics.duration.kind !== "instantaneous" ||
     spell.mechanics.phases.length !== 1 ||
-    !isCommandGrovelPhase(phase)
+    !isCommandPhase(phase)
   ) {
     return null;
   }
   const targetSelection = phase.attachment.value.selection;
-  const targetCountBySlot = commandGrovelTargetCountBySlot(
+  const targetCountBySlot = commandTargetCountBySlot(
     targetSelection,
     spell.mechanics.level,
   );
@@ -369,9 +372,9 @@ function commandGrovelSpell(spell: SpellRecord): {
   };
 }
 
-function isCommandGrovelPhase(
+function isCommandPhase(
   phase: ActivationPhase | undefined,
-): phase is CommandGrovelPhase {
+): phase is CommandPhase {
   const failedEffect = phase?.kind === "save_gate" ? phase.onFail : undefined;
   return (
     phase?.kind === "save_gate" &&
@@ -384,11 +387,15 @@ function isCommandGrovelPhase(
     failedEffect?.kind === "command_target_next_turn" &&
     failedEffect.execution === "target_next_turn" &&
     failedEffect.options.grovel.condition === "prone" &&
-    failedEffect.options.grovel.afterward === "end_turn"
+    failedEffect.options.grovel.afterward === "end_turn" &&
+    failedEffect.options.halt.movement === "none" &&
+    failedEffect.options.halt.action === "none" &&
+    failedEffect.options.halt.bonusAction === "none" &&
+    failedEffect.options.halt.duration === "target_turn"
   );
 }
 
-function commandGrovelTargetCountBySlot(
+function commandTargetCountBySlot(
   selection: TargetSelection,
   spellLevel: number,
 ): ((slotLevel: SpellSlotLevel) => number) | null {
@@ -1244,8 +1251,7 @@ function isDissonantWhispersForcedReactionMovementShape(
   return (
     spell.name === "Dissonant Whispers" &&
     spell.provenance.kind === "srd-5.2.1" &&
-    spell.provenance.section ===
-      "Spells/Descriptions-A-D#Dissonant Whispers" &&
+    spell.provenance.section === "Spells/Descriptions-A-D#Dissonant Whispers" &&
     spell.mechanics.level === 1 &&
     spell.mechanics.castingTime.kind === "action" &&
     spell.mechanics.range.kind === "point" &&

@@ -78,7 +78,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "saveGatedAttackRollAdvantage",
   "sleepTargetAdmission",
   "greaseGroundHazard",
-  "commandGrovel",
+  "command",
   "repeatedDamageAllocation",
   "directHitPointRestoration",
   "rollModifier",

@@ -26,7 +26,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV32B produce_flame
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV34 starry_wisp
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV38A sleep
-// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV50A command
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV50B command
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV39 eldritch_blast
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV40 grease
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield
@@ -50,7 +50,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT59 monk_deflect_attacks
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT62 fighter_tactical_mind
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT65 bard_cutting_words
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider spell.scalar-buff
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -209,6 +209,7 @@ const animalFriendshipUnitId = "animal_friendship";
 const charmPersonUnitId = "charm_person";
 const chillTouchUnitId = "chill_touch";
 const commandUnitId = "command";
+const commandLegendaryActorId = combatantId("unit-profile-command-legendary");
 const fireBoltUnitId = "fire_bolt";
 const falseLifeUnitId = "false_life";
 const faerieFireUnitId = "faerie_fire";
@@ -260,7 +261,9 @@ const combatProwessSupportProfile = {
 } as const;
 const spellCasterId = combatantId("unit-profile-spell-caster");
 const spellTargetId = combatantId("unit-profile-spell-target");
-const thunderwaveSecondTargetId = combatantId("unit-profile-thunderwave-target-2");
+const thunderwaveSecondTargetId = combatantId(
+  "unit-profile-thunderwave-target-2",
+);
 const ensnaringStrikeHelperId = combatantId("unit-profile-ensnaring-helper");
 const greaseAreaId = "unit-profile-grease-ground-area";
 const thunderwaveObjectId = battleObjectId("unit-profile-thunderwave-object");
@@ -3020,7 +3023,7 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
     );
   });
 
-  test("command is admitted as a Grovel-only target-list save spell with slot-scaled targets", () => {
+  test("command is admitted as a target-list save spell with promoted option choices and slot-scaled targets", () => {
     const spell = spellRecord(commandUnitId);
     const secondTargetId = combatantId("unit-profile-command-target-2");
     const state = spellBattle({
@@ -3046,7 +3049,7 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
     expect(levelOne.subject).toEqual({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(commandUnitId, 1, "commandGrovel"),
+      invocation: spellSlotInvocationRef(commandUnitId, 1, "command"),
       mode: { tag: "cast" },
     });
     expect(requireHole(levelOne.initialHoles, "spellTargetList")).toEqual(
@@ -3064,12 +3067,12 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
     );
     expect(requireHole(levelTwo.initialHoles, "commandOptionChoice")).toEqual(
       expect.objectContaining({
-        choices: ["grovel"],
+        choices: ["grovel", "halt"],
       }),
     );
     expect(spellActInvocation(levelTwo)).toEqual(
       expect.objectContaining({
-        procedure: "commandGrovel",
+        procedure: "command",
         spell,
         actionCost: "magicAction",
         resource: { tag: "spellSlot", slotLevel: 2 },
@@ -3089,9 +3092,12 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
     const act = spellAct({ state, spellId: commandUnitId, slotLevel: 1 });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
     const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
-    const targetFill = spellTargetListFill(targetHole, spellCasterId, commandUnitId, [
-      spellTargetId,
-    ]);
+    const targetFill = spellTargetListFill(
+      targetHole,
+      spellCasterId,
+      commandUnitId,
+      [spellTargetId],
+    );
     const optionFill: Extract<
       BattleFill,
       { readonly kind: "commandOptionChoice" }
@@ -3127,7 +3133,8 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
     }
     expect(requireCombatant(cast.state, spellTargetId).activeEffects).toEqual([
       expect.objectContaining({
-        kind: "commandGrovelPending",
+        kind: "commandPending",
+        option: "grovel",
         sourceSpellId: commandUnitId,
         sourceCombatantId: spellCasterId,
         expiresAt: {
@@ -3181,6 +3188,199 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
     );
   });
 
+  test("command Halt suppresses target turn Movement, Action, and Bonus Action until end turn", () => {
+    const spell = spellRecord(commandUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+      statBlockTargets: [
+        {
+          combatantId: commandLegendaryActorId,
+          statBlock: legendaryActionStatBlock(),
+          initiative: 5,
+        },
+      ],
+    });
+    const act = spellAct({ state, spellId: commandUnitId, slotLevel: 1 });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+    const targetFill = spellTargetListFill(
+      targetHole,
+      spellCasterId,
+      commandUnitId,
+      [spellTargetId],
+    );
+    const optionFill: Extract<
+      BattleFill,
+      { readonly kind: "commandOptionChoice" }
+    > = {
+      kind: "commandOptionChoice",
+      holeId: commandOption.holeId,
+      value: "halt",
+    };
+    const needsSave = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill, optionFill],
+    });
+    const savingThrow = requireResultHole(needsSave, "savingThrowOutcome");
+
+    const cast = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        optionFill,
+        savingThrowOutcomeFill(savingThrow, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Command Halt cast to resolve.");
+    }
+    expect(requireCombatant(cast.state, spellTargetId).activeEffects).toEqual([
+      expect.objectContaining({
+        kind: "commandPending",
+        option: "halt",
+        sourceSpellId: commandUnitId,
+        sourceCombatantId: spellCasterId,
+        expiresAt: {
+          kind: "endOfTurn",
+          combatantId: spellTargetId,
+          round: 1,
+        },
+      }),
+    ]);
+
+    const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+    expect(targetTurn.state.currentTurnResources.commandHalt).toEqual({
+      kind: "commandHalt",
+    });
+    expect(targetTurn.state.currentTurnResources.actionResources).toEqual([]);
+    expect(targetTurn.state.currentTurnResources.currentHasBonusAction).toBe(
+      false,
+    );
+    expect(targetTurn.snapshot.turn.actionResources).toEqual([]);
+    expect(targetTurn.snapshot.turn.bonusActionAvailable).toBe(false);
+    const haltedTargetSnapshot = targetTurn.snapshot.combatants.find(
+      (combatant) => combatant.combatantId === spellTargetId,
+    );
+    if (haltedTargetSnapshot === undefined) {
+      throw new Error("Expected halted target snapshot.");
+    }
+    expect(haltedTargetSnapshot.movement.spentFeet).toBe(
+      haltedTargetSnapshot.movement.speedFeet,
+    );
+    expect(haltedTargetSnapshot.movement.remainingFeet).toBe(movementFeet(0));
+    expect(
+      haltedTargetSnapshot.movement.speedKinds.every(
+        (speedKind) => speedKind.remainingFeet === movementFeet(0),
+      ),
+    ).toBe(true);
+    const haltedActs = discoverBattleActs(targetTurn.state);
+    const legendaryAct = haltedActs.find(
+      (
+        candidate,
+      ): candidate is AvailableBattleAct & {
+        readonly subject: Extract<
+          BattleSubject,
+          { readonly tag: "action"; readonly action: "attack" }
+        >;
+      } =>
+        candidate.subject.tag === "action" &&
+        candidate.subject.action === "attack" &&
+        candidate.subject.actorId === commandLegendaryActorId &&
+        candidate.subject.statBlockSection === "legendaryActions",
+    );
+    if (legendaryAct === undefined) {
+      throw new Error("Expected Command Halt to leave Legendary Actions open.");
+    }
+    expect(
+      haltedActs.some(
+        (candidate) =>
+          candidate.subject.actorId === spellTargetId &&
+          (candidate.subject.tag === "action" ||
+            candidate.subject.tag === "actionSpell" ||
+            candidate.subject.tag === "bonusAction" ||
+            candidate.subject.tag === "bonusActionStandardAction" ||
+            candidate.subject.tag === "bonusActionSpell" ||
+            candidate.subject.tag === "bonusActionDashSpell" ||
+            (candidate.subject.tag === "runtimeCommand" &&
+              (candidate.subject.command === "move" ||
+                candidate.subject.command === "standFromProne" ||
+                candidate.subject.command === "jumpMovementReplacement"))),
+      ),
+    ).toBe(false);
+    expect(haltedActs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: {
+            tag: "runtimeCommand",
+            actorId: spellTargetId,
+            command: "endTurn",
+          },
+        }),
+        expect.objectContaining({
+          subject: expect.objectContaining({
+            tag: "action",
+            actorId: commandLegendaryActorId,
+            statBlockSection: "legendaryActions",
+          }),
+        }),
+      ]),
+    );
+    expect(
+      resolveBattleSubject({
+        state: targetTurn.state,
+        subject: legendaryAct.subject,
+        fills: [],
+      }),
+    ).not.toMatchObject({ tag: "invalid", reason: "staleSubject" });
+    expect(
+      resolveBattleSubject({
+        state: targetTurn.state,
+        subject: { tag: "action", actorId: spellTargetId, action: "dodge" },
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+    expect(
+      resolveBattleSubject({
+        state: targetTurn.state,
+        subject: {
+          tag: "bonusAction",
+          actorId: spellTargetId,
+          action: "offHandAttack",
+          attackName: "Shortsword",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+    expect(
+      resolveBattleSubject({
+        state: targetTurn.state,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: spellTargetId,
+          command: "move",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+
+    const ended = endTurn({ state: targetTurn.state, actorId: spellTargetId });
+    if (ended.tag !== "resolved") {
+      throw new Error("Expected halted target End Turn to resolve.");
+    }
+    expect(requireCombatant(ended.state, spellTargetId).activeEffects).toEqual(
+      [],
+    );
+    expect(ended.state.currentTurnResources.commandHalt).toBeNull();
+  });
+
   test("command Grovel save success spends the cast without pending effects", () => {
     const spell = spellRecord(commandUnitId);
     const state = spellBattle({
@@ -3190,9 +3390,12 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
     const act = spellAct({ state, spellId: commandUnitId, slotLevel: 1 });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
     const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
-    const targetFill = spellTargetListFill(targetHole, spellCasterId, commandUnitId, [
-      spellTargetId,
-    ]);
+    const targetFill = spellTargetListFill(
+      targetHole,
+      spellCasterId,
+      commandUnitId,
+      [spellTargetId],
+    );
     const optionFill: Extract<
       BattleFill,
       { readonly kind: "commandOptionChoice" }
@@ -3241,9 +3444,12 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
     const act = spellAct({ state, spellId: commandUnitId, slotLevel: 1 });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
     const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
-    const targetFill = spellTargetListFill(targetHole, spellCasterId, commandUnitId, [
+    const targetFill = spellTargetListFill(
+      targetHole,
       spellCasterId,
-    ]);
+      commandUnitId,
+      [spellCasterId],
+    );
     const optionFill: Extract<
       BattleFill,
       { readonly kind: "commandOptionChoice" }
@@ -3275,7 +3481,8 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
     }
     expect(requireCombatant(cast.state, spellCasterId).activeEffects).toEqual([
       expect.objectContaining({
-        kind: "commandGrovelPending",
+        kind: "commandPending",
+        option: "grovel",
         sourceSpellId: commandUnitId,
         sourceCombatantId: spellCasterId,
         expiresAt: {
@@ -11202,7 +11409,11 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
       spellTargetId,
     );
     const savingThrow = requireResultHole(
-      resolveBattleSubject({ state, subject: act.subject, fills: [targetFill] }),
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill],
+      }),
       "savingThrowOutcome",
     );
     const saveFill = savingThrowOutcomeFill(savingThrow, [
@@ -11265,7 +11476,11 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
       spellTargetId,
     );
     const savingThrow = requireResultHole(
-      resolveBattleSubject({ state, subject: act.subject, fills: [targetFill] }),
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill],
+      }),
       "savingThrowOutcome",
     );
     const saveFill = savingThrowOutcomeFill(savingThrow, [
@@ -11320,7 +11535,11 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
       spellTargetId,
     );
     const savingThrow = requireResultHole(
-      resolveBattleSubject({ state, subject: act.subject, fills: [targetFill] }),
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill],
+      }),
       "savingThrowOutcome",
     );
     const saveFill = savingThrowOutcomeFill(savingThrow, [
@@ -11383,7 +11602,11 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
       spellTargetId,
     );
     const savingThrow = requireResultHole(
-      resolveBattleSubject({ state, subject: act.subject, fills: [targetFill] }),
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill],
+      }),
       "savingThrowOutcome",
     );
     const saveFill = savingThrowOutcomeFill(savingThrow, [
@@ -11434,7 +11657,11 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
       spellTargetId,
     );
     const savingThrow = requireResultHole(
-      resolveBattleSubject({ state, subject: act.subject, fills: [targetFill] }),
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill],
+      }),
       "savingThrowOutcome",
     );
     const saveFill = savingThrowOutcomeFill(savingThrow, [
@@ -11488,7 +11715,10 @@ function spellRecord(unitId: string): SpellRecord {
   return unit as SpellRecord;
 }
 
-function thunderwaveWithoutDirectPhase(base: SpellRecord, id: string): SpellRecord {
+function thunderwaveWithoutDirectPhase(
+  base: SpellRecord,
+  id: string,
+): SpellRecord {
   if (base.mechanics.family !== "activation") {
     throw new Error("Expected Thunderwave activation mechanics.");
   }
@@ -12680,6 +12910,36 @@ function statBlockWithCreatureType(
   };
 }
 
+function legendaryActionStatBlock(): StatBlockRecord {
+  const base = statBlockCatalog.requireStatBlock("stat_block_goblin_warrior");
+  const scimitar = base.statBlock.actions?.attacks?.find(
+    (attack) => attack.name === "Scimitar",
+  );
+  if (scimitar === undefined) {
+    throw new Error("Expected Goblin Warrior Scimitar fixture.");
+  }
+  return {
+    ...base,
+    id: "stat_block_command_legendary",
+    name: "Command Legendary",
+    statBlock: {
+      ...base.statBlock,
+      displayName: "Command Legendary",
+      legendaryActions: {
+        uses: 1,
+        actions: {
+          attacks: [
+            {
+              ...scimitar,
+              name: "Tail Swipe",
+            },
+          ],
+        },
+      },
+    },
+  };
+}
+
 function statBlockCreature(input: {
   readonly combatantId: CombatantId;
   readonly statBlock: StatBlockRecord;
@@ -12899,7 +13159,10 @@ function bonusActionDashSpellAct(input: {
 function jumpMovementReplacementAct(state: BattleState): AvailableBattleAct & {
   readonly subject: Extract<
     BattleSubject,
-    { readonly tag: "runtimeCommand"; readonly command: "jumpMovementReplacement" }
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "jumpMovementReplacement";
+    }
   >;
 } {
   const act = maybeJumpMovementReplacementAct(state);
@@ -12910,14 +13173,17 @@ function jumpMovementReplacementAct(state: BattleState): AvailableBattleAct & {
   return act;
 }
 
-function maybeJumpMovementReplacementAct(
-  state: BattleState,
-): (AvailableBattleAct & {
-  readonly subject: Extract<
-    BattleSubject,
-    { readonly tag: "runtimeCommand"; readonly command: "jumpMovementReplacement" }
-  >;
-}) | undefined {
+function maybeJumpMovementReplacementAct(state: BattleState):
+  | (AvailableBattleAct & {
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "jumpMovementReplacement";
+        }
+      >;
+    })
+  | undefined {
   return discoverBattleActs(state).find(
     (
       candidate,

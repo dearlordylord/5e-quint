@@ -810,7 +810,7 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
-      procedure: Schema.Literal("commandGrovel"),
+      procedure: Schema.Literal("command"),
       spell: BattleRuntimeObjectSchema,
       actionCost: Schema.Literal("magicAction"),
       ability: Schema.Literal("wis"),

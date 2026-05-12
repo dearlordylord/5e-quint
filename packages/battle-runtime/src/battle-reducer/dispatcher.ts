@@ -4,7 +4,7 @@
 // behavior change intended.
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
 import {
   canSpendAction,
@@ -187,7 +187,7 @@ import {
   REACTION_DECISION_HOLE_INSTANCE,
   activeOngoingFeaturesPreventSpellcasting,
   applyBattleMovement,
-  commandGrovelPendingEffectsForActor,
+  commandPendingEffectsForActor,
   currentActorHasOpenStatBlockMultiattackDispatch,
   discoverBattleActs,
   readiedMovementInitialHoles,
@@ -344,20 +344,20 @@ export function resolveBattleSubjectInternal(
       "Subject actor is not in this battle.",
     );
   }
-  const commandGrovelPendingEffects = commandGrovelPendingEffectsForActor(
+  const commandPendingEffects = commandPendingEffectsForActor(
     input.state,
     actorId,
-  );
+  ).filter((effect) => effect.option === "grovel");
   const commandGrovelSubject =
     input.subject.tag === "runtimeCommand" &&
     input.subject.command === "commandGrovel"
       ? input.subject
       : null;
   if (
-    commandGrovelPendingEffects.length > 0 &&
+    commandPendingEffects.length > 0 &&
     !(
       commandGrovelSubject !== null &&
-      commandGrovelPendingEffects.some(
+      commandPendingEffects.some(
         (effect) =>
           effect.sourceCombatantId === commandGrovelSubject.sourceCombatantId &&
           effect.sourceSpellId === commandGrovelSubject.sourceSpellId,
@@ -368,6 +368,17 @@ export function resolveBattleSubjectInternal(
       input.state,
       "staleSubject",
       "A pending Command Grovel effect must be resolved before other battle subjects.",
+    );
+  }
+  if (
+    input.state.currentTurnResources.commandHalt !== null &&
+    actorId === currentActorId(input.state) &&
+    subjectSuppressedByCommandHalt(input.subject)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Command Halt suppresses Movement, Actions, and Bonus Actions for this turn.",
     );
   }
   if (
@@ -689,6 +700,26 @@ export function resolveBattleSubjectInternal(
     return _exhaustive;
   })();
   return consumeOrCloseLegendaryActionWindow(input.subject, result);
+}
+
+function subjectSuppressedByCommandHalt(subject: BattleSubject): boolean {
+  if (
+    subject.tag === "action" ||
+    subject.tag === "actionSpell" ||
+    subject.tag === "bonusAction" ||
+    subject.tag === "bonusActionStandardAction" ||
+    subject.tag === "bonusActionSpell" ||
+    subject.tag === "bonusActionDashSpell" ||
+    subject.tag === "unitFeature"
+  ) {
+    return true;
+  }
+  return (
+    subject.tag === "runtimeCommand" &&
+    (subject.command === "move" ||
+      subject.command === "standFromProne" ||
+      subject.command === "jumpMovementReplacement")
+  );
 }
 
 export function actionHideSubject(subject: {

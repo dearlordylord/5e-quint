@@ -5710,6 +5710,7 @@ describe("battle runtime", () => {
       currentTurnResources: {
         actionResources: [{ kind: "action", source: "turn" }],
         currentHasBonusAction: true,
+        commandHalt: null,
         spellSlotExpendedThisTurn: false,
         attackRollMadeThisTurn: false,
         attackDamageRidersUsedThisTurn: [],
@@ -5925,6 +5926,7 @@ describe("battle runtime", () => {
       currentTurnResources: {
         actionResources: [],
         currentHasBonusAction: false,
+        commandHalt: null,
         spellSlotExpendedThisTurn: false,
         attackRollMadeThisTurn: false,
         attackDamageRidersUsedThisTurn: [],
@@ -5951,6 +5953,7 @@ describe("battle runtime", () => {
       currentTurnResources: {
         actionResources: [],
         currentHasBonusAction: false,
+        commandHalt: null,
         spellSlotExpendedThisTurn: false,
         attackRollMadeThisTurn: false,
         attackDamageRidersUsedThisTurn: [],
@@ -7450,6 +7453,7 @@ describe("battle runtime", () => {
       currentTurnResources: {
         actionResources: [],
         currentHasBonusAction: true,
+        commandHalt: null,
         spellSlotExpendedThisTurn: false,
         attackRollMadeThisTurn: false,
         attackDamageRidersUsedThisTurn: [],
@@ -7565,6 +7569,7 @@ describe("battle runtime", () => {
       currentTurnResources: {
         actionResources: [],
         currentHasBonusAction: true,
+        commandHalt: null,
         spellSlotExpendedThisTurn: false,
         attackRollMadeThisTurn: false,
         attackDamageRidersUsedThisTurn: [],
@@ -7605,6 +7610,7 @@ describe("battle runtime", () => {
       currentTurnResources: {
         actionResources: [],
         currentHasBonusAction: true,
+        commandHalt: null,
         spellSlotExpendedThisTurn: false,
         attackRollMadeThisTurn: false,
         attackDamageRidersUsedThisTurn: [],
@@ -7724,6 +7730,7 @@ describe("battle runtime", () => {
       currentTurnResources: {
         actionResources: [{ kind: "action", source: "turn" }],
         currentHasBonusAction: false,
+        commandHalt: null,
         spellSlotExpendedThisTurn: false,
         attackRollMadeThisTurn: false,
         attackDamageRidersUsedThisTurn: [],
@@ -11519,6 +11526,7 @@ describe("battle runtime", () => {
     ).state;
     expect(afterSlotSpell.currentTurnResources).toMatchObject({
       currentHasBonusAction: true,
+      commandHalt: null,
       spellSlotExpendedThisTurn: true,
     });
     expect(
@@ -19150,9 +19158,13 @@ describe("battle runtime", () => {
     });
   });
 
-  test("canonical battle runtime QNT self-tests pass", () => {
-    runCanonicalBattleRuntimeQntSelfTests();
-  }, canonicalBattleRuntimeQntSelfTestTimeoutMs);
+  test(
+    "canonical battle runtime QNT self-tests pass",
+    () => {
+      runCanonicalBattleRuntimeQntSelfTests();
+    },
+    canonicalBattleRuntimeQntSelfTestTimeoutMs,
+  );
 });
 
 function requireResolved(

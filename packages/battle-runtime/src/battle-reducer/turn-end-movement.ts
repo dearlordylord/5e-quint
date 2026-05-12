@@ -3,7 +3,7 @@
 // intended.
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
 import { resetTurnActionEconomy } from "@dnd/shared-algebras/action-economy-algebra";
 
@@ -126,8 +126,10 @@ import type {
   BattleActiveEffect,
   BattleActiveEffectExpiration,
   BattleAttackDamageDispositionHole,
+  BattleCommandHaltTurnSuppression,
   BattleCreatureState,
   BattleFill,
+  BattleGrappleLink,
   BattleGreaseGroundHazardSavingThrowOutcomeHole,
   BattleHoleId,
   BattleJumpMovementReplacementFact,
@@ -276,11 +278,29 @@ export function resolveEndTurn(
         );
   const combatantsAfterDamageReductionReset =
     resetSpellDamageReductionsForNewTurn(combatantsAfterRecharge);
+  const resetTurnResources = resetBattleTurnResources(state.currentTurnResources);
+  const commandHalt = commandHaltTurnSuppressionForActor(
+    combatantsAfterDamageReductionReset,
+    nextActorId,
+    initiative.round,
+  );
+  const currentTurnResources = commandHaltTurnResources(
+    resetTurnResources,
+    commandHalt,
+  );
+  const combatantsAfterCommandHalt =
+    commandHalt === null
+      ? combatantsAfterDamageReductionReset
+      : combatantsWithCommandHaltMovementSpent(
+          combatantsAfterDamageReductionReset,
+          state.grapples,
+          nextActorId,
+        );
   const nextState = {
     ...state,
     initiative,
-    combatants: combatantsAfterDamageReductionReset,
-    currentTurnResources: resetBattleTurnResources(state.currentTurnResources),
+    combatants: combatantsAfterCommandHalt,
+    currentTurnResources,
     readiedSpells,
     readiedMovements,
     helpAttacks,
@@ -295,6 +315,61 @@ export function resolveEndTurn(
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
+}
+
+function commandHaltTurnSuppressionForActor(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  actorId: CombatantId,
+  round: RoundType,
+): BattleCommandHaltTurnSuppression | null {
+  const actor = combatants.get(actorId);
+  const halted =
+    actor?.activeEffects.some(
+      (effect) =>
+        effect.kind === "commandPending" &&
+        effect.option === "halt" &&
+        effect.expiresAt.combatantId === actorId &&
+        effect.expiresAt.round === round,
+    ) ?? false;
+  return halted ? { kind: "commandHalt" } : null;
+}
+
+function commandHaltTurnResources(
+  resources: BattleTurnResources,
+  commandHalt: BattleCommandHaltTurnSuppression | null,
+): BattleTurnResources {
+  return commandHalt === null
+    ? resources
+    : {
+        ...resources,
+        actionResources: [],
+        currentHasBonusAction: false,
+        commandHalt,
+      };
+}
+
+function combatantsWithCommandHaltMovementSpent(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  grapples: readonly BattleGrappleLink[],
+  actorId: CombatantId,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  const actor = combatants.get(actorId);
+  if (actor === undefined) {
+    return combatants;
+  }
+
+  const isGrappled = grapples.some((grapple) => grapple.targetId === actorId);
+  const spentFeet = Math.max(
+    Number(actor.movementSpentFeet),
+    ...representedMovementSpeedKinds(actor).map((kind) =>
+      Number(effectiveMovementSpeed(actor, kind, isGrappled)),
+    ),
+  );
+
+  return new Map(combatants).set(actorId, {
+    ...actor,
+    movementSpentFeet: movementFeet(spentFeet),
+  });
 }
 
 export function resetSpellDamageReductionsForNewTurn(
@@ -535,7 +610,7 @@ type DurationActiveEffect = Extract<
     | Extract<BattleActiveEffect, { readonly kind: "sleepPendingRepeatSave" }>
     | Extract<BattleActiveEffect, { readonly kind: "sleepUnconscious" }>
     | Extract<BattleActiveEffect, { readonly kind: "spellDashBonusAction" }>
-    | Extract<BattleActiveEffect, { readonly kind: "commandGrovelPending" }>
+    | Extract<BattleActiveEffect, { readonly kind: "commandPending" }>
   >,
   { readonly expiresAt: BattleActiveEffectExpiration }
 > & {
@@ -610,12 +685,12 @@ export type GreaseGroundHazardEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "greaseGroundHazard" }
 >;
-export type CommandGrovelPendingEffect = Extract<
+export type CommandPendingEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "commandGrovelPending" }
+  { readonly kind: "commandPending" }
 >;
 
-export function commandGrovelPendingEffectForSubject(
+export function commandPendingEffectForSubject(
   state: BattleState,
   subject: Extract<
     BattleSubject,
@@ -624,27 +699,28 @@ export function commandGrovelPendingEffectForSubject(
       readonly command: "commandGrovel";
     }
   >,
-): CommandGrovelPendingEffect | null {
+): CommandPendingEffect | null {
   return (
-    commandGrovelPendingEffectsForActor(state, subject.actorId).find(
+    commandPendingEffectsForActor(state, subject.actorId).find(
       (effect) =>
+        effect.option === "grovel" &&
         effect.sourceSpellId === subject.sourceSpellId &&
         effect.sourceCombatantId === subject.sourceCombatantId,
     ) ?? null
   );
 }
 
-export function commandGrovelPendingEffectsForActor(
+export function commandPendingEffectsForActor(
   state: BattleState,
   actorId: CombatantId,
-): readonly CommandGrovelPendingEffect[] {
+): readonly CommandPendingEffect[] {
   const actor = state.combatants.get(actorId);
   if (actor === undefined) {
     return [];
   }
   return actor.activeEffects.filter(
-    (effect): effect is CommandGrovelPendingEffect =>
-      effect.kind === "commandGrovelPending" &&
+    (effect): effect is CommandPendingEffect =>
+      effect.kind === "commandPending" &&
       effect.expiresAt.combatantId === actorId &&
       effect.expiresAt.round === state.initiative.round,
   );
@@ -661,7 +737,7 @@ export function resolveCommandGrovelCommand(
     >
   >,
 ): BattleResolutionResult {
-  const effect = commandGrovelPendingEffectForSubject(input.state, input.subject);
+  const effect = commandPendingEffectForSubject(input.state, input.subject);
   if (effect === null) {
     return invalidResult(
       input.state,
@@ -1342,6 +1418,7 @@ export function resetBattleTurnResources(
     resetTurnActionEconomy(resources);
   return {
     ...base,
+    commandHalt: null,
     spellSlotExpendedThisTurn: false,
     attackRollMadeThisTurn: false,
     attackDamageRidersUsedThisTurn: [],

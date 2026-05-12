@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 import type {
   ActionEconomyState,
   RuntimeActionResource,
@@ -179,7 +179,7 @@ export {
   expireStartOfTurnEffects,
   expireStartOfTurnOngoingFeatures,
   movementHole,
-  commandGrovelPendingEffectsForActor,
+  commandPendingEffectsForActor,
   greaseGroundHazardSavingThrowOutcomeHole,
   movementHoleWithBudget,
   parseBattleMovement,
@@ -519,7 +519,8 @@ export type BattleActiveEffect =
       >;
     })
   | (BattleSpellEffectBase & {
-      readonly kind: "commandGrovelPending";
+      readonly kind: "commandPending";
+      readonly option: BattleCommandOption;
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
         { readonly kind: "endOfTurn" }
@@ -1378,7 +1379,7 @@ export type TargetListSpellInvocation =
       SupportedSpellInvocation,
       { readonly procedure: "jumpMovementReplacement" }
     >
-  | Extract<SupportedSpellInvocation, { readonly procedure: "commandGrovel" }>
+  | Extract<SupportedSpellInvocation, { readonly procedure: "command" }>
   | Extract<
       SupportedSpellInvocation,
       { readonly procedure: "conditionImmunityAndTurnStartTemporaryHitPoints" }
@@ -1788,7 +1789,7 @@ export type SupportedSpellInvocation =
   | {
       readonly access: PreparedSpellAccess;
       readonly resource: SpellSlotInvocationResource;
-      readonly procedure: "commandGrovel";
+      readonly procedure: "command";
       readonly spell: SpellRecord;
       readonly actionCost: "magicAction";
       readonly ability: Extract<Ability, "wis">;
@@ -1900,7 +1901,7 @@ export type SupportedDamageSpellInvocation = Exclude<
       | "saveGatedCondition"
       | "saveGatedAttackRollAdvantage"
       | "sleepTargetAdmission"
-      | "commandGrovel"
+      | "command"
       | "greaseGroundHazard"
       | "chainedSpellAttackDamage";
   }
@@ -1938,10 +1939,14 @@ type PendingAttackRollMissToHitReplacementSelection = {
   readonly unitId: UnitRecord["id"];
   readonly context: PendingAttackRollMissToHitReplacementContext;
 };
+export type BattleCommandHaltTurnSuppression = {
+  readonly kind: "commandHalt";
+};
 
 export type BattleTurnResources = ActionEconomyState & {
   readonly actionResources: readonly RuntimeActionResource[];
   readonly currentHasBonusAction: boolean;
+  readonly commandHalt: BattleCommandHaltTurnSuppression | null;
   readonly spellSlotExpendedThisTurn: boolean;
   readonly attackRollMadeThisTurn: boolean;
   readonly attackDamageRidersUsedThisTurn: readonly AttackDamageRiderUsage[];
@@ -2377,7 +2382,7 @@ export type BattleSpellTargetListHole = {
         | "scalarBuff"
         | "conditionImmunityAndTurnStartTemporaryHitPoints"
         | "jumpMovementReplacement"
-        | "commandGrovel";
+        | "command";
     }
   >;
   readonly minTargets: 1;
@@ -2553,7 +2558,7 @@ export type BattleCommandOptionChoiceHole = {
   readonly label: string;
   readonly spell: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "commandGrovel" }
+    { readonly procedure: "command" }
   >;
   readonly choices: readonly BattleCommandOption[];
 };
@@ -2623,7 +2628,7 @@ export type BattleSpellSavingThrowOutcomeHole = {
         | "afterHitSaveGatedCondition"
         | "saveGatedAttackRollAdvantage"
         | "sleepTargetAdmission"
-        | "commandGrovel"
+        | "command"
         | "greaseGroundHazard";
     }
   >;

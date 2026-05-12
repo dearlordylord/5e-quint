@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points
@@ -12,7 +12,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-damage-reduction
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-sleep-repeat-save-lifecycle
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-grease-ground-hazard
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-command-grovel
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-command-halt-grovel
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-expeditious-retreat-dash
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-forced-reaction-movement
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-jump-movement-replacement
@@ -278,8 +278,9 @@ module battleRuntime {
   type ScalarBuffSpell = FalseLifeScalarBuff | LongstriderScalarBuff | ShieldOfFaithScalarBuff
   type RollModifierSpell = BaneRollModifier | BlessRollModifier | GuidanceRollModifier
   type SpellActionCost = SpellMagicAction | SpellBonusAction
+  type CommandOption = CommandGrovelOption | CommandHaltOption
 
-  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireAttackRollAdvantage | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodAttackDisadvantage | ProduceFlameHeldLight({ durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | CommandGrovelPending({ source: Actor, expiresAtActor: Actor, expiresAtRound: int })
+  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireAttackRollAdvantage | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodAttackDisadvantage | ProduceFlameHeldLight({ durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
   type RuntimeCreatureType = HumanoidCreature | BeastCreature | AberrationCreature | CelestialCreature | ElementalCreature | FeyCreature | FiendCreature | UndeadCreature
   type ObjectTarget =
@@ -1003,7 +1004,7 @@ module battleRuntime {
         | SleepPendingRepeatSave(_) => false
         | SleepUnconscious(_) => false
         | GreaseGroundHazard(_) => false
-        | CommandGrovelPending(_) => false
+        | CommandPending(_) => false
       })) 13 + dexMod else baseAc
       val shieldBonus = if (effects.contains(ShieldArmorClassBonus)) 5 else 0
       val shieldOfFaithBonus = if (effects.contains(ShieldOfFaithArmorClassBonus)) 2 else 0
@@ -4922,27 +4923,29 @@ module battleRuntime {
   ): BattleState =
     endTurn(resolveGreaseGroundHazardSave(state, targetActor, areaId, savingThrowSucceeded))
 
-  pure def commandGrovelMaxTargets(slotLevel: int): int =
+  pure def commandMaxTargets(slotLevel: int): int =
     slotLevel
 
-  pure def commandGrovelPendingEffectFor(state: BattleState, targetActor: Actor): ActiveEffect =
-    CommandGrovelPending({
+  pure def commandPendingEffectFor(state: BattleState, targetActor: Actor, option: CommandOption): ActiveEffect =
+    CommandPending({
       source: Fighter,
+      option: option,
       expiresAtActor: targetActor,
       expiresAtRound: if (currentActor(state) == targetActor) state.initiative.round + 1 else state.initiative.round,
     })
 
-  pure def activeEffectsWithoutCommandGrovelPending(effects: Set[ActiveEffect], source: Actor): Set[ActiveEffect] =
+  pure def activeEffectsWithoutCommandPending(effects: Set[ActiveEffect], source: Actor): Set[ActiveEffect] =
     effects.filter(effect => match effect {
-      | CommandGrovelPending(data) => data.source != source
+      | CommandPending(data) => data.source != source
       | _ => true
     })
 
-  pure def resolveCommandGrovel(
+  pure def resolveCommand(
     state: BattleState,
     targets: Set[Actor],
     failedTargets: Set[Actor],
     slotLevel: int,
+    option: CommandOption,
   ): BattleState =
     if (
       not(state.actionAvailable) or
@@ -4952,7 +4955,7 @@ module battleRuntime {
       fighterHasRage(state) or
       not(canExpendSpellSlotThisTurn(state)) or
       targets.size() < 1 or
-      targets.size() > commandGrovelMaxTargets(slotLevel) or
+      targets.size() > commandMaxTargets(slotLevel) or
       not(failedTargets.forall(target => targets.contains(target)))
     )
       state
@@ -4961,38 +4964,38 @@ module battleRuntime {
         ...state,
         fighter: if (failedTargets.contains(Fighter)) {
           ...state.fighter,
-          activeEffects: activeEffectsWithoutCommandGrovelPending(state.fighter.activeEffects, Fighter)
-            .union(Set(commandGrovelPendingEffectFor(state, Fighter))),
+          activeEffects: activeEffectsWithoutCommandPending(state.fighter.activeEffects, Fighter)
+            .union(Set(commandPendingEffectFor(state, Fighter, option))),
         } else state.fighter,
         goblin: if (failedTargets.contains(Goblin)) {
           ...state.goblin,
-          activeEffects: activeEffectsWithoutCommandGrovelPending(state.goblin.activeEffects, Fighter)
-            .union(Set(commandGrovelPendingEffectFor(state, Goblin))),
+          activeEffects: activeEffectsWithoutCommandPending(state.goblin.activeEffects, Fighter)
+            .union(Set(commandPendingEffectFor(state, Goblin, option))),
         } else state.goblin,
         actionAvailable: false,
         spellSlotExpendedThisTurn: true,
       }
 
-  pure def commandGrovelPendingEffectsForActor(state: BattleState, actor: Actor): Set[ActiveEffect] =
+  pure def commandPendingEffectsForActor(state: BattleState, actor: Actor, option: CommandOption): Set[ActiveEffect] =
     match actor {
       | Fighter => state.fighter.activeEffects
       | Goblin => state.goblin.activeEffects
     }
       .filter(effect => match effect {
-        | CommandGrovelPending(data) =>
-            data.expiresAtActor == actor and data.expiresAtRound == state.initiative.round
+        | CommandPending(data) =>
+            data.option == option and data.expiresAtActor == actor and data.expiresAtRound == state.initiative.round
         | _ => false
       })
 
   pure def followCommandGrovel(state: BattleState): BattleState =
-    if (commandGrovelPendingEffectsForActor(state, currentActor(state)).size() > 0)
+    if (commandPendingEffectsForActor(state, currentActor(state), CommandGrovelOption).size() > 0)
       match currentActor(state) {
         | Fighter => endTurn({
             ...state,
             fighter: {
               ...state.fighter,
               prone: true,
-              activeEffects: state.fighter.activeEffects.exclude(commandGrovelPendingEffectsForActor(state, Fighter)),
+              activeEffects: state.fighter.activeEffects.exclude(commandPendingEffectsForActor(state, Fighter, CommandGrovelOption)),
             },
           })
         | Goblin => endTurn({
@@ -5000,12 +5003,49 @@ module battleRuntime {
             goblin: {
               ...state.goblin,
               prone: true,
-              activeEffects: state.goblin.activeEffects.exclude(commandGrovelPendingEffectsForActor(state, Goblin)),
+              activeEffects: state.goblin.activeEffects.exclude(commandPendingEffectsForActor(state, Goblin, CommandGrovelOption)),
             },
           })
       }
     else
       state
+
+  pure def followCommandHalt(state: BattleState): BattleState =
+    if (commandPendingEffectsForActor(state, currentActor(state), CommandHaltOption).size() > 0)
+      match currentActor(state) {
+        | Fighter => {
+            ...state,
+            actionAvailable: false,
+            bonusActionAvailable: false,
+            fighter: { ...state.fighter, movementSpent: state.fighter.speed },
+          }
+        | Goblin => {
+            ...state,
+            actionAvailable: false,
+            bonusActionAvailable: false,
+            goblin: { ...state.goblin, movementSpent: state.goblin.speed },
+          }
+      }
+    else
+      state
+
+  pure def endCommandHaltTurn(state: BattleState): BattleState =
+    match currentActor(state) {
+      | Fighter => endTurn({
+          ...state,
+          fighter: {
+            ...state.fighter,
+            activeEffects: state.fighter.activeEffects.exclude(commandPendingEffectsForActor(state, Fighter, CommandHaltOption)),
+          },
+        })
+      | Goblin => endTurn({
+          ...state,
+          goblin: {
+            ...state.goblin,
+            activeEffects: state.goblin.activeEffects.exclude(commandPendingEffectsForActor(state, Goblin, CommandHaltOption)),
+          },
+        })
+    }
 
   pure def selectedTargetCount(fighterTargeted: bool, goblinTargeted: bool): int =
     (if (fighterTargeted) 1 else 0) + (if (goblinTargeted) 1 else 0)
@@ -5902,12 +5942,13 @@ module battleRuntime {
   }
 
   run test_command_grovel_records_next_turn_pending_effect_on_failed_save = {
-    val resolved = resolveCommandGrovel(initialState, Set(Goblin), Set(Goblin), 1)
+    val resolved = resolveCommand(initialState, Set(Goblin), Set(Goblin), 1, CommandGrovelOption)
     all {
       assert(resolved.spellSlotExpendedThisTurn),
       assert(not(resolved.actionAvailable)),
-      assert(resolved.goblin.activeEffects.contains(CommandGrovelPending({
+      assert(resolved.goblin.activeEffects.contains(CommandPending({
         source: Fighter,
+        option: CommandGrovelOption,
         expiresAtActor: Goblin,
         expiresAtRound: 1,
       }))),
@@ -5916,14 +5957,39 @@ module battleRuntime {
   }
 
   run test_command_grovel_target_turn_applies_prone_and_ends_turn = {
-    val resolved = resolveCommandGrovel(initialState, Set(Goblin), Set(Goblin), 1)
+    val resolved = resolveCommand(initialState, Set(Goblin), Set(Goblin), 1, CommandGrovelOption)
     val goblinTurn = endTurn(resolved)
     val followed = followCommandGrovel(goblinTurn)
     all {
       assert(followed.goblin.prone),
       assert(currentActor(followed) == Fighter),
-      assert(not(followed.goblin.activeEffects.contains(CommandGrovelPending({
+      assert(not(followed.goblin.activeEffects.contains(CommandPending({
         source: Fighter,
+        option: CommandGrovelOption,
+        expiresAtActor: Goblin,
+        expiresAtRound: 1,
+      })))),
+    }
+  }
+
+  run test_command_halt_target_turn_suppresses_action_bonus_action_and_movement = {
+    val resolved = resolveCommand(initialState, Set(Goblin), Set(Goblin), 1, CommandHaltOption)
+    val goblinTurn = endTurn(resolved)
+    val halted = followCommandHalt(goblinTurn)
+    val ended = endCommandHaltTurn(halted)
+    all {
+      assert(resolved.goblin.activeEffects.contains(CommandPending({
+        source: Fighter,
+        option: CommandHaltOption,
+        expiresAtActor: Goblin,
+        expiresAtRound: 1,
+      }))),
+      assert(not(halted.actionAvailable)),
+      assert(not(halted.bonusActionAvailable)),
+      assert(halted.goblin.movementSpent == halted.goblin.speed),
+      assert(not(ended.goblin.activeEffects.contains(CommandPending({
+        source: Fighter,
+        option: CommandHaltOption,
         expiresAtActor: Goblin,
         expiresAtRound: 1,
       })))),
