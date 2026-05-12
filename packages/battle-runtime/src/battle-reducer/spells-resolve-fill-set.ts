@@ -105,6 +105,9 @@ export type SpellFillSet =
       readonly damageRoll:
         | Extract<BattleFill, { readonly kind: "rolledDice" }>
         | undefined;
+      readonly movement:
+        | Extract<BattleFill, { readonly kind: "movement" }>
+        | undefined;
       readonly spellDamageReductionRolls: readonly Extract<
         BattleFill,
         { readonly kind: "rolledDice" }
@@ -169,6 +172,9 @@ export function spellFillSet(
   >[] = [];
   let damageRoll:
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
+    | undefined;
+  let movement:
+    | Extract<BattleFill, { readonly kind: "movement" }>
     | undefined;
   const spellDamageReductionRolls: Extract<
     BattleFill,
@@ -632,6 +638,28 @@ export function spellFillSet(
       continue;
     }
 
+    if (fill.kind === "movement") {
+      if (
+        invocation.procedure !== "saveGatedDamage" ||
+        !invocation.failedSavePostDamageRiders.some(
+          (rider) => rider.kind === "forcedReactionMovement",
+        )
+      ) {
+        return {
+          tag: "invalid",
+          message: "Movement fill does not match this spell act.",
+        };
+      }
+      if (movement !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Spell forced movement was filled twice.",
+        };
+      }
+      movement = fill;
+      continue;
+    }
+
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the spell replay holes.`,
@@ -653,6 +681,7 @@ export function spellFillSet(
     concentrationSavingThrows,
     damageDispositions,
     damageRoll,
+    movement,
     spellDamageReductionRolls,
     attackBurstDamageRoll,
     healingRoll,

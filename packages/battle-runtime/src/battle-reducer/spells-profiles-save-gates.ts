@@ -1024,6 +1024,18 @@ export function supportedSaveGateFailedSaveEffects(
   ) {
     return null;
   }
+  const dissonantWhispersForcedMovementCount = riders.filter((rider) =>
+    isDissonantWhispersForcedReactionMovementShape(spell, phase, rider),
+  ).length;
+  if (
+    (dissonantWhispersForcedMovementCount > 0 &&
+      (dissonantWhispersForcedMovementCount !== 1 ||
+        !isDissonantWhispersFailedSaveDamageShape(damage))) ||
+    (isDissonantWhispersFailedSaveDamageShape(damage) &&
+      dissonantWhispersForcedMovementCount !== 1)
+  ) {
+    return null;
+  }
   const postDamageRiders = supportedFailedSavePostDamageRiders(
     spell,
     phase,
@@ -1048,6 +1060,19 @@ export function supportedFailedSavePostDamageRiders(
       continue;
     }
     if (
+      effect.kind === "forced_reaction_movement" &&
+      isDissonantWhispersForcedReactionMovementShape(spell, phase, effect)
+    ) {
+      riders.push({
+        kind: "forcedReactionMovement",
+        direction: "awayFromCaster",
+        route: "safest",
+        distance: "asFarAsPossible",
+        cost: "targetReactionIfAvailable",
+      });
+      continue;
+    }
+    if (
       effect.kind !== "modify_roll_advantage" ||
       effect.mode !== "disadvantage" ||
       !sameStringSet(effect.on ?? [], ["attack_roll"]) ||
@@ -1065,6 +1090,53 @@ export function supportedFailedSavePostDamageRiders(
     });
   }
   return riders;
+}
+
+function isDissonantWhispersForcedReactionMovementShape(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
+  effect: SaveGateFailureEffect,
+): boolean {
+  return (
+    spell.name === "Dissonant Whispers" &&
+    spell.provenance.kind === "srd-5.2.1" &&
+    spell.provenance.section ===
+      "Spells/Descriptions-A-D#Dissonant Whispers" &&
+    spell.mechanics.level === 1 &&
+    spell.mechanics.castingTime.kind === "action" &&
+    spell.mechanics.range.kind === "point" &&
+    spell.mechanics.range.feet === 60 &&
+    spell.mechanics.duration.kind === "instantaneous" &&
+    phase.ability === "wis" &&
+    phase.dc.kind === "caster_spell_save_dc" &&
+    phase.onSuccess.kind === "half_damage" &&
+    effect.kind === "forced_reaction_movement" &&
+    effect.cost === "target_reaction_if_available" &&
+    effect.direction === "away_from_caster" &&
+    effect.distance === "as_far_as_possible" &&
+    effect.route === "safest_available" &&
+    effect.unavailable === "no_movement"
+  );
+}
+
+function isDissonantWhispersFailedSaveDamageShape(
+  effect: Extract<SaveGateFailureEffect, { readonly kind: "damage" }>,
+): boolean {
+  const amount = effect.amount;
+  return (
+    effect.damageType === "psychic" &&
+    amount.kind === "linear_per_level" &&
+    amount.axis === "slot" &&
+    amount.startingAtLevel === 1 &&
+    amount.base.dice === 3 &&
+    amount.base.dieSize === 6 &&
+    amount.base.flat === undefined &&
+    amount.base.spellcastingMod === undefined &&
+    amount.base.abilityModifier === undefined &&
+    amount.perLevel.dice === 1 &&
+    amount.perLevel.dieSize === undefined &&
+    amount.perLevel.flat === undefined
+  );
 }
 
 function thunderwavePostSaveAreaEffect(

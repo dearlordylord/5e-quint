@@ -34,6 +34,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT34 mass_cure_wounds
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV49 expeditious_retreat
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV51 thunderwave
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV52 dissonant_whispers
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT21 mycelium_step
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT18 defense
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT27 feat_archery
@@ -47,7 +48,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT59 monk_deflect_attacks
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT62 fighter_tactical_mind
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT65 bard_cutting_words
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-grease-ground-hazard spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider spell.scalar-buff
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -190,6 +191,7 @@ const trueStrikeUnitId = "true_strike";
 const iceKnifeUnitId = "ice_knife";
 const sleepUnitId = "sleep";
 const thunderwaveUnitId = "thunderwave";
+const dissonantWhispersUnitId = "dissonant_whispers";
 const monkDeflectAttacksUnitId = "monk_deflect_attacks";
 const defenseUnitId = "defense";
 const divineFavorUnitId = "divine_favor";
@@ -10518,6 +10520,374 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
       message:
         "Thunderwave creature push facts must cover every failed-save target.",
     });
+  });
+});
+
+describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () => {
+  test("dissonant whispers is admitted as single-target Wisdom save damage with forced Reaction movement", () => {
+    const spell = spellRecord(dissonantWhispersUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = spellAct({
+      state,
+      spellId: dissonantWhispersUnitId,
+      slotLevel: 2,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(
+        dissonantWhispersUnitId,
+        2,
+        "saveGatedDamage",
+      ),
+      mode: { tag: "cast" },
+    });
+    const target = requireHole(act.initialHoles, "targetChoice");
+    const savingThrow = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          spellTargetFill(
+            target,
+            dissonantWhispersUnitId,
+            spellCasterId,
+            spellTargetId,
+          ),
+        ],
+      }),
+      "savingThrowOutcome",
+    );
+    expect(savingThrow).toEqual(
+      expect.objectContaining({
+        label: "Dissonant Whispers Saving Throw outcome",
+        ability: "wis",
+        dc: { kind: "caster_spell_save_dc" },
+      }),
+    );
+    expect(spellHoleInvocation([savingThrow])).toEqual(
+      expect.objectContaining({
+        procedure: "saveGatedDamage",
+        spell,
+        resource: { tag: "spellSlot", slotLevel: 2 },
+        ability: "wis",
+        targeting: { kind: "singleCombatant" },
+        damage: {
+          expr: { dice: 4, dieSize: 6 },
+          damageType: "psychic",
+        },
+        successDamage: "half",
+        rangeFeet: 60,
+        failedSavePostDamageRiders: [
+          {
+            kind: "forcedReactionMovement",
+            direction: "awayFromCaster",
+            route: "safest",
+            distance: "asFarAsPossible",
+            cost: "targetReactionIfAvailable",
+          },
+        ],
+      }),
+    );
+  });
+
+  test("dissonant whispers failed save spends the target Reaction and consumes caller movement", () => {
+    const spell = spellRecord(dissonantWhispersUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      targetHp: 30,
+      targetMaxHp: 30,
+    });
+    const act = spellAct({ state, spellId: dissonantWhispersUnitId });
+    const target = requireHole(act.initialHoles, "targetChoice");
+    const targetFill = spellTargetFill(
+      target,
+      dissonantWhispersUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+    const savingThrow = requireResultHole(
+      resolveBattleSubject({ state, subject: act.subject, fills: [targetFill] }),
+      "savingThrowOutcome",
+    );
+    const saveFill = savingThrowOutcomeFill(savingThrow, [
+      { targetId: spellTargetId, succeeded: false },
+    ]);
+    const damageRoll = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill, saveFill],
+      }),
+      "rolledDice",
+    );
+    const movement = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          targetFill,
+          saveFill,
+          damageRollFillWithGroups(damageRoll, [[3, 4, 5]]),
+        ],
+      }),
+      "movement",
+    );
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        saveFill,
+        damageRollFillWithGroups(damageRoll, [[3, 4, 5]]),
+        movementFill(movement, {
+          movementCostFeet: 30,
+          provokedOpportunityAttacks: [],
+        }),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Dissonant Whispers to resolve.");
+    }
+    expect(Number(requireCombatant(resolved.state, spellTargetId).hp)).toBe(18);
+    expect(
+      requireCombatant(resolved.state, spellTargetId).reactionAvailable,
+    ).toBe(false);
+  });
+
+  test("dissonant whispers successful save deals half damage only", () => {
+    const spell = spellRecord(dissonantWhispersUnitId);
+    const state = spellBattle({ preparedSpells: [spell] });
+    const act = spellAct({ state, spellId: dissonantWhispersUnitId });
+    const target = requireHole(act.initialHoles, "targetChoice");
+    const targetFill = spellTargetFill(
+      target,
+      dissonantWhispersUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+    const savingThrow = requireResultHole(
+      resolveBattleSubject({ state, subject: act.subject, fills: [targetFill] }),
+      "savingThrowOutcome",
+    );
+    const saveFill = savingThrowOutcomeFill(savingThrow, [
+      { targetId: spellTargetId, succeeded: true },
+    ]);
+    const damageRoll = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill, saveFill],
+      }),
+      "rolledDice",
+    );
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        saveFill,
+        damageRollFillWithGroups(damageRoll, [[3, 4, 5]]),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Dissonant Whispers to resolve.");
+    }
+    expect(Number(requireCombatant(resolved.state, spellTargetId).hp)).toBe(6);
+    expect(
+      requireCombatant(resolved.state, spellTargetId).reactionAvailable,
+    ).toBe(true);
+  });
+
+  test("dissonant whispers failed save does not request movement when the target has no Reaction", () => {
+    const spell = spellRecord(dissonantWhispersUnitId);
+    const battle = spellBattle({ preparedSpells: [spell] });
+    const target = requireCombatant(battle, spellTargetId);
+    const state = {
+      ...battle,
+      combatants: new Map(battle.combatants).set(spellTargetId, {
+        ...target,
+        reactionAvailable: false,
+      }),
+    };
+    const act = spellAct({ state, spellId: dissonantWhispersUnitId });
+    const targetChoice = requireHole(act.initialHoles, "targetChoice");
+    const targetFill = spellTargetFill(
+      targetChoice,
+      dissonantWhispersUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+    const savingThrow = requireResultHole(
+      resolveBattleSubject({ state, subject: act.subject, fills: [targetFill] }),
+      "savingThrowOutcome",
+    );
+    const saveFill = savingThrowOutcomeFill(savingThrow, [
+      { targetId: spellTargetId, succeeded: false },
+    ]);
+    const damageRoll = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill, saveFill],
+      }),
+      "rolledDice",
+    );
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        saveFill,
+        damageRollFillWithGroups(damageRoll, [[3, 4, 5]]),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Dissonant Whispers to resolve.");
+    }
+    expect(
+      requireCombatant(resolved.state, spellTargetId).reactionAvailable,
+    ).toBe(false);
+  });
+
+  test("dissonant whispers failed save spends Reaction without movement when the target cannot move", () => {
+    const spell = spellRecord(dissonantWhispersUnitId);
+    const battle = spellBattle({
+      preparedSpells: [spell],
+      targetHp: 30,
+      targetMaxHp: 30,
+    });
+    const state: BattleState = {
+      ...battle,
+      grapples: [
+        {
+          grapplerId: spellCasterId,
+          targetId: spellTargetId,
+          escapeDc: difficultyClass(12),
+          reachFeet: movementFeet(5),
+          hand: "left",
+          targetExemptFromDragCost: false,
+        },
+      ],
+    };
+    const act = spellAct({ state, spellId: dissonantWhispersUnitId });
+    const targetChoice = requireHole(act.initialHoles, "targetChoice");
+    const targetFill = spellTargetFill(
+      targetChoice,
+      dissonantWhispersUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+    const savingThrow = requireResultHole(
+      resolveBattleSubject({ state, subject: act.subject, fills: [targetFill] }),
+      "savingThrowOutcome",
+    );
+    const saveFill = savingThrowOutcomeFill(savingThrow, [
+      { targetId: spellTargetId, succeeded: false },
+    ]);
+    const damageRoll = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill, saveFill],
+      }),
+      "rolledDice",
+    );
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        saveFill,
+        damageRollFillWithGroups(damageRoll, [[3, 4, 5]]),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Dissonant Whispers to resolve.");
+    }
+    expect(Number(requireCombatant(resolved.state, spellTargetId).hp)).toBe(18);
+    expect(
+      requireCombatant(resolved.state, spellTargetId).reactionAvailable,
+    ).toBe(false);
+  });
+
+  test("dissonant whispers movement opens Opportunity Attack eligibility from Reaction movement", () => {
+    const spell = spellRecord(dissonantWhispersUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      targetHp: 30,
+      targetMaxHp: 30,
+    });
+    const act = spellAct({ state, spellId: dissonantWhispersUnitId });
+    const target = requireHole(act.initialHoles, "targetChoice");
+    const targetFill = spellTargetFill(
+      target,
+      dissonantWhispersUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+    const savingThrow = requireResultHole(
+      resolveBattleSubject({ state, subject: act.subject, fills: [targetFill] }),
+      "savingThrowOutcome",
+    );
+    const saveFill = savingThrowOutcomeFill(savingThrow, [
+      { targetId: spellTargetId, succeeded: false },
+    ]);
+    const damageRoll = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill, saveFill],
+      }),
+      "rolledDice",
+    );
+    const movement = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          targetFill,
+          saveFill,
+          damageRollFillWithGroups(damageRoll, [[3, 4, 5]]),
+        ],
+      }),
+      "movement",
+    );
+
+    const result = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        saveFill,
+        damageRollFillWithGroups(damageRoll, [[3, 4, 5]]),
+        movementFill(movement, {
+          movementCostFeet: 30,
+          provokedOpportunityAttacks: [
+            { reactorId: spellCasterId, attackName: "Unarmed Strike" },
+          ],
+        }),
+      ],
+    });
+
+    const reaction = requireResultHole(result, "reactionDecision");
+    expect(reaction.trigger).toBe("opportunityAttack");
   });
 });
 

@@ -77,6 +77,7 @@ module spellProcedureProfiles {
     | BurningHandsSaveDamageProfile
     | ViciousMockerySaveDamageProfile
     | ThunderwaveSaveDamageProfile
+    | DissonantWhispersSaveDamageProfile
 
   type SpellSaveGatedConditionProfile =
     | ColorSpraySaveConditionProfile
@@ -88,6 +89,7 @@ module spellProcedureProfiles {
   type SpellSaveGatedFailedEffect =
     | ViciousMockeryNextAttackDisadvantageEffect
     | ThunderwavePush10FeetEffect
+    | DissonantWhispersForcedReactionMovementEffect
     | ColorSprayBlindedEffect
     | EntangleRestrainedEffect
     | AnimalFriendshipCharmedEffect({ durationMinutes: int })
@@ -388,6 +390,7 @@ module spellProcedureProfiles {
       | BurningHandsSaveDamageProfile => SpellAreaSaveTargets
       | ViciousMockerySaveDamageProfile => SpellSingleSaveTarget
       | ThunderwaveSaveDamageProfile => SpellAreaSaveTargets
+      | DissonantWhispersSaveDamageProfile => SpellSingleSaveTarget
     }
 
   pure def spellSaveGatedDamageSuccess(profile: SpellSaveGatedDamageProfile): SpellSaveGatedDamageSuccess =
@@ -398,6 +401,7 @@ module spellProcedureProfiles {
       | BurningHandsSaveDamageProfile => SpellHalfDamageOnSaveSuccess
       | ViciousMockerySaveDamageProfile => SpellNoDamageOnSaveSuccess
       | ThunderwaveSaveDamageProfile => SpellHalfDamageOnSaveSuccess
+      | DissonantWhispersSaveDamageProfile => SpellHalfDamageOnSaveSuccess
     }
 
   pure def spellSaveGatedDamageType(profile: SpellSaveGatedDamageProfile): RuleDamageType =
@@ -408,6 +412,7 @@ module spellProcedureProfiles {
       | BurningHandsSaveDamageProfile => FireDamage
       | ViciousMockerySaveDamageProfile => PsychicDamage
       | ThunderwaveSaveDamageProfile => ThunderDamage
+      | DissonantWhispersSaveDamageProfile => PsychicDamage
     }
 
   pure def spellSaveGatedDamageRequiresSlot(profile: SpellSaveGatedDamageProfile): bool =
@@ -418,12 +423,14 @@ module spellProcedureProfiles {
       | BurningHandsSaveDamageProfile => true
       | ViciousMockerySaveDamageProfile => false
       | ThunderwaveSaveDamageProfile => true
+      | DissonantWhispersSaveDamageProfile => true
     }
 
   pure def spellSaveGatedDamageFailedSaveEffects(profile: SpellSaveGatedDamageProfile): Set[SpellSaveGatedFailedEffect] =
     match profile {
       | ViciousMockerySaveDamageProfile => Set(ViciousMockeryNextAttackDisadvantageEffect)
       | ThunderwaveSaveDamageProfile => Set(ThunderwavePush10FeetEffect)
+      | DissonantWhispersSaveDamageProfile => Set(DissonantWhispersForcedReactionMovementEffect)
       | _ => Set()
     }
 
@@ -1182,12 +1189,16 @@ module spellProcedureProfiles {
       assert(spellSaveGatedDamageSuccess(InflictWoundsSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
       assert(spellSaveGatedDamageSuccess(ViciousMockerySaveDamageProfile) == SpellNoDamageOnSaveSuccess),
       assert(spellSaveGatedDamageSuccess(ThunderwaveSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
+      assert(spellSaveGatedDamageSuccess(DissonantWhispersSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
       assert(spellSaveGatedDamageType(ViciousMockerySaveDamageProfile) == PsychicDamage),
       assert(spellSaveGatedDamageType(ThunderwaveSaveDamageProfile) == ThunderDamage),
+      assert(spellSaveGatedDamageType(DissonantWhispersSaveDamageProfile) == PsychicDamage),
       assert(spellSaveGatedDamageRequiresSlot(BurningHandsSaveDamageProfile)),
       assert(spellSaveGatedDamageRequiresSlot(ThunderwaveSaveDamageProfile)),
+      assert(spellSaveGatedDamageRequiresSlot(DissonantWhispersSaveDamageProfile)),
       assert(not(spellSaveGatedDamageRequiresSlot(AcidSplashSaveDamageProfile))),
       assert(spellSaveGatedDamageFailedSaveEffects(ThunderwaveSaveDamageProfile) == Set(ThunderwavePush10FeetEffect)),
+      assert(spellSaveGatedDamageFailedSaveEffects(DissonantWhispersSaveDamageProfile) == Set(DissonantWhispersForcedReactionMovementEffect)),
       assert(spellSaveGatedDamageFailedSaveEffects(ViciousMockerySaveDamageProfile) == Set(ViciousMockeryNextAttackDisadvantageEffect)),
       assert(spellSaveGatedConditionTargeting(ColorSpraySaveConditionProfile) == SpellAreaSaveTargets),
       assert(spellSaveGatedTargetMaxTargets(animalTargets, 1) == 1),

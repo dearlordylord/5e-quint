@@ -108,7 +108,15 @@ export function applyFailedSaveSpellActiveEffects(
     { readonly procedure: "saveGatedDamage" }
   >,
 ): BattleState {
-  if (invocation.failedSavePostDamageRiders.length === 0) {
+  const activeEffectRiders = invocation.failedSavePostDamageRiders.filter(
+    (
+      rider,
+    ): rider is Extract<
+      SpellFailedSavePostDamageRider,
+      { readonly kind: "nextAttackRollByTarget" }
+    > => rider.kind === "nextAttackRollByTarget",
+  );
+  if (activeEffectRiders.length === 0) {
     return state;
   }
   const combatants = new Map(state.combatants);
@@ -117,7 +125,7 @@ export function applyFailedSaveSpellActiveEffects(
     if (target === undefined) {
       continue;
     }
-    const activeEffects = invocation.failedSavePostDamageRiders.reduce(
+    const activeEffects = activeEffectRiders.reduce(
       (effects, rider): readonly BattleActiveEffect[] => [
         ...effects.filter(
           (effect) =>
@@ -496,7 +504,10 @@ export function activeEffectExpirationForPostDamageRider(
   targetId: CombatantId,
   expiresAt:
     | SpellPostDamageRiderExpiration
-    | SpellFailedSavePostDamageRider["expiresAt"]
+    | Extract<
+        SpellFailedSavePostDamageRider,
+        { readonly kind: "nextAttackRollByTarget" }
+      >["expiresAt"]
     | SpellFailedSaveConditionEffect["expiresAt"]
     | undefined,
 ): BattleActiveEffectExpiration {

@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-grease-ground-hazard spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points
@@ -13,6 +13,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-sleep-repeat-save-lifecycle
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-grease-ground-hazard
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-expeditious-retreat-dash
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-forced-reaction-movement
 module battleRuntime {
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
@@ -247,14 +248,14 @@ module battleRuntime {
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | EldritchBlast | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | TrueStrike | Grease
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | EldritchBlast | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | TrueStrike | Grease | DissonantWhispers
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | StarryWispSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack
   type SpellAttackBeamSequenceInvocation =
     | EldritchBlastBeamSequence
   type ChainedSpellAttackDamageInvocation =
     | ChromaticOrbChainedSpellAttack
   type ChromaticOrbDamageTypeChoice = ChromaticOrbAcid | ChromaticOrbCold | ChromaticOrbFire | ChromaticOrbLightning | ChromaticOrbPoison | ChromaticOrbThunder
-  type SaveGatedDamageInvocation = AcidSplashSaveGate | SacredFlameSaveGate | InflictWoundsSaveGate | BurningHandsSaveGate | ViciousMockerySaveGate
+  type SaveGatedDamageInvocation = AcidSplashSaveGate | SacredFlameSaveGate | InflictWoundsSaveGate | BurningHandsSaveGate | ViciousMockerySaveGate | DissonantWhispersSaveGate
   type AttackBurstSaveDamageInvocation =
     | IceKnifeAttackBurstSaveDamage
   type SaveGatedConditionInvocation =
@@ -407,6 +408,21 @@ module battleRuntime {
     | ResumeSaveGateDamage
     | ResumeAfterDamage
     | ResumeMovement({ speedKind: MovementSpeedKind, movementCost: int })
+    | ResumeDissonantWhispersMovementThenAfterDamage({ speedKind: MovementSpeedKind, movementCost: int })
+
+  type DissonantWhispersForcedMovementReplay =
+    | DissonantWhispersMovementMissing
+    | DissonantWhispersMovementFilled({
+        speedKind: MovementSpeedKind,
+        movementCost: int,
+        provokesOpportunityAttack: bool,
+      })
+
+  type DissonantWhispersForcedMovementResult =
+    | DissonantWhispersInvalidMovementFill
+    | DissonantWhispersNeedsMovementFill
+    | DissonantWhispersResolvedAfterDamage(BattleState)
+    | DissonantWhispersOpportunityAttackWindow(BattleState)
 
   type PendingReactionFrame = {
     trigger: ReactionTrigger,
@@ -445,6 +461,7 @@ module battleRuntime {
       | ResumeSaveGateDamage => BattleRuntimeSaveGateContinuation
       | ResumeAfterDamage => BattleRuntimeAfterDamageContinuation
       | ResumeMovement(_) => BattleRuntimeMovementContinuation
+      | ResumeDissonantWhispersMovementThenAfterDamage(_) => BattleRuntimeMovementContinuation
     }
 
   pure def reactionProcedureForFrame(
@@ -1188,6 +1205,14 @@ module battleRuntime {
       | Goblin => { ...state, goblin: { ...state.goblin, reactionAvailable: false } }
     }
 
+  pure def openDissonantWhispersAfterDamageSequence(state: BattleState): BattleState =
+    openReactionWindow(state, {
+      trigger: AfterDamage,
+      eligibleReactors: Set(Fighter),
+      offeredReactors: Set(),
+      continuation: ResumeAfterDamage,
+    })
+
   pure def applyShieldReactionSpell(state: BattleState, reactor: Actor): BattleState =
     match reactor {
       | Fighter => {
@@ -1336,6 +1361,7 @@ module battleRuntime {
       | ResumeSaveGateDamage => resolveAcidSplash(state, false, true, 4, true, true)
       | ResumeAfterDamage => state
       | ResumeMovement(movement) => applyFighterMovementWithSpeedKind(state, movement.speedKind, movement.movementCost)
+      | ResumeDissonantWhispersMovementThenAfterDamage(_) => openDissonantWhispersAfterDamageSequence(state)
     }
 
   pure def endTurnWithDeathSave(state: BattleState, deathSaveRoll: int): BattleState = {
@@ -2256,6 +2282,99 @@ module battleRuntime {
           prone: state.goblin.prone,
           grappleEscapeDc: link.escapeDc,
         }
+    }
+
+  pure def dissonantWhispersGoblinGrappleEscapeDc(state: BattleState): int =
+    match state.grapple {
+      | NoGrapple => 0
+      | FighterGrapplesGoblin(link) => link.escapeDc
+    }
+
+  pure def dissonantWhispersGoblinMovementProjection(state: BattleState, speedKind: MovementSpeedKind): BattleRuntimeMovementProjection = {
+    currentActorOwnsTurn:
+      state.goblin.hp > 0
+        and not(state.goblin.unconscious)
+        and not(state.goblin.incapacitated),
+    actionAvailable: true,
+    bonusActionAvailable: true,
+    reactionAvailable: state.goblin.reactionAvailable,
+    dashMovementBonus: 0,
+    disengaged: false,
+    dodging: state.goblin.dodging,
+    hidden: false,
+    helpAttackHeld: false,
+    readiedMovementHeld: false,
+    speedFeet: movementSpeed(state.goblin, speedKind),
+    movementSpentFeet: 0,
+    prone: state.goblin.prone,
+    grappleEscapeDc: dissonantWhispersGoblinGrappleEscapeDc(state),
+  }
+
+  pure def dissonantWhispersGoblinCanTakeReaction(state: BattleState): bool =
+    state.goblin.reactionAvailable
+      and state.goblin.hp > 0
+      and not(state.goblin.unconscious)
+      and not(state.goblin.incapacitated)
+
+  pure def dissonantWhispersGoblinCanMoveWithSpeedKind(
+    state: BattleState,
+    speedKind: MovementSpeedKind,
+    movementCost: int,
+  ): bool =
+    battleRuntimeCanSpendMovement(
+      dissonantWhispersGoblinMovementProjection(state, speedKind),
+      movementCost,
+    )
+
+  pure def dissonantWhispersGoblinHasMovementAvailable(state: BattleState): bool =
+    dissonantWhispersGoblinCanMoveWithSpeedKind(state, WalkSpeedKind, 1)
+      or dissonantWhispersGoblinCanMoveWithSpeedKind(state, ClimbSpeedKind, 1)
+      or dissonantWhispersGoblinCanMoveWithSpeedKind(state, SwimSpeedKind, 1)
+
+  pure def resolveDissonantWhispersGoblinForcedReactionMovement(
+    state: BattleState,
+    replay: DissonantWhispersForcedMovementReplay
+  ): DissonantWhispersForcedMovementResult =
+    if (not(dissonantWhispersGoblinCanTakeReaction(state))) {
+      match replay {
+        | DissonantWhispersMovementMissing =>
+            DissonantWhispersResolvedAfterDamage(openDissonantWhispersAfterDamageSequence(state))
+        | DissonantWhispersMovementFilled(_) => DissonantWhispersInvalidMovementFill
+      }
+    } else if (not(dissonantWhispersGoblinHasMovementAvailable(state))) {
+      match replay {
+        | DissonantWhispersMovementMissing =>
+            DissonantWhispersResolvedAfterDamage(
+              openDissonantWhispersAfterDamageSequence(spendReaction(state, Goblin))
+            )
+        | DissonantWhispersMovementFilled(_) => DissonantWhispersInvalidMovementFill
+      }
+    } else {
+      match replay {
+        | DissonantWhispersMovementMissing => DissonantWhispersNeedsMovementFill
+        | DissonantWhispersMovementFilled(fill) =>
+            if (not(dissonantWhispersGoblinCanMoveWithSpeedKind(state, fill.speedKind, fill.movementCost)))
+              DissonantWhispersInvalidMovementFill
+            else {
+              val afterReactionSpend = spendReaction(state, Goblin)
+              if (fill.provokesOpportunityAttack)
+                DissonantWhispersOpportunityAttackWindow(
+                  openReactionWindow(afterReactionSpend, {
+                    trigger: OpportunityAttack,
+                    eligibleReactors: Set(Fighter),
+                    offeredReactors: Set(),
+                    continuation: ResumeDissonantWhispersMovementThenAfterDamage({
+                      speedKind: fill.speedKind,
+                      movementCost: fill.movementCost,
+                    }),
+                  })
+                )
+              else
+                DissonantWhispersResolvedAfterDamage(
+                  openDissonantWhispersAfterDamageSequence(afterReactionSpend)
+                )
+            }
+      }
     }
 
   pure def stateWithFighterMovementStep(state: BattleState, step: BattleRuntimeMovementStep): BattleState =
@@ -3600,6 +3719,7 @@ module battleRuntime {
       | ProduceFlame => false
       | TrueStrike => false
       | Grease => true
+      | DissonantWhispers => true
     }
 
   pure def canExpendSpellSlotThisTurn(state: BattleState): bool =
@@ -3640,6 +3760,7 @@ module battleRuntime {
       | InflictWoundsSaveGate => BattleRuntimeInflictWoundsSaveDamage
       | BurningHandsSaveGate => BattleRuntimeBurningHandsSaveDamage
       | ViciousMockerySaveGate => BattleRuntimeViciousMockerySaveDamage
+      | DissonantWhispersSaveGate => BattleRuntimeDissonantWhispersSaveDamage
     }
 
   pure def battleRuntimeSaveGatedConditionProfileForInvocation(
@@ -4106,28 +4227,13 @@ module battleRuntime {
     }
 
   pure def saveGatedDamageFailedSaveActiveEffects(invocation: SaveGatedDamageInvocation): Set[ActiveEffect] =
-    battleRuntimeSaveGatedDamageFailedSaveEffects(
-      battleRuntimeSaveGatedDamageProfileForInvocation(invocation)
-    ).map(saveGatedFailedSaveActiveEffect)
-
-  pure def saveGatedFailedSaveActiveEffect(effect: BattleRuntimeSaveGatedFailedEffect): ActiveEffect =
-    match effect {
-      | BattleRuntimeViciousMockeryNextAttackDisadvantageEffect => ViciousMockeryNextAttackDisadvantage
-      | BattleRuntimeColorSprayBlindedEffect => ColorSprayBlinded
-      | BattleRuntimeEntangleRestrainedEffect => EntangleRestrained
-      | BattleRuntimeAnimalFriendshipCharmedEffect(data) => AnimalFriendshipCharmed({ source: Fighter, durationTicks: data.durationTicks })
-      | BattleRuntimeCharmPersonCharmedEffect(data) => CharmPersonCharmed({ source: Fighter, durationTicks: data.durationTicks })
-      | BattleRuntimeFaerieFireAttackRollAdvantageEffect => FaerieFireAttackRollAdvantage
-    }
-
-  pure def saveGatedFailedSaveActiveEffectFromSource(
-    effect: BattleRuntimeSaveGatedFailedEffect,
-    source: Actor
-  ): ActiveEffect =
-    match effect {
-      | BattleRuntimeAnimalFriendshipCharmedEffect(data) => AnimalFriendshipCharmed({ source: source, durationTicks: data.durationTicks })
-      | BattleRuntimeCharmPersonCharmedEffect(data) => CharmPersonCharmed({ source: source, durationTicks: data.durationTicks })
-      | _ => saveGatedFailedSaveActiveEffect(effect)
+    match invocation {
+      | AcidSplashSaveGate => Set()
+      | SacredFlameSaveGate => Set()
+      | InflictWoundsSaveGate => Set()
+      | BurningHandsSaveGate => Set()
+      | DissonantWhispersSaveGate => Set()
+      | ViciousMockerySaveGate => Set(ViciousMockeryNextAttackDisadvantage)
     }
 
   pure def spellAttackRollModeFromActiveEffects(
@@ -4278,9 +4384,12 @@ module battleRuntime {
     }
 
   pure def saveGatedConditionFailedSaveActiveEffects(invocation: SaveGatedConditionInvocation, source: Actor): Set[ActiveEffect] =
-    battleRuntimeSaveGatedConditionFailedSaveEffects(
-      battleRuntimeSaveGatedConditionProfileForInvocation(invocation)
-    ).map(effect => saveGatedFailedSaveActiveEffectFromSource(effect, source))
+    match invocation {
+      | ColorSpraySaveGate => Set(ColorSprayBlinded)
+      | EntangleSaveGate => Set(EntangleRestrained)
+      | AnimalFriendshipSaveGate => Set(AnimalFriendshipCharmed({ source: source, durationTicks: 24 * 60 }))
+      | CharmPersonSaveGate => Set(CharmPersonCharmed({ source: source, durationTicks: charmPersonCharmedDurationTicks }))
+    }
 
   pure def charmPersonCharmedDurationTicks: int = 60 * 10
 
@@ -4329,8 +4438,7 @@ module battleRuntime {
 
   pure def saveGatedAttackRollAdvantageFailedSaveActiveEffects(invocation: SaveGatedAttackRollAdvantageInvocation): Set[ActiveEffect] =
     match invocation {
-      | FaerieFireSaveGate => battleRuntimeSaveGatedConditionFailedSaveEffects(BattleRuntimeFaerieFireSaveAttackRollAdvantage)
-          .map(saveGatedFailedSaveActiveEffect)
+      | FaerieFireSaveGate => Set(FaerieFireAttackRollAdvantage)
     }
 
   pure def saveGatedAttackRollAdvantageReplayHoles(
@@ -5722,6 +5830,7 @@ module battleRuntime {
       assert(chainedSpellAttackDamageDice(ChromaticOrbChainedSpellAttack, 1) == 3),
       assert(chainedSpellAttackDamageDice(ChromaticOrbChainedSpellAttack, 3) == 5),
       assert(saveGatedDamageFailedSaveActiveEffects(ViciousMockerySaveGate) == Set(ViciousMockeryNextAttackDisadvantage)),
+      assert(saveGatedDamageFailedSaveActiveEffects(DissonantWhispersSaveGate) == Set()),
       assert(saveGatedConditionTargeting(ColorSpraySaveGate) == AreaSaveTargets),
       assert(saveGatedConditionFailedSaveActiveEffects(ColorSpraySaveGate, Fighter) == Set(ColorSprayBlinded)),
       assert(saveGatedConditionTargeting(EntangleSaveGate) == AreaSaveTargets),
@@ -5765,6 +5874,10 @@ module battleRuntime {
       assert(saveGatedTargeting(ViciousMockerySaveGate) == SingleSaveTarget),
       assert(saveGatedDamageSuccess(ViciousMockerySaveGate) == NoDamageOnSaveSuccess),
       assert(saveGatedDamageType(ViciousMockerySaveGate) == Psychic),
+      assert(saveGatedTargeting(DissonantWhispersSaveGate) == SingleSaveTarget),
+      assert(saveGatedDamageSuccess(DissonantWhispersSaveGate) == HalfDamageOnSaveSuccess),
+      assert(saveGatedDamageType(DissonantWhispersSaveGate) == Psychic),
+      assert(spellInvocationSpendsLevelOneSlot(DissonantWhispers)),
       assert(spellInvocationSpendsLevelOneSlot(IceKnife)),
       assert(spellInvocationSpendsLevelOneSlot(AnimalFriendship)),
       assert(spellInvocationSpendsLevelOneSlot(CharmPerson)),
@@ -7244,6 +7357,146 @@ module battleRuntime {
       assert(reactionContinuationKind(ResumeSaveGateDamage) == BattleRuntimeSaveGateContinuation),
       assert(reactionContinuationKind(ResumeAfterDamage) == BattleRuntimeAfterDamageContinuation),
       assert(reactionContinuationKind(ResumeMovement({ speedKind: WalkSpeedKind, movementCost: 5 })) == BattleRuntimeMovementContinuation),
+      assert(reactionContinuationKind(ResumeDissonantWhispersMovementThenAfterDamage({ speedKind: WalkSpeedKind, movementCost: 5 })) == BattleRuntimeMovementContinuation),
+    }
+  }
+
+  run test_dissonant_whispers_forced_reaction_requires_movement_fill_when_available = {
+    assert(
+      resolveDissonantWhispersGoblinForcedReactionMovement(initialState, DissonantWhispersMovementMissing)
+        == DissonantWhispersNeedsMovementFill
+    )
+  }
+
+  run test_dissonant_whispers_forced_reaction_no_reaction_opens_after_damage = {
+    val noReaction = {
+      ...initialState,
+      goblin: { ...initialState.goblin, reactionAvailable: false },
+    }
+    match resolveDissonantWhispersGoblinForcedReactionMovement(noReaction, DissonantWhispersMovementMissing) {
+      | DissonantWhispersResolvedAfterDamage(result) =>
+          all {
+            assert(not(result.goblin.reactionAvailable)),
+            assert(result.interruptStack.length() == 1),
+            assert(pendingReactionFrame(result.interruptStack[0]) == HasPendingReactionFrame({
+              trigger: AfterDamage,
+              eligibleReactors: Set(Fighter),
+              offeredReactors: Set(),
+              continuation: ResumeAfterDamage,
+            })),
+          }
+      | _ => assert(false)
+    }
+  }
+
+  run test_dissonant_whispers_forced_reaction_no_movement_spends_reaction_and_opens_after_damage = {
+    val grappled = grappleFighterGoblin(initialState, 12)
+    match resolveDissonantWhispersGoblinForcedReactionMovement(grappled, DissonantWhispersMovementMissing) {
+      | DissonantWhispersResolvedAfterDamage(result) =>
+          all {
+            assert(not(result.goblin.reactionAvailable)),
+            assert(result.interruptStack.length() == 1),
+            assert(pendingReactionFrame(result.interruptStack[0]) == HasPendingReactionFrame({
+              trigger: AfterDamage,
+              eligibleReactors: Set(Fighter),
+              offeredReactors: Set(),
+              continuation: ResumeAfterDamage,
+            })),
+          }
+      | _ => assert(false)
+    }
+  }
+
+  run test_dissonant_whispers_forced_reaction_rejects_movement_when_unavailable = {
+    val grappled = grappleFighterGoblin(initialState, 12)
+    assert(
+      resolveDissonantWhispersGoblinForcedReactionMovement(
+        grappled,
+        DissonantWhispersMovementFilled({
+          speedKind: WalkSpeedKind,
+          movementCost: 5,
+          provokesOpportunityAttack: false,
+        })
+      ) == DissonantWhispersInvalidMovementFill
+    )
+  }
+
+  run test_dissonant_whispers_forced_reaction_movement_without_threat_spends_reaction_then_after_damage = {
+    match resolveDissonantWhispersGoblinForcedReactionMovement(
+      initialState,
+      DissonantWhispersMovementFilled({
+        speedKind: WalkSpeedKind,
+        movementCost: 10,
+        provokesOpportunityAttack: false,
+      })
+    ) {
+      | DissonantWhispersResolvedAfterDamage(result) =>
+          all {
+            assert(not(result.goblin.reactionAvailable)),
+            assert(result.goblin.movementSpent == 0),
+            assert(result.interruptStack.length() == 1),
+            assert(pendingReactionFrame(result.interruptStack[0]) == HasPendingReactionFrame({
+              trigger: AfterDamage,
+              eligibleReactors: Set(Fighter),
+              offeredReactors: Set(),
+              continuation: ResumeAfterDamage,
+            })),
+          }
+      | _ => assert(false)
+    }
+  }
+
+  run test_dissonant_whispers_forced_reaction_movement_with_threat_opens_opportunity_attack_first = {
+    match resolveDissonantWhispersGoblinForcedReactionMovement(
+      initialState,
+      DissonantWhispersMovementFilled({
+        speedKind: WalkSpeedKind,
+        movementCost: 10,
+        provokesOpportunityAttack: true,
+      })
+    ) {
+      | DissonantWhispersOpportunityAttackWindow(result) =>
+          all {
+            assert(not(result.goblin.reactionAvailable)),
+            assert(result.interruptStack.length() == 1),
+            assert(pendingReactionFrame(result.interruptStack[0]) == HasPendingReactionFrame({
+              trigger: OpportunityAttack,
+              eligibleReactors: Set(Fighter),
+              offeredReactors: Set(),
+              continuation: ResumeDissonantWhispersMovementThenAfterDamage({
+                speedKind: WalkSpeedKind,
+                movementCost: 10,
+              }),
+            })),
+          }
+      | _ => assert(false)
+    }
+  }
+
+  run test_dissonant_whispers_declined_opportunity_attack_resumes_after_damage_sequence = {
+    match resolveDissonantWhispersGoblinForcedReactionMovement(
+      initialState,
+      DissonantWhispersMovementFilled({
+        speedKind: WalkSpeedKind,
+        movementCost: 10,
+        provokesOpportunityAttack: true,
+      })
+    ) {
+      | DissonantWhispersOpportunityAttackWindow(awaiting) => {
+          val resumed = declineReactionAndResume(awaiting, Fighter)
+          all {
+            assert(resumed.fighter.reactionAvailable),
+            assert(not(resumed.goblin.reactionAvailable)),
+            assert(resumed.interruptStack.length() == 1),
+            assert(pendingReactionFrame(resumed.interruptStack[0]) == HasPendingReactionFrame({
+              trigger: AfterDamage,
+              eligibleReactors: Set(Fighter),
+              offeredReactors: Set(),
+              continuation: ResumeAfterDamage,
+            })),
+          }
+        }
+      | _ => assert(false)
     }
   }
 

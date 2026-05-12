@@ -5,12 +5,16 @@ import {
   damageAmount as toDamageAmount,
   type MovementFeet,
 } from "@dnd/shared/types";
+import type { BattleReactionTrigger } from "../battle-reaction-triggers.ts";
 import {
   isTargetListSpellInvocation,
+  openAfterDamageSequenceReactionWindow,
+  spendReaction,
   maybeOpenReactionWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleHoleId,
+  type BattleAfterDamageEvent,
   type BattleResolutionResult,
   type BattleSpellAreaChoice,
   type BattleSpellSavingThrowOutcomeHole,
@@ -28,9 +32,11 @@ import {
   zeroHitPointReplacementDispositionHole,
 } from "./attack-damage-apply.ts";
 import { extendSavingThrowOngoingFeatures } from "./attack-roll.ts";
+import { combatantCanTakeReactions } from "./creature-state.ts";
 import { concentrationSavingThrowHole } from "./damage-apply.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
+import { applyBattleMovement } from "./readied-release.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import {
   applyFailedSaveAttackRollAdvantageEffects,
@@ -56,6 +62,11 @@ import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 import { type SpellFillSet } from "./spells-resolve-fill-set.ts";
 
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
+import {
+  parseBattleMovement,
+  readiedMovementHole,
+  readiedMovementBudgetForActor,
+} from "./turn-end-movement.ts";
 
 export function resolveGreaseGroundHazardSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
@@ -613,41 +624,158 @@ export function resolveSaveGateDamageSpellAct(input: {
     return spentResources;
   }
   const nextState = spentResources.state;
-  const afterDamageReactionWindow = maybeOpenReactionWindow(
-    nextState,
-    {
-      trigger: "afterDamage",
-      damageSourceId: input.actorId,
-      damagedId: damageTargets[0]!,
-      damageAmount: toDamageAmount(
-        spellDamageAmountForTarget(
-          input.input.state.combatants.get(damageTargets[0]!)!,
-          input.invocation,
-          damageRoll,
-          saveDamageResultForTarget(damageTargets[0]!),
-        ),
+  const afterDamageEvents = damageTargets.map((targetId) => ({
+    damageSourceId: input.actorId,
+    damagedId: targetId,
+    damageAmount: toDamageAmount(
+      spellDamageAmountForTarget(
+        input.input.state.combatants.get(targetId)!,
+        input.invocation,
+        damageRoll,
+        saveDamageResultForTarget(targetId),
       ),
-      reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
-        facts: input.fillSet.targetSpatialFacts,
-        damagedId: damageTargets[0]!,
-        damageSourceId: input.actorId,
-      }),
-      continuation: {
-        kind: "resolved",
-        subject: input.input.subject,
-      },
-    },
-    input.input.suppressedReactionTrigger,
-  );
-  if (afterDamageReactionWindow !== null) {
-    return afterDamageReactionWindow;
+    ),
+    reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
+      facts: input.fillSet.targetSpatialFacts,
+      damagedId: targetId,
+      damageSourceId: input.actorId,
+    }),
+  }));
+  const forcedMovement = resolveFailedSaveForcedReactionMovement({
+    state: nextState,
+    subject: input.input.subject,
+    failedTargets,
+    invocation: input.invocation,
+    movementFill: input.fillSet.movement,
+    afterDamageEvents,
+    suppressedReactionTrigger: input.input.suppressedReactionTrigger,
+  });
+  if (forcedMovement !== null) {
+    return forcedMovement;
   }
 
-  return {
-    tag: "resolved",
+  return openAfterDamageSequenceReactionWindow({
     state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
+    subject: input.input.subject,
+    events: afterDamageEvents,
+    suppressedReactionTrigger: input.input.suppressedReactionTrigger,
+  });
+}
+
+function resolveFailedSaveForcedReactionMovement(input: {
+  readonly state: BattleState;
+  readonly subject: ActionSpellBattleResolutionInput["subject"];
+  readonly failedTargets: readonly CombatantId[];
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "saveGatedDamage" }
+  >;
+  readonly movementFill:
+    | Extract<ActionSpellBattleResolutionInput["fills"][number], { readonly kind: "movement" }>
+    | undefined;
+  readonly afterDamageEvents: readonly BattleAfterDamageEvent[];
+  readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+}): BattleResolutionResult | null {
+  const forcedMovementRider = input.invocation.failedSavePostDamageRiders.find(
+    (rider) => rider.kind === "forcedReactionMovement",
+  );
+  if (forcedMovementRider === undefined) {
+    return input.movementFill === undefined
+      ? null
+      : invalidResult(
+          input.state,
+          "invalidFill",
+          "Forced movement fill does not match this spell.",
+        );
+  }
+  const [targetId] = input.failedTargets;
+  if (targetId === undefined) {
+    return input.movementFill === undefined
+      ? null
+      : invalidResult(
+          input.state,
+          "invalidFill",
+          "Dissonant Whispers movement is only valid after a failed save.",
+        );
+  }
+  if (input.failedTargets.length > 1) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Dissonant Whispers forced movement requires exactly one failed target.",
+    );
+  }
+  const target = input.state.combatants.get(targetId);
+  if (!combatantCanTakeReactions(target)) {
+    return input.movementFill === undefined
+      ? null
+      : invalidResult(
+          input.state,
+          "invalidFill",
+          "Dissonant Whispers movement is unavailable when the failed target has no Reaction.",
+        );
+  }
+  const movementHole = readiedMovementHole(input.state, targetId);
+  const targetCanMove = movementHole.speedKinds.some(
+    (speedKind) => Number(speedKind.movementBudgetFeet) > 0,
+  );
+  if (!targetCanMove) {
+    if (input.movementFill !== undefined) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Dissonant Whispers movement is unavailable when the failed target cannot move.",
+      );
+    }
+    return openAfterDamageSequenceReactionWindow({
+      state: spendReaction(input.state, targetId),
+      subject: input.subject,
+      events: input.afterDamageEvents,
+      suppressedReactionTrigger: input.suppressedReactionTrigger,
+    });
+  }
+  if (input.movementFill === undefined) {
+    return needsHolesResult(input.state, input.subject, [movementHole]);
+  }
+  const parsedMovement = parseBattleMovement(input.state, targetId, input.movementFill, {
+    movementBudgetFeet: readiedMovementBudgetForActor(
+      input.state,
+      targetId,
+      input.movementFill.value.speedKind,
+    ),
+    spendsTurnMovement: false,
+  });
+  if (parsedMovement.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", parsedMovement.message);
+  }
+  const stateAfterReactionSpend = spendReaction(input.state, targetId);
+  const threats = parsedMovement.movement.provokedOpportunityAttacks;
+  if (threats.length > 0) {
+    const reactionWindow = maybeOpenReactionWindow(
+      stateAfterReactionSpend,
+      {
+        trigger: "opportunityAttack",
+        moverId: targetId,
+        threats,
+        continuation: {
+          kind: "movementThenAfterDamageSequence",
+          subject: input.subject,
+          movement: parsedMovement.movement,
+          events: input.afterDamageEvents,
+        },
+      },
+      input.suppressedReactionTrigger,
+    );
+    if (reactionWindow !== null) {
+      return reactionWindow;
+    }
+  }
+  return openAfterDamageSequenceReactionWindow({
+    state: applyBattleMovement(stateAfterReactionSpend, parsedMovement.movement),
+    subject: input.subject,
+    events: input.afterDamageEvents,
+    suppressedReactionTrigger: input.suppressedReactionTrigger,
+  });
 }
 
 export function resolveSaveGateConditionSpellAct(input: {

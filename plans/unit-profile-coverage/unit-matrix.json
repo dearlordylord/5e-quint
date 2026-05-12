@@ -62,8 +62,8 @@
       "value": 130
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 64,
-      "numerator": 60,
+      "denominator": 65,
+      "numerator": 61,
       "percent": "93.8%"
     },
     "profileClassificationCoverage": {
@@ -72,34 +72,34 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 43,
-      "numerator": 43,
+      "denominator": 44,
+      "numerator": 44,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 43,
-      "numerator": 41,
-      "percent": "95.3%"
+      "denominator": 44,
+      "numerator": 42,
+      "percent": "95.5%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 43,
-      "numerator": 43,
+      "denominator": 44,
+      "numerator": 44,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 43,
-      "numerator": 43,
+      "denominator": 44,
+      "numerator": 44,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 64,
+      "denominator": 65,
       "numerator": 10,
-      "percent": "15.6%"
+      "percent": "15.4%"
     },
     "supportedProfileCoverage": {
       "denominator": 106,
-      "numerator": 64,
-      "percent": "60.4%"
+      "numerator": 65,
+      "percent": "61.3%"
     }
   },
   "metricSemantics": [
@@ -792,7 +792,8 @@
         "SRDINV29E",
         "SRDINV32B",
         "SRDINV34",
-        "SRDINV51"
+        "SRDINV51",
+        "SRDINV52"
       ],
       "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
       "verificationOwners": [
@@ -952,6 +953,31 @@
         "SRDINV49"
       ],
       "title": "Spell invocation immediately resolves Dash and grants Concentration-owned Bonus Action Dash",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-forced-reaction-movement",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "The runtime consumes Reaction availability, caller-supplied safest-route Movement, and table-supplied Opportunity Attack threats; route/pathfinding geometry is not derived inside the reducer. Package-local Quint models the reducer protocol for Reaction spend, no-movement fallback, Movement fill admission, Opportunity Attack interruption, and after-damage continuation ordering.",
+      "taskRefs": [
+        "SRDINV52"
+      ],
+      "title": "Spell invocation consumes caller-supplied failed-save Reaction movement facts",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -2041,6 +2067,24 @@
         "spell.invocation-damage-save-or-attack"
       ],
       "taskId": "SRDINV51"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted shared and battle-runtime Quint facts for Dissonant Whispers' Wisdom save, Psychic slot-scaled damage, half damage on success, slot use, authored failed-save rider shape, target Reaction spend, no-movement fallback, caller-supplied Movement fill admission, Opportunity Attack interruption, and after-damage continuation ordering.",
+      "profileIds": [
+        "spell.invocation-damage-save-or-attack",
+        "spell.invocation-forced-reaction-movement"
+      ],
+      "taskId": "SRDINV52"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Dissonant Whispers save success/failure damage, target Reaction spend, no-Reaction fallback, Reaction-available no-movement fallback, caller-supplied safest-route movement fill, and Opportunity Attack windows from table-supplied Reaction movement threats; runtime-owned route/pathfinding geometry remains outside the boundary.",
+      "profileIds": [
+        "spell.invocation-damage-save-or-attack",
+        "spell.invocation-forced-reaction-movement"
+      ],
+      "taskId": "SRDINV52"
     }
   ],
   "units": [
@@ -4273,7 +4317,8 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
-            "SRDINV51"
+            "SRDINV51",
+            "SRDINV52"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -4530,7 +4575,8 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
-            "SRDINV51"
+            "SRDINV51",
+            "SRDINV52"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -4632,7 +4678,8 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
-            "SRDINV51"
+            "SRDINV51",
+            "SRDINV52"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -4901,14 +4948,86 @@
         "status": "installed"
       },
       "claim": {
-        "reason": "Spell Definition is installed with typed save-gated Psychic damage and failed-save forced Reaction movement facts; runtime execution of forced Reaction movement, route choice, and Opportunity Attack derivation is not promoted yet.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "spell.invocation-damage-save-or-attack",
+          "spell.invocation-forced-reaction-movement"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001",
+          "RAW-PTG-REACTIONS-002",
+          "RAW-PTG-REACTIONS-003",
+          "RAW-PTG-REACTIONS-004",
+          "RAW-PTG-REACTIONS-006"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV52"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-damage-save-or-attack",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE10",
+            "QMBT5",
+            "SRDINV29E",
+            "SRDINV32B",
+            "SRDINV34",
+            "SRDINV51",
+            "SRDINV52"
+          ],
+          "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "spell.invocation-forced-reaction-movement",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "The runtime consumes Reaction availability, caller-supplied safest-route Movement, and table-supplied Opportunity Attack threats; route/pathfinding geometry is not derived inside the reducer. Package-local Quint models the reducer protocol for Reaction spend, no-movement fallback, Movement fill admission, Opportunity Attack interruption, and after-damage continuation ordering.",
+          "taskRefs": [
+            "SRDINV52"
+          ],
+          "title": "Spell invocation consumes caller-supplied failed-save Reaction movement facts",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/dissonant_whispers.json",
       "unitId": "dissonant_whispers"
     },
@@ -5516,7 +5635,8 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
-            "SRDINV51"
+            "SRDINV51",
+            "SRDINV52"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -5731,7 +5851,8 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
-            "SRDINV51"
+            "SRDINV51",
+            "SRDINV52"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -5791,7 +5912,8 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
-            "SRDINV51"
+            "SRDINV51",
+            "SRDINV52"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -5968,7 +6090,8 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
-            "SRDINV51"
+            "SRDINV51",
+            "SRDINV52"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6137,7 +6260,8 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
-            "SRDINV51"
+            "SRDINV51",
+            "SRDINV52"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6197,7 +6321,8 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
-            "SRDINV51"
+            "SRDINV51",
+            "SRDINV52"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6284,7 +6409,8 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
-            "SRDINV51"
+            "SRDINV51",
+            "SRDINV52"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6425,7 +6551,8 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
-            "SRDINV51"
+            "SRDINV51",
+            "SRDINV52"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6566,7 +6693,8 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
-            "SRDINV51"
+            "SRDINV51",
+            "SRDINV52"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6668,7 +6796,8 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
-            "SRDINV51"
+            "SRDINV51",
+            "SRDINV52"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6728,7 +6857,8 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
-            "SRDINV51"
+            "SRDINV51",
+            "SRDINV52"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6869,7 +6999,8 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
-            "SRDINV51"
+            "SRDINV51",
+            "SRDINV52"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6956,7 +7087,8 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
-            "SRDINV51"
+            "SRDINV51",
+            "SRDINV52"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -7449,7 +7581,8 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
-            "SRDINV51"
+            "SRDINV51",
+            "SRDINV52"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [

@@ -2165,6 +2165,17 @@ export function resumeInterruptedProcedure(
       snapshot: snapshotBattle(nextState),
     };
   }
+  if (continuation.kind === "movementThenAfterDamageSequence") {
+    return openAfterDamageSequenceReactionWindow({
+      state: applyBattleMovement(state, continuation.movement),
+      subject: continuation.subject,
+      events: continuation.events,
+      suppressedReactionTrigger:
+        suppressedReactionTrigger === "afterDamage"
+          ? undefined
+          : suppressedReactionTrigger,
+    });
+  }
   if (continuation.kind === "attackDamage") {
     const damageAmount = attackDamageContinuationAmount(state, continuation);
     if (damageAmount === null) {

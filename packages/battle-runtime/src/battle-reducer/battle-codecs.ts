@@ -189,6 +189,21 @@ const SpellPostSaveAreaEffectSchema = Schema.Struct({
   audibleBoom: BattleThunderwaveAudibleBoomSchema,
 });
 
+const SpellFailedSavePostDamageRiderSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("nextAttackRollByTarget"),
+    mode: Schema.Literal("disadvantage"),
+    expiresAt: Schema.Literal("endOfTargetNextTurn"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("forcedReactionMovement"),
+    direction: Schema.Literal("awayFromCaster"),
+    route: Schema.Literal("safest"),
+    distance: Schema.Literal("asFarAsPossible"),
+    cost: Schema.Literal("targetReactionIfAvailable"),
+  }),
+);
+
 const BattleSpellAreaChoiceBaseSchema = {
   originAnchorId: CombatantId,
   affectedTargetIds: Schema.Array(CombatantId),
@@ -607,11 +622,7 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       successDamage: Schema.Literal("none", "half"),
       rangeFeet: MovementFeet,
       failedSavePostDamageRiders: Schema.Array(
-        Schema.Struct({
-          kind: Schema.Literal("nextAttackRollByTarget"),
-          mode: Schema.Literal("disadvantage"),
-          expiresAt: Schema.Literal("endOfTargetNextTurn"),
-        }),
+        SpellFailedSavePostDamageRiderSchema,
       ),
       postSaveAreaEffect: Schema.optionalWith(SpellPostSaveAreaEffectSchema, {
         exact: true,
@@ -678,11 +689,7 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       successDamage: Schema.Literal("none", "half"),
       rangeFeet: MovementFeet,
       failedSavePostDamageRiders: Schema.Array(
-        Schema.Struct({
-          kind: Schema.Literal("nextAttackRollByTarget"),
-          mode: Schema.Literal("disadvantage"),
-          expiresAt: Schema.Literal("endOfTargetNextTurn"),
-        }),
+        SpellFailedSavePostDamageRiderSchema,
       ),
       postSaveAreaEffect: Schema.optionalWith(SpellPostSaveAreaEffectSchema, {
         exact: true,
