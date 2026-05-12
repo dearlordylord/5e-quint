@@ -2967,7 +2967,7 @@
     {
       "id": "SRDINV50",
       "title": "Research Command Option Runtime Split",
-      "suggestedStatus": "ready-for-research",
+      "suggestedStatus": "done",
       "intent": "Split Command's named next-turn option execution into implementable runtime slices before claiming support.",
       "rowCount": 3,
       "rowIds": [

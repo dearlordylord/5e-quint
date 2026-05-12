@@ -208,7 +208,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 243,
       "id": "SRDINV50",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Research Command Option Runtime Split"
     },
     {
@@ -240,6 +240,30 @@ Keep it synchronized with the DAG table and task details.
       "id": "SRDINV55",
       "status": "blocked",
       "title": "Recursive SRD Inventory Planning Review"
+    },
+    {
+      "number": 249,
+      "id": "SRDINV50A",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote Command Invocation and Grovel Runtime"
+    },
+    {
+      "number": 250,
+      "id": "SRDINV50B",
+      "status": "blocked",
+      "title": "Promote Command Halt Runtime"
+    },
+    {
+      "number": 251,
+      "id": "SRDINV50C",
+      "status": "blocked",
+      "title": "Promote Command Drop Held-Object Boundary"
+    },
+    {
+      "number": 252,
+      "id": "SRDINV50D",
+      "status": "blocked",
+      "title": "Promote Command Approach and Flee Route Runtime"
     }
   ]
 }
@@ -302,13 +326,17 @@ Keep it synchronized with the DAG table and task details.
 | 239   | SRDINV46 - Widen Jump Movement Replacement Surface | done | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Jump](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Jump is installed with typed touched willing targets, one-minute duration, slot-scaled additional targets, and once-per-turn jump movement replacement facts; runtime Movement spending, jump geometry, landing checks, and Difficult Terrain handling remain unpromoted. |
 | 240   | SRDINV47 - Widen Feather Fall Falling Reaction Surface | done | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Feather Fall](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Feather Fall is installed with a typed interrupting falling Reaction trigger, up-to-five falling creature targets, fall-rate cap, fall-damage prevention, and per-target landing cleanup; runtime falling simulation, fall-distance derivation, and landing geometry remain unpromoted. |
 | 241   | SRDINV48 - Recursive SRD Inventory Planning Review | done | SRDINV42-SRDINV47 | SRDINV49-SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: refreshed spell Unit metrics after SRDINV42-SRDINV47, confirmed movement/action Surface blockers are now owner-evidence-required runtime work, and appended SRDINV49-SRDINV55 movement/action runtime batch. |
-| 242   | SRDINV49 - Promote Expeditious Retreat Dash Runtime | done | SRDINV48 | SRDINV52-SRDINV53, SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Expeditious Retreat](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Dash](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Expeditious Retreat is promoted as a Bonus Action spell invocation that immediately resolves Dash through the existing movement/action owner, spends a Spell Slot, starts Concentration, and grants Concentration-owned later Bonus Action Dash permission without storing duplicate Speed or Movement facts. |
-| 243   | SRDINV50 - Research Command Option Runtime Split | ready-for-research | SRDINV48 | SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Split Command's failed-save next-turn option execution by runtime invariant before claiming support for Approach, Drop, Flee, Grovel, Halt, or slot-scaled targets. |
+| 242   | SRDINV49 - Promote Expeditious Retreat Dash Runtime | done | SRDINV48 | SRDINV50D, SRDINV52-SRDINV53, SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Expeditious Retreat](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Dash](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Expeditious Retreat is promoted as a Bonus Action spell invocation that immediately resolves Dash through the existing movement/action owner, spends a Spell Slot, starts Concentration, and grants Concentration-owned later Bonus Action Dash permission without storing duplicate Speed or Movement facts. |
+| 243   | SRDINV50 - Research Command Option Runtime Split | done | SRDINV48 | SRDINV50A-SRDINV50D, SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Command runtime must split into shared invocation/Grovel, Halt action suppression, Drop held-object boundary, and Approach/Flee route boundary tasks before support can be claimed. |
 | 244   | SRDINV51 - Promote Thunderwave Push Runtime Boundary | ready-for-implementation-after-light-research | SRDINV48 | SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Thunderwave](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Cube](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote save damage plus caller-supplied creature push, unsecured-object push disposition, and audible-boom evidence without deriving push geometry inside battle runtime. |
 | 245   | SRDINV52 - Promote Dissonant Whispers Forced Reaction Movement Runtime | ready-for-implementation-after-light-research | SRDINV49 | SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Dissonant Whispers](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Reaction](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [Opportunity Attacks](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | After SRDINV49 establishes the movement budget boundary, promote failed-save Reaction movement with caller-supplied safest route and Opportunity Attack eligibility. |
 | 246   | SRDINV53 - Promote Jump Movement Replacement Runtime | ready-for-implementation-after-light-research | SRDINV49 | SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Jump](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Jumping](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | After SRDINV49 establishes the movement budget boundary, promote Jump's once-per-target-turn 10-foot Movement spend for up to 30 feet of jump movement with caller-supplied landing facts. |
 | 247   | SRDINV54 - Research Feather Fall Falling Runtime Boundary | ready-for-research | SRDINV48 | SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Feather Fall](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Falling](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Research the smallest executable falling-trigger, descent-rate, fall-damage prevention, and per-target landing cleanup boundary before runtime promotion. |
-| 248   | SRDINV55 - Recursive SRD Inventory Planning Review | blocked | SRDINV49-SRDINV54 | none | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Review SRDINV49-SRDINV54 runtime results, refresh spell Unit metrics, and append the next concrete spell Surface or runtime batch. |
+| 248   | SRDINV55 - Recursive SRD Inventory Planning Review | blocked | SRDINV49-SRDINV54, SRDINV50A-SRDINV50D | none | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Review SRDINV49-SRDINV54 plus the split Command runtime tasks, refresh spell Unit metrics, and append the next concrete spell Surface or runtime batch. |
+| 249   | SRDINV50A - Promote Command Invocation and Grovel Runtime | ready-for-implementation-after-light-research | SRDINV50 | SRDINV50B-SRDINV50D, SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote the shared Command invocation and pending next-turn effect with the Grovel option only: failed-save Prone plus end-turn cleanup. |
+| 250   | SRDINV50B - Promote Command Halt Runtime | blocked | SRDINV50A | SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Halt as target-turn Movement, Action, and Bonus Action suppression over the Command pending-effect shell after SRDINV50A lands. |
+| 251   | SRDINV50C - Promote Command Drop Held-Object Boundary | blocked | SRDINV50A | SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Drop as a caller-supplied held-object disposition boundary after SRDINV50A lands, then end the target's turn without adding duplicate inventory state. |
+| 252   | SRDINV50D - Promote Command Approach and Flee Route Runtime | blocked | SRDINV50A, SRDINV49 | SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [Speed](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Approach and Flee through caller-supplied route execution facts after SRDINV50A lands; no pathfinding derivation. |
 
 ## Task Details
 ### Task 164 - QMBT69 - Recursive Unit Profile Planning Review
@@ -1068,7 +1096,7 @@ Status: `done`
 
 Depends on: SRDINV48
 
-Blocks: SRDINV52-SRDINV53, SRDINV55
+Blocks: SRDINV50D, SRDINV52-SRDINV53, SRDINV55
 
 Research / plan:
 [SRDINV48_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md),
@@ -1104,13 +1132,14 @@ Concentration-owned spell effect.
 
 ### Task 243 - SRDINV50 - Research Command Option Runtime Split
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV48
 
-Blocks: SRDINV55
+Blocks: SRDINV50A-SRDINV50D, SRDINV55
 
 Research / plan:
+[SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md),
 [SRDINV48_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md),
 [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md),
 [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md),
@@ -1132,6 +1161,12 @@ and turn action vocabulary; `UBIQUITOUS_LANGUAGE.md` check for Spell
 Invocation, Spell Effect, Movement, Speed, Prone, and Object; active-plan
 consistency if follow-up tasks are appended or revised; no MBT unless behavior
 is implemented.
+
+Result: Command runtime is split into SRDINV50A-SRDINV50D. The split keeps the
+shared cast/save/pending-effect shell separate from Grovel, Halt action
+suppression, Drop held-object disposition, and Approach/Flee route execution.
+Route and held-object facts remain caller/table-supplied at their execution
+boundaries rather than being stored as duplicate battle-runtime state.
 
 ### Task 244 - SRDINV51 - Promote Thunderwave Push Runtime Boundary
 
@@ -1261,18 +1296,20 @@ unless behavior is implemented.
 
 Status: `blocked`
 
-Depends on: SRDINV49-SRDINV54
+Depends on: SRDINV49-SRDINV54, SRDINV50A-SRDINV50D
 
 Blocks: none
 
 Research / plan:
+[SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md),
 [SRDINV48_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md),
 [SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
 [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md),
 [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
 
-Scope: review SRDINV49-SRDINV54 movement/action runtime results, refresh spell
-Unit metrics, and append the next concrete spell Surface or runtime batch.
+Scope: review SRDINV49-SRDINV54 plus the split Command runtime results,
+refresh spell Unit metrics, and append the next concrete spell Surface or
+runtime batch.
 
 Out of scope: implementation work not captured by the newly appended batch and
 treating catalog admission alone as behavior support.
@@ -1284,3 +1321,136 @@ details; regenerated inventory with `pnpm unit-profile-coverage:check --write`
 when evidence or inventory artifacts change; confirm the appended result is
 Ralph-sized concrete work; `/simplify` convergence, minimum two rounds unless
 the final changeset is trivial.
+
+### Task 249 - SRDINV50A - Promote Command Invocation and Grovel Runtime
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: SRDINV50
+
+Blocks: SRDINV50B-SRDINV50D, SRDINV55
+
+Research / plan:
+[SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md),
+[Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md),
+[Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote the shared Command Spell Invocation shell and the Grovel option:
+Magic Action and Spell Slot spend, slot-scaled creature target count, Wisdom
+Saving Throw gate, command-option fill narrowed to Grovel, failed-save pending
+next-turn Spell Effect, Prone application on the affected target's turn, and
+end-turn cleanup through the existing end-turn boundary.
+
+Out of scope: Approach, Drop, Flee, Halt, held-object inventory mutation,
+route/pathfinding derivation, and claiming full Command support.
+
+Verification: RAW/source review for Command, Prone, Spell Invocation, Spell
+Effect, Movement, and end-turn vocabulary; focused admission/runtime tests for
+target scaling, save success/failure, pending effect creation, target-turn
+Prone application, end-turn cleanup, and resource spend; package-local Quint
+updates before runtime divergence; `pnpm unit-profile-coverage:check --write`
+if evidence changes; `pnpm quality`; MBT only if integrated turn sequencing
+changes require it.
+
+### Task 250 - SRDINV50B - Promote Command Halt Runtime
+
+Status: `blocked`
+
+Depends on: SRDINV50A
+
+Blocks: SRDINV55
+
+Research / plan:
+[SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md),
+[Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md),
+[Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Halt over the pending Command effect from SRDINV50A. The target
+must not move and must take no Action or Bonus Action on that turn. Encode the
+suppression in state/types so downstream action discovery and resolution are
+both gated by the same fact, and clear the effect at the correct end-turn
+boundary.
+
+Out of scope: Reactions outside the target's own turn, Drop, route-bearing
+options, and generic action-suppression framework rewrites not needed for Halt.
+
+Verification: RAW/source review for Command Halt, Turn, Action, Bonus Action,
+Movement, and Spell Effect; focused tests proving Movement, Action, and Bonus
+Action subjects are unavailable or invalid during the Halt turn while
+start-turn/end-turn obligations still run; package-local Quint updates before
+runtime divergence; `pnpm unit-profile-coverage:check --write` if evidence
+changes; `pnpm quality`; MBT only if integrated action sequencing changes
+require it.
+
+### Task 251 - SRDINV50C - Promote Command Drop Held-Object Boundary
+
+Status: `blocked`
+
+Depends on: SRDINV50A
+
+Blocks: SRDINV55
+
+Research / plan:
+[SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md),
+[Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md),
+[Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Playing the Game object interactions](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Drop as a caller/table-supplied held-object disposition
+boundary. Runtime execution should ask for or consume precise held-object facts,
+emit dropped-object outcomes, and then end the target's turn. Reuse existing
+character loadout facts only where they are already the canonical held
+weapon/shield source; do not copy held-object state into a parallel Command
+store.
+
+Out of scope: general inventory simulation, automatic object placement, and
+changing character equipment ownership unless a single canonical loadout
+mutation boundary is added in this slice.
+
+Verification: RAW/source review for Command Drop, Object, held objects, and
+turn-ending clauses; focused tests for known empty held-object facts, known
+held-object facts, unknown/missing held-object facts as typed failure, dropped
+object outcomes, end-turn cleanup, and no duplicate inventory state; package-local
+Quint updates before runtime divergence; `pnpm unit-profile-coverage:check --write`
+if evidence changes; `pnpm quality`; MBT only if integrated object or turn
+sequencing changes require it.
+
+### Task 252 - SRDINV50D - Promote Command Approach and Flee Route Runtime
+
+Status: `blocked`
+
+Depends on: SRDINV50A, SRDINV49
+
+Blocks: SRDINV55
+
+Research / plan:
+[SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md),
+[Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md),
+[Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md),
+[Speed](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Opportunity Attacks](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Approach and Flee through caller-supplied route execution facts.
+Approach consumes a supplied shortest/direct movement result and caller/table
+proximity evidence for whether the target moved within 5 feet of the caster;
+end the turn only when that predicate is true. Flee consumes supplied
+fastest-available moving-away facts through the existing Movement budget owner.
+Opportunity Attack eligibility should derive from actual movement through the
+existing movement/reaction boundary.
+
+Out of scope: automatic shortest, direct, safest, or fastest route derivation;
+map collision and terrain pathfinding; generic route choice AI; and inventing
+non-RAW movement modes for "fastest available means."
+
+Verification: RAW/source review for Command Approach/Flee, Movement, Speed,
+Opportunity Attacks, and turn-ending clauses; focused tests for route fact
+consumption, Movement spend, Approach proximity/end-turn behavior, Flee
+whole-turn movement obligation, and Opportunity Attack derivation from actual
+movement; package-local Quint updates before runtime divergence; `pnpm
+unit-profile-coverage:check --write` if evidence changes; `pnpm quality`; MBT
+only if integrated movement/reaction sequencing changes require it.
