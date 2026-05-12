@@ -9,7 +9,9 @@ import {
   decodeUnitRecordEither,
   decodeUnitRecordSync,
   EffectAtomSchema,
+  JumpMovementReplacementSchema,
   OnHitTriggerMechanicsSchema,
+  TargetSelectionSchema,
 } from "./schema.ts";
 import {
   buildUnitCatalog,
@@ -96,6 +98,7 @@ const requiredFirstVerticalUnitIds = [
   "command",
   "dissonant_whispers",
   "expeditious_retreat",
+  "jump",
   "hellish_rebuke",
   "armor_chain_mail",
   "equipment_shield",
@@ -460,6 +463,144 @@ describe("SRD Unit catalog boundary", () => {
           kind: "grant_alternate_action_cost",
           from: { kind: "standard_action", actions: ["dash"] },
           to: { kind: "action" },
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test("decodes Jump as timed willing-target jump movement replacement", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const jump = result.catalog.requireUnit("jump");
+      expect(jump.kind).toBe("spell");
+      if (jump.kind !== "spell") return;
+      expect(jump.mechanics.family).toBe("activation");
+      if (jump.mechanics.family !== "activation") return;
+
+      expect(jump.mechanics.castingTime).toEqual({ kind: "bonus_action" });
+      expect(jump.mechanics.range).toEqual({ kind: "touch" });
+      expect(jump.mechanics.duration).toEqual({
+        kind: "timed",
+        value: { unit: "minute", amount: 1 },
+      });
+
+      const phase = jump.mechanics.phases[0];
+      expect(phase?.kind).toBe("direct");
+      if (phase?.kind !== "direct") return;
+
+      expect(phase.attachment).toEqual({
+        kind: "hole",
+        holeId: "jump_target",
+        label: "willing target",
+        value: {
+          kind: "target",
+          selection: {
+            mode: "choose_up_to",
+            count: {
+              kind: "linear",
+              base: 1,
+              perSlotAboveBase: 1,
+              baseLevel: 1,
+            },
+            targetKinds: ["creature"],
+            disposition: "willing",
+          },
+        },
+      });
+      expect(phase.effects).toEqual([
+        {
+          kind: "jump_movement_replacement",
+          frequency: "once_on_each_target_turn",
+          maxJumpDistanceFeet: 30,
+          movementCostFeet: 10,
+        },
+      ]);
+    }
+  });
+
+  test("rejects malformed Jump movement replacement facts", () => {
+    const decode = Schema.decodeUnknownEither(JumpMovementReplacementSchema);
+
+    expect(
+      Either.isLeft(
+        decode({
+          kind: "jump_movement_replacement",
+          frequency: "once_per_turn",
+          maxJumpDistanceFeet: 30,
+          movementCostFeet: 10,
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          kind: "jump_movement_replacement",
+          frequency: "each_turn",
+          maxJumpDistanceFeet: 30,
+          movementCostFeet: 10,
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          kind: "jump_movement_replacement",
+          frequency: "once_on_each_target_turn",
+          maxJumpDistanceFeet: 0,
+          movementCostFeet: 10,
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          kind: "jump_movement_replacement",
+          frequency: "once_on_each_target_turn",
+          maxJumpDistanceFeet: 30,
+          movementCostFeet: 10.5,
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test("rejects willing target disposition for non-creature target selections", () => {
+    const decode = Schema.decodeUnknownEither(TargetSelectionSchema);
+
+    expect(
+      Either.isRight(
+        decode({
+          mode: "one",
+          targetKinds: ["creature"],
+          disposition: "willing",
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          mode: "one",
+          targetKinds: ["object"],
+          disposition: "willing",
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          mode: "choose_up_to",
+          count: 2,
+          targetKinds: ["creature", "object"],
+          disposition: "willing",
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          mode: "any_number",
+          disposition: "willing",
         }),
       ),
     ).toBe(true);

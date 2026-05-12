@@ -268,14 +268,6 @@ const spellUnitMissingClassifications = new Map([
     },
   ],
   [
-    "jump",
-    {
-      kind: "needs-surface-widening",
-      missingConstruct:
-        "Spell Definition once-per-turn jump movement replacement, movement-spend requirement, and slot-scaled additional willing targets",
-    },
-  ],
-  [
     "mage_hand",
     {
       kind: "catalog-only-closure",

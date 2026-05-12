@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 353,
-      "numerator": 103,
-      "percent": "29.2%"
+      "denominator": 354,
+      "numerator": 104,
+      "percent": "29.4%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 420,
-      "numerator": 127,
-      "percent": "30.2%"
+      "denominator": 421,
+      "numerator": 128,
+      "percent": "30.4%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 128
+      "value": 129
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 63,
@@ -67,8 +67,8 @@
       "percent": "93.7%"
     },
     "profileClassificationCoverage": {
-      "denominator": 128,
-      "numerator": 128,
+      "denominator": 129,
+      "numerator": 129,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -97,9 +97,9 @@
       "percent": "15.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 104,
+      "denominator": 105,
       "numerator": 63,
-      "percent": "60.6%"
+      "percent": "60%"
     }
   },
   "metricSemantics": [
@@ -5716,6 +5716,24 @@
       ],
       "sourceRecordPath": "packages/surface/content/inflict_wounds.json",
       "unitId": "inflict_wounds"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Spell Definition is installed with typed touched willing target count, one-minute duration, and once-per-turn jump movement replacement facts; runtime movement execution, jump arc geometry, and landing checks are not promoted yet.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/jump.json",
+      "unitId": "jump"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

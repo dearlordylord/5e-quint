@@ -200,6 +200,13 @@ export const ForcedReactionMovementSchema = strictStruct({
   route: Schema.Literal("safest_available"),
 });
 
+export const JumpMovementReplacementSchema = strictStruct({
+  kind: Schema.Literal("jump_movement_replacement"),
+  frequency: Schema.Literal("once_on_each_target_turn"),
+  maxJumpDistanceFeet: PositiveIntegerSchema,
+  movementCostFeet: PositiveIntegerSchema,
+});
+
 export const AudibleEffectSchema = strictStruct({
   kind: Schema.Literal("audible"),
   sound: Schema.String,
@@ -306,6 +313,9 @@ type CommandTargetNextTurnOptions = Schema.Schema.Type<
 >;
 type ForcedReactionMovement = Schema.Schema.Type<
   typeof ForcedReactionMovementSchema
+>;
+type JumpMovementReplacement = Schema.Schema.Type<
+  typeof JumpMovementReplacementSchema
 >;
 type ForceMoveEffect = Schema.Schema.Type<typeof ForceMoveEffectSchema>;
 type AudibleEffect = Schema.Schema.Type<typeof AudibleEffectSchema>;
@@ -476,6 +486,7 @@ type EffectAtom =
       readonly options: CommandTargetNextTurnOptions;
     }
   | ForcedReactionMovement
+  | JumpMovementReplacement
   | AudibleEffect
   | {
       readonly kind: "remove_condition";
@@ -1270,14 +1281,22 @@ export const TargetCountSlotScalingSchema = Schema.Struct({
 });
 
 export const TargetKindSchema = Schema.Literal("creature", "object");
+export const TargetDispositionSchema = Schema.Literal("willing");
+const CreatureTargetKindsSchema = nonEmpty(Schema.Literal("creature"));
 
 export const TargetSelectionSchema = Schema.Union(
-  Schema.Struct({
+  strictStruct({
     mode: Schema.Literal("one"),
     targetKinds: optionalExact(nonEmpty(TargetKindSchema)),
     typeFilter: optionalExact(TargetTypeFilterSchema),
   }),
-  Schema.Struct({
+  strictStruct({
+    mode: Schema.Literal("one"),
+    targetKinds: CreatureTargetKindsSchema,
+    disposition: TargetDispositionSchema,
+    typeFilter: optionalExact(TargetTypeFilterSchema),
+  }),
+  strictStruct({
     mode: Schema.Literal("choose_up_to"),
     count: Schema.Union(
       PositiveIntegerSchema,
@@ -1288,9 +1307,27 @@ export const TargetSelectionSchema = Schema.Union(
     targetKinds: optionalExact(nonEmpty(TargetKindSchema)),
     typeFilter: optionalExact(TargetTypeFilterSchema),
   }),
-  Schema.Struct({
+  strictStruct({
+    mode: Schema.Literal("choose_up_to"),
+    count: Schema.Union(
+      PositiveIntegerSchema,
+      TargetCountSlotScalingSchema,
+      TargetCountThresholdTiersSchema,
+    ),
+    repeatsAllowed: optionalExact(Schema.Literal(true)),
+    targetKinds: CreatureTargetKindsSchema,
+    disposition: TargetDispositionSchema,
+    typeFilter: optionalExact(TargetTypeFilterSchema),
+  }),
+  strictStruct({
     mode: Schema.Literal("any_number"),
     targetKinds: optionalExact(nonEmpty(TargetKindSchema)),
+    typeFilter: optionalExact(TargetTypeFilterSchema),
+  }),
+  strictStruct({
+    mode: Schema.Literal("any_number"),
+    targetKinds: CreatureTargetKindsSchema,
+    disposition: TargetDispositionSchema,
     typeFilter: optionalExact(TargetTypeFilterSchema),
   }),
 );
@@ -1766,6 +1803,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         options: CommandTargetNextTurnOptionsSchema,
       }),
       ForcedReactionMovementSchema,
+      JumpMovementReplacementSchema,
       AudibleEffectSchema,
       Schema.Struct({
         kind: Schema.Literal("remove_condition"),

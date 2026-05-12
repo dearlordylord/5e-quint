@@ -534,6 +534,21 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "jump_movement_replacement": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "jump_movement_replacement",
+        label: [
+          "jump_movement_replacement",
+          e.frequency,
+          `jump: up to ${e.maxJumpDistanceFeet} ft`,
+          `movement cost: ${e.movementCostFeet} ft`,
+        ].join("\n"),
+      });
+      return id;
+    }
     case "audible": {
       const id = ids("eff");
       nodes.push({
@@ -2127,6 +2142,7 @@ function traceEffectAtomScaling(
     case "restrict_action_usage":
     case "command_target_next_turn":
     case "forced_reaction_movement":
+    case "jump_movement_replacement":
     case "audible":
     case "push_unsecured_objects":
     case "remove_condition":
@@ -4794,10 +4810,13 @@ function describeTargetSelection(s: TargetSelection): string {
     s.typeFilter !== undefined && s.typeFilter.length > 0
       ? `\ntype: ${s.typeFilter.join("/")}`
       : "";
-  if (s.mode === "one") return `one${typeFilter}`;
-  if (s.mode === "any_number") return `any_number${typeFilter}`;
+  const disposition =
+    "disposition" in s ? `\ndisposition: ${s.disposition}` : "";
+  if (s.mode === "one") return `one${typeFilter}${disposition}`;
+  if (s.mode === "any_number")
+    return `any_number${typeFilter}${disposition}`;
   const repeats = s.repeatsAllowed === true ? " (repeats allowed)" : "";
-  return `choose_up_to: ${describeScaling(s.count)}${repeats}${typeFilter}`;
+  return `choose_up_to: ${describeScaling(s.count)}${repeats}${typeFilter}${disposition}`;
 }
 
 function describeAreaOrigin(

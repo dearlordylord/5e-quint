@@ -163,14 +163,14 @@
       "catalog-installed-owner-evidence-present": 241,
       "non-runtime": 12,
       "catalog-only/dead-for-now": 80,
-      "catalog-installed-owner-evidence-required": 12,
-      "needs-surface-widening": 22
+      "catalog-installed-owner-evidence-required": 16,
+      "needs-surface-widening": 18
     },
     "spellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 80,
       "catalog-installed-owner-evidence-present": 97,
-      "catalog-installed-owner-evidence-required": 12,
-      "needs-surface-widening": 22
+      "catalog-installed-owner-evidence-required": 16,
+      "needs-surface-widening": 18
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -518,7 +518,7 @@
       "title": "Classify Installed Cantrip and Level-1 Spell Units",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Classify installed SRD cantrip and level-1 Spell Unit owner evidence separately from missing and catalog-only spell rows.",
-      "rowCount": 133,
+      "rowCount": 137,
       "rowIds": [
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_light",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_minor_illusion",
@@ -569,6 +569,7 @@
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_faerie_fire",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_healing_word",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_ice_knife",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_jump",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_longstrider",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_protection_from_evil_and_good",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_thunderwave",
@@ -591,6 +592,7 @@
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_ensnaring_strike",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_entangle",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_hunters_mark",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_jump",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_longstrider",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_acid_splash",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_chill_touch",
@@ -610,6 +612,7 @@
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_false_life",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_grease",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_ice_knife",
+        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_jump",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_mage_armor",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_magic_missile",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_ray_of_sickness",
@@ -645,6 +648,7 @@
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_false_life",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_grease",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_ice_knife",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_jump",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_longstrider",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_mage_armor",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_magic_missile",
@@ -753,7 +757,7 @@
       "title": "Review Catalog-Only and Surface-Widening Rows",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Preserve catalog-only/dead-for-now rows and name missing Surface constructs for nonspell and spell Surface-widening blockers.",
-      "rowCount": 22,
+      "rowCount": 18,
       "rowIds": [
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_feather_fall",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_hideous_laughter",
@@ -762,21 +766,17 @@
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_shillelagh",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_spare_the_dying",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_fog_cloud",
-        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_jump",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_fog_cloud",
-        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_jump",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_fire_bolt",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_sorcerous_burst",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_feather_fall",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_fog_cloud",
-        "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_jump",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hex",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hideous_laughter",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_fire_bolt",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_feather_fall",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_fog_cloud",
-        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_hideous_laughter",
-        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_jump"
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_hideous_laughter"
       ],
       "nextAction": "Either keep catalog-only rows explicitly catalog-only/dead-for-now or promote a named Surface-widening task for each blocker, including spell Surface pressure.",
       "acceptance": "Catalog-only rows are counted deliberately, and every nonspell or spell Surface-widening row names the missing construct."
@@ -2702,7 +2702,7 @@
     {
       "id": "SRDINV46",
       "title": "Widen Jump Movement Replacement Surface",
-      "suggestedStatus": "ready-for-research",
+      "suggestedStatus": "done",
       "intent": "Widen Surface for Jump's once-per-turn movement-spend jump replacement.",
       "rowCount": 4,
       "rowIds": [
@@ -8117,19 +8117,31 @@
       "detail": "Jump (Transmutation; —)",
       "candidateUnitId": "jump",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "Spell Definition once-per-turn jump movement replacement, movement-spend requirement, and slot-scaled additional willing targets"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "jump",
+        "sourceRecordPath": "packages/surface/content/jump.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "jump"
       },
-      "finalDisposition": "needs-surface-widening",
-      "ownerEvidence": [],
-      "nextAction": "Widen Surface: Spell Definition once-per-turn jump movement replacement, movement-spend requirement, and slot-scaled additional willing targets."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit jump is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Unit matrix records unsupported-profile: Spell Definition is installed with typed touched willing target count, one-minute duration, and once-per-turn jump movement replacement facts; runtime movement execution, jump arc geometry, and landing checks are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Unit matrix records unsupported-profile: Spell Definition is installed with typed touched willing target count, one-minute duration, and once-per-turn jump movement replacement facts; runtime movement execution, jump arc geometry, and landing checks are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_longstrider",
@@ -11527,19 +11539,31 @@
       "detail": "Jump (Transmutation; —)",
       "candidateUnitId": "jump",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "Spell Definition once-per-turn jump movement replacement, movement-spend requirement, and slot-scaled additional willing targets"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "jump",
+        "sourceRecordPath": "packages/surface/content/jump.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "jump"
       },
-      "finalDisposition": "needs-surface-widening",
-      "ownerEvidence": [],
-      "nextAction": "Widen Surface: Spell Definition once-per-turn jump movement replacement, movement-spend requirement, and slot-scaled additional willing targets."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit jump is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Unit matrix records unsupported-profile: Spell Definition is installed with typed touched willing target count, one-minute duration, and once-per-turn jump movement replacement facts; runtime movement execution, jump arc geometry, and landing checks are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Unit matrix records unsupported-profile: Spell Definition is installed with typed touched willing target count, one-minute duration, and once-per-turn jump movement replacement facts; runtime movement execution, jump arc geometry, and landing checks are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_longstrider",
@@ -13878,19 +13902,31 @@
       "detail": "Jump (Transmutation; —)",
       "candidateUnitId": "jump",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "Spell Definition once-per-turn jump movement replacement, movement-spend requirement, and slot-scaled additional willing targets"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "jump",
+        "sourceRecordPath": "packages/surface/content/jump.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "jump"
       },
-      "finalDisposition": "needs-surface-widening",
-      "ownerEvidence": [],
-      "nextAction": "Widen Surface: Spell Definition once-per-turn jump movement replacement, movement-spend requirement, and slot-scaled additional willing targets."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit jump is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Unit matrix records unsupported-profile: Spell Definition is installed with typed touched willing target count, one-minute duration, and once-per-turn jump movement replacement facts; runtime movement execution, jump arc geometry, and landing checks are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Unit matrix records unsupported-profile: Spell Definition is installed with typed touched willing target count, one-minute duration, and once-per-turn jump movement replacement facts; runtime movement execution, jump arc geometry, and landing checks are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_mage_armor",
@@ -17173,19 +17209,31 @@
       "detail": "Jump (Transmutation; —)",
       "candidateUnitId": "jump",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "Spell Definition once-per-turn jump movement replacement, movement-spend requirement, and slot-scaled additional willing targets"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "jump",
+        "sourceRecordPath": "packages/surface/content/jump.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "jump"
       },
-      "finalDisposition": "needs-surface-widening",
-      "ownerEvidence": [],
-      "nextAction": "Widen Surface: Spell Definition once-per-turn jump movement replacement, movement-spend requirement, and slot-scaled additional willing targets."
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit jump is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Unit matrix records unsupported-profile: Spell Definition is installed with typed touched willing target count, one-minute duration, and once-per-turn jump movement replacement facts; runtime movement execution, jump arc geometry, and landing checks are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Unit matrix records unsupported-profile: Spell Definition is installed with typed touched willing target count, one-minute duration, and once-per-turn jump movement replacement facts; runtime movement execution, jump arc geometry, and landing checks are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_longstrider",

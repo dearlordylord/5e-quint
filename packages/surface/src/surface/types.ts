@@ -241,6 +241,9 @@ export type CommandTargetNextTurnOptions = Schema.Schema.Type<
 export type ForcedReactionMovement = Schema.Schema.Type<
   typeof SurfaceSchema.ForcedReactionMovementSchema
 >;
+export type JumpMovementReplacement = Schema.Schema.Type<
+  typeof SurfaceSchema.JumpMovementReplacementSchema
+>;
 export type ForceMoveEffect = Schema.Schema.Type<
   typeof SurfaceSchema.ForceMoveEffectSchema
 >;
@@ -266,7 +269,9 @@ export function isAreaScopedEffectAtom(
   return effect.kind === "push_unsecured_objects";
 }
 
-export function isEffectAtom(effect: AreaDirectEffectAtom): effect is EffectAtom {
+export function isEffectAtom(
+  effect: AreaDirectEffectAtom,
+): effect is EffectAtom {
   return !isAreaScopedEffectAtom(effect);
 }
 export type SpellLevel = Schema.Schema.Type<

@@ -71,6 +71,7 @@ import heroismInput from "../../content/heroism.json";
 import huntersMarkInput from "../../content/hunters_mark.json";
 import iceKnifeInput from "../../content/ice_knife.json";
 import inflictWoundsInput from "../../content/inflict_wounds.json";
+import jumpInput from "../../content/jump.json";
 import lightInput from "../../content/light.json";
 import longstriderInput from "../../content/longstrider.json";
 import mageArmorInput from "../../content/mage_armor.json";
@@ -322,6 +323,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     huntersMarkInput,
     iceKnifeInput,
     inflictWoundsInput,
+    jumpInput,
     lightInput,
     longstriderInput,
     poisonSprayInput,
