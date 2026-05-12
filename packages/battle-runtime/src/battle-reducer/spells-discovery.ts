@@ -28,6 +28,7 @@ import {
   spellHasAvailableSpend,
   supportedSpellActs,
 } from "./spells-profiles.ts";
+import { representedMovementSpeedKinds } from "./movement-speed.ts";
 import {
   scalarBuffInitialHoles,
   spellDamageTypeChoiceHole,
@@ -267,6 +268,20 @@ export function discoverSupportedSpellInvocations(
                 initialHoles: [targetHole],
               },
             ];
+      }
+      if (invocation.procedure === "expeditiousRetreatDash") {
+        return representedMovementSpeedKinds(actor).map((speedKind) => ({
+          subject: {
+            tag: "bonusActionDashSpell" as const,
+            actorId,
+            invocation: supportedSpellInvocationRef(invocation),
+            mode: { tag: "cast" as const },
+            speedKind,
+          },
+          label: invocation.spell.name,
+          summary: spellInvocationCastSummary(invocation),
+          initialHoles: [],
+        }));
       }
       if (invocation.procedure === "chainedSpellAttackDamage") {
         const castActs = [
@@ -511,6 +526,9 @@ export function spellInvocationCastSummary(
       ? `Move ${invocation.spell.name} to a new target.`
       : `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
+  if (invocation.procedure === "expeditiousRetreatDash") {
+    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot, immediately Dash, and keep Dash available as a Bonus Action while Concentration lasts.`;
+  }
   if (invocation.procedure === "persistentArmorEffect") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
@@ -630,6 +648,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "afterHitSaveGatedCondition" &&
     invocation.procedure !== "afterHitTimedDamageAndSave" &&
     invocation.procedure !== "markedDamageRider" &&
+    invocation.procedure !== "expeditiousRetreatDash" &&
     invocation.procedure !== "saveGatedCondition" &&
     invocation.procedure !== "saveGatedAttackRollAdvantage" &&
     invocation.procedure !== "sleepTargetAdmission" &&
@@ -652,6 +671,7 @@ export function readiedSpellAct(
     invocation.procedure === "scalarBuff" ||
     invocation.procedure === "weaponDamageRider" ||
     invocation.procedure === "markedDamageRider" ||
+    invocation.procedure === "expeditiousRetreatDash" ||
     invocation.procedure === "afterHitDamage" ||
     invocation.procedure === "spellAttackBeamSequence" ||
     invocation.procedure === "afterHitSaveGatedCondition" ||

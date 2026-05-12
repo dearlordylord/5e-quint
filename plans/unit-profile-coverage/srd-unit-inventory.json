@@ -160,16 +160,16 @@
       "non-runtime": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 241,
+      "catalog-installed-owner-evidence-present": 244,
       "non-runtime": 12,
       "catalog-only/dead-for-now": 80,
-      "catalog-installed-owner-evidence-required": 19,
+      "catalog-installed-owner-evidence-required": 16,
       "needs-surface-widening": 15
     },
     "spellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 80,
-      "catalog-installed-owner-evidence-present": 97,
-      "catalog-installed-owner-evidence-required": 19,
+      "catalog-installed-owner-evidence-present": 100,
+      "catalog-installed-owner-evidence-required": 16,
       "needs-surface-widening": 15
     },
     "levelOneRowsByCategory": {
@@ -2953,7 +2953,7 @@
     {
       "id": "SRDINV49",
       "title": "Promote Expeditious Retreat Dash Runtime",
-      "suggestedStatus": "ready-for-implementation-after-light-research",
+      "suggestedStatus": "done",
       "intent": "Promote Expeditious Retreat's immediate Dash and Concentration-granted Bonus Action Dash as the smallest movement/action runtime slice.",
       "rowCount": 3,
       "rowIds": [
@@ -2996,7 +2996,7 @@
     {
       "id": "SRDINV52",
       "title": "Promote Dissonant Whispers Forced Reaction Movement Runtime",
-      "suggestedStatus": "blocked",
+      "suggestedStatus": "ready-for-implementation-after-light-research",
       "intent": "Promote Dissonant Whispers' failed-save forced Reaction movement using the movement budget boundary from SRDINV49.",
       "rowCount": 1,
       "rowIds": [
@@ -3008,7 +3008,7 @@
     {
       "id": "SRDINV53",
       "title": "Promote Jump Movement Replacement Runtime",
-      "suggestedStatus": "blocked",
+      "suggestedStatus": "ready-for-implementation-after-light-research",
       "intent": "Promote Jump's once-per-turn movement replacement over the movement budget boundary from SRDINV49.",
       "rowCount": 4,
       "rowIds": [
@@ -14009,7 +14009,7 @@
         "state": "installed",
         "unitId": "expeditious_retreat"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -14018,11 +14018,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Unit matrix records unsupported-profile: Spell Definition is installed with typed immediate Dash and Concentration-duration Bonus Action Dash facts; runtime Dash execution and Movement budget updates are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV49 at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Unit matrix records unsupported-profile: Spell Definition is installed with typed immediate Dash and Concentration-duration Bonus Action Dash facts; runtime Dash execution and Movement budget updates are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_false_life",
@@ -15508,7 +15508,7 @@
         "state": "installed",
         "unitId": "expeditious_retreat"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -15517,11 +15517,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Unit matrix records unsupported-profile: Spell Definition is installed with typed immediate Dash and Concentration-duration Bonus Action Dash facts; runtime Dash execution and Movement budget updates are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV49 at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Unit matrix records unsupported-profile: Spell Definition is installed with typed immediate Dash and Concentration-duration Bonus Action Dash facts; runtime Dash execution and Movement budget updates are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hellish_rebuke",
@@ -17183,7 +17183,7 @@
         "state": "installed",
         "unitId": "expeditious_retreat"
       },
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -17192,11 +17192,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Unit matrix records unsupported-profile: Spell Definition is installed with typed immediate Dash and Concentration-duration Bonus Action Dash facts; runtime Dash execution and Movement budget updates are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV49 at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Unit matrix records unsupported-profile: Spell Definition is installed with typed immediate Dash and Concentration-duration Bonus Action Dash facts; runtime Dash execution and Movement budget updates are not promoted yet. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_false_life",

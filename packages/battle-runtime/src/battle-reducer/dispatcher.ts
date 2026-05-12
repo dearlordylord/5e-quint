@@ -135,6 +135,7 @@ import {
 } from "./spells-profiles.ts";
 
 import {
+  resolveBonusActionDashSpellAct,
   resolveBonusActionSpellAct,
   resolveSpellAct,
 } from "./spells-resolve.ts";
@@ -423,7 +424,8 @@ export function resolveBattleSubjectInternal(
     );
   }
   if (
-    input.subject.tag === "bonusActionSpell" &&
+    (input.subject.tag === "bonusActionSpell" ||
+      input.subject.tag === "bonusActionDashSpell") &&
     (!combatantCanTakeActions(input.state.combatants.get(actorId)) ||
       !input.state.currentTurnResources.currentHasBonusAction)
   ) {
@@ -558,6 +560,13 @@ export function resolveBattleSubjectInternal(
     }
     if (subject.tag === "bonusActionSpell") {
       return resolveBonusActionSpellAct({
+        ...input,
+        subject,
+        suppressedReactionTrigger: options.suppressedReactionTrigger,
+      });
+    }
+    if (subject.tag === "bonusActionDashSpell") {
+      return resolveBonusActionDashSpellAct({
         ...input,
         subject,
         suppressedReactionTrigger: options.suppressedReactionTrigger,

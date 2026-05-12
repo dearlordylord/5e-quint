@@ -527,6 +527,7 @@ type DurationActiveEffect = Extract<
     BattleActiveEffect,
     | Extract<BattleActiveEffect, { readonly kind: "sleepPendingRepeatSave" }>
     | Extract<BattleActiveEffect, { readonly kind: "sleepUnconscious" }>
+    | Extract<BattleActiveEffect, { readonly kind: "spellDashBonusAction" }>
   >,
   { readonly expiresAt: BattleActiveEffectExpiration }
 > & {

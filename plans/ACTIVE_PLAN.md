@@ -202,7 +202,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 242,
       "id": "SRDINV49",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Expeditious Retreat Dash Runtime"
     },
     {
@@ -220,13 +220,13 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 245,
       "id": "SRDINV52",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Promote Dissonant Whispers Forced Reaction Movement Runtime"
     },
     {
       "number": 246,
       "id": "SRDINV53",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Promote Jump Movement Replacement Runtime"
     },
     {
@@ -302,11 +302,11 @@ Keep it synchronized with the DAG table and task details.
 | 239   | SRDINV46 - Widen Jump Movement Replacement Surface | done | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Jump](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Jump is installed with typed touched willing targets, one-minute duration, slot-scaled additional targets, and once-per-turn jump movement replacement facts; runtime Movement spending, jump geometry, landing checks, and Difficult Terrain handling remain unpromoted. |
 | 240   | SRDINV47 - Widen Feather Fall Falling Reaction Surface | done | SRDINV41 | SRDINV48 | [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [Feather Fall](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Feather Fall is installed with a typed interrupting falling Reaction trigger, up-to-five falling creature targets, fall-rate cap, fall-damage prevention, and per-target landing cleanup; runtime falling simulation, fall-distance derivation, and landing geometry remain unpromoted. |
 | 241   | SRDINV48 - Recursive SRD Inventory Planning Review | done | SRDINV42-SRDINV47 | SRDINV49-SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: refreshed spell Unit metrics after SRDINV42-SRDINV47, confirmed movement/action Surface blockers are now owner-evidence-required runtime work, and appended SRDINV49-SRDINV55 movement/action runtime batch. |
-| 242   | SRDINV49 - Promote Expeditious Retreat Dash Runtime | ready-for-implementation-after-light-research | SRDINV48 | SRDINV52-SRDINV53, SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Expeditious Retreat](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Dash](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote the immediate Dash and Concentration-granted Bonus Action Dash over the existing action/movement budget owner without duplicating Speed or Movement state. |
+| 242   | SRDINV49 - Promote Expeditious Retreat Dash Runtime | done | SRDINV48 | SRDINV52-SRDINV53, SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Expeditious Retreat](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Dash](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Expeditious Retreat is promoted as a Bonus Action spell invocation that immediately resolves Dash through the existing movement/action owner, spends a Spell Slot, starts Concentration, and grants Concentration-owned later Bonus Action Dash permission without storing duplicate Speed or Movement facts. |
 | 243   | SRDINV50 - Research Command Option Runtime Split | ready-for-research | SRDINV48 | SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Split Command's failed-save next-turn option execution by runtime invariant before claiming support for Approach, Drop, Flee, Grovel, Halt, or slot-scaled targets. |
 | 244   | SRDINV51 - Promote Thunderwave Push Runtime Boundary | ready-for-implementation-after-light-research | SRDINV48 | SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Thunderwave](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Cube](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote save damage plus caller-supplied creature push, unsecured-object push disposition, and audible-boom evidence without deriving push geometry inside battle runtime. |
-| 245   | SRDINV52 - Promote Dissonant Whispers Forced Reaction Movement Runtime | blocked | SRDINV49 | SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Dissonant Whispers](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Reaction](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [Opportunity Attacks](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | After SRDINV49 establishes the movement budget boundary, promote failed-save Reaction movement with caller-supplied safest route and Opportunity Attack eligibility. |
-| 246   | SRDINV53 - Promote Jump Movement Replacement Runtime | blocked | SRDINV49 | SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Jump](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Jumping](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | After SRDINV49 establishes the movement budget boundary, promote Jump's once-per-target-turn 10-foot Movement spend for up to 30 feet of jump movement with caller-supplied landing facts. |
+| 245   | SRDINV52 - Promote Dissonant Whispers Forced Reaction Movement Runtime | ready-for-implementation-after-light-research | SRDINV49 | SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Dissonant Whispers](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Reaction](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [Opportunity Attacks](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | After SRDINV49 establishes the movement budget boundary, promote failed-save Reaction movement with caller-supplied safest route and Opportunity Attack eligibility. |
+| 246   | SRDINV53 - Promote Jump Movement Replacement Runtime | ready-for-implementation-after-light-research | SRDINV49 | SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Jump](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Jumping](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | After SRDINV49 establishes the movement budget boundary, promote Jump's once-per-target-turn 10-foot Movement spend for up to 30 feet of jump movement with caller-supplied landing facts. |
 | 247   | SRDINV54 - Research Feather Fall Falling Runtime Boundary | ready-for-research | SRDINV48 | SRDINV55 | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [Feather Fall](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Falling](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Research the smallest executable falling-trigger, descent-rate, fall-damage prevention, and per-target landing cleanup boundary before runtime promotion. |
 | 248   | SRDINV55 - Recursive SRD Inventory Planning Review | blocked | SRDINV49-SRDINV54 | none | [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Review SRDINV49-SRDINV54 runtime results, refresh spell Unit metrics, and append the next concrete spell Surface or runtime batch. |
 
@@ -1064,7 +1064,7 @@ in two rounds in the review note.
 
 ### Task 242 - SRDINV49 - Promote Expeditious Retreat Dash Runtime
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: SRDINV48
 
@@ -1094,6 +1094,13 @@ spend; package-local Quint updates before runtime divergence if the promoted
 model needs new facts; `pnpm unit-profile-coverage:check --write` if evidence
 changes; `pnpm quality`; MBT only if the behavior change touches integrated
 battle-runtime sequencing beyond focused reducer coverage.
+
+Result: Expeditious Retreat is promoted as a supported
+`spell.invocation-expeditious-retreat-dash` profile. The runtime discovers the
+Bonus Action spell cast, resolves the immediate Dash through the existing Dash
+movement-budget owner, spends the Bonus Action and Spell Slot, starts
+Concentration, and projects the later Bonus Action Dash from the
+Concentration-owned spell effect.
 
 ### Task 243 - SRDINV50 - Research Command Option Runtime Split
 
@@ -1159,7 +1166,7 @@ changes; `pnpm quality`; MBT only if integrated sequencing changes require it.
 
 ### Task 245 - SRDINV52 - Promote Dissonant Whispers Forced Reaction Movement Runtime
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: SRDINV49
 
@@ -1191,7 +1198,7 @@ only if integrated reaction/movement sequencing changes require it.
 
 ### Task 246 - SRDINV53 - Promote Jump Movement Replacement Runtime
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: SRDINV49
 

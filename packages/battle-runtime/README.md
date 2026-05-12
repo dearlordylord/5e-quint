@@ -215,6 +215,10 @@ The support-profile parser surface should cover these profile families:
   expression to each selected target. Slot-spent spell profiles share the
   turn-resource fact that only one Spell Slot can be expended to cast a spell on
   a turn.
+- `SpellProfile.expeditiousRetreatDash`: a Bonus Action, slot-spent,
+  self-targeted Dash spell profile. The cast immediately resolves Dash through
+  the shared Dash movement-budget owner, starts Concentration, and stores only a
+  concentration-owned permission that later projects Dash as a Bonus Action.
 - `SpellProfile.cantripSpellAttack`: an action-cast cantrip spell attack damage
   profile, with supported rider effects carried as profile data. Pure damage
   cantrips such as Poison Spray carry an empty rider list. Creature-or-object
@@ -601,7 +605,10 @@ Available acts:
   Slot state, unless worn armor lacks required Armor Training. Action-time acts
   consume the Magic action; prepared Healing Word uses a `bonusActionSpell`
   subject that spends the turn Bonus Action and the turn's one Spell Slot
-  expenditure.
+  expenditure. Expeditious Retreat uses a `bonusActionDashSpell` subject that
+  spends the Bonus Action and Spell Slot, immediately applies Dash's movement
+  budget increase, and stores a concentration-owned later Bonus Action Dash
+  permission.
 - admit True Strike as a cantrip-hosted weapon attack only from an existing
   executable character weapon attack option whose weapon satisfies the material
   component proficiency and cost. The spell subject carries the component
@@ -692,6 +699,11 @@ Feature and spell resources:
   spell: a damaging visible creature within 60 feet makes a Dexterity save,
   takes Fire damage on a failed save and half as much on success, and the spell
   spends the reactor's Reaction plus the selected Spell Slot.
+- Prepared `expeditious_retreat` is admitted as a self-targeted Bonus Action
+  spell: the cast spends the Bonus Action plus selected Spell Slot, immediately
+  resolves Dash through the existing movement budget owner, and records a
+  concentration-owned permission that projects later Dash as a Bonus Action
+  until Concentration ends.
 - `faerie_fire` admits the executable creature subset: table-supplied
   affected creatures in the point-origin Cube make Dexterity saves, and failed
   saves receive a concentration-owned attack-roll Advantage effect for attacks

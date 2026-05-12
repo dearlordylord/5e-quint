@@ -32,6 +32,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT25 healing_word
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT32 cure_wounds mass_healing_word
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT34 mass_cure_wounds
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV49 expeditious_retreat
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT21 mycelium_step
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT18 defense
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT27 feat_archery
@@ -45,7 +46,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT59 monk_deflect_attacks
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT62 fighter_tactical_mind
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT65 bard_cutting_words
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-grease-ground-hazard spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider spell.scalar-buff
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -103,6 +104,7 @@ import {
   battleId,
   battleReactionRollOrDamageReductionSupportForUnit,
   battleUnitRefWithSupportProfiles,
+  breakBattleConcentration,
   cantripSpellInvocationRef,
   characterId,
   combatantId,
@@ -178,6 +180,7 @@ const colorSprayUnitId = "color_spray";
 const entangleUnitId = "entangle";
 const eldritchBlastUnitId = "eldritch_blast";
 const ensnaringStrikeUnitId = "ensnaring_strike";
+const expeditiousRetreatUnitId = "expeditious_retreat";
 const searingSmiteUnitId = "searing_smite";
 const trueStrikeUnitId = "true_strike";
 const iceKnifeUnitId = "ice_knife";
@@ -266,6 +269,12 @@ type BonusActionSpellAct = AvailableBattleAct & {
   readonly subject: Extract<
     BattleSubject,
     { readonly tag: "bonusActionSpell" }
+  >;
+};
+type BonusActionDashSpellAct = AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "bonusActionDashSpell" }
   >;
 };
 type PassiveFeatUnit = Extract<UnitRecord, { readonly kind: "feat" }> & {
@@ -9859,6 +9868,181 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
   });
 });
 
+describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
+  test("expeditious_retreat casts as a Bonus Action Dash spell", () => {
+    const spell = spellRecord(expeditiousRetreatUnitId);
+    const state = spellBattle({ preparedSpells: [spell] });
+    const act = bonusActionDashSpellAct({
+      state,
+      spellId: expeditiousRetreatUnitId,
+    });
+
+    expect(act).toEqual(
+      expect.objectContaining({
+        subject: {
+          tag: "bonusActionDashSpell",
+          actorId: spellCasterId,
+          invocation: spellSlotInvocationRef(
+            expeditiousRetreatUnitId,
+            1,
+            "expeditiousRetreatDash",
+          ),
+          mode: { tag: "cast" },
+          speedKind: "walk",
+        },
+        initialHoles: [],
+      }),
+    );
+  });
+
+  test("expeditious_retreat immediately Dashes and stores a Concentration-owned Bonus Action Dash permission", () => {
+    const spell = spellRecord(expeditiousRetreatUnitId);
+    const state = spellBattle({ preparedSpells: [spell] });
+    const act = bonusActionDashSpellAct({
+      state,
+      spellId: expeditiousRetreatUnitId,
+    });
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        turn: {
+          bonusActionAvailable: false,
+          spellSlotExpendedThisTurn: true,
+          dashMovementBonusFeet: 30,
+        },
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: spellCasterId,
+            movement: expect.objectContaining({
+              speedFeet: 30,
+              remainingFeet: 60,
+            }),
+          }),
+        ]),
+      },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Expeditious Retreat to resolve.");
+    }
+    const caster = requireCombatant(resolved.state, spellCasterId);
+    expect(resolved.snapshot.turn.actionResources).toEqual(
+      expect.arrayContaining([expect.objectContaining({ source: "turn" })]),
+    );
+    expect(caster.concentration).toEqual({
+      sourceSpellId: expeditiousRetreatUnitId,
+      effectKind: "spellEffect",
+    });
+    expect(caster.activeEffects).toContainEqual({
+      kind: "spellDashBonusAction",
+      sourceSpellId: expeditiousRetreatUnitId,
+      sourceCombatantId: spellCasterId,
+      expiresAt: { kind: "concentration", combatantId: spellCasterId },
+    });
+  });
+
+  test("expeditious_retreat grants later Bonus Action Dash until Concentration ends", () => {
+    const spell = spellRecord(expeditiousRetreatUnitId);
+    const state = spellBattle({ preparedSpells: [spell] });
+    const castAct = bonusActionDashSpellAct({
+      state,
+      spellId: expeditiousRetreatUnitId,
+    });
+    const cast = resolveBattleSubject({
+      state,
+      subject: castAct.subject,
+      fills: [],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Expeditious Retreat to resolve.");
+    }
+    const targetTurn = endTurn({
+      state: cast.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected Expeditious Retreat caster end turn.");
+    }
+    const nextCasterTurn = endTurn({
+      state: targetTurn.state,
+      actorId: spellTargetId,
+    });
+    if (nextCasterTurn.tag !== "resolved") {
+      throw new Error("Expected Expeditious Retreat target end turn.");
+    }
+    const laterDashAct = discoverBattleActs(nextCasterTurn.state).find(
+      (candidate) =>
+        candidate.subject.tag === "bonusActionStandardAction" &&
+        candidate.subject.sourceUnitId === expeditiousRetreatUnitId &&
+        candidate.subject.action === "dash" &&
+        candidate.subject.speedKind === "walk",
+    );
+    expect(laterDashAct).toBeDefined();
+    if (laterDashAct === undefined) {
+      throw new Error("Expected Expeditious Retreat Bonus Action Dash act.");
+    }
+
+    const dashed = resolveBattleSubject({
+      state: nextCasterTurn.state,
+      subject: laterDashAct.subject,
+      fills: [],
+    });
+    expect(dashed).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        turn: {
+          bonusActionAvailable: false,
+          dashMovementBonusFeet: 30,
+        },
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: spellCasterId,
+            movement: expect.objectContaining({ remainingFeet: 60 }),
+          }),
+        ]),
+      },
+    });
+    if (dashed.tag !== "resolved") {
+      throw new Error("Expected Expeditious Retreat Bonus Action Dash.");
+    }
+    expect(dashed.snapshot.turn.actionResources).toEqual(
+      expect.arrayContaining([expect.objectContaining({ source: "turn" })]),
+    );
+
+    const broken = breakBattleConcentration(cast.state, spellCasterId);
+    const afterBrokenTargetTurn = endTurn({
+      state: broken,
+      actorId: spellCasterId,
+    });
+    if (afterBrokenTargetTurn.tag !== "resolved") {
+      throw new Error("Expected broken Expeditious Retreat caster end turn.");
+    }
+    const afterBrokenCasterTurn = endTurn({
+      state: afterBrokenTargetTurn.state,
+      actorId: spellTargetId,
+    });
+    if (afterBrokenCasterTurn.tag !== "resolved") {
+      throw new Error("Expected broken Expeditious Retreat target end turn.");
+    }
+    expect(discoverBattleActs(afterBrokenCasterTurn.state)).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: expect.objectContaining({
+            tag: "bonusActionStandardAction",
+            sourceUnitId: expeditiousRetreatUnitId,
+            action: "dash",
+          }),
+        }),
+      ]),
+    );
+  });
+});
+
 describe("QMBT53 deterministic Adrenaline Rush admission", () => {
   test("orc_adrenaline_rush is admitted as Bonus Action Dash Temporary Hit Points", () => {
     const unit = unitLibrary.requireUnit(orcAdrenalineRushUnitId);
@@ -11315,6 +11499,22 @@ function bonusSpellAct(input: {
   expect(act).toBeDefined();
   if (act === undefined) {
     throw new Error(`Expected ${input.spellId} Bonus Action spell act.`);
+  }
+  return act;
+}
+
+function bonusActionDashSpellAct(input: {
+  readonly state: BattleState;
+  readonly spellId: string;
+}): BonusActionDashSpellAct {
+  const act = discoverBattleActs(input.state).find(
+    (candidate): candidate is BonusActionDashSpellAct =>
+      candidate.subject.tag === "bonusActionDashSpell" &&
+      candidate.subject.invocation.spellId === input.spellId,
+  );
+  expect(act).toBeDefined();
+  if (act === undefined) {
+    throw new Error(`Expected ${input.spellId} Bonus Action Dash spell act.`);
   }
   return act;
 }

@@ -16,7 +16,10 @@
 // `snapshotBattle`, `discoverBattleActs`, etc.) round-trip through
 // `../battle-reducer.ts` until Pass 19 merges the dispatcher.
 
-import { spendAction } from "@dnd/shared-algebras/action-economy-algebra";
+import {
+  spendAction,
+  spendActivationResource,
+} from "@dnd/shared-algebras/action-economy-algebra";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   attackRollHits,
@@ -31,6 +34,7 @@ import {
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleResolutionResult,
+  type BonusActionDashSpellBattleResolutionInput,
   type BonusActionSpellBattleResolutionInput,
   type SpellMarkedDamageRider,
   type SupportedSpellInvocation,
@@ -51,7 +55,10 @@ import {
   requiredObjectTargetAttackRollMode,
 } from "./attack-roll.ts";
 import { activeEffectArmorClass } from "./creature-state.ts";
-import { concentrationSavingThrowHole } from "./damage-apply.ts";
+import {
+  breakBattleConcentration,
+  concentrationSavingThrowHole,
+} from "./damage-apply.ts";
 import {
   activeMarkedDamageRiders,
   applyAvailableSpellDamageReduction,
@@ -59,6 +66,7 @@ import {
   spellDamageReductionRollForTarget,
 } from "./damage-helpers.ts";
 import { needsHolesResult, revealHidden } from "./hole-helpers.ts";
+import { applyDashToActor } from "./attack-resolution.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { expendSpellSlot } from "./spell-effects.ts";
 import {
@@ -91,6 +99,7 @@ import {
   spellHasAvailableSpend,
   supportedSpellActs,
 } from "./spells-profiles.ts";
+import { representedMovementSpeedKinds } from "./movement-speed.ts";
 import {
   recordAttackRollMissToHitReplacementUsed,
   selectedAttackRollMissToHitReplacement,
@@ -1226,4 +1235,153 @@ export function resolveBonusActionSpellAct(
     invocation,
     fillSet,
   });
+}
+
+export function resolveBonusActionDashSpellAct(
+  input: BonusActionDashSpellBattleResolutionInput,
+): BattleResolutionResult {
+  const subject = input.subject;
+  const actor = input.state.combatants.get(subject.actorId);
+  const invocation =
+    actor?.origin.kind === "character"
+      ? supportedSpellActs(actor).find(
+          (
+            candidate,
+          ): candidate is Extract<
+            SupportedSpellInvocation,
+            { readonly procedure: "expeditiousRetreatDash" }
+          > =>
+            candidate.procedure === "expeditiousRetreatDash" &&
+            supportedSpellInvocationMatchesRef(candidate, subject.invocation),
+        )
+      : undefined;
+  if (actor?.origin.kind !== "character" || invocation == null) {
+    return invalidResult(
+      input.state,
+      "unsupportedActOption",
+      "Bonus Action Dash spell act requires a supported Expeditious Retreat spell.",
+    );
+  }
+  if (input.fills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Expeditious Retreat accepts no fills.",
+    );
+  }
+  if (!spellHasAvailableSpend(actor, invocation)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Expeditious Retreat no longer has its required runtime spell resource.",
+    );
+  }
+  if (
+    !spellActTurnResourceAvailable(input.state.currentTurnResources, invocation)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "This turn has already expended a Spell Slot.",
+    );
+  }
+  if (!representedMovementSpeedKinds(actor).includes(subject.speedKind)) {
+    return invalidResult(
+      input.state,
+      "unsupportedActOption",
+      "Expeditious Retreat Dash speed kind is not represented for this combatant.",
+    );
+  }
+  if (activeOngoingFeaturesPreventSpellcasting(actor)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Expeditious Retreat is unavailable while an active ongoing feature prevents spellcasting.",
+    );
+  }
+
+  const castingState = spellRequiresVerbal(invocation.spell)
+    ? revealHidden(input.state, subject.actorId)
+    : input.state;
+  const spellCastReactionWindow = maybeOpenReactionWindow(
+    castingState,
+    {
+      trigger: "spellCast",
+      casterId: subject.actorId,
+      spellId: invocation.spell.id,
+      targetIds: [subject.actorId],
+      continuation: {
+        kind: "replay",
+        subject: input.subject,
+        fills: input.fills,
+      },
+    },
+    input.suppressedReactionTrigger,
+  );
+  if (spellCastReactionWindow !== null) {
+    return spellCastReactionWindow;
+  }
+
+  const spent = spendActivationResource(castingState.currentTurnResources, {
+    kind: "bonusAction",
+  });
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Expeditious Retreat Bonus Action is no longer available for the current actor.",
+    );
+  }
+  const slotTurnResources = markSpellSlotExpendedThisTurn(spent.right);
+  if (Either.isLeft(slotTurnResources)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "This turn has already expended a Spell Slot.",
+    );
+  }
+  const afterPriorConcentration = breakBattleConcentration(
+    castingState,
+    subject.actorId,
+  );
+  const slotted = expendSpellSlot(
+    afterPriorConcentration,
+    subject.actorId,
+    invocation.resource.slotLevel,
+  );
+  const effectHost = slotted.combatants.get(subject.actorId);
+  if (effectHost === undefined) {
+    return invalidResult(
+      input.state,
+      "missingCombatant",
+      "Expeditious Retreat caster is not in this battle.",
+    );
+  }
+  const effectedActor = {
+    ...effectHost,
+    concentration: {
+      sourceSpellId: invocation.spell.id,
+      effectKind: "spellEffect" as const,
+    },
+    activeEffects: [...effectHost.activeEffects, invocation.activeEffect],
+  };
+  const effected = {
+    ...slotted,
+    currentTurnResources: slotTurnResources.right,
+    combatants: new Map(slotted.combatants).set(
+      subject.actorId,
+      effectedActor,
+    ),
+  };
+  const dashed = applyDashToActor(
+    effected,
+    effectedActor,
+    subject.speedKind,
+    effected.currentTurnResources,
+  );
+  return {
+    tag: "resolved",
+    state: dashed,
+    snapshot: snapshotBattle(dashed),
+  };
 }

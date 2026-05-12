@@ -87,6 +87,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "afterHitSaveGatedCondition",
   "afterHitTimedDamageAndSave",
   "markedDamageRider",
+  "expeditiousRetreatDash",
   "persistentArmorEffect",
   "shieldReaction",
 ] as const;
@@ -311,6 +312,15 @@ export const BattleSubjectSchema = Schema.Union(
     }),
   }),
   Schema.Struct({
+    tag: Schema.Literal("bonusActionDashSpell"),
+    actorId: CombatantId,
+    invocation: SpellInvocationRefSchema,
+    mode: Schema.Struct({
+      tag: Schema.Literal("cast"),
+    }),
+    speedKind: Schema.Literal(...BATTLE_MOVEMENT_SPEED_KINDS),
+  }),
+  Schema.Struct({
     tag: Schema.Literal("unitFeature"),
     actorId: CombatantId,
     unitId: BattleSubjectTextSchema,
@@ -443,6 +453,15 @@ function spellSubjectModeKey(mode: SpellSubjectMode): readonly unknown[] {
 function battleSubjectKey(subject: BattleSubject): string {
   if (subject.tag === "action" && subject.action === "shakeAwakeFromSleep") {
     return JSON.stringify([subject.tag, subject.actorId, subject.action]);
+  }
+  if (subject.tag === "bonusActionDashSpell") {
+    return JSON.stringify([
+      subject.tag,
+      subject.actorId,
+      spellInvocationRefKey(subject.invocation),
+      spellSubjectModeKey(subject.mode),
+      subject.speedKind,
+    ]);
   }
   return Match.value(subject).pipe(
     Match.when({ tag: "action", action: "attack" }, (attack) =>

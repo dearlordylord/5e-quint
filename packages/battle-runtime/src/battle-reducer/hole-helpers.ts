@@ -334,15 +334,35 @@ export function alternateActionCostProfilesForActor(
     { readonly kind: "alternateActionCost" }
   >;
 }[] {
-  return combatant?.origin.kind === "character"
-    ? combatant.origin.characterUnitRefs.flatMap((unitRef) =>
-        unitRef.supportProfiles.flatMap((profile) =>
-          typeof profile === "object" && profile.kind === "alternateActionCost"
-            ? [{ unitId: unitRef.unitId, profile }]
-            : [],
-        ),
-      )
-    : [];
+  if (combatant?.origin.kind !== "character") {
+    return [];
+  }
+  const characterProfiles = combatant.origin.characterUnitRefs.flatMap(
+    (unitRef) =>
+      unitRef.supportProfiles.flatMap((profile) =>
+        typeof profile === "object" && profile.kind === "alternateActionCost"
+          ? [{ unitId: unitRef.unitId, profile }]
+          : [],
+      ),
+  );
+  const spellEffectProfiles = combatant.activeEffects.flatMap((effect) =>
+    effect.kind === "spellDashBonusAction"
+      ? [
+          {
+            unitId: effect.sourceSpellId,
+            profile: {
+              kind: "alternateActionCost" as const,
+              from: {
+                kind: "standardAction" as const,
+                actions: ["dash"] as const,
+              },
+              to: { kind: "bonusAction" as const },
+            },
+          },
+        ]
+      : [],
+  );
+  return [...characterProfiles, ...spellEffectProfiles];
 }
 
 export function bonusActionDashTemporaryHitPointsProfilesForActor(

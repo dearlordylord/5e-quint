@@ -17,13 +17,13 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Authored Surface Unit catalog admission | 129/422 | 30.6% |
 | Authored Surface executable catalog admission | 105/355 | 29.6% |
 | Installed Unit profile classification coverage | 130/130 | 100% |
-| Supported executable Unit coverage | 63/106 | 59.4% |
-| QNT profile modeling coverage | 42/42 | 100% |
-| QNT proof coverage | 40/42 | 95.2% |
-| Runtime mapping coverage | 42/42 | 100% |
-| Runtime parity coverage | 42/42 | 100% |
-| Deterministic admission/projection coverage | 59/63 | 93.7% |
-| Selected identity MBT coverage | 10/63 | 15.9% |
+| Supported executable Unit coverage | 64/106 | 60.4% |
+| QNT profile modeling coverage | 43/43 | 100% |
+| QNT proof coverage | 41/43 | 95.3% |
+| Runtime mapping coverage | 43/43 | 100% |
+| Runtime parity coverage | 43/43 | 100% |
+| Deterministic admission/projection coverage | 60/64 | 93.8% |
+| Selected identity MBT coverage | 10/64 | 15.6% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -85,6 +85,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `divine_smite` | srd-5.2.1 | `spell.invocation-after-hit-damage` |
 | `ensnaring_strike` | srd-5.2.1 | `spell.invocation-after-hit-restraint-turn-start-damage` |
 | `entangle` | srd-5.2.1 | `spell.invocation-condition-save` |
+| `expeditious_retreat` | srd-5.2.1 | `spell.invocation-expeditious-retreat-dash` |
 | `false_life` | srd-5.2.1 | `spell.scalar-buff` |
 | `guidance` | srd-5.2.1 | `spell.invocation-roll-modifier` |
 | `guiding_bolt` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
@@ -786,6 +787,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `divine_smite` | `spell.invocation-after-hit-damage` | SRDINV31C | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `ensnaring_strike` | `spell.invocation-after-hit-restraint-turn-start-damage` | SRDINV31D | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `entangle` | `spell.invocation-condition-save` | SRDINV29C | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `expeditious_retreat` | `spell.invocation-expeditious-retreat-dash` | SRDINV49 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `false_life` | `spell.scalar-buff` | SRDINV30A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `guidance` | `spell.invocation-roll-modifier` | SRDINV30B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `guiding_bolt` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28D | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
@@ -886,7 +888,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `chill_touch` | profile-subset-supported | supported subset: combatant-target melee spell attack damage; cantrip damage scaling; readied Action-time spell release; deferred: non-combatant target eligibility for the SRD generic target wording (SRDINV34); target can't regain Hit Points until the end of the caster's next turn (SRDINV28D) |
 | `command` | unsupported-profile | Spell Definition is installed with typed next-turn Command option facts; runtime execution of the named options, route choice, held-item drop, and turn-ending clauses is not promoted yet. |
 | `dissonant_whispers` | unsupported-profile | Spell Definition is installed with typed save-gated Psychic damage and failed-save forced Reaction movement facts; runtime execution of forced Reaction movement, route choice, and Opportunity Attack derivation is not promoted yet. |
-| `expeditious_retreat` | unsupported-profile | Spell Definition is installed with typed immediate Dash and Concentration-duration Bonus Action Dash facts; runtime Dash execution and Movement budget updates are not promoted yet. |
 | `faerie_fire` | profile-subset-supported | supported subset: 20-foot point-origin Cube affected-creature boundary with table-supplied area membership; Dexterity save-gated affected creatures; Concentration-owned attack-roll Advantage against failed-save affected creatures when the attacker can see them; deferred: object outline and object attack-roll Advantage (SRDINV33); Dim Light emitted by affected creatures and objects (SRDINV33); affected creatures and objects can't benefit from the Invisible condition (SRDINV33) |
 | `feather_fall` | unsupported-profile | Spell Definition is installed with typed falling Reaction trigger, up-to-five falling creature targets, fall-rate cap, fall-damage prevention, and per-target landing cleanup facts; runtime falling simulation, fall-distance derivation, and landing geometry are not promoted yet. |
 | `fire_bolt` | needs-surface-widening | QMBT23 keeps SRD Fire Bolt out of supported spell evidence until promoted spell invocation has an explicit object-target branch and object-ignition effect outcome; table-supplied object facts are required but are not a complete runtime boundary. |
@@ -918,7 +919,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
-| srd-5.2.1 | unassigned | unsupported-profile | 56 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `bard_bardic_inspiration`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `monk_martial_arts`, `ranger_favored_enemy`, `rogue_expertise`, `rogue_thieves_cant`, `sorcerer_innate_sorcery`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `mastery_sap`, `orc_darkvision`, `command`, `dissonant_whispers`, `expeditious_retreat`, `feather_fall`, `jump`, `light`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `thunderwave`, `minor_illusion`, `hellish_rebuke`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
+| srd-5.2.1 | unassigned | unsupported-profile | 55 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `bard_bardic_inspiration`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `monk_martial_arts`, `ranger_favored_enemy`, `rogue_expertise`, `rogue_thieves_cant`, `sorcerer_innate_sorcery`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `mastery_sap`, `orc_darkvision`, `command`, `dissonant_whispers`, `feather_fall`, `jump`, `light`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `thunderwave`, `minor_illusion`, `hellish_rebuke`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
 | srd-5.2.1 | unassigned | profile-subset-supported | 10 | `animal_friendship`, `chill_touch`, `faerie_fire`, `grease`, `hunters_mark`, `protection_from_evil_and_good`, `produce_flame`, `starry_wisp`, `sleep`, `charm_person` |
 | srd-5.2.1 | QCORE10 | needs-surface-widening | 1 | `fire_bolt` |
 
@@ -996,6 +997,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 | SRDINV39 | completed-runtime-parity | `spell.invocation-beam-sequence` |
 | SRDINV40 | qnt-proof | `spell.invocation-grease-ground-hazard` |
 | SRDINV40 | completed-runtime-parity | `spell.invocation-grease-ground-hazard` |
+| SRDINV49 | qnt-proof | `spell.invocation-expeditious-retreat-dash` |
+| SRDINV49 | completed-runtime-parity | `spell.invocation-expeditious-retreat-dash` |
 
 ## Supported Profiles Lacking Runtime Parity
 

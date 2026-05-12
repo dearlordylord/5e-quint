@@ -58,6 +58,7 @@ import {
   supportedPreparedAfterHitSaveGatedConditionSpellProfile,
   supportedPreparedAfterHitTimedDamageAndSaveSpellProfile,
   supportedPreparedCreatureTypeProtectionSpellProfile,
+  supportedPreparedExpeditiousRetreatDashSpellProfile,
   supportedPreparedHealingSpellProfile,
   supportedPreparedMarkedDamageRiderSpellProfile,
   supportedPreparedRollModifierSpellProfile,
@@ -222,6 +223,13 @@ export function supportedSpellActs(
     ...spellcasting.preparedSpells.flatMap((spell) =>
       supportedPreparedMarkedDamageRiderSpellProfile(
         actor,
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...spellcasting.preparedSpells.flatMap((spell) =>
+      supportedPreparedExpeditiousRetreatDashSpellProfile(
+        actor.combatantId,
         spell,
         spellcasting.spellSlots,
       ),

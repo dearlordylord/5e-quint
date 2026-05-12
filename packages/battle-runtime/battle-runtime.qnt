@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-grease-ground-hazard spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-grease-ground-hazard spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points
@@ -12,6 +12,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-damage-reduction
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-sleep-repeat-save-lifecycle
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-grease-ground-hazard
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-expeditious-retreat-dash
 module battleRuntime {
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
@@ -75,6 +76,13 @@ module battleRuntime {
   //   Concentration spell that marks one target, adds Force damage when the
   //   caster hits that target with an Attack Roll, and can be moved with a
   //   Bonus Action after the marked target drops to 0 HP.
+  // - Spells/Descriptions-E-L.md lines 168-177, Playing-the-Game.md lines
+  //   318-324 and 533-551, Spells/Gaining-and-Casting.md lines 92-96,
+  //   Rules-Glossary.md lines 239-247, 361-365, and 904-910, and
+  //   UBIQUITOUS_LANGUAGE.md: Expeditious Retreat is a self-targeted Bonus
+  //   Action Concentration spell that immediately grants Dash and stores only
+  //   the permission to take Dash again as a Bonus Action while the spell
+  //   lasts; Speed and Movement budget updates stay owned by Dash.
   // - Classes/Monk.md lines 102-106, Classes/Rogue.md lines 109-111,
   //   Classes/Bard.md lines 332-334, and Playing-the-Game.md lines 326-332:
   //   Deflect Attacks, Uncanny Dodge, and Cutting Words are Reactions that
@@ -267,7 +275,7 @@ module battleRuntime {
   type RollModifierSpell = BaneRollModifier | BlessRollModifier | GuidanceRollModifier
   type SpellActionCost = SpellMagicAction | SpellBonusAction
 
-  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireAttackRollAdvantage | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodAttackDisadvantage | ProduceFlameHeldLight({ durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | GreaseGroundHazard({ areaId: int, durationTicks: int })
+  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireAttackRollAdvantage | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodAttackDisadvantage | ProduceFlameHeldLight({ durationTicks: int }) | ExpeditiousRetreatDashBonusAction | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | GreaseGroundHazard({ areaId: int, durationTicks: int })
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
   type RuntimeCreatureType = HumanoidCreature | BeastCreature | AberrationCreature | CelestialCreature | ElementalCreature | FeyCreature | FiendCreature | UndeadCreature
   type ObjectTarget =
@@ -961,6 +969,7 @@ module battleRuntime {
         | CharmPersonCharmed(_) => false
         | ProtectionFromEvilAndGoodAttackDisadvantage => false
         | ProduceFlameHeldLight(_) => false
+        | ExpeditiousRetreatDashBonusAction => false
         | SleepPendingRepeatSave(_) => false
         | SleepUnconscious(_) => false
         | GreaseGroundHazard(_) => false
@@ -1922,7 +1931,7 @@ module battleRuntime {
   }
 
   pure def spellEffectConcentrationActiveEffects(): Set[ActiveEffect] =
-    Set(ShieldOfFaithArmorClassBonus, HeroismFrightenedImmunity, BaneD20RollPenalty, BlessD20RollBonus, GuidanceAbilityCheckBonus, EntangleRestrained, FaerieFireAttackRollAdvantage, ProtectionFromEvilAndGoodAttackDisadvantage)
+    Set(ShieldOfFaithArmorClassBonus, HeroismFrightenedImmunity, BaneD20RollPenalty, BlessD20RollBonus, GuidanceAbilityCheckBonus, EntangleRestrained, FaerieFireAttackRollAdvantage, ProtectionFromEvilAndGoodAttackDisadvantage, ExpeditiousRetreatDashBonusAction)
 
   pure def activeEffectsWithoutSpellEffectConcentration(effects: Set[ActiveEffect]): Set[ActiveEffect] =
     effects
@@ -2299,6 +2308,61 @@ module battleRuntime {
     } else {
       { state: state, usesRemaining: usesRemaining }
     }
+
+  pure def activeEffectsContainExpeditiousRetreatDashBonusAction(effects: Set[ActiveEffect]): bool =
+    effects.contains(ExpeditiousRetreatDashBonusAction)
+
+  pure def resolveExpeditiousRetreatDash(state: BattleState, speedKind: MovementSpeedKind): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      state.bonusActionAvailable and
+      canExpendSpellSlotThisTurn(state) and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state))
+    ) {
+      val concentrationBase = {
+        ...state,
+        fighter: breakConcentration(state.fighter),
+        goblin: { ...state.goblin, activeEffects: activeEffectsWithoutSpellEffectConcentration(state.goblin.activeEffects) },
+      }
+      val dashed = stateWithFighterMovementStep(
+        concentrationBase,
+        battleRuntimeBonusActionDash(
+          movementProjectionForFighter(concentrationBase, speedKind),
+          movementSpeed(concentrationBase.fighter, speedKind),
+        ),
+      )
+      {
+        ...dashed,
+        fighter: {
+          ...dashed.fighter,
+          concentrating: true,
+          activeEffects: dashed.fighter.activeEffects.union(Set(ExpeditiousRetreatDashBonusAction)),
+        },
+        spellSlotExpendedThisTurn: true,
+      }
+    } else {
+      state
+    }
+
+  pure def expeditiousRetreatBonusActionDashFighter(state: BattleState, speedKind: MovementSpeedKind): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      state.bonusActionAvailable and
+      activeEffectsContainExpeditiousRetreatDashBonusAction(state.fighter.activeEffects) and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated)
+    )
+      stateWithFighterMovementStep(
+        state,
+        battleRuntimeBonusActionDash(
+          movementProjectionForFighter(state, speedKind),
+          movementSpeed(state.fighter, speedKind),
+        ),
+      )
+    else
+      state
 
   pure def disengageFighter(state: BattleState): BattleState =
     stateWithFighterMovementStep(state, battleRuntimeDisengage(movementProjectionForFighter(state, WalkSpeedKind)))
@@ -6697,6 +6761,44 @@ module battleRuntime {
         | HeroismTurnStartTemporaryHitPoints(_) => true
         | _ => false
       }))),
+    }
+  }
+
+  run test_expeditious_retreat_immediate_dash_spends_bonus_action_and_slot = {
+    val result = resolveExpeditiousRetreatDash(initialState, WalkSpeedKind)
+    all {
+      assert(result.actionAvailable),
+      assert(not(result.bonusActionAvailable)),
+      assert(result.spellSlotExpendedThisTurn),
+      assert(result.dashMovementBonus == 30),
+      assert(movementRemainingForFighterWithSpeedKind(result, WalkSpeedKind) == 60),
+      assert(result.fighter.concentrating),
+      assert(result.fighter.activeEffects.contains(ExpeditiousRetreatDashBonusAction)),
+    }
+  }
+
+  run test_expeditious_retreat_later_bonus_action_dash_uses_existing_dash_budget = {
+    val cast = resolveExpeditiousRetreatDash(initialState, WalkSpeedKind)
+    val nextFighterTurn = endTurn(endTurn(cast))
+    val dashed = expeditiousRetreatBonusActionDashFighter(nextFighterTurn, WalkSpeedKind)
+    all {
+      assert(dashed.actionAvailable),
+      assert(not(dashed.bonusActionAvailable)),
+      assert(dashed.dashMovementBonus == 30),
+      assert(movementRemainingForFighterWithSpeedKind(dashed, WalkSpeedKind) == 60),
+      assert(dashed.fighter.activeEffects.contains(ExpeditiousRetreatDashBonusAction)),
+    }
+  }
+
+  run test_expeditious_retreat_concentration_cleanup_removes_bonus_action_dash_permission = {
+    val cast = resolveExpeditiousRetreatDash(initialState, WalkSpeedKind)
+    val broken = { ...cast, fighter: breakConcentration(cast.fighter) }
+    val nextFighterTurn = endTurn(endTurn(broken))
+    val attempted = expeditiousRetreatBonusActionDashFighter(nextFighterTurn, WalkSpeedKind)
+    all {
+      assert(not(broken.fighter.concentrating)),
+      assert(not(broken.fighter.activeEffects.contains(ExpeditiousRetreatDashBonusAction))),
+      assert(attempted == nextFighterTurn),
     }
   }
 

@@ -62,9 +62,9 @@
       "value": 130
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 63,
-      "numerator": 59,
-      "percent": "93.7%"
+      "denominator": 64,
+      "numerator": 60,
+      "percent": "93.8%"
     },
     "profileClassificationCoverage": {
       "denominator": 130,
@@ -72,34 +72,34 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 42,
-      "numerator": 42,
+      "denominator": 43,
+      "numerator": 43,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 42,
-      "numerator": 40,
-      "percent": "95.2%"
+      "denominator": 43,
+      "numerator": 41,
+      "percent": "95.3%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 42,
-      "numerator": 42,
+      "denominator": 43,
+      "numerator": 43,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 42,
-      "numerator": 42,
+      "denominator": 43,
+      "numerator": 43,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 63,
+      "denominator": 64,
       "numerator": 10,
-      "percent": "15.9%"
+      "percent": "15.6%"
     },
     "supportedProfileCoverage": {
       "denominator": 106,
-      "numerator": 63,
-      "percent": "59.4%"
+      "numerator": 64,
+      "percent": "60.4%"
     }
   },
   "metricSemantics": [
@@ -926,6 +926,31 @@
         "SRDINV40"
       ],
       "title": "Spell invocation creates a timed Grease ground hazard with recurring Dexterity saves",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-expeditious-retreat-dash",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "Movement budget updates reuse the battle Dash/action owner; the spell effect stores only the Concentration-owned permission to take Dash as a Bonus Action.",
+      "taskRefs": [
+        "SRDINV49"
+      ],
+      "title": "Spell invocation immediately resolves Dash and grants Concentration-owned Bonus Action Dash",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -1983,6 +2008,22 @@
         "spell.invocation-grease-ground-hazard"
       ],
       "taskId": "SRDINV40"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Expeditious Retreat's immediate Dash, Bonus Action and Spell Slot spend, Concentration-owned later Bonus Action Dash permission, and Concentration cleanup.",
+      "profileIds": [
+        "spell.invocation-expeditious-retreat-dash"
+      ],
+      "taskId": "SRDINV49"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Expeditious Retreat cast discovery, immediate Dash movement bonus, Bonus Action and Spell Slot spend, action preservation, later Bonus Action Dash, and Concentration cleanup.",
+      "profileIds": [
+        "spell.invocation-expeditious-retreat-dash"
+      ],
+      "taskId": "SRDINV49"
     }
   ],
   "units": [
@@ -5078,14 +5119,51 @@
         "status": "installed"
       },
       "claim": {
-        "reason": "Spell Definition is installed with typed immediate Dash and Concentration-duration Bonus Action Dash facts; runtime Dash execution and Movement budget updates are not promoted yet.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "spell.invocation-expeditious-retreat-dash"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV49"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-expeditious-retreat-dash",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "Movement budget updates reuse the battle Dash/action owner; the spell effect stores only the Concentration-owned permission to take Dash as a Bonus Action.",
+          "taskRefs": [
+            "SRDINV49"
+          ],
+          "title": "Spell invocation immediately resolves Dash and grants Concentration-owned Bonus Action Dash",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/expeditious_retreat.json",
       "unitId": "expeditious_retreat"
     },
