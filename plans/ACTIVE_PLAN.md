@@ -360,6 +360,126 @@ Keep it synchronized with the DAG table and task details.
       "id": "SRDINV66",
       "status": "blocked",
       "title": "Recursive SRD Inventory Planning Review"
+    },
+    {
+      "number": 269,
+      "id": "SRDINV67",
+      "status": "blocked",
+      "title": "Promote Produce Flame Object Hurl Runtime"
+    },
+    {
+      "number": 270,
+      "id": "SRDINV68A",
+      "status": "blocked",
+      "title": "Promote Sleep Damage Cleanup Runtime"
+    },
+    {
+      "number": 271,
+      "id": "SRDINV68B",
+      "status": "blocked",
+      "title": "Promote Sleep Shake-Awake Cleanup Runtime"
+    },
+    {
+      "number": 272,
+      "id": "SRDINV69A",
+      "status": "blocked",
+      "title": "Promote Hellish Rebuke Reaction Trigger Runtime"
+    },
+    {
+      "number": 273,
+      "id": "SRDINV69B",
+      "status": "blocked",
+      "title": "Promote Hellish Rebuke Save Damage Runtime"
+    },
+    {
+      "number": 274,
+      "id": "SRDINV70A",
+      "status": "blocked",
+      "title": "Research Light and Illumination Runtime Boundary"
+    },
+    {
+      "number": 275,
+      "id": "SRDINV70B",
+      "status": "blocked",
+      "title": "Promote Light Object Illumination Runtime"
+    },
+    {
+      "number": 276,
+      "id": "SRDINV71",
+      "status": "blocked",
+      "title": "Research Minor Illusion Battle Boundary"
+    },
+    {
+      "number": 277,
+      "id": "SRDINV72A",
+      "status": "blocked",
+      "title": "Promote Bardic Inspiration Grant Runtime"
+    },
+    {
+      "number": 278,
+      "id": "SRDINV72B",
+      "status": "blocked",
+      "title": "Promote Bardic Inspiration Failed D20 Test Runtime"
+    },
+    {
+      "number": 279,
+      "id": "SRDINV73A",
+      "status": "blocked",
+      "title": "Promote Monk Martial Arts Attack Projection"
+    },
+    {
+      "number": 280,
+      "id": "SRDINV73B",
+      "status": "blocked",
+      "title": "Promote Monk Martial Arts Bonus Unarmed Strike"
+    },
+    {
+      "number": 281,
+      "id": "SRDINV74A",
+      "status": "blocked",
+      "title": "Promote Weapon Mastery Sap Runtime"
+    },
+    {
+      "number": 282,
+      "id": "SRDINV74B",
+      "status": "blocked",
+      "title": "Research Weapon Mastery Cleave and Topple Split"
+    },
+    {
+      "number": 283,
+      "id": "SRDINV75A",
+      "status": "blocked",
+      "title": "Promote Sorcerer Innate Sorcery Activation Runtime"
+    },
+    {
+      "number": 284,
+      "id": "SRDINV75B",
+      "status": "blocked",
+      "title": "Promote Innate Sorcery Spell DC and Attack Projection"
+    },
+    {
+      "number": 285,
+      "id": "SRDINV76A",
+      "status": "blocked",
+      "title": "Research Warlock Level-1 Invocation Runtime Boundary"
+    },
+    {
+      "number": 286,
+      "id": "SRDINV76B",
+      "status": "blocked",
+      "title": "Promote Pact of the Blade Battle Projection"
+    },
+    {
+      "number": 287,
+      "id": "SRDINV77",
+      "status": "blocked",
+      "title": "Promote Ranger Favored Enemy Hunter's Mark Free Casts"
+    },
+    {
+      "number": 288,
+      "id": "SRDINV78",
+      "status": "blocked",
+      "title": "Recursive Level-1 Battle Feature Planning Review"
     }
   ]
 }
@@ -448,7 +568,27 @@ Keep it synchronized with the DAG table and task details.
 | 265   | SRDINV63 - Research Hunter's Mark Finding-Advantage Boundary | blocked | SRDINV62 | SRDINV66 | [Hunter's Mark](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Ability Check](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Decide whether the Perception/Survival finding Advantage clause is battle-runtime roll behavior, exploration-only metadata, or a caller-supplied battle check modifier. |
 | 266   | SRDINV64 - Promote Chill Touch Healing-Prevention Rider | blocked | SRDINV55 | SRDINV66 | [Chill Touch](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Healing](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Chill Touch's hit-applied no-hit-point-regain rider through the existing healing resolution boundary until the caster's next turn. |
 | 267   | SRDINV65 - Promote Shocking Grasp Opportunity Attack Denial | blocked | SRDINV55 | SRDINV66 | [Shocking Grasp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Opportunity Attacks](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Reaction](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Shocking Grasp's hit-applied Opportunity Attack prevention until the target's next-turn boundary, scoped to Opportunity Attacks rather than all Reactions. |
-| 268   | SRDINV66 - Recursive SRD Inventory Planning Review | blocked | SRDINV57-SRDINV65 | none | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Review the deferred-clause batch, refresh spell Unit metrics, measure remaining level-1 battle-related gaps, and append the next concrete batch only after resolving or explicitly deferring any review notes. |
+| 268   | SRDINV66 - Recursive SRD Inventory Planning Review | blocked | SRDINV57-SRDINV65 | SRDINV67-SRDINV78 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Review the deferred-clause batch, refresh spell Unit metrics, measure remaining level-1 battle-related gaps, and unlock the pre-seeded remaining level-1 battle feature/spell batch only after resolving or explicitly deferring any review notes. |
+| 269   | SRDINV67 - Promote Produce Flame Object Hurl Runtime | blocked | SRDINV66 | SRDINV78 | [Produce Flame](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-M-P.md), [Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Breaking Objects](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [SRDINV34 decision](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV28E_STARRY_WISP_OBJECT_TARGET_DECISION.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Produce Flame's creature-or-object hurl target using the existing typed object target and object damage disposition boundary, without adding object inventory state. |
+| 270   | SRDINV68A - Promote Sleep Damage Cleanup Runtime | blocked | SRDINV66 | SRDINV68B, SRDINV78 | [Sleep](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Damage](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [SRDINV38 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV38_SLEEP_SAVE_LOOP_RESEARCH.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote cleanup of Sleep-owned Incapacitated/Unconscious effects when the affected target takes damage from any source. |
+| 271   | SRDINV68B - Promote Sleep Shake-Awake Cleanup Runtime | blocked | SRDINV68A | SRDINV78 | [Sleep](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Action](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [SRDINV38 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV38_SLEEP_SAVE_LOOP_RESEARCH.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote the adjacent action cleanup that shakes a creature out of Sleep's effect, reusing existing action and target-adjacency fact boundaries. |
+| 272   | SRDINV69A - Promote Hellish Rebuke Reaction Trigger Runtime | blocked | SRDINV66 | SRDINV69B, SRDINV78 | [Hellish Rebuke](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Reaction](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [Damage](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Hellish Rebuke's damage-taken Reaction discovery/window from a visible creature within 60 feet, without resolving damage in the trigger task. |
+| 273   | SRDINV69B - Promote Hellish Rebuke Save Damage Runtime | blocked | SRDINV69A | SRDINV78 | [Hellish Rebuke](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Saving Throw](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Damage](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Hellish Rebuke's Dexterity save, Fire damage, half damage on success, slot scaling, and Reaction/Spell Slot spend through the existing reaction continuation boundary. |
+| 274   | SRDINV70A - Research Light and Illumination Runtime Boundary | blocked | SRDINV66 | SRDINV70B, SRDINV78 | [Light](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Bright Light](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Dim Light](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Darkness](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Decide the shared battle-runtime boundary for authored light emitters before promoting Light, Produce Flame held light, Faerie Fire/Starry Wisp light riders, or Darkvision interactions further. |
+| 275   | SRDINV70B - Promote Light Object Illumination Runtime | blocked | SRDINV70A | SRDINV78 | [Light](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Bright Light](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Dim Light](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Light as a touched Large-or-smaller object illumination effect using the researched light boundary and caller-supplied object identity facts. |
+| 276   | SRDINV71 - Research Minor Illusion Battle Boundary | blocked | SRDINV66 | SRDINV78 | [Minor Illusion](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-M-P.md), [Illusions](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Study](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Decide whether Minor Illusion has battle-runtime executable state, Surface-only authored facts, or explicit non-battle closure for sound/image creation, Study reveal, and physical-interaction reveal. |
+| 277   | SRDINV72A - Promote Bardic Inspiration Grant Runtime | blocked | SRDINV66 | SRDINV72B, SRDINV78 | [Bardic Inspiration](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Bard.md), [Bonus Action](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [D20 Test](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Bardic Inspiration's Bonus Action grant, target visibility/hearing/range facts, one-die-per-creature invariant, d6 resource count, and one-hour effect ownership. |
+| 278   | SRDINV72B - Promote Bardic Inspiration Failed D20 Test Runtime | blocked | SRDINV72A | SRDINV78 | [Bardic Inspiration](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Bard.md), [D20 Test](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Attack Roll](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Saving Throw](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Ability Check](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Bardic Inspiration die use after a failed D20 Test, including roll addition, possible failure-to-success replay, and die expenditure without duplicating roll state. |
+| 279   | SRDINV73A - Promote Monk Martial Arts Attack Projection | blocked | SRDINV66 | SRDINV73B, SRDINV78 | [Martial Arts](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Monk.md), [Unarmed Strike](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Weapon Attack](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Martial Arts weapon/unarmed eligibility, d6 damage replacement, Dexterity attack/damage option, and Grapple/Shove DC projection without duplicating loadout state. |
+| 280   | SRDINV73B - Promote Monk Martial Arts Bonus Unarmed Strike | blocked | SRDINV73A | SRDINV78 | [Martial Arts](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Monk.md), [Bonus Action](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Unarmed Strike](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Martial Arts' unconditional Bonus Action Unarmed Strike while unarmored, unshielded, and unarmed or wielding only Monk weapons. |
+| 281   | SRDINV74A - Promote Weapon Mastery Sap Runtime | blocked | SRDINV66 | SRDINV74B, SRDINV78 | [Sap](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md), [Attack Roll](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Weapon Mastery](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Sap's hit-applied Disadvantage on the target's next attack roll before the attacker's next turn, gated by selected weapon mastery ownership. |
+| 282   | SRDINV74B - Research Weapon Mastery Cleave and Topple Split | blocked | SRDINV74A | SRDINV78 | [Cleave and Topple](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md), [Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Weapon Mastery](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Split Cleave extra-attack and Topple save-gated Prone into implementable runtime tasks, or document the missing Surface/runtime boundary for the current mastery records. |
+| 283   | SRDINV75A - Promote Sorcerer Innate Sorcery Activation Runtime | blocked | SRDINV66 | SRDINV75B, SRDINV78 | [Innate Sorcery](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Sorcerer.md), [Bonus Action](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Long Rest](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Innate Sorcery activation as a Bonus Action, two-use Long Rest resource, and one-minute active effect without yet wiring spell DC/attack projections. |
+| 284   | SRDINV75B - Promote Innate Sorcery Spell DC and Attack Projection | blocked | SRDINV75A | SRDINV78 | [Innate Sorcery](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Sorcerer.md), [Spell Attack](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Saving Throw](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote active Innate Sorcery's +1 Sorcerer spell save DC and Advantage on Sorcerer spell attack rolls through existing spell invocation projection. |
+| 285   | SRDINV76A - Research Warlock Level-1 Invocation Runtime Boundary | blocked | SRDINV66 | SRDINV76B, SRDINV78 | [Eldritch Invocations](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Pact Magic](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Classify level-1-legal Warlock invocation options into character-creation-only, spell-access, and battle-runtime tasks before promoting any one option as representative support. |
+| 286   | SRDINV76B - Promote Pact of the Blade Battle Projection | blocked | SRDINV76A | SRDINV78 | [Pact of the Blade](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Weapon Attack](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Damage Types](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Pact of the Blade's bonded weapon battle projection: Charisma attack/damage option, selectable Necrotic/Psychic/Radiant/normal damage type, proficiency, and focus facts without generic item conjuration simulation. |
+| 287   | SRDINV77 - Promote Ranger Favored Enemy Hunter's Mark Free Casts | blocked | SRDINV66 | SRDINV78 | [Favored Enemy](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Ranger.md), [Hunter's Mark](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Long Rest](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Favored Enemy as always-prepared Hunter's Mark plus two no-slot casts per Long Rest that reuse the existing Hunter's Mark runtime procedure. |
+| 288   | SRDINV78 - Recursive Level-1 Battle Feature Planning Review | blocked | SRDINV67-SRDINV77 | none | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Review the remaining spell/class-feature/weapon-mastery batch, refresh level-1 battle-related metrics, and decide whether the next queue is closure, cleanup, or final acceptance evidence. |
 
 ## Task Details
 ### Task 164 - QMBT69 - Recursive Unit Profile Planning Review
@@ -2006,7 +2146,7 @@ Status: `blocked`
 
 Depends on: SRDINV57-SRDINV65
 
-Blocks: none
+Blocks: SRDINV67-SRDINV78
 
 Research / plan:
 [SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
@@ -2015,8 +2155,9 @@ Research / plan:
 [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
 
 Scope: review SRDINV57-SRDINV65, refresh spell Unit metrics, measure remaining
-level-1 battle-related gaps, and append the next concrete batch only after
-resolving or explicitly deferring any reasonable review notes.
+level-1 battle-related gaps, and unlock the pre-seeded remaining level-1
+battle feature/spell batch only after resolving or explicitly deferring any
+reasonable review notes.
 
 Out of scope: implementation work not captured by the newly appended batch and
 claiming full level-1 battle support from catalog admission alone.
@@ -2028,3 +2169,601 @@ unit-profile-coverage:check --write` when evidence or inventory artifacts
 change; confirm remaining gaps are measured against battle-related level-1
 feature/spell behavior; `/simplify` convergence, minimum two rounds unless the
 final changeset is trivial.
+
+### Task 269 - SRDINV67 - Promote Produce Flame Object Hurl Runtime
+
+Status: `blocked`
+
+Depends on: SRDINV66
+
+Blocks: SRDINV78
+
+Research / plan:
+[Produce Flame](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-M-P.md),
+[Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Breaking Objects](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[SRDINV34 decision](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV28E_STARRY_WISP_OBJECT_TARGET_DECISION.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Produce Flame's hurl target as creature-or-object execution,
+using the existing typed object target and object damage disposition boundary
+from the prior Starry Wisp object-target decision. Preserve the held-flame gate
+and avoid adding object inventory or environmental-light state.
+
+Out of scope: general object inventory, ignition/heat beyond the spell text,
+and Produce Flame's held-light rider, which belongs with the shared light
+boundary.
+
+Verification: RAW/source review for Produce Flame, Object, and object damage
+wording; focused tests for creature target parity, object target acceptance,
+held-state gating, miss behavior, and no object-state duplication; package-local
+Quint updates before runtime divergence; `pnpm unit-profile-coverage:check
+--write` if evidence changes; `pnpm quality`; `/simplify` convergence for
+significant changes; MBT only if integrated target or damage sequencing changes
+require it.
+
+### Task 270 - SRDINV68A - Promote Sleep Damage Cleanup Runtime
+
+Status: `blocked`
+
+Depends on: SRDINV66
+
+Blocks: SRDINV68B, SRDINV78
+
+Research / plan:
+[Sleep](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md),
+[Damage](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[SRDINV38 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV38_SLEEP_SAVE_LOOP_RESEARCH.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote cleanup of Sleep-owned Incapacitated/Unconscious effects when an
+affected target takes damage from any source. Route through the existing damage
+commit boundary so attack, spell, and other damage paths cannot diverge.
+
+Out of scope: the adjacent shake-awake action, concentration-like expiration
+that Sleep does not have, and generic condition cleanup unrelated to Sleep
+ownership.
+
+Verification: RAW/source review for Sleep damage-ending wording and Damage;
+focused tests for attack damage, spell damage, non-damage events, unrelated
+Unconscious/Incapacitated preservation, and idempotent cleanup; package-local
+Quint updates before runtime divergence; `pnpm unit-profile-coverage:check
+--write` if evidence changes; `pnpm quality`; `/simplify` convergence for
+significant changes; MBT only if shared damage sequencing changes require it.
+
+### Task 271 - SRDINV68B - Promote Sleep Shake-Awake Cleanup Runtime
+
+Status: `blocked`
+
+Depends on: SRDINV68A
+
+Blocks: SRDINV78
+
+Research / plan:
+[Sleep](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md),
+[Action](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[SRDINV38 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV38_SLEEP_SAVE_LOOP_RESEARCH.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote the action by a creature within 5 feet that shakes an affected
+target out of Sleep. Use caller-supplied adjacency facts and the existing action
+resource boundary, then reuse the Sleep-owned cleanup helper introduced by
+SRDINV68A.
+
+Out of scope: deriving grid adjacency/pathfinding, waking from non-Sleep
+Unconscious effects, and broad Help/Search action modeling.
+
+Verification: RAW/source review for Sleep and Action wording; focused tests for
+adjacent actor success, non-adjacent rejection, action spend, Sleep-owned effect
+cleanup, unrelated condition preservation, and repeated wake attempts;
+package-local Quint updates before runtime divergence; `pnpm
+unit-profile-coverage:check --write` if evidence changes; `pnpm quality`;
+`/simplify` convergence for significant changes; MBT only if action sequencing
+changes require it.
+
+### Task 272 - SRDINV69A - Promote Hellish Rebuke Reaction Trigger Runtime
+
+Status: `blocked`
+
+Depends on: SRDINV66
+
+Blocks: SRDINV69B, SRDINV78
+
+Research / plan:
+[Hellish Rebuke](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[Reaction](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md),
+[Damage](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Hellish Rebuke's Reaction discovery/window when a creature with
+the spell available takes damage from a visible creature within 60 feet. Record
+the attacker/defender/slot continuation facts needed by the resolution task
+without resolving the saving throw or damage.
+
+Out of scope: Dexterity save and Fire damage resolution, Counterspell-like
+reaction competition, and deriving line of sight or range from map geometry.
+
+Verification: RAW/source review for Hellish Rebuke, Reaction, and Damage;
+focused tests for damage-trigger offer, invisible attacker rejection,
+out-of-range rejection, no-reaction-resource rejection, spell-resource gating,
+and continuation payload shape; package-local Quint updates before runtime
+divergence; `pnpm unit-profile-coverage:check --write` if evidence changes;
+`pnpm quality`; `/simplify` convergence for significant changes; MBT only if
+reaction discovery sequencing changes require it.
+
+### Task 273 - SRDINV69B - Promote Hellish Rebuke Save Damage Runtime
+
+Status: `blocked`
+
+Depends on: SRDINV69A
+
+Blocks: SRDINV78
+
+Research / plan:
+[Hellish Rebuke](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[Saving Throw](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Damage](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Hellish Rebuke's Dexterity save, Fire damage, half damage on
+success, slot scaling, and Reaction/Spell Slot spend from the continuation
+created by SRDINV69A.
+
+Out of scope: new reaction discovery rules, object damage, and any damage type
+or saving throw not named by Hellish Rebuke.
+
+Verification: RAW/source review for Hellish Rebuke damage/save/upcast wording;
+focused tests for failed save full damage, successful save half damage, slot
+level scaling, reaction and slot spend, invalid continuation rejection, and no
+damage on canceled continuation; package-local Quint updates before runtime
+divergence; `pnpm unit-profile-coverage:check --write` if evidence changes;
+`pnpm quality`; `/simplify` convergence for significant changes; MBT only if
+integrated reaction-resolution sequencing changes require it.
+
+### Task 274 - SRDINV70A - Research Light and Illumination Runtime Boundary
+
+Status: `blocked`
+
+Depends on: SRDINV66
+
+Blocks: SRDINV70B, SRDINV78
+
+Research / plan:
+[Light](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[Bright Light](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Dim Light](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Darkness](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: decide the shared runtime boundary for authored light emitters before
+promoting Light, Produce Flame held light, Faerie Fire/Starry Wisp light riders,
+or Darkvision interactions further. Classify what belongs in battle-runtime
+state, what remains Surface/display metadata, and what requires caller-supplied
+visibility facts.
+
+Out of scope: implementing Light, general map illumination/path tracing, and
+rewriting existing visibility gates before the boundary is documented.
+
+Verification: RAW/source review for Light, Bright Light, Dim Light, Darkness,
+Darkvision if used, and `UBIQUITOUS_LANGUAGE.md`; produce a short research note
+under `plans/unit-profile-coverage/`; active-plan consistency if new tasks are
+split from the decision; `pnpm quality`; `/simplify` convergence only if code
+or substantial plan structure changes.
+
+### Task 275 - SRDINV70B - Promote Light Object Illumination Runtime
+
+Status: `blocked`
+
+Depends on: SRDINV70A
+
+Blocks: SRDINV78
+
+Research / plan:
+[Light](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Bright Light](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Dim Light](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Light as a touched Large-or-smaller object illumination effect
+using the researched light boundary and caller-supplied object identity and
+worn/carried facts. Preserve duration and ownership so recasting/expiration
+cannot leave stale illumination.
+
+Out of scope: object inventory, color UI, map lighting algorithms, and light
+from other spells unless required by the shared boundary.
+
+Verification: RAW/source review for Light, Object, Bright Light, and Dim Light;
+focused tests for valid object application, too-large/worn/carried rejection,
+duration cleanup, recast/replacement behavior, and no duplicated visibility
+state; package-local Quint updates before runtime divergence; `pnpm
+unit-profile-coverage:check --write` if evidence changes; `pnpm quality`;
+`/simplify` convergence for significant changes; MBT only if turn/timing
+sequencing changes require it.
+
+### Task 276 - SRDINV71 - Research Minor Illusion Battle Boundary
+
+Status: `blocked`
+
+Depends on: SRDINV66
+
+Blocks: SRDINV78
+
+Research / plan:
+[Minor Illusion](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-M-P.md),
+[Illusions](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Study](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: decide whether Minor Illusion has battle-runtime executable state,
+Surface-only authored facts, or explicit non-battle closure for sound/image
+creation, Study reveal, and physical-interaction reveal. If executable, split
+implementation tasks by image/sound and reveal pathway.
+
+Out of scope: implementing the illusion model in the research task and adding a
+general perception/Investigation subsystem without a typed battle boundary.
+
+Verification: RAW/source review for Minor Illusion, Illusions, Study, and
+`UBIQUITOUS_LANGUAGE.md`; produce a short research note under
+`plans/unit-profile-coverage/`; active-plan consistency if follow-up tasks are
+created; `pnpm quality`; `/simplify` convergence only if code or substantial
+plan structure changes.
+
+### Task 277 - SRDINV72A - Promote Bardic Inspiration Grant Runtime
+
+Status: `blocked`
+
+Depends on: SRDINV66
+
+Blocks: SRDINV72B, SRDINV78
+
+Research / plan:
+[Bardic Inspiration](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Bard.md),
+[Bonus Action](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[D20 Test](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Bardic Inspiration's Bonus Action grant to another creature
+within 60 feet who can see or hear the Bard. Model one die per creature,
+one-hour effect ownership, and the Bard's d6 resource count derived from
+Charisma modifier with the RAW minimum.
+
+Out of scope: spending the die after a failed D20 Test, later-level die size,
+and deriving line of sight/hearing/range from map geometry.
+
+Verification: RAW/source review for Bardic Inspiration, Bonus Action, and D20
+Test; focused tests for grant success, visibility/hearing/range rejection,
+bonus-action spend, one-die-per-target replacement/rejection invariant, resource
+count minimum, and duration ownership; package-local Quint updates before
+runtime divergence; `pnpm unit-profile-coverage:check --write` if evidence
+changes; `pnpm quality`; `/simplify` convergence for significant changes; MBT
+only if action/resource sequencing changes require it.
+
+### Task 278 - SRDINV72B - Promote Bardic Inspiration Failed D20 Test Runtime
+
+Status: `blocked`
+
+Depends on: SRDINV72A
+
+Blocks: SRDINV78
+
+Research / plan:
+[Bardic Inspiration](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Bard.md),
+[D20 Test](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Attack Roll](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Saving Throw](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Ability Check](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Bardic Inspiration die use after a failed D20 Test. Reuse the
+existing roll/result representation so the die can be added, failure can become
+success, and the inspiration effect is expended without duplicating roll state.
+
+Out of scope: using the die before knowing failure, reactions to non-D20 Tests,
+later-level Bardic Inspiration variants, and generic roll-history storage.
+
+Verification: RAW/source review for Bardic Inspiration and D20 Test variants;
+focused tests for attack roll, saving throw, and ability check failures,
+failure-to-success replay, still-failed outcome, die expenditure, no use on
+success, and no double spend; package-local Quint updates before runtime
+divergence; `pnpm unit-profile-coverage:check --write` if evidence changes;
+`pnpm quality`; `/simplify` convergence for significant changes; MBT only if
+shared D20 Test resolution sequencing changes require it.
+
+### Task 279 - SRDINV73A - Promote Monk Martial Arts Attack Projection
+
+Status: `blocked`
+
+Depends on: SRDINV66
+
+Blocks: SRDINV73B, SRDINV78
+
+Research / plan:
+[Martial Arts](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Monk.md),
+[Unarmed Strike](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Weapon Attack](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Martial Arts' attack projection while the Monk is unarmored,
+unshielded, and unarmed or wielding only Monk weapons. Include d6 damage
+replacement, Dexterity attack/damage choice for Unarmed Strikes and Monk
+weapons, and Dexterity-based Grapple/Shove DC projection.
+
+Out of scope: the Bonus Action Unarmed Strike, later Martial Arts die scaling,
+and duplicating equipment/loadout facts already represented elsewhere.
+
+Verification: RAW/source review for Martial Arts, Unarmed Strike, and Weapon
+Attack; focused tests for eligible/uneligible loadouts, d6 replacement, Dex vs
+Str attack/damage choice, Monk weapon qualification, Grapple/Shove DC
+projection, armor/shield rejection, and no duplicated loadout state;
+package-local Quint updates before runtime divergence; `pnpm
+unit-profile-coverage:check --write` if evidence changes; `pnpm quality`;
+`/simplify` convergence for significant changes; MBT only if attack projection
+sequencing changes require it.
+
+### Task 280 - SRDINV73B - Promote Monk Martial Arts Bonus Unarmed Strike
+
+Status: `blocked`
+
+Depends on: SRDINV73A
+
+Blocks: SRDINV78
+
+Research / plan:
+[Martial Arts](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Monk.md),
+[Bonus Action](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Unarmed Strike](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Martial Arts' Bonus Action Unarmed Strike while the same
+unarmored, unshielded, unarmed-or-Monk-weapon eligibility gate holds. Reuse the
+attack projection from SRDINV73A and the existing Bonus Action resource.
+
+Out of scope: adding an Attack-action prerequisite not present in the SRD
+5.2.1 text, Flurry of Blows, and later-level Monk features.
+
+Verification: RAW/source review for Martial Arts, Bonus Action, and Unarmed
+Strike; focused tests for eligible bonus strike, armor/shield/loadout rejection,
+bonus-action spend, attack projection reuse, and no Attack-action prerequisite;
+package-local Quint updates before runtime divergence; `pnpm
+unit-profile-coverage:check --write` if evidence changes; `pnpm quality`;
+`/simplify` convergence for significant changes; MBT only if action sequencing
+changes require it.
+
+### Task 281 - SRDINV74A - Promote Weapon Mastery Sap Runtime
+
+Status: `blocked`
+
+Depends on: SRDINV66
+
+Blocks: SRDINV74B, SRDINV78
+
+Research / plan:
+[Sap](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md),
+[Attack Roll](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Weapon Mastery](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Sap's hit-applied Disadvantage on the target's next attack roll
+before the attacker's next turn, gated by selected weapon mastery ownership and
+the weapon's Sap property.
+
+Out of scope: other mastery properties, mastery selection UI, and any
+Disadvantage beyond the single next attack roll before the attacker's next turn.
+
+Verification: RAW/source review for Sap and Weapon Mastery; focused tests for
+hit application, miss pass-through, next attack Disadvantage consumption,
+start-of-attacker-turn cleanup, mastery ownership gating, and non-Sap weapon
+rejection; package-local Quint updates before runtime divergence; `pnpm
+unit-profile-coverage:check --write` if evidence changes; `pnpm quality`;
+`/simplify` convergence for significant changes; MBT only if turn cleanup or
+attack modifier sequencing changes require it.
+
+### Task 282 - SRDINV74B - Research Weapon Mastery Cleave and Topple Split
+
+Status: `blocked`
+
+Depends on: SRDINV74A
+
+Blocks: SRDINV78
+
+Research / plan:
+[Cleave and Topple](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md),
+[Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Weapon Mastery](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: split Cleave and Topple into implementable runtime tasks or document the
+missing Surface/runtime boundary for current mastery records. Cleave likely
+needs once-per-turn extra attack state and adjacent second-target facts; Topple
+likely needs a save-gated Prone application keyed to weapon mastery DC.
+
+Out of scope: implementing Cleave or Topple in this research task and
+promoting every mastery property as one broad task.
+
+Verification: RAW/source review for Cleave, Topple, Prone, and Weapon Mastery;
+produce a short research note under `plans/unit-profile-coverage/`; active-plan
+consistency if follow-up tasks are appended; `pnpm quality`; `/simplify`
+convergence only if code or substantial plan structure changes.
+
+### Task 283 - SRDINV75A - Promote Sorcerer Innate Sorcery Activation Runtime
+
+Status: `blocked`
+
+Depends on: SRDINV66
+
+Blocks: SRDINV75B, SRDINV78
+
+Research / plan:
+[Innate Sorcery](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Sorcerer.md),
+[Bonus Action](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Long Rest](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Innate Sorcery activation as a Bonus Action, two-use Long Rest
+resource, and one-minute active effect. Keep spell DC/attack projection out of
+this task so activation/resource ownership is accepted first.
+
+Out of scope: spell save DC increase, spell attack Advantage, later Sorcerer
+features, and rest recovery beyond the resource reset already used by
+character/class resources.
+
+Verification: RAW/source review for Innate Sorcery, Bonus Action, and Long
+Rest; focused tests for activation, bonus-action spend, resource spend, resource
+exhaustion rejection, one-minute duration, expiration cleanup, and Long Rest
+reset if the resource owner is touched; package-local Quint updates before
+runtime divergence; `pnpm unit-profile-coverage:check --write` if evidence
+changes; `pnpm quality`; `/simplify` convergence for significant changes; MBT
+only if turn/duration sequencing changes require it.
+
+### Task 284 - SRDINV75B - Promote Innate Sorcery Spell DC and Attack Projection
+
+Status: `blocked`
+
+Depends on: SRDINV75A
+
+Blocks: SRDINV78
+
+Research / plan:
+[Innate Sorcery](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Sorcerer.md),
+[Spell Attack](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Saving Throw](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote active Innate Sorcery's +1 Sorcerer spell save DC and Advantage
+on Sorcerer spell attack rolls through the existing spell invocation projection.
+The Sorcerer-spell gate must be typed or otherwise executable, not remembered by
+downstream callers.
+
+Out of scope: activation/resource handling already owned by SRDINV75A,
+non-Sorcerer spell modifiers, and metamagic or later-level Sorcerer features.
+
+Verification: RAW/source review for Innate Sorcery, Spell Attack, and Saving
+Throw; focused tests for active/inactive DC projection, Sorcerer vs non-Sorcerer
+spell gates, spell attack Advantage, save-DC effect on target saves, expiration
+removal, and no duplicate modifier state; package-local Quint updates before
+runtime divergence; `pnpm unit-profile-coverage:check --write` if evidence
+changes; `pnpm quality`; `/simplify` convergence for significant changes; MBT
+only if shared spell invocation sequencing changes require it.
+
+### Task 285 - SRDINV76A - Research Warlock Level-1 Invocation Runtime Boundary
+
+Status: `blocked`
+
+Depends on: SRDINV66
+
+Blocks: SRDINV76B, SRDINV78
+
+Research / plan:
+[Eldritch Invocations](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md),
+[Pact Magic](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: classify level-1-legal Warlock invocation options into
+character-creation-only, spell-access, and battle-runtime tasks before promoting
+any option as representative support. At SRD level 1, Armor of Shadows and Pact
+of the Blade/Chain/Tome are candidates; invocations with level 2 prerequisites
+must not be counted as level-1 coverage.
+
+Out of scope: implementing invocation options in the research task and treating
+all invocations as one runtime feature.
+
+Verification: RAW/source review for Eldritch Invocations, Warlock level
+prerequisites, Pact Magic, and `UBIQUITOUS_LANGUAGE.md`; produce a short
+research note under `plans/unit-profile-coverage/`; active-plan consistency if
+follow-up tasks are appended; `pnpm quality`; `/simplify` convergence only if
+code or substantial plan structure changes.
+
+### Task 286 - SRDINV76B - Promote Pact of the Blade Battle Projection
+
+Status: `blocked`
+
+Depends on: SRDINV76A
+
+Blocks: SRDINV78
+
+Research / plan:
+[Pact of the Blade](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md),
+[Weapon Attack](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Damage Types](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Pact of the Blade's bonded weapon battle projection: Charisma
+attack/damage option, selectable Necrotic/Psychic/Radiant/normal damage type,
+proficiency, and spellcasting-focus facts. Keep the conjured/bonded weapon
+identity boundary typed and avoid generic item lifecycle simulation unless the
+existing inventory model already owns it.
+
+Out of scope: Pact of the Chain/Tome, Armor of Shadows, general item
+conjuration, and invocations with level 2 prerequisites.
+
+Verification: RAW/source review for Pact of the Blade, Weapon Attack, and
+Damage Types; focused tests for bonded weapon gating, Charisma attack/damage
+choice, normal and alternate damage type selection, proficiency projection,
+focus projection if represented in battle, and non-bonded weapon pass-through;
+package-local Quint updates before runtime divergence; `pnpm
+unit-profile-coverage:check --write` if evidence changes; `pnpm quality`;
+`/simplify` convergence for significant changes; MBT only if attack projection
+sequencing changes require it.
+
+### Task 287 - SRDINV77 - Promote Ranger Favored Enemy Hunter's Mark Free Casts
+
+Status: `blocked`
+
+Depends on: SRDINV66
+
+Blocks: SRDINV78
+
+Research / plan:
+[Favored Enemy](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Ranger.md),
+[Hunter's Mark](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[Long Rest](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Favored Enemy as always-prepared Hunter's Mark plus two no-slot
+casts per Long Rest that reuse the existing Hunter's Mark runtime procedure and
+concentration/effect ownership. Model slotless casts as a class resource, not a
+parallel copy of spell-slot state.
+
+Out of scope: Hunter's Mark deferred clauses owned by SRDINV62-SRDINV63,
+Ranger spell-list admission already handled elsewhere, and later Favored Enemy
+scaling.
+
+Verification: RAW/source review for Favored Enemy, Hunter's Mark, and Long
+Rest; focused tests for prepared/access projection, slotless cast spend,
+fallback to normal slot cast when free uses are exhausted if supported, Long
+Rest reset, concentration/effect reuse, and no duplicate spell-slot accounting;
+package-local Quint updates before runtime divergence; `pnpm
+unit-profile-coverage:check --write` if evidence changes; `pnpm quality`;
+`/simplify` convergence for significant changes; MBT only if spell-cast
+resource sequencing changes require it.
+
+### Task 288 - SRDINV78 - Recursive Level-1 Battle Feature Planning Review
+
+Status: `blocked`
+
+Depends on: SRDINV67-SRDINV77
+
+Blocks: none
+
+Research / plan:
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md),
+[ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: review SRDINV67-SRDINV77, refresh level-1 battle-related feature/spell
+metrics, calculate the remaining acceptance gap for "all battle-related level-1
+features, including spells, can be used in battle," and decide whether the next
+queue is final closure, cleanup, or another concrete implementation batch.
+
+Out of scope: claiming 100% support from catalog/profile admission alone and
+recursively inventing tasks before the implemented batch has been reviewed.
+
+Verification: RAW/source review for any newly appended slices plus
+`UBIQUITOUS_LANGUAGE.md`; active-plan consistency across Ralph index, DAG table,
+and task details; regenerate inventory with `pnpm
+unit-profile-coverage:check --write` when evidence or inventory artifacts
+change; explicitly list remaining unsupported/profile-subset-supported
+battle-related level-1 rows with reason and owner; `/simplify` convergence,
+minimum two rounds unless the final changeset is trivial.
