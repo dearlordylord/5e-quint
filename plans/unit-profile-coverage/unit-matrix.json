@@ -5779,11 +5779,11 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "SRDINV33",
+            "followUpTaskId": "SRDINV58C",
             "mechanic": "object outline and object attack-roll Advantage"
           },
           {
-            "followUpTaskId": "SRDINV33",
+            "followUpTaskId": "SRDINV70A",
             "mechanic": "Dim Light emitted by affected creatures and objects"
           }
         ],

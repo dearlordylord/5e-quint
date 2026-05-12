@@ -106,13 +106,13 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 258,
       "id": "SRDINV58B",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Research Faerie Fire Object Outline and Dim Light Boundary"
     },
     {
       "number": 259,
       "id": "SRDINV59A",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "blocked",
       "title": "Promote Starry Wisp Dim Light Rider Runtime"
     },
     {
@@ -288,6 +288,12 @@ Keep it synchronized with the DAG table and task details.
       "id": "SRDINV78",
       "status": "blocked",
       "title": "Recursive Level-1 Battle Feature Planning Review"
+    },
+    {
+      "number": 289,
+      "id": "SRDINV58C",
+      "status": "blocked",
+      "title": "Promote Faerie Fire Object Outline Runtime"
     }
   ]
 }
@@ -327,16 +333,16 @@ Keep it synchronized with the DAG table and task details.
 | Order | Task                                                      | Status             | Depends on | Blocks | Research / plan | Next action |
 | ----- | --------------------------------------------------------- | ------------------ | ---------- | ------ | --------------- | ----------- |
 | 164   | QMBT69 - Recursive Unit Profile Planning Review | deferred | completed baseline | none | [QMBT66 review](/workspace/typescript/dnd/plans/unit-profile-coverage/QMBT66_RECURSIVE_PLANNING_REVIEW.md), [Unit profile coverage report](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md) | Still parked by the SRD inventory frontier instruction; completed baseline is complete, but the older QMBT queue remains deferred until that frontier resumes it. |
-| 248   | SRDINV55 - Recursive SRD Inventory Planning Review | done | SRDINV50D1, SRDINV50D2, SRDINV56A, SRDINV56B | SRDINV57, SRDINV58A, SRDINV58B, SRDINV59A, SRDINV59B, SRDINV60A, SRDINV60B, SRDINV61, SRDINV62, SRDINV63, SRDINV64, SRDINV65, SRDINV66 | [SRDINV55 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV55_RECURSIVE_PLANNING_REVIEW.md), [SRDINV54 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md), [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Reviewed the closed Command route and Feather Fall runtime batch, refreshed metrics, unblocked the immediate deferred-clause batch, and closed SRDINV65 as existing Shocking Grasp evidence. |
+| 248   | SRDINV55 - Recursive SRD Inventory Planning Review | done | SRDINV50D1, SRDINV50D2, SRDINV56A, SRDINV56B | SRDINV57, SRDINV58A, SRDINV58B, SRDINV60A, SRDINV60B, SRDINV61, SRDINV62, SRDINV63, SRDINV64, SRDINV65, SRDINV66 | [SRDINV55 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV55_RECURSIVE_PLANNING_REVIEW.md), [SRDINV54 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md), [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [SRDINV48 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV48_RECURSIVE_PLANNING_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Reviewed the closed Command route and Feather Fall runtime batch, refreshed metrics, unblocked the immediate deferred-clause batch, and closed SRDINV65 as existing Shocking Grasp evidence. Starry Wisp light work is now deferred behind SRDINV70A. |
 | 252   | SRDINV50D1 - Promote Command Approach Route Runtime | done | none | SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [Speed](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promoted Approach through caller-supplied shortest/direct route execution facts and caller-supplied within-5-feet evidence; no pathfinding derivation. |
 | 253   | SRDINV50D2 - Promote Command Flee Route Runtime | done | none | SRDINV55 | [SRDINV50 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV50_COMMAND_OPTION_RUNTIME_SPLIT_RESEARCH.md), [Command](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [Speed](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Opportunity Attacks](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Flee only through caller-supplied fastest-available moving-away route facts and actual movement-budget execution; no route AI. |
 | 254   | SRDINV56A - Promote Feather Fall Reaction Invocation Runtime | done | none | SRDINV56B, SRDINV55 | [SRDINV54 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md), [Feather Fall](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Falling](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Reaction](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promoted table-supplied falling-trigger Reaction invocation, up-to-five falling target admission, spell effect creation, and active descent-cap projection; no falling simulator. |
 | 255   | SRDINV56B - Promote Feather Fall Landing Cleanup Runtime | done | SRDINV56A | SRDINV55 | [SRDINV54 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV54_FEATHER_FALL_FALLING_RUNTIME_BOUNDARY_RESEARCH.md), [Feather Fall](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Falling](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promoted caller-supplied landing cleanup for Feather Fall effects, preventing fall damage and Falling-hazard Prone at the same landing boundary. |
 | 256   | SRDINV57 - Promote Grease Difficult Terrain Movement Boundary | done | SRDINV55 | SRDINV66 | [Grease](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Movement](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [SRDINV41 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV41_RECURSIVE_PLANNING_REVIEW.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promoted Grease's ground as caller-supplied Difficult Terrain movement-cost evidence without deriving area geometry or pathfinding. |
 | 257   | SRDINV58A - Promote Faerie Fire Invisible-Denial Runtime | done | SRDINV55 | SRDINV58B, SRDINV66 | [Faerie Fire](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Invisible](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promoted Faerie Fire's failed-save creature outline as one concentration-owned effect that denies Invisible benefits while preserving sight-gated attack-roll Advantage. |
-| 258   | SRDINV58B - Research Faerie Fire Object Outline and Dim Light Boundary | ready-for-research | SRDINV58A | SRDINV66 | [Faerie Fire](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Dim Light](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Decide whether noncarried object outlines and Dim Light emission are battle-runtime facts, Surface-only facts, or explicit out-of-scope environmental projection. |
-| 259   | SRDINV59A - Promote Starry Wisp Dim Light Rider Runtime | ready-for-implementation-after-light-research | SRDINV55 | SRDINV59B, SRDINV66 | [Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Dim Light](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [SRDINV34 decision](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV28E_STARRY_WISP_OBJECT_TARGET_DECISION.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Starry Wisp's hit-applied Dim Light rider as a timed target-attached effect if the existing light model can execute it without duplicating visibility state. |
-| 260   | SRDINV59B - Promote Starry Wisp Invisible-Denial Rider Runtime | blocked | SRDINV59A | SRDINV66 | [Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Invisible](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote the hit-applied Starry Wisp rider that prevents the target from benefiting from Invisible until the spell's next-turn boundary. |
+| 258   | SRDINV58B - Research Faerie Fire Object Outline and Dim Light Boundary | done | SRDINV58A | SRDINV66 | [SRDINV58B research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV58B_FAERIE_FIRE_OBJECT_LIGHT_BOUNDARY_RESEARCH.md), [Faerie Fire](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Dim Light](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Object outline is a future object-target runtime slice using caller-supplied object and sight facts; Dim Light remains shared illumination/environment projection pending SRDINV70A. |
+| 259   | SRDINV59A - Promote Starry Wisp Dim Light Rider Runtime | blocked | SRDINV70A | SRDINV78 | [Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Dim Light](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [SRDINV58B research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV58B_FAERIE_FIRE_OBJECT_LIGHT_BOUNDARY_RESEARCH.md), [SRDINV34 decision](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV28E_STARRY_WISP_OBJECT_TARGET_DECISION.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Blocked until SRDINV70A decides the shared illumination runtime boundary; do not add Starry-Wisp-specific Dim Light state. |
+| 260   | SRDINV59B - Promote Starry Wisp Invisible-Denial Rider Runtime | blocked | SRDINV59A | SRDINV78 | [Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Invisible](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote the hit-applied Starry Wisp rider that prevents the target from benefiting from Invisible until the spell's next-turn boundary. |
 | 261   | SRDINV60A - Promote Protection from Evil and Good Condition Prevention | ready-for-implementation-after-light-research | SRDINV55 | SRDINV60B, SRDINV66 | [Protection from Evil and Good](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-M-P.md), [Charmed](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Frightened](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Possession](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote prevention of scoped-creature possession and new Charmed/Frightened application while reusing existing creature-type and condition ownership facts. |
 | 262   | SRDINV60B - Promote Protection from Evil and Good Scoped Save Advantage | blocked | SRDINV60A | SRDINV66 | [Protection from Evil and Good](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-M-P.md), [Saving Throw](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Advantage on new saves against already-applied scoped possession, Charmed, and Frightened effects without adding parallel save-modifier state. |
 | 263   | SRDINV61 - Promote Animal Friendship Damage-Break Cleanup | ready-for-implementation-after-light-research | SRDINV55 | SRDINV66 | [Animal Friendship](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Charmed](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote caster-or-ally damage cleanup for Animal Friendship's Charmed effect through the existing damage/effect ownership boundary. |
@@ -344,7 +350,7 @@ Keep it synchronized with the DAG table and task details.
 | 265   | SRDINV63 - Research Hunter's Mark Finding-Advantage Boundary | blocked | SRDINV62 | SRDINV66 | [Hunter's Mark](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Ability Check](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Decide whether the Perception/Survival finding Advantage clause is battle-runtime roll behavior, exploration-only metadata, or a caller-supplied battle check modifier. |
 | 266   | SRDINV64 - Promote Chill Touch Healing-Prevention Rider | ready-for-implementation-after-light-research | SRDINV55 | SRDINV66 | [Chill Touch](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Healing](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Chill Touch's hit-applied no-hit-point-regain rider through the existing healing resolution boundary until the caster's next turn. |
 | 267   | SRDINV65 - Promote Shocking Grasp Opportunity Attack Denial | done | SRDINV55 | SRDINV66 | [Shocking Grasp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Opportunity Attacks](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Reaction](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Existing promoted evidence already models Shocking Grasp's hit-applied Opportunity Attack prevention until the target's next-turn boundary, scoped to Opportunity Attacks rather than all Reactions. |
-| 268   | SRDINV66 - Recursive SRD Inventory Planning Review | blocked | SRDINV57, SRDINV58A, SRDINV58B, SRDINV59A, SRDINV59B, SRDINV60A, SRDINV60B, SRDINV61, SRDINV62, SRDINV63, SRDINV64, SRDINV65 | SRDINV67, SRDINV68A, SRDINV68B, SRDINV69A, SRDINV69B, SRDINV70A, SRDINV70B, SRDINV71, SRDINV72A, SRDINV72B, SRDINV73A, SRDINV73B, SRDINV74A, SRDINV74B, SRDINV75A, SRDINV75B, SRDINV76A, SRDINV76B, SRDINV77, SRDINV78 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Review the deferred-clause batch, refresh spell Unit metrics, measure remaining level-1 battle-related gaps, and unlock the pre-seeded remaining level-1 battle feature/spell batch only after resolving or explicitly deferring any review notes. |
+| 268   | SRDINV66 - Recursive SRD Inventory Planning Review | blocked | SRDINV57, SRDINV58A, SRDINV58B, SRDINV60A, SRDINV60B, SRDINV61, SRDINV62, SRDINV63, SRDINV64, SRDINV65 | SRDINV58C, SRDINV67, SRDINV68A, SRDINV68B, SRDINV69A, SRDINV69B, SRDINV70A, SRDINV70B, SRDINV71, SRDINV72A, SRDINV72B, SRDINV73A, SRDINV73B, SRDINV74A, SRDINV74B, SRDINV75A, SRDINV75B, SRDINV76A, SRDINV76B, SRDINV77, SRDINV78 | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Review the deferred-clause batch except Starry Wisp light/invisible riders now deferred behind SRDINV70A, refresh spell Unit metrics, measure remaining level-1 battle-related gaps, and unlock the pre-seeded remaining level-1 battle feature/spell batch only after resolving or explicitly deferring any review notes. |
 | 269   | SRDINV67 - Promote Produce Flame Object Hurl Runtime | blocked | SRDINV66 | SRDINV78 | [Produce Flame](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-M-P.md), [Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Breaking Objects](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [SRDINV34 decision](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV28E_STARRY_WISP_OBJECT_TARGET_DECISION.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Produce Flame's creature-or-object hurl target using the existing typed object target and object damage disposition boundary, without adding object inventory state. |
 | 270   | SRDINV68A - Promote Sleep Damage Cleanup Runtime | blocked | SRDINV66 | SRDINV68B, SRDINV78 | [Sleep](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Damage](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [SRDINV38 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV38_SLEEP_SAVE_LOOP_RESEARCH.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote cleanup of Sleep-owned Incapacitated/Unconscious effects when the affected target takes damage from any source. |
 | 271   | SRDINV68B - Promote Sleep Shake-Awake Cleanup Runtime | blocked | SRDINV68A | SRDINV78 | [Sleep](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Action](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [SRDINV38 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV38_SLEEP_SAVE_LOOP_RESEARCH.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote the adjacent action cleanup that shakes a creature out of Sleep's effect, reusing existing action and target-adjacency fact boundaries. |
@@ -364,7 +370,8 @@ Keep it synchronized with the DAG table and task details.
 | 285   | SRDINV76A - Research Warlock Level-1 Invocation Runtime Boundary | blocked | SRDINV66 | SRDINV76B, SRDINV78 | [Eldritch Invocations](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Pact Magic](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Classify level-1-legal Warlock invocation options into character-creation-only, spell-access, and battle-runtime tasks before promoting any one option as representative support. |
 | 286   | SRDINV76B - Promote Pact of the Blade Battle Projection | blocked | SRDINV76A | SRDINV78 | [Pact of the Blade](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Weapon Attack](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Damage Types](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Pact of the Blade's bonded weapon battle projection: Charisma attack/damage option, selectable Necrotic/Psychic/Radiant/normal damage type, proficiency, and focus facts without generic item conjuration simulation. |
 | 287   | SRDINV77 - Promote Ranger Favored Enemy Hunter's Mark Free Casts | blocked | SRDINV66 | SRDINV78 | [Favored Enemy](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Ranger.md), [Hunter's Mark](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Long Rest](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Favored Enemy as always-prepared Hunter's Mark plus two no-slot casts per Long Rest that reuse the existing Hunter's Mark runtime procedure. |
-| 288   | SRDINV78 - Recursive Level-1 Battle Feature Planning Review | blocked | SRDINV67, SRDINV68A, SRDINV68B, SRDINV69A, SRDINV69B, SRDINV70A, SRDINV70B, SRDINV71, SRDINV72A, SRDINV72B, SRDINV73A, SRDINV73B, SRDINV74A, SRDINV74B, SRDINV75A, SRDINV75B, SRDINV76A, SRDINV76B, SRDINV77 | none | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Review the remaining spell/class-feature/weapon-mastery batch, refresh level-1 battle-related metrics, and decide whether the next queue is closure, cleanup, or final acceptance evidence. |
+| 288   | SRDINV78 - Recursive Level-1 Battle Feature Planning Review | blocked | SRDINV58C, SRDINV59A, SRDINV59B, SRDINV67, SRDINV68A, SRDINV68B, SRDINV69A, SRDINV69B, SRDINV70A, SRDINV70B, SRDINV71, SRDINV72A, SRDINV72B, SRDINV73A, SRDINV73B, SRDINV74A, SRDINV74B, SRDINV75A, SRDINV75B, SRDINV76A, SRDINV76B, SRDINV77 | none | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Review the remaining spell/class-feature/weapon-mastery batch, including Faerie Fire object outline and Starry Wisp light/invisible riders after their prerequisites, refresh level-1 battle-related metrics, and decide whether the next queue is closure, cleanup, or final acceptance evidence. |
+| 289   | SRDINV58C - Promote Faerie Fire Object Outline Runtime | blocked | SRDINV66 | SRDINV78 | [SRDINV58B research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV58B_FAERIE_FIRE_OBJECT_LIGHT_BOUNDARY_RESEARCH.md), [Faerie Fire](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Target](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote object outline attack Advantage and object Invisible-benefit denial through caller-supplied object ids and object sight facts, without object inventory or area-geometry derivation. |
 
 ## Task Details
 ### Task 164 - QMBT69 - Recursive Unit Profile Planning Review
@@ -402,7 +409,7 @@ Status: `done`
 
 Depends on: SRDINV50D1, SRDINV50D2, SRDINV56A, SRDINV56B
 
-Blocks: SRDINV57, SRDINV58A, SRDINV58B, SRDINV59A, SRDINV59B, SRDINV60A, SRDINV60B, SRDINV61, SRDINV62, SRDINV63, SRDINV64, SRDINV65, SRDINV66
+Blocks: SRDINV57, SRDINV58A, SRDINV58B, SRDINV60A, SRDINV60B, SRDINV61, SRDINV62, SRDINV63, SRDINV64, SRDINV65, SRDINV66
 
 Research / plan:
 [SRDINV55_RECURSIVE_PLANNING_REVIEW.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV55_RECURSIVE_PLANNING_REVIEW.md),
@@ -414,14 +421,19 @@ Research / plan:
 [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
 
 Scope: review the closed Command, movement, and Feather Fall runtime batch,
-refresh spell Unit metrics, and unlock SRDINV57, SRDINV58A, SRDINV58B, SRDINV59A, SRDINV59B, SRDINV60A, SRDINV60B, SRDINV61, SRDINV62, SRDINV63, SRDINV64, SRDINV65, SRDINV66 only after verifying
-that support claims, deferred mechanics, and inventory pressure are honest.
+refresh spell Unit metrics, and unlock SRDINV57, SRDINV58A, SRDINV58B,
+SRDINV60A, SRDINV60B, SRDINV61, SRDINV62, SRDINV63, SRDINV64, SRDINV65,
+SRDINV66 only after verifying that support claims, deferred mechanics, and
+inventory pressure are honest. SRDINV59A/SRDINV59B are no longer part of this
+immediate batch after SRDINV58B assigned Dim Light to the shared illumination
+decision.
 
 Result: SRDINV55 reviewed the closed batch, recorded refreshed metrics in
 `SRDINV55_RECURSIVE_PLANNING_REVIEW.md`, unblocked the immediate deferred-clause
 tasks whose only dependency was this review, and closed SRDINV65 as existing
 promoted Shocking Grasp Opportunity Attack denial evidence rather than duplicate
-runtime work.
+runtime work. SRDINV58B later reblocked Starry Wisp Dim Light work behind
+SRDINV70A rather than leaving it in the immediate batch.
 
 Out of scope: implementation work not captured by the newly appended batch and
 treating catalog admission alone as behavior support.
@@ -624,13 +636,14 @@ visibility/attack sequencing changes require it.
 
 ### Task 258 - SRDINV58B - Research Faerie Fire Object Outline and Dim Light Boundary
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV58A
 
 Blocks: SRDINV66
 
 Research / plan:
+[SRDINV58B_FAERIE_FIRE_OBJECT_LIGHT_BOUNDARY_RESEARCH.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV58B_FAERIE_FIRE_OBJECT_LIGHT_BOUNDARY_RESEARCH.md),
 [Faerie Fire](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
 [Dim Light](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
 [Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
@@ -640,36 +653,44 @@ Scope: decide whether object outlines and Dim Light emission are executable
 battle-runtime facts, Surface-only facts, or explicit environmental projection
 outside this battle runtime.
 
+Result: object outline attack Advantage and object Invisible-benefit denial are
+future battle-runtime executable facts, but only through caller-supplied object
+identities and object sight facts. Dim Light emission remains shared
+illumination/environment projection pending SRDINV70A rather than a
+Faerie-Fire-specific runtime field.
+
 Out of scope: implementing runtime behavior in this research task.
 
 Verification: RAW/source review for Faerie Fire, Object, Dim Light, visibility,
-and area vocabulary; active-plan consistency if follow-up tasks are appended;
-`/simplify` convergence if the plan changes are significant; no MBT.
+and area vocabulary; active-plan consistency across Ralph index, DAG table, and
+task details; `/simplify` convergence recorded in the research note; no MBT.
 
 ### Task 259 - SRDINV59A - Promote Starry Wisp Dim Light Rider Runtime
 
-Status: `ready-for-implementation-after-light-research`
+Status: `blocked`
 
-Depends on: SRDINV55
+Depends on: SRDINV70A
 
-Blocks: SRDINV59B, SRDINV66
+Blocks: SRDINV78
 
 Research / plan:
 [Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md),
 [Dim Light](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[SRDINV58B_FAERIE_FIRE_OBJECT_LIGHT_BOUNDARY_RESEARCH.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV58B_FAERIE_FIRE_OBJECT_LIGHT_BOUNDARY_RESEARCH.md),
 [SRDINV28E_STARRY_WISP_OBJECT_TARGET_DECISION.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV28E_STARRY_WISP_OBJECT_TARGET_DECISION.md),
 [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
 
-Scope: promote Starry Wisp's hit-applied Dim Light rider as a timed
-target-attached effect if the current light/visibility model can execute it
-without duplicating environmental state.
+Scope: promote Starry Wisp's hit-applied Dim Light rider only after SRDINV70A
+decides the shared illumination runtime boundary. Do not add a
+Starry-Wisp-specific light state field or visibility duplicate.
 
 Out of scope: generic illumination simulation and object-target changes already
 owned by the earlier object-target decision.
 
-Verification: RAW/source review for Starry Wisp and Dim Light; focused tests
-for hit application, duration, cleanup, and interaction with existing light
-projection; package-local Quint updates before runtime divergence; `pnpm
+Verification: SRDINV70A shared-light decision first; RAW/source review for
+Starry Wisp and Dim Light; focused tests for hit application, duration, cleanup,
+and interaction with the shared light projection if SRDINV70A makes this
+runtime-owned; package-local Quint updates before runtime divergence; `pnpm
 unit-profile-coverage:check --write` if evidence changes; `pnpm quality`;
 `/simplify` convergence for significant changes; MBT only if attack/visibility
 sequencing changes require it.
@@ -680,7 +701,7 @@ Status: `blocked`
 
 Depends on: SRDINV59A
 
-Blocks: SRDINV66
+Blocks: SRDINV78
 
 Research / plan:
 [Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md),
@@ -898,9 +919,9 @@ windows. No new MBT lane is required for this plan correction.
 
 Status: `blocked`
 
-Depends on: SRDINV57, SRDINV58A, SRDINV58B, SRDINV59A, SRDINV59B, SRDINV60A, SRDINV60B, SRDINV61, SRDINV62, SRDINV63, SRDINV64, SRDINV65
+Depends on: SRDINV57, SRDINV58A, SRDINV58B, SRDINV60A, SRDINV60B, SRDINV61, SRDINV62, SRDINV63, SRDINV64, SRDINV65
 
-Blocks: SRDINV67, SRDINV68A, SRDINV68B, SRDINV69A, SRDINV69B, SRDINV70A, SRDINV70B, SRDINV71, SRDINV72A, SRDINV72B, SRDINV73A, SRDINV73B, SRDINV74A, SRDINV74B, SRDINV75A, SRDINV75B, SRDINV76A, SRDINV76B, SRDINV77, SRDINV78
+Blocks: SRDINV58C, SRDINV67, SRDINV68A, SRDINV68B, SRDINV69A, SRDINV69B, SRDINV70A, SRDINV70B, SRDINV71, SRDINV72A, SRDINV72B, SRDINV73A, SRDINV73B, SRDINV74A, SRDINV74B, SRDINV75A, SRDINV75B, SRDINV76A, SRDINV76B, SRDINV77, SRDINV78
 
 Research / plan:
 [SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
@@ -908,10 +929,12 @@ Research / plan:
 [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md),
 [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
 
-Scope: review SRDINV57, SRDINV58A, SRDINV58B, SRDINV59A, SRDINV59B, SRDINV60A, SRDINV60B, SRDINV61, SRDINV62, SRDINV63, SRDINV64, SRDINV65, refresh spell Unit metrics, measure remaining
-level-1 battle-related gaps, and unlock the pre-seeded remaining level-1
-battle feature/spell batch only after resolving or explicitly deferring any
-reasonable review notes.
+Scope: review SRDINV57, SRDINV58A, SRDINV58B, SRDINV60A, SRDINV60B, SRDINV61,
+SRDINV62, SRDINV63, SRDINV64, SRDINV65, refresh spell Unit metrics, measure
+remaining level-1 battle-related gaps, and unlock the pre-seeded remaining
+level-1 battle feature/spell batch only after resolving or explicitly deferring
+any reasonable review notes. Starry Wisp Dim Light and dependent rider work are
+deferred behind SRDINV70A and no longer block this review.
 
 Out of scope: implementation work not captured by the newly appended batch and
 claiming full level-1 battle support from catalog admission alone.
@@ -1496,7 +1519,7 @@ resource sequencing changes require it.
 
 Status: `blocked`
 
-Depends on: SRDINV67, SRDINV68A, SRDINV68B, SRDINV69A, SRDINV69B, SRDINV70A, SRDINV70B, SRDINV71, SRDINV72A, SRDINV72B, SRDINV73A, SRDINV73B, SRDINV74A, SRDINV74B, SRDINV75A, SRDINV75B, SRDINV76A, SRDINV76B, SRDINV77
+Depends on: SRDINV58C, SRDINV59A, SRDINV59B, SRDINV67, SRDINV68A, SRDINV68B, SRDINV69A, SRDINV69B, SRDINV70A, SRDINV70B, SRDINV71, SRDINV72A, SRDINV72B, SRDINV73A, SRDINV73B, SRDINV74A, SRDINV74B, SRDINV75A, SRDINV75B, SRDINV76A, SRDINV76B, SRDINV77
 
 Blocks: none
 
@@ -1506,10 +1529,13 @@ Research / plan:
 [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md),
 [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
 
-Scope: review SRDINV67, SRDINV68A, SRDINV68B, SRDINV69A, SRDINV69B, SRDINV70A, SRDINV70B, SRDINV71, SRDINV72A, SRDINV72B, SRDINV73A, SRDINV73B, SRDINV74A, SRDINV74B, SRDINV75A, SRDINV75B, SRDINV76A, SRDINV76B, SRDINV77, refresh level-1 battle-related feature/spell
-metrics, calculate the remaining acceptance gap for "all battle-related level-1
-features, including spells, can be used in battle," and decide whether the next
-queue is final closure, cleanup, or another concrete implementation batch.
+Scope: review SRDINV58C, SRDINV59A, SRDINV59B, SRDINV67, SRDINV68A, SRDINV68B,
+SRDINV69A, SRDINV69B, SRDINV70A, SRDINV70B, SRDINV71, SRDINV72A, SRDINV72B,
+SRDINV73A, SRDINV73B, SRDINV74A, SRDINV74B, SRDINV75A, SRDINV75B, SRDINV76A,
+SRDINV76B, SRDINV77, refresh level-1 battle-related feature/spell metrics,
+calculate the remaining acceptance gap for "all battle-related level-1 features,
+including spells, can be used in battle," and decide whether the next queue is
+final closure, cleanup, or another concrete implementation batch.
 
 Out of scope: claiming 100% support from catalog/profile admission alone and
 recursively inventing tasks before the implemented batch has been reviewed.
@@ -1521,3 +1547,39 @@ unit-profile-coverage:check --write` when evidence or inventory artifacts
 change; explicitly list remaining unsupported/profile-subset-supported
 battle-related level-1 rows with reason and owner; `/simplify` convergence,
 minimum two rounds unless the final changeset is trivial.
+
+### Task 289 - SRDINV58C - Promote Faerie Fire Object Outline Runtime
+
+Status: `blocked`
+
+Depends on: SRDINV66
+
+Blocks: SRDINV78
+
+Research / plan:
+[SRDINV58B_FAERIE_FIRE_OBJECT_LIGHT_BOUNDARY_RESEARCH.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV58B_FAERIE_FIRE_OBJECT_LIGHT_BOUNDARY_RESEARCH.md),
+[Faerie Fire](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Target](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Faerie Fire's noncreature object outline branch through
+caller-supplied object ids for objects in the Cube and caller-supplied object
+sight facts for object-target attack rolls. Store or project only the
+concentration-owned object outline facts needed to grant attack-roll Advantage
+against affected objects and deny Invisible-condition benefits for those
+objects.
+
+Out of scope: deriving object membership from area geometry, adding object
+inventory or location state, deriving object visibility/cover/line of sight,
+and implementing Dim Light or Lightly Obscured propagation. Dim Light remains
+owned by SRDINV70A/SRDINV59A.
+
+Verification: RAW/source review for Faerie Fire, Object, Target, attack-roll
+Advantage, and Invisible wording; focused tests for object-id admission, object
+attack Advantage with supplied sight facts, concentration cleanup, no creature
+regression, and no duplicated object inventory or visibility state;
+package-local Quint updates before runtime divergence; `pnpm
+unit-profile-coverage:check --write` if evidence changes; `pnpm quality`;
+`/simplify` convergence for significant changes; MBT only if object-target
+attack sequencing changes require it.
