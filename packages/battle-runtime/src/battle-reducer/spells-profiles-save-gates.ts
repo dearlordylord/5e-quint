@@ -130,6 +130,14 @@ type CommandPhase = Extract<ActivationPhase, { readonly kind: "save_gate" }> & {
     };
   };
 };
+type SaveGateFailedEffect = Extract<
+  ActivationPhase,
+  { readonly kind: "save_gate" }
+>["onFail"];
+type ModifyRollAdvantageEffect = Extract<
+  SaveGateFailedEffect,
+  { readonly kind: "modify_roll_advantage" }
+>;
 
 export function supportedCantripSaveGateDamageProfile(
   spell: SpellRecord,
@@ -566,6 +574,8 @@ export function faerieFireSaveGateAttackRollAdvantageSpell(
   }
   const phase = spell.mechanics.phases[0];
   const failedEffect = phase?.kind === "save_gate" ? phase.onFail : undefined;
+  const attackAdvantageEffect =
+    faerieFireFailedSaveAttackAdvantageEffect(failedEffect);
   if (
     spell.name !== "Faerie Fire" ||
     spell.provenance.kind !== "srd-5.2.1" ||
@@ -589,9 +599,7 @@ export function faerieFireSaveGateAttackRollAdvantageSpell(
     phase.attachment.value.shape.kind !== "cube" ||
     phase.attachment.value.shape.sideFeet !==
       SUPPORTED_POINT_CUBE_SAVE_GATE_SIDE_FEET ||
-    failedEffect?.kind !== "modify_roll_advantage" ||
-    failedEffect.mode !== "advantage" ||
-    !sameStringSet(failedEffect.on, ["attack_roll"])
+    attackAdvantageEffect === null
   ) {
     return null;
   }
@@ -603,14 +611,35 @@ export function faerieFireSaveGateAttackRollAdvantageSpell(
       sideFeet: movementFeet(phase.attachment.value.shape.sideFeet),
     },
     effect: {
-      kind: "visibleAttackRollAgainstSelf",
+      kind: "faerieFireOutline",
       sourceSpellId: spell.id,
       sourceCombatantId: actorId,
-      mode: "advantage",
       expiresAt: { kind: "concentration", combatantId: actorId },
     },
     rangeFeet: movementFeet(spell.mechanics.range.feet),
   };
+}
+
+function faerieFireFailedSaveAttackAdvantageEffect(
+  effect: SaveGateFailedEffect | undefined,
+): ModifyRollAdvantageEffect | null {
+  if (effect?.kind !== "composite" || effect.effects.length !== 2) {
+    return null;
+  }
+  const attackAdvantageEffects = effect.effects.filter(
+    (candidate): candidate is ModifyRollAdvantageEffect =>
+      candidate.kind === "modify_roll_advantage" &&
+      candidate.mode === "advantage" &&
+      sameStringSet(candidate.on, ["attack_roll"]),
+  );
+  const suppressesInvisible = effect.effects.some(
+    (candidate) =>
+      candidate.kind === "suppress_condition_benefit" &&
+      candidate.condition === "invisible",
+  );
+  return attackAdvantageEffects.length === 1 && suppressesInvisible
+    ? attackAdvantageEffects[0]
+    : null;
 }
 
 export function animalFriendshipSaveGateConditionSpell(

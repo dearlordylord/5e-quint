@@ -572,8 +572,7 @@ export type BattleActiveEffect =
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {
-      readonly kind: "visibleAttackRollAgainstSelf";
-      readonly mode: AttackRollMode;
+      readonly kind: "faerieFireOutline";
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {
@@ -1413,7 +1412,7 @@ export type SpellSavingThrowRollModeRule = {
 };
 export type SpellFailedSaveAttackRollEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "visibleAttackRollAgainstSelf" }
+  { readonly kind: "faerieFireOutline" }
 >;
 export type ScalarBuffSpellTargeting =
   | {

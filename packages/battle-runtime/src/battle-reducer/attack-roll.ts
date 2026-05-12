@@ -45,6 +45,7 @@ import {
 import { attackTargetRangeBand, effectiveWalkSpeed } from "./movement-speed.ts";
 import {
   combatantCanSee,
+  combatantInvisibleBenefitDenied,
   combatantsAreEnemies,
   currentActorId,
   grappledBy,
@@ -91,7 +92,9 @@ export function requiredAttackRollMode(
   const target = state.combatants.get(targetId);
   const grapple = grappledBy(state, attackerId);
   const hiddenTargetDisadvantage =
-    target?.hidden !== null && target?.hidden !== undefined;
+    target?.hidden !== null &&
+    target?.hidden !== undefined &&
+    !combatantInvisibleBenefitDenied(target);
   const dodgeDisadvantage =
     attacker !== undefined &&
     target !== undefined &&
@@ -103,7 +106,9 @@ export function requiredAttackRollMode(
     attackTargetRangeBand(targetSpatialFacts, attackerId, targetId, attack) ===
       "long";
   const hasAdvantage =
-    (attacker?.hidden !== null && attacker?.hidden !== undefined) ||
+    (attacker?.hidden !== null &&
+      attacker?.hidden !== undefined &&
+      !combatantInvisibleBenefitDenied(attacker)) ||
     state.helpAttacks.some(
       (help) => help.allyId === attackerId && help.targetEnemyId === targetId,
     ) ||
@@ -165,7 +170,9 @@ export function attackRollHasAdvantageSource(
   const attacker = state.combatants.get(attackerId);
   const target = state.combatants.get(targetId);
   return (
-    (attacker?.hidden !== null && attacker?.hidden !== undefined) ||
+    (attacker?.hidden !== null &&
+      attacker?.hidden !== undefined &&
+      !combatantInvisibleBenefitDenied(attacker)) ||
     state.helpAttacks.some(
       (help) => help.allyId === attackerId && help.targetEnemyId === targetId,
     ) ||
@@ -333,8 +340,8 @@ export function activeEffectGrantsAttackRollMode(
     target?.activeEffects.some(
       (effect) =>
         (effect.kind === "nextAttackRollAgainstSelf" && effect.mode === mode) ||
-        (effect.kind === "visibleAttackRollAgainstSelf" &&
-          effect.mode === mode &&
+        (effect.kind === "faerieFireOutline" &&
+          mode === "advantage" &&
           attacker !== undefined &&
           target !== undefined &&
           combatantCanSee(state, attacker.combatantId, target.combatantId)) ||

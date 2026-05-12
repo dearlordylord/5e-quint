@@ -23,9 +23,10 @@
 -- separately would require object attachment — DEFERRED to when a
 -- second object-only unit surfaces.
 --
--- "Dim Light 10 ft" emanation and "can't benefit from Invisible" are
--- visibility predicates (DM agenda per ARCHITECTURE.md §1). "If the
--- attacker can see it" is also DM agenda.
+-- "Dim Light 10 ft" emanation remains a visibility predicate (DM agenda
+-- per ARCHITECTURE.md §1). The failed-save creature outline is promoted as
+-- a single durable effect whose executable consequences are sight-gated
+-- attack-roll Advantage and Invisible-benefit denial.
 --
 -- The caster's choice of color (blue/green/violet) is pure narrative
 -- flavor with no mechanical consequence; omitted.
@@ -66,9 +67,16 @@ let faerieFire =
                 , ability = "dex"
                 , dc = { kind = "caster_spell_save_dc" }
                 , onFail =
-                    { kind = "modify_roll_advantage"
-                    , mode = "advantage"
-                    , on = [ "attack_roll" ]
+                    { kind = "composite"
+                    , effects =
+                        [ { kind = "modify_roll_advantage"
+                          , mode = "advantage"
+                          , on = [ "attack_roll" ]
+                          }
+                        , { kind = "suppress_condition_benefit"
+                          , condition = "invisible"
+                          }
+                        ]
                     }
                 , onSuccess = { kind = "none" }
                 }

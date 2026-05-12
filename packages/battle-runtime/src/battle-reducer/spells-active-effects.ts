@@ -492,7 +492,7 @@ export function applyFailedSaveAttackRollAdvantageEffects(
       ...target.activeEffects.filter(
         (effect) =>
           !(
-            effect.kind === "visibleAttackRollAgainstSelf" &&
+            effect.kind === "faerieFireOutline" &&
             effect.sourceSpellId === invocation.spell.id &&
             effect.sourceCombatantId === actorId
           ),

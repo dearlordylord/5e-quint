@@ -743,10 +743,10 @@ Feature and spell resources:
   until Concentration ends.
 - `faerie_fire` admits the executable creature subset: table-supplied
   affected creatures in the point-origin Cube make Dexterity saves, and failed
-  saves receive a concentration-owned attack-roll Advantage effect for attacks
-  against them when the attacker can see the affected creature. Object
-  outline/Advantage, Dim Light emission, and Invisible benefit denial remain
-  explicit planning follow-ups.
+  saves receive a single concentration-owned outline effect that grants
+  attack-roll Advantage against them when the attacker can see the affected
+  creature and denies benefits from the Invisible condition. Object
+  outline/Advantage and Dim Light emission remain explicit planning follow-ups.
 - creature-type-scoped spell effects admit `animal_friendship`,
   `charm_person`, and `protection_from_evil_and_good` from retained Spell
   Records. Animal Friendship filters targets by Beast creature type. Charm

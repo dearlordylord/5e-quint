@@ -1511,7 +1511,8 @@
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
       "taskRefs": [
-        "SRDINV30E"
+        "SRDINV30E",
+        "SRDINV58A"
       ],
       "title": "Spell invocation applies save-gated attack-roll Advantage against affected combatants",
       "verificationOwners": [
@@ -2019,7 +2020,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Promoted battle-runtime Quint facts for Faerie Fire's point-origin Cube Dexterity save and concentration-owned sight-gated attack-roll Advantage against failed-save creatures.",
+      "note": "Promoted battle-runtime Quint facts for Faerie Fire's point-origin Cube Dexterity save and concentration-owned outline effect that grants sight-gated attack-roll Advantage and denies Invisible benefits for failed-save creatures.",
       "profileIds": [
         "spell.invocation-attack-roll-advantage-save"
       ],
@@ -2027,11 +2028,27 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime admission and reducer tests for Faerie Fire point-origin Cube targeting, Dexterity save outcomes, concentration cleanup, and sight-gated attack-roll Advantage against failed-save creatures. Object outline, Dim Light, and Invisible benefit denial remain deferred.",
+      "note": "Focused battle-runtime admission and reducer tests for Faerie Fire point-origin Cube targeting, Dexterity save outcomes, concentration cleanup, and one concentration-owned outline effect that grants sight-gated attack-roll Advantage and denies Invisible benefits for failed-save creatures. Object outline and Dim Light remain deferred.",
       "profileIds": [
         "spell.invocation-attack-roll-advantage-save"
       ],
       "taskId": "SRDINV30E"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Faerie Fire's failed-save outline as the single effect denying Invisible benefits while preserving the sight-gated attack-roll Advantage rule.",
+      "profileIds": [
+        "spell.invocation-attack-roll-advantage-save"
+      ],
+      "taskId": "SRDINV58A"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Faerie Fire failed-save Invisible-benefit denial, successful saves with no outline effect, concentration cleanup, and no duplicate visibility state.",
+      "profileIds": [
+        "spell.invocation-attack-roll-advantage-save"
+      ],
+      "taskId": "SRDINV58A"
     },
     {
       "claimKind": "qnt-proof",
@@ -5768,10 +5785,6 @@
           {
             "followUpTaskId": "SRDINV33",
             "mechanic": "Dim Light emitted by affected creatures and objects"
-          },
-          {
-            "followUpTaskId": "SRDINV33",
-            "mechanic": "affected creatures and objects can't benefit from the Invisible condition"
           }
         ],
         "profileIds": [
@@ -5783,7 +5796,7 @@
         "supportedMechanics": [
           "20-foot point-origin Cube affected-creature boundary with table-supplied area membership",
           "Dexterity save-gated affected creatures",
-          "Concentration-owned attack-roll Advantage against failed-save affected creatures when the attacker can see them"
+          "Concentration-owned outline effect that grants attack-roll Advantage against failed-save affected creatures when the attacker can see them and denies benefits from the Invisible condition"
         ],
         "tag": "profile-subset-supported"
       },
@@ -5808,7 +5821,8 @@
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
           "taskRefs": [
-            "SRDINV30E"
+            "SRDINV30E",
+            "SRDINV58A"
           ],
           "title": "Spell invocation applies save-gated attack-roll Advantage against affected combatants",
           "verificationOwners": [

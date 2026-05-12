@@ -92,6 +92,7 @@ import { battleStateInitIssue } from "./domain-helpers.ts";
 import { applyInitialZeroHpLifecycle } from "./damage-apply.ts";
 import { battleMovementBudgetForActor } from "./movement-speed.ts";
 import {
+  combatantInvisibleBenefitDenied,
   combatantWearingArmorCategory,
   currentActorId,
   grappledBy,
@@ -435,7 +436,7 @@ export function combatantSnapshot(
     conditions: activeConditions(
       combatant.conditions,
       sourceGrapple !== null,
-      combatant.hidden !== null,
+      combatant.hidden !== null && !combatantInvisibleBenefitDenied(combatant),
     ),
     concentrating: combatant.concentration !== null,
     dodging: combatant.dodging,

@@ -292,7 +292,7 @@ module battleRuntime {
   type SpellActionCost = SpellMagicAction | SpellBonusAction
   type CommandOption = CommandGrovelOption | CommandHaltOption | CommandDropOption | CommandApproachOption | CommandFleeOption
 
-  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireAttackRollAdvantage | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodAttackDisadvantage | ProduceFlameHeldLight({ durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
+  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodAttackDisadvantage | ProduceFlameHeldLight({ durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
   type RuntimeCreatureType = HumanoidCreature | BeastCreature | AberrationCreature | CelestialCreature | ElementalCreature | FeyCreature | FiendCreature | UndeadCreature
   type ObjectTarget =
@@ -1016,7 +1016,7 @@ module battleRuntime {
         | EntangleRestrained => false
         | EnsnaringStrikeRestrained(_) => false
         | SearingSmiteBurning(_) => false
-        | FaerieFireAttackRollAdvantage => false
+        | FaerieFireOutline => false
         | AnimalFriendshipCharmed(_) => false
         | CharmPersonCharmed(_) => false
         | ProtectionFromEvilAndGoodAttackDisadvantage => false
@@ -1996,7 +1996,7 @@ module battleRuntime {
   }
 
   pure def spellEffectConcentrationActiveEffects(): Set[ActiveEffect] =
-    Set(ShieldOfFaithArmorClassBonus, HeroismFrightenedImmunity, BaneD20RollPenalty, BlessD20RollBonus, GuidanceAbilityCheckBonus, EntangleRestrained, FaerieFireAttackRollAdvantage, ProtectionFromEvilAndGoodAttackDisadvantage, ExpeditiousRetreatDashBonusAction)
+    Set(ShieldOfFaithArmorClassBonus, HeroismFrightenedImmunity, BaneD20RollPenalty, BlessD20RollBonus, GuidanceAbilityCheckBonus, EntangleRestrained, FaerieFireOutline, ProtectionFromEvilAndGoodAttackDisadvantage, ExpeditiousRetreatDashBonusAction)
 
   pure def activeEffectsWithoutSpellEffectConcentration(effects: Set[ActiveEffect]): Set[ActiveEffect] =
     effects
@@ -4503,14 +4503,17 @@ module battleRuntime {
     targetEffects: Set[ActiveEffect],
     attackerCanSeeTarget: bool,
   ): SpellAttackRollMode =
-    if (attackerEffects.contains(ViciousMockeryNextAttackDisadvantage) and (targetEffects.contains(GuidingBoltNextAttackAdvantage) or (attackerCanSeeTarget and targetEffects.contains(FaerieFireAttackRollAdvantage))))
+    if (attackerEffects.contains(ViciousMockeryNextAttackDisadvantage) and (targetEffects.contains(GuidingBoltNextAttackAdvantage) or (attackerCanSeeTarget and targetEffects.contains(FaerieFireOutline))))
       NormalSpellAttackRoll
-    else if (targetEffects.contains(GuidingBoltNextAttackAdvantage) or (attackerCanSeeTarget and targetEffects.contains(FaerieFireAttackRollAdvantage)))
+    else if (targetEffects.contains(GuidingBoltNextAttackAdvantage) or (attackerCanSeeTarget and targetEffects.contains(FaerieFireOutline)))
       AdvantageSpellAttackRoll
     else if (attackerEffects.contains(ViciousMockeryNextAttackDisadvantage))
       DisadvantageSpellAttackRoll
     else
       NormalSpellAttackRoll
+
+  pure def activeEffectsDenyInvisibleBenefit(effects: Set[ActiveEffect]): bool =
+    effects.contains(FaerieFireOutline)
 
   pure def protectionFromEvilAndGoodCreatureTypeIsScoped(creatureType: RuntimeCreatureType): bool =
     creatureType == AberrationCreature or
@@ -4528,7 +4531,7 @@ module battleRuntime {
   ): SpellAttackRollMode = {
     val hasAdvantage =
       targetEffects.contains(GuidingBoltNextAttackAdvantage)
-      or (attackerCanSeeTarget and targetEffects.contains(FaerieFireAttackRollAdvantage))
+      or (attackerCanSeeTarget and targetEffects.contains(FaerieFireOutline))
     val hasDisadvantage =
       attackerEffects.contains(ViciousMockeryNextAttackDisadvantage)
       or (
@@ -4700,7 +4703,7 @@ module battleRuntime {
 
   pure def saveGatedAttackRollAdvantageFailedSaveActiveEffects(invocation: SaveGatedAttackRollAdvantageInvocation): Set[ActiveEffect] =
     match invocation {
-      | FaerieFireSaveGate => Set(FaerieFireAttackRollAdvantage)
+      | FaerieFireSaveGate => Set(FaerieFireOutline)
     }
 
   pure def saveGatedAttackRollAdvantageReplayHoles(
@@ -6632,7 +6635,9 @@ module battleRuntime {
       assert(saveGatedConditionTargeting(EntangleSaveGate) == AreaSaveTargets),
       assert(saveGatedConditionFailedSaveActiveEffects(EntangleSaveGate, Fighter) == Set(EntangleRestrained)),
       assert(saveGatedAttackRollAdvantageTargeting(FaerieFireSaveGate) == AreaSaveTargets),
-      assert(saveGatedAttackRollAdvantageFailedSaveActiveEffects(FaerieFireSaveGate) == Set(FaerieFireAttackRollAdvantage)),
+      assert(saveGatedAttackRollAdvantageFailedSaveActiveEffects(FaerieFireSaveGate) == Set(FaerieFireOutline)),
+      assert(activeEffectsDenyInvisibleBenefit(Set(FaerieFireOutline))),
+      assert(not(activeEffectsDenyInvisibleBenefit(Set(GuidingBoltNextAttackAdvantage)))),
       assert(saveGatedConditionTargeting(AnimalFriendshipSaveGate) == TargetListSaveTargets({ minTargets: 1, baseSlotLevel: 1, baseTargets: 1, additionalTargetsPerSlotLevel: 1 })),
       assert(saveGatedTargetMaxTargets(saveGatedConditionTargeting(AnimalFriendshipSaveGate), 1) == 1),
       assert(saveGatedTargetMaxTargets(saveGatedConditionTargeting(AnimalFriendshipSaveGate), 2) == 2),
@@ -6648,15 +6653,15 @@ module battleRuntime {
       assert(saveGatedConditionSavingThrowHasAdvantage(CharmPersonSaveGate, true)),
       assert(not(saveGatedConditionSavingThrowHasAdvantage(CharmPersonSaveGate, false))),
       assert(spellAttackRollModeFromActiveEffects(Set(), Set(GuidingBoltNextAttackAdvantage), false) == AdvantageSpellAttackRoll),
-      assert(spellAttackRollModeFromActiveEffects(Set(), Set(FaerieFireAttackRollAdvantage), true) == AdvantageSpellAttackRoll),
-      assert(spellAttackRollModeFromActiveEffects(Set(), Set(FaerieFireAttackRollAdvantage), false) == NormalSpellAttackRoll),
+      assert(spellAttackRollModeFromActiveEffects(Set(), Set(FaerieFireOutline), true) == AdvantageSpellAttackRoll),
+      assert(spellAttackRollModeFromActiveEffects(Set(), Set(FaerieFireOutline), false) == NormalSpellAttackRoll),
       assert(spellAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), Set(), true) == DisadvantageSpellAttackRoll),
       assert(spellAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), Set(GuidingBoltNextAttackAdvantage), true) == NormalSpellAttackRoll),
-      assert(spellAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), Set(FaerieFireAttackRollAdvantage), true) == NormalSpellAttackRoll),
+      assert(spellAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), Set(FaerieFireOutline), true) == NormalSpellAttackRoll),
       assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(ProtectionFromEvilAndGoodAttackDisadvantage), true) == DisadvantageSpellAttackRoll),
       assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(GuidingBoltNextAttackAdvantage, ProtectionFromEvilAndGoodAttackDisadvantage), false) == NormalSpellAttackRoll),
-      assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(FaerieFireAttackRollAdvantage, ProtectionFromEvilAndGoodAttackDisadvantage), true) == NormalSpellAttackRoll),
-      assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(FaerieFireAttackRollAdvantage, ProtectionFromEvilAndGoodAttackDisadvantage), false) == DisadvantageSpellAttackRoll),
+      assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(FaerieFireOutline, ProtectionFromEvilAndGoodAttackDisadvantage), true) == NormalSpellAttackRoll),
+      assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(FaerieFireOutline, ProtectionFromEvilAndGoodAttackDisadvantage), false) == DisadvantageSpellAttackRoll),
       assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(HumanoidCreature, Set(), Set(ProtectionFromEvilAndGoodAttackDisadvantage), true) == NormalSpellAttackRoll),
       assert(saveGatedTargeting(SacredFlameSaveGate) == SingleSaveTarget),
       assert(saveGatedDamageSuccess(SacredFlameSaveGate) == NoDamageOnSaveSuccess),
@@ -7132,18 +7137,20 @@ module battleRuntime {
     }
   }
 
-  run test_faerie_fire_applies_attack_roll_advantage_until_concentration_break = {
+  run test_faerie_fire_applies_outline_until_concentration_break = {
     val lit = resolveFaerieFire(initialState, true, false)
     val broken = breakConcentrationSpellEffects(lit, Fighter)
     all {
       assert(lit.actionAvailable == false),
       assert(lit.spellSlotExpendedThisTurn == true),
       assert(lit.fighter.concentrating),
-      assert(not(lit.fighter.activeEffects.contains(FaerieFireAttackRollAdvantage))),
-      assert(lit.goblin.activeEffects.contains(FaerieFireAttackRollAdvantage)),
+      assert(not(lit.fighter.activeEffects.contains(FaerieFireOutline))),
+      assert(lit.goblin.activeEffects.contains(FaerieFireOutline)),
+      assert(activeEffectsDenyInvisibleBenefit(lit.goblin.activeEffects)),
       assert(spellAttackRollModeFromActiveEffects(Set(), lit.goblin.activeEffects, true) == AdvantageSpellAttackRoll),
       assert(spellAttackRollModeFromActiveEffects(Set(), lit.goblin.activeEffects, false) == NormalSpellAttackRoll),
-      assert(not(broken.goblin.activeEffects.contains(FaerieFireAttackRollAdvantage))),
+      assert(not(broken.goblin.activeEffects.contains(FaerieFireOutline))),
+      assert(not(activeEffectsDenyInvisibleBenefit(broken.goblin.activeEffects))),
     }
   }
 

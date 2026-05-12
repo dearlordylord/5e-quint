@@ -5786,7 +5786,7 @@ describe("SRDINV30D deterministic Heroism Spell Unit admission", () => {
 });
 
 describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
-  test("faerie_fire is admitted as point-origin Cube save-gated attack Advantage", () => {
+  test("faerie_fire is admitted as point-origin Cube save-gated outline effects", () => {
     const spell = spellRecord(faerieFireUnitId);
     const act = spellAct({
       state: spellBattle({
@@ -5823,10 +5823,9 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
         ability: "dex",
         targeting: { kind: "pointOriginCube", sideFeet: 20 },
         effect: expect.objectContaining({
-          kind: "visibleAttackRollAgainstSelf",
+          kind: "faerieFireOutline",
           sourceSpellId: faerieFireUnitId,
           sourceCombatantId: spellCasterId,
-          mode: "advantage",
           expiresAt: { kind: "concentration", combatantId: spellCasterId },
         }),
         rangeFeet: 60,
@@ -5871,13 +5870,15 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Faerie Fire to resolve.");
     }
+    expect(resolved.state.combatants.get(spellCasterId)?.activeEffects).toEqual(
+      [],
+    );
     expect(resolved.state.combatants.get(spellTargetId)?.activeEffects).toEqual(
       [
         expect.objectContaining({
-          kind: "visibleAttackRollAgainstSelf",
+          kind: "faerieFireOutline",
           sourceSpellId: faerieFireUnitId,
           sourceCombatantId: spellCasterId,
-          mode: "advantage",
           expiresAt: { kind: "concentration", combatantId: spellCasterId },
         }),
       ],
@@ -5932,7 +5933,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
     expect(attackRoll).toMatchObject({ rollMode: "advantage" });
   });
 
-  test("faerie_fire attack Advantage requires the attacker to see the affected creature", () => {
+  test("faerie_fire outline denies Invisible benefit for affected creatures", () => {
     const spell = spellRecord(faerieFireUnitId);
     const state = spellBattle({ preparedSpells: [spell] });
     const act = spellAct({ state, spellId: faerieFireUnitId });
@@ -6009,7 +6010,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
       }),
       "attackRoll",
     );
-    expect(attackRoll).not.toMatchObject({ rollMode: "advantage" });
+    expect(attackRoll).toMatchObject({ rollMode: "advantage" });
   });
 
   test("breaking faerie_fire Concentration clears its attack Advantage effect", () => {

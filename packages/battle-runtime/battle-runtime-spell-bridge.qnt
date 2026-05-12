@@ -63,7 +63,7 @@ module battleRuntimeSpellBridge {
     | BattleRuntimeEntangleRestrainedEffect
     | BattleRuntimeAnimalFriendshipCharmedEffect({ durationTicks: int })
     | BattleRuntimeCharmPersonCharmedEffect({ durationTicks: int })
-    | BattleRuntimeFaerieFireAttackRollAdvantageEffect
+    | BattleRuntimeFaerieFireOutlineEffect
 
   type BattleRuntimeScalarBuffProfile =
     | BattleRuntimeFalseLifeScalarBuff
@@ -276,7 +276,7 @@ module battleRuntimeSpellBridge {
       | EntangleRestrainedEffect => BattleRuntimeEntangleRestrainedEffect
       | AnimalFriendshipCharmedEffect(data) => BattleRuntimeAnimalFriendshipCharmedEffect({ durationTicks: data.durationMinutes })
       | CharmPersonCharmedEffect(data) => BattleRuntimeCharmPersonCharmedEffect({ durationTicks: data.durationMinutes })
-      | FaerieFireAttackRollAdvantageEffect => BattleRuntimeFaerieFireAttackRollAdvantageEffect
+      | FaerieFireOutlineEffect => BattleRuntimeFaerieFireOutlineEffect
     }
 
   pure def battleRuntimeSaveGatedDamageFailedSaveEffects(
@@ -692,7 +692,7 @@ module battleRuntimeSpellBridge {
       assert(battleRuntimeSaveGatedConditionTargeting(BattleRuntimeColorSpraySaveCondition) == BattleRuntimeAreaSaveTargets),
       assert(battleRuntimeSaveGatedTargetMaxTargets(animalTargets, 2) == 2),
       assert(battleRuntimeSaveGatedConditionFailedSaveEffects(BattleRuntimeEntangleSaveCondition) == Set(BattleRuntimeEntangleRestrainedEffect)),
-      assert(battleRuntimeSaveGatedConditionFailedSaveEffects(BattleRuntimeFaerieFireSaveAttackRollAdvantage) == Set(BattleRuntimeFaerieFireAttackRollAdvantageEffect)),
+      assert(battleRuntimeSaveGatedConditionFailedSaveEffects(BattleRuntimeFaerieFireSaveAttackRollAdvantage) == Set(BattleRuntimeFaerieFireOutlineEffect)),
       assert(battleRuntimeSaveGatedConditionTargetCreatureTypeIsLegal(BattleRuntimeAnimalFriendshipSaveCondition, true, false)),
       assert(not(battleRuntimeSaveGatedConditionTargetCreatureTypeIsLegal(BattleRuntimeAnimalFriendshipSaveCondition, false, true))),
       assert(battleRuntimeSaveGatedConditionSavingThrowHasAdvantage(BattleRuntimeCharmPersonSaveCondition, true)),

@@ -43,11 +43,20 @@
         },
         "kind": "save_gate",
         "onFail": {
-          "kind": "modify_roll_advantage",
-          "mode": "advantage",
-          "on": [
-            "attack_roll"
-          ]
+          "effects": [
+            {
+              "kind": "modify_roll_advantage",
+              "mode": "advantage",
+              "on": [
+                "attack_roll"
+              ]
+            },
+            {
+              "condition": "invisible",
+              "kind": "suppress_condition_benefit"
+            }
+          ],
+          "kind": "composite"
         },
         "onSuccess": {
           "kind": "none"

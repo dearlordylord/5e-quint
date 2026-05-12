@@ -94,7 +94,7 @@ module spellProcedureProfiles {
     | EntangleRestrainedEffect
     | AnimalFriendshipCharmedEffect({ durationMinutes: int })
     | CharmPersonCharmedEffect({ durationMinutes: int })
-    | FaerieFireAttackRollAdvantageEffect
+    | FaerieFireOutlineEffect
 
   type ScalarBuffSpellProfile =
     | FalseLifeScalarBuffProfile
@@ -460,7 +460,7 @@ module spellProcedureProfiles {
       | EntangleSaveConditionProfile => Set(EntangleRestrainedEffect)
       | AnimalFriendshipSaveConditionProfile => Set(AnimalFriendshipCharmedEffect({ durationMinutes: 24 * 60 }))
       | CharmPersonSaveConditionProfile => Set(CharmPersonCharmedEffect({ durationMinutes: 10 * 60 }))
-      | FaerieFireSaveAttackRollAdvantageProfile => Set(FaerieFireAttackRollAdvantageEffect)
+      | FaerieFireSaveAttackRollAdvantageProfile => Set(FaerieFireOutlineEffect)
     }
 
   pure def spellSaveGatedConditionTargetCreatureTypeIsLegal(
@@ -1204,7 +1204,7 @@ module spellProcedureProfiles {
       assert(spellSaveGatedTargetMaxTargets(animalTargets, 1) == 1),
       assert(spellSaveGatedTargetMaxTargets(animalTargets, 2) == 2),
       assert(spellSaveGatedConditionFailedSaveEffects(EntangleSaveConditionProfile) == Set(EntangleRestrainedEffect)),
-      assert(spellSaveGatedConditionFailedSaveEffects(FaerieFireSaveAttackRollAdvantageProfile) == Set(FaerieFireAttackRollAdvantageEffect)),
+      assert(spellSaveGatedConditionFailedSaveEffects(FaerieFireSaveAttackRollAdvantageProfile) == Set(FaerieFireOutlineEffect)),
       assert(spellSaveGatedConditionTargetCreatureTypeIsLegal(AnimalFriendshipSaveConditionProfile, true, false)),
       assert(not(spellSaveGatedConditionTargetCreatureTypeIsLegal(AnimalFriendshipSaveConditionProfile, false, true))),
       assert(spellSaveGatedConditionTargetCreatureTypeIsLegal(CharmPersonSaveConditionProfile, false, true)),

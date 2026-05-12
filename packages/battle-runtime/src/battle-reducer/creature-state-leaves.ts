@@ -25,10 +25,21 @@ export function combatantCanSee(
     return false;
   }
   const seen = state.combatants.get(seenId);
+  const invisibleBenefitDenied = combatantInvisibleBenefitDenied(seen);
   return (
     seen !== undefined &&
-    seen.hidden === null &&
-    !hasCondition(seen.conditions, "invisible")
+    (seen.hidden === null || invisibleBenefitDenied) &&
+    (!hasCondition(seen.conditions, "invisible") || invisibleBenefitDenied)
+  );
+}
+
+export function combatantInvisibleBenefitDenied(
+  combatant: BattleCreatureState | undefined,
+): boolean {
+  return (
+    combatant?.activeEffects.some(
+      (effect) => effect.kind === "faerieFireOutline",
+    ) === true
   );
 }
 
