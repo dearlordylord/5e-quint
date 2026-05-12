@@ -1846,6 +1846,35 @@ function rowRefs(rows) {
   return rows.map((row) => row.id).sort();
 }
 
+const completedSrdInventoryBatchIds = new Set([
+  "SRDINV31C",
+  "SRDINV31D",
+  "SRDINV31E",
+  "SRDINV31F",
+  "SRDINV33",
+  "SRDINV34",
+  "SRDINV35",
+  "SRDINV36",
+  "SRDINV37",
+  "SRDINV38",
+  "SRDINV39",
+  "SRDINV40",
+  "SRDINV41",
+  "SRDINV42",
+  "SRDINV43",
+  "SRDINV44",
+  "SRDINV45",
+  "SRDINV46",
+  "SRDINV47",
+  "SRDINV48",
+  "SRDINV49",
+  "SRDINV50",
+  "SRDINV51",
+  "SRDINV52",
+  "SRDINV53",
+  "SRDINV54",
+]);
+
 function makeBatch({
   id,
   title,
@@ -1858,7 +1887,9 @@ function makeBatch({
   return {
     id,
     title,
-    suggestedStatus,
+    suggestedStatus: completedSrdInventoryBatchIds.has(id)
+      ? "done"
+      : suggestedStatus,
     intent,
     rowCount: rows.length,
     rowIds: rowRefs(rows),
