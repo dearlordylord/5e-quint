@@ -94,7 +94,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 282,
       "id": "SRDINV74B",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Research Weapon Mastery Cleave and Topple Split"
     },
     {
@@ -138,6 +138,18 @@ Keep it synchronized with the DAG table and task details.
       "id": "SRDINV58C",
       "status": "ready-for-implementation-after-light-research",
       "title": "Promote Faerie Fire Object Outline Runtime"
+    },
+    {
+      "number": 290,
+      "id": "SRDINV74C",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote Weapon Mastery Topple Runtime"
+    },
+    {
+      "number": 291,
+      "id": "SRDINV74D",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote Weapon Mastery Cleave Runtime"
     }
   ]
 }
@@ -182,14 +194,16 @@ Keep it synchronized with the DAG table and task details.
 | 279   | SRDINV73A - Promote Monk Martial Arts Attack Projection                 | done                                          | completed baseline | SRDINV73B, SRDINV78 | [Martial Arts](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Monk.md), [Unarmed Strike](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Weapon Attack](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                                                                                | Completed: promoted Martial Arts weapon/unarmed eligibility, level-1 d6 damage replacement, Dexterity attack/damage option, and Grapple/Shove DC projection without duplicating loadout state.                                                                                                                              |
 | 280   | SRDINV73B - Promote Monk Martial Arts Bonus Unarmed Strike              | done                                          | SRDINV73A | SRDINV78 | [Martial Arts](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Monk.md), [Bonus Action](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Unarmed Strike](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                                                                                 | Completed: promoted Martial Arts' Bonus Action Unarmed Strike while unarmored, unshielded, and unarmed or wielding only Monk weapons, reusing SRDINV73A's attack projection and Bonus Action spending without an Attack-action prerequisite.                                                                                |
 | 281   | SRDINV74A - Promote Weapon Mastery Sap Runtime                          | done                                          | completed baseline | SRDINV74B, SRDINV78 | [Sap](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md), [Attack Roll](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Weapon Mastery](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                                                                                                   | Completed: promoted Sap's selected-weapon mastery gate, hit-applied Disadvantage on the target's next attack roll, consumption on that attack roll, and cleanup at the start of the attacker's next turn.                                                                                                                   |
-| 282   | SRDINV74B - Research Weapon Mastery Cleave and Topple Split             | ready-for-research                            | SRDINV74A | SRDINV78 | [Cleave and Topple](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md), [Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Weapon Mastery](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                                                                                           | Split Cleave extra-attack and Topple save-gated Prone into implementable runtime tasks, or document the missing Surface/runtime boundary for the current mastery records.                                                                                                                                                  |
+| 282   | SRDINV74B - Research Weapon Mastery Cleave and Topple Split             | done                                          | SRDINV74A | SRDINV74C, SRDINV74D | [Cleave and Topple research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV74B_CLEAVE_TOPPLE_SPLIT_RESEARCH.md), [Cleave and Topple](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md), [Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Weapon Mastery](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                        | Completed: current Surface records already model Cleave and Topple; follow-up runtime work is split into SRDINV74C Topple and SRDINV74D Cleave.                                                                                                                                    |
 | 283   | SRDINV75A - Promote Sorcerer Innate Sorcery Activation Runtime          | ready-for-implementation-after-light-research | completed baseline | SRDINV75B, SRDINV78 | [Innate Sorcery](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Sorcerer.md), [Bonus Action](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Long Rest](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                                                                                | Promote Innate Sorcery activation as a Bonus Action, two-use Long Rest resource, and one-minute active effect without yet wiring spell DC/attack projections.                                                                                                                                                              |
 | 284   | SRDINV75B - Promote Innate Sorcery Spell DC and Attack Projection       | blocked                                       | SRDINV75A | SRDINV78 | [Innate Sorcery](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Sorcerer.md), [Spell Attack](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Saving Throw](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                                                                             | Promote active Innate Sorcery's +1 Sorcerer spell save DC and Advantage on Sorcerer spell attack rolls through existing spell invocation projection.                                                                                                                                                                       |
 | 285   | SRDINV76A - Research Warlock Level-1 Invocation Runtime Boundary        | ready-for-research                            | completed baseline | SRDINV76B, SRDINV78 | [Eldritch Invocations](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Pact Magic](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Classify level-1-legal Warlock invocation options into character-creation-only, spell-access, and battle-runtime tasks before promoting any one option as representative support.                                                                                                                                          |
 | 286   | SRDINV76B - Promote Pact of the Blade Battle Projection                 | blocked                                       | SRDINV76A | SRDINV78 | [Pact of the Blade](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Weapon Attack](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Damage Types](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                                                                          | Promote Pact of the Blade's bonded weapon battle projection: Charisma attack/damage option, selectable Necrotic/Psychic/Radiant/normal damage type, proficiency, and focus facts without generic item conjuration simulation.                                                                                              |
 | 287   | SRDINV77 - Promote Ranger Favored Enemy Hunter's Mark Free Casts        | ready-for-implementation-after-light-research | completed baseline | SRDINV78 | [Favored Enemy](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Ranger.md), [Hunter's Mark](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Long Rest](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                                                                         | Promote Favored Enemy as always-prepared Hunter's Mark plus two no-slot casts per Long Rest that reuse the existing Hunter's Mark runtime procedure.                                                                                                                                                                       |
-| 288   | SRDINV78 - Recursive Level-1 Battle Feature Planning Review             | blocked                                       | SRDINV58C, SRDINV72A, SRDINV72B, SRDINV73A, SRDINV73B, SRDINV74A, SRDINV74B, SRDINV75A, SRDINV75B, SRDINV76A, SRDINV76B, SRDINV77 | none | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                                                                                 | Review the remaining spell/class-feature/weapon-mastery batch, including Faerie Fire object outline and the Starry Wisp object-target Invisible-condition benefit projection gap, refresh level-1 battle-related metrics, and decide whether the next queue is closure, cleanup, or final acceptance evidence.             |
+| 288   | SRDINV78 - Recursive Level-1 Battle Feature Planning Review             | blocked                                       | SRDINV58C, SRDINV72A, SRDINV72B, SRDINV73A, SRDINV73B, SRDINV74A, SRDINV74C, SRDINV74D, SRDINV75A, SRDINV75B, SRDINV76A, SRDINV76B, SRDINV77 | none | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                                                                                 | Review the remaining spell/class-feature/weapon-mastery batch after Topple and Cleave runtime promotion tasks complete, including Faerie Fire object outline and the Starry Wisp object-target Invisible-condition benefit projection gap, refresh level-1 battle-related metrics, and decide whether the next queue is closure, cleanup, or final acceptance evidence.             |
 | 289   | SRDINV58C - Promote Faerie Fire Object Outline Runtime                  | ready-for-implementation-after-light-research | completed baseline | SRDINV78 | [SRDINV58B research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV58B_FAERIE_FIRE_OBJECT_LIGHT_BOUNDARY_RESEARCH.md), [Faerie Fire](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Target](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                | Promote object outline attack Advantage and object Invisible-benefit denial through caller-supplied object ids and object sight facts, without object inventory or area-geometry derivation.                                                                                                                               |
+| 290   | SRDINV74C - Promote Weapon Mastery Topple Runtime                       | ready-for-implementation-after-light-research | SRDINV74B | SRDINV78 | [Cleave and Topple research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV74B_CLEAVE_TOPPLE_SPLIT_RESEARCH.md), [Topple](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md), [Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Weapon Mastery](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                         | Promote Topple as an optional selected-weapon mastery rider: on weapon hit, force a Constitution save against 8 + attack ability modifier + Proficiency Bonus and apply Prone on failure.                                                                                         |
+| 291   | SRDINV74D - Promote Weapon Mastery Cleave Runtime                       | ready-for-implementation-after-light-research | SRDINV74B | SRDINV78 | [Cleave and Topple research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV74B_CLEAVE_TOPPLE_SPLIT_RESEARCH.md), [Cleave](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md), [Weapon Mastery](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                       | Promote Cleave as an optional once-per-turn selected-weapon mastery rider using caller/table-supplied second-target adjacency/reach facts and same-weapon extra attack damage without a positive ability modifier.                                             |
 
 ## Task Details
 
@@ -391,30 +405,32 @@ Quint facts; coverage artifacts record `unit-feature.weapon-mastery-sap`.
 
 ### Task 282 - SRDINV74B - Research Weapon Mastery Cleave and Topple Split
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV74A
 
-Blocks: SRDINV78
+Blocks: SRDINV74C, SRDINV74D
 
 Research / plan:
+[Cleave and Topple research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV74B_CLEAVE_TOPPLE_SPLIT_RESEARCH.md),
 [Cleave and Topple](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md),
 [Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
 [Weapon Mastery](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md),
 [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
 
-Scope: split Cleave and Topple into implementable runtime tasks or document the
-missing Surface/runtime boundary for current mastery records. Cleave likely
-needs once-per-turn extra attack state and adjacent second-target facts; Topple
-likely needs a save-gated Prone application keyed to weapon mastery DC.
+Completed: reviewed Cleave, Topple, Prone, Weapon Mastery, and current Surface
+mechanics. Current Surface records already represent both mastery properties;
+the missing work is runtime/catalog/support-profile/QNT/test/evidence
+promotion, split into SRDINV74C for Topple and SRDINV74D for Cleave.
 
 Out of scope: implementing Cleave or Topple in this research task and
 promoting every mastery property as one broad task.
 
-Verification: RAW/source review for Cleave, Topple, Prone, and Weapon Mastery;
-produce a short research note under `plans/unit-profile-coverage/`; active-plan
-consistency if follow-up tasks are appended; `pnpm quality`; `/simplify`
-convergence only if code or substantial plan structure changes.
+Verification: completed RAW/source review for Cleave, Topple, Prone, and
+Weapon Mastery; produced
+`plans/unit-profile-coverage/SRDINV74B_CLEAVE_TOPPLE_SPLIT_RESEARCH.md`;
+updated active-plan index, DAG, and task details for SRDINV74C/SRDINV74D;
+`pnpm quality`; `/simplify` convergence recorded in the research note.
 
 ### Task 283 - SRDINV75A - Promote Sorcerer Innate Sorcery Activation Runtime
 
@@ -572,7 +588,7 @@ resource sequencing changes require it.
 
 Status: `blocked`
 
-Depends on: SRDINV58C, SRDINV72A, SRDINV72B, SRDINV73A, SRDINV73B, SRDINV74A, SRDINV74B, SRDINV75A, SRDINV75B, SRDINV76A, SRDINV76B, SRDINV77
+Depends on: SRDINV58C, SRDINV72A, SRDINV72B, SRDINV73A, SRDINV73B, SRDINV74A, SRDINV74C, SRDINV74D, SRDINV75A, SRDINV75B, SRDINV76A, SRDINV76B, SRDINV77
 
 Blocks: none
 
@@ -584,13 +600,13 @@ Research / plan:
 
 Scope: review SRDINV58C, SRDINV59A, SRDINV59B, SRDINV67, SRDINV68A, SRDINV68B,
 SRDINV69A, SRDINV69B, SRDINV70A, SRDINV70B, SRDINV71, SRDINV72A, SRDINV72B,
-SRDINV73A, SRDINV73B, SRDINV74A, SRDINV74B, SRDINV75A, SRDINV75B, SRDINV76A,
-SRDINV76B, SRDINV77, refresh level-1 battle-related feature/spell metrics,
-explicitly account for the remaining Starry Wisp object-target
+SRDINV73A, SRDINV73B, SRDINV74A, SRDINV74C, SRDINV74D, SRDINV75A, SRDINV75B,
+SRDINV76A, SRDINV76B, SRDINV77, refresh level-1 battle-related feature/spell
+metrics, explicitly account for the remaining Starry Wisp object-target
 Invisible-condition benefit projection gap, calculate the remaining acceptance
 gap for "all battle-related level-1 features, including spells, can be used in
-battle," and decide whether the next queue is final closure, cleanup, or another
-concrete implementation batch.
+battle," and decide whether the next queue is final closure, cleanup, or
+another concrete implementation batch.
 
 Out of scope: claiming 100% support from catalog/profile admission alone and
 recursively inventing tasks before the implemented batch has been reviewed.
@@ -638,3 +654,79 @@ package-local Quint updates before runtime divergence; `pnpm
 unit-profile-coverage:check --write` if evidence changes; `pnpm quality`;
 `/simplify` convergence for significant changes; MBT only if object-target
 attack sequencing changes require it.
+
+### Task 290 - SRDINV74C - Promote Weapon Mastery Topple Runtime
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: SRDINV74B
+
+Blocks: SRDINV78
+
+Research / plan:
+[SRDINV74B Cleave and Topple split research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV74B_CLEAVE_TOPPLE_SPLIT_RESEARCH.md),
+[Topple](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md),
+[Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Weapon Mastery](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Topple as an optional selected-weapon mastery rider. Gate the
+rider on weapon hit, selected weapon mastery ownership, the attacked weapon's
+authored Topple Mastery Property, and a `weaponMasteryTopple` support profile.
+Derive the Constitution save DC from 8 plus the attack ability modifier plus
+the attacker's Proficiency Bonus, then apply Prone on failed save and no effect
+on success.
+
+Out of scope: generic weapon or creature save DC storage, Cleave's extra attack
+and once-per-turn state, and Prone movement/crawl/righting behavior beyond the
+condition effects needed by promoted attack-roll mode tests.
+
+Verification: RAW/source review for Topple, Prone, Weapon Mastery, Saving
+Throw, and Attack Roll; package-local Quint update before runtime divergence;
+focused tests for selected-weapon gate, optional rider choice, save DC
+derivation from the attack ability modifier and Proficiency Bonus, failed-save
+Prone application, successful-save no-op, missing selected mastery rejection,
+missing Topple support rejection, and character-battle selected-weapon
+projection; `pnpm unit-profile-coverage:check --write` if evidence changes;
+`pnpm quality`; `/simplify` convergence for significant changes; MBT only if
+attack/save sequencing changes require it.
+
+### Task 291 - SRDINV74D - Promote Weapon Mastery Cleave Runtime
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: SRDINV74B
+
+Blocks: SRDINV78
+
+Research / plan:
+[SRDINV74B Cleave and Topple split research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV74B_CLEAVE_TOPPLE_SPLIT_RESEARCH.md),
+[Cleave](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md),
+[Weapon Mastery](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Cleave as an optional once-per-turn selected-weapon mastery
+rider. Gate the rider on a hit with a melee attack roll using the selected
+Cleave weapon, selected weapon mastery ownership, the weapon's authored Cleave
+Mastery Property, and a `weaponMasteryCleave` support profile. Require
+caller/table-supplied second-target eligibility facts that the second creature
+is within 5 feet of the first target and within the attacker's reach. Resolve
+the same-weapon second attack and apply weapon damage on hit without adding a
+positive ability modifier, while preserving a negative ability modifier.
+
+Out of scope: deriving adjacency, reach, line of sight, cover, or target
+identity from a grid or map; conflating Cleave with Extra Attack, Light/Nick
+extra attacks, Bonus Actions, or Multiattack; and Topple's save-gated Prone
+behavior.
+
+Verification: RAW/source review for Cleave, Weapon Mastery, Attack Roll, melee
+attack, weapon damage, and Reach; package-local Quint update before runtime
+divergence; focused tests for selected-weapon gate, melee-hit-only gate,
+optional rider choice, caller-supplied second-target eligibility rejection,
+same-weapon second attack, second-hit damage without positive ability modifier,
+negative ability modifier preservation, once-per-turn enforcement, missing
+selected mastery rejection, missing Cleave support rejection, and
+character-battle selected-weapon projection; `pnpm
+unit-profile-coverage:check --write` if evidence changes; `pnpm quality`;
+`/simplify` convergence for significant changes; MBT only if attack sequencing
+changes require it.
