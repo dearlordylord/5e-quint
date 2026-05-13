@@ -1703,7 +1703,7 @@ export type HeldLightHurlSpellInvocation = DamageSpellSource & {
   readonly spell: SpellRecord;
   readonly targeting: Extract<
     SpellTargeting,
-    { readonly kind: "singleCombatant" }
+    { readonly kind: "singleCreatureOrObject" }
   >;
   readonly damage: {
     readonly expr: DiceExpr;

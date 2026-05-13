@@ -134,7 +134,7 @@ function spellBeamAttackRollProtocolId(
 export function spellObjectAttackRollHole(
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "spellAttackDamage" }
+    { readonly procedure: "heldLightHurl" | "spellAttackDamage" }
   >,
   rollMode?: AttackRollMode,
 ): BattleSpellAttackRollHole {
@@ -1172,7 +1172,12 @@ export function spellObjectDamageOutcome(input: {
   readonly objectId: BattleObjectId;
   readonly invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "spellAttackBeamSequence" | "spellAttackDamage" }
+    {
+      readonly procedure:
+        | "heldLightHurl"
+        | "spellAttackBeamSequence"
+        | "spellAttackDamage";
+    }
   >;
   readonly damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>;
   readonly critical: boolean;
@@ -1215,7 +1220,12 @@ export function spellObjectDamageOutcome(input: {
 export function spellObjectRolledDamage(
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "spellAttackBeamSequence" | "spellAttackDamage" }
+    {
+      readonly procedure:
+        | "heldLightHurl"
+        | "spellAttackBeamSequence"
+        | "spellAttackDamage";
+    }
   >,
   damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
   _critical: boolean,

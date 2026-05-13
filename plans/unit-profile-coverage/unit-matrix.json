@@ -794,7 +794,8 @@
         "SRDINV34",
         "SRDINV51",
         "SRDINV52",
-        "SRDINV64"
+        "SRDINV64",
+        "SRDINV67"
       ],
       "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
       "verificationOwners": [
@@ -2233,6 +2234,22 @@
         "spell.invocation-damage-save-or-attack"
       ],
       "taskId": "SRDINV32B"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Produce Flame's held-state-gated hurl supporting creature-or-object targets, Fire damage, and object damage disposition outcomes.",
+      "profileIds": [
+        "spell.invocation-damage-save-or-attack"
+      ],
+      "taskId": "SRDINV67"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests for Produce Flame's held-state-gated hurl over combatant and typed caller-supplied object targets, including object hit/miss adjudication and hit point damage disposition.",
+      "profileIds": [
+        "spell.invocation-damage-save-or-attack"
+      ],
+      "taskId": "SRDINV67"
     },
     {
       "claimKind": "qnt-proof",
@@ -4725,7 +4742,8 @@
             "SRDINV34",
             "SRDINV51",
             "SRDINV52",
-            "SRDINV64"
+            "SRDINV64",
+            "SRDINV67"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -4978,7 +4996,8 @@
             "SRDINV34",
             "SRDINV51",
             "SRDINV52",
-            "SRDINV64"
+            "SRDINV64",
+            "SRDINV67"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -5079,7 +5098,8 @@
             "SRDINV34",
             "SRDINV51",
             "SRDINV52",
-            "SRDINV64"
+            "SRDINV64",
+            "SRDINV67"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -5519,7 +5539,8 @@
             "SRDINV34",
             "SRDINV51",
             "SRDINV52",
-            "SRDINV64"
+            "SRDINV64",
+            "SRDINV67"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6226,7 +6247,8 @@
             "SRDINV34",
             "SRDINV51",
             "SRDINV52",
-            "SRDINV64"
+            "SRDINV64",
+            "SRDINV67"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6441,7 +6463,8 @@
             "SRDINV34",
             "SRDINV51",
             "SRDINV52",
-            "SRDINV64"
+            "SRDINV64",
+            "SRDINV67"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6503,7 +6526,8 @@
             "SRDINV34",
             "SRDINV51",
             "SRDINV52",
-            "SRDINV64"
+            "SRDINV64",
+            "SRDINV67"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6742,7 +6766,8 @@
             "SRDINV34",
             "SRDINV51",
             "SRDINV52",
-            "SRDINV64"
+            "SRDINV64",
+            "SRDINV67"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6869,8 +6894,8 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "SRDINV67",
-            "mechanic": "object target identity, Armor Class/Hit Points, and damage disposition for the SRD creature-or-object hurl target"
+            "followUpTaskId": "SRDINV70A",
+            "mechanic": "shared Bright Light and Dim Light runtime interaction boundary for the held flame"
           }
         ],
         "profileIds": [
@@ -6880,9 +6905,11 @@
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
         ],
         "supportedMechanics": [
-          "Bonus Action held-light state",
+          "Bonus Action held-flame state",
           "held-state-gated later Magic action hurl",
-          "combatant-target ranged spell attack damage",
+          "creature-or-object target boundary with combatant target choice or typed caller-supplied object identity",
+          "caller-supplied object range, Armor Class, Hit Points or table-resolved damage disposition facts",
+          "ranged spell attack hit/miss adjudication against combatant and object targets",
           "Fire damage",
           "cantrip damage scaling"
         ],
@@ -6916,7 +6943,8 @@
             "SRDINV34",
             "SRDINV51",
             "SRDINV52",
-            "SRDINV64"
+            "SRDINV64",
+            "SRDINV67"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6978,7 +7006,8 @@
             "SRDINV34",
             "SRDINV51",
             "SRDINV52",
-            "SRDINV64"
+            "SRDINV64",
+            "SRDINV67"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -7067,7 +7096,8 @@
             "SRDINV34",
             "SRDINV51",
             "SRDINV52",
-            "SRDINV64"
+            "SRDINV64",
+            "SRDINV67"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -7210,7 +7240,8 @@
             "SRDINV34",
             "SRDINV51",
             "SRDINV52",
-            "SRDINV64"
+            "SRDINV64",
+            "SRDINV67"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -7353,7 +7384,8 @@
             "SRDINV34",
             "SRDINV51",
             "SRDINV52",
-            "SRDINV64"
+            "SRDINV64",
+            "SRDINV67"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -7457,7 +7489,8 @@
             "SRDINV34",
             "SRDINV51",
             "SRDINV52",
-            "SRDINV64"
+            "SRDINV64",
+            "SRDINV67"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -7519,7 +7552,8 @@
             "SRDINV34",
             "SRDINV51",
             "SRDINV52",
-            "SRDINV64"
+            "SRDINV64",
+            "SRDINV67"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -7662,7 +7696,8 @@
             "SRDINV34",
             "SRDINV51",
             "SRDINV52",
-            "SRDINV64"
+            "SRDINV64",
+            "SRDINV67"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -7751,7 +7786,8 @@
             "SRDINV34",
             "SRDINV51",
             "SRDINV52",
-            "SRDINV64"
+            "SRDINV64",
+            "SRDINV67"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -8250,7 +8286,8 @@
             "SRDINV34",
             "SRDINV51",
             "SRDINV52",
-            "SRDINV64"
+            "SRDINV64",
+            "SRDINV67"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [

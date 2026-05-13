@@ -26,11 +26,9 @@
 -- OMITTED (DM agenda):
 --   "The flame emits no heat and ignites nothing" — world-state narrative,
 --   no mechanical atom models heat or ignition gating.
---   Runtime support for the hurled flame is currently the combatant-target
---   subset. Object targeting remains checker-visible unsupported until object
---   target identity, AC/HP, and damage disposition are executable runtime
---   facts. The 60-foot range is enforced by the promoted runtime profile; it
---   is not captured on OngoingEffect.attack_roll, which omits `attachment`.
+--   The 60-foot hurl range and creature-or-object target boundary are enforced
+--   by the promoted runtime profile; they are not captured on
+--   OngoingEffect.attack_roll, which omits `attachment`.
 
 let produceFlame =
       { kind = "spell"

@@ -320,13 +320,15 @@ const NoSpellInvocationResourceSchema = Schema.Struct({
   tag: Schema.Literal("none"),
 });
 
+const SingleCreatureOrObjectSpellTargetingSchema = Schema.Struct({
+  kind: Schema.Literal("singleCreatureOrObject"),
+});
+
 const SpellAttackDamageTargetingSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("singleCombatant"),
   }),
-  Schema.Struct({
-    kind: Schema.Literal("singleCreatureOrObject"),
-  }),
+  SingleCreatureOrObjectSpellTargetingSchema,
 );
 
 const BattleObjectDamageDispositionSchema = Schema.Union(
@@ -415,9 +417,7 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       resource: NoSpellInvocationResourceSchema,
       procedure: Schema.Literal("heldLightHurl"),
       spell: BattleRuntimeObjectSchema,
-      targeting: Schema.Struct({
-        kind: Schema.Literal("singleCombatant"),
-      }),
+      targeting: SingleCreatureOrObjectSpellTargetingSchema,
       damage: Schema.Struct({
         expr: BattleRuntimeObjectSchema,
         damageType: DamageTypeSchema,

@@ -33,7 +33,10 @@ type SingleCreatureOrObjectSpellAttackDamageInvocation =
     { readonly kind: "spellObjectTarget" }
   > extends infer ObjectFact
     ? {
-        readonly procedure: "spellAttackBeamSequence" | "spellAttackDamage";
+        readonly procedure:
+          | "heldLightHurl"
+          | "spellAttackBeamSequence"
+          | "spellAttackDamage";
         readonly spell: { readonly id: string; readonly name: string };
         readonly rangeFeet: ObjectFact extends {
           readonly rangeFeet: infer RangeFeet;

@@ -411,7 +411,7 @@ export function supportedCantripHeldLightHurlSpellProfile(
       resource: { tag: "none" },
       procedure: "heldLightHurl",
       spell,
-      targeting: { kind: "singleCombatant" },
+      targeting: { kind: "singleCreatureOrObject" },
       damage: {
         expr: damageExpr,
         damageType: damageEffect.damageType,

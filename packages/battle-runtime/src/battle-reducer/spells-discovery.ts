@@ -458,7 +458,8 @@ export function discoverSupportedSpellInvocations(
         return castActs;
       }
       if (
-        invocation.procedure === "spellAttackDamage" &&
+        (invocation.procedure === "heldLightHurl" ||
+          invocation.procedure === "spellAttackDamage") &&
         invocation.targeting.kind === "singleCreatureOrObject"
       ) {
         const targetHole = spellTargetHole(state, actorId, invocation);

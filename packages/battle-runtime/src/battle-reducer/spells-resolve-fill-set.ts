@@ -266,7 +266,8 @@ export function spellFillSet(
         }
       }
       if (
-        invocation.procedure !== "spellAttackDamage" ||
+        (invocation.procedure !== "heldLightHurl" &&
+          invocation.procedure !== "spellAttackDamage") ||
         invocation.targeting.kind !== "singleCreatureOrObject"
       ) {
         return {

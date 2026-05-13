@@ -482,7 +482,8 @@ export function resolveSpellAct(
   if (fillSet.targetId == null && fillSet.objectTarget === undefined) {
     return needsHolesResult(castingState, input.subject, [
       spellTargetHole(castingState, subject.actorId, invocation),
-      ...(invocation.procedure === "spellAttackDamage" &&
+      ...((invocation.procedure === "heldLightHurl" ||
+        invocation.procedure === "spellAttackDamage") &&
       invocation.targeting.kind === "singleCreatureOrObject"
         ? [spellObjectTargetHole(invocation)]
         : []),
@@ -491,7 +492,8 @@ export function resolveSpellAct(
   const objectTarget = fillSet.objectTarget;
   if (objectTarget !== undefined) {
     if (
-      invocation.procedure !== "spellAttackDamage" ||
+      (invocation.procedure !== "heldLightHurl" &&
+        invocation.procedure !== "spellAttackDamage") ||
       invocation.targeting.kind !== "singleCreatureOrObject"
     ) {
       return invalidResult(
@@ -965,7 +967,7 @@ function resolveSpellAttackDamageObjectTarget(input: {
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "spellAttackDamage" }
+    { readonly procedure: "heldLightHurl" | "spellAttackDamage" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }> & {
     readonly objectTarget: NonNullable<

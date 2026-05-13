@@ -62,6 +62,7 @@ import trueStrikeInput from "../../surface/content/true_strike.json";
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import {
   abilityModifier,
+  armorClass,
   defaultArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
@@ -70,6 +71,7 @@ import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { classLevel } from "@dnd/shared/types";
 import {
   attackBonus,
+  damageAmount,
   type DamageType,
   difficultyClass,
   DieRollResult,
@@ -135,6 +137,7 @@ import {
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
+  type BattleObjectDamageDisposition,
   type BattleSpellAreaChoice,
   type BattleState,
   type BattleSubject,
@@ -6379,7 +6382,7 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
       expect.objectContaining({
         procedure: "heldLightHurl",
         spell,
-        targeting: { kind: "singleCombatant" },
+        targeting: { kind: "singleCreatureOrObject" },
         damage: {
           expr: { dice: 1, dieSize: 8 },
           damageType: "fire",
@@ -6392,6 +6395,10 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
       expect.objectContaining({
         kind: "targetChoice",
         choices: [spellCasterId, spellTargetId],
+      }),
+      expect.objectContaining({
+        kind: "objectTargetChoice",
+        label: "Produce Flame object target",
       }),
     ]);
   });
@@ -6486,6 +6493,141 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
     expect(resolved.state.currentTurnResources.spellSlotExpendedThisTurn).toBe(
       false,
     );
+  });
+
+  test("produce_flame hurl object miss spends the Magic action without object damage", () => {
+    const spell = spellRecord(produceFlameUnitId);
+    const state = spellBattle({ cantrips: [spell] });
+    const lit = resolveBattleSubject({
+      state,
+      subject: bonusSpellAct({ state, spellId: produceFlameUnitId }).subject,
+      fills: [],
+    });
+    if (lit.tag !== "resolved") {
+      throw new Error("Expected Produce Flame held light to resolve.");
+    }
+    const hurl = spellAct({ state: lit.state, spellId: produceFlameUnitId });
+    const objectTarget = requireHole(hurl.initialHoles, "objectTargetChoice");
+    const objectFill = spellObjectTargetFill({
+      hole: objectTarget,
+      spellId: produceFlameUnitId,
+      casterId: spellCasterId,
+    });
+    const attack = requireResultHole(
+      resolveBattleSubject({
+        state: lit.state,
+        subject: hurl.subject,
+        fills: [objectFill],
+      }),
+      "attackRoll",
+    );
+
+    const resolved = resolveBattleSubject({
+      state: lit.state,
+      subject: hurl.subject,
+      fills: [objectFill, attackRollFill(attack, { total: 12, naturalD20: 7 })],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: spellCasterId },
+          { combatantId: spellTargetId },
+        ],
+        turn: { actionResources: [] },
+      },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Produce Flame object miss to resolve.");
+    }
+    expect(resolved.objectDamages).toBeUndefined();
+  });
+
+  test("produce_flame hurl applies object hit point disposition on a hit", () => {
+    const spell = spellRecord(produceFlameUnitId);
+    const state = spellBattle({
+      cantrips: [spell],
+      casterClassLevels: [{ className: "druid", level: classLevel(5) }],
+    });
+    const lit = resolveBattleSubject({
+      state,
+      subject: bonusSpellAct({ state, spellId: produceFlameUnitId }).subject,
+      fills: [],
+    });
+    if (lit.tag !== "resolved") {
+      throw new Error("Expected Produce Flame held light to resolve.");
+    }
+    const hurl = spellAct({ state: lit.state, spellId: produceFlameUnitId });
+    const objectTarget = requireHole(hurl.initialHoles, "objectTargetChoice");
+    const objectId = battleObjectId("produce-flame-target");
+    const objectFill = spellObjectTargetFill({
+      hole: objectTarget,
+      objectId,
+      spellId: produceFlameUnitId,
+      casterId: spellCasterId,
+      damageDisposition: { kind: "hitPoints", hitPoints: Hp(5) },
+    });
+    const attack = requireResultHole(
+      resolveBattleSubject({
+        state: lit.state,
+        subject: hurl.subject,
+        fills: [objectFill],
+      }),
+      "attackRoll",
+    );
+    const damage = requireResultHole(
+      resolveBattleSubject({
+        state: lit.state,
+        subject: hurl.subject,
+        fills: [
+          objectFill,
+          attackRollFill(attack, { total: 18, naturalD20: 12 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    expect(damage).toMatchObject({
+      label: "Produce Flame damage (2d8-fire)",
+    });
+
+    const resolved = resolveBattleSubject({
+      state: lit.state,
+      subject: hurl.subject,
+      fills: [
+        objectFill,
+        attackRollFill(attack, { total: 18, naturalD20: 12 }),
+        damageRollFillWithGroups(damage, [[4, 5]]),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      objectDamages: [
+        {
+          kind: "hitPoints",
+          objectId,
+          damageType: "fire",
+          rolledDamage: damageAmount(9),
+          effectiveDamage: damageAmount(9),
+          priorHitPoints: Hp(5),
+          nextHitPoints: Hp(0),
+          destroyed: true,
+        },
+      ],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Produce Flame object hit to resolve.");
+    }
+    expect(
+      resolved.state.combatants
+        .get(spellCasterId)
+        ?.activeEffects.some(
+          (effect) =>
+            effect.kind === "heldLight" &&
+            effect.sourceSpellId === produceFlameUnitId,
+        ),
+    ).toBe(true);
   });
 });
 
@@ -14722,6 +14864,37 @@ function spellTargetFill(
         casterId,
         targetId,
         spellId,
+      },
+    ],
+  };
+}
+
+type ObjectTargetChoiceFill = Extract<
+  BattleFill,
+  { readonly kind: "objectTargetChoice" }
+>;
+
+function spellObjectTargetFill(input: {
+  readonly hole: Extract<BattleHole, { readonly kind: "objectTargetChoice" }>;
+  readonly objectId?: ObjectTargetChoiceFill["value"];
+  readonly spellId: string;
+  readonly casterId: CombatantId;
+  readonly damageDisposition?: BattleObjectDamageDisposition;
+}): ObjectTargetChoiceFill {
+  const objectId = input.objectId ?? battleObjectId("produce-flame-object");
+  return {
+    kind: "objectTargetChoice",
+    holeId: input.hole.holeId,
+    value: objectId,
+    spatialFacts: [
+      {
+        kind: "spellObjectTarget",
+        casterId: input.casterId,
+        objectId,
+        spellId: input.spellId,
+        rangeFeet: movementFeet(60),
+        armorClass: armorClass(13),
+        damageDisposition: input.damageDisposition ?? { kind: "tableResolved" },
       },
     ],
   };

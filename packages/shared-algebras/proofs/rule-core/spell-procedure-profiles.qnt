@@ -381,7 +381,7 @@ module spellProcedureProfiles {
     }
 
   pure def spellAttackDamageProfileSupportsObjectTarget(profile: SpellAttackDamageProfile): bool =
-    profile == StarryWispSpellAttackProfile
+    profile == StarryWispSpellAttackProfile or profile == ProduceFlameHurlSpellAttackProfile
 
   pure def spellSaveGatedDamageTargeting(profile: SpellSaveGatedDamageProfile): SpellSaveGatedTargeting =
     match profile {
@@ -1179,6 +1179,7 @@ module spellProcedureProfiles {
       assert(spellAttackDamageProfileHitEffects(RayOfSicknessSpellAttackProfile) == Set(RayOfSicknessPoisonedHitEffect)),
       assert(spellAttackDamageProfileHitEffects(StarryWispSpellAttackProfile) == Set()),
       assert(spellAttackDamageProfileSupportsObjectTarget(StarryWispSpellAttackProfile)),
+      assert(spellAttackDamageProfileSupportsObjectTarget(ProduceFlameHurlSpellAttackProfile)),
       assert(not(spellAttackDamageProfileSupportsObjectTarget(RayOfFrostSpellAttackProfile))),
     }
   }

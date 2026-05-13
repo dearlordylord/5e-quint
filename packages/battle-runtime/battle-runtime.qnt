@@ -306,6 +306,7 @@ module battleRuntime {
   type ObjectTarget =
     | StarryWispObjectTarget
     | EldritchBlastObjectTarget
+    | ProduceFlameObjectTarget
   type ObjectDamageDisposition =
     | ObjectHitPoints({ hitPoints: int })
     | ObjectHitPointsWithDamageThreshold({ hitPoints: int, damageThreshold: int })
@@ -6745,6 +6746,7 @@ module battleRuntime {
       assert(spellAttackDamageActiveEffects(ChillTouchSpellAttack) == Set(ChillTouchHitPointRegainPrevented({ source: Fighter, expiresAtRound: 0 }))),
       assert(spellAttackDamageActiveEffects(StarryWispSpellAttack) == Set()),
       assert(spellAttackDamageSupportsObjectTarget(StarryWispSpellAttack)),
+      assert(spellAttackDamageSupportsObjectTarget(ProduceFlameHurlSpellAttack)),
       assert(not(spellAttackDamageSupportsObjectTarget(ChillTouchSpellAttack))),
       assert(spellAttackBeamSequenceDamageType(EldritchBlastBeamSequence) == Force),
       assert(eldritchBlastBeamCount(1) == 1),
@@ -6759,6 +6761,9 @@ module battleRuntime {
       assert(spellAttackDamageObjectReplayHoles(StarryWispSpellAttack, true, true, false, false, false) == Set(AttackRoll)),
       assert(spellAttackDamageObjectReplayHoles(StarryWispSpellAttack, true, true, true, true, false) == Set(SpellDamageRoll)),
       assert(spellAttackDamageObjectReplayHoles(StarryWispSpellAttack, true, true, true, false, false) == Set()),
+      assert(spellAttackDamageObjectReplayHoles(ProduceFlameHurlSpellAttack, true, false, false, false, false) == Set(ObjectTargetChoice)),
+      assert(spellAttackDamageObjectReplayHoles(ProduceFlameHurlSpellAttack, true, true, false, false, false) == Set(AttackRoll)),
+      assert(spellAttackDamageObjectReplayHoles(ProduceFlameHurlSpellAttack, true, true, true, true, false) == Set(SpellDamageRoll)),
       assert(spellObjectDamageOutcome(StarryWispSpellAttack, StarryWispObjectTarget, 6, ObjectHitPoints({ hitPoints: 5 })) == ObjectHitPointDamage({
         object: StarryWispObjectTarget,
         damageType: Radiant,
@@ -6776,6 +6781,15 @@ module battleRuntime {
         priorHitPoints: 10,
         nextHitPoints: 10,
         destroyed: false,
+      })),
+      assert(spellObjectDamageOutcome(ProduceFlameHurlSpellAttack, ProduceFlameObjectTarget, 6, ObjectHitPoints({ hitPoints: 5 })) == ObjectHitPointDamage({
+        object: ProduceFlameObjectTarget,
+        damageType: Fire,
+        rolledDamage: 6,
+        effectiveDamage: 6,
+        priorHitPoints: 5,
+        nextHitPoints: 0,
+        destroyed: true,
       })),
       assert(spellAttackBeamSequenceObjectDamageOutcome(EldritchBlastBeamSequence, EldritchBlastObjectTarget, 6, ObjectHitPoints({ hitPoints: 10 })) == ObjectHitPointDamage({
         object: EldritchBlastObjectTarget,
