@@ -29,13 +29,7 @@ import {
   damageAmountAfterTargetAdjustments,
   damageAmountByTypeAfterTargetAdjustments,
 } from "./damage-helpers.ts";
-import {
-  applyHpDamage,
-  breakBattleConcentrationAfterDamage,
-  markMarkedDamageRiderTransferAvailable,
-  removeSpellConditionEffectsFromTargetDamagedByCasterOrAlly,
-} from "./damage-apply.ts";
-import { removeSleepEffectsFromTarget } from "./spell-condition-effects-helpers.ts";
+import { applyBattleHitPointDamage } from "./damage-apply.ts";
 import {
   attackRollMissToHitReplacementHolePayload,
   signedModifier,
@@ -997,40 +991,15 @@ export function applySpellDamage(
     reduction.target,
     reduction.damageByType,
   );
-  const damaged = applyHpDamage(reduction.target, effectiveDamage, {
+  return applyBattleHitPointDamage({
+    state,
+    target: reduction.target,
+    damageAmount: effectiveDamage,
     deathFailuresAtZeroHp: critical ? 2 : 1,
     damageDisposition,
+    damageSourceId,
+    concentrationSavingThrow,
   });
-  const nextState = {
-    ...state,
-    combatants: new Map(state.combatants).set(targetId, damaged),
-  };
-  const afterMarkDrop = markMarkedDamageRiderTransferAvailable(
-    nextState,
-    targetId,
-    target.hp,
-    damaged.hp,
-  );
-  const concentrated =
-    concentrationSavingThrow?.value.succeeded === false ||
-    (target.concentration !== null && damaged.concentration === null)
-      ? breakBattleConcentrationAfterDamage({
-          state: afterMarkDrop,
-          combatantId: targetId,
-          priorConcentration: target.concentration,
-        })
-      : afterMarkDrop;
-  const afterDamageEscapes =
-    effectiveDamage > 0 && damageSourceId !== undefined
-      ? removeSpellConditionEffectsFromTargetDamagedByCasterOrAlly(
-          concentrated,
-          damageSourceId,
-          targetId,
-        )
-      : concentrated;
-  return effectiveDamage > 0
-    ? removeSleepEffectsFromTarget(afterDamageEscapes, targetId)
-    : afterDamageEscapes;
 }
 
 type PreparedSlotSpellDamageContext = {
@@ -1056,40 +1025,15 @@ export function applyPreparedSlotSpellDamage(
     damageDisposition = { kind: "ordinaryDamage" },
     damageSourceId,
   } = context;
-  const damaged = applyHpDamage(target, damageAmount, {
+  return applyBattleHitPointDamage({
+    state,
+    target,
+    damageAmount,
     deathFailuresAtZeroHp: 1,
     damageDisposition,
+    damageSourceId,
+    concentrationSavingThrow,
   });
-  const nextState = {
-    ...state,
-    combatants: new Map(state.combatants).set(targetId, damaged),
-  };
-  const afterMarkDrop = markMarkedDamageRiderTransferAvailable(
-    nextState,
-    targetId,
-    target.hp,
-    damaged.hp,
-  );
-  const concentrated =
-    concentrationSavingThrow?.value.succeeded === false ||
-    (target.concentration !== null && damaged.concentration === null)
-      ? breakBattleConcentrationAfterDamage({
-          state: afterMarkDrop,
-          combatantId: targetId,
-          priorConcentration: target.concentration,
-        })
-      : afterMarkDrop;
-  const afterDamageEscapes =
-    damageAmount > 0 && damageSourceId !== undefined
-      ? removeSpellConditionEffectsFromTargetDamagedByCasterOrAlly(
-          concentrated,
-          damageSourceId,
-          targetId,
-        )
-      : concentrated;
-  return damageAmount > 0
-    ? removeSleepEffectsFromTarget(afterDamageEscapes, targetId)
-    : afterDamageEscapes;
 }
 
 export function spellDamageAmountForTarget(

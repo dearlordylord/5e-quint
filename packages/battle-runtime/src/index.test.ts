@@ -73,6 +73,7 @@ import {
   elapsedTimeTicksFromHours,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
+import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
 import {
   holeId,
   holeInstanceKey,
@@ -18442,6 +18443,332 @@ describe("battle runtime", () => {
     });
   });
 
+  test("Sleep pending effect ends when the target takes spell damage", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-sleep-spell-damage-cleanup"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            cantrips: [],
+            preparedSpells: [spellRecord("sleep")],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+        }),
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Magic Missile Caster",
+          initiative: 15,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            cantrips: [],
+            preparedSpells: [spellRecord("magic_missile")],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+        }),
+        characterSeed({
+          combatantId: goblinId,
+          displayName: "Target",
+          initiative: 10,
+          side: oppositionSide,
+          currentHp: 20,
+          maxHp: 20,
+        }),
+      ],
+    });
+    const savingThrows = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: magicSubject("sleep"),
+        fills: [],
+      }),
+      "savingThrowOutcome",
+    );
+    const slept = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: magicSubject("sleep"),
+        fills: [
+          savingThrowOutcomeFill(savingThrows, [
+            { targetId: goblinId, succeeded: false },
+          ]),
+        ],
+      }),
+    ).state;
+    const fighterTurn = requireResolved(
+      endTurn({ state: slept, actorId: wizardId }),
+    ).state;
+    const subject: BattleSubject = {
+      tag: "actionSpell",
+      actorId: fighterId,
+      invocation: spellSlotInvocationRef(
+        "magic_missile",
+        1,
+        "repeatedDamageAllocation",
+      ),
+      mode: { tag: "cast" },
+    };
+    const targetAllocation = requireHole(
+      resolveBattleSubject({ state: fighterTurn, subject, fills: [] }),
+      "spellTargetAllocation",
+    );
+    const damage = requireHole(
+      resolveBattleSubject({
+        state: fighterTurn,
+        subject,
+        fills: [
+          spellTargetAllocationFill(
+            targetAllocation,
+            [{ targetId: goblinId, count: 3 }],
+            fighterId,
+          ),
+        ],
+      }),
+      "rolledDice",
+    );
+
+    const damaged = requireResolved(
+      resolveBattleSubject({
+        state: fighterTurn,
+        subject,
+        fills: [
+          spellTargetAllocationFill(
+            targetAllocation,
+            [{ targetId: goblinId, count: 3 }],
+            fighterId,
+          ),
+          damageRollFillWithGroups(damage, [[1, 1, 1]]),
+        ],
+      }),
+    ).state;
+
+    expect(damaged.combatants.get(goblinId)).toMatchObject({
+      conditions: expect.objectContaining({ directIncapacitated: false }),
+      activeEffects: [],
+    });
+  });
+
+  test("Sleep damage cleanup ignores no-damage events and is idempotent", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-sleep-damage-cleanup-idempotent"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            cantrips: [],
+            preparedSpells: [spellRecord("sleep")],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+        }),
+        characterSeed({
+          combatantId: goblinId,
+          displayName: "Target",
+          initiative: 10,
+          side: oppositionSide,
+          currentHp: 20,
+          maxHp: 20,
+        }),
+      ],
+    });
+    const savingThrows = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: magicSubject("sleep"),
+        fills: [],
+      }),
+      "savingThrowOutcome",
+    );
+    const sleeping = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: magicSubject("sleep"),
+        fills: [
+          savingThrowOutcomeFill(savingThrows, [
+            { targetId: goblinId, succeeded: false },
+          ]),
+        ],
+      }),
+    ).state;
+    const sleepingTarget = sleeping.combatants.get(goblinId)!;
+
+    const noDamage = applyBattleHitPointDamage({
+      state: sleeping,
+      target: sleepingTarget,
+      damageAmount: 0,
+      deathFailuresAtZeroHp: 1,
+      damageSourceId: fighterId,
+    });
+    expect(noDamage.combatants.get(goblinId)).toMatchObject({
+      conditions: expect.objectContaining({ directIncapacitated: true }),
+      activeEffects: [
+        expect.objectContaining({ kind: "sleepPendingRepeatSave" }),
+      ],
+    });
+
+    const damaged = applyBattleHitPointDamage({
+      state: sleeping,
+      target: sleepingTarget,
+      damageAmount: 1,
+      deathFailuresAtZeroHp: 1,
+      damageSourceId: fighterId,
+    });
+    const damagedAgain = applyBattleHitPointDamage({
+      state: damaged,
+      target: damaged.combatants.get(goblinId)!,
+      damageAmount: 1,
+      deathFailuresAtZeroHp: 1,
+      damageSourceId: fighterId,
+    });
+
+    expect(damagedAgain.combatants.get(goblinId)).toMatchObject({
+      hp: Hp(18),
+      conditions: expect.objectContaining({ directIncapacitated: false }),
+      activeEffects: [],
+    });
+  });
+
+  test("Sleep damage cleanup preserves unrelated Incapacitated and Unconscious sources", () => {
+    const incapacitatedState = startBattleRight({
+      battleId: battleId("battle-sleep-damage-cleanup-preserves-incapacitated"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            cantrips: [],
+            preparedSpells: [spellRecord("sleep")],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+        }),
+        characterSeed({
+          combatantId: goblinId,
+          displayName: "Target",
+          initiative: 10,
+          side: oppositionSide,
+          currentHp: 20,
+          maxHp: 20,
+          conditions: ["incapacitated"],
+        }),
+      ],
+    });
+    const incapacitatedSavingThrows = requireHole(
+      resolveBattleSubject({
+        state: incapacitatedState,
+        subject: magicSubject("sleep"),
+        fills: [],
+      }),
+      "savingThrowOutcome",
+    );
+    const sleptIncapacitated = requireResolved(
+      resolveBattleSubject({
+        state: incapacitatedState,
+        subject: magicSubject("sleep"),
+        fills: [
+          savingThrowOutcomeFill(incapacitatedSavingThrows, [
+            { targetId: goblinId, succeeded: false },
+          ]),
+        ],
+      }),
+    ).state;
+    const incapacitatedTarget = sleptIncapacitated.combatants.get(goblinId)!;
+    const afterIncapacitatedDamage = applyBattleHitPointDamage({
+      state: sleptIncapacitated,
+      target: incapacitatedTarget,
+      damageAmount: 1,
+      deathFailuresAtZeroHp: 1,
+      damageSourceId: fighterId,
+    });
+
+    expect(afterIncapacitatedDamage.combatants.get(goblinId)).toMatchObject({
+      conditions: expect.objectContaining({ directIncapacitated: true }),
+      activeEffects: [],
+    });
+
+    const unconsciousState = startBattleRight({
+      battleId: battleId("battle-sleep-damage-cleanup-preserves-unconscious"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            cantrips: [],
+            preparedSpells: [spellRecord("sleep")],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+        }),
+        characterSeed({
+          combatantId: goblinId,
+          displayName: "Target",
+          initiative: 10,
+          side: oppositionSide,
+          currentHp: 20,
+          maxHp: 20,
+          conditions: ["unconscious"],
+        }),
+      ],
+    });
+    const unconsciousSavingThrows = requireHole(
+      resolveBattleSubject({
+        state: unconsciousState,
+        subject: magicSubject("sleep"),
+        fills: [],
+      }),
+      "savingThrowOutcome",
+    );
+    const sleptUnconscious = requireResolved(
+      resolveBattleSubject({
+        state: unconsciousState,
+        subject: magicSubject("sleep"),
+        fills: [
+          savingThrowOutcomeFill(unconsciousSavingThrows, [
+            { targetId: goblinId, succeeded: false },
+          ]),
+        ],
+      }),
+    ).state;
+    const goblinTurn = requireResolved(
+      endTurn({ state: sleptUnconscious, actorId: wizardId }),
+    ).state;
+    const repeatSave = requireHole(
+      endTurn({ state: goblinTurn, actorId: goblinId }),
+      "savingThrowOutcome",
+    );
+    const repeated = requireResolved(
+      endTurn({
+        state: goblinTurn,
+        actorId: goblinId,
+        fills: [
+          savingThrowOutcomeFill(repeatSave, [
+            { targetId: goblinId, succeeded: false },
+          ]),
+        ],
+      }),
+    ).state;
+    const unconsciousTarget = repeated.combatants.get(goblinId)!;
+    const afterUnconsciousDamage = applyBattleHitPointDamage({
+      state: repeated,
+      target: unconsciousTarget,
+      damageAmount: 1,
+      deathFailuresAtZeroHp: 1,
+      damageSourceId: fighterId,
+    });
+
+    expect(afterUnconsciousDamage.combatants.get(goblinId)).toMatchObject({
+      conditions: expect.objectContaining({ unconscious: true }),
+      activeEffects: [],
+    });
+  });
+
   test("Sleep shake-awake spends an action and requires an adjacent target fact", () => {
     const state = startBattleRight({
       battleId: battleId("battle-sleep-shake-awake"),
@@ -20541,6 +20868,7 @@ function spellTargetAllocationFill(
     readonly targetId: CombatantId;
     readonly count: number;
   }[],
+  casterId: CombatantId = wizardId,
 ): BattleFill {
   if (hole.kind !== "spellTargetAllocation") {
     throw new Error("Expected spellTargetAllocation hole.");
@@ -20551,7 +20879,7 @@ function spellTargetAllocationFill(
     value: { allocations },
     spatialFacts: allocations.map((allocation) => ({
       kind: "spellTarget",
-      casterId: wizardId,
+      casterId,
       targetId: allocation.targetId,
       spellId: hole.spell.spell.id,
     })),

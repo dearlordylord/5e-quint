@@ -167,6 +167,57 @@ export function applyTemporaryHitPoints(
   };
 }
 
+export function applyBattleHitPointDamage(input: {
+  readonly state: BattleState;
+  readonly target: BattleCreatureState;
+  readonly damageAmount: number;
+  readonly deathFailuresAtZeroHp: 1 | 2;
+  readonly damageDisposition?: BattleAttackDamageDisposition | undefined;
+  readonly damageSourceId?: CombatantId | undefined;
+  readonly concentrationSavingThrow?:
+    | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
+    | undefined;
+}): BattleState {
+  const damaged = applyHpDamage(input.target, input.damageAmount, {
+    deathFailuresAtZeroHp: input.deathFailuresAtZeroHp,
+    ...(input.damageDisposition === undefined
+      ? {}
+      : { damageDisposition: input.damageDisposition }),
+  });
+  const targetId = input.target.combatantId;
+  const nextState = {
+    ...input.state,
+    combatants: new Map(input.state.combatants).set(targetId, damaged),
+  };
+  const afterMarkDrop = markMarkedDamageRiderTransferAvailable(
+    nextState,
+    targetId,
+    input.target.hp,
+    damaged.hp,
+  );
+  const afterConcentration =
+    input.damageAmount > 0 &&
+    (input.concentrationSavingThrow?.value.succeeded === false ||
+      (input.target.concentration !== null && damaged.concentration === null))
+      ? breakBattleConcentrationAfterDamage({
+          state: afterMarkDrop,
+          combatantId: targetId,
+          priorConcentration: input.target.concentration,
+        })
+      : afterMarkDrop;
+  const afterCasterOrAllyDamageEscapes =
+    input.damageAmount > 0 && input.damageSourceId !== undefined
+      ? removeSpellConditionEffectsFromTargetDamagedByCasterOrAlly(
+          afterConcentration,
+          input.damageSourceId,
+          targetId,
+        )
+      : afterConcentration;
+  return input.damageAmount > 0
+    ? removeSleepEffectsFromTarget(afterCasterOrAllyDamageEscapes, targetId)
+    : afterCasterOrAllyDamageEscapes;
+}
+
 export function applyAttackDamage(
   state: BattleState,
   attackerId: CombatantId,
@@ -208,37 +259,17 @@ export function applyAttackDamage(
     reduction.damageByType,
   );
   const damagedTarget = reduction.target;
-  const damaged = applyHpDamage(damagedTarget, damageAmount, {
+  const afterDamage = applyBattleHitPointDamage({
+    state,
+    target: damagedTarget,
+    damageAmount,
     deathFailuresAtZeroHp: critical ? 2 : 1,
     damageDisposition: fillSet.damageDisposition,
+    damageSourceId: attackerId,
+    concentrationSavingThrow: fillSet.concentrationSavingThrow,
   });
-  const combatants = new Map(state.combatants).set(targetId, damaged);
-
-  const nextState = {
-    ...state,
-    combatants,
-  };
-  const afterMarkDrop = markMarkedDamageRiderTransferAvailable(
-    nextState,
-    targetId,
-    target.hp,
-    damaged.hp,
-  );
-  const concentrated =
-    fillSet.concentrationSavingThrow?.value.succeeded === false ||
-    (target.concentration !== null && damaged.concentration === null)
-      ? breakBattleConcentrationAfterDamage({
-          state: afterMarkDrop,
-          combatantId: targetId,
-          priorConcentration: target.concentration,
-        })
-      : afterMarkDrop;
-  const afterSleepDamage =
-    damageAmount > 0
-      ? removeSleepEffectsFromTarget(concentrated, targetId)
-      : concentrated;
   return normalizeBattleGrapples(
-    recordAttackDamageUnitsUsed(afterSleepDamage, attackDamageRiders),
+    recordAttackDamageUnitsUsed(afterDamage, attackDamageRiders),
   );
 }
 
@@ -260,45 +291,18 @@ export function applyAttackDamageAmount(
   if (target == null) {
     return state;
   }
-  const damaged = applyHpDamage(target, Number(damageAmount), {
+  const afterDamage = applyBattleHitPointDamage({
+    state,
+    target,
+    damageAmount: Number(damageAmount),
     deathFailuresAtZeroHp,
     damageDisposition,
+    damageSourceId: attackerId,
+    concentrationSavingThrow,
   });
-  const combatants = new Map(state.combatants).set(targetId, damaged);
-  const nextState = {
-    ...state,
-    combatants,
-  };
-  const afterMarkDrop = markMarkedDamageRiderTransferAvailable(
-    nextState,
-    targetId,
-    target.hp,
-    damaged.hp,
-  );
-  const concentrated =
-    Number(damageAmount) > 0 &&
-    (concentrationSavingThrow?.value.succeeded === false ||
-      (target.concentration !== null && damaged.concentration === null))
-      ? breakBattleConcentrationAfterDamage({
-          state: afterMarkDrop,
-          combatantId: targetId,
-          priorConcentration: target.concentration,
-        })
-      : afterMarkDrop;
-  const afterDamageEscapes =
-    Number(damageAmount) > 0
-      ? removeSleepEffectsFromTarget(
-          removeSpellConditionEffectsFromTargetDamagedByCasterOrAlly(
-            concentrated,
-            attackerId,
-            targetId,
-          ),
-          targetId,
-        )
-      : concentrated;
   return normalizeBattleGrapples(
     recordAttackDamageUnitsUsed(
-      afterDamageEscapes,
+      afterDamage,
       attackDamageRiders.map((rider) => ({ ...rider, attackerId })),
       weaponDamageDiceRollChoice === undefined
         ? []
