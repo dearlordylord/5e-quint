@@ -112,13 +112,13 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 285,
       "id": "SRDINV76A",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Research Warlock Level-1 Invocation Runtime Boundary"
     },
     {
       "number": 286,
       "id": "SRDINV76B",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Promote Pact of the Blade Battle Projection"
     },
     {
@@ -150,6 +150,30 @@ Keep it synchronized with the DAG table and task details.
       "id": "SRDINV74D",
       "status": "ready-for-implementation-after-light-research",
       "title": "Promote Weapon Mastery Cleave Runtime"
+    },
+    {
+      "number": 292,
+      "id": "SRDINV76C",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote Armor of Shadows Spell Access"
+    },
+    {
+      "number": 293,
+      "id": "SRDINV76D",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote Eldritch Mind Concentration Save Advantage"
+    },
+    {
+      "number": 294,
+      "id": "SRDINV76E",
+      "status": "ready-for-research",
+      "title": "Research Pact of the Chain Familiar Boundary"
+    },
+    {
+      "number": 295,
+      "id": "SRDINV76F",
+      "status": "ready-for-research",
+      "title": "Research Pact of the Tome Spell Access Boundary"
     }
   ]
 }
@@ -197,13 +221,17 @@ Keep it synchronized with the DAG table and task details.
 | 282   | SRDINV74B - Research Weapon Mastery Cleave and Topple Split             | done                                          | SRDINV74A | SRDINV74C, SRDINV74D | [Cleave and Topple research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV74B_CLEAVE_TOPPLE_SPLIT_RESEARCH.md), [Cleave and Topple](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md), [Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Weapon Mastery](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                        | Completed: current Surface records already model Cleave and Topple; follow-up runtime work is split into SRDINV74C Topple and SRDINV74D Cleave.                                                                                                                                    |
 | 283   | SRDINV75A - Promote Sorcerer Innate Sorcery Activation Runtime          | done                                          | completed baseline | SRDINV75B, SRDINV78 | [Innate Sorcery](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Sorcerer.md), [Bonus Action](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Long Rest](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                                                                                | Completed: promoted Innate Sorcery activation as a Bonus Action, two-use Long Rest resource spend, one-minute active occurrence, exhausted-use rejection, Sorcerer ownership gate, expiration cleanup, and profile evidence without yet wiring spell DC/attack projections.                                                   |
 | 284   | SRDINV75B - Promote Innate Sorcery Spell DC and Attack Projection       | done | SRDINV75A | SRDINV78 | [Innate Sorcery](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Sorcerer.md), [Spell Attack](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Saving Throw](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                                                                             | Promote active Innate Sorcery's +1 Sorcerer spell save DC and Advantage on Sorcerer spell attack rolls through existing spell invocation projection.                                                                                                                                                                       |
-| 285   | SRDINV76A - Research Warlock Level-1 Invocation Runtime Boundary        | ready-for-research                            | completed baseline | SRDINV76B, SRDINV78 | [Eldritch Invocations](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Pact Magic](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Classify level-1-legal Warlock invocation options into character-creation-only, spell-access, and battle-runtime tasks before promoting any one option as representative support.                                                                                                                                          |
-| 286   | SRDINV76B - Promote Pact of the Blade Battle Projection                 | blocked                                       | SRDINV76A | SRDINV78 | [Pact of the Blade](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Weapon Attack](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Damage Types](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                                                                          | Promote Pact of the Blade's bonded weapon battle projection: Charisma attack/damage option, selectable Necrotic/Psychic/Radiant/normal damage type, proficiency, and focus facts without generic item conjuration simulation.                                                                                              |
+| 285   | SRDINV76A - Research Warlock Level-1 Invocation Runtime Boundary        | done                                          | completed baseline | SRDINV76B, SRDINV76C, SRDINV76D, SRDINV76E, SRDINV76F, SRDINV78 | [SRDINV76A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76A_WARLOCK_LEVEL_1_INVOCATION_BOUNDARY_RESEARCH.md), [Eldritch Invocations](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Pact Magic](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                  | Completed: level-1-legal invocations split into Pact of the Blade, Armor of Shadows, Eldritch Mind, Pact of the Chain, and Pact of the Tome follow-up surfaces; level-2+ prerequisite invocations are not level-1 coverage.                                                                                                |
+| 286   | SRDINV76B - Promote Pact of the Blade Battle Projection                 | ready-for-implementation-after-light-research | SRDINV76A | SRDINV78 | [SRDINV76A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76A_WARLOCK_LEVEL_1_INVOCATION_BOUNDARY_RESEARCH.md), [Pact of the Blade](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Weapon Attack](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Damage Types](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                          | Promote Pact of the Blade's bonded weapon battle projection only: Charisma attack/damage option, selectable Necrotic/Psychic/Radiant/normal damage type, proficiency, and focus facts without generic item conjuration simulation.                                                                                         |
 | 287   | SRDINV77 - Promote Ranger Favored Enemy Hunter's Mark Free Casts        | ready-for-implementation-after-light-research | completed baseline | SRDINV78 | [Favored Enemy](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Ranger.md), [Hunter's Mark](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Long Rest](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                                                                         | Promote Favored Enemy as always-prepared Hunter's Mark plus two no-slot casts per Long Rest that reuse the existing Hunter's Mark runtime procedure.                                                                                                                                                                       |
-| 288   | SRDINV78 - Recursive Level-1 Battle Feature Planning Review             | blocked                                       | SRDINV58C, SRDINV72A, SRDINV72B, SRDINV73A, SRDINV73B, SRDINV74A, SRDINV74C, SRDINV74D, SRDINV75A, SRDINV75B, SRDINV76A, SRDINV76B, SRDINV77 | none | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                                                                                 | Review the remaining spell/class-feature/weapon-mastery batch after Topple and Cleave runtime promotion tasks complete, including Faerie Fire object outline and the Starry Wisp object-target Invisible-condition benefit projection gap, refresh level-1 battle-related metrics, and decide whether the next queue is closure, cleanup, or final acceptance evidence.             |
+| 288   | SRDINV78 - Recursive Level-1 Battle Feature Planning Review             | blocked                                       | SRDINV58C, SRDINV72A, SRDINV72B, SRDINV73A, SRDINV73B, SRDINV74A, SRDINV74C, SRDINV74D, SRDINV75A, SRDINV75B, SRDINV76A, SRDINV76B, SRDINV76C, SRDINV76D, SRDINV76E, SRDINV76F, SRDINV77 | none | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [SRDINV76A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76A_WARLOCK_LEVEL_1_INVOCATION_BOUNDARY_RESEARCH.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                      | Review the remaining spell/class-feature/weapon-mastery batch after Topple, Cleave, Pact of the Blade, Armor of Shadows, Eldritch Mind, Pact of the Chain boundary research, and Pact of the Tome boundary research complete; refresh level-1 battle-related metrics and decide whether the next queue is closure, cleanup, or final acceptance evidence. |
 | 289   | SRDINV58C - Promote Faerie Fire Object Outline Runtime                  | ready-for-implementation-after-light-research | completed baseline | SRDINV78 | [SRDINV58B research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV58B_FAERIE_FIRE_OBJECT_LIGHT_BOUNDARY_RESEARCH.md), [Faerie Fire](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Target](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                | Promote object outline attack Advantage and object Invisible-benefit denial through caller-supplied object ids and object sight facts, without object inventory or area-geometry derivation.                                                                                                                               |
 | 290   | SRDINV74C - Promote Weapon Mastery Topple Runtime                       | ready-for-implementation-after-light-research | SRDINV74B | SRDINV78 | [Cleave and Topple research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV74B_CLEAVE_TOPPLE_SPLIT_RESEARCH.md), [Topple](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md), [Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Weapon Mastery](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                         | Promote Topple as an optional selected-weapon mastery rider: on weapon hit, force a Constitution save against 8 + attack ability modifier + Proficiency Bonus and apply Prone on failure.                                                                                         |
 | 291   | SRDINV74D - Promote Weapon Mastery Cleave Runtime                       | ready-for-implementation-after-light-research | SRDINV74B | SRDINV78 | [Cleave and Topple research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV74B_CLEAVE_TOPPLE_SPLIT_RESEARCH.md), [Cleave](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md), [Weapon Mastery](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                       | Promote Cleave as an optional once-per-turn selected-weapon mastery rider using caller/table-supplied second-target adjacency/reach facts and same-weapon extra attack damage without a positive ability modifier.                                             |
+| 292   | SRDINV76C - Promote Armor of Shadows Spell Access                       | ready-for-implementation-after-light-research | SRDINV76A | SRDINV78 | [SRDINV76A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76A_WARLOCK_LEVEL_1_INVOCATION_BOUNDARY_RESEARCH.md), [Armor of Shadows](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Mage Armor](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-M-P.md), [Pact Magic](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                    | Promote selected Armor of Shadows as self-only Mage Armor Spell Access that spends no Spell Slot and reuses the existing Mage Armor persistent armor spell procedure.                                                                                                             |
+| 293   | SRDINV76D - Promote Eldritch Mind Concentration Save Advantage          | ready-for-implementation-after-light-research | SRDINV76A | SRDINV78 | [SRDINV76A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76A_WARLOCK_LEVEL_1_INVOCATION_BOUNDARY_RESEARCH.md), [Eldritch Mind](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Concentration](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Saving Throw](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                | Promote selected Eldritch Mind as Advantage only on Constitution Saving Throws made to maintain Concentration, with ordinary Constitution Saving Throws and other Saving Throws unaffected.                                                                  |
+| 294   | SRDINV76E - Research Pact of the Chain Familiar Boundary                | ready-for-research                            | SRDINV76A | SRDINV78 | [SRDINV76A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76A_WARLOCK_LEVEL_1_INVOCATION_BOUNDARY_RESEARCH.md), [Pact of the Chain](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Find Familiar](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Magic Action](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                        | Research how Pact of the Chain grants Find Familiar access, special forms, no-slot Magic action casting, and the familiar Reaction attack boundary without duplicating companion runtime state.                                                              |
+| 295   | SRDINV76F - Research Pact of the Tome Spell Access Boundary             | ready-for-research                            | SRDINV76A | SRDINV78 | [SRDINV76A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76A_WARLOCK_LEVEL_1_INVOCATION_BOUNDARY_RESEARCH.md), [Pact of the Tome](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Ritual](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Spellcasting Focus](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                  | Research how Book of Shadows grants selected cantrips and level-1 Ritual spell access while the book is on the Warlock's person, without duplicating selected spell lists.                                                                                  |
 
 ## Task Details
 
@@ -495,21 +523,23 @@ only if shared spell invocation sequencing changes require it.
 
 ### Task 285 - SRDINV76A - Research Warlock Level-1 Invocation Runtime Boundary
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: completed baseline
 
-Blocks: SRDINV76B, SRDINV78
+Blocks: SRDINV76B, SRDINV76C, SRDINV76D, SRDINV76E, SRDINV76F, SRDINV78
 
 Research / plan:
+[SRDINV76A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76A_WARLOCK_LEVEL_1_INVOCATION_BOUNDARY_RESEARCH.md),
 [Eldritch Invocations](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md),
 [Pact Magic](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md),
 [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
 
-Scope: classify level-1-legal Warlock invocation options into
-character-creation-only, spell-access, and battle-runtime tasks before promoting
-any option as representative support. At SRD level 1, Armor of Shadows and Pact
-of the Blade/Chain/Tome are candidates; invocations with level 2 prerequisites
+Completed: classified level-1-legal Warlock invocation options into
+spell-access, battle-runtime, companion-boundary, and character-creation/spell
+access tasks before promoting any one option as representative support. At SRD
+level 1, Armor of Shadows, Eldritch Mind, Pact of the Blade, Pact of the Chain,
+and Pact of the Tome are legal options; invocations with level 2 prerequisites
 must not be counted as level-1 coverage.
 
 Out of scope: implementing invocation options in the research task and treating
@@ -523,23 +553,27 @@ code or substantial plan structure changes.
 
 ### Task 286 - SRDINV76B - Promote Pact of the Blade Battle Projection
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: SRDINV76A
 
 Blocks: SRDINV78
 
 Research / plan:
+[SRDINV76A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76A_WARLOCK_LEVEL_1_INVOCATION_BOUNDARY_RESEARCH.md),
 [Pact of the Blade](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md),
 [Weapon Attack](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
 [Damage Types](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
 [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
 
-Scope: promote Pact of the Blade's bonded weapon battle projection: Charisma
-attack/damage option, selectable Necrotic/Psychic/Radiant/normal damage type,
-proficiency, and spellcasting-focus facts. Keep the conjured/bonded weapon
-identity boundary typed and avoid generic item lifecycle simulation unless the
-existing inventory model already owns it.
+Scope: promote Pact of the Blade's bonded weapon battle projection only:
+selected `pact_of_the_blade` invocation ownership, bonded Simple or Martial
+Melee weapon eligibility, proficiency, spellcasting-focus fact if represented
+in battle, Charisma attack/damage option, selectable
+Necrotic/Psychic/Radiant/normal damage type, and bond lifecycle gates only to
+the extent the runtime owns those timing and identity facts. Keep the
+conjured/bonded weapon identity boundary typed and avoid generic item lifecycle
+simulation unless the existing inventory model already owns it.
 
 Out of scope: Pact of the Chain/Tome, Armor of Shadows, general item
 conjuration, and invocations with level 2 prerequisites.
@@ -589,7 +623,7 @@ resource sequencing changes require it.
 
 Status: `blocked`
 
-Depends on: SRDINV58C, SRDINV72A, SRDINV72B, SRDINV73A, SRDINV73B, SRDINV74A, SRDINV74C, SRDINV74D, SRDINV75A, SRDINV75B, SRDINV76A, SRDINV76B, SRDINV77
+Depends on: SRDINV58C, SRDINV72A, SRDINV72B, SRDINV73A, SRDINV73B, SRDINV74A, SRDINV74C, SRDINV74D, SRDINV75A, SRDINV75B, SRDINV76A, SRDINV76B, SRDINV76C, SRDINV76D, SRDINV76E, SRDINV76F, SRDINV77
 
 Blocks: none
 
@@ -597,13 +631,15 @@ Research / plan:
 [SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
 [UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md),
 [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md),
+[SRDINV76A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76A_WARLOCK_LEVEL_1_INVOCATION_BOUNDARY_RESEARCH.md),
 [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
 
 Scope: review SRDINV58C, SRDINV59A, SRDINV59B, SRDINV67, SRDINV68A, SRDINV68B,
 SRDINV69A, SRDINV69B, SRDINV70A, SRDINV70B, SRDINV71, SRDINV72A, SRDINV72B,
 SRDINV73A, SRDINV73B, SRDINV74A, SRDINV74C, SRDINV74D, SRDINV75A, SRDINV75B,
-SRDINV76A, SRDINV76B, SRDINV77, refresh level-1 battle-related feature/spell
-metrics, explicitly account for the remaining Starry Wisp object-target
+SRDINV76A, SRDINV76B, SRDINV76C, SRDINV76D, SRDINV76E, SRDINV76F, SRDINV77,
+refresh level-1 battle-related feature/spell metrics, explicitly account for
+the remaining Starry Wisp object-target
 Invisible-condition benefit projection gap, calculate the remaining acceptance
 gap for "all battle-related level-1 features, including spells, can be used in
 battle," and decide whether the next queue is final closure, cleanup, or
@@ -731,3 +767,132 @@ character-battle selected-weapon projection; `pnpm
 unit-profile-coverage:check --write` if evidence changes; `pnpm quality`;
 `/simplify` convergence for significant changes; MBT only if attack sequencing
 changes require it.
+
+### Task 292 - SRDINV76C - Promote Armor of Shadows Spell Access
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: SRDINV76A
+
+Blocks: SRDINV78
+
+Research / plan:
+[SRDINV76A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76A_WARLOCK_LEVEL_1_INVOCATION_BOUNDARY_RESEARCH.md),
+[Armor of Shadows](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md),
+[Mage Armor](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-M-P.md),
+[Pact Magic](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote selected `armor_of_shadows` invocation ownership into Warlock
+Spell Access for Mage Armor. Expose self-targeted Mage Armor Spell Invocation
+that spends no Spell Slot, rejects non-self targets and armored self targets,
+and reuses the existing Mage Armor persistent armor procedure and early end on
+donning armor.
+
+Out of scope: changing Mage Armor's AC formula or duration semantics, generic
+no-slot spell access for all invocations, level-2 Fiendish Vigor, and other
+prerequisite spell-access invocations.
+
+Verification: RAW/source review for Armor of Shadows, Mage Armor, Pact Magic,
+Spell Access, and Spell Invocation terms; focused tests for selected
+invocation ownership, self-only targeting, no-slot spend, armored-target
+rejection, existing Mage Armor effect reuse, and no duplicate Mage Armor state;
+package-local Quint updates if the spell invocation resource model changes;
+character-battle projection tests; `pnpm unit-profile-coverage:check --write`
+if evidence changes; `pnpm quality`; `/simplify` convergence for significant
+changes; MBT only if spell-cast sequencing changes require it.
+
+### Task 293 - SRDINV76D - Promote Eldritch Mind Concentration Save Advantage
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: SRDINV76A
+
+Blocks: SRDINV78
+
+Research / plan:
+[SRDINV76A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76A_WARLOCK_LEVEL_1_INVOCATION_BOUNDARY_RESEARCH.md),
+[Eldritch Mind](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md),
+[Concentration](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Saving Throw](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote selected `eldritch_mind` invocation ownership into battle
+runtime. Apply Advantage only to Constitution Saving Throws made to maintain
+Concentration after the caster takes damage.
+
+Out of scope: generic Constitution Saving Throw Advantage, ordinary Saving
+Throws that are not Concentration maintenance saves, changing Concentration
+break triggers, and level-2+ invocation spell or cantrip modifiers.
+
+Verification: RAW/source review for Eldritch Mind, Concentration, and Saving
+Throw; focused tests for selected invocation ownership, Concentration
+maintenance save Advantage, ordinary Constitution Saving Throw pass-through,
+other Saving Throw pass-through, and no change to Concentration break trigger
+timing; package-local Quint updates before runtime divergence;
+character-battle projection tests; `pnpm unit-profile-coverage:check --write`
+if evidence changes; `pnpm quality`; `/simplify` convergence for significant
+changes; MBT only if Concentration save sequencing changes require it.
+
+### Task 294 - SRDINV76E - Research Pact of the Chain Familiar Boundary
+
+Status: `ready-for-research`
+
+Depends on: SRDINV76A
+
+Blocks: SRDINV78
+
+Research / plan:
+[SRDINV76A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76A_WARLOCK_LEVEL_1_INVOCATION_BOUNDARY_RESEARCH.md),
+[Pact of the Chain](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md),
+[Find Familiar](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[Magic Action](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: decide how selected `pact_of_the_chain` grants Find Familiar Spell
+Access, no-slot Magic action casting, special familiar form choices, and the
+Warlock-forgoes-one-Attack-action-attack-to-grant-familiar-Reaction-attack
+boundary. Keep familiar initiative, action ownership, disappearance, and
+one-familiar replacement in the companion runtime owner rather than duplicating
+companion state in Warlock feature state.
+
+Out of scope: implementing familiar runtime behavior in the research task,
+promoting generic companion state, and treating Find Familiar authored content
+alone as Pact of the Chain runtime support.
+
+Verification: RAW/source review for Pact of the Chain, Find Familiar, Magic
+Action, Attack action, Reaction, and companion vocabulary; produce a short
+research note under `plans/unit-profile-coverage/`; active-plan consistency if
+follow-up tasks are appended; `pnpm quality`; `/simplify` convergence only if
+code or substantial plan structure changes.
+
+### Task 295 - SRDINV76F - Research Pact of the Tome Spell Access Boundary
+
+Status: `ready-for-research`
+
+Depends on: SRDINV76A
+
+Blocks: SRDINV78
+
+Research / plan:
+[SRDINV76A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76A_WARLOCK_LEVEL_1_INVOCATION_BOUNDARY_RESEARCH.md),
+[Pact of the Tome](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md),
+[Ritual](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Spellcasting Focus](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: decide how Book of Shadows selection records grant three cantrips and
+two level-1 Ritual spells from any class as prepared Warlock spells while the
+book is on the Warlock's person. Model the book-on-person Spell Access
+condition without duplicating selected spell lists, and decide whether the Book
+of Shadows Spellcasting Focus fact matters to promoted battle runtime.
+
+Out of scope: implementing Book of Shadows runtime behavior in the research
+task, copying selected spell lists into parallel battle state, and treating one
+selected spell as representative support for Pact of the Tome.
+
+Verification: RAW/source review for Pact of the Tome, Ritual, Spell Access,
+prepared spells, and Spellcasting Focus terms; produce a short research note
+under `plans/unit-profile-coverage/`; active-plan consistency if follow-up
+tasks are appended; `pnpm quality`; `/simplify` convergence only if code or
+substantial plan structure changes.
