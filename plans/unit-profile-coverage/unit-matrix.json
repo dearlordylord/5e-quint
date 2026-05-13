@@ -72,23 +72,23 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 47,
-      "numerator": 47,
+      "denominator": 48,
+      "numerator": 48,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 47,
-      "numerator": 46,
+      "denominator": 48,
+      "numerator": 47,
       "percent": "97.9%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 47,
-      "numerator": 47,
+      "denominator": 48,
+      "numerator": 48,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 47,
-      "numerator": 47,
+      "denominator": 48,
+      "numerator": 48,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -1111,6 +1111,33 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/feather-fall-reaction-spell.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.reaction-hellish-rebuke",
+      "profileKind": "reaction",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/reaction-triggered-spells.ts"
+      ],
+      "sourceBoundary": "The runtime consumes caller-supplied after-damage facts establishing that the damaged reactor took damage from a visible creature within 60 feet, requires Hellish Rebuke spell access, an available Reaction, and an available Spell Slot, then opens an after-damage Reaction frame carrying the damager, damaged reactor, and slot-level continuation facts. Dexterity save and Fire damage resolution are deferred to SRDINV69B.",
+      "taskRefs": [
+        "SRDINV69A"
+      ],
+      "title": "Reaction spell opens Hellish Rebuke after-damage casting window",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
         }
       ]
     },
@@ -2460,6 +2487,22 @@
         "spell.invocation-feather-fall-mitigation"
       ],
       "taskId": "SRDINV56B"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Hellish Rebuke's after-damage Reaction window, including SRD trigger facts, Hellish Rebuke availability, Reaction availability, Spell Slot availability, and damager/damaged/slot continuation facts.",
+      "profileIds": [
+        "spell.reaction-hellish-rebuke"
+      ],
+      "taskId": "SRDINV69A"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Hellish Rebuke after-damage Reaction discovery from caller-supplied visible-within-60-feet damager facts, range rejection, Reaction availability rejection, Spell Slot availability rejection, and continuation facts for damager, damaged reactor, and slot-level invocation.",
+      "profileIds": [
+        "spell.reaction-hellish-rebuke"
+      ],
+      "taskId": "SRDINV69A"
     },
     {
       "claimKind": "qnt-proof",
@@ -8530,14 +8573,64 @@
         "status": "installed"
       },
       "claim": {
-        "reason": "Spell Definition is installed for Warlock Spell Access validation; promoted QNT-backed Reaction casting-window runtime parity is not present yet.",
-        "tag": "unsupported-profile"
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "SRDINV69B",
+            "mechanic": "Dexterity Saving Throw and Fire damage resolution remain outside this trigger-window slice"
+          }
+        ],
+        "profileIds": [
+          "spell.reaction-hellish-rebuke"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001",
+          "RAW-PTG-REACTIONS-002"
+        ],
+        "supportedMechanics": [
+          "caller-supplied after-damage facts open a Reaction window when the damaged creature has Hellish Rebuke available, can see the damaging creature within 60 feet, has a Reaction available, and has an available Spell Slot",
+          "the after-damage Reaction frame carries damager, damaged reactor, and slot-level continuation facts for later resolution"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV69A"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.reaction-hellish-rebuke",
+          "profileKind": "reaction",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+            "packages/battle-runtime/src/battle-reducer/reaction-triggered-spells.ts"
+          ],
+          "sourceBoundary": "The runtime consumes caller-supplied after-damage facts establishing that the damaged reactor took damage from a visible creature within 60 feet, requires Hellish Rebuke spell access, an available Reaction, and an available Spell Slot, then opens an after-damage Reaction frame carrying the damager, damaged reactor, and slot-level continuation facts. Dexterity save and Fire damage resolution are deferred to SRDINV69B.",
+          "taskRefs": [
+            "SRDINV69A"
+          ],
+          "title": "Reaction spell opens Hellish Rebuke after-damage casting window",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/hellish_rebuke.json",
       "unitId": "hellish_rebuke"
     },

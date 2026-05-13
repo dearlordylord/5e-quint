@@ -1,3 +1,5 @@
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV69A hellish_rebuke
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.reaction-hellish-rebuke
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -31,8 +33,10 @@ import {
   startBattle,
   type AvailableBattleAct,
   type BattleCreatureInit,
+  type BattleCreatureState,
   type BattleFill,
   type BattleHole,
+  type BattleReactionFrame,
   type BattleState,
   type BattleSubject,
   type CombatantId,
@@ -154,6 +158,107 @@ describe("Hellish Rebuke Reaction spell", () => {
     expect(result).toMatchObject({
       tag: "resolved",
       snapshot: { pendingReaction: null },
+    });
+  });
+
+  test("is not offered when caller-supplied damager facts do not establish 60-foot range", () => {
+    const state = battleWithHellishRebuke(srdSpellRecord(hellishRebukeUnitId));
+    const result = resolveUnarmedStrikeAgainstCaster({
+      state,
+      includeHellishRebukeTriggerFact: true,
+      hellishRebukeFactRangeFeet: movementFeet(120),
+    });
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: { pendingReaction: null },
+    });
+  });
+
+  test("is not offered when the damaged caster has no Reaction available", () => {
+    const state = withCombatant(
+      battleWithHellishRebuke(srdSpellRecord(hellishRebukeUnitId)),
+      spellCasterId,
+      (caster) => ({ ...caster, reactionAvailable: false }),
+    );
+    const result = resolveUnarmedStrikeAgainstCaster({
+      state,
+      includeHellishRebukeTriggerFact: true,
+    });
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: { pendingReaction: null },
+    });
+  });
+
+  test("is not offered when the damaged caster has no available Spell Slot", () => {
+    const hellishRebuke = srdSpellRecord(hellishRebukeUnitId);
+    const state = battleWithHellishRebuke(hellishRebuke, {
+      casterSpellcasting: {
+        spellcastingAbilityModifier: abilityModifier(3),
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [],
+        preparedSpells: [hellishRebuke],
+        spellSlots: [],
+      },
+    });
+    const result = resolveUnarmedStrikeAgainstCaster({
+      state,
+      includeHellishRebukeTriggerFact: true,
+    });
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: { pendingReaction: null },
+    });
+  });
+
+  test("records the after-damage damager, defender, and slot continuation facts", () => {
+    const state = battleWithHellishRebuke(srdSpellRecord(hellishRebukeUnitId));
+    const awaitingReaction = resolveUnarmedStrikeAgainstCaster({
+      state,
+      includeHellishRebukeTriggerFact: true,
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected Hellish Rebuke after-damage Reaction window.");
+    }
+    const frame = requireTopReactionFrame(awaitingReaction.state);
+    expect(frame).toMatchObject({
+      trigger: "afterDamage",
+      damageSourceId: damagerId,
+      damagedId: spellCasterId,
+      damageAmount: 1,
+      continuation: { kind: "resolved" },
+      reactionSpellTargetFacts: [
+        {
+          kind: "reactionSpellDamagerVisibleWithinRange",
+          reactorId: spellCasterId,
+          damageSourceId: damagerId,
+          spellId: hellishRebukeUnitId,
+          rangeFeet: movementFeet(60),
+        },
+      ],
+    });
+    const choice = awaitingReaction.snapshot.pendingReaction?.choices.find(
+      (candidate) =>
+        candidate.kind === "castTriggeredReactionSpell" &&
+        candidate.reactorId === spellCasterId &&
+        candidate.invocation.tag === "spellSlot" &&
+        candidate.invocation.slotLevel === 2,
+    );
+    expect(choice).toMatchObject({
+      kind: "castTriggeredReactionSpell",
+      reactorId: spellCasterId,
+      invocation: {
+        tag: "spellSlot",
+        spellId: hellishRebukeUnitId,
+        procedure: "saveGatedDamage",
+        slotLevel: 2,
+      },
+      subject: {
+        tag: "runtimeCommand",
+        command: "castTriggeredReactionSpell",
+        reactorId: spellCasterId,
+      },
     });
   });
 
@@ -364,6 +469,10 @@ function battleWithHellishRebuke(
       BattleCreatureInit["creatureInit"],
       { readonly kind: "character" }
     >["spellcasting"];
+    readonly casterSpellcasting?: Extract<
+      BattleCreatureInit["creatureInit"],
+      { readonly kind: "character" }
+    >["spellcasting"];
   } = {},
 ): BattleState {
   const result = startBattle({
@@ -381,7 +490,7 @@ function battleWithHellishRebuke(
         displayName: "Hellish Rebuke caster",
         initiative: 10,
         side: partySide,
-        spellcasting: {
+        spellcasting: input.casterSpellcasting ?? {
           spellcastingAbilityModifier: abilityModifier(3),
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
@@ -484,6 +593,9 @@ function characterCreature(input: {
 function resolveUnarmedStrikeAgainstCaster(input: {
   readonly state: BattleState;
   readonly includeHellishRebukeTriggerFact: boolean;
+  readonly hellishRebukeFactRangeFeet?:
+    | ReturnType<typeof movementFeet>
+    | undefined;
   readonly includeReciprocalHellishRebukeTriggerFact?: boolean | undefined;
 }): ReturnType<typeof resolveBattleSubject> {
   const attackAct = discoverBattleActs(input.state).find(
@@ -500,6 +612,7 @@ function resolveUnarmedStrikeAgainstCaster(input: {
   const targetFill = attackTargetFill({
     hole: targetHole,
     includeHellishRebukeTriggerFact: input.includeHellishRebukeTriggerFact,
+    hellishRebukeFactRangeFeet: input.hellishRebukeFactRangeFeet,
     includeReciprocalHellishRebukeTriggerFact:
       input.includeReciprocalHellishRebukeTriggerFact === true,
   });
@@ -529,6 +642,9 @@ function resolveUnarmedStrikeAgainstCaster(input: {
 function attackTargetFill(input: {
   readonly hole: Extract<BattleHole, { readonly kind: "targetChoice" }>;
   readonly includeHellishRebukeTriggerFact: boolean;
+  readonly hellishRebukeFactRangeFeet?:
+    | ReturnType<typeof movementFeet>
+    | undefined;
   readonly includeReciprocalHellishRebukeTriggerFact: boolean;
 }): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   return {
@@ -549,7 +665,7 @@ function attackTargetFill(input: {
               reactorId: spellCasterId,
               damageSourceId: damagerId,
               spellId: hellishRebukeUnitId,
-              rangeFeet: movementFeet(60),
+              rangeFeet: input.hellishRebukeFactRangeFeet ?? movementFeet(60),
             },
           ]
         : []),
@@ -566,6 +682,32 @@ function attackTargetFill(input: {
         : []),
     ],
   };
+}
+
+function withCombatant(
+  state: BattleState,
+  combatantId: CombatantId,
+  update: (combatant: BattleCreatureState) => BattleCreatureState,
+): BattleState {
+  const combatant = state.combatants.get(combatantId);
+  if (combatant === undefined) {
+    throw new Error(`Expected combatant ${combatantId}.`);
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(
+      combatantId,
+      update(combatant),
+    ),
+  };
+}
+
+function requireTopReactionFrame(state: BattleState): BattleReactionFrame {
+  const frame = state.interruptStack[state.interruptStack.length - 1];
+  if (frame?.kind !== "reaction") {
+    throw new Error("Expected top interrupt frame to be a Reaction frame.");
+  }
+  return frame.frame;
 }
 
 function magicMissileSubject(): BattleSubject {

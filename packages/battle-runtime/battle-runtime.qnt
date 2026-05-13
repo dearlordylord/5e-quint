@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points
@@ -21,6 +21,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-forced-reaction-movement
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-jump-movement-replacement
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.creature-type-protection-and-charm
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.reaction-hellish-rebuke
 module battleRuntime {
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
@@ -125,6 +126,12 @@ module battleRuntime {
   //   roll, or targeted by Magic Missile; it grants +5 AC against the
   //   triggering attack until the start of the caster's next turn and negates
   //   Magic Missile damage to that target.
+  // - Spells/Descriptions-E-L.md lines 1153-1169, Playing-the-Game.md lines
+  //   326-332, Rules-Glossary.md lines 319-325 and 814-816, and
+  //   UBIQUITOUS_LANGUAGE.md: Hellish Rebuke is a Reaction spell taken in
+  //   response to taking damage from a visible creature within 60 feet. This
+  //   spec models the after-damage Reaction discovery window and continuation
+  //   facts; the Dexterity save and Fire damage resolution remain separate.
   // - Spells/Descriptions-M-P.md lines 5-15 and
   //   Spells/Gaining-and-Casting.md lines 142-149: Mage Armor is a timed
   //   ongoing spell effect whose target's base AC becomes 13 + Dexterity
@@ -416,6 +423,25 @@ module battleRuntime {
 
   type ReactionTrigger = AttackHit | AttackDamage | SpellCast | SaveFailed | AfterDamage | OpportunityAttack
 
+  type HellishRebukeAfterDamageTrigger =
+    | HellishRebukeDamageFromVisibleCreatureWithin60Feet
+    | HellishRebukeNoDamageTaken
+    | HellishRebukeDamageNotFromCreature
+    | HellishRebukeDamagerNotVisible
+    | HellishRebukeDamagerOutside60Feet
+
+  type HellishRebukeAfterDamageContinuation = {
+    damager: Actor,
+    damaged: Actor,
+    slotLevel: int,
+  }
+
+  type HellishRebukeAfterDamageAvailability = {
+    hellishRebukeAvailable: bool,
+    reactionAvailable: bool,
+    spellSlotAvailable: bool,
+  }
+
   type LastTurnActor = NoTurnEnded | LastTurnFighter | LastTurnGoblin
   type FighterCriticalRange = DefaultCriticalRange | ImprovedCriticalRange19
 
@@ -432,6 +458,7 @@ module battleRuntime {
     | ResumeIceKnife
     | ResumeSaveGateDamage
     | ResumeAfterDamage
+    | ResumeHellishRebukeAfterDamage(HellishRebukeAfterDamageContinuation)
     | ResumeMovement({ speedKind: MovementSpeedKind, movementCost: int })
     | ResumeCommandFleeMovement({ speedKind: MovementSpeedKind, movementCost: int })
     | ResumeDissonantWhispersMovementThenAfterDamage({ speedKind: MovementSpeedKind, movementCost: int })
@@ -486,6 +513,7 @@ module battleRuntime {
       | ResumeIceKnife => BattleRuntimeSpellAttackContinuation
       | ResumeSaveGateDamage => BattleRuntimeSaveGateContinuation
       | ResumeAfterDamage => BattleRuntimeAfterDamageContinuation
+      | ResumeHellishRebukeAfterDamage(_) => BattleRuntimeAfterDamageContinuation
       | ResumeMovement(_) => BattleRuntimeMovementContinuation
       | ResumeCommandFleeMovement(_) => BattleRuntimeMovementContinuation
       | ResumeDissonantWhispersMovementThenAfterDamage(_) => BattleRuntimeMovementContinuation
@@ -1290,6 +1318,47 @@ module battleRuntime {
       | Goblin => state.goblin.reactionAvailable
     }
 
+  pure def hellishRebukeAfterDamageReactionEligible(
+    triggerFacts: HellishRebukeAfterDamageTrigger,
+    availability: HellishRebukeAfterDamageAvailability,
+  ): bool =
+    match triggerFacts {
+      | HellishRebukeDamageFromVisibleCreatureWithin60Feet =>
+          availability.hellishRebukeAvailable and
+            availability.reactionAvailable and
+            availability.spellSlotAvailable
+      | _ => false
+    }
+
+  pure def openHellishRebukeAfterDamageReactionWindow(
+    state: BattleState,
+    damager: Actor,
+    damaged: Actor,
+    triggerFacts: HellishRebukeAfterDamageTrigger,
+    hellishRebukeAvailable: bool,
+    slotLevel: int,
+  ): BattleState =
+    if (hellishRebukeAfterDamageReactionEligible(
+      triggerFacts,
+      {
+        hellishRebukeAvailable: hellishRebukeAvailable,
+        reactionAvailable: reactorCanReact(state, damaged),
+        spellSlotAvailable: canExpendSpellSlotThisTurn(state),
+      },
+    ))
+      openReactionWindow(state, {
+        trigger: AfterDamage,
+        eligibleReactors: Set(damaged),
+        offeredReactors: Set(),
+        continuation: ResumeHellishRebukeAfterDamage({
+          damager: damager,
+          damaged: damaged,
+          slotLevel: slotLevel,
+        }),
+      })
+    else
+      state
+
   pure def spendReaction(state: BattleState, reactor: Actor): BattleState =
     match reactor {
       | Fighter => { ...state, fighter: { ...state.fighter, reactionAvailable: false } }
@@ -1451,6 +1520,7 @@ module battleRuntime {
       | ResumeIceKnife => resolveIceKnife(state, 15, 10, 4, false, true, false, 6, true, true)
       | ResumeSaveGateDamage => resolveAcidSplash(state, false, true, 4, true, true)
       | ResumeAfterDamage => state
+      | ResumeHellishRebukeAfterDamage(_) => state
       | ResumeMovement(movement) => applyFighterMovementWithSpeedKind(state, movement.speedKind, movement.movementCost)
       | ResumeCommandFleeMovement(movement) => followCommandFlee(state, movement.speedKind, movement.movementCost, false)
       | ResumeDissonantWhispersMovementThenAfterDamage(_) => openDissonantWhispersAfterDamageSequence(state)
@@ -8467,8 +8537,60 @@ module battleRuntime {
       assert(reactionContinuationKind(ResumeIceKnife) == BattleRuntimeSpellAttackContinuation),
       assert(reactionContinuationKind(ResumeSaveGateDamage) == BattleRuntimeSaveGateContinuation),
       assert(reactionContinuationKind(ResumeAfterDamage) == BattleRuntimeAfterDamageContinuation),
+      assert(reactionContinuationKind(ResumeHellishRebukeAfterDamage({ damager: Goblin, damaged: Fighter, slotLevel: 1 })) == BattleRuntimeAfterDamageContinuation),
       assert(reactionContinuationKind(ResumeMovement({ speedKind: WalkSpeedKind, movementCost: 5 })) == BattleRuntimeMovementContinuation),
       assert(reactionContinuationKind(ResumeDissonantWhispersMovementThenAfterDamage({ speedKind: WalkSpeedKind, movementCost: 5 })) == BattleRuntimeMovementContinuation),
+    }
+  }
+
+  run test_hellish_rebuke_after_damage_reaction_opens_srd_window_with_continuation_facts = {
+    val awaiting = openHellishRebukeAfterDamageReactionWindow(
+      initialState,
+      Goblin,
+      Fighter,
+      HellishRebukeDamageFromVisibleCreatureWithin60Feet,
+      true,
+      1,
+    )
+    all {
+      assert(awaiting.interruptStack.length() == 1),
+      assert(pendingReactionFrame(awaiting.interruptStack[0]) == HasPendingReactionFrame({
+        trigger: AfterDamage,
+        eligibleReactors: Set(Fighter),
+        offeredReactors: Set(),
+        continuation: ResumeHellishRebukeAfterDamage({
+          damager: Goblin,
+          damaged: Fighter,
+          slotLevel: 1,
+        }),
+      })),
+    }
+  }
+
+  run test_hellish_rebuke_after_damage_reaction_requires_srd_trigger_and_availability_facts = {
+    val noReaction = {
+      ...initialState,
+      fighter: { ...initialState.fighter, reactionAvailable: false },
+    }
+    val noSlot = { ...initialState, spellSlotExpendedThisTurn: true }
+    val available = {
+      hellishRebukeAvailable: true,
+      reactionAvailable: true,
+      spellSlotAvailable: true,
+    }
+    all {
+      assert(hellishRebukeAfterDamageReactionEligible(HellishRebukeDamageFromVisibleCreatureWithin60Feet, available)),
+      assert(not(hellishRebukeAfterDamageReactionEligible(HellishRebukeNoDamageTaken, available))),
+      assert(not(hellishRebukeAfterDamageReactionEligible(HellishRebukeDamageNotFromCreature, available))),
+      assert(not(hellishRebukeAfterDamageReactionEligible(HellishRebukeDamagerNotVisible, available))),
+      assert(not(hellishRebukeAfterDamageReactionEligible(HellishRebukeDamagerOutside60Feet, available))),
+      assert(not(hellishRebukeAfterDamageReactionEligible(HellishRebukeDamageFromVisibleCreatureWithin60Feet, { ...available, hellishRebukeAvailable: false }))),
+      assert(not(hellishRebukeAfterDamageReactionEligible(HellishRebukeDamageFromVisibleCreatureWithin60Feet, { ...available, reactionAvailable: false }))),
+      assert(not(hellishRebukeAfterDamageReactionEligible(HellishRebukeDamageFromVisibleCreatureWithin60Feet, { ...available, spellSlotAvailable: false }))),
+      assert(openHellishRebukeAfterDamageReactionWindow(initialState, Goblin, Fighter, HellishRebukeNoDamageTaken, true, 1) == initialState),
+      assert(openHellishRebukeAfterDamageReactionWindow(noReaction, Goblin, Fighter, HellishRebukeDamageFromVisibleCreatureWithin60Feet, true, 1) == noReaction),
+      assert(openHellishRebukeAfterDamageReactionWindow(noSlot, Goblin, Fighter, HellishRebukeDamageFromVisibleCreatureWithin60Feet, true, 1) == noSlot),
+      assert(openHellishRebukeAfterDamageReactionWindow(initialState, Goblin, Fighter, HellishRebukeDamageFromVisibleCreatureWithin60Feet, false, 1) == initialState),
     }
   }
 

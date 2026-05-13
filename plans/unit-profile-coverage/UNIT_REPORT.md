@@ -18,10 +18,10 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Authored Surface executable catalog admission | 105/355 | 29.6% |
 | Installed Unit profile classification coverage | 130/130 | 100% |
 | Supported executable Unit coverage | 67/106 | 63.2% |
-| QNT profile modeling coverage | 47/47 | 100% |
-| QNT proof coverage | 46/47 | 97.9% |
-| Runtime mapping coverage | 47/47 | 100% |
-| Runtime parity coverage | 47/47 | 100% |
+| QNT profile modeling coverage | 48/48 | 100% |
+| QNT proof coverage | 47/48 | 97.9% |
+| Runtime mapping coverage | 48/48 | 100% |
+| Runtime parity coverage | 48/48 | 100% |
 | Deterministic admission/projection coverage | 63/67 | 94% |
 | Selected identity MBT coverage | 10/67 | 14.9% |
 | Classic non-SRD expression gate | 1/1 | 100% |
@@ -131,6 +131,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `sleep` | srd-5.2.1 | `spell.invocation-sleep-target-admission`, `spell.invocation-sleep-repeat-save-lifecycle` | point-origin 5-foot-radius Sphere target admission; Wisdom Saving Throw holes for selected targets that are not automatic successes; Exhaustion-immunity automatic success derived from retained Stat Block condition-immunity facts; Magic action and Spell Slot spend; failed initial save applies Sleep-owned Incapacitated until the end of the target's next turn with a repeat Wisdom save; repeat success ends that target's Sleep effect; failed repeat save escalates to spell-owned Unconscious for the remaining Concentration duration; damage from any source ends that target's Sleep effect with Sleep-owned condition cleanup; caller-supplied adjacent action shakes a target out of Sleep's effect and spends the actor's action | creatures that do not sleep automatically succeed only when an executable non-sleeper fact is supported (SRDINV41) |
 | `thunderwave` | srd-5.2.1 | `spell.invocation-damage-save-or-attack` | self-origin 15-foot Cube Constitution Saving Throw boundary with table-supplied affected creatures; slot-scaled Thunder damage with half damage on successful saves; failed-save creature push consumed from caller-supplied legal destination or blocked-push facts; unsecured-object push disposition consumed from caller-supplied object facts; audible thunderous boom evidence within 300 feet | runtime-owned push geometry, collision/pathfinding, and final-position derivation (SRDINV55); broad object inventory simulation and sound propagation simulation (SRDINV55) |
 | `charm_person` | srd-5.2.1 | `spell.creature-type-protection-and-charm` | Humanoid creature-type target filter; Wisdom save-gated Charmed condition; hostile-target Wisdom save Advantage; 1-hour spell-owned condition duration; spell ends if caster or one of the caster's allies deals damage to the target; slot-scaled target count | Friendly disposition, social interaction effects, and target knowledge when the spell ends are not represented in battle runtime state (SRDINV41) |
+| `hellish_rebuke` | srd-5.2.1 | `spell.reaction-hellish-rebuke` | caller-supplied after-damage facts open a Reaction window when the damaged creature has Hellish Rebuke available, can see the damaging creature within 60 feet, has a Reaction available, and has an available Spell Slot; the after-damage Reaction frame carries damager, damaged reactor, and slot-level continuation facts for later resolution | Dexterity Saving Throw and Fire damage resolution remain outside this trigger-window slice (SRDINV69B) |
 
 ## Authored Surface Units Not In Unit Catalog
 
@@ -838,6 +839,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `sleep` | `spell.invocation-sleep-target-admission`, `spell.invocation-sleep-repeat-save-lifecycle` | SRDINV38A | `packages/battle-runtime/src/unit-profile-admission.test.ts` | creatures that do not sleep automatically succeed only when an executable non-sleeper fact is supported (SRDINV41) |
 | `thunderwave` | `spell.invocation-damage-save-or-attack` | SRDINV51 | `packages/battle-runtime/src/unit-profile-admission.test.ts` | runtime-owned push geometry, collision/pathfinding, and final-position derivation (SRDINV55); broad object inventory simulation and sound propagation simulation (SRDINV55) |
 | `charm_person` | `spell.creature-type-protection-and-charm` | SRDINV37 | `packages/battle-runtime/src/unit-profile-admission.test.ts` | Friendly disposition, social interaction effects, and target knowledge when the spell ends are not represented in battle runtime state (SRDINV41) |
+| `hellish_rebuke` | `spell.reaction-hellish-rebuke` | SRDINV69A | `packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts` | Dexterity Saving Throw and Fire damage resolution remain outside this trigger-window slice (SRDINV69B) |
 
 ## Selected Identity MBT Evidence
 
@@ -912,7 +914,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `thunderwave` | profile-subset-supported | supported subset: self-origin 15-foot Cube Constitution Saving Throw boundary with table-supplied affected creatures; slot-scaled Thunder damage with half damage on successful saves; failed-save creature push consumed from caller-supplied legal destination or blocked-push facts; unsecured-object push disposition consumed from caller-supplied object facts; audible thunderous boom evidence within 300 feet; deferred: runtime-owned push geometry, collision/pathfinding, and final-position derivation (SRDINV55); broad object inventory simulation and sound propagation simulation (SRDINV55) |
 | `minor_illusion` | unsupported-profile | Sound/image illusion creation, physical-interaction reveal, faint rendering after Study, and recast expiry are illusion/exploration state outside promoted runtime owners. |
 | `charm_person` | profile-subset-supported | supported subset: Humanoid creature-type target filter; Wisdom save-gated Charmed condition; hostile-target Wisdom save Advantage; 1-hour spell-owned condition duration; spell ends if caster or one of the caster's allies deals damage to the target; slot-scaled target count; deferred: Friendly disposition, social interaction effects, and target knowledge when the spell ends are not represented in battle runtime state (SRDINV41) |
-| `hellish_rebuke` | unsupported-profile | Spell Definition is installed for Warlock Spell Access validation; promoted QNT-backed Reaction casting-window runtime parity is not present yet. |
+| `hellish_rebuke` | profile-subset-supported | supported subset: caller-supplied after-damage facts open a Reaction window when the damaged creature has Hellish Rebuke available, can see the damaging creature within 60 feet, has a Reaction available, and has an available Spell Slot; the after-damage Reaction frame carries damager, damaged reactor, and slot-level continuation facts for later resolution; deferred: Dexterity Saving Throw and Fire damage resolution remain outside this trigger-window slice (SRDINV69B) |
 | `armor_chain_mail` | unsupported-profile | Equipment AC data is authored but not represented as an executable Unit profile row. |
 | `equipment_shield` | unsupported-profile | Shield equipment AC data is authored but not represented as an executable Unit profile row. |
 | `weapon_dagger` | unsupported-profile | Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix. |
@@ -926,8 +928,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
-| srd-5.2.1 | unassigned | unsupported-profile | 50 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `bard_bardic_inspiration`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `monk_martial_arts`, `ranger_favored_enemy`, `rogue_expertise`, `rogue_thieves_cant`, `sorcerer_innate_sorcery`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `mastery_sap`, `orc_darkvision`, `light`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `minor_illusion`, `hellish_rebuke`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
-| srd-5.2.1 | unassigned | profile-subset-supported | 12 | `chill_touch`, `faerie_fire`, `feather_fall`, `grease`, `hunters_mark`, `jump`, `protection_from_evil_and_good`, `produce_flame`, `starry_wisp`, `sleep`, `thunderwave`, `charm_person` |
+| srd-5.2.1 | unassigned | unsupported-profile | 49 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `bard_bardic_inspiration`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `monk_martial_arts`, `ranger_favored_enemy`, `rogue_expertise`, `rogue_thieves_cant`, `sorcerer_innate_sorcery`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `mastery_sap`, `orc_darkvision`, `light`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `minor_illusion`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
+| srd-5.2.1 | unassigned | profile-subset-supported | 13 | `chill_touch`, `faerie_fire`, `feather_fall`, `grease`, `hunters_mark`, `jump`, `protection_from_evil_and_good`, `produce_flame`, `starry_wisp`, `sleep`, `thunderwave`, `charm_person`, `hellish_rebuke` |
 | srd-5.2.1 | QCORE10 | needs-surface-widening | 1 | `fire_bolt` |
 
 ## Profile Claims By Task
@@ -1034,6 +1036,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 | SRDINV56A | completed-runtime-parity | `spell.invocation-feather-fall-mitigation` |
 | SRDINV56B | qnt-proof | `spell.invocation-feather-fall-mitigation` |
 | SRDINV56B | completed-runtime-parity | `spell.invocation-feather-fall-mitigation` |
+| SRDINV69A | qnt-proof | `spell.reaction-hellish-rebuke` |
+| SRDINV69A | completed-runtime-parity | `spell.reaction-hellish-rebuke` |
 | SRDINV51 | qnt-proof | `spell.invocation-damage-save-or-attack` |
 | SRDINV51 | completed-runtime-parity | `spell.invocation-damage-save-or-attack` |
 | SRDINV52 | qnt-proof | `spell.invocation-damage-save-or-attack`, `spell.invocation-forced-reaction-movement` |
