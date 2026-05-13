@@ -21,7 +21,10 @@ import type {
   OngoingFeatureRollModifier,
   SupportedUnitFeatureProfile,
 } from "../unit-feature-support.ts";
-import { WEAPON_MASTERY_SAP_SUPPORT_PROFILE } from "../unit-feature-support.ts";
+import {
+  WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
+  ongoingFeatureSpellModifierSourceClassName,
+} from "../unit-feature-support.ts";
 import {
   ATTACK_ROLL_HOLE_ID,
   ATTACK_ROLL_HOLE_INSTANCE,
@@ -31,6 +34,7 @@ import {
   type BattleCreatureState,
   type BattleState,
   type BattleTargetSpatialFact,
+  type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import {
   activeOngoingFeatureOccurrencesForCombatant,
@@ -152,6 +156,62 @@ export function requiredObjectTargetAttackRollMode(
       state,
       attacker,
       undefined,
+      "disadvantage",
+    );
+  return attackRollModeFromSources(hasAdvantage, hasDisadvantage);
+}
+
+export function requiredSpellObjectTargetAttackRollMode(
+  state: BattleState,
+  attackerId: CombatantId,
+  invocation: SupportedSpellInvocation,
+): AttackRollMode | undefined {
+  const attacker = state.combatants.get(attackerId);
+  const baseMode = requiredObjectTargetAttackRollMode(state, attackerId);
+  const hasAdvantage =
+    baseMode === "advantage" ||
+    ongoingFeatureGrantsSpellAttackRollMode(
+      attacker,
+      invocation,
+      "advantage",
+    );
+  const hasDisadvantage =
+    baseMode === "disadvantage" ||
+    ongoingFeatureGrantsSpellAttackRollMode(
+      attacker,
+      invocation,
+      "disadvantage",
+    );
+  return attackRollModeFromSources(hasAdvantage, hasDisadvantage);
+}
+
+export function requiredSpellAttackRollMode(
+  state: BattleState,
+  attackerId: CombatantId,
+  targetId: CombatantId,
+  invocation: SupportedSpellInvocation,
+  targetSpatialFacts: readonly BattleTargetSpatialFact[] = [],
+): AttackRollMode | undefined {
+  const attacker = state.combatants.get(attackerId);
+  const baseMode = requiredAttackRollMode(
+    state,
+    attackerId,
+    targetId,
+    undefined,
+    targetSpatialFacts,
+  );
+  const hasAdvantage =
+    baseMode === "advantage" ||
+    ongoingFeatureGrantsSpellAttackRollMode(
+      attacker,
+      invocation,
+      "advantage",
+    );
+  const hasDisadvantage =
+    baseMode === "disadvantage" ||
+    ongoingFeatureGrantsSpellAttackRollMode(
+      attacker,
+      invocation,
       "disadvantage",
     );
   return attackRollModeFromSources(hasAdvantage, hasDisadvantage);
@@ -327,6 +387,44 @@ export function ongoingFeatureGrantsAttackRollMode(
       ),
     );
   return outgoing || incoming;
+}
+
+function ongoingFeatureGrantsSpellAttackRollMode(
+  attacker: BattleCreatureState | undefined,
+  invocation: SupportedSpellInvocation,
+  mode: AttackRollMode,
+): boolean {
+  return (
+    isCharacterBattleCreatureState(attacker) &&
+    spellInvocationIsFromSpellcastingSource(attacker, invocation) &&
+    [...activeOngoingFeatureOccurrencesForCombatant(attacker)].some(([key]) => {
+      const profile = ongoingFeatureProfileForSourceKey(attacker, key);
+      return (
+        profile !== null &&
+        ongoingFeatureSpellModifierSourceClassName(profile) ===
+          attacker.origin.spellcasting?.sourceClassName &&
+        profile.spellModifiers.some(
+          (modifier) => modifier.attackRollMode === mode,
+        )
+      );
+    })
+  );
+}
+
+function spellInvocationIsFromSpellcastingSource(
+  combatant: BattleCreatureState | undefined,
+  invocation: SupportedSpellInvocation,
+): boolean {
+  if (!isCharacterBattleCreatureState(combatant)) {
+    return false;
+  }
+  const spellcasting = combatant.origin.spellcasting;
+  return (
+    spellcasting !== undefined &&
+    [...spellcasting.cantrips, ...spellcasting.preparedSpells].some(
+      (spell) => spell.id === invocation.spell.id,
+    )
+  );
 }
 
 export function activeEffectGrantsAttackRollMode(

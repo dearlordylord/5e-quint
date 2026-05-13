@@ -30,7 +30,7 @@ import {
   attackRollModeMatches,
   consumeHelpAttackForAttackRoll,
   recordAttackRollOngoingFeatures,
-  requiredAttackRollMode,
+  requiredSpellAttackRollMode,
 } from "./attack-roll.ts";
 import { activeEffectArmorClass } from "./creature-state.ts";
 import { concentrationSavingThrowHole } from "./damage-apply.ts";
@@ -116,10 +116,11 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
     return spellCastReactionWindow;
   }
 
-  const requiredRollMode = requiredAttackRollMode(
+  const requiredRollMode = requiredSpellAttackRollMode(
     input.input.state,
     input.actorId,
     target.combatantId,
+    input.invocation,
   );
   if (input.fillSet.attackRoll === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [

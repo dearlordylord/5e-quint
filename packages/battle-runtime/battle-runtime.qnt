@@ -329,6 +329,7 @@ module battleRuntime {
   type PreventedProtectionCondition = PreventedCharmed | PreventedFrightened
   type PossessionAttemptDisposition = PossessionPreventedByCreatureTypeProtection | PossessionUnprevented
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
+  type SpellSourceClass = SorcererSpellSource | NonSorcererSpellSource
   type RuntimeCreatureType = HumanoidCreature | BeastCreature | AberrationCreature | CelestialCreature | ElementalCreature | FeyCreature | FiendCreature | UndeadCreature
   type ObjectTarget =
     | StarryWispObjectTarget
@@ -4561,6 +4562,31 @@ module battleRuntime {
   ): int =
     spellcastingAbilityModifier + proficiencyBonus
 
+  pure def innateSorceryAppliesToSpell(
+    innateSorceryActive: bool,
+    spellSourceClass: SpellSourceClass,
+  ): bool =
+    innateSorceryActive and spellSourceClass == SorcererSpellSource
+
+  pure def sorcererSpellSaveDcWithInnateSorcery(
+    baseDc: int,
+    innateSorceryActive: bool,
+    spellSourceClass: SpellSourceClass,
+  ): int =
+    baseDc + (if (innateSorceryAppliesToSpell(innateSorceryActive, spellSourceClass)) 1 else 0)
+
+  pure def sorcererSpellAttackRollModeWithInnateSorcery(
+    baseline: SpellAttackRollMode,
+    innateSorceryActive: bool,
+    spellSourceClass: SpellSourceClass,
+  ): SpellAttackRollMode =
+    if (innateSorceryAppliesToSpell(innateSorceryActive, spellSourceClass) and baseline == DisadvantageSpellAttackRoll)
+      NormalSpellAttackRoll
+    else if (innateSorceryAppliesToSpell(innateSorceryActive, spellSourceClass) and baseline == NormalSpellAttackRoll)
+      AdvantageSpellAttackRoll
+    else
+      baseline
+
   pure def battleRuntimeSpellAttackDamageProfileForInvocation(
     invocation: SpellAttackDamageInvocation
   ): BattleRuntimeSpellAttackDamageProfile =
@@ -7215,6 +7241,12 @@ module battleRuntime {
       assert(rollModifierActiveEffect(BlessRollModifier) == BlessD20RollBonus),
       assert(rollModifierActiveEffect(GuidanceRollModifier) == GuidanceAbilityCheckBonus),
       assert(spellAttackModifier(3, 2) == 5),
+      assert(sorcererSpellSaveDcWithInnateSorcery(13, true, SorcererSpellSource) == 14),
+      assert(sorcererSpellSaveDcWithInnateSorcery(13, false, SorcererSpellSource) == 13),
+      assert(sorcererSpellSaveDcWithInnateSorcery(13, true, NonSorcererSpellSource) == 13),
+      assert(sorcererSpellAttackRollModeWithInnateSorcery(NormalSpellAttackRoll, true, SorcererSpellSource) == AdvantageSpellAttackRoll),
+      assert(sorcererSpellAttackRollModeWithInnateSorcery(DisadvantageSpellAttackRoll, true, SorcererSpellSource) == NormalSpellAttackRoll),
+      assert(sorcererSpellAttackRollModeWithInnateSorcery(NormalSpellAttackRoll, true, NonSorcererSpellSource) == NormalSpellAttackRoll),
       assert(magicMissileDartCount(1) == 3),
       assert(magicMissileDartCount(2) == 4),
       assert(magicMissileAllocatedDamage(3, 3, 1) == 6),

@@ -29,7 +29,7 @@ import {
   attackRollModeMatches,
   consumeHelpAttackForAttackRoll,
   recordAttackRollOngoingFeatures,
-  requiredAttackRollMode,
+  requiredSpellAttackRollMode,
 } from "./attack-roll.ts";
 import { activeEffectArmorClass } from "./creature-state.ts";
 import {
@@ -641,10 +641,11 @@ export function resolveSpellRelease(
   }
   let spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [];
   if (invocation.procedure === "spellAttackDamage") {
-    const requiredRollMode = requiredAttackRollMode(
+    const requiredRollMode = requiredSpellAttackRollMode(
       input.state,
       input.subject.actorId,
       target.combatantId,
+      invocation,
     );
     if (fillSet.attackRoll == null) {
       return needsHolesResult(input.state, input.subject, [

@@ -1118,6 +1118,7 @@ function spellcaster(input: {
     initiative: input.initiative,
     side: partySide,
     spellcasting: {
+      sourceClassName: "wizard",
       spellcastingAbilityModifier: 3,
       proficiencyBonus: proficiencyBonus(2),
       canCastSpells: true,

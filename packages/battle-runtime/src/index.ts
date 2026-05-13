@@ -135,6 +135,7 @@ export {
   resolveBardicInspirationFailedD20Test,
   scoreModifier,
   snapshotBattle,
+  spellSaveDcForCaster,
   startBattle,
   type ActiveOngoingFeatureOccurrence,
   type ActiveOngoingFeatureOccurrenceSnapshot,

@@ -233,6 +233,7 @@ export function battleCreatureStateFromInit(
           : {
               spellcasting: characterSpellcastingState(
                 creatureInit.spellcasting,
+                classLevels,
               ),
             }),
       },
@@ -639,6 +640,27 @@ export function characterResourceInitIssue(
     }
   }
   return null;
+}
+
+export function characterSpellcastingInitIssue(
+  input: BattleCreatureInit,
+): Either.Either<never, BattleStateInitIssue> | null {
+  const creatureInit = input.creatureInit;
+  if (
+    creatureInit.kind !== "character" ||
+    creatureInit.spellcasting === undefined
+  ) {
+    return null;
+  }
+  const classLevels = parseCharacterBattleClassLevels(creatureInit.classLevels);
+  return classLevels.some(
+    (classLevel) =>
+      classLevel.className === creatureInit.spellcasting?.sourceClassName,
+  )
+    ? null
+    : battleStateInitIssue(
+        "Battle spellcasting source class must match a character class level.",
+      );
 }
 
 export function knockedOutOneHp(): KnockedOutOneHpT {

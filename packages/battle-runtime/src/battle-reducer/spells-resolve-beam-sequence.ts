@@ -34,8 +34,8 @@ import {
   consumeHelpAttackForAttackRoll,
   consumeSelfAttackRollEffects,
   recordAttackRollOngoingFeatures,
-  requiredAttackRollMode,
-  requiredObjectTargetAttackRollMode,
+  requiredSpellObjectTargetAttackRollMode,
+  requiredSpellAttackRollMode,
 } from "./attack-roll.ts";
 import { activeEffectArmorClass } from "./creature-state.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
@@ -271,10 +271,11 @@ function resolveEldritchBlastCreatureBeam(input: {
       "Eldritch Blast beam target must be a combatant within the selected spell's supported range.",
     );
   }
-  const requiredRollMode = requiredAttackRollMode(
+  const requiredRollMode = requiredSpellAttackRollMode(
     input.state,
     input.actorId,
     target.combatantId,
+    input.invocation,
   );
   if (input.beam.attackRoll === undefined) {
     return needsHolesResult(input.state, input.input.subject, [
@@ -608,9 +609,10 @@ function resolveEldritchBlastObjectBeam(input: {
       "Eldritch Blast object beam must include a matching table-supplied range and object Armor Class fact.",
     );
   }
-  const requiredRollMode = requiredObjectTargetAttackRollMode(
+  const requiredRollMode = requiredSpellObjectTargetAttackRollMode(
     input.state,
     input.actorId,
+    input.invocation,
   );
   if (input.beam.attackRoll === undefined) {
     return needsHolesResult(input.state, input.input.subject, [

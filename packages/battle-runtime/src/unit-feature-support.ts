@@ -498,6 +498,20 @@ export type OngoingFeatureRollModifier = {
   readonly abilityFilter?: readonly Ability[];
 };
 
+export type OngoingFeatureSpellModifier = {
+  readonly saveDcBonus: number;
+  readonly attackRollMode: AttackRollMode;
+};
+
+export function ongoingFeatureSpellModifierSourceClassName(
+  profile: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "ongoingFeature" }
+  >,
+): ClassName | null {
+  return profile.unit.kind === "class_feature" ? profile.unit.className : null;
+}
+
 export type OngoingFeatureDamageModifier = {
   readonly amount: number;
   readonly abilityFilter?: readonly Ability[];
@@ -816,6 +830,7 @@ export type SupportedUnitFeatureProfile =
       readonly concentrationEffect?: "breakAndPrevent";
       readonly actionRestrictions: readonly "spellcasting"[];
       readonly rollModifiers: readonly OngoingFeatureRollModifier[];
+      readonly spellModifiers: readonly OngoingFeatureSpellModifier[];
       readonly damageModifiers: readonly OngoingFeatureDamageModifier[];
       readonly resistances: readonly DamageType[];
     }
@@ -2859,9 +2874,10 @@ function parseOngoingFeatureEffects(
   unit: UnitRecord,
 ): Pick<
   Extract<SupportedUnitFeatureProfile, { readonly kind: "ongoingFeature" }>,
-  "rollModifiers" | "damageModifiers" | "resistances"
+  "rollModifiers" | "spellModifiers" | "damageModifiers" | "resistances"
 > | null {
   const rollModifiers: OngoingFeatureRollModifier[] = [];
+  const spellModifiers: OngoingFeatureSpellModifier[] = [];
   const damageModifiers: OngoingFeatureDamageModifier[] = [];
   const resistances: DamageType[] = [];
   for (const effect of effects) {
@@ -2944,7 +2960,7 @@ function parseOngoingFeatureEffects(
     damageModifiers.length === 0 &&
     resistances.length === 0
     ? parseInnateSorceryActivationProjectionEffects(unit, effects)
-    : { rollModifiers, damageModifiers, resistances };
+    : { rollModifiers, spellModifiers, damageModifiers, resistances };
 }
 
 function parseInnateSorceryActivationProjectionEffects(
@@ -2952,7 +2968,7 @@ function parseInnateSorceryActivationProjectionEffects(
   effects: readonly { readonly kind: string }[],
 ): Pick<
   Extract<SupportedUnitFeatureProfile, { readonly kind: "ongoingFeature" }>,
-  "rollModifiers" | "damageModifiers" | "resistances"
+  "rollModifiers" | "spellModifiers" | "damageModifiers" | "resistances"
 > | null {
   if (
     unit.kind !== "class_feature" ||
@@ -2971,7 +2987,17 @@ function parseInnateSorceryActivationProjectionEffects(
   ) {
     return null;
   }
-  return { rollModifiers: [], damageModifiers: [], resistances: [] };
+  return {
+    rollModifiers: [],
+    spellModifiers: [
+      {
+        saveDcBonus: 1,
+        attackRollMode: "advantage",
+      },
+    ],
+    damageModifiers: [],
+    resistances: [],
+  };
 }
 
 function isInnateSorcerySaveDcEffect(

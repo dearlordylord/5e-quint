@@ -1101,6 +1101,7 @@ function trueStrikeDaggerItemId() {
 
 function handoffSpellcastingState(): CharacterBattleSpellcastingState {
   return {
+    sourceClassName: "wizard",
     spellcastingAbilityModifier: abilityModifier(3),
     proficiencyBonus: proficiencyBonus(2),
     canCastSpells: true,

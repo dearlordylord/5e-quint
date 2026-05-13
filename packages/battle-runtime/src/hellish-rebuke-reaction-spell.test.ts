@@ -316,6 +316,7 @@ describe("Hellish Rebuke Reaction spell", () => {
     const hellishRebuke = srdSpellRecord(hellishRebukeUnitId);
     const state = battleWithHellishRebuke(hellishRebuke, {
       casterSpellcasting: {
+        sourceClassName: "wizard",
         spellcastingAbilityModifier: abilityModifier(3),
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,
@@ -388,6 +389,7 @@ describe("Hellish Rebuke Reaction spell", () => {
     const hellishRebuke = srdSpellRecord(hellishRebukeUnitId);
     const state = battleWithHellishRebuke(hellishRebuke, {
       damagerSpellcasting: {
+        sourceClassName: "wizard",
         spellcastingAbilityModifier: abilityModifier(3),
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,
@@ -506,6 +508,7 @@ describe("Hellish Rebuke Reaction spell", () => {
   test("is offered after caller-supplied Magic Missile damage facts from the damaging creature", () => {
     const state = battleWithHellishRebuke(srdSpellRecord(hellishRebukeUnitId), {
       damagerSpellcasting: {
+        sourceClassName: "wizard",
         spellcastingAbilityModifier: abilityModifier(3),
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,
@@ -602,6 +605,7 @@ function battleWithHellishRebuke(
         initiative: 10,
         side: partySide,
         spellcasting: input.casterSpellcasting ?? {
+          sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
@@ -632,6 +636,7 @@ function battleWithHellishRebukeOnCasterTurn(spell: SpellRecord): BattleState {
         initiative: 20,
         side: partySide,
         spellcasting: {
+          sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,

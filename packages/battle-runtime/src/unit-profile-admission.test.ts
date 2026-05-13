@@ -96,6 +96,7 @@ import {
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type {
   ActivationPhase,
+  ClassName,
   EffectAtom,
   Size,
   SpellRecord,
@@ -786,6 +787,12 @@ describe("SRDINV75A Innate Sorcery deterministic Unit profile admission", () => 
         },
         actionRestrictions: [],
         rollModifiers: [],
+        spellModifiers: [
+          {
+            saveDcBonus: 1,
+            attackRollMode: "advantage",
+          },
+        ],
         damageModifiers: [],
         resistances: [],
       }),
@@ -8344,6 +8351,7 @@ describe("SRDINV31 deterministic after-hit Spell Unit admission", () => {
       preparedSpells: [divineSmite],
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
       targetSpellcasting: {
+        sourceClassName: "wizard",
         spellcastingAbilityModifier: abilityModifier(3),
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,
@@ -8566,6 +8574,7 @@ describe("SRDINV31 deterministic after-hit Spell Unit admission", () => {
       preparedSpells: [spell],
       attack: zeroAbilityWeaponAttack("weapon_shortbow"),
       targetSpellcasting: {
+        sourceClassName: "wizard",
         spellcastingAbilityModifier: abilityModifier(3),
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,
@@ -8693,6 +8702,7 @@ describe("SRDINV31 deterministic after-hit Spell Unit admission", () => {
       preparedSpells: [spell],
       attack: zeroAbilityWeaponAttack("weapon_shortbow"),
       targetSpellcasting: {
+        sourceClassName: "wizard",
         spellcastingAbilityModifier: abilityModifier(3),
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,
@@ -8831,6 +8841,7 @@ describe("SRDINV31 deterministic after-hit Spell Unit admission", () => {
       attack: zeroAbilityWeaponAttack("weapon_shortbow"),
       extraTargetIds: [ensnaringStrikeHelperId],
       targetSpellcasting: {
+        sourceClassName: "wizard",
         spellcastingAbilityModifier: abilityModifier(3),
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,
@@ -13750,6 +13761,19 @@ function eldritchBlastWithTargetCount(
   } as SpellRecord;
 }
 
+function singleSpellcastingSourceClassName(
+  classLevels: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["classLevels"],
+): ClassName {
+  if (classLevels.length !== 1) {
+    throw new Error("Test spellcasting fixtures require one source class.");
+  }
+  const [classLevel] = classLevels;
+  return classLevel.className;
+}
+
 function spellBattle(input: {
   readonly cantrips?: readonly SpellRecord[];
   readonly preparedSpells?: readonly SpellRecord[];
@@ -13793,6 +13817,9 @@ function spellBattle(input: {
     readonly side?: typeof partySide | typeof oppositionSide;
   }[];
 }): BattleState {
+  const casterClassLevels = input.casterClassLevels ?? [
+    { className: "wizard", level: 1 },
+  ];
   const result = startBattle({
     battleId: battleId("unit-profile-spell-admission"),
     combatants: [
@@ -13802,6 +13829,7 @@ function spellBattle(input: {
         initiative: 20,
         side: partySide,
         spellcasting: {
+          sourceClassName: singleSpellcastingSourceClassName(casterClassLevels),
           spellcastingAbilityModifier: abilityModifier(3),
           proficiencyBonus: input.casterProficiencyBonus ?? proficiencyBonus(2),
           canCastSpells: true,
@@ -13810,9 +13838,7 @@ function spellBattle(input: {
           spellSlots: input.spellSlots ?? [{ spellLevel: 1, count: 2 }],
         },
         ...(input.attack === undefined ? {} : { attack: input.attack }),
-        ...(input.casterClassLevels === undefined
-          ? {}
-          : { classLevels: input.casterClassLevels }),
+        classLevels: casterClassLevels,
         ...(input.casterWeaponProficiencies === undefined
           ? {}
           : { weaponProficiencies: input.casterWeaponProficiencies }),
@@ -14028,9 +14054,10 @@ function combatProwessBattle(input: {
         characterUnitRefs: [combatProwessBattleUnitRef()],
         ...(input.cantrips === undefined
           ? {}
-          : {
-              spellcasting: {
-                spellcastingAbilityModifier: abilityModifier(3),
+            : {
+                spellcasting: {
+                  sourceClassName: "wizard",
+                  spellcastingAbilityModifier: abilityModifier(3),
                 proficiencyBonus: proficiencyBonus(2),
                 canCastSpells: true,
                 cantrips: input.cantrips,
@@ -14046,9 +14073,10 @@ function combatProwessBattle(input: {
         side: oppositionSide,
         ...(input.targetPreparedSpells === undefined
           ? {}
-          : {
-              spellcasting: {
-                spellcastingAbilityModifier: abilityModifier(3),
+            : {
+                spellcasting: {
+                  sourceClassName: "wizard",
+                  spellcastingAbilityModifier: abilityModifier(3),
                 proficiencyBonus: proficiencyBonus(2),
                 canCastSpells: true,
                 cantrips: [],

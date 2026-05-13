@@ -96,6 +96,7 @@ export type CharacterBattleSpellSlotState = {
 };
 
 export type CharacterBattleSpellcastingInit = {
+  readonly sourceClassName: ClassName;
   readonly spellcastingAbilityModifier: number;
   readonly proficiencyBonus: ProficiencyBonus;
   readonly canCastSpells: boolean;
@@ -360,6 +361,7 @@ export function spendCharacterResourceUse(
 
 export function characterSpellcastingState(
   input: CharacterBattleSpellcastingInit,
+  classLevels: readonly CharacterBattleClassLevel[],
 ): CharacterBattleSpellcastingState {
   const spellSlotLevels = new Set<number>();
   for (const slot of input.spellSlots) {
@@ -413,6 +415,10 @@ export function characterSpellcastingState(
   }
 
   return {
+    sourceClassName: spellcastingSourceClassName(
+      input.sourceClassName,
+      classLevels,
+    ),
     spellcastingAbilityModifier: abilityModifier(
       input.spellcastingAbilityModifier,
     ),
@@ -436,6 +442,20 @@ export function characterSpellcastingState(
       };
     }),
   };
+}
+
+function spellcastingSourceClassName(
+  sourceClassName: ClassName,
+  classLevels: readonly CharacterBattleClassLevel[],
+): ClassName {
+  if (
+    classLevels.some((classLevel) => classLevel.className === sourceClassName)
+  ) {
+    return sourceClassName;
+  }
+  throw new Error(
+    "Battle spellcasting source class must match a character class level.",
+  );
 }
 
 function supportedUseCountCapForLevel(

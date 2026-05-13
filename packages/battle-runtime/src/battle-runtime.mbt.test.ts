@@ -2170,6 +2170,7 @@ function rogueCreatureInit(input: {
       unarmedStrike: baseUnarmedStrike(),
       unitFeatures: [{ unit: unitLibrary.requireUnit("rogue_sneak_attack") }],
       spellcasting: {
+        sourceClassName: "rogue",
         spellcastingAbilityModifier: 3,
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,
@@ -2274,6 +2275,7 @@ function scalarBuffCasterCreatureInit(input: {
       attack: null,
       unarmedStrike: baseUnarmedStrike(),
       spellcasting: {
+        sourceClassName: "fighter",
         spellcastingAbilityModifier: 3,
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,
@@ -2312,6 +2314,7 @@ function starryWispCasterCreatureInit(input: {
       attack: null,
       unarmedStrike: baseUnarmedStrike(),
       spellcasting: {
+        sourceClassName: "fighter",
         spellcastingAbilityModifier: 3,
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,
@@ -2350,6 +2353,7 @@ function eldritchBlastCasterCreatureInit(input: {
       attack: null,
       unarmedStrike: baseUnarmedStrike(),
       spellcasting: {
+        sourceClassName: "fighter",
         spellcastingAbilityModifier: 3,
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,
@@ -2384,6 +2388,7 @@ function sleepCasterCreatureInit(input: {
       attack: null,
       unarmedStrike: baseUnarmedStrike(),
       spellcasting: {
+        sourceClassName: "fighter",
         spellcastingAbilityModifier: 3,
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,

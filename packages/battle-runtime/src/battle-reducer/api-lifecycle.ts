@@ -58,6 +58,7 @@ import {
 battleCreatureStateFromInit,
 combatantInitiativeInsertionIndex,
 characterResourceInitIssue,
+characterSpellcastingInitIssue,
 hidePrerequisitesReferenceCombatantsIssue,
 positiveHpUnconsciousInitIssue
 } from "./creature-state.ts";
@@ -110,6 +111,10 @@ export function startBattle(input: {
     const characterResourceIssue = characterResourceInitIssue(combatant);
     if (characterResourceIssue !== null) {
       return characterResourceIssue;
+    }
+    const characterSpellcastingIssue = characterSpellcastingInitIssue(combatant);
+    if (characterSpellcastingIssue !== null) {
+      return characterSpellcastingIssue;
     }
     combatants.set(
       combatant.combatantId,
@@ -181,6 +186,12 @@ export function addBattleCombatant(input: {
   const characterResourceIssue = characterResourceInitIssue(input.combatant);
   if (characterResourceIssue !== null) {
     return characterResourceIssue;
+  }
+  const characterSpellcastingIssue = characterSpellcastingInitIssue(
+    input.combatant,
+  );
+  if (characterSpellcastingIssue !== null) {
+    return characterSpellcastingIssue;
   }
   const nextCombatants = new Map(input.state.combatants).set(
     input.combatant.combatantId,

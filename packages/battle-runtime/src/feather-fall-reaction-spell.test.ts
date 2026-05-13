@@ -304,6 +304,7 @@ function battleWithFeatherFall(): BattleState {
     battleId: battleId("feather-fall-reaction-spell"),
     combatants: [
       characterCreature(casterId, "Feather Fall caster", 20, {
+        sourceClassName: "wizard",
         spellcastingAbilityModifier: abilityModifier(3),
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,

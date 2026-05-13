@@ -553,6 +553,7 @@ function spellBattle(input: {
         initiative: 20,
         side: partySide,
         spellcasting: {
+          sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
@@ -592,6 +593,7 @@ function battleWithShieldReactionSpell(spell: SpellRecord): BattleState {
         initiative: 10,
         side: partySide,
         spellcasting: {
+          sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
@@ -640,6 +642,7 @@ function battleWithAttackers(input: {
         initiative: 10,
         side: partySide,
         spellcasting: {
+          sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
@@ -670,6 +673,7 @@ function battleWithSpellAttack(input: {
         initiative: 20,
         side: oppositionSide,
         spellcasting: {
+          sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
@@ -684,6 +688,7 @@ function battleWithSpellAttack(input: {
         initiative: 10,
         side: partySide,
         spellcasting: {
+          sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
@@ -714,6 +719,7 @@ function battleWithMagicMissile(input: {
         initiative: 20,
         side: oppositionSide,
         spellcasting: {
+          sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
@@ -728,6 +734,7 @@ function battleWithMagicMissile(input: {
         initiative: 10,
         side: partySide,
         spellcasting: {
+          sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,

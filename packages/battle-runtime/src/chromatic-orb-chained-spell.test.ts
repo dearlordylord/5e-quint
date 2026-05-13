@@ -428,6 +428,7 @@ function chromaticOrbBattle(input: {
         initiative: 20,
         side: partySide,
         spellcasting: {
+          sourceClassName: "wizard",
           spellcastingAbilityModifier: abilityModifier(3),
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,

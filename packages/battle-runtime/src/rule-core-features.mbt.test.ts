@@ -1402,6 +1402,7 @@ function evasionBattle(): BattleState {
         initiative: 20,
         attack: null,
         spellcasting: {
+          sourceClassName: "wizard",
           spellcastingAbilityModifier: 3,
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,

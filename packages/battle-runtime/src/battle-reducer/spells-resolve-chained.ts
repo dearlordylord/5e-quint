@@ -35,7 +35,7 @@ import {
   attackRollModeMatches,
   consumeHelpAttackForAttackRoll,
   recordAttackRollOngoingFeatures,
-  requiredAttackRollMode,
+  requiredSpellAttackRollMode,
 } from "./attack-roll.ts";
 import { activeEffectArmorClass } from "./creature-state.ts";
 import {
@@ -206,10 +206,11 @@ export function resolveChainedSpellAttackDamageAct(input: {
       }
     }
 
-    const requiredRollMode = requiredAttackRollMode(
+    const requiredRollMode = requiredSpellAttackRollMode(
       replayState,
       input.actorId,
       target.combatantId,
+      input.invocation,
     );
     if (step.attackRoll === undefined) {
       return needsHolesResult(replayState, input.input.subject, [

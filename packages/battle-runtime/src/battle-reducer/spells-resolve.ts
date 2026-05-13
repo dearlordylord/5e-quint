@@ -51,8 +51,8 @@ import {
   consumeSelfAttackRollEffects,
   consumeHelpAttackForAttackRoll,
   recordAttackRollOngoingFeatures,
-  requiredAttackRollMode,
-  requiredObjectTargetAttackRollMode,
+  requiredSpellObjectTargetAttackRollMode,
+  requiredSpellAttackRollMode,
 } from "./attack-roll.ts";
 import { activeEffectArmorClass } from "./creature-state.ts";
 import {
@@ -632,10 +632,11 @@ export function resolveSpellAct(
     invocation.procedure === "spellAttackDamage" ||
     invocation.procedure === "heldLightHurl"
   ) {
-    const requiredRollMode = requiredAttackRollMode(
+    const requiredRollMode = requiredSpellAttackRollMode(
       castingState,
       subject.actorId,
       target.combatantId,
+      invocation,
     );
     if (fillSet.attackRoll == null) {
       return needsHolesResult(castingState, input.subject, [
@@ -1045,9 +1046,10 @@ function resolveSpellAttackDamageObjectTarget(input: {
     return spellCastReactionWindow;
   }
 
-  const requiredRollMode = requiredObjectTargetAttackRollMode(
+  const requiredRollMode = requiredSpellObjectTargetAttackRollMode(
     input.input.state,
     input.actorId,
+    input.invocation,
   );
   if (input.fillSet.attackRoll == null) {
     return needsHolesResult(input.input.state, input.input.subject, [

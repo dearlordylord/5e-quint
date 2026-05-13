@@ -14,6 +14,7 @@ import {
   characterBuildArmorTraining,
   characterBuildSpellcastingSlotCapacity,
   characterBuildUnitRefs,
+  classUnitIdToClassName,
   computeTotalLevel,
   characterEquipmentItemSourceFromId,
   type CharacterBuild,
@@ -40,6 +41,7 @@ import {
 } from "@dnd/shared/types";
 import type {
   Ability,
+  ClassName,
   SpellRecord,
   UnitRecord,
   WeaponRecord,
@@ -463,7 +465,10 @@ export function characterSpellcasting(input: {
   if (Either.isLeft(canCastSpells)) {
     return battleCreatureInitIssue(canCastSpells.left.message);
   }
-  const sources = spellcastingSourcesWithOneAbility(spellcasting.sources);
+  const sources = spellcastingSourcesWithOneAbilityAndClass({
+    unitLibrary,
+    sources: spellcasting.sources,
+  });
   if (Either.isLeft(sources)) {
     return battleCreatureInitIssue(sources.left.message);
   }
@@ -483,6 +488,7 @@ export function characterSpellcasting(input: {
   }
 
   return Either.right({
+    sourceClassName: sources.right.sourceClassName,
     spellcastingAbilityModifier: battleAbilityModifier(
       scoreModifier(build.abilityScores[sources.right.spellcastingAbility]),
     ),
@@ -505,22 +511,49 @@ export function characterSpellcasting(input: {
   });
 }
 
-function spellcastingSourcesWithOneAbility(
-  sources: NonEmptyReadonlyArray<CharacterBuildSpellcastingSource>,
-): Either.Either<
+function spellcastingSourcesWithOneAbilityAndClass(input: {
+  readonly unitLibrary: UnitCatalog;
+  readonly sources: NonEmptyReadonlyArray<CharacterBuildSpellcastingSource>;
+}): Either.Either<
   {
     readonly spellcastingAbility: CharacterBuildSpellcastingSource["spellcastingAbility"];
+    readonly sourceClassName: ClassName;
     readonly sources: readonly CharacterBuildSpellcastingSource[];
   },
   BattleCreatureInitIssue
 > {
-  const firstSource = sources[0];
-  return sources.every(
+  const firstSource = input.sources[0];
+  const firstClassName = classUnitIdToClassName({
+    unitLibrary: input.unitLibrary,
+    classUnitId: firstSource.sourceUnitId,
+  });
+  if (Either.isLeft(firstClassName)) {
+    return battleCreatureInitIssue(
+      "Battle spellcasting projection requires a class spellcasting source.",
+    );
+  }
+  if (
+    !input.sources.every((source) => {
+      const className = classUnitIdToClassName({
+        unitLibrary: input.unitLibrary,
+        classUnitId: source.sourceUnitId,
+      });
+      return (
+        Either.isRight(className) && className.right === firstClassName.right
+      );
+    })
+  ) {
+    return battleCreatureInitIssue(
+      "Battle spellcasting projection requires one source class.",
+    );
+  }
+  return input.sources.every(
     (source) => source.spellcastingAbility === firstSource.spellcastingAbility,
   )
     ? Either.right({
         spellcastingAbility: firstSource.spellcastingAbility,
-        sources,
+        sourceClassName: firstClassName.right,
+        sources: input.sources,
       })
     : battleCreatureInitIssue(
         "Battle spellcasting projection requires one spellcasting ability.",

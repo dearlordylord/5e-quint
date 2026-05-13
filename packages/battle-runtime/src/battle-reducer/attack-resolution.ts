@@ -60,6 +60,7 @@ import { CombatantId } from "../identity.ts";
 import {
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
+  ongoingFeatureSpellModifierSourceClassName,
 } from "../unit-feature-support.ts";
 
 import {
@@ -80,8 +81,10 @@ import {
 import {
   battleCreatureStateWithKnockOutPreservedConditions,
   combatantCanTakeActions,
+  activeOngoingFeatureOccurrencesForCombatant,
   isCharacterBattleCreatureState,
   literalStatBlockNumber,
+  ongoingFeatureProfileForSourceKey,
 } from "./creature-state.ts";
 
 import {
@@ -1690,7 +1693,41 @@ export function spellSaveDcForCaster(
   return difficultyClass(
     8 +
       Number(spellcasting.spellcastingAbilityModifier) +
-      spellcasting.proficiencyBonus,
+      spellcasting.proficiencyBonus +
+      activeOngoingFeatureSpellSaveDcBonus(caster),
+  );
+}
+
+function activeOngoingFeatureSpellSaveDcBonus(
+  caster: BattleCreatureState,
+): number {
+  if (!isCharacterBattleCreatureState(caster)) {
+    return 0;
+  }
+  const spellcasting = caster.origin.spellcasting;
+  if (spellcasting === undefined) {
+    return 0;
+  }
+  return [...activeOngoingFeatureOccurrencesForCombatant(caster)].reduce(
+    (total, [key]) => {
+      const profile = ongoingFeatureProfileForSourceKey(caster, key);
+      if (
+        profile === null ||
+        ongoingFeatureSpellModifierSourceClassName(profile) !==
+          spellcasting.sourceClassName
+      ) {
+        return total;
+      }
+      return (
+        total +
+        profile.spellModifiers.reduce(
+          (modifierTotal, modifier) =>
+            modifierTotal + modifier.saveDcBonus,
+          0,
+        )
+      );
+    },
+    0,
   );
 }
 

@@ -46,6 +46,7 @@ import {
   removeBattleCombatants,
   sameBattleSubject,
   snapshotBattle,
+  spellSaveDcForCaster,
   spellSlotInvocationRef,
   startBattle,
   resolveFailedAbilityCheckResourceBoost,
@@ -9337,6 +9338,140 @@ describe("battle runtime", () => {
     expect(
       current.combatants.get(fighterId)?.activeOngoingFeatureOccurrences,
     ).toEqual(new Map());
+  });
+
+  test("Innate Sorcery projects +1 DC and spell attack Advantage for Sorcerer spells while active", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-innate-sorcery-spell-projection"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "sorcerer", level: 1 }],
+          resources: [innateSorceryResource()],
+          spellcasting: {
+            ...wizardSpellcasting({
+              cantrips: [
+                spellRecord("acid_splash"),
+                spellRecord("ray_of_frost"),
+              ],
+              preparedSpells: [],
+            }),
+            sourceClassName: "sorcerer",
+          },
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const activated = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: {
+          tag: "unitFeature",
+          actorId: fighterId,
+          unitId: "sorcerer_innate_sorcery",
+        },
+        fills: [],
+      }),
+    ).state;
+
+    expect(spellSaveDcForCaster(activated, fighterId)).toBe(14);
+
+    const subject: BattleSubject = {
+      tag: "actionSpell",
+      actorId: fighterId,
+      invocation: cantripSpellInvocationRef(
+        "ray_of_frost",
+        "spellAttackDamage",
+      ),
+      mode: { tag: "cast" },
+    };
+    const target = requireHole(
+      resolveBattleSubject({ state: activated, subject, fills: [] }),
+      "targetChoice",
+    );
+    const attackRoll = requireHole(
+      resolveBattleSubject({
+        state: activated,
+        subject,
+        fills: [targetFill(target, goblinId)],
+      }),
+      "attackRoll",
+    );
+
+    expect(attackRoll).toMatchObject({ rollMode: "advantage" });
+  });
+
+  test("Innate Sorcery does not project onto non-Sorcerer spell sources and stops after expiration", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-innate-sorcery-spell-source-gate"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [
+            { className: "sorcerer", level: 1 },
+            { className: "wizard", level: 1 },
+          ],
+          resources: [innateSorceryResource()],
+          spellcasting: {
+            ...wizardSpellcasting({
+              cantrips: [spellRecord("ray_of_frost")],
+              preparedSpells: [],
+            }),
+            sourceClassName: "wizard",
+          },
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const activated = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: {
+          tag: "unitFeature",
+          actorId: fighterId,
+          unitId: "sorcerer_innate_sorcery",
+        },
+        fills: [],
+      }),
+    ).state;
+
+    expect(spellSaveDcForCaster(activated, fighterId)).toBe(13);
+
+    const subject: BattleSubject = {
+      tag: "actionSpell",
+      actorId: fighterId,
+      invocation: cantripSpellInvocationRef(
+        "ray_of_frost",
+        "spellAttackDamage",
+      ),
+      mode: { tag: "cast" },
+    };
+    const target = requireHole(
+      resolveBattleSubject({ state: activated, subject, fills: [] }),
+      "targetChoice",
+    );
+    const attackRoll = requireHole(
+      resolveBattleSubject({
+        state: activated,
+        subject,
+        fills: [targetFill(target, goblinId)],
+      }),
+      "attackRoll",
+    );
+
+    expect(attackRoll).not.toHaveProperty("rollMode");
+
+    let expired = activated;
+    for (let round = 1; round <= 10; round += 1) {
+      expired = requireResolved(endTurn({ state: expired, actorId: fighterId }))
+        .state;
+      expired = requireResolved(endTurn({ state: expired, actorId: goblinId }))
+        .state;
+    }
+    expired = requireResolved(endTurn({ state: expired, actorId: fighterId }))
+      .state;
+
+    expect(spellSaveDcForCaster(expired, fighterId)).toBe(13);
   });
 
   test("Rage early-end conditions remove the ongoing feature instead of hiding it", () => {
@@ -20739,12 +20874,15 @@ describe("battle runtime", () => {
             { className: "fighter", level: 1 },
           ],
           resources: [rageResource()],
-          spellcasting: wizardSpellcasting({
-            preparedSpells: [
-              spellRecord("hunters_mark"),
-              spellRecord("magic_missile"),
-            ],
-          }),
+          spellcasting: {
+            ...wizardSpellcasting({
+              preparedSpells: [
+                spellRecord("hunters_mark"),
+                spellRecord("magic_missile"),
+              ],
+            }),
+            sourceClassName: "fighter",
+          },
         }),
         statBlockCreatureInit({ initiative: 10 }),
         skeletonCreatureInit({ initiative: 5 }),
@@ -22916,6 +23054,12 @@ function characterSeed(input: {
             grip: "one_handed" as const,
           },
         });
+  const classLevels = input.classLevels ?? [
+    {
+      className: input.spellcasting?.sourceClassName ?? "fighter",
+      level: input.classLevel ?? 1,
+    },
+  ];
   return {
     combatantId: input.combatantId ?? fighterId,
     displayName: input.displayName ?? "Fighter",
@@ -22925,9 +23069,7 @@ function characterSeed(input: {
       kind: "character",
       characterId: characterId("fighter-character"),
       characterUnitRefs: input.characterUnitRefs ?? [],
-      classLevels: input.classLevels ?? [
-        { className: "fighter", level: input.classLevel ?? 1 },
-      ],
+      classLevels,
       armorClass:
         input.armorClass ?? armorClassStateForLoadout(selectedLoadout),
       size: "medium",
@@ -24479,6 +24621,7 @@ function wizardSpellcasting(input?: {
   >["spellcasting"]
 > {
   return {
+    sourceClassName: "wizard",
     spellcastingAbilityModifier: 3,
     proficiencyBonus: proficiencyBonus(2),
     canCastSpells: true,
