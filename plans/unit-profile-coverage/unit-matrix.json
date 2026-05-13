@@ -6869,7 +6869,7 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "SRDINV34",
+            "followUpTaskId": "SRDINV67",
             "mechanic": "object target identity, Armor Class/Hit Points, and damage disposition for the SRD creature-or-object hurl target"
           }
         ],
@@ -7407,11 +7407,11 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "SRDINV41",
+            "followUpTaskId": "SRDINV59A",
             "mechanic": "target emits Dim Light in a 10-foot radius until the end of the caster's next turn"
           },
           {
-            "followUpTaskId": "SRDINV41",
+            "followUpTaskId": "SRDINV59B",
             "mechanic": "target can't benefit from the Invisible condition until the end of the caster's next turn"
           }
         ],
@@ -8098,8 +8098,12 @@
             "mechanic": "creatures that do not sleep automatically succeed only when an executable non-sleeper fact is supported"
           },
           {
-            "followUpTaskId": "SRDINV38C",
-            "mechanic": "damage-from-any-source and adjacent shake-awake cleanup"
+            "followUpTaskId": "SRDINV68A",
+            "mechanic": "damage-from-any-source cleanup"
+          },
+          {
+            "followUpTaskId": "SRDINV68B",
+            "mechanic": "adjacent shake-awake cleanup"
           }
         ],
         "profileIds": [
