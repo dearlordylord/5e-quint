@@ -62,9 +62,9 @@
       "value": 130
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 66,
-      "numerator": 62,
-      "percent": "93.9%"
+      "denominator": 67,
+      "numerator": 63,
+      "percent": "94%"
     },
     "profileClassificationCoverage": {
       "denominator": 130,
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 66,
+      "denominator": 67,
       "numerator": 10,
-      "percent": "15.2%"
+      "percent": "14.9%"
     },
     "supportedProfileCoverage": {
       "denominator": 106,
-      "numerator": 66,
-      "percent": "62.3%"
+      "numerator": 67,
+      "percent": "63.2%"
     }
   },
   "metricSemantics": [
@@ -1492,7 +1492,8 @@
       ],
       "taskRefs": [
         "SRDINV30C",
-        "SRDINV60A"
+        "SRDINV60A",
+        "SRDINV61"
       ],
       "title": "Spell invocation applies creature-type-scoped Charmed or attack-roll protection active effects",
       "verificationOwners": [
@@ -2001,7 +2002,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime admission and reducer tests for Animal Friendship Beast-target Charmed application and Protection from Evil and Good attacker-creature-type attack Disadvantage. Animal Friendship damage-break remains checker-visible deferred mechanics.",
+      "note": "Focused battle-runtime admission and reducer tests for Animal Friendship Beast-target Charmed application and Protection from Evil and Good attacker-creature-type attack Disadvantage.",
       "profileIds": [
         "spell.creature-type-protection-and-charm"
       ],
@@ -2022,6 +2023,22 @@
         "spell.creature-type-protection-and-charm"
       ],
       "taskId": "SRDINV60A"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Animal Friendship's target-damaged-by-caster-or-ally cleanup rule, including a distinct same-side ally damage source.",
+      "profileIds": [
+        "spell.creature-type-protection-and-charm"
+      ],
+      "taskId": "SRDINV61"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Animal Friendship Charmed cleanup from caster damage and ally damage, unrelated damage pass-through, and relationship derivation from existing combatant side state.",
+      "profileIds": [
+        "spell.creature-type-protection-and-charm"
+      ],
+      "taskId": "SRDINV61"
     },
     {
       "claimKind": "qnt-proof",
@@ -4725,25 +4742,13 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "followUpTaskId": "SRDINV33",
-            "mechanic": "spell ends if caster or one of the caster's allies deals damage to the target"
-          }
-        ],
         "profileIds": [
           "spell.creature-type-protection-and-charm"
         ],
         "rawRequirementIds": [
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
         ],
-        "supportedMechanics": [
-          "Beast creature-type target filter",
-          "Wisdom save-gated Charmed condition",
-          "24-hour spell-owned condition duration",
-          "slot-scaled target count"
-        ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -4767,7 +4772,8 @@
           ],
           "taskRefs": [
             "SRDINV30C",
-            "SRDINV60A"
+            "SRDINV60A",
+            "SRDINV61"
           ],
           "title": "Spell invocation applies creature-type-scoped Charmed or attack-roll protection active effects",
           "verificationOwners": [
@@ -6798,7 +6804,8 @@
           ],
           "taskRefs": [
             "SRDINV30C",
-            "SRDINV60A"
+            "SRDINV60A",
+            "SRDINV61"
           ],
           "title": "Spell invocation applies creature-type-scoped Charmed or attack-roll protection active effects",
           "verificationOwners": [
@@ -8395,7 +8402,8 @@
           ],
           "taskRefs": [
             "SRDINV30C",
-            "SRDINV60A"
+            "SRDINV60A",
+            "SRDINV61"
           ],
           "title": "Spell invocation applies creature-type-scoped Charmed or attack-roll protection active effects",
           "verificationOwners": [

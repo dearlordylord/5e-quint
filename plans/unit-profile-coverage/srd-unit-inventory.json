@@ -156,13 +156,13 @@
     "spellPressureRows": 211,
     "levelOneBattleReadiness": {
       "denominator": 367,
-      "numerator": 279,
-      "percent": "76%",
+      "numerator": 282,
+      "percent": "76.8%",
       "rowsByStatus": {
-        "accepted": 210,
+        "accepted": 213,
         "accepted-no-battle-effect": 69,
         "battle-runtime-required": 35,
-        "partial-battle-runtime": 38,
+        "partial-battle-runtime": 35,
         "surface-widening-required": 15
       }
     },
@@ -4830,7 +4830,7 @@
         "state": "installed",
         "unitId": "animal_friendship"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -8097,7 +8097,7 @@
         "state": "installed",
         "unitId": "animal_friendship"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -11706,7 +11706,7 @@
         "state": "installed",
         "unitId": "animal_friendship"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {

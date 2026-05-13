@@ -260,6 +260,7 @@ module battleRuntime {
 
   type Actor = Fighter | Goblin
   type CombatantSide = PartySide | OppositionSide
+  type DamageSourceActor = FighterDamageSource | FighterAllyDamageSource | GoblinDamageSource
 
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
@@ -2168,10 +2169,10 @@ module battleRuntime {
   pure def applyDamage(target: Combatant, damage: int, deathFailuresAtZeroHp: int, concentrationSaveSucceeded: bool): Combatant =
     applyDamageWithDisposition(target, damage, deathFailuresAtZeroHp, concentrationSaveSucceeded, OrdinaryDamage)
 
-  pure def activeEffectsAfterTargetDamagedByCasterOrAlly(effects: Set[ActiveEffect], damageSource: Actor): Set[ActiveEffect] =
+  pure def activeEffectsAfterTargetDamagedByCasterOrAlly(effects: Set[ActiveEffect], damageSource: DamageSourceActor): Set[ActiveEffect] =
     effects.filter(effect => match effect {
-      | AnimalFriendshipCharmed(data) => data.source != damageSource
-      | CharmPersonCharmed(data) => data.source != damageSource
+      | AnimalFriendshipCharmed(data) => not(damageSourceIsCasterOrAlly(data.source, damageSource))
+      | CharmPersonCharmed(data) => not(damageSourceIsCasterOrAlly(data.source, damageSource))
       | _ => true
     })
 
@@ -2191,7 +2192,7 @@ module battleRuntime {
     if (damage > 0 and battleRuntimeSleepEffectEndsOnDamage)
       combatantWithoutSleepEffects({
         ...damaged,
-        activeEffects: activeEffectsAfterTargetDamagedByCasterOrAlly(damaged.activeEffects, damageSource),
+        activeEffects: activeEffectsAfterTargetDamagedByCasterOrAlly(damaged.activeEffects, actorDamageSource(damageSource)),
       })
     else
       damaged
@@ -3889,6 +3890,22 @@ module battleRuntime {
       | Fighter => PartySide
       | Goblin => OppositionSide
     }
+
+  pure def actorDamageSource(actor: Actor): DamageSourceActor =
+    match actor {
+      | Fighter => FighterDamageSource
+      | Goblin => GoblinDamageSource
+    }
+
+  pure def damageSourceSide(damageSource: DamageSourceActor): CombatantSide =
+    match damageSource {
+      | FighterDamageSource => PartySide
+      | FighterAllyDamageSource => PartySide
+      | GoblinDamageSource => OppositionSide
+    }
+
+  pure def damageSourceIsCasterOrAlly(caster: Actor, damageSource: DamageSourceActor): bool =
+    actorSide(caster) == damageSourceSide(damageSource)
 
   pure def actorsAreEnemies(attacker: Actor, target: Actor): bool =
     actorSide(attacker) != actorSide(target)
@@ -6597,6 +6614,7 @@ module battleRuntime {
   }
 
   run test_spell_invocation_executable_spell_facts = {
+    val animalFriendshipCharmed = AnimalFriendshipCharmed({ source: Fighter, durationTicks: 24 * 60 })
     all {
       assert(rollModifierMaximumTargets(BlessRollModifier, 2) == 4),
       assert(rollModifierMaximumTargets(BaneRollModifier, 3) == 5),
@@ -6690,7 +6708,15 @@ module battleRuntime {
       assert(saveGatedTargetMaxTargets(saveGatedConditionTargeting(AnimalFriendshipSaveGate), 2) == 2),
       assert(saveGatedConditionTargetCreatureTypeIsLegal(AnimalFriendshipSaveGate, BeastCreature)),
       assert(not(saveGatedConditionTargetCreatureTypeIsLegal(AnimalFriendshipSaveGate, HumanoidCreature))),
-      assert(saveGatedConditionFailedSaveActiveEffects(AnimalFriendshipSaveGate, Fighter) == Set(AnimalFriendshipCharmed({ source: Fighter, durationTicks: 24 * 60 }))),
+      assert(saveGatedConditionFailedSaveActiveEffects(AnimalFriendshipSaveGate, Fighter) == Set(animalFriendshipCharmed)),
+      assert(actorDamageSource(Fighter) == FighterDamageSource),
+      assert(damageSourceSide(FighterAllyDamageSource) == PartySide),
+      assert(damageSourceIsCasterOrAlly(Fighter, FighterDamageSource)),
+      assert(damageSourceIsCasterOrAlly(Fighter, FighterAllyDamageSource)),
+      assert(not(damageSourceIsCasterOrAlly(Fighter, GoblinDamageSource))),
+      assert(activeEffectsAfterTargetDamagedByCasterOrAlly(Set(animalFriendshipCharmed), FighterDamageSource) == Set()),
+      assert(activeEffectsAfterTargetDamagedByCasterOrAlly(Set(animalFriendshipCharmed), FighterAllyDamageSource) == Set()),
+      assert(activeEffectsAfterTargetDamagedByCasterOrAlly(Set(animalFriendshipCharmed), GoblinDamageSource) == Set(animalFriendshipCharmed)),
       assert(saveGatedConditionTargeting(CharmPersonSaveGate) == TargetListSaveTargets({ minTargets: 1, baseSlotLevel: 1, baseTargets: 1, additionalTargetsPerSlotLevel: 1 })),
       assert(saveGatedTargetMaxTargets(saveGatedConditionTargeting(CharmPersonSaveGate), 1) == 1),
       assert(saveGatedTargetMaxTargets(saveGatedConditionTargeting(CharmPersonSaveGate), 2) == 2),

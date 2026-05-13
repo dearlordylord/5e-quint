@@ -17,13 +17,13 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Authored Surface Unit catalog admission | 129/422 | 30.6% |
 | Authored Surface executable catalog admission | 105/355 | 29.6% |
 | Installed Unit profile classification coverage | 130/130 | 100% |
-| Supported executable Unit coverage | 66/106 | 62.3% |
+| Supported executable Unit coverage | 67/106 | 63.2% |
 | QNT profile modeling coverage | 47/47 | 100% |
 | QNT proof coverage | 46/47 | 97.9% |
 | Runtime mapping coverage | 47/47 | 100% |
 | Runtime parity coverage | 47/47 | 100% |
-| Deterministic admission/projection coverage | 62/66 | 93.9% |
-| Selected identity MBT coverage | 10/66 | 15.2% |
+| Deterministic admission/projection coverage | 63/67 | 94% |
+| Selected identity MBT coverage | 10/67 | 14.9% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -75,6 +75,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `orc_adrenaline_rush` | srd-5.2.1 | `unit-feature.bonus-action-dash-temporary-hit-points` |
 | `orc_relentless_endurance` | srd-5.2.1 | `unit-feature.zero-hit-point-replacement` |
 | `acid_splash` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
+| `animal_friendship` | srd-5.2.1 | `spell.creature-type-protection-and-charm` |
 | `bane` | srd-5.2.1 | `spell.invocation-roll-modifier` |
 | `bless` | srd-5.2.1 | `spell.invocation-roll-modifier` |
 | `burning_hands` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
@@ -118,7 +119,6 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Unit | Collection | Profiles | Supported Mechanics | Deferred Mechanics |
 | --- | --- | --- | --- | --- |
-| `animal_friendship` | srd-5.2.1 | `spell.creature-type-protection-and-charm` | Beast creature-type target filter; Wisdom save-gated Charmed condition; 24-hour spell-owned condition duration; slot-scaled target count | spell ends if caster or one of the caster's allies deals damage to the target (SRDINV33) |
 | `chill_touch` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | combatant-target melee spell attack damage; cantrip damage scaling; readied Action-time spell release | non-combatant target eligibility for the SRD generic target wording (SRDINV34); target can't regain Hit Points until the end of the caster's next turn (SRDINV28D) |
 | `faerie_fire` | srd-5.2.1 | `spell.invocation-attack-roll-advantage-save` | 20-foot point-origin Cube affected-creature boundary with table-supplied area membership; Dexterity save-gated affected creatures; Concentration-owned outline effect that grants attack-roll Advantage against failed-save affected creatures when the attacker can see them and denies benefits from the Invisible condition | object outline and object attack-roll Advantage (SRDINV58C); Dim Light emitted by affected creatures and objects (SRDINV70A) |
 | `feather_fall` | srd-5.2.1 | `spell.invocation-feather-fall-mitigation` | caller-supplied falling Reaction trigger for the caster or a visible creature within 60 feet; up-to-five falling creature target admission using caller-supplied falling and range facts; Reaction and level-1 Spell Slot spend; one-minute per-target Feather Fall mitigation effect; active 60-foot-per-round descent-rate cap projection; caller-supplied landing cleanup that ends the landed target's mitigation, emits no-fall-damage outcome, and suppresses Falling-Prone when Feather Fall prevents damage | fall-distance derivation, map elevation, and landing geometry simulation remain outside the runtime boundary (SRDINV55) |
@@ -782,6 +782,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `orc_adrenaline_rush` | `unit-feature.bonus-action-dash-temporary-hit-points` | QMBT53 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `orc_relentless_endurance` | `unit-feature.zero-hit-point-replacement` | QMBT47 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `acid_splash` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `animal_friendship` | `spell.creature-type-protection-and-charm` | SRDINV30C | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `bane` | `spell.invocation-roll-modifier` | SRDINV30B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `bless` | `spell.invocation-roll-modifier` | SRDINV30B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `burning_hands` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV29A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
@@ -825,7 +826,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Unit | Profiles | Task | Owner | Deferred Mechanics |
 | --- | --- | --- | --- | --- |
-| `animal_friendship` | `spell.creature-type-protection-and-charm` | SRDINV30C | `packages/battle-runtime/src/unit-profile-admission.test.ts` | spell ends if caster or one of the caster's allies deals damage to the target (SRDINV33) |
 | `chill_touch` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28C | `packages/battle-runtime/src/unit-profile-admission.test.ts` | non-combatant target eligibility for the SRD generic target wording (SRDINV34); target can't regain Hit Points until the end of the caster's next turn (SRDINV28D) |
 | `faerie_fire` | `spell.invocation-attack-roll-advantage-save` | SRDINV30E | `packages/battle-runtime/src/unit-profile-admission.test.ts` | object outline and object attack-roll Advantage (SRDINV58C); Dim Light emitted by affected creatures and objects (SRDINV70A) |
 | `feather_fall` | `spell.invocation-feather-fall-mitigation` | SRDINV56A | `packages/battle-runtime/src/feather-fall-reaction-spell.test.ts` | fall-distance derivation, map elevation, and landing geometry simulation remain outside the runtime boundary (SRDINV55) |
@@ -894,7 +894,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `rogue_weapon_mastery` | unsupported-profile | Weapon mastery grant container; mastery Unit carries executable pressure. |
 | `mastery_sap` | unsupported-profile | Weapon mastery rider is authored but not yet a stable Unit profile row. |
 | `orc_darkvision` | unsupported-profile | Sense grant is authored data with no promoted execution profile. |
-| `animal_friendship` | profile-subset-supported | supported subset: Beast creature-type target filter; Wisdom save-gated Charmed condition; 24-hour spell-owned condition duration; slot-scaled target count; deferred: spell ends if caster or one of the caster's allies deals damage to the target (SRDINV33) |
 | `chill_touch` | profile-subset-supported | supported subset: combatant-target melee spell attack damage; cantrip damage scaling; readied Action-time spell release; deferred: non-combatant target eligibility for the SRD generic target wording (SRDINV34); target can't regain Hit Points until the end of the caster's next turn (SRDINV28D) |
 | `faerie_fire` | profile-subset-supported | supported subset: 20-foot point-origin Cube affected-creature boundary with table-supplied area membership; Dexterity save-gated affected creatures; Concentration-owned outline effect that grants attack-roll Advantage against failed-save affected creatures when the attacker can see them and denies benefits from the Invisible condition; deferred: object outline and object attack-roll Advantage (SRDINV58C); Dim Light emitted by affected creatures and objects (SRDINV70A) |
 | `feather_fall` | profile-subset-supported | supported subset: caller-supplied falling Reaction trigger for the caster or a visible creature within 60 feet; up-to-five falling creature target admission using caller-supplied falling and range facts; Reaction and level-1 Spell Slot spend; one-minute per-target Feather Fall mitigation effect; active 60-foot-per-round descent-rate cap projection; caller-supplied landing cleanup that ends the landed target's mitigation, emits no-fall-damage outcome, and suppresses Falling-Prone when Feather Fall prevents damage; deferred: fall-distance derivation, map elevation, and landing geometry simulation remain outside the runtime boundary (SRDINV55) |
@@ -928,7 +927,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
 | srd-5.2.1 | unassigned | unsupported-profile | 50 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `bard_bardic_inspiration`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `monk_martial_arts`, `ranger_favored_enemy`, `rogue_expertise`, `rogue_thieves_cant`, `sorcerer_innate_sorcery`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `mastery_sap`, `orc_darkvision`, `light`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `minor_illusion`, `hellish_rebuke`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
-| srd-5.2.1 | unassigned | profile-subset-supported | 13 | `animal_friendship`, `chill_touch`, `faerie_fire`, `feather_fall`, `grease`, `hunters_mark`, `jump`, `protection_from_evil_and_good`, `produce_flame`, `starry_wisp`, `sleep`, `thunderwave`, `charm_person` |
+| srd-5.2.1 | unassigned | profile-subset-supported | 12 | `chill_touch`, `faerie_fire`, `feather_fall`, `grease`, `hunters_mark`, `jump`, `protection_from_evil_and_good`, `produce_flame`, `starry_wisp`, `sleep`, `thunderwave`, `charm_person` |
 | srd-5.2.1 | QCORE10 | needs-surface-widening | 1 | `fire_bolt` |
 
 ## Profile Claims By Task
@@ -981,6 +980,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 | SRDINV30C | completed-runtime-parity | `spell.creature-type-protection-and-charm` |
 | SRDINV60A | qnt-proof | `spell.creature-type-protection-and-charm` |
 | SRDINV60A | completed-runtime-parity | `spell.creature-type-protection-and-charm` |
+| SRDINV61 | qnt-proof | `spell.creature-type-protection-and-charm` |
+| SRDINV61 | completed-runtime-parity | `spell.creature-type-protection-and-charm` |
 | SRDINV30D | qnt-proof | `spell.invocation-condition-immunity-turn-start-temporary-hit-points` |
 | SRDINV30D | completed-runtime-parity | `spell.invocation-condition-immunity-turn-start-temporary-hit-points` |
 | SRDINV30E | qnt-proof | `spell.invocation-attack-roll-advantage-save` |

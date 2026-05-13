@@ -144,7 +144,10 @@ import {
 import { characterBattleResourceForUnit } from "./character-battle-resources.ts";
 import { conditionApplicationPreventedByCreatureTypeProtection } from "./battle-reducer/spell-condition-effects-helpers.ts";
 import { applyFailedSaveSpellConditionEffects } from "./battle-reducer/spells-active-effects.ts";
-import { spellSavingThrowOutcomeHole } from "./battle-reducer/spells-damage-fills.ts";
+import {
+  applyPreparedSlotSpellDamage,
+  spellSavingThrowOutcomeHole,
+} from "./battle-reducer/spells-damage-fills.ts";
 import {
   ALTERNATE_ACTION_COST_ACTIONS,
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
@@ -9525,6 +9528,80 @@ describe("SRDINV30C deterministic protection and charm Spell Unit admission", ()
     });
   });
 
+  test("animal friendship ends when a caster ally damages the target", () => {
+    const allyId = combatantId("unit-profile-animal-friendship-ally");
+    const beastId = combatantId("unit-profile-animal-friendship-ally-damaged");
+    const charmed = resolvedAnimalFriendshipState(beastId, [
+      {
+        combatantId: allyId,
+        statBlock: statBlockWithCreatureType("humanoid"),
+        initiative: 8,
+        side: partySide,
+      },
+    ]);
+
+    const damaged = applyPreparedSlotSpellDamage(charmed, beastId, 4, {
+      damageSourceId: allyId,
+    });
+
+    expect(damaged.combatants.get(beastId)).toMatchObject({
+      conditions: expect.not.objectContaining({ charmed: true }),
+      activeEffects: expect.not.arrayContaining([
+        expect.objectContaining({
+          kind: "spellCondition",
+          sourceSpellId: animalFriendshipUnitId,
+        }),
+      ]),
+    });
+  });
+
+  test("animal friendship ignores damage from combatants outside the caster's side", () => {
+    const enemyId = combatantId("unit-profile-animal-friendship-enemy-damager");
+    const beastId = combatantId("unit-profile-animal-friendship-enemy-damaged");
+    const charmed = resolvedAnimalFriendshipState(beastId, [
+      {
+        combatantId: enemyId,
+        statBlock: statBlockWithCreatureType("humanoid"),
+        initiative: 8,
+        side: oppositionSide,
+      },
+    ]);
+
+    const damaged = applyPreparedSlotSpellDamage(charmed, beastId, 4, {
+      damageSourceId: enemyId,
+    });
+
+    expect(damaged.combatants.get(beastId)).toMatchObject({
+      conditions: expect.objectContaining({ charmed: true }),
+      activeEffects: expect.arrayContaining([
+        expect.objectContaining({
+          kind: "spellCondition",
+          sourceSpellId: animalFriendshipUnitId,
+          escape: { kind: "targetDamagedByCasterOrAlly" },
+        }),
+      ]),
+    });
+  });
+
+  test("animal friendship stores the caster source and damage-break rule without ally lists", () => {
+    const beastId = combatantId("unit-profile-animal-friendship-source-shape");
+    const charmed = resolvedAnimalFriendshipState(beastId, []);
+    const effect = requireCombatant(charmed, beastId).activeEffects.find(
+      (candidate) =>
+        candidate.kind === "spellCondition" &&
+        candidate.sourceSpellId === animalFriendshipUnitId,
+    );
+
+    expect(effect).toMatchObject({
+      kind: "spellCondition",
+      sourceCombatantId: spellCasterId,
+      escape: { kind: "targetDamagedByCasterOrAlly" },
+    });
+    expect(effect).not.toEqual(
+      expect.objectContaining({ allyIds: expect.anything() }),
+    );
+  });
+
   test("charm person only admits Humanoid targets and gives hostile targets Advantage on the Wisdom save", () => {
     const spell = spellRecord(charmPersonUnitId);
     const beastId = combatantId("unit-profile-charm-person-beast");
@@ -13163,6 +13240,53 @@ function spellBattle(input: {
     throw new Error(result.left.message);
   }
   return result.right;
+}
+
+function resolvedAnimalFriendshipState(
+  beastId: CombatantId,
+  additionalStatBlockTargets: NonNullable<
+    Parameters<typeof spellBattle>[0]["statBlockTargets"]
+  >,
+): BattleState {
+  const spell = spellRecord(animalFriendshipUnitId);
+  const state = spellBattle({
+    preparedSpells: [spell],
+    statBlockTargets: [
+      {
+        combatantId: beastId,
+        statBlock: statBlockWithCreatureType("beast"),
+        initiative: 9,
+      },
+      ...additionalStatBlockTargets,
+    ],
+  });
+  const act = spellAct({ state, spellId: animalFriendshipUnitId });
+  const targetHole = requireHole(act.initialHoles, "spellTargetList");
+  const targetFill = spellTargetListFill(
+    targetHole,
+    spellCasterId,
+    animalFriendshipUnitId,
+    [beastId],
+  );
+  const saveHole = requireResultHole(
+    resolveBattleSubject({ state, subject: act.subject, fills: [targetFill] }),
+    "savingThrowOutcome",
+  );
+  const resolved = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      targetFill,
+      savingThrowOutcomeFill(saveHole, [
+        { targetId: beastId, succeeded: false },
+      ]),
+    ],
+  });
+  expect(resolved).toMatchObject({ tag: "resolved" });
+  if (resolved.tag !== "resolved") {
+    throw new Error("Expected Animal Friendship to resolve.");
+  }
+  return resolved.state;
 }
 
 function archeryBattle(input: {
