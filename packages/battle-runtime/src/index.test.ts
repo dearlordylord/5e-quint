@@ -574,6 +574,7 @@ describe("battle runtime", () => {
           attackName: "Longsword",
         },
         { tag: "action", actorId: fighterId, action: "grapple" },
+        { tag: "action", actorId: fighterId, action: "shove" },
         { tag: "runtimeCommand", actorId: fighterId, command: "move" },
         { tag: "runtimeCommand", actorId: fighterId, command: "endTurn" },
       ]),
@@ -1317,6 +1318,50 @@ describe("battle runtime", () => {
         targetExemptFromDragCost: false,
       }),
     ]);
+  });
+
+  test("Shove resolves the Unarmed Strike save and prone failure effect", () => {
+    const state = fighterVsGoblinBattle();
+    const subject: BattleSubject = {
+      tag: "action",
+      actorId: fighterId,
+      action: "shove",
+    };
+    const target = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const outcome = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFill(target, goblinId)],
+      }),
+      "shoveOutcome",
+    );
+    const shoved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(target, goblinId),
+          shoveOutcomeFill(outcome, {
+            succeeded: false,
+            failedEffect: { kind: "prone" },
+          }),
+        ],
+      }),
+    );
+
+    expect(outcome).toMatchObject({ dc: 13 });
+    expect(shoved.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: goblinId,
+          conditions: expect.arrayContaining(["prone"]),
+        }),
+      ]),
+    );
   });
 
   test("release and Escape Grapple end the typed grapple link", () => {
@@ -20972,6 +21017,7 @@ function subjectName(
   | "ready"
   | "search"
   | "grapple"
+  | "shove"
   | "escapeGrapple"
   | "escapeSpellRestraint"
   | "shakeAwakeFromSleep"
@@ -21717,6 +21763,11 @@ function targetFill(
             grapplerId: fighterId,
             targetId,
           },
+          {
+            kind: "shoveTargetWithinReach" as const,
+            shoverId: fighterId,
+            targetId,
+          },
           ...[
             combatantId("ally"),
             combatantId("sneak-ally"),
@@ -22101,6 +22152,20 @@ function grappleOutcomeFill(
     kind: "grappleOutcome",
     holeId: hole.holeId,
     value: { succeeded },
+  };
+}
+
+function shoveOutcomeFill(
+  hole: BattleHole,
+  value: Extract<BattleFill, { readonly kind: "shoveOutcome" }>["value"],
+): Extract<BattleFill, { readonly kind: "shoveOutcome" }> {
+  if (hole.kind !== "shoveOutcome") {
+    throw new Error("Expected shoveOutcome hole.");
+  }
+  return {
+    kind: "shoveOutcome",
+    holeId: hole.holeId,
+    value,
   };
 }
 

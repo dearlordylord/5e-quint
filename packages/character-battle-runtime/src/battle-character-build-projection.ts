@@ -1,10 +1,13 @@
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.martial-arts-attack-projection
 import {
   scoreModifier,
   type CharacterBattleSpellSlotState,
+  type CharacterBattleClassLevelInit,
   type CharacterUnarmedStrikeActionOption,
   type CharacterWeaponAttackActionOption,
   type BattleCreatureInit,
   type CharacterBattleLoadoutRef,
+  martialArtsAttackProjectionProfileForUnit,
   passiveArmorClassBonusProfileForUnit,
 } from "@dnd/battle-runtime";
 import {
@@ -28,11 +31,18 @@ import {
 import {
   abilityModifier as battleAbilityModifier,
   attackBonus as battleAttackBonus,
+  classLevel,
+  type AbilityModifier,
   proficiencyBonus,
   resourceCount,
   spellSlotLevel,
 } from "@dnd/shared/types";
-import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
+import type {
+  Ability,
+  SpellRecord,
+  UnitRecord,
+  WeaponRecord,
+} from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either, Option } from "effect";
 
@@ -84,6 +94,7 @@ function armorDefenseBonus(
 export function characterAttackActionOption(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
+  classLevels: readonly CharacterBattleClassLevelInit[] = [],
 ): Either.Either<
   CharacterWeaponAttackActionOption | null,
   BattleCreatureInitIssue
@@ -95,12 +106,18 @@ export function characterAttackActionOption(
     return Either.right(null);
   }
 
-  return characterWeaponAttackActionOption(selectedWeapon, build, unitLibrary);
+  return characterWeaponAttackActionOption(
+    selectedWeapon,
+    build,
+    unitLibrary,
+    classLevels,
+  );
 }
 
 export function characterOffHandAttackActionOption(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
+  classLevels: readonly CharacterBattleClassLevelInit[] = [],
 ): Either.Either<
   CharacterWeaponAttackActionOption | undefined,
   BattleCreatureInitIssue
@@ -116,6 +133,7 @@ export function characterOffHandAttackActionOption(
     selectedWeapon,
     build,
     unitLibrary,
+    classLevels,
   );
   return Either.isLeft(option)
     ? battleCreatureInitIssue(option.left.message)
@@ -175,6 +193,7 @@ function characterWeaponAttackActionOption(
   unitId: UnitRecord["id"],
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
+  classLevels: readonly CharacterBattleClassLevelInit[],
 ): Either.Either<
   CharacterWeaponAttackActionOption | null,
   BattleCreatureInitIssue
@@ -187,24 +206,39 @@ function characterWeaponAttackActionOption(
     return Either.right(null);
   }
 
-  return Either.right({
+  const baseAttack = {
     kind: "weapon",
     weapon: unit.right,
     ability: "str",
     abilityModifier: battleAbilityModifier(
       scoreModifier(build.abilityScores.str),
     ),
+  } as const satisfies CharacterWeaponAttackActionOption;
+  const martialArts = martialArtsAttackProjectionForBuild({
+    build,
+    unitLibrary,
+    classLevels,
   });
+  if (Either.isLeft(martialArts)) {
+    return battleCreatureInitIssue(martialArts.left.message);
+  }
+  return Either.right(
+    martialArts.right === null || !isMonkWeapon(unit.right)
+      ? baseAttack
+      : martialArtsWeaponAttack(baseAttack, build, martialArts.right),
+  );
 }
 
 export function characterBaseUnarmedStrikeActionOption(
   build: CharacterBuild,
-): CharacterUnarmedStrikeActionOption {
+  unitLibrary?: UnitCatalog,
+  classLevels: readonly CharacterBattleClassLevelInit[] = [],
+): Either.Either<CharacterUnarmedStrikeActionOption, BattleCreatureInitIssue> {
   const strengthModifier = battleAbilityModifier(
     scoreModifier(build.abilityScores.str),
   );
   const buildProficiencyBonus = proficiencyBonus(characterLevel(build));
-  return {
+  const baseAttack = {
     kind: "unarmedStrike",
     effect: {
       kind: "damage",
@@ -216,6 +250,175 @@ export function characterBaseUnarmedStrikeActionOption(
       Number(strengthModifier) + Number(buildProficiencyBonus),
     ),
     damageAbilityModifier: strengthModifier,
+  } as const satisfies CharacterUnarmedStrikeActionOption;
+  if (unitLibrary === undefined) return Either.right(baseAttack);
+  const martialArts = martialArtsAttackProjectionForBuild({
+    build,
+    unitLibrary,
+    classLevels,
+  });
+  if (Either.isLeft(martialArts)) {
+    return battleCreatureInitIssue(martialArts.left.message);
+  }
+  return Either.right(
+    martialArts.right === null
+      ? baseAttack
+      : martialArtsUnarmedStrike(baseAttack, build, martialArts.right),
+  );
+}
+
+type MartialArtsAttackProjection = NonNullable<
+  ReturnType<typeof martialArtsAttackProjectionProfileForUnit>
+>;
+
+function martialArtsAttackProjectionForBuild(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly classLevels: readonly CharacterBattleClassLevelInit[];
+}): Either.Either<MartialArtsAttackProjection | null, BattleCreatureInitIssue> {
+  if (!martialArtsLoadoutConditionHolds(input)) {
+    return Either.right(null);
+  }
+  const classLevels = input.classLevels.map((entry) => ({
+    className: entry.className,
+    level: classLevel(entry.level),
+  }));
+  for (const ref of characterBuildUnitRefs(input.build, input.unitLibrary)) {
+    const unit = getRequiredUnit(input.unitLibrary, ref.unitId);
+    if (Either.isLeft(unit)) {
+      return battleCreatureInitIssue(unit.left.message);
+    }
+    const profile = martialArtsAttackProjectionProfileForUnit(
+      unit.right,
+      classLevels,
+    );
+    if (profile !== null) {
+      return Either.right(profile);
+    }
+  }
+  return Either.right(null);
+}
+
+function martialArtsLoadoutConditionHolds(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+}): boolean {
+  const loadout = input.build.equipment.loadout;
+  if (loadout.armor !== undefined || loadout.shield !== undefined) {
+    return false;
+  }
+  const weaponUnitIds = [
+    characterBuildEquipmentItemUnitId(loadout.weapon?.itemId),
+    characterBuildEquipmentItemUnitId(loadout.offHandWeapon?.itemId),
+  ].filter((unitId): unitId is UnitRecord["id"] => unitId !== undefined);
+  return weaponUnitIds.every((unitId) => {
+    const unit = input.unitLibrary.getUnit(unitId);
+    return Option.isSome(unit) && unit.value.kind === "weapon"
+      ? isMonkWeapon(unit.value)
+      : false;
+  });
+}
+
+function isMonkWeapon(weapon: WeaponRecord): boolean {
+  return (
+    weapon.usage === "melee" &&
+    (weapon.category === "simple" ||
+      (weapon.category === "martial" &&
+        (weapon.properties ?? []).some(
+          (property) => property.kind === "light",
+        )))
+  );
+}
+
+function martialArtsWeaponAttack(
+  attack: CharacterWeaponAttackActionOption,
+  build: CharacterBuild,
+  projection: MartialArtsAttackProjection,
+): CharacterWeaponAttackActionOption {
+  const chosen = martialArtsChosenAbility(
+    build,
+    attack.ability,
+    attack.abilityModifier,
+  );
+  return {
+    ...attack,
+    weapon: weaponWithMartialArtsDamage(attack.weapon, projection),
+    ability: chosen.ability,
+    abilityModifier: chosen.modifier,
+    damageAbilityModifier: chosen.modifier,
+  };
+}
+
+function martialArtsUnarmedStrike(
+  attack: CharacterUnarmedStrikeActionOption,
+  build: CharacterBuild,
+  projection: MartialArtsAttackProjection,
+): CharacterUnarmedStrikeActionOption {
+  const chosen = martialArtsChosenAbility(
+    build,
+    attack.attackAbility,
+    attack.attackAbilityModifier,
+  );
+  const proficiency = proficiencyBonus(characterLevel(build));
+  const damageReplacement = projection.martialArts.damageReplacement;
+  const effect =
+    damageReplacement === null
+      ? attack.effect
+      : {
+          kind: "damage" as const,
+          damage: {
+            kind: "authoredReplacement" as const,
+            sourceUnitId: projection.unit.id,
+            dice: damageReplacement.dice,
+            dieSize: damageReplacement.dieSize,
+            damageType: "bludgeoning" as const,
+          },
+        };
+  return {
+    ...attack,
+    effect,
+    attackAbility: chosen.ability,
+    attackAbilityModifier: chosen.modifier,
+    attackBonus: battleAttackBonus(
+      Number(chosen.modifier) + Number(proficiency),
+    ),
+    damageAbilityModifier: chosen.modifier,
+  };
+}
+
+function martialArtsChosenAbility(
+  build: CharacterBuild,
+  fallbackAbility: Ability,
+  fallbackModifier: AbilityModifier,
+): { readonly ability: Ability; readonly modifier: AbilityModifier } {
+  const dexModifier = battleAbilityModifier(
+    scoreModifier(build.abilityScores.dex),
+  );
+  return dexModifier >= fallbackModifier
+    ? { ability: "dex", modifier: dexModifier }
+    : { ability: fallbackAbility, modifier: fallbackModifier };
+}
+
+function weaponWithMartialArtsDamage(
+  weapon: WeaponRecord,
+  projection: MartialArtsAttackProjection,
+): WeaponRecord {
+  const damageReplacement = projection.martialArts.damageReplacement;
+  if (
+    damageReplacement === null ||
+    weapon.damage.kind !== "dice" ||
+    weapon.damage.dice !== 1 ||
+    weapon.damage.dieSize >= damageReplacement.dieSize
+  ) {
+    return weapon;
+  }
+  return {
+    ...weapon,
+    damage: {
+      ...weapon.damage,
+      dice: damageReplacement.dice,
+      dieSize: damageReplacement.dieSize,
+    },
   };
 }
 

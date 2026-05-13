@@ -249,11 +249,13 @@ export {
   resolveReady,
   resolveReleaseGrappleCommand,
   resolveSearch,
+  resolveShove,
   resolveShakeAwakeFromSleep,
   resolveStatBlockBonusActionDisengage,
   resolveStatBlockBonusActionHide,
   resolveStatBlockBonusActionOption,
   spellSaveDcForCaster,
+  shoveFillSet,
   spendAttackAction,
   spendAttackActionResource,
   validateAttackDamageFill,
@@ -1322,6 +1324,11 @@ export type BattleTargetSpatialFact =
       readonly targetId: CombatantId;
     }
   | {
+      readonly kind: "shoveTargetWithinReach";
+      readonly shoverId: CombatantId;
+      readonly targetId: CombatantId;
+    }
+  | {
       readonly kind: "spellRestraintEscapeActorWithinTargetReach";
       readonly actorId: CombatantId;
       readonly targetId: CombatantId;
@@ -1357,6 +1364,23 @@ export type BattleThunderwaveCreaturePushOutcome = {
 export type BattleThunderwaveUnsecuredObjectPushOutcome = {
   readonly objectId: BattleObjectId;
   readonly disposition: BattleThunderwavePushDisposition;
+};
+export type BattleShovePushDisposition =
+  | {
+      readonly kind: "pushed";
+      readonly distanceFeet: MovementFeet;
+      readonly destinationId: BattleTablePositionId;
+      readonly provokesOpportunityAttacks: false;
+    }
+  | {
+      readonly kind: "blocked";
+      readonly distanceFeet: MovementFeet;
+      readonly reason: "blocked" | "noLegalDestination";
+      readonly provokesOpportunityAttacks: false;
+    };
+export type BattleShovePushOutcome = {
+  readonly targetId: CombatantId;
+  readonly disposition: BattleShovePushDisposition;
 };
 export type BattleThunderwaveAudibleBoom = {
   readonly sound: "thunderous boom";
@@ -3024,6 +3048,28 @@ export type BattleGrappleOutcomeHole = {
   readonly dc: DifficultyClass;
   readonly mode: "grappleSave" | "escapeCheck";
 };
+export type BattleShoveOutcomeValue =
+  | {
+      readonly succeeded: true;
+    }
+  | {
+      readonly succeeded: false;
+      readonly failedEffect:
+        | { readonly kind: "prone" }
+        | {
+            readonly kind: "pushAway";
+            readonly disposition: BattleShovePushDisposition;
+          };
+    };
+export type BattleShoveOutcomeHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "shoveOutcome";
+  readonly label: string;
+  readonly actorId: CombatantId;
+  readonly targetId: CombatantId;
+  readonly dc: DifficultyClass;
+};
 export type BattleAttackDamageDispositionHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -3062,6 +3108,7 @@ export type BattleHole =
   | BattleMovementHole
   | BattleAbilityCheckHole
   | BattleGrappleOutcomeHole
+  | BattleShoveOutcomeHole
   | BattleAttackDamageDispositionHole;
 
 export type BattleAttackRollResult = AttackRollResult & {
@@ -3202,6 +3249,11 @@ export type BattleFill =
       readonly value: {
         readonly succeeded: boolean;
       };
+    }
+  | {
+      readonly kind: "shoveOutcome";
+      readonly holeId: BattleHoleId;
+      readonly value: BattleShoveOutcomeValue;
     };
 
 export type BattleResolutionInput = {
@@ -3268,6 +3320,9 @@ export type SearchBattleResolutionInput =
 export type GrappleBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<BattleSubject, { readonly tag: "action"; readonly action: "grapple" }>
 >;
+export type ShoveBattleResolutionInput = BattleResolutionInputForSubject<
+  Extract<BattleSubject, { readonly tag: "action"; readonly action: "shove" }>
+>;
 export type EscapeGrappleBattleResolutionInput =
   BattleResolutionInputForSubject<
     Extract<
@@ -3329,6 +3384,7 @@ export type BattleResolutionResult =
       readonly snapshot: BattleSnapshot;
       readonly objectDamages?: readonly BattleObjectDamageOutcome[];
       readonly droppedObjects?: readonly BattleDroppedObjectOutcome[];
+      readonly shovePushes?: readonly BattleShovePushOutcome[];
     }
   | {
       readonly tag: "needsHoles";
@@ -3532,6 +3588,10 @@ export {
   SEARCH_ABILITY_CHECK_HOLE_INSTANCE,
   SEARCH_TARGET_HOLE_ID,
   SEARCH_TARGET_HOLE_INSTANCE,
+  SHOVE_OUTCOME_HOLE_ID,
+  SHOVE_OUTCOME_HOLE_INSTANCE,
+  SHOVE_TARGET_HOLE_ID,
+  SHOVE_TARGET_HOLE_INSTANCE,
   SLEEP_SHAKE_AWAKE_TARGET_HOLE_ID,
   SLEEP_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
   STAT_BLOCK_RECHARGE_ROLL_HOLE_ID,
@@ -3541,6 +3601,7 @@ export {
   type ClassFeatureExtraAttackActionResource,
   type GrappleFillSet,
   type HpDamageProjection,
+  type ShoveFillSet,
   type StatBlockMultiattackActionResource,
   type SupportedLiteralMultiattackDispatch,
   type SupportedStatBlockBonusActionOption,

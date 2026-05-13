@@ -1,5 +1,8 @@
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.martial-arts-attack-projection
 import type {
+  BattleFill,
   BattleCreatureState,
+  BattleHole,
   CharacterBattleSpellcastingState,
 } from "@dnd/battle-runtime";
 import {
@@ -9,6 +12,7 @@ import {
   combatantId,
   discoverBattleActs,
   initiativeScore,
+  resolveBattleSubject,
 } from "@dnd/battle-runtime";
 import {
   abilityScoreAssignment,
@@ -428,7 +432,387 @@ describe("Character Build battle projection", () => {
       trueStrike?.initialHoles.find((hole) => hole.kind === "targetChoice"),
     ).toMatchObject({ choices: [targetId] });
   });
+
+  test("projects Martial Arts d6 and Dexterity for eligible unarmed and Monk weapon attacks", () => {
+    const init = expectRight(
+      battleCreatureInitFromCharacterBuild({
+        combatantId: combatantId("martial-arts-dagger"),
+        characterId: characterId("character:martial-arts-dagger"),
+        displayName: "Martial Arts Dagger Monk",
+        build: monkBuild({ weaponUnitId: "weapon_dagger", str: 12, dex: 16 }),
+        initiative: initiativeScore(10),
+        side: battleCombatantSide("party"),
+        unitLibrary,
+      }),
+    );
+
+    expect(init.creatureInit.kind).toBe("character");
+    if (init.creatureInit.kind !== "character") return;
+    expect(init.creatureInit.attack).toMatchObject({
+      kind: "weapon",
+      ability: "dex",
+      abilityModifier: abilityModifier(3),
+      damageAbilityModifier: abilityModifier(3),
+      weapon: { id: "weapon_dagger", damage: { dice: 1, dieSize: 6 } },
+    });
+    expect(init.creatureInit.unarmedStrike).toMatchObject({
+      kind: "unarmedStrike",
+      attackAbility: "dex",
+      attackAbilityModifier: abilityModifier(3),
+      attackBonus: 5,
+      damageAbilityModifier: abilityModifier(3),
+      effect: {
+        damage: {
+          kind: "authoredReplacement",
+          sourceUnitId: "monk_martial_arts",
+          dice: 1,
+          dieSize: 6,
+        },
+      },
+    });
+  });
+
+  test("keeps Martial Arts Dexterity projection above the d6 die slice", () => {
+    const init = expectRight(
+      battleCreatureInitFromCharacterBuild({
+        combatantId: combatantId("martial-arts-level-five"),
+        characterId: characterId("character:martial-arts-level-five"),
+        displayName: "Experienced Monk",
+        build: monkBuild({
+          level: 5,
+          weaponUnitId: "weapon_dagger",
+          str: 12,
+          dex: 16,
+        }),
+        initiative: initiativeScore(10),
+        side: battleCombatantSide("party"),
+        unitLibrary,
+      }),
+    );
+
+    expect(init.creatureInit.kind).toBe("character");
+    if (init.creatureInit.kind !== "character") return;
+    expect(init.creatureInit.attack).toMatchObject({
+      kind: "weapon",
+      ability: "dex",
+      abilityModifier: abilityModifier(3),
+      damageAbilityModifier: abilityModifier(3),
+      weapon: { id: "weapon_dagger", damage: { dice: 1, dieSize: 4 } },
+    });
+    expect(init.creatureInit.unarmedStrike).toMatchObject({
+      kind: "unarmedStrike",
+      attackAbility: "dex",
+      attackAbilityModifier: abilityModifier(3),
+      damageAbilityModifier: abilityModifier(3),
+      effect: {
+        damage: {
+          kind: "base",
+          flat: 1,
+        },
+      },
+    });
+  });
+
+  test("keeps Strength when it is the better Martial Arts attack and damage choice", () => {
+    const init = expectRight(
+      battleCreatureInitFromCharacterBuild({
+        combatantId: combatantId("martial-arts-strength"),
+        characterId: characterId("character:martial-arts-strength"),
+        displayName: "Strength Monk",
+        build: monkBuild({ weaponUnitId: "weapon_dagger", str: 16, dex: 12 }),
+        initiative: initiativeScore(10),
+        side: battleCombatantSide("party"),
+        unitLibrary,
+      }),
+    );
+
+    expect(init.creatureInit.kind).toBe("character");
+    if (init.creatureInit.kind !== "character") return;
+    expect(init.creatureInit.attack).toMatchObject({
+      kind: "weapon",
+      ability: "str",
+      abilityModifier: abilityModifier(3),
+      damageAbilityModifier: abilityModifier(3),
+      weapon: { damage: { dice: 1, dieSize: 6 } },
+    });
+    expect(init.creatureInit.unarmedStrike).toMatchObject({
+      attackAbility: "str",
+      attackAbilityModifier: abilityModifier(3),
+      attackBonus: 5,
+      damageAbilityModifier: abilityModifier(3),
+    });
+  });
+
+  test("requires unarmored unshielded loadouts that wield only Monk weapons", () => {
+    const shielded = expectRight(
+      battleCreatureInitFromCharacterBuild({
+        combatantId: combatantId("martial-arts-shield"),
+        characterId: characterId("character:martial-arts-shield"),
+        displayName: "Shielded Monk",
+        build: monkBuild({
+          weaponUnitId: "weapon_dagger",
+          shield: true,
+          str: 12,
+          dex: 16,
+        }),
+        initiative: initiativeScore(10),
+        side: battleCombatantSide("party"),
+        unitLibrary,
+      }),
+    );
+    const longsword = expectRight(
+      battleCreatureInitFromCharacterBuild({
+        combatantId: combatantId("martial-arts-longsword"),
+        characterId: characterId("character:martial-arts-longsword"),
+        displayName: "Longsword Monk",
+        build: monkBuild({
+          weaponUnitId: "weapon_longsword",
+          str: 12,
+          dex: 16,
+        }),
+        initiative: initiativeScore(10),
+        side: battleCombatantSide("party"),
+        unitLibrary,
+      }),
+    );
+    const mixed = expectRight(
+      battleCreatureInitFromCharacterBuild({
+        combatantId: combatantId("martial-arts-mixed"),
+        characterId: characterId("character:martial-arts-mixed"),
+        displayName: "Mixed Weapon Monk",
+        build: monkBuild({
+          weaponUnitId: "weapon_dagger",
+          offHandWeaponUnitId: "weapon_longsword",
+          str: 12,
+          dex: 16,
+        }),
+        initiative: initiativeScore(10),
+        side: battleCombatantSide("party"),
+        unitLibrary,
+      }),
+    );
+
+    for (const init of [shielded, longsword, mixed]) {
+      expect(init.creatureInit.kind).toBe("character");
+      if (init.creatureInit.kind !== "character") return;
+      expect(init.creatureInit.attack).toMatchObject({
+        kind: "weapon",
+        ability: "str",
+        abilityModifier: abilityModifier(1),
+      });
+      expect(init.creatureInit.unarmedStrike.effect.damage).toEqual({
+        kind: "base",
+        damageType: "bludgeoning",
+        flat: 1,
+      });
+    }
+  });
+
+  test("keeps Martial Arts Dexterity in Grapple and Shove save DCs above the d6 die slice", () => {
+    const monkId = combatantId("martial-arts-grappler");
+    const targetId = combatantId("martial-arts-grapple-target");
+    const state = expectRight(
+      startBattleFromCharacterBuildAndStatBlock({
+        battleId: battleId("martial-arts-grapple-dc"),
+        character: {
+          combatantId: monkId,
+          characterId: characterId("character:martial-arts-grappler"),
+          displayName: "Grappling Monk",
+          build: monkBuild({ level: 5, str: 12, dex: 16 }),
+          initiative: initiativeScore(20),
+          side: battleCombatantSide("party"),
+        },
+        statBlockBattleInput: {
+          combatantId: targetId,
+          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          initiative: initiativeScore(10),
+          side: battleCombatantSide("monsters"),
+        },
+        unitLibrary,
+      }),
+    );
+    const grappleSubject = {
+      tag: "action" as const,
+      actorId: monkId,
+      action: "grapple" as const,
+    };
+    const grappleTarget = requireHole(
+      resolveBattleSubject({ state, subject: grappleSubject, fills: [] }),
+      "targetChoice",
+    );
+    const grappleOutcome = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: grappleSubject,
+        fills: [
+          targetFill(grappleTarget, targetId, [
+            { kind: "grappleTargetWithinReach", grapplerId: monkId, targetId },
+          ]),
+        ],
+      }),
+      "grappleOutcome",
+    );
+    const shoveSubject = {
+      tag: "action" as const,
+      actorId: monkId,
+      action: "shove" as const,
+    };
+    const shoveTarget = requireHole(
+      resolveBattleSubject({ state, subject: shoveSubject, fills: [] }),
+      "targetChoice",
+    );
+    const shoveOutcome = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: shoveSubject,
+        fills: [
+          targetFill(shoveTarget, targetId, [
+            { kind: "shoveTargetWithinReach", shoverId: monkId, targetId },
+          ]),
+        ],
+      }),
+      "shoveOutcome",
+    );
+
+    expect(grappleOutcome.dc).toBe(14);
+    expect(shoveOutcome.dc).toBe(14);
+  });
 });
+
+function monkBuild(input: {
+  readonly level?: number;
+  readonly weaponUnitId?: string;
+  readonly offHandWeaponUnitId?: string;
+  readonly armor?: boolean;
+  readonly shield?: boolean;
+  readonly str: number;
+  readonly dex: number;
+}): CharacterBuild {
+  const weaponItemId =
+    input.weaponUnitId === undefined
+      ? undefined
+      : characterEquipmentItemId({
+          slot: "main",
+          unitId: expectRight(characterEquipmentItemUnitId(input.weaponUnitId)),
+        });
+  const offHandWeaponItemId =
+    input.offHandWeaponUnitId === undefined
+      ? undefined
+      : characterEquipmentItemId({
+          slot: "off",
+          unitId: expectRight(
+            characterEquipmentItemUnitId(input.offHandWeaponUnitId),
+          ),
+        });
+  const armorItemId =
+    input.armor === true
+      ? characterEquipmentItemId({
+          slot: "armor",
+          unitId: expectRight(characterEquipmentItemUnitId("armor_leather")),
+        })
+      : undefined;
+  const shieldItemId =
+    input.shield === true
+      ? characterEquipmentItemId({
+          slot: "shield",
+          unitId: expectRight(characterEquipmentItemUnitId("equipment_shield")),
+        })
+      : undefined;
+
+  return {
+    progression: {
+      startingClass: classUnitId("class_monk"),
+      advancements: Array.from(
+        { length: Math.max(0, (input.level ?? 1) - 1) },
+        () => ({
+          classUnitId: classUnitId("class_monk"),
+          hitPointRule: { tag: "fixedHigherLevelGain" as const },
+        }),
+      ),
+    },
+    background: "background_soldier",
+    species: "species_orc",
+    originLanguages: ["Common", "Dwarvish", "Goblin"],
+    alignment: { order: "lawful", morality: "good" },
+    abilityScores: expectRight(
+      abilityScoreAssignment({
+        str: input.str,
+        dex: input.dex,
+        con: 13,
+        int: 8,
+        wis: 16,
+        cha: 10,
+      }),
+    ),
+    proficiencyChoices: [],
+    features: [],
+    equipment: {
+      owned: [
+        ...(weaponItemId === undefined || input.weaponUnitId === undefined
+          ? []
+          : [{ itemId: weaponItemId, unitId: input.weaponUnitId }]),
+        ...(offHandWeaponItemId === undefined ||
+        input.offHandWeaponUnitId === undefined
+          ? []
+          : [
+              {
+                itemId: offHandWeaponItemId,
+                unitId: input.offHandWeaponUnitId,
+              },
+            ]),
+        ...(armorItemId === undefined
+          ? []
+          : [{ itemId: armorItemId, unitId: "armor_leather" }]),
+        ...(shieldItemId === undefined
+          ? []
+          : [{ itemId: shieldItemId, unitId: "equipment_shield" }]),
+      ],
+      loadout: {
+        ...(weaponItemId === undefined
+          ? {}
+          : { weapon: { itemId: weaponItemId, grip: "one_handed" as const } }),
+        ...(offHandWeaponItemId === undefined
+          ? {}
+          : { offHandWeapon: { itemId: offHandWeaponItemId } }),
+        ...(armorItemId === undefined ? {} : { armor: armorItemId }),
+        ...(shieldItemId === undefined ? {} : { shield: shieldItemId }),
+      },
+    },
+  };
+}
+
+function requireHole<K extends BattleHole["kind"]>(
+  result: ReturnType<typeof resolveBattleSubject>,
+  kind: K,
+): Extract<BattleHole, { readonly kind: K }> {
+  if (result.tag !== "needsHoles") {
+    throw new Error(`Expected needsHoles result, got ${result.tag}.`);
+  }
+  const hole = result.holes.find(
+    (candidate): candidate is Extract<BattleHole, { readonly kind: K }> =>
+      candidate.kind === kind,
+  );
+  if (hole === undefined) {
+    throw new Error(`Expected ${kind} hole.`);
+  }
+  return hole;
+}
+
+function targetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  targetId: ReturnType<typeof combatantId>,
+  spatialFacts: Extract<
+    BattleFill,
+    { readonly kind: "targetChoice" }
+  >["spatialFacts"] = [],
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value: targetId,
+    ...(spatialFacts.length === 0 ? {} : { spatialFacts }),
+  };
+}
 
 function multiclassUnarmoredDefenseBuild(): CharacterBuild {
   return {
@@ -675,10 +1059,10 @@ function fighterWithLayOnHandsResourceBuild(): CharacterBuild {
 }
 
 function expectRight<T, E>(result: Either.Either<T, E>): T {
-  expect(Either.isRight(result)).toBe(true);
   if (Either.isLeft(result)) {
     throw new Error(`Expected Right, got ${JSON.stringify(result.left)}`);
   }
+  expect(Either.isRight(result)).toBe(true);
   return result.right;
 }
 

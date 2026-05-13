@@ -63,6 +63,8 @@ import {
   hiddenSearchTargetChoices,
   hideAbilityCheckHole,
   searchTargetHole,
+  shoveTargetChoices,
+  shoveTargetHole,
   sleepShakeAwakeTargetHole,
 } from "./hole-helpers.ts";
 
@@ -375,6 +377,19 @@ export function discoverBattleActs(
       label: "Grapple",
       summary: "Replace one attack with an Unarmed Strike Grapple.",
       initialHoles: [grappleTargetHole(state, actorId)],
+    });
+  }
+  if (
+    combatantCanTakeActions(state.combatants.get(actorId)) &&
+    !actorHasStatBlockMultiattackActionResource(state, actorId) &&
+    canSpendAction(state.currentTurnResources, "attack") &&
+    shoveTargetChoices(state, actorId).length > 0
+  ) {
+    acts.push({
+      subject: { tag: "action", actorId, action: "shove" },
+      label: "Shove",
+      summary: "Replace one attack with an Unarmed Strike Shove.",
+      initialHoles: [shoveTargetHole(state, actorId)],
     });
   }
   if (

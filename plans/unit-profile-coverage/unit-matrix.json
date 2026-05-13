@@ -72,23 +72,23 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 51,
-      "numerator": 51,
+      "denominator": 52,
+      "numerator": 52,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 51,
-      "numerator": 50,
-      "percent": "98%"
+      "denominator": 52,
+      "numerator": 51,
+      "percent": "98.1%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 51,
-      "numerator": 51,
+      "denominator": 52,
+      "numerator": 52,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 51,
-      "numerator": 51,
+      "denominator": 52,
+      "numerator": 52,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -276,6 +276,38 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.martial-arts-attack-projection",
+      "profileKind": "passive",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/character-battle-runtime/src/battle-character-build-projection.ts",
+        "packages/battle-runtime/src/battle-reducer/movement-speed.ts"
+      ],
+      "sourceBoundary": "Character build class levels, retained monk_martial_arts Unit support profile, and canonical character loadout weapon/armor/shield facts",
+      "taskRefs": [
+        "SRDINV73A"
+      ],
+      "title": "Unit feature projects eligible Monk Martial Arts attack ability, damage die, and Grapple/Shove save DC facts",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
         }
       ]
     },
@@ -2756,6 +2788,22 @@
         "spell.invocation-object-light"
       ],
       "taskId": "SRDINV70B"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Shared Unit feature and promoted battle-runtime Quint facts cover Martial Arts eligibility, Dexterity attack/damage choice, level-1 d6 damage replacement, and Dexterity-based Grapple/Shove save DC projection for the promoted Unarmed Strike Grapple and Shove actions.",
+      "profileIds": [
+        "unit-feature.martial-arts-attack-projection"
+      ],
+      "taskId": "SRDINV73A"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused admission and character-battle-runtime tests cover monk_martial_arts profile recognition, d6-slice scoping, canonical loadout eligibility, Dexterity-vs-Strength projection, and Grapple/Shove save DC projection through the promoted Unarmed Strike Grapple and Shove actions.",
+      "profileIds": [
+        "unit-feature.martial-arts-attack-projection"
+      ],
+      "taskId": "SRDINV73A"
     }
   ],
   "units": [
@@ -3847,14 +3895,73 @@
         "status": "installed"
       },
       "claim": {
-        "reason": "Class feature source facts are authored for downstream Monk feature projection; Martial Arts is not currently a standalone promoted battle Unit profile.",
-        "tag": "unsupported-profile"
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "Task 280",
+            "mechanic": "Bonus Action Unarmed Strike after taking the Attack action"
+          },
+          {
+            "followUpTaskId": "SRDINV78",
+            "mechanic": "later-level Martial Arts die size increases beyond d6"
+          }
+        ],
+        "profileIds": [
+          "unit-feature.martial-arts-attack-projection"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "while unarmored and not wielding a Shield, and unarmed or wielding only Monk weapons, eligible Unarmed Strikes and Monk weapons may use Dexterity instead of Strength for attack and damage rolls",
+          "eligible Unarmed Strikes and eligible one-die Monk weapons may replace lower damage dice with the level-1 d6 Martial Arts die",
+          "eligible promoted Unarmed Strike Grapple and Shove save DCs may use Dexterity through the projected Unarmed Strike ability modifier"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV73A"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "unit-feature.martial-arts-attack-projection",
+          "profileKind": "passive",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/character-battle-runtime/src/battle-character-build-projection.ts",
+            "packages/battle-runtime/src/battle-reducer/movement-speed.ts"
+          ],
+          "sourceBoundary": "Character build class levels, retained monk_martial_arts Unit support profile, and canonical character loadout weapon/armor/shield facts",
+          "taskRefs": [
+            "SRDINV73A"
+          ],
+          "title": "Unit feature projects eligible Monk Martial Arts attack ability, damage die, and Grapple/Shove save DC facts",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/monk_martial_arts.json",
       "unitId": "monk_martial_arts"
     },

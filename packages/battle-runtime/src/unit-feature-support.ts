@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.martial-arts-attack-projection unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
 import { Match } from "effect";
 import * as Either from "effect/Either";
 import {
@@ -55,6 +55,8 @@ export const PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE =
   "passiveSpeedKindGrants";
 export const WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE =
   "weaponDamageDiceRollChoice";
+export const MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE =
+  "martialArtsAttackProjection";
 export const ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE =
   "attackActionAttackCountScaling";
 export const ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE =
@@ -86,6 +88,7 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
   PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
+  MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE,
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE,
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
@@ -384,6 +387,17 @@ export function battleUnitSupportProfilesForUnit(input: {
   }
   if (weaponDamageDiceRollChoiceSupport === "weaponDamageDiceRollChoice") {
     supportProfiles.push(WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE);
+  }
+
+  const martialArtsAttackProjectionSupport =
+    battleMartialArtsAttackProjectionSupportForUnit(input.unit);
+  if (martialArtsAttackProjectionSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Martial Arts attack projection Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (martialArtsAttackProjectionSupport === "martialArtsAttackProjection") {
+    supportProfiles.push(MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE);
   }
 
   const attackActionAttackCountScalingSupport =
@@ -742,6 +756,22 @@ export type WeaponDamageDiceRollChoiceProfile = {
   readonly diceScope: "weaponDamageDice";
   readonly choose: "eitherRoll";
 };
+export type MartialArtsAttackProjectionProfile = {
+  readonly condition: {
+    readonly kind: "unarmoredUnshieldedOnlyMonkWeapons";
+  };
+  readonly damageReplacement: MartialArtsDamageReplacementProfile | null;
+  readonly abilitySubstitution: {
+    readonly use: "dex";
+    readonly replaces: "str";
+    readonly on: readonly ["attackRoll", "damageRoll", "unarmedStrikeSaveDc"];
+  };
+};
+export type MartialArtsDamageReplacementProfile = {
+  readonly scope: "unarmedOrMonkWeapon";
+  readonly dice: 1;
+  readonly dieSize: 6;
+};
 
 export type SupportedUnitFeatureProfile =
   | {
@@ -830,6 +860,12 @@ export type SupportedUnitFeatureProfile =
       readonly kind: "weaponDamageDiceRollChoice";
       readonly unit: UnitRecord;
       readonly damageDiceChoice: WeaponDamageDiceRollChoiceProfile;
+    }
+  | {
+      readonly kind: "martialArtsAttackProjection";
+      readonly unit: UnitRecord;
+      readonly classLevel: ClassLevel;
+      readonly martialArts: MartialArtsAttackProjectionProfile;
     }
   | {
       readonly kind: "bardicInspirationGrant";
@@ -1131,6 +1167,11 @@ export type BattleWeaponDamageDiceRollChoiceSupport =
   | "unsupported"
   | null;
 
+export type BattleMartialArtsAttackProjectionSupport =
+  | "martialArtsAttackProjection"
+  | "unsupported"
+  | null;
+
 export type BattleAttackActionAttackCountScalingSupport =
   | BattleAttackActionAttackCountScalingSupportProfile
   | "unsupported"
@@ -1225,6 +1266,17 @@ export function battleWeaponDamageDiceRollChoiceSupportForUnit(
   return weaponDamageDiceRollChoiceProfileForUnit(unit) === null
     ? "unsupported"
     : "weaponDamageDiceRollChoice";
+}
+
+export function battleMartialArtsAttackProjectionSupportForUnit(
+  unit: UnitRecord,
+): BattleMartialArtsAttackProjectionSupport {
+  if (!hasMartialArtsAttackProjectionMechanics(unit)) {
+    return null;
+  }
+  return martialArtsAttackProjectionMechanicsForUnit(unit) === null
+    ? "unsupported"
+    : "martialArtsAttackProjection";
 }
 
 export function battleAttackActionAttackCountScalingSupportForUnit(
@@ -1337,6 +1389,19 @@ function hasWeaponDamageDiceRollChoiceMechanics(unit: UnitRecord): boolean {
     unit.kind === "feat" &&
     unit.mechanics.family === "on_hit_trigger" &&
     unit.mechanics.effect.kind === "reroll_weapon_damage_dice"
+  );
+}
+
+function hasMartialArtsAttackProjectionMechanics(unit: UnitRecord): boolean {
+  return (
+    unit.kind === "class_feature" &&
+    unit.className === "monk" &&
+    unit.mechanics.family === "passive" &&
+    unit.mechanics.grants.some(
+      (effect) =>
+        effect.kind === "replace_damage_die" ||
+        effect.kind === "substitute_ability_for_rolls",
+    )
   );
 }
 
@@ -1722,6 +1787,119 @@ export function weaponDamageDiceRollChoiceProfileForUnit(
   };
 }
 
+export function martialArtsAttackProjectionProfileForUnit(
+  unit: UnitRecord,
+  classLevels: readonly CharacterBattleClassLevel[],
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "martialArtsAttackProjection" }
+> | null {
+  const martialArts = martialArtsAttackProjectionMechanicsForUnit(unit);
+  if (unit.kind !== "class_feature" || martialArts === null) {
+    return null;
+  }
+  const monkLevel = findCharacterClassLevel(classLevels, unit.className);
+  if (monkLevel === undefined || monkLevel < unit.acquiredAtLevel) {
+    return null;
+  }
+  return {
+    kind: "martialArtsAttackProjection",
+    unit,
+    classLevel: monkLevel,
+    martialArts: {
+      ...martialArts,
+      damageReplacement:
+        monkLevel < 5 ? martialArts.damageReplacement : null,
+    },
+  };
+}
+
+function martialArtsAttackProjectionMechanicsForUnit(
+  unit: UnitRecord,
+): MartialArtsAttackProjectionProfile | null {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.className !== "monk" ||
+    unit.mechanics.family !== "passive"
+  ) {
+    return null;
+  }
+
+  const condition = unit.mechanics.condition;
+  if (condition?.kind !== "all_of" || condition.predicates.length !== 3) {
+    return null;
+  }
+  const unarmedOrMonkWeaponsOnly = condition.predicates.some(
+    (predicate) => predicate.kind === "unarmed_or_monk_weapons_only",
+  );
+  const unarmored = condition.predicates.some(
+    (predicate) =>
+      predicate.kind === "not_wearing_armor" &&
+      sameStringSet(predicate.categories, ["light", "medium", "heavy"]),
+  );
+  const unshielded = condition.predicates.some(
+    (predicate) => predicate.kind === "not_wielding_shield",
+  );
+  if (!unarmedOrMonkWeaponsOnly || !unarmored || !unshielded) {
+    return null;
+  }
+
+  const damageReplacements = unit.mechanics.grants.filter(
+    (grant) => grant.kind === "replace_damage_die",
+  );
+  const abilitySubstitutions = unit.mechanics.grants.filter(
+    (grant) => grant.kind === "substitute_ability_for_rolls",
+  );
+  if (damageReplacements.length !== 1 || abilitySubstitutions.length !== 1) {
+    return null;
+  }
+  const [damageReplacement] = damageReplacements;
+  const [abilitySubstitution] = abilitySubstitutions;
+  if (
+    damageReplacement?.scope !== "unarmed_or_monk_weapon" ||
+    damageReplacement.die.kind !== "threshold_tiers" ||
+    damageReplacement.die.axis !== "class" ||
+    damageReplacement.die.base.dice !== 1 ||
+    damageReplacement.die.base.dieSize !== 6 ||
+    abilitySubstitution?.scope !== "unarmed_or_monk_weapon" ||
+    abilitySubstitution.use !== "dex" ||
+    abilitySubstitution.replaces !== "str" ||
+    !sameStringSet(abilitySubstitution.on, [
+      "attack_roll",
+      "damage_roll",
+      "unarmed_strike_save_dc",
+    ])
+  ) {
+    return null;
+  }
+
+  return {
+    condition: {
+      kind: "unarmoredUnshieldedOnlyMonkWeapons",
+    },
+    damageReplacement: {
+      scope: "unarmedOrMonkWeapon",
+      dice: 1,
+      dieSize: 6,
+    },
+    abilitySubstitution: {
+      use: "dex",
+      replaces: "str",
+      on: ["attackRoll", "damageRoll", "unarmedStrikeSaveDc"],
+    },
+  };
+}
+
+function parseMartialArtsAttackProjectionUnitFeatureProfile(
+  unit: UnitRecord,
+  classLevels: readonly CharacterBattleClassLevel[],
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "martialArtsAttackProjection" }
+> | null {
+  return martialArtsAttackProjectionProfileForUnit(unit, classLevels);
+}
+
 function fixedDiceDeltaValue(delta: {
   readonly kind: string;
   readonly dice?: number;
@@ -1923,6 +2101,7 @@ export function parseSupportedUnitFeatureProfile(
     parsePassiveSpeedBonusUnitFeatureProfile(unit) ??
     parsePassiveSpeedKindGrantsUnitFeatureProfile(unit) ??
     parseWeaponDamageDiceRollChoiceUnitFeatureProfile(unit) ??
+    parseMartialArtsAttackProjectionUnitFeatureProfile(unit, classLevels) ??
     parseBardicInspirationGrantUnitFeatureProfile(unit, classLevels) ??
     attackActionAttackCountScalingProfileForUnit(unit) ??
     zeroHitPointReplacementProfileForUnit(unit) ??

@@ -1,3 +1,4 @@
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.martial-arts-attack-projection
 // Movement-budget and speed helpers extracted from battle-reducer.ts.
 // Cluster S (movement_speed). Mechanical extraction — no behavior change.
 // Reads creature-state-leaves.ts to avoid cycling back into G.
@@ -522,7 +523,7 @@ export function grappleLinkForTarget(
     link: {
       grapplerId,
       targetId,
-      escapeDc: grappleEscapeDc(grappler),
+      escapeDc: unarmedStrikeSaveDc(grappler),
       reachFeet: movementFeet(5),
       hand,
       targetExemptFromDragCost: grappleDragCostExempt(
@@ -531,6 +532,44 @@ export function grappleLinkForTarget(
       ),
     },
   };
+}
+
+export function shoveForTarget(
+  state: BattleState,
+  shoverId: CombatantId,
+  targetId: CombatantId,
+  facts: readonly BattleTargetSpatialFact[],
+):
+  | { readonly tag: "ok"; readonly dc: DifficultyClass }
+  | { readonly tag: "invalid"; readonly message: string } {
+  const shover = state.combatants.get(shoverId);
+  const target = state.combatants.get(targetId);
+  if (shover === undefined || target === undefined || shoverId === targetId) {
+    return {
+      tag: "invalid",
+      message: "Shove target must be another combatant in this battle.",
+    };
+  }
+  if (!targetIsNoMoreThanOneSizeLarger(shover.size, target.size)) {
+    return {
+      tag: "invalid",
+      message: "Shove target cannot be more than one size larger.",
+    };
+  }
+  if (
+    !facts.some(
+      (fact) =>
+        fact.kind === "shoveTargetWithinReach" &&
+        fact.shoverId === shoverId &&
+        fact.targetId === targetId,
+    )
+  ) {
+    return {
+      tag: "invalid",
+      message: "Shove target must be within reach by table-supplied fact.",
+    };
+  }
+  return { tag: "ok", dc: unarmedStrikeSaveDc(shover) };
 }
 
 export function firstFreeHand(
@@ -546,18 +585,28 @@ export function firstFreeHand(
 export function grappleEscapeDc(
   grappler: BattleCreatureState,
 ): DifficultyClass {
+  return unarmedStrikeSaveDc(grappler);
+}
+
+export function unarmedStrikeSaveDc(
+  combatant: BattleCreatureState,
+): DifficultyClass {
   return difficultyClass(
-    8 + strengthModifier(grappler) + combatantProficiencyBonus(grappler),
+    8 +
+      unarmedStrikeSaveDcAbilityModifier(combatant) +
+      combatantProficiencyBonus(combatant),
   );
 }
 
-export function strengthModifier(combatant: BattleCreatureState): number {
+export function unarmedStrikeSaveDcAbilityModifier(
+  combatant: BattleCreatureState,
+): number {
   if (combatant.origin.kind === "statBlock") {
     return Math.floor(
       (combatant.origin.statBlock.statBlock.abilityScores.str - 10) / 2,
     );
   }
-  return Number(combatant.armorClass.abilityModifiers.str);
+  return Number(combatant.origin.unarmedStrike.attackAbilityModifier);
 }
 
 export function combatantProficiencyBonus(

@@ -18,6 +18,7 @@ export const BATTLE_SUBJECT_ACTIONS = [
   "ready",
   "search",
   "grapple",
+  "shove",
   "escapeGrapple",
   "escapeSpellRestraint",
   "shakeAwakeFromSleep",
@@ -239,6 +240,21 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("action"),
     actorId: CombatantId,
     action: Schema.Literal("grapple"),
+    attackName: Schema.optionalWith(BattleSubjectTextSchema, { exact: true }),
+    statBlockSection: Schema.optionalWith(
+      Schema.Literal(
+        "actions",
+        "bonusActions",
+        "reactions",
+        "legendaryActions",
+      ),
+      { exact: true },
+    ),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("shove"),
     attackName: Schema.optionalWith(BattleSubjectTextSchema, { exact: true }),
     statBlockSection: Schema.optionalWith(
       Schema.Literal(
@@ -504,6 +520,15 @@ function spellSubjectModeKey(mode: SpellSubjectMode): readonly unknown[] {
 function battleSubjectKey(subject: BattleSubject): string {
   if (subject.tag === "action" && subject.action === "shakeAwakeFromSleep") {
     return JSON.stringify([subject.tag, subject.actorId, subject.action]);
+  }
+  if (subject.tag === "action" && subject.action === "shove") {
+    return JSON.stringify([
+      subject.tag,
+      subject.actorId,
+      subject.action,
+      subject.attackName ?? null,
+      subject.statBlockSection ?? null,
+    ]);
   }
   if (subject.tag === "bonusActionDashSpell") {
     return JSON.stringify([

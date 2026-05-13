@@ -239,6 +239,29 @@ module battleRuntimeFeatureBridge {
       },
     ).pool.usesRemaining
 
+  pure def battleRuntimeMartialArtsAttackProjection(
+    unarmored: bool,
+    wieldingShield: bool,
+    attackForm: MartialArtsAttackForm,
+    strengthModifier: int,
+    dexterityModifier: int,
+    normalDamageDice: int,
+    normalDamageDieSize: int,
+    proficiencyBonus: int
+  ): MartialArtsAttackProjectionResult =
+    resolveMartialArtsAttackProjection({
+      eligibility: {
+        unarmored: unarmored,
+        wieldingShield: wieldingShield,
+        attackForm: attackForm,
+      },
+      strengthModifier: strengthModifier,
+      dexterityModifier: dexterityModifier,
+      normalDamageDice: normalDamageDice,
+      normalDamageDieSize: normalDamageDieSize,
+      proficiencyBonus: proficiencyBonus,
+    })
+
   run test_rage_runtime_projection_uses_feature_profile = {
     all {
       assert(battleRuntimeRageDamageBonus(1) == 2),
@@ -277,6 +300,38 @@ module battleRuntimeFeatureBridge {
       assert(not(battleRuntimeDeflectAttacksRedirectTargetEligible(true, false, false, true, true))),
       assert(battleRuntimeDeflectAttacksRedirectDamage(0, 3, true, false, 5, 5, 0) == 10),
       assert(battleRuntimeDeflectAttacksRedirectFocusRemaining(0, 3, true) == 2),
+    }
+  }
+
+  run test_martial_arts_runtime_projection_uses_feature_profile = {
+    val unarmed = battleRuntimeMartialArtsAttackProjection(
+      true,
+      false,
+      MartialArtsUnarmedStrike,
+      1,
+      3,
+      0,
+      1,
+      2
+    )
+    val shielded = battleRuntimeMartialArtsAttackProjection(
+      true,
+      true,
+      MartialArtsMonkWeapon,
+      1,
+      3,
+      1,
+      4,
+      2
+    )
+    all {
+      assert(unarmed.eligible),
+      assert(unarmed.attackAbilityModifier == 3),
+      assert(unarmed.damageDieSize == 6),
+      assert(unarmed.unarmedStrikeSaveDc == 13),
+      assert(not(shielded.eligible)),
+      assert(shielded.attackAbilityModifier == 1),
+      assert(shielded.damageDieSize == 4),
     }
   }
 }

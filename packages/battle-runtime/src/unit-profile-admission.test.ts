@@ -53,7 +53,8 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT62 fighter_tactical_mind
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT65 bard_cutting_words
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV72A bard_bardic_inspiration
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV73A monk_martial_arts
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.martial-arts-attack-projection unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider spell.scalar-buff
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -109,6 +110,7 @@ import {
   ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
   BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE,
   FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE,
+  MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE,
   PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE,
   PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
   battleCombatantSide,
@@ -163,6 +165,7 @@ import {
   PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
   PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
   battleFailedAbilityCheckResourceBoostSupportForUnit,
+  battleMartialArtsAttackProjectionSupportForUnit,
   bonusActionDashTemporaryHitPointsProfileForUnit,
   battlePassiveSpeedKindGrantsSupportForUnit,
   parseSupportedUnitFeatureProfile,
@@ -197,6 +200,7 @@ const rogueUncannyDodgeUnitId = "rogue_uncanny_dodge";
 const rogueSneakAttackUnitId = "rogue_sneak_attack";
 const bardBardicInspirationUnitId = "bard_bardic_inspiration";
 const bardCuttingWordsUnitId = "bard_cutting_words";
+const monkMartialArtsUnitId = "monk_martial_arts";
 const baneUnitId = "bane";
 const blessUnitId = "bless";
 const burningHandsUnitId = "burning_hands";
@@ -751,6 +755,103 @@ describe("QMBT65 Cutting Words deterministic Unit profile admission", () => {
 });
 
 describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () => {
+  test("monk_martial_arts is admitted as a level-1 attack projection profile", () => {
+    const unit = unitLibrary.requireUnit(monkMartialArtsUnitId);
+
+    expect(
+      battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
+    ).toEqual(
+      Either.right({
+        unitId: monkMartialArtsUnitId,
+        supportProfiles: [MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE],
+      }),
+    );
+    expect(battleMartialArtsAttackProjectionSupportForUnit(unit)).toBe(
+      MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE,
+    );
+    expect(
+      parseSupportedUnitFeatureProfile(unit, [
+        { className: "monk", level: classLevel(1) },
+      ]),
+    ).toEqual(
+      expect.objectContaining({
+        kind: "martialArtsAttackProjection",
+        unit,
+        classLevel: classLevel(1),
+        martialArts: {
+          condition: { kind: "unarmoredUnshieldedOnlyMonkWeapons" },
+          damageReplacement: {
+            scope: "unarmedOrMonkWeapon",
+            dice: 1,
+            dieSize: 6,
+          },
+          abilitySubstitution: {
+            use: "dex",
+            replaces: "str",
+            on: ["attackRoll", "damageRoll", "unarmedStrikeSaveDc"],
+          },
+        },
+      }),
+    );
+  });
+
+  test("monk_martial_arts attack projection admission does not require its later bonus action grant", () => {
+    const unit = unitLibrary.requireUnit(monkMartialArtsUnitId);
+    expect(unit.kind).toBe("class_feature");
+    if (unit.kind !== "class_feature") {
+      throw new Error("Expected Monk Martial Arts to be a class feature.");
+    }
+    expect(unit.mechanics.family).toBe("passive");
+    if (unit.mechanics.family !== "passive") {
+      throw new Error("Expected Monk Martial Arts to use passive mechanics.");
+    }
+    const attackProjectionUnit: UnitRecord = {
+      ...unit,
+      mechanics: {
+        ...unit.mechanics,
+        grants: unit.mechanics.grants.filter(
+          (grant) => grant.kind !== "grant_bonus_action_attack",
+        ),
+      },
+    };
+
+    expect(
+      battleMartialArtsAttackProjectionSupportForUnit(attackProjectionUnit),
+    ).toBe(MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE);
+    expect(
+      parseSupportedUnitFeatureProfile(attackProjectionUnit, [
+        { className: "monk", level: classLevel(1) },
+      ]),
+    ).toEqual(
+      expect.objectContaining({
+        kind: "martialArtsAttackProjection",
+      }),
+    );
+  });
+
+  test("monk_martial_arts keeps Dexterous Attacks while deferring later die scaling", () => {
+    const unit = unitLibrary.requireUnit(monkMartialArtsUnitId);
+
+    expect(
+      parseSupportedUnitFeatureProfile(unit, [
+        { className: "monk", level: classLevel(5) },
+      ]),
+    ).toEqual(
+      expect.objectContaining({
+        kind: "martialArtsAttackProjection",
+        classLevel: classLevel(5),
+        martialArts: expect.objectContaining({
+          damageReplacement: null,
+          abilitySubstitution: {
+            use: "dex",
+            replaces: "str",
+            on: ["attackRoll", "damageRoll", "unarmedStrikeSaveDc"],
+          },
+        }),
+      }),
+    );
+  });
+
   test("monk_deflect_attacks projects zero-damage redirect executable facts", () => {
     const unit = unitLibrary.requireUnit(monkDeflectAttacksUnitId);
     const supportProfile =

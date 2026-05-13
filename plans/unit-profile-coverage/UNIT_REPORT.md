@@ -18,10 +18,10 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Authored Surface executable catalog admission | 105/355 | 29.6% |
 | Installed Unit profile classification coverage | 130/130 | 100% |
 | Supported executable Unit coverage | 68/106 | 64.2% |
-| QNT profile modeling coverage | 51/51 | 100% |
-| QNT proof coverage | 50/51 | 98% |
-| Runtime mapping coverage | 51/51 | 100% |
-| Runtime parity coverage | 51/51 | 100% |
+| QNT profile modeling coverage | 52/52 | 100% |
+| QNT proof coverage | 51/52 | 98.1% |
+| Runtime mapping coverage | 52/52 | 100% |
+| Runtime parity coverage | 52/52 | 100% |
 | Deterministic admission/projection coverage | 64/68 | 94.1% |
 | Selected identity MBT coverage | 10/68 | 14.7% |
 | Classic non-SRD expression gate | 1/1 | 100% |
@@ -121,6 +121,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Unit | Collection | Profiles | Supported Mechanics | Deferred Mechanics |
 | --- | --- | --- | --- | --- |
 | `bard_bardic_inspiration` | srd-5.2.1 | `unit-feature.bardic-inspiration-grant`, `unit-feature.bardic-inspiration-failed-d20-test` | Bonus Action grant to another creature within 60 feet who can see or hear the Bard; one Bardic Inspiration die per creature; one-hour die ownership; d6 grant and Charisma-modifier use pool minimum; spending the Bardic Inspiration die after an already-failed attack roll, Saving Throw, or Ability Check | later-level Bardic Inspiration die size increases beyond d6 (SRDINV78) |
+| `monk_martial_arts` | srd-5.2.1 | `unit-feature.martial-arts-attack-projection` | while unarmored and not wielding a Shield, and unarmed or wielding only Monk weapons, eligible Unarmed Strikes and Monk weapons may use Dexterity instead of Strength for attack and damage rolls; eligible Unarmed Strikes and eligible one-die Monk weapons may replace lower damage dice with the level-1 d6 Martial Arts die; eligible promoted Unarmed Strike Grapple and Shove save DCs may use Dexterity through the projected Unarmed Strike ability modifier | Bonus Action Unarmed Strike after taking the Attack action (Task 280); later-level Martial Arts die size increases beyond d6 (SRDINV78) |
 | `chill_touch` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | combatant-target melee spell attack damage; cantrip damage scaling; hit-applied target can't regain Hit Points until the end of the caster's next turn; readied Action-time spell release | non-combatant target eligibility for the SRD generic target wording (SRDINV34) |
 | `faerie_fire` | srd-5.2.1 | `spell.invocation-attack-roll-advantage-save` | 20-foot point-origin Cube affected-creature boundary with table-supplied area membership; Dexterity save-gated affected creatures; Concentration-owned outline effect that grants attack-roll Advantage against failed-save affected creatures when the attacker can see them and denies benefits from the Invisible condition | object outline and object attack-roll Advantage (SRDINV58C); Dim Light emitted by affected creatures and objects (SRDINV70A) |
 | `feather_fall` | srd-5.2.1 | `spell.invocation-feather-fall-mitigation` | caller-supplied falling Reaction trigger for the caster or a visible creature within 60 feet; up-to-five falling creature target admission using caller-supplied falling and range facts; Reaction and level-1 Spell Slot spend; one-minute per-target Feather Fall mitigation effect; active 60-foot-per-round descent-rate cap projection; caller-supplied landing cleanup that ends the landed target's mitigation, emits no-fall-damage outcome, and suppresses Falling-Prone when Feather Fall prevents damage | fall-distance derivation, map elevation, and landing geometry simulation remain outside the runtime boundary (SRDINV55) |
@@ -832,6 +833,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | --- | --- | --- | --- | --- |
 | `bard_bardic_inspiration` | `unit-feature.bardic-inspiration-grant`, `unit-feature.bardic-inspiration-failed-d20-test` | SRDINV72A | `packages/battle-runtime/src/unit-profile-admission.test.ts` | later-level Bardic Inspiration die size increases beyond d6 (SRDINV78) |
 | `bard_bardic_inspiration` | `unit-feature.bardic-inspiration-grant`, `unit-feature.bardic-inspiration-failed-d20-test` | SRDINV72B | `packages/battle-runtime/src/index.test.ts` | later-level Bardic Inspiration die size increases beyond d6 (SRDINV78) |
+| `monk_martial_arts` | `unit-feature.martial-arts-attack-projection` | SRDINV73A | `packages/battle-runtime/src/unit-profile-admission.test.ts` | Bonus Action Unarmed Strike after taking the Attack action (Task 280); later-level Martial Arts die size increases beyond d6 (SRDINV78) |
 | `chill_touch` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV64 | `packages/battle-runtime/src/unit-profile-admission.test.ts` | non-combatant target eligibility for the SRD generic target wording (SRDINV34) |
 | `faerie_fire` | `spell.invocation-attack-roll-advantage-save` | SRDINV30E | `packages/battle-runtime/src/unit-profile-admission.test.ts` | object outline and object attack-roll Advantage (SRDINV58C); Dim Light emitted by affected creatures and objects (SRDINV70A) |
 | `feather_fall` | `spell.invocation-feather-fall-mitigation` | SRDINV56A | `packages/battle-runtime/src/feather-fall-reaction-spell.test.ts` | fall-distance derivation, map elevation, and landing geometry simulation remain outside the runtime boundary (SRDINV55) |
@@ -888,7 +890,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `cleric_divine_order` | unsupported-profile | Class feature source facts are authored for character creation choices; no promoted battle Unit profile consumes this suborder choice directly. |
 | `druid_druidic` | unsupported-profile | Language, hidden-message, and prepared-spell source facts are authored; exploration/language execution is not promoted as a battle Unit profile. |
 | `druid_primal_order` | unsupported-profile | Class feature source facts are authored for character creation choices; no promoted battle Unit profile consumes this suborder choice directly. |
-| `monk_martial_arts` | unsupported-profile | Class feature source facts are authored for downstream Monk feature projection; Martial Arts is not currently a standalone promoted battle Unit profile. |
+| `monk_martial_arts` | profile-subset-supported | supported subset: while unarmored and not wielding a Shield, and unarmed or wielding only Monk weapons, eligible Unarmed Strikes and Monk weapons may use Dexterity instead of Strength for attack and damage rolls; eligible Unarmed Strikes and eligible one-die Monk weapons may replace lower damage dice with the level-1 d6 Martial Arts die; eligible promoted Unarmed Strike Grapple and Shove save DCs may use Dexterity through the projected Unarmed Strike ability modifier; deferred: Bonus Action Unarmed Strike after taking the Attack action (Task 280); later-level Martial Arts die size increases beyond d6 (SRDINV78) |
 | `ranger_favored_enemy` | unsupported-profile | Prepared spell and free-cast source facts are authored; Hunter's Mark spell execution is outside this class-feature Unit profile. |
 | `rogue_expertise` | unsupported-profile | Class feature source facts are authored for character creation skill Expertise choices; no promoted battle Unit profile consumes this choice directly. |
 | `rogue_thieves_cant` | unsupported-profile | Language source facts are authored; exploration/language execution is not promoted as a battle Unit profile. |
@@ -932,8 +934,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
-| srd-5.2.1 | unassigned | unsupported-profile | 47 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `monk_martial_arts`, `ranger_favored_enemy`, `rogue_expertise`, `rogue_thieves_cant`, `sorcerer_innate_sorcery`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `mastery_sap`, `orc_darkvision`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `minor_illusion`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
-| srd-5.2.1 | unassigned | profile-subset-supported | 14 | `bard_bardic_inspiration`, `chill_touch`, `faerie_fire`, `feather_fall`, `grease`, `hunters_mark`, `jump`, `light`, `protection_from_evil_and_good`, `produce_flame`, `starry_wisp`, `sleep`, `thunderwave`, `charm_person` |
+| srd-5.2.1 | unassigned | unsupported-profile | 46 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `ranger_favored_enemy`, `rogue_expertise`, `rogue_thieves_cant`, `sorcerer_innate_sorcery`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `mastery_sap`, `orc_darkvision`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `minor_illusion`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
+| srd-5.2.1 | unassigned | profile-subset-supported | 15 | `bard_bardic_inspiration`, `monk_martial_arts`, `chill_touch`, `faerie_fire`, `feather_fall`, `grease`, `hunters_mark`, `jump`, `light`, `protection_from_evil_and_good`, `produce_flame`, `starry_wisp`, `sleep`, `thunderwave`, `charm_person` |
 | srd-5.2.1 | QCORE10 | needs-surface-widening | 1 | `fire_bolt` |
 
 ## Profile Claims By Task
@@ -1062,6 +1064,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 | SRDINV53 | completed-runtime-parity | `spell.invocation-jump-movement-replacement` |
 | SRDINV70B | qnt-proof | `spell.invocation-object-light` |
 | SRDINV70B | completed-runtime-parity | `spell.invocation-object-light` |
+| SRDINV73A | qnt-proof | `unit-feature.martial-arts-attack-projection` |
+| SRDINV73A | completed-runtime-parity | `unit-feature.martial-arts-attack-projection` |
 
 ## Supported Profiles Lacking Runtime Parity
 

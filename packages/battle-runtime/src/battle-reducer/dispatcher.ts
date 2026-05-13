@@ -226,6 +226,7 @@ import {
   resolveReleaseReadiedMovementCommand,
   resolveReleaseReadiedSpellCommand,
   resolveSearch,
+  resolveShove,
   resolveShakeAwakeFromSleep,
   resolveStandFromProneCommand,
   resolveStatBlockBonusActionOption,
@@ -581,6 +582,9 @@ export function resolveBattleSubjectInternal(
     if (subject.tag === "action" && subject.action === "grapple") {
       return resolveGrapple({ ...input, subject });
     }
+    if (subject.tag === "action" && subject.action === "shove") {
+      return resolveShove({ ...input, subject });
+    }
     if (subject.tag === "action" && subject.action === "escapeGrapple") {
       return resolveEscapeGrapple({ ...input, subject });
     }
@@ -837,6 +841,7 @@ export function standardActionKindForSubject(
     Match.when("ready", () => "ready" as const),
     Match.when("search", () => "search" as const),
     Match.when("grapple", () => "attack" as const),
+    Match.when("shove", () => "attack" as const),
     Match.when("escapeGrapple", () => "attack" as const),
     Match.when("escapeSpellRestraint", () => "utilize" as const),
     Match.exhaustive,

@@ -9,6 +9,7 @@ import type {
   ActionEconomyState,
   RuntimeActionResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
+import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 
 import {
   actionRestrictionAllows,
@@ -77,6 +78,7 @@ import {
 } from "./creature-state-leaves.ts";
 
 import {
+  battleCreatureStateWithKnockOutPreservedConditions,
   combatantCanTakeActions,
   isCharacterBattleCreatureState,
   literalStatBlockNumber,
@@ -104,6 +106,8 @@ import {
   needsHolesResult,
   searchAbilityCheckHole,
   searchTargetHole,
+  shoveOutcomeHole,
+  shoveTargetHole,
   sleepShakeAwakeTargetHole,
 } from "./hole-helpers.ts";
 
@@ -112,6 +116,7 @@ import {
   effectiveMovementSpeed,
   grappleLinkForTarget,
   representedMovementSpeedKinds,
+  shoveForTarget,
 } from "./movement-speed.ts";
 
 import { invalidResult } from "./result-helpers.ts";
@@ -151,6 +156,7 @@ import type {
   BattleResolutionInputForSubject,
   BattleResolutionResult,
   BattleRolledDiceFill,
+  BattleShovePushOutcome,
   BattleState,
   BattleTargetChoiceHole,
   BattleTargetSpatialFact,
@@ -165,6 +171,8 @@ import type {
   HideBattleResolutionInput,
   MultiattackBattleResolutionInput,
   SearchBattleResolutionInput,
+  ShoveBattleResolutionInput,
+  ShoveFillSet,
   SpellMarkedDamageRider,
   SpellAttackDamageComponent,
   StatBlockBattleCreatureState,
@@ -186,6 +194,8 @@ import {
   HIDE_DC,
   SEARCH_ABILITY_CHECK_HOLE_ID,
   SEARCH_TARGET_HOLE_ID,
+  SHOVE_OUTCOME_HOLE_ID,
+  SHOVE_TARGET_HOLE_ID,
   SLEEP_SHAKE_AWAKE_TARGET_HOLE_ID,
   actorHasClassFeatureExtraAttackActionResource,
   actorHasStatBlockMultiattackActionResource,
@@ -1292,6 +1302,105 @@ export function resolveGrapple(
   };
 }
 
+export function resolveShove(
+  input: ShoveBattleResolutionInput,
+): BattleResolutionResult {
+  const fillSet = shoveFillSet(input.fills);
+  if (fillSet.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", fillSet.message);
+  }
+  if (fillSet.targetId === undefined) {
+    return needsHolesResult(input.state, input.subject, [
+      shoveTargetHole(input.state, input.subject.actorId),
+    ]);
+  }
+  const targetFill = input.fills.find((fill) => fill.kind === "targetChoice");
+  if (targetFill?.holeId !== SHOVE_TARGET_HOLE_ID) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Shove target fill does not match the requested hole.",
+    );
+  }
+  const shove = shoveForTarget(
+    input.state,
+    input.subject.actorId,
+    fillSet.targetId,
+    fillSet.targetSpatialFacts,
+  );
+  if (shove.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", shove.message);
+  }
+  if (fillSet.outcome === undefined) {
+    return needsHolesResult(input.state, input.subject, [
+      shoveOutcomeHole({
+        actorId: input.subject.actorId,
+        targetId: fillSet.targetId,
+        dc: shove.dc,
+      }),
+    ]);
+  }
+  if (fillSet.outcome.holeId !== SHOVE_OUTCOME_HOLE_ID) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Shove outcome fill does not match the requested hole.",
+    );
+  }
+  if (
+    !fillSet.outcome.value.succeeded &&
+    fillSet.outcome.value.failedEffect.kind === "pushAway"
+  ) {
+    const pushValidation = validateShovePushDisposition(
+      fillSet.outcome.value.failedEffect.disposition,
+    );
+    if (pushValidation !== null) {
+      return invalidResult(input.state, "invalidFill", pushValidation);
+    }
+  }
+  if (
+    actorHasStatBlockMultiattackActionResource(
+      input.state,
+      input.subject.actorId,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Shove is not available during a Stat Block Multiattack dispatch.",
+    );
+  }
+  const spent = spendAction(input.state.currentTurnResources, "attack");
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Shove is no longer available for the current actor.",
+    );
+  }
+  const savingThrowExtendedState = extendSavingThrowOngoingFeatures(
+    input.state,
+    input.subject.actorId,
+    [fillSet.targetId],
+  );
+  const afterEffect = applyShoveOutcome({
+    state: {
+      ...savingThrowExtendedState,
+      currentTurnResources: spent.right,
+    },
+    targetId: fillSet.targetId,
+    outcome: fillSet.outcome.value,
+  });
+  return {
+    tag: "resolved",
+    state: afterEffect.state,
+    snapshot: snapshotBattle(afterEffect.state),
+    ...(afterEffect.shovePushes.length === 0
+      ? {}
+      : { shovePushes: afterEffect.shovePushes }),
+  };
+}
+
 export function resolveEscapeGrapple(
   input: EscapeGrappleBattleResolutionInput,
 ): BattleResolutionResult {
@@ -1585,6 +1694,63 @@ export function spellSaveDcForCaster(
   );
 }
 
+function validateShovePushDisposition(
+  disposition: BattleShovePushOutcome["disposition"],
+): string | null {
+  if (Number(disposition.distanceFeet) !== 5) {
+    return "Shove push disposition must use the action's 5-foot distance.";
+  }
+  if (disposition.provokesOpportunityAttacks !== false) {
+    return "Shove push disposition must not provoke Opportunity Attacks.";
+  }
+  return null;
+}
+
+function applyShoveOutcome(input: {
+  readonly state: BattleState;
+  readonly targetId: CombatantId;
+  readonly outcome: Extract<
+    BattleFill,
+    { readonly kind: "shoveOutcome" }
+  >["value"];
+}): {
+  readonly state: BattleState;
+  readonly shovePushes: readonly BattleShovePushOutcome[];
+} {
+  if (input.outcome.succeeded) {
+    return { state: input.state, shovePushes: [] };
+  }
+  return Match.value(input.outcome.failedEffect).pipe(
+    Match.when({ kind: "prone" }, () => {
+      const target = input.state.combatants.get(input.targetId);
+      if (target === undefined) {
+        return { state: input.state, shovePushes: [] };
+      }
+      const state = {
+        ...input.state,
+        combatants: new Map(input.state.combatants).set(
+          input.targetId,
+          battleCreatureStateWithKnockOutPreservedConditions(
+            target,
+            applyCondition(target.conditions, "prone"),
+          ),
+        ),
+      };
+      return { state, shovePushes: [] };
+    }),
+    Match.when({ kind: "pushAway" }, (effect) => ({
+      state: input.state,
+      shovePushes: [
+        {
+          targetId: input.targetId,
+          disposition: effect.disposition,
+        },
+      ],
+    })),
+    Match.exhaustive,
+  );
+}
+
 export function grappleFillSet(fills: readonly BattleFill[]): GrappleFillSet {
   let targetId: CombatantId | undefined;
   let targetSpatialFacts: readonly BattleTargetSpatialFact[] = [];
@@ -1613,6 +1779,39 @@ export function grappleFillSet(fills: readonly BattleFill[]): GrappleFillSet {
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the Grapple replay holes.`,
+    };
+  }
+  return { tag: "ok", targetId, targetSpatialFacts, outcome };
+}
+
+export function shoveFillSet(fills: readonly BattleFill[]): ShoveFillSet {
+  let targetId: CombatantId | undefined;
+  let targetSpatialFacts: readonly BattleTargetSpatialFact[] = [];
+  let outcome:
+    | Extract<BattleFill, { readonly kind: "shoveOutcome" }>
+    | undefined;
+  for (const fill of fills) {
+    if (fill.kind === "targetChoice") {
+      if (targetId !== undefined) {
+        return { tag: "invalid", message: "Shove target was filled twice." };
+      }
+      targetId = fill.value;
+      targetSpatialFacts = fill.spatialFacts ?? [];
+      continue;
+    }
+    if (fill.kind === "shoveOutcome") {
+      if (outcome !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Shove outcome was filled twice.",
+        };
+      }
+      outcome = fill;
+      continue;
+    }
+    return {
+      tag: "invalid",
+      message: `Fill ${fill.kind} does not match the Shove replay holes.`,
     };
   }
   return { tag: "ok", targetId, targetSpatialFacts, outcome };

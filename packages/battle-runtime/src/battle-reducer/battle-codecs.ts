@@ -1409,6 +1409,14 @@ export const BattleHoleSchema = Schema.Union(
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
+    kind: Schema.Literal("shoveOutcome"),
+    label: Schema.String,
+    actorId: CombatantId,
+    targetId: CombatantId,
+    dc: DifficultyClass,
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
     kind: Schema.Literal("attackDamageDisposition"),
     label: Schema.String,
     attackerId: CombatantId,
@@ -1664,6 +1672,11 @@ type BattleFillEncoded =
         | {
             readonly kind: "grappleTargetWithinReach";
             readonly grapplerId: string;
+            readonly targetId: string;
+          }
+        | {
+            readonly kind: "shoveTargetWithinReach";
+            readonly shoverId: string;
             readonly targetId: string;
           }
         | {
@@ -1998,6 +2011,33 @@ type BattleFillEncoded =
       readonly value: {
         readonly succeeded: boolean;
       };
+    }
+  | {
+      readonly kind: "shoveOutcome";
+      readonly holeId: string;
+      readonly value:
+        | { readonly succeeded: true }
+        | {
+            readonly succeeded: false;
+            readonly failedEffect:
+              | { readonly kind: "prone" }
+              | {
+                  readonly kind: "pushAway";
+                  readonly disposition:
+                    | {
+                        readonly kind: "pushed";
+                        readonly distanceFeet: number;
+                        readonly destinationId: string;
+                        readonly provokesOpportunityAttacks: false;
+                      }
+                    | {
+                        readonly kind: "blocked";
+                        readonly distanceFeet: number;
+                        readonly reason: "blocked" | "noLegalDestination";
+                        readonly provokesOpportunityAttacks: false;
+                      };
+                };
+          };
     };
 
 export const BattleFillSchema: Schema.Schema<
@@ -2149,6 +2189,11 @@ export const BattleFillSchema: Schema.Schema<
             Schema.Struct({
               kind: Schema.Literal("grappleTargetWithinReach"),
               grapplerId: CombatantId,
+              targetId: CombatantId,
+            }),
+            Schema.Struct({
+              kind: Schema.Literal("shoveTargetWithinReach"),
+              shoverId: CombatantId,
               targetId: CombatantId,
             }),
             Schema.Struct({
@@ -2532,6 +2577,27 @@ export const BattleFillSchema: Schema.Schema<
       value: Schema.Struct({
         succeeded: Schema.Boolean,
       }),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("shoveOutcome"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Union(
+        Schema.Struct({
+          succeeded: Schema.Literal(true),
+        }),
+        Schema.Struct({
+          succeeded: Schema.Literal(false),
+          failedEffect: Schema.Union(
+            Schema.Struct({
+              kind: Schema.Literal("prone"),
+            }),
+            Schema.Struct({
+              kind: Schema.Literal("pushAway"),
+              disposition: BattleThunderwavePushDispositionSchema,
+            }),
+          ),
+        }),
+      ),
     }),
   ),
 ).annotations({ identifier: "BattleFill" });

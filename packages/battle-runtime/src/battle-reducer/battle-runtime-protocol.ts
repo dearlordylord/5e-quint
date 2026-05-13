@@ -141,6 +141,14 @@ export const GRAPPLE_OUTCOME_HOLE_ID = holeId("battle:grapple:outcome");
 export const GRAPPLE_OUTCOME_HOLE_INSTANCE = holeInstanceKey(
   "battle:grapple:outcome",
 );
+export const SHOVE_TARGET_HOLE_ID = holeId("battle:shove:target");
+export const SHOVE_TARGET_HOLE_INSTANCE = holeInstanceKey(
+  "battle:shove:target",
+);
+export const SHOVE_OUTCOME_HOLE_ID = holeId("battle:shove:outcome");
+export const SHOVE_OUTCOME_HOLE_INSTANCE = holeInstanceKey(
+  "battle:shove:outcome",
+);
 export const ESCAPE_GRAPPLE_OUTCOME_HOLE_ID = holeId(
   "battle:escape-grapple:outcome",
 );
@@ -207,6 +215,16 @@ export type GrappleFillSet =
       readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
       readonly outcome:
         | Extract<BattleFill, { readonly kind: "grappleOutcome" }>
+        | undefined;
+    }
+  | { readonly tag: "invalid"; readonly message: string };
+export type ShoveFillSet =
+  | {
+      readonly tag: "ok";
+      readonly targetId: CombatantId | undefined;
+      readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
+      readonly outcome:
+        | Extract<BattleFill, { readonly kind: "shoveOutcome" }>
         | undefined;
     }
   | { readonly tag: "invalid"; readonly message: string };

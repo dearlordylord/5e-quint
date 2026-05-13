@@ -39,6 +39,10 @@ import {
   SEARCH_ABILITY_CHECK_HOLE_INSTANCE,
   SEARCH_TARGET_HOLE_ID,
   SEARCH_TARGET_HOLE_INSTANCE,
+  SHOVE_OUTCOME_HOLE_ID,
+  SHOVE_OUTCOME_HOLE_INSTANCE,
+  SHOVE_TARGET_HOLE_ID,
+  SHOVE_TARGET_HOLE_INSTANCE,
   SLEEP_SHAKE_AWAKE_TARGET_HOLE_ID,
   SLEEP_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
   snapshotBattle,
@@ -49,6 +53,7 @@ import {
   type BattleCreatureState,
   type BattleGrappleLink,
   type BattleGrappleOutcomeHole,
+  type BattleShoveOutcomeHole,
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
@@ -57,6 +62,7 @@ import {
 import {
   grappleLinkForTarget,
   representedMovementSpeedKinds,
+  shoveForTarget,
 } from "./movement-speed.ts";
 import { combatantCanTakeActions } from "./creature-state.ts";
 import { sleepShakeAwakeTargetChoices } from "./spell-condition-effects-helpers.ts";
@@ -177,6 +183,20 @@ export function grappleTargetHole(
   };
 }
 
+export function shoveTargetHole(
+  state: BattleState,
+  actorId: CombatantId,
+): BattleTargetChoiceHole {
+  return {
+    kind: "targetChoice",
+    holeId: SHOVE_TARGET_HOLE_ID,
+    holeInstanceKey: SHOVE_TARGET_HOLE_INSTANCE,
+    label: "Shove target",
+    requiresTableSpatialFact: true,
+    choices: shoveTargetChoices(state, actorId),
+  };
+}
+
 export function sleepShakeAwakeTargetHole(
   state: BattleState,
   actorId: CombatantId,
@@ -203,6 +223,22 @@ export function grappleOutcomeHole(
     targetId: link.targetId,
     dc: link.escapeDc,
     mode: "grappleSave",
+  };
+}
+
+export function shoveOutcomeHole(input: {
+  readonly actorId: CombatantId;
+  readonly targetId: CombatantId;
+  readonly dc: DifficultyClass;
+}): BattleShoveOutcomeHole {
+  return {
+    kind: "shoveOutcome",
+    holeId: SHOVE_OUTCOME_HOLE_ID,
+    holeInstanceKey: SHOVE_OUTCOME_HOLE_INSTANCE,
+    label: "Shove saving throw",
+    actorId: input.actorId,
+    targetId: input.targetId,
+    dc: input.dc,
   };
 }
 
@@ -475,5 +511,25 @@ export function grappleTargetChoices(
       },
     ]);
     return link.tag === "ok";
+  });
+}
+
+export function shoveTargetChoices(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly CombatantId[] {
+  const actor = state.combatants.get(actorId);
+  if (actor?.origin.kind !== "character") {
+    return [];
+  }
+  return [...state.combatants.keys()].filter((targetId) => {
+    const shove = shoveForTarget(state, actorId, targetId, [
+      {
+        kind: "shoveTargetWithinReach",
+        shoverId: actorId,
+        targetId,
+      },
+    ]);
+    return shove.tag === "ok";
   });
 }

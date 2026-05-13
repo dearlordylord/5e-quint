@@ -141,12 +141,24 @@ export function battleCreatureInitFromCharacterBuild(
   if (Either.isLeft(armorClass)) {
     return battleCreatureInitIssue(armorClass.left.message);
   }
-  const attack = characterAttackActionOption(input.build, input.unitLibrary);
+  const classLevels = characterBattleClassLevels(
+    input.build,
+    input.unitLibrary,
+  );
+  if (Either.isLeft(classLevels)) {
+    return battleCreatureInitIssue(classLevels.left.message);
+  }
+  const attack = characterAttackActionOption(
+    input.build,
+    input.unitLibrary,
+    classLevels.right,
+  );
   if (Either.isLeft(attack))
     return battleCreatureInitIssue(attack.left.message);
   const offHandAttack = characterOffHandAttackActionOption(
     input.build,
     input.unitLibrary,
+    classLevels.right,
   );
   if (Either.isLeft(offHandAttack)) {
     return battleCreatureInitIssue(offHandAttack.left.message);
@@ -159,13 +171,6 @@ export function battleCreatureInitFromCharacterBuild(
   const resources = characterBattleResources(input.build, input.unitLibrary);
   if (Either.isLeft(resources)) {
     return battleCreatureInitIssue(resources.left.message);
-  }
-  const classLevels = characterBattleClassLevels(
-    input.build,
-    input.unitLibrary,
-  );
-  if (Either.isLeft(classLevels)) {
-    return battleCreatureInitIssue(classLevels.left.message);
   }
   const proficiencies = characterBuildProficiencies(
     input.build,
@@ -188,6 +193,14 @@ export function battleCreatureInitFromCharacterBuild(
         });
   if (spellcasting !== undefined && Either.isLeft(spellcasting)) {
     return battleCreatureInitIssue(spellcasting.left.message);
+  }
+  const unarmedStrike = characterBaseUnarmedStrikeActionOption(
+    input.build,
+    input.unitLibrary,
+    classLevels.right,
+  );
+  if (Either.isLeft(unarmedStrike)) {
+    return battleCreatureInitIssue(unarmedStrike.left.message);
   }
 
   return Either.right({
@@ -224,7 +237,7 @@ export function battleCreatureInitFromCharacterBuild(
         : { zeroHpLifecycle: input.zeroHpLifecycle }),
       selectedLoadout,
       attack: attack.right,
-      unarmedStrike: characterBaseUnarmedStrikeActionOption(input.build),
+      unarmedStrike: unarmedStrike.right,
       ...(offHandAttack.right === undefined
         ? {}
         : { offHandAttack: offHandAttack.right }),

@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.martial-arts-attack-projection unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
 
 module unitFeatureProcedureProfiles {
   import hitPointDamage.* from "./hit-point-damage"
@@ -16,6 +16,7 @@ module unitFeatureProcedureProfiles {
   // - Classes/Rogue.md: Cunning Action, Sneak Attack, Evasion, Uncanny Dodge.
   // - Classes/Barbarian.md: Rage, Reckless Attack.
   // - Classes/Bard.md: Bardic Inspiration and College of Lore Cutting Words.
+  // - Classes/Monk.md: Martial Arts attack projection, Deflect Attacks.
   // - Feats.md: Archery, Defense, Savage Attacker, Boon of Combat Prowess.
   // - Character-Origins.md: Orc Adrenaline Rush and Relentless Endurance.
   // - Playing-the-Game.md: Bonus Actions, Reactions, Attack Rolls, Critical Hits,
@@ -345,6 +346,35 @@ module unitFeatureProcedureProfiles {
     effectiveDamage: int,
   }
 
+  type MartialArtsAttackForm =
+    | MartialArtsUnarmedStrike
+    | MartialArtsMonkWeapon
+    | MartialArtsOtherWeapon
+
+  type MartialArtsEligibilityFacts = {
+    unarmored: bool,
+    wieldingShield: bool,
+    attackForm: MartialArtsAttackForm,
+  }
+
+  type MartialArtsAttackProjectionFacts = {
+    eligibility: MartialArtsEligibilityFacts,
+    strengthModifier: int,
+    dexterityModifier: int,
+    normalDamageDice: int,
+    normalDamageDieSize: int,
+    proficiencyBonus: int,
+  }
+
+  type MartialArtsAttackProjectionResult = {
+    eligible: bool,
+    attackAbilityModifier: int,
+    damageAbilityModifier: int,
+    damageDice: int,
+    damageDieSize: int,
+    unarmedStrikeSaveDc: int,
+  }
+
   type AttackRollMissToHitReplacementFacts = {
     naturalD20: int,
     total: int,
@@ -557,6 +587,64 @@ module unitFeatureProcedureProfiles {
       weaponDamageDiceRolledPerCandidate: savageAttackerCandidateDiceCount(facts),
       selectedWeaponDamageDiceTotal: selectedTotal,
       effectiveDamage: nonnegative(selectedTotal + facts.damageModifier),
+    }
+  }
+
+  pure def martialArtsAttackEligible(facts: MartialArtsEligibilityFacts): bool =
+    facts.unarmored and
+    not(facts.wieldingShield) and
+    (
+      facts.attackForm == MartialArtsUnarmedStrike or
+      facts.attackForm == MartialArtsMonkWeapon
+    )
+
+  pure def martialArtsChosenAbilityModifier(
+    eligible: bool,
+    strengthModifier: int,
+    dexterityModifier: int
+  ): int =
+    if (eligible and dexterityModifier >= strengthModifier)
+      dexterityModifier
+    else
+      strengthModifier
+
+  pure def martialArtsDamageDieSize(
+    eligible: bool,
+    normalDamageDice: int,
+    normalDamageDieSize: int
+  ): int =
+    if (
+      eligible and
+      (normalDamageDice == 0 or normalDamageDice == 1) and
+      normalDamageDieSize < 6
+    )
+      6
+    else
+      normalDamageDieSize
+
+  pure def resolveMartialArtsAttackProjection(
+    facts: MartialArtsAttackProjectionFacts
+  ): MartialArtsAttackProjectionResult = {
+    val eligible = martialArtsAttackEligible(facts.eligibility)
+    val chosenModifier = martialArtsChosenAbilityModifier(
+      eligible,
+      facts.strengthModifier,
+      facts.dexterityModifier
+    )
+    val damageDieSize = martialArtsDamageDieSize(
+      eligible,
+      facts.normalDamageDice,
+      facts.normalDamageDieSize
+    )
+    val damageDice =
+      if (eligible and facts.normalDamageDice == 0) 1 else facts.normalDamageDice
+    {
+      eligible: eligible,
+      attackAbilityModifier: chosenModifier,
+      damageAbilityModifier: chosenModifier,
+      damageDice: damageDice,
+      damageDieSize: damageDieSize,
+      unarmedStrikeSaveDc: 8 + chosenModifier + facts.proficiencyBonus,
     }
   }
 
@@ -1907,6 +1995,91 @@ module unitFeatureProcedureProfiles {
       assert(result.turn.dashMovementBonusFeet == 30),
       assert(result.pool.usesRemaining == 0),
       assert(result.temporaryHitPoints == 5),
+    }
+  }
+
+  run test_martial_arts_projects_dexterity_d6_and_grapple_shove_dc = {
+    val unarmed = resolveMartialArtsAttackProjection({
+      eligibility: {
+        unarmored: true,
+        wieldingShield: false,
+        attackForm: MartialArtsUnarmedStrike,
+      },
+      strengthModifier: 1,
+      dexterityModifier: 3,
+      normalDamageDice: 0,
+      normalDamageDieSize: 1,
+      proficiencyBonus: 2,
+    })
+    val monkWeapon = resolveMartialArtsAttackProjection({
+      eligibility: {
+        unarmored: true,
+        wieldingShield: false,
+        attackForm: MartialArtsMonkWeapon,
+      },
+      strengthModifier: 1,
+      dexterityModifier: 3,
+      normalDamageDice: 1,
+      normalDamageDieSize: 4,
+      proficiencyBonus: 2,
+    })
+    all {
+      assert(unarmed.attackAbilityModifier == 3),
+      assert(unarmed.damageAbilityModifier == 3),
+      assert(unarmed.damageDice == 1),
+      assert(unarmed.damageDieSize == 6),
+      assert(unarmed.unarmedStrikeSaveDc == 13),
+      assert(monkWeapon.damageDice == 1),
+      assert(monkWeapon.damageDieSize == 6),
+      assert(monkWeapon.unarmedStrikeSaveDc == 13),
+    }
+  }
+
+  run test_martial_arts_rejects_armor_shield_and_non_monk_weapons = {
+    val armored = resolveMartialArtsAttackProjection({
+      eligibility: {
+        unarmored: false,
+        wieldingShield: false,
+        attackForm: MartialArtsUnarmedStrike,
+      },
+      strengthModifier: 2,
+      dexterityModifier: 4,
+      normalDamageDice: 0,
+      normalDamageDieSize: 1,
+      proficiencyBonus: 2,
+    })
+    val shielded = resolveMartialArtsAttackProjection({
+      eligibility: {
+        unarmored: true,
+        wieldingShield: true,
+        attackForm: MartialArtsMonkWeapon,
+      },
+      strengthModifier: 2,
+      dexterityModifier: 4,
+      normalDamageDice: 1,
+      normalDamageDieSize: 4,
+      proficiencyBonus: 2,
+    })
+    val otherWeapon = resolveMartialArtsAttackProjection({
+      eligibility: {
+        unarmored: true,
+        wieldingShield: false,
+        attackForm: MartialArtsOtherWeapon,
+      },
+      strengthModifier: 2,
+      dexterityModifier: 4,
+      normalDamageDice: 1,
+      normalDamageDieSize: 4,
+      proficiencyBonus: 2,
+    })
+    all {
+      assert(not(armored.eligible)),
+      assert(armored.attackAbilityModifier == 2),
+      assert(armored.damageDieSize == 1),
+      assert(not(shielded.eligible)),
+      assert(shielded.damageDieSize == 4),
+      assert(not(otherWeapon.eligible)),
+      assert(otherWeapon.attackAbilityModifier == 2),
     }
   }
 

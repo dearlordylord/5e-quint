@@ -26,6 +26,7 @@ export const BATTLE_TRACE_HOLE_KINDS = [
   "movement",
   "abilityCheck",
   "grappleOutcome",
+  "shoveOutcome",
   "attackDamageDisposition",
 ] as const satisfies ReadonlyArray<BattleHole["kind"]>;
 
