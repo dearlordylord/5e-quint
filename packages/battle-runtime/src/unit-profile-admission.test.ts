@@ -53,8 +53,9 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT62 fighter_tactical_mind
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT65 bard_cutting_words
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV72A bard_bardic_inspiration
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV75A sorcerer_innate_sorcery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV73A monk_martial_arts
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.martial-arts-attack-projection unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider spell.scalar-buff
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -200,6 +201,7 @@ const rogueUncannyDodgeUnitId = "rogue_uncanny_dodge";
 const rogueSneakAttackUnitId = "rogue_sneak_attack";
 const bardBardicInspirationUnitId = "bard_bardic_inspiration";
 const bardCuttingWordsUnitId = "bard_cutting_words";
+const sorcererInnateSorceryUnitId = "sorcerer_innate_sorcery";
 const monkMartialArtsUnitId = "monk_martial_arts";
 const baneUnitId = "bane";
 const blessUnitId = "bless";
@@ -749,6 +751,43 @@ describe("QMBT65 Cutting Words deterministic Unit profile admission", () => {
             reduction: expect.objectContaining({ dieSize: 8 }),
           }),
         ]),
+      }),
+    );
+  });
+});
+
+describe("SRDINV75A Innate Sorcery deterministic Unit profile admission", () => {
+  test("sorcerer_innate_sorcery is admitted as a fixed-duration Bonus Action activation", () => {
+    const unit = unitLibrary.requireUnit(sorcererInnateSorceryUnitId);
+    const profile = parseSupportedUnitFeatureProfile(unit, [
+      { className: "sorcerer", level: classLevel(1) },
+    ]);
+
+    expect(
+      battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
+    ).toEqual(
+      Either.right({
+        unitId: sorcererInnateSorceryUnitId,
+        supportProfiles: [],
+      }),
+    );
+    expect(profile).toEqual(
+      expect.objectContaining({
+        kind: "ongoingFeature",
+        unit,
+        activationTrigger: "bonusAction",
+        spendsUse: true,
+        lifecycle: {
+          kind: "fixedDuration",
+          maximumDurationRounds: 10,
+          earlyEndConditions: [],
+          earlyEndArmorCategories: [],
+          extensionTriggers: [],
+        },
+        actionRestrictions: [],
+        rollModifiers: [],
+        damageModifiers: [],
+        resistances: [],
       }),
     );
   });

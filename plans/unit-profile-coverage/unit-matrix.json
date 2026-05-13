@@ -72,23 +72,23 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 53,
-      "numerator": 53,
+      "denominator": 54,
+      "numerator": 54,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 53,
-      "numerator": 52,
+      "denominator": 54,
+      "numerator": 53,
       "percent": "98.1%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 53,
-      "numerator": 53,
+      "denominator": 54,
+      "numerator": 54,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 53,
-      "numerator": 53,
+      "denominator": 54,
+      "numerator": 54,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -482,6 +482,36 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.innate-sorcery-activation",
+      "profileKind": "persistent-effect",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "Sorcerer class feature Unit authored with activation timing, fixed two-use Long Rest resource, and one-minute ongoing lifecycle. Spell save DC and Sorcerer spell attack Advantage projection are represented by the same authored Unit but deferred to unit-feature.innate-sorcery-spell-projection.",
+      "taskRefs": [
+        "SRDINV75A"
+      ],
+      "title": "Unit feature spends a Bonus Action and Long Rest use to start a one-minute Innate Sorcery occurrence",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-feature-bridge.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/index.test.ts"
         }
       ]
     },
@@ -2871,6 +2901,22 @@
         "unit-feature.weapon-mastery-sap"
       ],
       "taskId": "SRDINV74A"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted Unit feature Quint facts cover Innate Sorcery Bonus Action activation, two-use Long Rest pool spending, duplicate active rejection, and one-minute occurrence state.",
+      "profileIds": [
+        "unit-feature.innate-sorcery-activation"
+      ],
+      "taskId": "SRDINV75A"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover sorcerer_innate_sorcery profile recognition, Bonus Action/resource spending, Sorcerer ownership, exhausted-use rejection, one-minute active occurrence creation, and turn-based expiry.",
+      "profileIds": [
+        "unit-feature.innate-sorcery-activation"
+      ],
+      "taskId": "SRDINV75A"
     }
   ],
   "units": [
@@ -4459,14 +4505,71 @@
         "status": "installed"
       },
       "claim": {
-        "reason": "Class feature source facts are authored; Sorcerer spell save DC and spell attack projection is not promoted as a battle Unit profile yet.",
-        "tag": "unsupported-profile"
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "SRDINV75B",
+            "mechanic": "while-active +1 Sorcerer spell save DC projection"
+          },
+          {
+            "followUpTaskId": "SRDINV75B",
+            "mechanic": "while-active Advantage on Sorcerer spell attack rolls"
+          }
+        ],
+        "profileIds": [
+          "unit-feature.innate-sorcery-activation"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Bonus Action activation",
+          "two-use Long Rest resource spending",
+          "one-minute active occurrence lifecycle"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV75A"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "unit-feature.innate-sorcery-activation",
+          "profileKind": "persistent-effect",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "Sorcerer class feature Unit authored with activation timing, fixed two-use Long Rest resource, and one-minute ongoing lifecycle. Spell save DC and Sorcerer spell attack Advantage projection are represented by the same authored Unit but deferred to unit-feature.innate-sorcery-spell-projection.",
+          "taskRefs": [
+            "SRDINV75A"
+          ],
+          "title": "Unit feature spends a Bonus Action and Long Rest use to start a one-minute Innate Sorcery occurrence",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-feature-bridge.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/sorcerer_innate_sorcery.json",
       "unitId": "sorcerer_innate_sorcery"
     },

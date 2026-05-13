@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.martial-arts-attack-projection unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.zero-hit-point-replacement
 import { Match } from "effect";
 import * as Either from "effect/Either";
 import {
@@ -2403,10 +2403,11 @@ function parseOngoingFeatureUnitFeatureProfile(
   const effects = phase.effects.flatMap((effect): readonly EffectAtom[] =>
     isEffectAtom(effect) ? [effect] : [],
   );
-  if (effects.length !== phase.effects.length) {
-    return null;
-  }
-  const parsedEffects = parseOngoingFeatureEffects(effects, classLevels, unit);
+  const parsedEffects =
+    effects.length === phase.effects.length
+      ? (parseOngoingFeatureEffects(effects, classLevels, unit) ??
+        parseInnateSorceryActivationProjectionEffects(unit, phase.effects))
+      : parseInnateSorceryActivationProjectionEffects(unit, phase.effects);
   if (parsedEffects === null) {
     return null;
   }
@@ -2942,8 +2943,89 @@ function parseOngoingFeatureEffects(
   return rollModifiers.length === 0 &&
     damageModifiers.length === 0 &&
     resistances.length === 0
-    ? null
+    ? parseInnateSorceryActivationProjectionEffects(unit, effects)
     : { rollModifiers, damageModifiers, resistances };
+}
+
+function parseInnateSorceryActivationProjectionEffects(
+  unit: UnitRecord,
+  effects: readonly { readonly kind: string }[],
+): Pick<
+  Extract<SupportedUnitFeatureProfile, { readonly kind: "ongoingFeature" }>,
+  "rollModifiers" | "damageModifiers" | "resistances"
+> | null {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.className !== "sorcerer" ||
+    effects.length !== 2
+  ) {
+    return null;
+  }
+  const saveDc = effects.find((effect) => effect.kind === "modify_save_dc");
+  const attackRollAdvantage = effects.find(
+    (effect) => effect.kind === "modify_roll_advantage",
+  );
+  if (
+    !isInnateSorcerySaveDcEffect(saveDc) ||
+    !isInnateSorcerySpellAttackAdvantageEffect(attackRollAdvantage)
+  ) {
+    return null;
+  }
+  return { rollModifiers: [], damageModifiers: [], resistances: [] };
+}
+
+function isInnateSorcerySaveDcEffect(
+  effect: { readonly kind: string } | undefined,
+): effect is {
+  readonly kind: "modify_save_dc";
+  readonly delta: {
+    readonly kind: "fixed_number";
+    readonly amount: 1;
+    readonly sign: "+";
+  };
+  readonly spellSourceFilter: { readonly className: "sorcerer" };
+} {
+  return (
+    effect?.kind === "modify_save_dc" &&
+    "delta" in effect &&
+    typeof effect.delta === "object" &&
+    effect.delta !== null &&
+    "kind" in effect.delta &&
+    effect.delta.kind === "fixed_number" &&
+    "amount" in effect.delta &&
+    effect.delta.amount === 1 &&
+    "sign" in effect.delta &&
+    effect.delta.sign === "+" &&
+    "spellSourceFilter" in effect &&
+    typeof effect.spellSourceFilter === "object" &&
+    effect.spellSourceFilter !== null &&
+    "className" in effect.spellSourceFilter &&
+    effect.spellSourceFilter.className === "sorcerer"
+  );
+}
+
+function isInnateSorcerySpellAttackAdvantageEffect(
+  effect: { readonly kind: string } | undefined,
+): effect is {
+  readonly kind: "modify_roll_advantage";
+  readonly mode: "advantage";
+  readonly on: readonly ["spell_attack_roll"];
+  readonly spellSourceFilter: { readonly className: "sorcerer" };
+} {
+  return (
+    effect?.kind === "modify_roll_advantage" &&
+    "mode" in effect &&
+    effect.mode === "advantage" &&
+    "on" in effect &&
+    Array.isArray(effect.on) &&
+    effect.on.length === 1 &&
+    effect.on[0] === "spell_attack_roll" &&
+    "spellSourceFilter" in effect &&
+    typeof effect.spellSourceFilter === "object" &&
+    effect.spellSourceFilter !== null &&
+    "className" in effect.spellSourceFilter &&
+    effect.spellSourceFilter.className === "sorcerer"
+  );
 }
 
 function numericDeltaForClassLevel(

@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.innate-sorcery-activation
 
 module battleRuntimeFeatureBridge {
   import actionTurnProcedures.* from "../shared-algebras/proofs/rule-core/action-turn-procedures"
@@ -20,6 +21,17 @@ module battleRuntimeFeatureBridge {
       reactor: NoConcentration,
     },
   }
+
+  pure def battleRuntimeActivateInnateSorcery(
+    bonusActionAvailable: bool,
+    usesRemaining: int,
+    active: bool,
+  ): InnateSorceryState =
+    activateInnateSorcery({
+      turn: initialTurnProcedureState.with("bonusActionAvailable", bonusActionAvailable),
+      pool: { usesRemaining: usesRemaining, maximumUses: 2 },
+      occurrence: if (active) InnateSorceryOneMinuteDuration else NoInnateSorceryOccurrence,
+    })
 
   pure def battleRuntimeRageDamageBonus(barbarianLevel: int): int =
     rageDamageBonus(barbarianLevel)
@@ -302,6 +314,19 @@ module battleRuntimeFeatureBridge {
       assert(not(battleRuntimeRecklessAttackActivates(false, true, true, true))),
       assert(battleRuntimeRecklessAttackGrantsIncomingAttackAdvantage(true)),
       assert(not(battleRuntimeRecklessAttackGrantsIncomingAttackAdvantage(false))),
+    }
+  }
+
+  run test_innate_sorcery_runtime_projection_uses_feature_profile = {
+    val active = battleRuntimeActivateInnateSorcery(true, 2, false)
+    val exhausted = battleRuntimeActivateInnateSorcery(true, 0, false)
+    val noBonusAction = battleRuntimeActivateInnateSorcery(false, 2, false)
+    all {
+      assert(active.occurrence == InnateSorceryOneMinuteDuration),
+      assert(active.pool.usesRemaining == 1),
+      assert(not(active.turn.bonusActionAvailable)),
+      assert(exhausted.occurrence == NoInnateSorceryOccurrence),
+      assert(noBonusAction.occurrence == NoInnateSorceryOccurrence),
     }
   }
 

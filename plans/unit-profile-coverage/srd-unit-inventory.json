@@ -161,8 +161,8 @@
       "rowsByStatus": {
         "accepted": 214,
         "accepted-no-battle-effect": 69,
-        "battle-runtime-required": 28,
-        "partial-battle-runtime": 41,
+        "battle-runtime-required": 27,
+        "partial-battle-runtime": 42,
         "surface-widening-required": 15
       }
     },
@@ -12885,7 +12885,7 @@
         "state": "installed",
         "unitId": "sorcerer_innate_sorcery"
       },
-      "unitProfileDisposition": "unsupported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -12894,8 +12894,8 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime",
-          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV18 level-1 Sorcerer class-feature support profile; Innate Sorcery is retained through the finalized CharacterBuild feature Unit refs for supported Sorcerer progressions; executable feature behavior remains owned by downstream feature/runtime projections.",
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV75A at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],

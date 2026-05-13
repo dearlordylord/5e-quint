@@ -8,14 +8,20 @@
     "activationCost": {
       "kind": "bonus_action"
     },
-    "duration": {
-      "kind": "timed",
-      "value": {
-        "amount": 1,
-        "unit": "minute"
+    "family": "activation",
+    "ongoingFeature": {
+      "activationTiming": "activation_cost",
+      "actionRestrictions": [],
+      "lifecycle": {
+        "duration": {
+          "amount": 1,
+          "unit": "minute"
+        },
+        "earlyEndArmorCategories": [],
+        "earlyEndConditions": [],
+        "kind": "fixed_duration"
       }
     },
-    "family": "activation",
     "phases": [
       {
         "attachment": {

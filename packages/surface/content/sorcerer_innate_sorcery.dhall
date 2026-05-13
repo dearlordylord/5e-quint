@@ -18,7 +18,16 @@ let innateSorcery =
           , activationCost = { kind = "bonus_action" }
           , resource = { kind = "use_count", cap = { kind = "fixed", uses = 2 } }
           , resetCadence = { kind = "long_rest" }
-          , duration = { kind = "timed", value = { unit = "minute", amount = 1 } }
+          , ongoingFeature =
+              { activationTiming = "activation_cost"
+              , actionRestrictions = [] : List Text
+              , lifecycle =
+                  { kind = "fixed_duration"
+                  , duration = { unit = "minute", amount = 1 }
+                  , earlyEndConditions = [] : List Text
+                  , earlyEndArmorCategories = [] : List Text
+                  }
+              }
           , phases =
               [ { kind = "direct"
                 , attachment = { kind = "self" }

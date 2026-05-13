@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.martial-arts-attack-projection unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
 
 module unitFeatureProcedureProfiles {
   import hitPointDamage.* from "./hit-point-damage"
@@ -16,6 +16,7 @@ module unitFeatureProcedureProfiles {
   // - Classes/Rogue.md: Cunning Action, Sneak Attack, Evasion, Uncanny Dodge.
   // - Classes/Barbarian.md: Rage, Reckless Attack.
   // - Classes/Bard.md: Bardic Inspiration and College of Lore Cutting Words.
+  // - Classes/Sorcerer.md: Innate Sorcery activation.
   // - Classes/Monk.md: Martial Arts attack projection, Deflect Attacks.
   // - Feats.md: Archery, Defense, Savage Attacker, Boon of Combat Prowess.
   // - Character-Origins.md: Orc Adrenaline Rush and Relentless Endurance.
@@ -26,6 +27,16 @@ module unitFeatureProcedureProfiles {
   type FeatureUsePool = {
     usesRemaining: int,
     maximumUses: int,
+  }
+
+  type InnateSorceryOccurrence =
+    | NoInnateSorceryOccurrence
+    | InnateSorceryOneMinuteDuration
+
+  type InnateSorceryState = {
+    turn: TurnProcedureState,
+    pool: FeatureUsePool,
+    occurrence: InnateSorceryOccurrence,
   }
 
   type ActionSurgeActionGrant =
@@ -810,6 +821,26 @@ module unitFeatureProcedureProfiles {
     if (pool.usesRemaining <= 0) pool
     else pool.with("usesRemaining", pool.usesRemaining - 1)
 
+  pure def legalInnateSorceryState(state: InnateSorceryState): bool = all {
+    legalFeatureUsePool(state.pool),
+    state.occurrence.in(Set(NoInnateSorceryOccurrence, InnateSorceryOneMinuteDuration)),
+    state.occurrence == NoInnateSorceryOccurrence or state.pool.usesRemaining < state.pool.maximumUses,
+  }
+
+  pure def activateInnateSorcery(state: InnateSorceryState): InnateSorceryState = {
+    val admitted = all {
+      legalInnateSorceryState(state),
+      canSpendBonusAction(state.turn),
+      state.pool.usesRemaining > 0,
+      state.occurrence == NoInnateSorceryOccurrence,
+    }
+    {
+      turn: if (admitted) spendActionCost(state.turn, BonusActionCost) else state.turn,
+      pool: if (admitted) spendFeatureUsePool(state.pool) else state.pool,
+      occurrence: if (admitted) InnateSorceryOneMinuteDuration else state.occurrence,
+    }
+  }
+
   pure def legalActionSurgeState(state: ActionSurgeState): bool = all {
     legalFeatureUsePool(state.pool),
     state.actionGrant.in(Set(
@@ -1437,6 +1468,25 @@ module unitFeatureProcedureProfiles {
       assert(unarmedOutcome.critical),
       assert(not(nonEligibleAttackOutcome.hits)),
       assert(not(nonEligibleAttackOutcome.critical)),
+    }
+  }
+
+  run test_innate_sorcery_spends_bonus_action_and_long_rest_use = {
+    val state = {
+      turn: initialTurnProcedureState,
+      pool: { usesRemaining: 2, maximumUses: 2 },
+      occurrence: NoInnateSorceryOccurrence,
+    }
+    val active = activateInnateSorcery(state)
+    val exhausted = activateInnateSorcery(state.with("pool", { usesRemaining: 0, maximumUses: 2 }))
+    val alreadyActive = activateInnateSorcery(active)
+    all {
+      assert(not(active.turn.bonusActionAvailable)),
+      assert(active.pool.usesRemaining == 1),
+      assert(active.occurrence == InnateSorceryOneMinuteDuration),
+      assert(exhausted.occurrence == NoInnateSorceryOccurrence),
+      assert(exhausted.pool.usesRemaining == 0),
+      assert(alreadyActive.pool.usesRemaining == 1),
     }
   }
 

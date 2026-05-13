@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bardic-inspiration-failed-d20-test unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap spell.invocation-beam-sequence spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-marked-damage-rider spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bardic-inspiration-failed-d20-test unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap spell.invocation-beam-sequence spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-marked-damage-rider spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV72B bard_bardic_inspiration
 import { Schema } from "effect";
 import * as Either from "effect/Either";
@@ -9213,6 +9213,130 @@ describe("battle runtime", () => {
       ended.state.combatants.get(fighterId)?.activeOngoingFeatureOccurrences
         .size,
     ).toBe(0);
+  });
+
+  test("Innate Sorcery activation spends a Bonus Action and one Long Rest use for one minute", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-innate-sorcery"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "sorcerer", level: 1 }],
+          resources: [innateSorceryResource()],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject: BattleSubject = {
+      tag: "unitFeature",
+      actorId: fighterId,
+      unitId: "sorcerer_innate_sorcery",
+    };
+
+    expect(discoverBattleActs(state).map((act) => act.subject)).toEqual(
+      expect.arrayContaining([subject]),
+    );
+
+    const result = requireResolved(
+      resolveBattleSubject({ state, subject, fills: [] }),
+    );
+    const sorcerer = result.state.combatants.get(fighterId);
+    const resource = sorcerer?.origin.kind === "character"
+      ? sorcerer.origin.resources[0]
+      : undefined;
+
+    expect(result.state.currentTurnResources.currentHasBonusAction).toBe(false);
+    expect(resource).toMatchObject({ usesRemaining: resourceCount(1) });
+    expect(sorcerer?.activeOngoingFeatureOccurrences).toEqual(
+      new Map([
+        [
+          "sorcerer_innate_sorcery",
+          {
+            kind: "fixedDuration",
+            expiresAt: {
+              kind: "endOfTurn",
+              combatantId: fighterId,
+              round: 11,
+            },
+          },
+        ],
+      ]),
+    );
+  });
+
+  test("Innate Sorcery rejects exhausted uses and non-Sorcerer ownership", () => {
+    const subject: BattleSubject = {
+      tag: "unitFeature",
+      actorId: fighterId,
+      unitId: "sorcerer_innate_sorcery",
+    };
+    const exhausted = startBattleRight({
+      battleId: battleId("battle-innate-sorcery-exhausted"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "sorcerer", level: 1 }],
+          resources: [innateSorceryResource({ usesRemaining: 0 })],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    expect(discoverBattleActs(exhausted).map((act) => act.subject)).not.toEqual(
+      expect.arrayContaining([subject]),
+    );
+    expect(
+      resolveBattleSubject({ state: exhausted, subject, fills: [] }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+    expect(() =>
+      startBattle({
+        battleId: battleId("battle-innate-sorcery-non-sorcerer"),
+        combatants: [
+          characterSeed({
+            initiative: 20,
+            resources: [innateSorceryResource()],
+          }),
+          statBlockCreatureInit({ initiative: 10 }),
+        ],
+      }),
+    ).toThrow(
+      "Character class feature resource requires a sorcerer class level.",
+    );
+  });
+
+  test("Innate Sorcery expires after its one-minute active duration", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-innate-sorcery-expiry"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "sorcerer", level: 1 }],
+          resources: [innateSorceryResource()],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject: BattleSubject = {
+      tag: "unitFeature",
+      actorId: fighterId,
+      unitId: "sorcerer_innate_sorcery",
+    };
+    let current = requireResolved(
+      resolveBattleSubject({ state, subject, fills: [] }),
+    ).state;
+
+    for (let round = 1; round <= 10; round += 1) {
+      current = requireResolved(
+        endTurn({ state: current, actorId: fighterId }),
+      ).state;
+      current = requireResolved(endTurn({ state: current, actorId: goblinId }))
+        .state;
+    }
+    current = requireResolved(endTurn({ state: current, actorId: fighterId }))
+      .state;
+
+    expect(
+      current.combatants.get(fighterId)?.activeOngoingFeatureOccurrences,
+    ).toEqual(new Map());
   });
 
   test("Rage early-end conditions remove the ongoing feature instead of hiding it", () => {
@@ -23283,6 +23407,30 @@ function rageResource(input?: {
     !("resource" in unit.mechanics)
   ) {
     throw new Error("Expected Rage resource Unit.");
+  }
+  return {
+    unit,
+    ...(input?.usesRemaining === undefined
+      ? {}
+      : { usesRemaining: input.usesRemaining }),
+  };
+}
+
+function innateSorceryResource(input?: {
+  readonly usesRemaining?: number;
+}): NonNullable<
+  Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["resources"]
+>[number] {
+  const unit = unitLibrary.requireUnit("sorcerer_innate_sorcery");
+  if (
+    unit.kind !== "class_feature" ||
+    unit.mechanics.family !== "activation" ||
+    !("resource" in unit.mechanics)
+  ) {
+    throw new Error("Expected Innate Sorcery resource Unit.");
   }
   return {
     unit,
