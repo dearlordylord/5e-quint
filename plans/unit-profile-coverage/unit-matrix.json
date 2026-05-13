@@ -2123,7 +2123,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Promoted battle-runtime Quint facts for Hunter's Mark combat target marking, mark-scoped Force damage, and transfer after the marked target drops to 0 Hit Points; noncombat finding Advantage remains deferred.",
+      "note": "Promoted battle-runtime Quint facts for Hunter's Mark combat target marking, mark-scoped Force damage, and transfer after the marked target drops to 0 Hit Points; finding Advantage remains a classified caller-supplied ability-check roll-mode gap after SRDINV63.",
       "profileIds": [
         "spell.invocation-marked-damage-rider"
       ],
@@ -2131,7 +2131,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime admission and reducer tests for Hunter's Mark combat target marking, mark-scoped Force damage, Concentration cleanup, and Bonus Action transfer; noncombat finding Advantage remains deferred.",
+      "note": "Focused battle-runtime admission and reducer tests for Hunter's Mark combat target marking, mark-scoped Force damage, Concentration cleanup, and Bonus Action transfer; finding Advantage remains a classified caller-supplied ability-check roll-mode gap after SRDINV63.",
       "profileIds": [
         "spell.invocation-marked-damage-rider"
       ],
@@ -6315,8 +6315,8 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "SRDINV63",
-            "mechanic": "Wisdom (Perception or Survival) Advantage to find the marked target"
+            "followUpTaskId": "SRDINV66",
+            "mechanic": "classified gap: caller-supplied Wisdom (Perception or Survival) Advantage roll-mode projection to find the marked target; no dedicated SRDINV63 implementation task"
           }
         ],
         "profileIds": [
