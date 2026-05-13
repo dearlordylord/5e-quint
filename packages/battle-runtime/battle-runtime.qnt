@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points
@@ -21,6 +21,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-forced-reaction-movement
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-jump-movement-replacement
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.creature-type-protection-and-charm
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-object-light
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.reaction-hellish-rebuke spell.invocation-damage-save-or-attack
 module battleRuntime {
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
@@ -277,7 +278,7 @@ module battleRuntime {
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | EldritchBlast | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | TrueStrike | Grease | Command | DissonantWhispers | FeatherFall | HellishRebuke
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | EldritchBlast | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | Light | TrueStrike | Grease | Command | DissonantWhispers | FeatherFall | HellishRebuke
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | StarryWispSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack
   type SpellAttackBeamSequenceInvocation =
     | EldritchBlastBeamSequence
@@ -316,6 +317,10 @@ module battleRuntime {
     | StarryWispObjectTarget
     | EldritchBlastObjectTarget
     | ProduceFlameObjectTarget
+    | LightObjectTarget
+    | PriorLightObjectTarget
+  type ObjectSize = ObjectTiny | ObjectSmall | ObjectMedium | ObjectLarge | ObjectHuge | ObjectGargantuan
+  type ObjectWearCarry = ObjectNotWornOrCarriedBySomeoneElse | ObjectWornOrCarriedByCaster | ObjectWornBySomeoneElse | ObjectCarriedBySomeoneElse
   type ObjectDamageDisposition =
     | ObjectHitPoints({ hitPoints: int })
     | ObjectHitPointsWithDamageThreshold({ hitPoints: int, damageThreshold: int })
@@ -341,14 +346,16 @@ module battleRuntime {
   type LightEmission =
     | DimLightEmission({ radiusFeet: int })
     | BrightAndDimLightEmission({ brightRadiusFeet: int, dimAdditionalFeet: int })
+  type LightEmitterExpiration =
+    | EndOfTurnLightEmitterExpiration({ actor: Actor, round: int })
+    | DurationLightEmitterExpiration({ durationTicks: int })
   type LightEmitter =
     | SpellLightEmitter({
         source: Actor,
         sourceSpell: SpellInvocation,
         attachment: LightEmitterAttachment,
         emission: LightEmission,
-        expiresAtActor: Actor,
-        expiresAtRound: int,
+        expiresAt: LightEmitterExpiration,
       })
 
   type ChainedSpellAttackDamageHole =
@@ -889,8 +896,36 @@ module battleRuntime {
     round: int
   ): Set[LightEmitter] =
     emitters.filter(emitter => match emitter {
-      | SpellLightEmitter(data) => data.expiresAtActor != actor or data.expiresAtRound != round
+      | SpellLightEmitter(data) => match data.expiresAt {
+          | EndOfTurnLightEmitterExpiration(expiresAt) => expiresAt.actor != actor or expiresAt.round != round
+          | DurationLightEmitterExpiration(_) => true
+        }
     })
+
+  pure def tickDurationLightEmitters(emitters: Set[LightEmitter]): Set[LightEmitter] =
+    emitters
+      .map(emitter => match emitter {
+        | SpellLightEmitter(data) => match data.expiresAt {
+          | DurationLightEmitterExpiration(expiresAt) =>
+            if (expiresAt.durationTicks > 0)
+              SpellLightEmitter({
+                ...data,
+                expiresAt: DurationLightEmitterExpiration({
+                  durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(expiresAt.durationTicks),
+                }),
+              })
+            else
+              emitter
+          | EndOfTurnLightEmitterExpiration(_) => emitter
+        }
+      })
+      .filter(emitter => match emitter {
+        | SpellLightEmitter(data) => match data.expiresAt {
+          | DurationLightEmitterExpiration(expiresAt) =>
+            battleRuntimeTimedSpellEffectRemainsActive(expiresAt.durationTicks)
+          | EndOfTurnLightEmitterExpiration(_) => true
+        }
+      })
 
   pure def expireEndOfTurnSpellEffects(state: BattleState): BattleState = {
     val actor = currentActor(state)
@@ -1039,6 +1074,7 @@ module battleRuntime {
     val goblinEffects = tickDurationActiveEffects(state.goblin.activeEffects)
     {
       ...state,
+      lightEmitters: tickDurationLightEmitters(state.lightEmitters),
       fighter: {
         ...state.fighter,
         concentrating: state.fighter.concentrating
@@ -2173,8 +2209,10 @@ module battleRuntime {
       sourceSpell: StarryWisp,
       attachment: attachment,
       emission: DimLightEmission({ radiusFeet: 10 }),
-      expiresAtActor: source,
-      expiresAtRound: endOfCasterNextTurnLightEmitterExpiresAtRound(state, source),
+      expiresAt: EndOfTurnLightEmitterExpiration({
+        actor: source,
+        round: endOfCasterNextTurnLightEmitterExpiresAtRound(state, source),
+      }),
     })
 
   pure def applyStarryWispDimLightEmitter(
@@ -3860,6 +3898,64 @@ module battleRuntime {
 
   pure def produceFlameDurationTicks: int = 100
 
+  pure def lightBrightLightRadiusFeet: int = 20
+
+  pure def lightDimLightAdditionalFeet: int = 20
+
+  pure def lightDurationTicks: int = 600
+
+  pure def lightObjectTargetAllowed(objectSize: ObjectSize, wornOrCarried: ObjectWearCarry): bool =
+    (
+      objectSize == ObjectTiny or
+      objectSize == ObjectSmall or
+      objectSize == ObjectMedium or
+      objectSize == ObjectLarge
+    ) and (
+      wornOrCarried == ObjectNotWornOrCarriedBySomeoneElse or
+      wornOrCarried == ObjectWornOrCarriedByCaster
+    )
+
+  pure def lightObjectEmitter(objectTarget: ObjectTarget): LightEmitter =
+    SpellLightEmitter({
+      source: Fighter,
+      sourceSpell: Light,
+      attachment: ObjectLightEmitter({ object: objectTarget }),
+      emission: BrightAndDimLightEmission({
+        brightRadiusFeet: lightBrightLightRadiusFeet,
+        dimAdditionalFeet: lightDimLightAdditionalFeet,
+      }),
+      expiresAt: DurationLightEmitterExpiration({ durationTicks: lightDurationTicks }),
+    })
+
+  pure def lightEmittersWithoutLightFromSource(emitters: Set[LightEmitter], source: Actor): Set[LightEmitter] =
+    emitters.filter(emitter => match emitter {
+      | SpellLightEmitter(data) => data.source != source or data.sourceSpell != Light
+    })
+
+  pure def resolveLightObject(
+    state: BattleState,
+    objectTarget: ObjectTarget,
+    objectSize: ObjectSize,
+    wornOrCarried: ObjectWearCarry,
+  ): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      state.actionAvailable and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state)) and
+      lightObjectTargetAllowed(objectSize, wornOrCarried)
+    ) {
+      {
+        ...state,
+        lightEmitters: lightEmittersWithoutLightFromSource(state.lightEmitters, Fighter)
+          .union(Set(lightObjectEmitter(objectTarget))),
+        actionAvailable: false,
+      }
+    } else {
+      state
+    }
+
   pure def activeEffectsWithoutProduceFlameHeldLight(effects: Set[ActiveEffect]): Set[ActiveEffect] =
     effects.filter(effect => match effect {
       | ProduceFlameHeldLight(_) => false
@@ -4292,6 +4388,7 @@ module battleRuntime {
       | RayOfSickness => true
       | ViciousMockery => false
       | ProduceFlame => false
+      | Light => false
       | TrueStrike => false
       | Grease => true
       | Command => true
@@ -6952,8 +7049,7 @@ module battleRuntime {
         sourceSpell: StarryWisp,
         attachment: CombatantLightEmitter({ actor: Goblin }),
         emission: DimLightEmission({ radiusFeet: 10 }),
-        expiresAtActor: Fighter,
-        expiresAtRound: 2,
+        expiresAt: EndOfTurnLightEmitterExpiration({ actor: Fighter, round: 2 }),
       })),
       assert(spellAttackDamageSupportsObjectTarget(StarryWispSpellAttack)),
       assert(spellAttackDamageSupportsObjectTarget(ProduceFlameHurlSpellAttack)),
@@ -8446,6 +8542,65 @@ module battleRuntime {
     all {
       assert(activeEffectsContainProduceFlameHeldLight(stillSameRound.fighter.activeEffects)),
       assert(not(activeEffectsContainProduceFlameHeldLight(nextRound.fighter.activeEffects))),
+    }
+  }
+
+  run test_light_object_records_bright_and_dim_object_emitter = {
+    val result = resolveLightObject(initialState, LightObjectTarget, ObjectLarge, ObjectNotWornOrCarriedBySomeoneElse)
+    all {
+      assert(result.lightEmitters.contains(lightObjectEmitter(LightObjectTarget))),
+      assert(not(result.actionAvailable)),
+      assert(result.bonusActionAvailable),
+      assert(not(result.spellSlotExpendedThisTurn)),
+      assert(result.fighter.activeEffects == Set()),
+      assert(result.goblin.activeEffects == Set()),
+      assert(lightBrightLightRadiusFeet == 20),
+      assert(lightDimLightAdditionalFeet == 20),
+      assert(lightDurationTicks == 600),
+    }
+  }
+
+  run test_light_object_rejects_too_large_or_worn_carried_by_someone_else = {
+    all {
+      assert(resolveLightObject(initialState, LightObjectTarget, ObjectHuge, ObjectNotWornOrCarriedBySomeoneElse) == initialState),
+      assert(resolveLightObject(initialState, LightObjectTarget, ObjectMedium, ObjectWornBySomeoneElse) == initialState),
+      assert(resolveLightObject(initialState, LightObjectTarget, ObjectMedium, ObjectCarriedBySomeoneElse) == initialState),
+      assert(lightObjectTargetAllowed(ObjectTiny, ObjectWornOrCarriedByCaster)),
+      assert(not(lightObjectTargetAllowed(ObjectGargantuan, ObjectWornOrCarriedByCaster))),
+    }
+  }
+
+  run test_light_object_recast_replaces_prior_light_from_same_source = {
+    val prior = {
+      ...initialState,
+      lightEmitters: Set(lightObjectEmitter(PriorLightObjectTarget)),
+    }
+    val recast = resolveLightObject(prior, LightObjectTarget, ObjectMedium, ObjectWornOrCarriedByCaster)
+    all {
+      assert(recast.lightEmitters == Set(lightObjectEmitter(LightObjectTarget))),
+      assert(not(recast.lightEmitters.contains(lightObjectEmitter(PriorLightObjectTarget)))),
+    }
+  }
+
+  run test_light_object_emitter_expires_after_duration_tick = {
+    val nearlyExpired = {
+      ...initialState,
+      lightEmitters: Set(SpellLightEmitter({
+        source: Fighter,
+        sourceSpell: Light,
+        attachment: ObjectLightEmitter({ object: LightObjectTarget }),
+        emission: BrightAndDimLightEmission({
+          brightRadiusFeet: lightBrightLightRadiusFeet,
+          dimAdditionalFeet: lightDimLightAdditionalFeet,
+        }),
+        expiresAt: DurationLightEmitterExpiration({ durationTicks: 1 }),
+      })),
+    }
+    val stillSameRound = endTurn(nearlyExpired)
+    val nextRound = endTurn(stillSameRound)
+    all {
+      assert(stillSameRound.lightEmitters.size() == 1),
+      assert(nextRound.lightEmitters == Set()),
     }
   }
 

@@ -2,6 +2,7 @@
 
 import { Match } from "effect";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
+import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { type Round as RoundType } from "@dnd/shared/types";
 import type {
   DamageType,
@@ -39,6 +40,7 @@ import {
   type SpellPostDamageRiderExpiration,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
+import type { BattleObjectId } from "../identity.ts";
 
 export const FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND = 60;
 
@@ -197,6 +199,28 @@ export function expireBattleLightEmitters(
   shouldExpire: (emitter: BattleLightEmitter) => boolean,
 ): readonly BattleLightEmitter[] {
   return emitters.filter((emitter) => !shouldExpire(emitter));
+}
+
+export function tickDurationBattleLightEmitters(
+  emitters: readonly BattleLightEmitter[],
+): readonly BattleLightEmitter[] {
+  return emitters.flatMap((emitter): readonly BattleLightEmitter[] => {
+    if (emitter.expiresAt.kind !== "duration") {
+      return [emitter];
+    }
+    const remainingTicks = Number(emitter.expiresAt.durationTicks) - 1;
+    return remainingTicks <= 0
+      ? []
+      : [
+          {
+            ...emitter,
+            expiresAt: {
+              kind: "duration",
+              durationTicks: elapsedTimeTicks(remainingTicks),
+            },
+          },
+        ];
+  });
 }
 
 function sameLightEmitterAttachment(
@@ -858,6 +882,36 @@ export function applyHeldLightSpellEffect(
         },
       ],
     }),
+  };
+}
+
+export function applyObjectLightSpellEffect(
+  state: BattleState,
+  actorId: CombatantId,
+  objectId: BattleObjectId,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "objectLight" }
+  >,
+): BattleState {
+  return {
+    ...state,
+    lightEmitters: [
+      ...state.lightEmitters.filter(
+        (emitter) =>
+          !(
+            emitter.sourceSpellId === invocation.spell.id &&
+            emitter.sourceCombatantId === actorId
+          ),
+      ),
+      {
+        sourceSpellId: invocation.spell.id,
+        sourceCombatantId: actorId,
+        attachment: { kind: "object", objectId },
+        emission: invocation.light,
+        expiresAt: invocation.expiresAt,
+      },
+    ],
   };
 }
 

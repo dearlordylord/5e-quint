@@ -129,7 +129,6 @@ const installedSpellUnitCatalogOnlyClosures = new Set([
   "detect_evil_and_good",
   "detect_magic",
   "detect_poison_and_disease",
-  "light",
   "minor_illusion",
 ]);
 
@@ -198,7 +197,6 @@ const battleRuntimeRelevantCatalogOnlySpellUnitIds = new Set([
   "detect_magic",
   "detect_poison_and_disease",
   "find_familiar",
-  "light",
   "minor_illusion",
 ]);
 

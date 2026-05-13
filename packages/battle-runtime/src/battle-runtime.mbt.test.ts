@@ -808,8 +808,7 @@ function createEldritchBlastDriver() {
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = discoverSpellHoles(state, subject);
     let lastResult: EldritchBlastMbtProjection["lastResult"] = "init";
-    let lastInvalidReason: EldritchBlastMbtProjection["lastInvalidReason"] =
-      "";
+    let lastInvalidReason: EldritchBlastMbtProjection["lastInvalidReason"] = "";
 
     function reset(): void {
       state = eldritchBlastBattle();
@@ -2930,15 +2929,40 @@ function lightEmitterFromQuint(raw: unknown): LightEmitterMbtProjection {
     sourceCombatantId: actorIdFromQuint(fields["source"], "source"),
     attachment: lightEmitterAttachmentFromQuint(fields["attachment"]),
     emission: lightEmissionFromQuint(fields["emission"]),
-    expiresAt: {
-      kind: "endOfTurn",
-      combatantId: actorIdFromQuint(
-        fields["expiresAtActor"],
-        "expiresAtActor",
-      ),
-      round: numberFromQuintInt(fields["expiresAtRound"], "expiresAtRound"),
-    },
+    expiresAt: lightEmitterExpirationFromQuint(fields["expiresAt"]),
   };
+}
+
+function lightEmitterExpirationFromQuint(
+  raw: unknown,
+): LightEmitterExpirationMbtProjection {
+  const tag = quintVariantTag(raw);
+  if (tag === "EndOfTurnLightEmitterExpiration") {
+    const fields = quintVariantRecordValue(
+      raw,
+      "EndOfTurnLightEmitterExpiration",
+    );
+    return {
+      kind: "endOfTurn",
+      combatantId: actorIdFromQuint(fields["actor"], "actor"),
+      round: numberFromQuintInt(fields["round"], "round"),
+    };
+  }
+  if (tag === "DurationLightEmitterExpiration") {
+    const fields = quintVariantRecordValue(
+      raw,
+      "DurationLightEmitterExpiration",
+    );
+    return {
+      kind: "duration",
+      durationTicks: numberFromQuintInt(
+        fields["durationTicks"],
+        "durationTicks",
+      ),
+    };
+  }
+
+  throw new Error(`Unknown Quint light emitter expiration variant: ${tag}`);
 }
 
 function lightEmitterAttachmentFromQuint(
@@ -3007,6 +3031,9 @@ function spellIdFromQuint(raw: unknown, field: string): string {
   if (tag === "StarryWisp") {
     return "starry_wisp";
   }
+  if (tag === "Light") {
+    return "light";
+  }
 
   throw new Error(`Unknown Quint spell field ${field}: ${tag}`);
 }
@@ -3015,6 +3042,12 @@ function objectIdFromQuint(raw: unknown, field: string): string {
   const tag = quintVariantTag(raw);
   if (tag === "StarryWispObjectTarget") {
     return starryWispObjectId;
+  }
+  if (tag === "LightObjectTarget") {
+    return "light-object";
+  }
+  if (tag === "PriorLightObjectTarget") {
+    return "prior-light-object";
   }
 
   throw new Error(`Unknown Quint object field ${field}: ${tag}`);
@@ -3062,7 +3095,9 @@ function projectHole(hole: BattleHole): MbtHole {
       throw new Error("Battle runtime MBT does not model skill choice holes.");
     }),
     Match.when({ kind: "commandOptionChoice" }, () => {
-      throw new Error("Battle runtime MBT does not model Command option holes.");
+      throw new Error(
+        "Battle runtime MBT does not model Command option holes.",
+      );
     }),
     Match.when({ kind: "heldObjectFacts" }, () => {
       throw new Error(

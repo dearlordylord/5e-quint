@@ -115,6 +115,7 @@ import {
   applyCommandGrovelProneToTarget,
   applyGreaseProneToTarget,
   expireBattleLightEmitters,
+  tickDurationBattleLightEmitters,
 } from "./spells-active-effects.ts";
 
 import {
@@ -258,6 +259,10 @@ export function resolveEndTurn(
       emitter.expiresAt.combatantId === currentActorId(state) &&
       emitter.expiresAt.round === state.initiative.round,
   );
+  const lightEmittersAfterDurationTick =
+    Number(initiative.round) > Number(state.initiative.round)
+      ? tickDurationBattleLightEmitters(lightEmittersAfterEndEffects)
+      : lightEmittersAfterEndEffects;
   const combatantsAfterStartOngoingFeatures = expireStartOfTurnOngoingFeatures(
     combatantsAfterEndEffects,
     nextActorId,
@@ -320,7 +325,7 @@ export function resolveEndTurn(
     ...state,
     initiative,
     combatants: combatantsAfterCommandHalt,
-    lightEmitters: lightEmittersAfterEndEffects,
+    lightEmitters: lightEmittersAfterDurationTick,
     currentTurnResources,
     readiedSpells,
     readiedMovements,

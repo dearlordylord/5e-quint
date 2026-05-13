@@ -26,6 +26,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31B hunters_mark
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV32B produce_flame
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV59B starry_wisp
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV70B light
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV38A sleep
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV50D2 command
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV39 eldritch_blast
@@ -51,7 +52,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT59 monk_deflect_attacks
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT62 fighter_tactical_mind
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT65 bard_cutting_words
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider spell.scalar-buff
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -93,6 +94,7 @@ import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type {
   ActivationPhase,
   EffectAtom,
+  Size,
   SpellRecord,
   StatBlockRecord,
   UnitRecord,
@@ -141,6 +143,7 @@ import {
   type BattleSpellAreaChoice,
   type BattleState,
   type BattleSubject,
+  type BattleTargetSpatialFact,
   type CombatantId,
   type SupportedSpellInvocation,
 } from "./index.ts";
@@ -229,6 +232,7 @@ const guidanceUnitId = "guidance";
 const greaseUnitId = "grease";
 const heroismUnitId = "heroism";
 const inflictWoundsUnitId = "inflict_wounds";
+const lightUnitId = "light";
 const longstriderUnitId = "longstrider";
 const mageArmorUnitId = "mage_armor";
 const magicMissileUnitId = "magic_missile";
@@ -6638,6 +6642,262 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
             effect.sourceSpellId === produceFlameUnitId,
         ),
     ).toBe(true);
+  });
+});
+
+describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
+  test("light is admitted as a Magic action cantrip object emitter", () => {
+    const spell = spellRecord(lightUnitId);
+    const state = spellBattle({ cantrips: [spell] });
+    const act = spellAct({ state, spellId: lightUnitId });
+    const targetHole = requireHole(act.initialHoles, "objectTargetChoice");
+    const objectId = battleObjectId("unit-profile-light-object");
+
+    expect(act).toEqual(
+      expect.objectContaining({
+        subject: {
+          tag: "actionSpell",
+          actorId: spellCasterId,
+          invocation: cantripSpellInvocationRef(lightUnitId, "objectLight"),
+          mode: { tag: "cast" },
+        },
+        initialHoles: [
+          expect.objectContaining({
+            kind: "objectTargetChoice",
+            label: "Light object target",
+            requiresTableSpatialFact: true,
+          }),
+        ],
+      }),
+    );
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellObjectLightTargetFill({
+          hole: targetHole,
+          objectId,
+          spellId: lightUnitId,
+          casterId: spellCasterId,
+          size: "large",
+        }),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      state: {
+        lightEmitters: [
+          {
+            sourceSpellId: lightUnitId,
+            sourceCombatantId: spellCasterId,
+            attachment: { kind: "object", objectId },
+            emission: {
+              kind: "brightAndDim",
+              brightRadiusFeet: movementFeet(20),
+              dimAdditionalFeet: movementFeet(20),
+            },
+            expiresAt: {
+              kind: "duration",
+              durationTicks: elapsedTimeTicks(600),
+            },
+          },
+        ],
+      },
+      snapshot: {
+        lightEmitters: [
+          expect.objectContaining({
+            sourceSpellId: lightUnitId,
+            attachment: { kind: "object", objectId },
+          }),
+        ],
+      },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Light to resolve.");
+    }
+    expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
+      false,
+    );
+    expect(resolved.state.currentTurnResources.spellSlotExpendedThisTurn).toBe(
+      false,
+    );
+    expect(
+      resolved.state.combatants.get(spellCasterId)?.activeEffects,
+    ).toEqual([]);
+    expect(
+      resolved.state.combatants.get(spellTargetId)?.activeEffects,
+    ).toEqual([]);
+  });
+
+  test("light rejects objects larger than Large", () => {
+    const spell = spellRecord(lightUnitId);
+    const state = spellBattle({ cantrips: [spell] });
+    const act = spellAct({ state, spellId: lightUnitId });
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellObjectLightTargetFill({
+          hole: requireHole(act.initialHoles, "objectTargetChoice"),
+          spellId: lightUnitId,
+          casterId: spellCasterId,
+          size: "huge",
+        }),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+  });
+
+  test.each([
+    { kind: "someoneElse" as const, relation: "worn" as const },
+    { kind: "someoneElse" as const, relation: "carried" as const },
+  ])("light rejects an object $relation by someone else", (wornOrCarried) => {
+    const spell = spellRecord(lightUnitId);
+    const state = spellBattle({ cantrips: [spell] });
+    const act = spellAct({ state, spellId: lightUnitId });
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellObjectLightTargetFill({
+          hole: requireHole(act.initialHoles, "objectTargetChoice"),
+          spellId: lightUnitId,
+          casterId: spellCasterId,
+          wornOrCarried,
+        }),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+  });
+
+  test("light recast replaces the caster's prior object emitter", () => {
+    const spell = spellRecord(lightUnitId);
+    const state = {
+      ...spellBattle({ cantrips: [spell] }),
+      lightEmitters: [
+        {
+          sourceSpellId: lightUnitId,
+          sourceCombatantId: spellCasterId,
+          attachment: {
+            kind: "object" as const,
+            objectId: battleObjectId("unit-profile-light-stale"),
+          },
+          emission: {
+            kind: "brightAndDim" as const,
+            brightRadiusFeet: movementFeet(20),
+            dimAdditionalFeet: movementFeet(20),
+          },
+          expiresAt: {
+            kind: "duration" as const,
+            durationTicks: elapsedTimeTicks(1),
+          },
+        },
+      ],
+    };
+    const act = spellAct({ state, spellId: lightUnitId });
+    const objectId = battleObjectId("unit-profile-light-recast");
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellObjectLightTargetFill({
+          hole: requireHole(act.initialHoles, "objectTargetChoice"),
+          objectId,
+          spellId: lightUnitId,
+          casterId: spellCasterId,
+          wornOrCarried: { kind: "caster" },
+        }),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      state: {
+        lightEmitters: [
+          expect.objectContaining({
+            sourceSpellId: lightUnitId,
+            sourceCombatantId: spellCasterId,
+            attachment: { kind: "object", objectId },
+            expiresAt: {
+              kind: "duration",
+              durationTicks: elapsedTimeTicks(600),
+            },
+          }),
+        ],
+      },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Light recast to resolve.");
+    }
+    expect(resolved.state.lightEmitters).toHaveLength(1);
+  });
+
+  test("light object emitter expires on its timed duration", () => {
+    const spell = spellRecord(lightUnitId);
+    const state = spellBattle({ cantrips: [spell] });
+    const oneRoundRemaining: BattleState = {
+      ...state,
+      lightEmitters: [
+        {
+          sourceSpellId: lightUnitId,
+          sourceCombatantId: spellCasterId,
+          attachment: {
+            kind: "object",
+            objectId: battleObjectId("unit-profile-light-expiring"),
+          },
+          emission: {
+            kind: "brightAndDim",
+            brightRadiusFeet: movementFeet(20),
+            dimAdditionalFeet: movementFeet(20),
+          },
+          expiresAt: {
+            kind: "duration",
+            durationTicks: elapsedTimeTicks(1),
+          },
+        },
+      ],
+    };
+
+    const sameRound = resolveBattleSubject({
+      state: oneRoundRemaining,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellCasterId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+    if (sameRound.tag !== "resolved") {
+      throw new Error("Expected Light caster end turn to resolve.");
+    }
+    const nextRound = resolveBattleSubject({
+      state: sameRound.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellTargetId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+
+    expect(nextRound).toMatchObject({
+      tag: "resolved",
+      state: { lightEmitters: [] },
+      snapshot: { lightEmitters: [] },
+    });
   });
 });
 
@@ -14905,6 +15165,35 @@ function spellObjectTargetFill(input: {
         rangeFeet: movementFeet(60),
         armorClass: armorClass(13),
         damageDisposition: input.damageDisposition ?? { kind: "tableResolved" },
+      },
+    ],
+  };
+}
+
+function spellObjectLightTargetFill(input: {
+  readonly hole: Extract<BattleHole, { readonly kind: "objectTargetChoice" }>;
+  readonly objectId?: ObjectTargetChoiceFill["value"];
+  readonly spellId: string;
+  readonly casterId: CombatantId;
+  readonly size?: Size;
+  readonly wornOrCarried?: Extract<
+    BattleTargetSpatialFact,
+    { readonly kind: "spellObjectLightTarget" }
+  >["wornOrCarried"];
+}): ObjectTargetChoiceFill {
+  const objectId = input.objectId ?? battleObjectId("light-object");
+  return {
+    kind: "objectTargetChoice",
+    holeId: input.hole.holeId,
+    value: objectId,
+    spatialFacts: [
+      {
+        kind: "spellObjectLightTarget",
+        casterId: input.casterId,
+        objectId,
+        spellId: input.spellId,
+        size: input.size ?? "medium",
+        wornOrCarried: input.wornOrCarried ?? { kind: "nobody" },
       },
     ],
   };

@@ -60,6 +60,10 @@ export type SpellBeamFillSet = {
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
     | undefined;
 };
+type SpellObjectDamageTargetFact = Extract<
+  BattleTargetSpatialFact,
+  { readonly kind: "spellObjectTarget" }
+>;
 
 export type SpellFillSet =
   | {
@@ -70,7 +74,9 @@ export type SpellFillSet =
             readonly objectId: BattleObjectId;
             readonly spatialFacts: readonly Extract<
               BattleTargetSpatialFact,
-              { readonly kind: "spellObjectTarget" }
+              {
+                readonly kind: "spellObjectLightTarget" | "spellObjectTarget";
+              }
             >[];
           }
         | undefined;
@@ -134,7 +140,7 @@ export function spellFillSet(
         readonly objectId: BattleObjectId;
         readonly spatialFacts: readonly Extract<
           BattleTargetSpatialFact,
-          { readonly kind: "spellObjectTarget" }
+          { readonly kind: "spellObjectLightTarget" | "spellObjectTarget" }
         >[];
       }
     | undefined;
@@ -259,7 +265,10 @@ export function spellFillSet(
             target: {
               kind: "object",
               objectId: fill.value,
-              spatialFacts: fill.spatialFacts,
+              spatialFacts: fill.spatialFacts.filter(
+                (fact): fact is SpellObjectDamageTargetFact =>
+                  fact.kind === "spellObjectTarget",
+              ),
             },
           };
           continue;
@@ -267,8 +276,10 @@ export function spellFillSet(
       }
       if (
         (invocation.procedure !== "heldLightHurl" &&
+          invocation.procedure !== "objectLight" &&
           invocation.procedure !== "spellAttackDamage") ||
-        invocation.targeting.kind !== "singleCreatureOrObject"
+        (invocation.targeting.kind !== "singleCreatureOrObject" &&
+          invocation.targeting.kind !== "singleObject")
       ) {
         return {
           tag: "invalid",

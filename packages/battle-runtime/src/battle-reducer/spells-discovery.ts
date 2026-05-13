@@ -248,6 +248,21 @@ export function discoverSupportedSpellInvocations(
           },
         ];
       }
+      if (invocation.procedure === "objectLight") {
+        return [
+          {
+            subject: {
+              tag: "actionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: invocation.spell.name,
+            summary: spellInvocationCastSummary(invocation),
+            initialHoles: [spellObjectTargetHole(invocation)],
+          },
+        ];
+      }
       if (invocation.procedure === "weaponDamageRider") {
         return [
           {
@@ -516,6 +531,9 @@ export function spellInvocationCastSummary(
   if (invocation.procedure === "heldLight") {
     return `Cast ${invocation.spell.name} as a cantrip.`;
   }
+  if (invocation.procedure === "objectLight") {
+    return `Cast ${invocation.spell.name} as a cantrip.`;
+  }
   if (invocation.procedure === "heldLightHurl") {
     return `Take a Magic action to hurl ${invocation.spell.name}.`;
   }
@@ -686,6 +704,7 @@ export function isReadiedSpellInvocation(
   return (
     invocation.procedure !== "directHitPointRestoration" &&
     invocation.procedure !== "heldLight" &&
+    invocation.procedure !== "objectLight" &&
     invocation.procedure !== "heldLightHurl" &&
     invocation.procedure !== "spellHostedWeaponAttack" &&
     invocation.procedure !== "damageReduction" &&

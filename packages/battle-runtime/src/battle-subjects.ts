@@ -58,6 +58,7 @@ export const BattleSubjectTextSchema = Schema.NonEmptyTrimmedString;
 
 export const CANTRIP_SPELL_PROCEDURES = [
   "heldLight",
+  "objectLight",
   "heldLightHurl",
   "damageReduction",
   "spellAttackBeamSequence",

@@ -100,6 +100,13 @@ export function supportedSpellInvocationRef(
       procedure: "featherFallMitigation",
     };
   }
+  if (invocation.procedure === "objectLight") {
+    return {
+      tag: "cantrip",
+      spellId: spellId(invocation.spell.id),
+      procedure: "objectLight",
+    };
+  }
   return Match.value(invocation).pipe(
     Match.when({ procedure: "heldLight" }, (cantrip) => ({
       tag: "cantrip" as const,

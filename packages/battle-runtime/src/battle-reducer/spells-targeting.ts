@@ -45,6 +45,27 @@ type SingleCreatureOrObjectSpellAttackDamageInvocation =
           : never;
       }
     : never;
+type SingleObjectSpellInvocation =
+  | SingleCreatureOrObjectSpellAttackDamageInvocation
+  | Extract<
+      SupportedSpellInvocation,
+      {
+        readonly procedure: "objectLight";
+        readonly spell: { readonly id: string; readonly name: string };
+      }
+    >;
+type ObjectLightTargetFact = Extract<
+  BattleTargetSpatialFact,
+  { readonly kind: "spellObjectLightTarget" }
+>;
+type ObjectLightTargetSize = ObjectLightTargetFact["size"];
+
+const OBJECT_LIGHT_ALLOWED_SIZES = [
+  "tiny",
+  "small",
+  "medium",
+  "large",
+] as const satisfies readonly ObjectLightTargetSize[];
 
 export function spellTargetHole(
   state: BattleState,
@@ -106,7 +127,7 @@ function spellBeamTargetHoleKey(
 }
 
 export function spellObjectTargetHole(
-  invocation: SingleCreatureOrObjectSpellAttackDamageInvocation,
+  invocation: SingleObjectSpellInvocation,
 ): BattleObjectTargetChoiceHole {
   const holeKey = `battle:spell:object-target:${invocation.spell.id}`;
   return {
@@ -156,7 +177,7 @@ function spellBeamObjectTargetHoleKey(
 }
 
 export function spellObjectTargetHoleId(
-  invocation: SingleCreatureOrObjectSpellAttackDamageInvocation,
+  invocation: SingleObjectSpellInvocation,
 ): BattleHoleId {
   return holeId(`battle:spell:object-target:${invocation.spell.id}`);
 }
@@ -315,6 +336,31 @@ export function spellObjectTargetFact(
         fact.rangeFeet === invocation.rangeFeet,
     ) ?? null
   );
+}
+
+export function spellObjectLightTargetFact(
+  facts: readonly ObjectLightTargetFact[],
+  actorId: CombatantId,
+  objectId: BattleObjectId,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "objectLight" }
+  >,
+): ObjectLightTargetFact | null {
+  return (
+    facts.find(
+      (fact) =>
+        fact.casterId === actorId &&
+        fact.objectId === objectId &&
+        fact.spellId === invocation.spell.id &&
+        objectSizeIsLargeOrSmaller(fact.size) &&
+        fact.wornOrCarried.kind !== "someoneElse",
+    ) ?? null
+  );
+}
+
+function objectSizeIsLargeOrSmaller(objectSize: ObjectLightTargetSize): boolean {
+  return OBJECT_LIGHT_ALLOWED_SIZES.some((allowed) => allowed === objectSize);
 }
 
 export function spellTargetHasNonSpatialPrerequisites(

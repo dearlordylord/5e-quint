@@ -21193,7 +21193,10 @@ type ObjectTargetChoiceFill = Extract<
   BattleFill,
   { readonly kind: "objectTargetChoice" }
 >;
-type SpellObjectTargetFact = ObjectTargetChoiceFill["spatialFacts"][number];
+type SpellObjectTargetFact = Extract<
+  ObjectTargetChoiceFill["spatialFacts"][number],
+  { readonly kind: "spellObjectTarget" }
+>;
 
 function objectTargetFill(input: {
   readonly hole: BattleHole;

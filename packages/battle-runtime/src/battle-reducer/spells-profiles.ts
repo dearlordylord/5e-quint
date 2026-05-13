@@ -281,6 +281,9 @@ export function supportedSpellActs(
       supportedCantripHeldLightSpellProfile(spell),
     ),
     ...spellcasting.cantrips.flatMap((spell) =>
+      supportedCantripObjectLightSpellProfile(spell),
+    ),
+    ...spellcasting.cantrips.flatMap((spell) =>
       supportedCantripHeldLightHurlSpellProfile(
         spell,
         spellcasting.spellcastingAbilityModifier,
@@ -363,6 +366,61 @@ export function supportedCantripHeldLightSpellProfile(
       ];
 }
 
+export function supportedCantripObjectLightSpellProfile(
+  spell: SpellRecord,
+): readonly SupportedSpellInvocation[] {
+  if (!isLightObjectSpell(spell)) {
+    return [];
+  }
+  const lightPhase = spell.mechanics.phases.find(
+    (phase) =>
+      phase.kind === "direct" &&
+      phase.attachment.kind === "hole" &&
+      phase.attachment.value.kind === "object" &&
+      phase.attachment.value.count === 1 &&
+      phase.attachment.value.filter?.heldOrWorn === "forbidden" &&
+      phase.effects?.some((effect) => effect.kind === "emit_light"),
+  );
+  const lightEffects =
+    lightPhase === undefined || !("effects" in lightPhase)
+      ? undefined
+      : lightPhase.effects;
+  const lightEffect = lightEffects?.find(
+    (effect) => effect.kind === "emit_light",
+  );
+  if (
+    lightEffect === undefined ||
+    lightEffect.kind !== "emit_light" ||
+    lightEffect.brightRadiusFeet !== 20 ||
+    lightEffect.dimAdditionalFeet !== 20
+  ) {
+    return [];
+  }
+  const duration = spell.mechanics.duration;
+  if (duration.kind !== "timed") {
+    return [];
+  }
+  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(duration.value);
+  return Either.isLeft(durationTicks)
+    ? []
+    : [
+        {
+          access: { tag: "classCantrip" },
+          resource: { tag: "none" },
+          procedure: "objectLight",
+          spell,
+          actionCost: "magicAction",
+          targeting: { kind: "singleObject" },
+          light: {
+            kind: "brightAndDim",
+            brightRadiusFeet: movementFeet(lightEffect.brightRadiusFeet),
+            dimAdditionalFeet: movementFeet(lightEffect.dimAdditionalFeet),
+          },
+          expiresAt: { kind: "duration", durationTicks: durationTicks.right },
+        },
+      ];
+}
+
 export function supportedCantripHeldLightHurlSpellProfile(
   spell: SpellRecord,
   spellcastingAbilityModifier: AbilityModifier,
@@ -423,6 +481,28 @@ export function supportedCantripHeldLightHurlSpellProfile(
       ),
     },
   ];
+}
+
+export function isLightObjectSpell(
+  spell: SpellRecord,
+): spell is SpellRecord & {
+  readonly mechanics: Extract<
+    SpellRecord["mechanics"],
+    { family: "activation" }
+  >;
+} {
+  return (
+    spell.name === "Light" &&
+    spell.provenance.kind === "srd-5.2.1" &&
+    spell.provenance.section === "Spells/Descriptions-L-P#Light" &&
+    spell.mechanics.family === "activation" &&
+    spell.mechanics.level === 0 &&
+    spell.mechanics.castingTime.kind === "action" &&
+    spell.mechanics.range.kind === "touch" &&
+    spell.mechanics.duration.kind === "timed" &&
+    spell.mechanics.duration.value.unit === "hour" &&
+    spell.mechanics.duration.value.amount === 1
+  );
 }
 
 export function isProduceFlameOngoingEffectSpell(

@@ -415,6 +415,22 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     Schema.Struct({
       access: ClassCantripSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
+      procedure: Schema.Literal("objectLight"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      targeting: Schema.Struct({
+        kind: Schema.Literal("singleObject"),
+      }),
+      light: Schema.Struct({
+        kind: Schema.Literal("brightAndDim"),
+        brightRadiusFeet: MovementFeet,
+        dimAdditionalFeet: MovementFeet,
+      }),
+      expiresAt: BattleRuntimeObjectSchema,
+    }),
+    Schema.Struct({
+      access: ClassCantripSpellAccessSchema,
+      resource: NoSpellInvocationResourceSchema,
       procedure: Schema.Literal("heldLightHurl"),
       spell: BattleRuntimeObjectSchema,
       targeting: SingleCreatureOrObjectSpellTargetingSchema,
@@ -1555,6 +1571,26 @@ type BattleFillEncoded =
               | { readonly kind: "tableResolved" };
           }
         | {
+            readonly kind: "spellObjectLightTarget";
+            readonly casterId: string;
+            readonly objectId: string;
+            readonly spellId: string;
+            readonly size:
+              | "tiny"
+              | "small"
+              | "medium"
+              | "large"
+              | "huge"
+              | "gargantuan";
+            readonly wornOrCarried:
+              | { readonly kind: "nobody" }
+              | { readonly kind: "caster" }
+              | {
+                  readonly kind: "someoneElse";
+                  readonly relation: "worn" | "carried";
+                };
+          }
+        | {
             readonly kind: "spellLeapTargetWithinRange";
             readonly previousTargetId: string;
             readonly targetId: string;
@@ -1639,22 +1675,44 @@ type BattleFillEncoded =
       readonly kind: "objectTargetChoice";
       readonly holeId: string;
       readonly value: string;
-      readonly spatialFacts: readonly {
-        readonly kind: "spellObjectTarget";
-        readonly casterId: string;
-        readonly objectId: string;
-        readonly spellId: string;
-        readonly rangeFeet: number;
-        readonly armorClass: number;
-        readonly damageDisposition:
-          | { readonly kind: "hitPoints"; readonly hitPoints: number }
-          | {
-              readonly kind: "hitPointsWithDamageThreshold";
-              readonly hitPoints: number;
-              readonly damageThreshold: number;
-            }
-          | { readonly kind: "tableResolved" };
-      }[];
+      readonly spatialFacts: readonly (
+        | {
+            readonly kind: "spellObjectTarget";
+            readonly casterId: string;
+            readonly objectId: string;
+            readonly spellId: string;
+            readonly rangeFeet: number;
+            readonly armorClass: number;
+            readonly damageDisposition:
+              | { readonly kind: "hitPoints"; readonly hitPoints: number }
+              | {
+                  readonly kind: "hitPointsWithDamageThreshold";
+                  readonly hitPoints: number;
+                  readonly damageThreshold: number;
+                }
+              | { readonly kind: "tableResolved" };
+          }
+        | {
+            readonly kind: "spellObjectLightTarget";
+            readonly casterId: string;
+            readonly objectId: string;
+            readonly spellId: string;
+            readonly size:
+              | "tiny"
+              | "small"
+              | "medium"
+              | "large"
+              | "huge"
+              | "gargantuan";
+            readonly wornOrCarried:
+              | { readonly kind: "nobody" }
+              | { readonly kind: "caster" }
+              | {
+                  readonly kind: "someoneElse";
+                  readonly relation: "worn" | "carried";
+                };
+          }
+      )[];
     }
   | {
       readonly kind: "damageTypeChoice";
@@ -1977,6 +2035,28 @@ export const BattleFillSchema: Schema.Schema<
               damageDisposition: BattleObjectDamageDispositionSchema,
             }),
             Schema.Struct({
+              kind: Schema.Literal("spellObjectLightTarget"),
+              casterId: CombatantId,
+              objectId: BattleObjectId,
+              spellId: Schema.String,
+              size: Schema.Literal(
+                "tiny",
+                "small",
+                "medium",
+                "large",
+                "huge",
+                "gargantuan",
+              ),
+              wornOrCarried: Schema.Union(
+                Schema.Struct({ kind: Schema.Literal("nobody") }),
+                Schema.Struct({ kind: Schema.Literal("caster") }),
+                Schema.Struct({
+                  kind: Schema.Literal("someoneElse"),
+                  relation: Schema.Literal("worn", "carried"),
+                }),
+              ),
+            }),
+            Schema.Struct({
               kind: Schema.Literal("spellLeapTargetWithinRange"),
               previousTargetId: CombatantId,
               targetId: CombatantId,
@@ -2073,15 +2153,39 @@ export const BattleFillSchema: Schema.Schema<
       holeId: BattleHoleIdSchema,
       value: BattleObjectId,
       spatialFacts: Schema.Array(
-        Schema.Struct({
-          kind: Schema.Literal("spellObjectTarget"),
-          casterId: CombatantId,
-          objectId: BattleObjectId,
-          spellId: Schema.String,
-          rangeFeet: MovementFeet,
-          armorClass: BattleArmorClassSchema,
-          damageDisposition: BattleObjectDamageDispositionSchema,
-        }),
+        Schema.Union(
+          Schema.Struct({
+            kind: Schema.Literal("spellObjectTarget"),
+            casterId: CombatantId,
+            objectId: BattleObjectId,
+            spellId: Schema.String,
+            rangeFeet: MovementFeet,
+            armorClass: BattleArmorClassSchema,
+            damageDisposition: BattleObjectDamageDispositionSchema,
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("spellObjectLightTarget"),
+            casterId: CombatantId,
+            objectId: BattleObjectId,
+            spellId: Schema.String,
+            size: Schema.Literal(
+              "tiny",
+              "small",
+              "medium",
+              "large",
+              "huge",
+              "gargantuan",
+            ),
+            wornOrCarried: Schema.Union(
+              Schema.Struct({ kind: Schema.Literal("nobody") }),
+              Schema.Struct({ kind: Schema.Literal("caster") }),
+              Schema.Struct({
+                kind: Schema.Literal("someoneElse"),
+                relation: Schema.Literal("worn", "carried"),
+              }),
+            ),
+          }),
+        ),
       ),
     }),
     Schema.Struct({

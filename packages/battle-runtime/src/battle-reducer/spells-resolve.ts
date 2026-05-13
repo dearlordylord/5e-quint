@@ -203,6 +203,7 @@ import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.t
 import {
   resolveHeldLightSpellAct,
   resolveMarkedDamageRiderSpellAct,
+  resolveObjectLightSpellAct,
   resolveReadySpellAct,
   resolveWeaponDamageRiderSpellAct,
 } from "./spells-resolve-release.ts";
@@ -257,6 +258,7 @@ export function resolveSpellAct(
     subject.mode.tag === "ready" &&
     (invocation.procedure === "directHitPointRestoration" ||
       invocation.procedure === "heldLightHurl" ||
+      invocation.procedure === "objectLight" ||
       invocation.procedure === "spellHostedWeaponAttack" ||
       invocation.procedure === "damageReduction" ||
       invocation.procedure === "scalarBuff" ||
@@ -352,6 +354,14 @@ export function resolveSpellAct(
   }
   if (invocation.procedure === "attackBurstSaveDamage") {
     return resolveAttackBurstSaveDamageSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "objectLight") {
+    return resolveObjectLightSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
@@ -507,7 +517,20 @@ export function resolveSpellAct(
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
-      fillSet: { ...fillSet, objectTarget },
+      fillSet: {
+        ...fillSet,
+        objectTarget: {
+          ...objectTarget,
+          spatialFacts: objectTarget.spatialFacts.filter(
+            (
+              fact,
+            ): fact is Extract<
+              (typeof objectTarget.spatialFacts)[number],
+              { readonly kind: "spellObjectTarget" }
+            > => fact.kind === "spellObjectTarget",
+          ),
+        },
+      },
     });
   }
   if (fillSet.targetId == null) {
@@ -983,7 +1006,14 @@ function resolveSpellAttackDamageObjectTarget(input: {
   };
 }): BattleResolutionResult {
   const objectFact = spellObjectTargetFact(
-    input.fillSet.objectTarget.spatialFacts,
+    input.fillSet.objectTarget.spatialFacts.filter(
+      (
+        fact,
+      ): fact is Extract<
+        (typeof input.fillSet.objectTarget.spatialFacts)[number],
+        { readonly kind: "spellObjectTarget" }
+      > => fact.kind === "spellObjectTarget",
+    ),
     input.actorId,
     input.fillSet.objectTarget.objectId,
     input.invocation,

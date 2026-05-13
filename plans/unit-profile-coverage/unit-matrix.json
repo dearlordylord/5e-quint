@@ -72,23 +72,23 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 48,
-      "numerator": 48,
+      "denominator": 49,
+      "numerator": 49,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 48,
-      "numerator": 47,
-      "percent": "97.9%"
+      "denominator": 49,
+      "numerator": 48,
+      "percent": "98%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 48,
-      "numerator": 48,
+      "denominator": 49,
+      "numerator": 49,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 48,
-      "numerator": 48,
+      "denominator": 49,
+      "numerator": 49,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -956,6 +956,31 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-object-light",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "Caller-supplied touched object identity, size, and worn/carried facts; runtime owns the spell source, object attachment, Bright/Dim radii, one-hour duration, same-caster recast replacement, and duration cleanup. Opaque-cover suppression, map illumination, obscured-area derivation, Darkvision-adjusted sight, and colored-light presentation remain outside this runtime boundary.",
+      "taskRefs": [
+        "SRDINV70B"
+      ],
+      "title": "Spell invocation creates a source-owned object light emitter",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
         }
       ]
     },
@@ -2631,6 +2656,22 @@
         "spell.invocation-jump-movement-replacement"
       ],
       "taskId": "SRDINV53"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Light's caller-supplied object identity, Large-or-smaller and worn/carried-by-someone-else target gate, object-attached Bright and Dim light emitter, one-hour duration cleanup, same-caster recast replacement, and no combatant active-effect visibility state.",
+      "profileIds": [
+        "spell.invocation-object-light"
+      ],
+      "taskId": "SRDINV70B"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Light Magic Action cantrip discovery, object target fill admission, too-large and worn/carried-by-someone-else rejection, object-attached Bright 20 plus Dim additional 20 light emitter projection, one-hour duration cleanup, same-caster recast replacement, and no duplicated combatant visibility state.",
+      "profileIds": [
+        "spell.invocation-object-light"
+      ],
+      "taskId": "SRDINV70B"
     }
   ],
   "units": [
@@ -6857,14 +6898,66 @@
         "status": "installed"
       },
       "claim": {
-        "reason": "Object light effect is authored but not promoted as an execution profile yet.",
-        "tag": "unsupported-profile"
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "SRDINV78",
+            "mechanic": "opaque-cover suppression, map illumination, obscured-area derivation, Darkvision-adjusted sight, and colored-light presentation remain outside the object-emitter runtime boundary"
+          }
+        ],
+        "profileIds": [
+          "spell.invocation-object-light"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action cantrip cast with no Spell Slot spend",
+          "caller-supplied touched object identity, size, and worn/carried facts",
+          "Large-or-smaller object admission",
+          "rejection when the object is worn or carried by someone else",
+          "source-owned object-attached Bright Light 20-foot radius plus Dim Light for an additional 20 feet",
+          "one-hour duration cleanup",
+          "same-caster recast replacement of the prior Light emitter"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV70B"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-object-light",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "Caller-supplied touched object identity, size, and worn/carried facts; runtime owns the spell source, object attachment, Bright/Dim radii, one-hour duration, same-caster recast replacement, and duration cleanup. Opaque-cover suppression, map illumination, obscured-area derivation, Darkvision-adjusted sight, and colored-light presentation remain outside this runtime boundary.",
+          "taskRefs": [
+            "SRDINV70B"
+          ],
+          "title": "Spell invocation creates a source-owned object light emitter",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/light.json",
       "unitId": "light"
     },
