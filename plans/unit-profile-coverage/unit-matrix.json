@@ -62,9 +62,9 @@
       "value": 130
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 68,
+      "denominator": 69,
       "numerator": 64,
-      "percent": "94.1%"
+      "percent": "92.8%"
     },
     "profileClassificationCoverage": {
       "denominator": 130,
@@ -72,34 +72,34 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 52,
-      "numerator": 52,
+      "denominator": 53,
+      "numerator": 53,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 52,
-      "numerator": 51,
+      "denominator": 53,
+      "numerator": 52,
       "percent": "98.1%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 52,
-      "numerator": 52,
+      "denominator": 53,
+      "numerator": 53,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 52,
-      "numerator": 52,
+      "denominator": 53,
+      "numerator": 53,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 68,
+      "denominator": 69,
       "numerator": 10,
-      "percent": "14.7%"
+      "percent": "14.5%"
     },
     "supportedProfileCoverage": {
       "denominator": 106,
-      "numerator": 68,
-      "percent": "64.2%"
+      "numerator": 69,
+      "percent": "65.1%"
     }
   },
   "metricSemantics": [
@@ -687,6 +687,32 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.weapon-mastery-sap",
+      "profileKind": "persistent-effect",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "Battle init receives selected weapon mastery weapon-kind choices from character creation; runtime gates Sap on the selected weapon kind, the attacked weapon's authored Sap mastery property, and the mastery_sap support profile.",
+      "taskRefs": [
+        "SRDINV74A"
+      ],
+      "title": "Weapon Mastery Sap imposes Disadvantage on the hit target's next attack roll before the attacker's next turn",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/index.test.ts"
         }
       ]
     },
@@ -2829,6 +2855,22 @@
         "unit-feature.martial-arts-attack-projection"
       ],
       "taskId": "SRDINV73B"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Sap's selected weapon mastery gate, hit-only application, next attack Disadvantage, and expiry at the start of the attacker's next turn.",
+      "profileIds": [
+        "unit-feature.weapon-mastery-sap"
+      ],
+      "taskId": "SRDINV74A"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime and character-battle-runtime tests cover selected Sap weapon projection from CharacterBuild, selected Sap weapon hit application, miss pass-through, missing selected weapon mastery rejection, missing Sap support rejection, next attack Disadvantage consumption, and start-of-attacker-turn cleanup.",
+      "profileIds": [
+        "unit-feature.weapon-mastery-sap"
+      ],
+      "taskId": "SRDINV74A"
     }
   ],
   "units": [
@@ -5021,14 +5063,46 @@
         "status": "installed"
       },
       "claim": {
-        "reason": "Weapon mastery rider is authored but not yet a stable Unit profile row.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "unit-feature.weapon-mastery-sap"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "mastery",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "unit-feature.weapon-mastery-sap",
+          "profileKind": "persistent-effect",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "Battle init receives selected weapon mastery weapon-kind choices from character creation; runtime gates Sap on the selected weapon kind, the attacked weapon's authored Sap mastery property, and the mastery_sap support profile.",
+          "taskRefs": [
+            "SRDINV74A"
+          ],
+          "title": "Weapon Mastery Sap imposes Disadvantage on the hit target's next attack roll before the attacker's next turn",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/mastery_sap.json",
       "unitId": "mastery_sap"
     },

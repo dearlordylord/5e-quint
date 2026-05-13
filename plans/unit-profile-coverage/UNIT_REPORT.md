@@ -17,13 +17,13 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Authored Surface Unit catalog admission | 129/422 | 30.6% |
 | Authored Surface executable catalog admission | 105/355 | 29.6% |
 | Installed Unit profile classification coverage | 130/130 | 100% |
-| Supported executable Unit coverage | 68/106 | 64.2% |
-| QNT profile modeling coverage | 52/52 | 100% |
-| QNT proof coverage | 51/52 | 98.1% |
-| Runtime mapping coverage | 52/52 | 100% |
-| Runtime parity coverage | 52/52 | 100% |
-| Deterministic admission/projection coverage | 64/68 | 94.1% |
-| Selected identity MBT coverage | 10/68 | 14.7% |
+| Supported executable Unit coverage | 69/106 | 65.1% |
+| QNT profile modeling coverage | 53/53 | 100% |
+| QNT proof coverage | 52/53 | 98.1% |
+| Runtime mapping coverage | 53/53 | 100% |
+| Runtime parity coverage | 53/53 | 100% |
+| Deterministic admission/projection coverage | 64/69 | 92.8% |
+| Selected identity MBT coverage | 10/69 | 14.5% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -72,6 +72,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `paladin_extra_attack` | srd-5.2.1 | `unit-feature.attack-action-attack-count-scaling` |
 | `ranger_extra_attack` | srd-5.2.1 | `unit-feature.attack-action-attack-count-scaling` |
 | `ranger_roving` | srd-5.2.1 | `unit-feature.passive-speed-kind-grants` |
+| `mastery_sap` | srd-5.2.1 | `unit-feature.weapon-mastery-sap` |
 | `orc_adrenaline_rush` | srd-5.2.1 | `unit-feature.bonus-action-dash-temporary-hit-points` |
 | `orc_relentless_endurance` | srd-5.2.1 | `unit-feature.zero-hit-point-replacement` |
 | `acid_splash` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
@@ -901,7 +902,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `paladin_weapon_mastery` | unsupported-profile | Weapon mastery grant container; mastery Unit carries executable pressure. |
 | `ranger_weapon_mastery` | unsupported-profile | Weapon mastery grant container; mastery Unit carries executable pressure. |
 | `rogue_weapon_mastery` | unsupported-profile | Weapon mastery grant container; mastery Unit carries executable pressure. |
-| `mastery_sap` | unsupported-profile | Weapon mastery rider is authored but not yet a stable Unit profile row. |
 | `orc_darkvision` | unsupported-profile | Sense grant is authored data with no promoted execution profile. |
 | `chill_touch` | profile-subset-supported | supported subset: combatant-target melee spell attack damage; cantrip damage scaling; hit-applied target can't regain Hit Points until the end of the caster's next turn; readied Action-time spell release; deferred: non-combatant target eligibility for the SRD generic target wording (SRDINV34) |
 | `faerie_fire` | profile-subset-supported | supported subset: 20-foot point-origin Cube affected-creature boundary with table-supplied area membership; Dexterity save-gated affected creatures; Concentration-owned outline effect that grants attack-roll Advantage against failed-save affected creatures when the attacker can see them and denies benefits from the Invisible condition; deferred: object outline and object attack-roll Advantage (SRDINV58C); Dim Light emitted by affected creatures and objects (SRDINV70A) |
@@ -934,7 +934,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
-| srd-5.2.1 | unassigned | unsupported-profile | 46 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `ranger_favored_enemy`, `rogue_expertise`, `rogue_thieves_cant`, `sorcerer_innate_sorcery`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `mastery_sap`, `orc_darkvision`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `minor_illusion`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
+| srd-5.2.1 | unassigned | unsupported-profile | 45 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `ranger_favored_enemy`, `rogue_expertise`, `rogue_thieves_cant`, `sorcerer_innate_sorcery`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `orc_darkvision`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `minor_illusion`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword` |
 | srd-5.2.1 | unassigned | profile-subset-supported | 15 | `bard_bardic_inspiration`, `monk_martial_arts`, `chill_touch`, `faerie_fire`, `feather_fall`, `grease`, `hunters_mark`, `jump`, `light`, `protection_from_evil_and_good`, `produce_flame`, `starry_wisp`, `sleep`, `thunderwave`, `charm_person` |
 | srd-5.2.1 | QCORE10 | needs-surface-widening | 1 | `fire_bolt` |
 
@@ -1068,6 +1068,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 | SRDINV73A | completed-runtime-parity | `unit-feature.martial-arts-attack-projection` |
 | SRDINV73B | qnt-proof | `unit-feature.martial-arts-attack-projection` |
 | SRDINV73B | completed-runtime-parity | `unit-feature.martial-arts-attack-projection` |
+| SRDINV74A | qnt-proof | `unit-feature.weapon-mastery-sap` |
+| SRDINV74A | completed-runtime-parity | `unit-feature.weapon-mastery-sap` |
 
 ## Supported Profiles Lacking Runtime Parity
 

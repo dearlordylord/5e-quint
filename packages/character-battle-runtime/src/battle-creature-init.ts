@@ -47,7 +47,10 @@ import {
   getRequiredUnit,
   type BattleCreatureInitIssue,
 } from "./battle-character-build-projection.ts";
-import { characterUnitRefsWithBattleSupportProfiles } from "./battle-support-profiles.ts";
+import {
+  characterBattleWeaponMasterySelections,
+  characterUnitRefsWithBattleSupportProfiles,
+} from "./battle-support-profiles.ts";
 
 // MCP owns cross-runtime wiring. Character creation finalizes a CharacterBuild;
 // battle accepts battle-owned creature-init inputs. This mapper is where
@@ -105,9 +108,19 @@ export function battleCreatureInitFromCharacterBuild(
     );
   }
   const maxHp = Hp(hitPoints.right.maximum);
+  const weaponMasteries = characterBattleWeaponMasterySelections(
+    input.build,
+    input.unitLibrary,
+  );
+  if (Either.isLeft(weaponMasteries)) {
+    return battleCreatureInitIssue(
+      weaponMasteries.left.map((issue) => issue.message).join("; "),
+    );
+  }
   const characterUnitRefs = characterUnitRefsWithBattleSupportProfiles(
     input.build,
     input.unitLibrary,
+    weaponMasteries.right,
   );
   if (Either.isLeft(characterUnitRefs)) {
     return battleCreatureInitIssue(
@@ -236,6 +249,9 @@ export function battleCreatureInitFromCharacterBuild(
         ? {}
         : { zeroHpLifecycle: input.zeroHpLifecycle }),
       selectedLoadout,
+      ...(weaponMasteries.right.length === 0
+        ? {}
+        : { weaponMasteries: weaponMasteries.right }),
       attack: attack.right,
       unarmedStrike: unarmedStrike.right,
       ...(offHandAttack.right === undefined

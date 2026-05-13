@@ -304,6 +304,7 @@ export function applyFailedSaveSpellActiveEffects(
           (effect) =>
             !(
               effect.kind === "nextAttackRollBySelf" &&
+              "sourceSpellId" in effect &&
               effect.sourceSpellId === invocation.spell.id &&
               effect.sourceCombatantId === actorId
             ),

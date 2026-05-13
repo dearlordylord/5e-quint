@@ -173,6 +173,9 @@ export function battleCreatureStateFromInit(
     assertCharacterBattleFeaturesHaveUniqueUnits(
       creatureInit.unitFeatures ?? [],
     );
+    assertCharacterBattleWeaponMasteriesHaveUniqueWeapons(
+      creatureInit.weaponMasteries ?? [],
+    );
     return applyInitialZeroHpLifecycle({
       ...base,
       armorClass: creatureInit.armorClass,
@@ -184,6 +187,7 @@ export function battleCreatureStateFromInit(
         classLevels,
         weaponProficiencies: creatureInit.weaponProficiencies ?? [],
         selectedLoadout: creatureInit.selectedLoadout,
+        weaponMasteries: creatureInit.weaponMasteries ?? [],
         speed: creatureInit.speed,
         attack: creatureInit.attack,
         unarmedStrike: creatureInit.unarmedStrike,
@@ -288,6 +292,22 @@ export function assertCharacterBattleFeaturesHaveUniqueUnits(
       );
     }
     seen.add(feature.unit.id);
+  }
+}
+
+export function assertCharacterBattleWeaponMasteriesHaveUniqueWeapons(
+  weaponMasteries: readonly NonNullable<
+    CharacterBattleCreatureInit["weaponMasteries"]
+  >[number][],
+): void {
+  const seen = new Set<UnitRecord["id"]>();
+  for (const weaponMastery of weaponMasteries) {
+    if (seen.has(weaponMastery.weaponUnitId)) {
+      throw new Error(
+        `Duplicate character battle weapon mastery selection: ${weaponMastery.weaponUnitId}`,
+      );
+    }
+    seen.add(weaponMastery.weaponUnitId);
   }
 }
 

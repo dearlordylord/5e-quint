@@ -2,6 +2,7 @@
 // battle-reducer.ts. Cluster T (attack_roll). Mechanical extraction — no
 // behavior change. Cycle #20 resolved by importing the shared ongoing-feature
 // helpers from ./ongoing-feature-helpers.ts instead of cycling through J.
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.weapon-mastery-sap
 
 import {
   EMPTY_CONDITION_STATE,
@@ -20,6 +21,7 @@ import type {
   OngoingFeatureRollModifier,
   SupportedUnitFeatureProfile,
 } from "../unit-feature-support.ts";
+import { WEAPON_MASTERY_SAP_SUPPORT_PROFILE } from "../unit-feature-support.ts";
 import {
   ATTACK_ROLL_HOLE_ID,
   ATTACK_ROLL_HOLE_INSTANCE,
@@ -35,6 +37,7 @@ import {
   isCharacterBattleCreatureState,
   ongoingFeatureProfileForSourceKey,
   ongoingFeatureSourceKeyForUnit,
+  unitRefSupportsProfile,
 } from "./creature-state.ts";
 import {
   attackActionBonusWithPassiveFeatureBonus,
@@ -55,6 +58,8 @@ import {
   ongoingFeatureProfileHasExtensionTrigger,
 } from "./ongoing-feature-helpers.ts";
 import { battleCreatureType } from "./domain-helpers.ts";
+
+const WEAPON_MASTERY_SAP_UNIT_ID = "mastery_sap" satisfies UnitRecord["id"];
 
 export function attackRollHole(
   attacker: BattleCreatureState | undefined,
@@ -414,6 +419,61 @@ export function consumeHelpAttackForAttackRoll(
     helpAttacks: withoutOneShotEffects.helpAttacks.filter(
       (_, index) => index !== helpIndex,
     ),
+  };
+}
+
+export function applyWeaponMasterySapOnHit(
+  state: BattleState,
+  attackerId: CombatantId,
+  targetId: CombatantId,
+  attack: SupportedAttackActionOption,
+): BattleState {
+  if (attack.kind !== "weapon") {
+    return state;
+  }
+  const attacker = state.combatants.get(attackerId);
+  const target = state.combatants.get(targetId);
+  const hasSelectedWeaponMastery = isCharacterBattleCreatureState(attacker)
+    ? attacker.origin.weaponMasteries.find(
+        (mastery) => mastery.weaponUnitId === attack.weapon.id,
+      )
+    : undefined;
+  if (
+    !isCharacterBattleCreatureState(attacker) ||
+    target === undefined ||
+    attack.weapon.mastery !== "sap" ||
+    hasSelectedWeaponMastery === undefined ||
+    !unitRefSupportsProfile(
+      attacker.origin.characterUnitRefs,
+      WEAPON_MASTERY_SAP_UNIT_ID,
+      WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
+    )
+  ) {
+    return state;
+  }
+  const activeEffects = [
+    ...target.activeEffects.filter(
+      (effect) =>
+        !(
+          effect.kind === "nextAttackRollBySelf" &&
+          "sourceUnitId" in effect &&
+          effect.sourceCombatantId === attackerId
+        ),
+    ),
+    {
+      kind: "nextAttackRollBySelf",
+      sourceUnitId: WEAPON_MASTERY_SAP_UNIT_ID,
+      sourceCombatantId: attackerId,
+      mode: "disadvantage",
+      expiresAt: { kind: "startOfTurn", combatantId: attackerId },
+    } as const,
+  ];
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(targetId, {
+      ...target,
+      activeEffects,
+    }),
   };
 }
 

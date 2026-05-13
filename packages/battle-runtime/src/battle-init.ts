@@ -44,6 +44,10 @@ export type CharacterBattleLoadoutRef = {
   };
 };
 
+export type CharacterBattleWeaponMasterySelection = {
+  readonly weaponUnitId: UnitRecord["id"];
+};
+
 export type BattleWalkSpeed = {
   readonly walkFeet: MovementFeet;
 };
@@ -76,6 +80,7 @@ export type CharacterBattleCreatureInit = {
   readonly positiveHpUnconscious?: BattlePositiveHpUnconscious;
   readonly zeroHpLifecycle?: CharacterZeroHpLifecycleInit;
   readonly selectedLoadout: CharacterBattleLoadoutRef;
+  readonly weaponMasteries?: readonly CharacterBattleWeaponMasterySelection[];
   readonly attack: CharacterWeaponAttackActionOption | null;
   readonly unarmedStrike: CharacterUnarmedStrikeActionOption;
   readonly offHandAttack?: CharacterWeaponAttackActionOption | undefined;

@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points
@@ -24,6 +24,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-object-light
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.reaction-hellish-rebuke spell.invocation-damage-save-or-attack
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.weapon-mastery-sap
 module battleRuntime {
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
@@ -109,6 +110,10 @@ module battleRuntime {
   //   Unarmed Strike, level-1 d6 damage replacement, Dexterity attack/damage
   //   choice, and Dexterity Grapple/Shove save DC projection for the promoted
   //   Unarmed Strike Grapple and Shove action paths.
+  // - Equipment.md lines 82-107 and UBIQUITOUS_LANGUAGE.md: Sap is a Weapon
+  //   Mastery property usable only for an unlocked weapon kind; on a hit with
+  //   that weapon, the target has Disadvantage on its next attack roll before
+  //   the start of the attacker's next turn.
   // - Classes/Rogue.md lines 113-115, Classes/Monk.md lines 132-134, and
   //   Playing-the-Game.md lines 704-714: Evasion-style replacement riders
   //   apply only to Dexterity Saving Throw damage procedures whose successful
@@ -320,7 +325,7 @@ module battleRuntime {
   type SpellActionCost = SpellMagicAction | SpellBonusAction
   type CommandOption = CommandGrovelOption | CommandHaltOption | CommandDropOption | CommandApproachOption | CommandFleeOption
 
-  type ActiveEffect = BardicInspirationDie({ source: Actor, dieSize: int, durationTicks: int }) | MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool, durationTicks: int }) | RayOfSicknessPoisoned | ChillTouchHitPointRegainPrevented({ source: Actor, expiresAtRound: int }) | StarryWispInvisibleBenefitDenied({ source: Actor, expiresAtRound: int }) | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodCreatureTypeProtection | ProduceFlameHeldLight({ durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
+  type ActiveEffect = BardicInspirationDie({ source: Actor, dieSize: int, durationTicks: int }) | MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool, durationTicks: int }) | RayOfSicknessPoisoned | ChillTouchHitPointRegainPrevented({ source: Actor, expiresAtRound: int }) | StarryWispInvisibleBenefitDenied({ source: Actor, expiresAtRound: int }) | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | WeaponMasterySapNextAttackDisadvantage({ source: Actor }) | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodCreatureTypeProtection | ProduceFlameHeldLight({ durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
   type PreventedProtectionCondition = PreventedCharmed | PreventedFrightened
   type PossessionAttemptDisposition = PossessionPreventedByCreatureTypeProtection | PossessionUnprevented
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
@@ -687,6 +692,7 @@ module battleRuntime {
     fighterSneakAttackUsedThisTurn: bool,
     fighterExtraAttackSupported: bool,
     fighterExtraAttackSlotsRemaining: int,
+    fighterLongswordSapMastery: bool,
   }
 
   type ActionSurgeResult = {
@@ -802,6 +808,7 @@ module battleRuntime {
     fighterSneakAttackUsedThisTurn: false,
     fighterExtraAttackSupported: false,
     fighterExtraAttackSlotsRemaining: 0,
+    fighterLongswordSapMastery: false,
   }
 
   // The battle runtime receives Initiative counts and the caller-resolved
@@ -902,6 +909,15 @@ module battleRuntime {
       | _ => true
     })
 
+  pure def activeEffectsWithoutExpiredSapStartOfTurnRiders(
+    effects: Set[ActiveEffect],
+    actor: Actor,
+  ): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | WeaponMasterySapNextAttackDisadvantage(data) => data.source != actor
+      | _ => true
+    })
+
   pure def lightEmittersWithoutExpiredEndOfTurnEmitters(
     emitters: Set[LightEmitter],
     actor: Actor,
@@ -962,7 +978,7 @@ module battleRuntime {
     else
       state
 
-  pure def expireStartOfTurnEffectsForActor(effects: Set[ActiveEffect]): Set[ActiveEffect] = {
+  pure def expireStartOfTurnEffectsForActiveActor(effects: Set[ActiveEffect]): Set[ActiveEffect] = {
     val resetEffects = resetResistanceDamageReductions(effects)
     if (battleRuntimeOneRoundShieldArmorClassBonusExpiresAtStartOfNextTurn)
       resetEffects.exclude(Set(ShieldArmorClassBonus))
@@ -970,15 +986,38 @@ module battleRuntime {
       resetEffects
   }
 
+  pure def expireStartOfTurnEffectsForNonActiveActor(effects: Set[ActiveEffect], actor: Actor): Set[ActiveEffect] =
+    activeEffectsWithoutExpiredSapStartOfTurnRiders(effects, actor)
+
   pure def expireStartOfTurnSpellEffects(state: BattleState, nextActor: Actor): BattleState =
     match nextActor {
       | Fighter => {
           ...state,
-          fighter: { ...state.fighter, activeEffects: expireStartOfTurnEffectsForActor(state.fighter.activeEffects) },
+          fighter: {
+            ...state.fighter,
+            activeEffects: activeEffectsWithoutExpiredSapStartOfTurnRiders(
+              expireStartOfTurnEffectsForActiveActor(state.fighter.activeEffects),
+              Fighter
+            ),
+          },
+          goblin: {
+            ...state.goblin,
+            activeEffects: expireStartOfTurnEffectsForNonActiveActor(state.goblin.activeEffects, Fighter),
+          },
         }
       | Goblin => {
           ...state,
-          goblin: { ...state.goblin, activeEffects: expireStartOfTurnEffectsForActor(state.goblin.activeEffects) },
+          fighter: {
+            ...state.fighter,
+            activeEffects: expireStartOfTurnEffectsForNonActiveActor(state.fighter.activeEffects, Goblin),
+          },
+          goblin: {
+            ...state.goblin,
+            activeEffects: activeEffectsWithoutExpiredSapStartOfTurnRiders(
+              expireStartOfTurnEffectsForActiveActor(state.goblin.activeEffects),
+              Goblin
+            ),
+          },
         }
     }
 
@@ -1179,6 +1218,7 @@ module battleRuntime {
         | ShockingGraspOpportunityAttackDenied => false
         | GuidingBoltNextAttackAdvantage => false
         | ViciousMockeryNextAttackDisadvantage => false
+        | WeaponMasterySapNextAttackDisadvantage(_) => false
         | ColorSprayBlinded => false
         | EntangleRestrained => false
         | EnsnaringStrikeRestrained(_) => false
@@ -1810,8 +1850,11 @@ module battleRuntime {
       val huntersMarkDamage = fighterHuntersMarkDamage(damageRoll.huntersMarkDamageRoll, revealed.fighter.activeEffects, Goblin)
       if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), fighterCriticalThreshold(state))))
         { ...spent, lightWeaponAttackMade: true }
-      else
-        { ...spent, goblin: applyDamageFromSource(state.goblin, damageRoll.weaponDamageRoll + 3 + rageDamage + divineFavorDamage + divineSmiteDamage + huntersMarkDamage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded, damageDisposition, Fighter), lightWeaponAttackMade: true }
+      else {
+        val damaged = applyDamageFromSource(state.goblin, damageRoll.weaponDamageRoll + 3 + rageDamage + divineFavorDamage + divineSmiteDamage + huntersMarkDamage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded, damageDisposition, Fighter)
+        val sapEffects = if (state.fighterLongswordSapMastery) Set(WeaponMasterySapNextAttackDisadvantage({ source: Fighter })) else Set()
+        { ...spent, goblin: { ...damaged, activeEffects: damaged.activeEffects.union(sapEffects) }, lightWeaponAttackMade: true }
+      }
     }
 
   pure def trueStrikeBonusDamageDice(characterLevel: int): int =
@@ -5026,11 +5069,11 @@ module battleRuntime {
     targetEffects: Set[ActiveEffect],
     attackerCanSeeTarget: bool,
   ): SpellAttackRollMode =
-    if (attackerEffects.contains(ViciousMockeryNextAttackDisadvantage) and (targetEffects.contains(GuidingBoltNextAttackAdvantage) or (attackerCanSeeTarget and targetEffects.contains(FaerieFireOutline))))
+    if ((attackerEffects.contains(ViciousMockeryNextAttackDisadvantage) or attackerEffects.exists(effect => match effect { | WeaponMasterySapNextAttackDisadvantage(_) => true | _ => false })) and (targetEffects.contains(GuidingBoltNextAttackAdvantage) or (attackerCanSeeTarget and targetEffects.contains(FaerieFireOutline))))
       NormalSpellAttackRoll
     else if (targetEffects.contains(GuidingBoltNextAttackAdvantage) or (attackerCanSeeTarget and targetEffects.contains(FaerieFireOutline)))
       AdvantageSpellAttackRoll
-    else if (attackerEffects.contains(ViciousMockeryNextAttackDisadvantage))
+    else if (attackerEffects.contains(ViciousMockeryNextAttackDisadvantage) or attackerEffects.exists(effect => match effect { | WeaponMasterySapNextAttackDisadvantage(_) => true | _ => false }))
       DisadvantageSpellAttackRoll
     else
       NormalSpellAttackRoll
@@ -5060,6 +5103,7 @@ module battleRuntime {
       or (attackerCanSeeTarget and targetEffects.contains(FaerieFireOutline))
     val hasDisadvantage =
       attackerEffects.contains(ViciousMockeryNextAttackDisadvantage)
+      or attackerEffects.exists(effect => match effect { | WeaponMasterySapNextAttackDisadvantage(_) => true | _ => false })
       or (
         targetEffects.contains(ProtectionFromEvilAndGoodCreatureTypeProtection)
         and protectionFromEvilAndGoodCreatureTypeIsScoped(attackerCreatureType)
@@ -8152,6 +8196,60 @@ module battleRuntime {
     all {
       assert(result.actionAvailable == false),
       assert(result.goblin.hp == 10),
+    }
+  }
+
+  run test_weapon_mastery_sap_applies_next_attack_disadvantage_on_selected_sap_weapon_hit = {
+    val mastered = { ...initialState, fighterLongswordSapMastery: true }
+    val hit = resolveAttack(mastered, 15, 10, fighterWeaponAttackDamageRoll(1), true)
+    val goblinTurn = endTurn(hit)
+    val fighterNextTurn = endTurn(goblinTurn)
+    all {
+      assert(hit.goblin.activeEffects.contains(WeaponMasterySapNextAttackDisadvantage({ source: Fighter }))),
+      assert(spellAttackRollModeFromActiveEffects(hit.goblin.activeEffects, Set(), true) == DisadvantageSpellAttackRoll),
+      assert(goblinTurn.goblin.activeEffects.contains(WeaponMasterySapNextAttackDisadvantage({ source: Fighter }))),
+      assert(not(fighterNextTurn.goblin.activeEffects.contains(WeaponMasterySapNextAttackDisadvantage({ source: Fighter })))),
+    }
+  }
+
+  run test_weapon_mastery_sap_start_turn_expiry_preserves_non_active_combatant_effects = {
+    val goblinTurn = endTurn(initialState)
+    val primed = {
+      ...goblinTurn,
+      goblin: {
+        ...goblinTurn.goblin,
+        activeEffects: Set(
+          ShieldArmorClassBonus,
+          ResistanceDamageReduction({ damageType: Piercing, usedThisTurn: true }),
+          JumpMovementReplacement({ durationTicks: 10, usedThisTurn: true }),
+          WeaponMasterySapNextAttackDisadvantage({ source: Fighter })
+        ),
+      },
+    }
+    val fighterNextTurn = endTurn(primed)
+    all {
+      assert(not(fighterNextTurn.goblin.activeEffects.contains(WeaponMasterySapNextAttackDisadvantage({ source: Fighter })))),
+      assert(fighterNextTurn.goblin.activeEffects.contains(ShieldArmorClassBonus)),
+      assert(fighterNextTurn.goblin.activeEffects.contains(ResistanceDamageReduction({ damageType: Piercing, usedThisTurn: true }))),
+      assert(fighterNextTurn.goblin.activeEffects.exists(effect => match effect {
+        | JumpMovementReplacement(data) => data.usedThisTurn
+        | _ => false
+      })),
+    }
+  }
+
+  run test_weapon_mastery_sap_is_gated_by_hit_and_selected_weapon_mastery = {
+    val notMasteredHit = resolveAttack(initialState, 15, 10, fighterWeaponAttackDamageRoll(1), true)
+    val masteredMiss = resolveAttack({ ...initialState, fighterLongswordSapMastery: true }, 1, 1, fighterWeaponAttackDamageRoll(1), true)
+    all {
+      assert(not(notMasteredHit.goblin.activeEffects.exists(effect => match effect {
+        | WeaponMasterySapNextAttackDisadvantage(_) => true
+        | _ => false
+      }))),
+      assert(not(masteredMiss.goblin.activeEffects.exists(effect => match effect {
+        | WeaponMasterySapNextAttackDisadvantage(_) => true
+        | _ => false
+      }))),
     }
   }
 

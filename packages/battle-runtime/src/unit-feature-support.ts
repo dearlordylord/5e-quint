@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.martial-arts-attack-projection unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.martial-arts-attack-projection unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.zero-hit-point-replacement
 import { Match } from "effect";
 import * as Either from "effect/Either";
 import {
@@ -67,6 +67,7 @@ export const FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE =
   "failedAbilityCheckResourceBoost";
 export const BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE =
   "bardicInspirationGrant";
+export const WEAPON_MASTERY_SAP_SUPPORT_PROFILE = "weaponMasterySap";
 const BARDIC_INSPIRATION_RANGE_FEET = 60;
 export const ALTERNATE_ACTION_COST_ACTIONS = [
   "dash",
@@ -93,6 +94,7 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE,
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
   FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE,
+  WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
 ] as const;
 export type BattlePassiveSpeedBonusSupportProfile = {
@@ -453,6 +455,18 @@ export function battleUnitSupportProfilesForUnit(input: {
   }
   if (bardicInspirationGrantSupport !== null) {
     supportProfiles.push(bardicInspirationGrantSupport);
+  }
+
+  const weaponMasterySapSupport = battleWeaponMasterySapSupportForUnit(
+    input.unit,
+  );
+  if (weaponMasterySapSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Weapon Mastery Sap Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (weaponMasterySapSupport !== null) {
+    supportProfiles.push(weaponMasterySapSupport);
   }
 
   return Either.right(supportProfiles);
@@ -1192,6 +1206,11 @@ export type BattleBonusActionDashTemporaryHitPointsSupport =
 
 export type BattleFailedAbilityCheckResourceBoostSupport =
   | BattleFailedAbilityCheckResourceBoostSupportProfile
+  | "unsupported"
+  | null;
+
+export type BattleWeaponMasterySapSupport =
+  | typeof WEAPON_MASTERY_SAP_SUPPORT_PROFILE
   | "unsupported"
   | null;
 
@@ -2144,6 +2163,25 @@ export function battleBardicInspirationGrantSupportForUnit(
     )
     ? "unsupported"
     : null;
+}
+
+export function battleWeaponMasterySapSupportForUnit(
+  unit: UnitRecord,
+): BattleWeaponMasterySapSupport {
+  if (unit.kind !== "mastery") {
+    return null;
+  }
+  return unit.mechanics.family === "on_hit_trigger" &&
+    unit.mechanics.trigger.kind === "weapon_hit" &&
+    unit.mechanics.optional === false &&
+    unit.mechanics.effect.kind === "modify_roll_advantage" &&
+    unit.mechanics.effect.mode === "disadvantage" &&
+    unit.mechanics.effect.count === 1 &&
+    unit.mechanics.effect.on.length === 1 &&
+    unit.mechanics.effect.on[0] === "attack_roll" &&
+    unit.mechanics.effect.expiresOn.kind === "target_uses_or_turn_start"
+    ? WEAPON_MASTERY_SAP_SUPPORT_PROFILE
+    : "unsupported";
 }
 
 function parseBardicInspirationGrantUnitFeatureProfile(

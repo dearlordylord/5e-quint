@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.martial-arts-attack-projection
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap
 import type {
   BattleFill,
   BattleCreatureState,
@@ -34,6 +34,7 @@ import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import {
   Hp,
   abilityModifier,
+  DieRollResult,
   proficiencyBonus,
   resourceCount,
   spellSlotLevel,
@@ -433,6 +434,97 @@ describe("Character Build battle projection", () => {
     ).toMatchObject({ choices: [targetId] });
   });
 
+  test("projects selected Weapon Mastery Sap into battle attack behavior", () => {
+    const fighterId = combatantId("weapon-mastery-fighter");
+    const targetId = combatantId("weapon-mastery-target");
+    const state = expectRight(
+      startBattleFromCharacterBuildAndStatBlock({
+        battleId: battleId("character-battle-weapon-mastery-sap"),
+        character: {
+          combatantId: fighterId,
+          characterId: characterId("character:weapon-mastery-fighter"),
+          displayName: "Weapon Mastery Fighter",
+          build: weaponMasteryLongswordFighterBuild(),
+          initiative: initiativeScore(20),
+          side: battleCombatantSide("party"),
+        },
+        statBlockBattleInput: {
+          combatantId: targetId,
+          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          initiative: initiativeScore(10),
+          side: battleCombatantSide("monsters"),
+        },
+        unitLibrary,
+      }),
+    );
+    const fighter = state.combatants.get(fighterId);
+    expect(fighter?.origin).toMatchObject({
+      kind: "character",
+      weaponMasteries: [{ weaponUnitId: "weapon_longsword" }],
+      characterUnitRefs: expect.arrayContaining([
+        {
+          unitId: "mastery_sap",
+          supportProfiles: ["weaponMasterySap"],
+        },
+      ]),
+    });
+
+    const subject = {
+      tag: "action" as const,
+      actorId: fighterId,
+      action: "attack" as const,
+      attackName: "Longsword",
+    };
+    const meleeReachFact = {
+      kind: "attackTargetInMeleeReach" as const,
+      actorId: fighterId,
+      targetId,
+      attackName: "Longsword",
+    };
+    const target = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const attackRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFill(target, targetId, [meleeReachFact])],
+      }),
+      "attackRoll",
+    );
+    const damageRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(target, targetId, [meleeReachFact]),
+          attackRollFill(attackRoll, { total: 15, naturalD20: 10 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    const hit = requireResolvedBattleSubject(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(target, targetId, [meleeReachFact]),
+          attackRollFill(attackRoll, { total: 15, naturalD20: 10 }),
+          rolledDiceFill(damageRoll, 1),
+        ],
+      }),
+    );
+
+    expect(hit.state.combatants.get(targetId)?.activeEffects).toContainEqual({
+      kind: "nextAttackRollBySelf",
+      sourceUnitId: "mastery_sap",
+      sourceCombatantId: fighterId,
+      mode: "disadvantage",
+      expiresAt: { kind: "startOfTurn", combatantId: fighterId },
+    });
+  });
+
   test("projects Martial Arts d6 and Dexterity for eligible unarmed and Monk weapon attacks", () => {
     const init = expectRight(
       battleCreatureInitFromCharacterBuild({
@@ -798,6 +890,15 @@ function requireHole<K extends BattleHole["kind"]>(
   return hole;
 }
 
+function requireResolvedBattleSubject(
+  result: ReturnType<typeof resolveBattleSubject>,
+): Extract<ReturnType<typeof resolveBattleSubject>, { readonly tag: "resolved" }> {
+  if (result.tag !== "resolved") {
+    throw new Error(`Expected resolved result, got ${result.tag}.`);
+  }
+  return result;
+}
+
 function targetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
   targetId: ReturnType<typeof combatantId>,
@@ -811,6 +912,31 @@ function targetFill(
     holeId: hole.holeId,
     value: targetId,
     ...(spatialFacts.length === 0 ? {} : { spatialFacts }),
+  };
+}
+
+function attackRollFill(
+  hole: Extract<BattleHole, { readonly kind: "attackRoll" }>,
+  value: { readonly total: number; readonly naturalD20: number },
+): Extract<BattleFill, { readonly kind: "attackRoll" }> {
+  return {
+    kind: "attackRoll",
+    holeId: hole.holeId,
+    value: {
+      total: value.total,
+      naturalD20: DieRollResult(value.naturalD20),
+    },
+  };
+}
+
+function rolledDiceFill(
+  hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
+  value: number,
+): Extract<BattleFill, { readonly kind: "rolledDice" }> {
+  return {
+    kind: "rolledDice",
+    holeId: hole.holeId,
+    value: [{ results: [DieRollResult(value)] }],
   };
 }
 
@@ -886,6 +1012,33 @@ function defenseBuild(input: {
     equipment: {
       owned: [{ itemId: armorItemId, unitId: "armor_chain_mail" }],
       loadout: input.wearingArmor ? { armor: armorItemId } : {},
+    },
+  };
+}
+
+function weaponMasteryLongswordFighterBuild(): CharacterBuild {
+  const longswordItemId = characterEquipmentItemId({
+    slot: "main",
+    unitId: expectRight(characterEquipmentItemUnitId("weapon_longsword")),
+  });
+
+  return {
+    ...defenseBuild({ wearingArmor: false }),
+    features: [
+      {
+        selectedFromUnitId: "fighter_weapon_mastery",
+        kind: "selectedClassChoice",
+        unitId: "weapon_longsword",
+      },
+    ],
+    equipment: {
+      owned: [{ itemId: longswordItemId, unitId: "weapon_longsword" }],
+      loadout: {
+        weapon: {
+          itemId: longswordItemId,
+          grip: "one_handed",
+        },
+      },
     },
   };
 }

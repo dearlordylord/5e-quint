@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bardic-inspiration-failed-d20-test unit-feature.martial-arts-attack-projection spell.invocation-beam-sequence spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-marked-damage-rider spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bardic-inspiration-failed-d20-test unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap spell.invocation-beam-sequence spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-marked-damage-rider spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV72B bard_bardic_inspiration
 import { Schema } from "effect";
 import * as Either from "effect/Either";
@@ -15,6 +15,7 @@ import {
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
+  WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
   BattleFillSchema,
   BattleHoleSchema,
@@ -81,6 +82,7 @@ import {
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
 import { combatantCanSee } from "./battle-reducer/creature-state-leaves.ts";
+import { applyWeaponMasterySapOnHit } from "./battle-reducer/attack-roll.ts";
 import {
   holeId,
   holeInstanceKey,
@@ -3807,6 +3809,156 @@ describe("battle runtime", () => {
         },
       },
     });
+  });
+
+  test("Weapon Mastery Sap applies next attack Disadvantage on a selected Sap weapon hit", () => {
+    const state = fighterVsGoblinBattle({
+      characterUnitRefs: masterySapUnitRefs(),
+      weaponMasteries: longswordWeaponMasterySelections(),
+    });
+    const subject = fighterAttackSubject();
+    const targetHole = attackInitialTargetHole(state, subject);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole, subject);
+    const damageHole = attackDamageHoleAfterHit(
+      state,
+      targetHole,
+      rollHole,
+      { total: 15, naturalD20: 10 },
+      subject,
+    );
+
+    const hit = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(targetHole, goblinId),
+          attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+          damageRollFill(damageHole, 1),
+        ],
+      }),
+    );
+
+    expect(hit.state.combatants.get(goblinId)?.activeEffects).toContainEqual({
+      kind: "nextAttackRollBySelf",
+      sourceUnitId: "mastery_sap",
+      sourceCombatantId: fighterId,
+      mode: "disadvantage",
+      expiresAt: { kind: "startOfTurn", combatantId: fighterId },
+    });
+
+    const goblinTurn = requireResolved(
+      endTurn({ state: hit.state, actorId: fighterId }),
+    ).state;
+    const goblinSubject = goblinAttackSubject("Scimitar");
+    const goblinTarget = attackInitialTargetHole(goblinTurn, goblinSubject);
+    const goblinRoll = attackRollHoleAfterTarget(
+      goblinTurn,
+      goblinTarget,
+      goblinSubject,
+      fighterId,
+    );
+
+    expect(goblinRoll).toMatchObject({
+      kind: "attackRoll",
+      rollMode: "disadvantage",
+    });
+
+    const missed = requireResolved(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject: goblinSubject,
+        fills: [
+          targetFill(goblinTarget, fighterId),
+          attackRollFill(goblinRoll, {
+            total: 1,
+            naturalD20: 1,
+            rollMode: "disadvantage",
+          }),
+        ],
+      }),
+    );
+
+    expect(
+      missed.state.combatants.get(goblinId)?.activeEffects,
+    ).not.toContainEqual(
+      expect.objectContaining({ sourceUnitId: "mastery_sap" }),
+    );
+  });
+
+  test("Weapon Mastery Sap expires at the start of the attacker's next turn without a target attack", () => {
+    const hit = resolveLongswordHit(
+      fighterVsGoblinBattle({
+        characterUnitRefs: masterySapUnitRefs(),
+        weaponMasteries: longswordWeaponMasterySelections(),
+      }),
+    );
+
+    expect(hit.state.combatants.get(goblinId)?.activeEffects).toContainEqual(
+      expect.objectContaining({
+        kind: "nextAttackRollBySelf",
+        sourceUnitId: "mastery_sap",
+      }),
+    );
+
+    const goblinTurn = requireResolved(
+      endTurn({ state: hit.state, actorId: fighterId }),
+    ).state;
+    const fighterNextTurn = requireResolved(
+      endTurn({ state: goblinTurn, actorId: goblinId }),
+    ).state;
+
+    expect(
+      fighterNextTurn.combatants.get(goblinId)?.activeEffects,
+    ).not.toContainEqual(
+      expect.objectContaining({ sourceUnitId: "mastery_sap" }),
+    );
+  });
+
+  test("Weapon Mastery Sap is gated by hit, selected mastery ownership, and Sap weapon property", () => {
+    const subject = fighterAttackSubject();
+    const hitWithoutSelection = resolveLongswordHit(
+      fighterVsGoblinBattle({ characterUnitRefs: masterySapUnitRefs() }),
+      subject,
+    );
+    const missedWithSelection = resolveLongswordMiss(
+      fighterVsGoblinBattle({
+        characterUnitRefs: masterySapUnitRefs(),
+        weaponMasteries: longswordWeaponMasterySelections(),
+      }),
+      subject,
+    );
+    const hitWithSelectionButNoSapSupport = resolveLongswordHit(
+      fighterVsGoblinBattle({
+        weaponMasteries: longswordWeaponMasterySelections(),
+      }),
+      subject,
+    );
+    const selectedNonSapWeaponState = fighterVsGoblinBattle({
+      characterUnitRefs: masterySapUnitRefs(),
+      weaponMasteries: [
+        {
+          weaponUnitId: "weapon_shortsword",
+        },
+      ],
+    });
+    const selectedNonSapWeapon = applyWeaponMasterySapOnHit(
+      selectedNonSapWeaponState,
+      fighterId,
+      goblinId,
+      testShortswordAttack(),
+    );
+
+    for (const result of [
+      hitWithoutSelection,
+      missedWithSelection,
+      hitWithSelectionButNoSapSupport,
+    ]) {
+      expect(result.state.combatants.get(goblinId)?.activeEffects).toEqual([]);
+    }
+    expect(
+      selectedNonSapWeapon.combatants.get(goblinId)?.activeEffects,
+    ).toEqual([]);
   });
 
   test("attack hit procedures open a typed reaction window and resume after decline", () => {
@@ -21297,6 +21449,10 @@ function fighterVsGoblinBattle(input?: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["characterUnitRefs"];
+  readonly weaponMasteries?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["weaponMasteries"];
 }): BattleState {
   return startBattleRight({
     battleId: battleId("battle-attack"),
@@ -21306,6 +21462,9 @@ function fighterVsGoblinBattle(input?: {
         ...(input?.characterUnitRefs === undefined
           ? {}
           : { characterUnitRefs: input.characterUnitRefs }),
+        ...(input?.weaponMasteries === undefined
+          ? {}
+          : { weaponMasteries: input.weaponMasteries }),
       }),
       statBlockCreatureInit({ initiative: 10 }),
     ],
@@ -21335,6 +21494,29 @@ function sneakAttackUnitRefs(): Extract<
     {
       unitId: "rogue_sneak_attack",
       supportProfiles: [ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE],
+    },
+  ];
+}
+
+function masterySapUnitRefs(): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["characterUnitRefs"] {
+  return [
+    {
+      unitId: "mastery_sap",
+      supportProfiles: [WEAPON_MASTERY_SAP_SUPPORT_PROFILE],
+    },
+  ];
+}
+
+function longswordWeaponMasterySelections(): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["weaponMasteries"] {
+  return [
+    {
+      weaponUnitId: "weapon_longsword",
     },
   ];
 }
@@ -21730,6 +21912,54 @@ function criticalAttackDamageResult(
       damageRollFillWithGroups(damageHole, [[4, 4]]),
     ],
   });
+}
+
+function resolveLongswordHit(
+  state: BattleState,
+  subject: ReturnType<typeof fighterAttackSubject> = fighterAttackSubject(),
+): Extract<ReturnType<typeof resolveBattleSubject>, { readonly tag: "resolved" }> {
+  return resolveWeaponHit(state, subject);
+}
+
+function resolveWeaponHit(
+  state: BattleState,
+  subject: ReturnType<typeof fighterAttackSubject>,
+): Extract<ReturnType<typeof resolveBattleSubject>, { readonly tag: "resolved" }> {
+  const targetHole = attackInitialTargetHole(state, subject);
+  const rollHole = attackRollHoleAfterTarget(state, targetHole, subject);
+  const damageHole = attackDamageHoleAfterHit(state, targetHole, rollHole, {
+    total: 15,
+    naturalD20: 10,
+  });
+  return requireResolved(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFill(targetHole, goblinId),
+        attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+        damageRollFill(damageHole, 1),
+      ],
+    }),
+  );
+}
+
+function resolveLongswordMiss(
+  state: BattleState,
+  subject: ReturnType<typeof fighterAttackSubject> = fighterAttackSubject(),
+): Extract<ReturnType<typeof resolveBattleSubject>, { readonly tag: "resolved" }> {
+  const targetHole = attackInitialTargetHole(state, subject);
+  const rollHole = attackRollHoleAfterTarget(state, targetHole, subject);
+  return requireResolved(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFill(targetHole, goblinId),
+        attackRollFill(rollHole, { total: 1, naturalD20: 1 }),
+      ],
+    }),
+  );
 }
 
 function characterWithDeathSaveCounters(input: {
@@ -22517,6 +22747,10 @@ function characterSeed(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["selectedLoadout"];
+  readonly weaponMasteries?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["weaponMasteries"];
   readonly attack?:
     | Extract<
         BattleCreatureInit["creatureInit"],
@@ -22584,6 +22818,9 @@ function characterSeed(input: {
         ? {}
         : { positiveHpUnconscious: input.positiveHpUnconscious }),
       selectedLoadout,
+      ...(input.weaponMasteries === undefined
+        ? {}
+        : { weaponMasteries: input.weaponMasteries }),
       attack,
       unarmedStrike: input.unarmedStrike ?? testUnarmedStrikeDamageAttack(),
       ...(input.offHandAttack === undefined

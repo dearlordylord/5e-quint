@@ -49,6 +49,7 @@ export {
   type BattleCreatureInitIssue,
 } from "./battle-character-build-projection.ts";
 export {
+  characterBattleWeaponMasterySelections,
   characterUnitRefsWithBattleSupportProfiles,
   type BattleSupportProfileIssue,
 } from "./battle-support-profiles.ts";
