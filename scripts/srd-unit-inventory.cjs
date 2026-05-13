@@ -1871,6 +1871,7 @@ const completedSrdInventoryBatchIds = new Set([
   "SRDINV52",
   "SRDINV53",
   "SRDINV54",
+  "SRDINV55",
 ]);
 
 function makeBatch({
