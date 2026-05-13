@@ -896,7 +896,9 @@
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
       "taskRefs": [
-        "SRDINV38B"
+        "SRDINV38B",
+        "SRDINV68A",
+        "SRDINV68B"
       ],
       "title": "Spell invocation resolves Sleep's pending repeat-save lifecycle",
       "verificationOwners": [
@@ -1938,6 +1940,22 @@
         "spell.invocation-sleep-repeat-save-lifecycle"
       ],
       "taskId": "SRDINV38B"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Sleep-owned Incapacitated/Unconscious cleanup when the affected target takes damage from attack, spell, and direct HP damage paths while preserving unrelated condition sources.",
+      "profileIds": [
+        "spell.invocation-sleep-repeat-save-lifecycle"
+      ],
+      "taskId": "SRDINV68A"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover the caller-supplied adjacent action that shakes a target out of Sleep, including action spend, adjacency rejection, Sleep-owned cleanup, unrelated condition preservation, and repeated-attempt rejection.",
+      "profileIds": [
+        "spell.invocation-sleep-repeat-save-lifecycle"
+      ],
+      "taskId": "SRDINV68B"
     },
     {
       "claimKind": "completed-runtime-parity",
@@ -8132,14 +8150,6 @@
           {
             "followUpTaskId": "SRDINV41",
             "mechanic": "creatures that do not sleep automatically succeed only when an executable non-sleeper fact is supported"
-          },
-          {
-            "followUpTaskId": "SRDINV68A",
-            "mechanic": "damage-from-any-source cleanup"
-          },
-          {
-            "followUpTaskId": "SRDINV68B",
-            "mechanic": "adjacent shake-awake cleanup"
           }
         ],
         "profileIds": [
@@ -8156,7 +8166,9 @@
           "Magic action and Spell Slot spend",
           "failed initial save applies Sleep-owned Incapacitated until the end of the target's next turn with a repeat Wisdom save",
           "repeat success ends that target's Sleep effect",
-          "failed repeat save escalates to spell-owned Unconscious for the remaining Concentration duration"
+          "failed repeat save escalates to spell-owned Unconscious for the remaining Concentration duration",
+          "damage from any source ends that target's Sleep effect with Sleep-owned condition cleanup",
+          "caller-supplied adjacent action shakes a target out of Sleep's effect and spends the actor's action"
         ],
         "tag": "profile-subset-supported"
       },
@@ -8204,7 +8216,9 @@
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
           "taskRefs": [
-            "SRDINV38B"
+            "SRDINV38B",
+            "SRDINV68A",
+            "SRDINV68B"
           ],
           "title": "Spell invocation resolves Sleep's pending repeat-save lifecycle",
           "verificationOwners": [

@@ -18861,6 +18861,65 @@ describe("battle runtime", () => {
     });
   });
 
+  test("Sleep shake-awake preserves unrelated Incapacitated and Unconscious sources", () => {
+    const shakenIncapacitated = shakeAwakeGoblinFromSleep(
+      battleAfterFailedSleepInitialSave({
+        battle: "battle-sleep-shake-awake-preserves-incapacitated",
+        targetConditions: ["incapacitated"],
+      }),
+    );
+
+    expect(shakenIncapacitated.combatants.get(goblinId)).toMatchObject({
+      conditions: expect.objectContaining({ directIncapacitated: true }),
+      activeEffects: [],
+    });
+
+    const shakenUnconscious = shakeAwakeGoblinFromSleep(
+      battleAfterGoblinFailedSleepRepeatSave({
+        battle: "battle-sleep-shake-awake-preserves-unconscious",
+        helperInitiative: 5,
+        targetConditions: ["unconscious"],
+      }),
+    );
+
+    expect(shakenUnconscious.combatants.get(goblinId)).toMatchObject({
+      conditions: expect.objectContaining({ unconscious: true }),
+      activeEffects: [],
+    });
+  });
+
+  test("Sleep shake-awake cannot be repeated after the target is awake", () => {
+    const fighterTurn = battleAfterFailedSleepInitialSave({
+      battle: "battle-sleep-shake-awake-repeat",
+    });
+    const subject = sleepShakeAwakeSubject();
+    const target = findAct(fighterTurn, subject).initialHoles[0]!;
+    const fill = sleepShakeAwakeTargetFill(target);
+
+    const shaken = requireResolved(
+      resolveBattleSubject({
+        state: fighterTurn,
+        subject,
+        fills: [fill],
+      }),
+    ).state;
+
+    expect(discoverBattleActs(shaken)).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ subject })]),
+    );
+    expect(
+      resolveBattleSubject({
+        state: shaken,
+        subject,
+        fills: [fill],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Sleep shake-awake target must be within 5 feet of the actor by table-supplied fact.",
+    });
+  });
+
   test("Sleep repeat success preserves unrelated Incapacitated sources", () => {
     const state = startBattleRight({
       battleId: battleId("battle-sleep-repeat-preserve-incapacitated"),
@@ -20759,6 +20818,117 @@ function findAct(
     throw new Error(`Expected discovered act ${JSON.stringify(subject)}.`);
   }
   return act;
+}
+
+type SleepShakeAwakeSubject = Extract<
+  BattleSubject,
+  { readonly tag: "action"; readonly action: "shakeAwakeFromSleep" }
+>;
+
+function sleepShakeAwakeSubject(): SleepShakeAwakeSubject {
+  return { tag: "action", actorId: fighterId, action: "shakeAwakeFromSleep" };
+}
+
+function sleepShakeAwakeTargetFill(hole: BattleHole): BattleFill {
+  return targetFill(hole, goblinId, [
+    {
+      kind: "sleepShakeAwakeActorWithin5Feet",
+      actorId: fighterId,
+      targetId: goblinId,
+    },
+  ]);
+}
+
+function battleAfterFailedSleepInitialSave(input: {
+  readonly battle: string;
+  readonly helperInitiative?: number;
+  readonly targetConditions?: Parameters<typeof characterSeed>[0]["conditions"];
+}): BattleState {
+  const state = startBattleRight({
+    battleId: battleId(input.battle),
+    combatants: [
+      characterSeed({
+        combatantId: wizardId,
+        displayName: "Wizard",
+        initiative: 20,
+        attack: null,
+        spellcasting: wizardSpellcasting({
+          cantrips: [],
+          preparedSpells: [spellRecord("sleep")],
+          spellSlots: [{ spellLevel: 1, count: 1 }],
+        }),
+      }),
+      characterSeed({
+        combatantId: fighterId,
+        displayName: "Helper",
+        initiative: input.helperInitiative ?? 15,
+      }),
+      characterSeed({
+        combatantId: goblinId,
+        displayName: "Target",
+        initiative: 10,
+        side: oppositionSide,
+        ...(input.targetConditions === undefined
+          ? {}
+          : { conditions: input.targetConditions }),
+      }),
+    ],
+  });
+  const savingThrows = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: magicSubject("sleep"),
+      fills: [],
+    }),
+    "savingThrowOutcome",
+  );
+  const slept = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: magicSubject("sleep"),
+      fills: [
+        savingThrowOutcomeFill(savingThrows, [
+          { targetId: goblinId, succeeded: false },
+        ]),
+      ],
+    }),
+  ).state;
+  return requireResolved(endTurn({ state: slept, actorId: wizardId })).state;
+}
+
+function battleAfterGoblinFailedSleepRepeatSave(input: {
+  readonly battle: string;
+  readonly helperInitiative: number;
+  readonly targetConditions?: Parameters<typeof characterSeed>[0]["conditions"];
+}): BattleState {
+  const goblinTurn = battleAfterFailedSleepInitialSave(input);
+  const repeatSave = requireHole(
+    endTurn({ state: goblinTurn, actorId: goblinId }),
+    "savingThrowOutcome",
+  );
+  return requireResolved(
+    endTurn({
+      state: goblinTurn,
+      actorId: goblinId,
+      fills: [
+        savingThrowOutcomeFill(repeatSave, [
+          { targetId: goblinId, succeeded: false },
+        ]),
+      ],
+    }),
+  ).state;
+}
+
+function shakeAwakeGoblinFromSleep(state: BattleState): BattleState {
+  const subject = sleepShakeAwakeSubject();
+  const target = findAct(state, subject).initialHoles[0]!;
+  return requireResolved(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [sleepShakeAwakeTargetFill(target)],
+    }),
+  ).state;
 }
 
 function targetFill(
