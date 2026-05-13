@@ -4,7 +4,7 @@
 // feature holes. Mechanical move; no behavior change intended.
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
 import {
   grantUnitActionResource,
@@ -12,6 +12,8 @@ import {
 } from "@dnd/shared-algebras/action-economy-algebra";
 
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
+
+import { attackRollResultIsValid } from "@dnd/shared-algebras/attack-roll-algebra";
 
 import { validateRolledDiceForDiceExpr } from "@dnd/shared-algebras/runtime-dice-algebra";
 
@@ -68,6 +70,8 @@ import {
 
 import { attackActionOptionsForActor } from "./attack-damage-apply.ts";
 
+import { attackRollHitsWithCriticalThreshold } from "./attack-resolution.ts";
+
 import { needsHolesResult } from "./hole-helpers.ts";
 
 import {
@@ -84,6 +88,8 @@ import { attackTargetHole } from "./hole-helpers.ts";
 
 import type {
   AvailableBattleAct,
+  BardicInspirationFailedD20TestResolutionInput,
+  BardicInspirationFailedD20TestResolutionResult,
   BattleCreatureState,
   BattleFill,
   BattleHoleId,
@@ -427,6 +433,130 @@ export function resolveBardicInspirationGrantUnitFeature(
     tag: "resolved",
     state: nextState,
     snapshot: snapshotBattle(nextState),
+  };
+}
+
+export function resolveBardicInspirationFailedD20Test(
+  input: BardicInspirationFailedD20TestResolutionInput,
+): BardicInspirationFailedD20TestResolutionResult {
+  const actor = input.state.combatants.get(input.d20Test.actorId);
+  if (actor === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Bardic Inspiration is no longer available for the D20 Test actor.",
+    );
+  }
+
+  const die = actor.activeEffects.find(
+    (effect) => effect.kind === "bardicInspirationDie",
+  );
+  if (die === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Bardic Inspiration is no longer available for the D20 Test actor.",
+    );
+  }
+  if (
+    !Number.isInteger(input.bardicInspirationRoll) ||
+    input.bardicInspirationRoll < 1 ||
+    input.bardicInspirationRoll > die.dieSize
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      `Bardic Inspiration roll must be a 1d${die.dieSize} result.`,
+    );
+  }
+
+  const outcome = bardicInspirationD20TestOutcome(input);
+  if (outcome.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", outcome.message);
+  }
+  if (outcome.value.originalSucceeded) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Bardic Inspiration requires an already-failed D20 Test.",
+    );
+  }
+
+  const nextActor: BattleCreatureState = {
+    ...actor,
+    activeEffects: actor.activeEffects.filter(
+      (effect) => effect.kind !== "bardicInspirationDie",
+    ),
+  };
+  const nextState = {
+    ...input.state,
+    combatants: new Map(input.state.combatants).set(
+      input.d20Test.actorId,
+      nextActor,
+    ),
+  };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+    bardicInspirationD20Test: {
+      boostedTotal: outcome.value.boostedTotal,
+      boostedSucceeded: outcome.value.boostedSucceeded,
+    },
+  };
+}
+
+function bardicInspirationD20TestOutcome(
+  input: BardicInspirationFailedD20TestResolutionInput,
+):
+  | {
+      readonly tag: "ok";
+      readonly value: {
+        readonly originalSucceeded: boolean;
+        readonly boostedTotal: number;
+        readonly boostedSucceeded: boolean;
+      };
+    }
+  | { readonly tag: "invalid"; readonly message: string } {
+  if (input.d20Test.kind === "attackRoll") {
+    if (!attackRollResultIsValid(input.d20Test.attackRoll)) {
+      return {
+        tag: "invalid",
+        message: "Attack roll result is outside the d20 attack-roll protocol.",
+      };
+    }
+    const criticalThreshold = input.d20Test.criticalThreshold ?? 20;
+    const boostedRoll = {
+      ...input.d20Test.attackRoll,
+      total: input.d20Test.attackRoll.total + input.bardicInspirationRoll,
+    };
+    return {
+      tag: "ok",
+      value: {
+        originalSucceeded: attackRollHitsWithCriticalThreshold(
+          input.d20Test.attackRoll,
+          input.d20Test.armorClass,
+          criticalThreshold,
+        ),
+        boostedTotal: boostedRoll.total,
+        boostedSucceeded: attackRollHitsWithCriticalThreshold(
+          boostedRoll,
+          input.d20Test.armorClass,
+          criticalThreshold,
+        ),
+      },
+    };
+  }
+
+  const boostedTotal =
+    input.d20Test.originalTotal + input.bardicInspirationRoll;
+  return {
+    tag: "ok",
+    value: {
+      originalSucceeded: input.d20Test.originalTotal >= input.d20Test.dc,
+      boostedTotal,
+      boostedSucceeded: boostedTotal >= input.d20Test.dc,
+    },
   };
 }
 

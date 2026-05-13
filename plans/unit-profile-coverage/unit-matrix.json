@@ -72,23 +72,23 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 50,
-      "numerator": 50,
+      "denominator": 51,
+      "numerator": 51,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 50,
-      "numerator": 49,
+      "denominator": 51,
+      "numerator": 50,
       "percent": "98%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 50,
-      "numerator": 50,
+      "denominator": 51,
+      "numerator": 51,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 50,
-      "numerator": 50,
+      "denominator": 51,
+      "numerator": 51,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -345,7 +345,7 @@
         "packages/battle-runtime/src/unit-feature-support.ts",
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
-      "sourceBoundary": "Caller-supplied range and hearing facts plus existing visibility state; runtime owns Bonus Action/resource spending, one held die per target, one-hour duration, and d6 grant at Bard level 1. Spending the die after a failed D20 Test is a later profile.",
+      "sourceBoundary": "Caller-supplied range and hearing facts plus existing visibility state; runtime owns Bonus Action/resource spending, one held die per target, one-hour duration, and d6 grant at Bard level 1. Failed D20 Test die use is represented by unit-feature.bardic-inspiration-failed-d20-test.",
       "taskRefs": [
         "SRDINV72A"
       ],
@@ -358,6 +358,32 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.bardic-inspiration-failed-d20-test",
+      "profileKind": "resource",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/unit-features.ts"
+      ],
+      "sourceBoundary": "Separate public helper boundary, not a BattleSubject replay path; consumes an existing Bardic Inspiration die effect after the caller supplies an already-failed attack roll, Saving Throw, or Ability Check total.",
+      "taskRefs": [
+        "SRDINV72B"
+      ],
+      "title": "Unit feature expends a held Bardic Inspiration die after an already-failed D20 Test",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/index.test.ts"
         }
       ]
     },
@@ -1985,11 +2011,27 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime reducer and admission tests cover Bardic Inspiration target facts, Bonus Action and Charisma-derived resource spending, one held die, one-hour duration, and duplicate-die rejection. Die spending after a failed D20 Test remains deferred.",
+      "note": "Focused battle-runtime reducer and admission tests cover Bardic Inspiration target facts, Bonus Action and Charisma-derived resource spending, one held die, one-hour duration, and duplicate-die rejection.",
       "profileIds": [
         "unit-feature.bardic-inspiration-grant"
       ],
       "taskId": "SRDINV72A"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for spending a held Bardic Inspiration die after an already-failed attack roll, Saving Throw, or Ability Check, including boosted success and die expenditure.",
+      "profileIds": [
+        "unit-feature.bardic-inspiration-failed-d20-test"
+      ],
+      "taskId": "SRDINV72B"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Bardic Inspiration die use after already-failed attack rolls, Saving Throws, and Ability Checks, failure-to-success replay, still-failed outcomes, die expenditure, success rejection, invalid die rolls, and double-spend rejection.",
+      "profileIds": [
+        "unit-feature.bardic-inspiration-failed-d20-test"
+      ],
+      "taskId": "SRDINV72B"
     },
     {
       "claimKind": "completed-runtime-parity",
@@ -3581,16 +3623,13 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "SRDINV72B",
-            "mechanic": "spending the Bardic Inspiration die after a failed D20 Test"
-          },
-          {
             "followUpTaskId": "SRDINV78",
             "mechanic": "later-level Bardic Inspiration die size increases beyond d6"
           }
         ],
         "profileIds": [
-          "unit-feature.bardic-inspiration-grant"
+          "unit-feature.bardic-inspiration-grant",
+          "unit-feature.bardic-inspiration-failed-d20-test"
         ],
         "rawRequirementIds": [
           "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
@@ -3599,7 +3638,8 @@
           "Bonus Action grant to another creature within 60 feet who can see or hear the Bard",
           "one Bardic Inspiration die per creature",
           "one-hour die ownership",
-          "d6 grant and Charisma-modifier use pool minimum"
+          "d6 grant and Charisma-modifier use pool minimum",
+          "spending the Bardic Inspiration die after an already-failed attack roll, Saving Throw, or Ability Check"
         ],
         "tag": "profile-subset-supported"
       },
@@ -3609,6 +3649,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV72A"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV72B"
         }
       ],
       "executableMechanics": true,
@@ -3624,7 +3669,7 @@
             "packages/battle-runtime/src/unit-feature-support.ts",
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
-          "sourceBoundary": "Caller-supplied range and hearing facts plus existing visibility state; runtime owns Bonus Action/resource spending, one held die per target, one-hour duration, and d6 grant at Bard level 1. Spending the die after a failed D20 Test is a later profile.",
+          "sourceBoundary": "Caller-supplied range and hearing facts plus existing visibility state; runtime owns Bonus Action/resource spending, one held die per target, one-hour duration, and d6 grant at Bard level 1. Failed D20 Test die use is represented by unit-feature.bardic-inspiration-failed-d20-test.",
           "taskRefs": [
             "SRDINV72A"
           ],
@@ -3637,6 +3682,32 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "unit-feature.bardic-inspiration-failed-d20-test",
+          "profileKind": "resource",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/unit-features.ts"
+          ],
+          "sourceBoundary": "Separate public helper boundary, not a BattleSubject replay path; consumes an existing Bardic Inspiration die effect after the caller supplies an already-failed attack roll, Saving Throw, or Ability Check total.",
+          "taskRefs": [
+            "SRDINV72B"
+          ],
+          "title": "Unit feature expends a held Bardic Inspiration die after an already-failed D20 Test",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/index.test.ts"
             }
           ]
         }

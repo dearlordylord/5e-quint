@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-object-light spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-object-light spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 import type {
   ActionEconomyState,
   RuntimeActionResource,
@@ -154,6 +154,7 @@ export {
   discoverLegendaryActionActs,
   hasReactionRollOrDamageReductionRangeFact,
   ongoingFeatureIsAvailable,
+  resolveBardicInspirationFailedD20Test,
   resolveExtraActionGrantUnitFeature,
   resolveFailedAbilityCheckResourceBoost,
   resolveOngoingFeatureUnitFeature,
@@ -2435,6 +2436,30 @@ export type BattleFailedAbilityCheckFacts = {
   readonly dc: DifficultyClass;
 };
 
+export type BattleBardicInspirationFailedD20TestFacts =
+  | {
+      readonly kind: "abilityCheck";
+      readonly actorId: CombatantId;
+      readonly ability: Ability;
+      readonly skillOrToolLabel?: string;
+      readonly originalTotal: number;
+      readonly dc: DifficultyClass;
+    }
+  | {
+      readonly kind: "attackRoll";
+      readonly actorId: CombatantId;
+      readonly attackRoll: BattleAttackRollResult;
+      readonly armorClass: ArmorClass;
+      readonly criticalThreshold?: CriticalHitThreshold;
+    }
+  | {
+      readonly kind: "savingThrow";
+      readonly actorId: CombatantId;
+      readonly ability: Ability;
+      readonly originalTotal: number;
+      readonly dc: DifficultyClass;
+    };
+
 export type BattleSuccessfulAbilityCheckFacts = {
   readonly actorId: CombatantId;
   readonly ability: Ability;
@@ -2451,6 +2476,12 @@ export type FailedAbilityCheckResourceBoostResolutionInput = {
   readonly boostRoll: number;
 };
 
+export type BardicInspirationFailedD20TestResolutionInput = {
+  readonly state: BattleState;
+  readonly d20Test: BattleBardicInspirationFailedD20TestFacts;
+  readonly bardicInspirationRoll: number;
+};
+
 export type SuccessfulAbilityCheckReactionReductionResolutionInput = {
   readonly state: BattleState;
   readonly reactorId: CombatantId;
@@ -2462,6 +2493,15 @@ export type SuccessfulAbilityCheckReactionReductionResolutionInput = {
 export type FailedAbilityCheckResourceBoostResolutionResult =
   | (Extract<BattleResolutionResult, { readonly tag: "resolved" }> & {
       readonly abilityCheckBoost: {
+        readonly boostedTotal: number;
+        readonly boostedSucceeded: boolean;
+      };
+    })
+  | Extract<BattleResolutionResult, { readonly tag: "invalid" }>;
+
+export type BardicInspirationFailedD20TestResolutionResult =
+  | (Extract<BattleResolutionResult, { readonly tag: "resolved" }> & {
+      readonly bardicInspirationD20Test: {
         readonly boostedTotal: number;
         readonly boostedSucceeded: boolean;
       };

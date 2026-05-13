@@ -116,7 +116,8 @@ flowchart TD
   CommandDrop["runtimeCommand.commandDrop<br/>success: consumes canonical held-object facts or heldObjectFacts fill, emits droppedObjects, then resolves End Turn<br/>invalid: stale pending Command, duplicate object ids, or mismatched fills"]
   CommandApproach["runtimeCommand.commandApproach<br/>success: consumes Movement route/proximity facts, spends Movement, clears pending Command, conditionally resolves End Turn<br/>invalid: stale pending Command, missing route fact, or mismatched fills"]
   Attack["action.attack + attackName<br/>success: staged target/roll/damage replay<br/>invalid: actor missing, unsupported shape, no action resource, bad fills"]
-  UnitFeature["unitFeature<br/>success: spend retained feature resource and resolve supported Unit procedure<br/>invalid: no use remains, no Bonus Action, or already used this turn"]
+  UnitFeature["unitFeature<br/>success: spend retained feature resource or grant Bardic Inspiration dice<br/>invalid: no use remains, no Bonus Action, or already used this turn"]
+  BardicDieUse["resolveBardicInspirationFailedD20Test<br/>success: expend held die after an already-failed attack roll, Saving Throw, or Ability Check<br/>invalid: no held die, prior success, or bad die roll"]
   Magic["actionSpell + spellId<br/>success: staged action-time spell replay via Magic action, including supported attack, save, damage, mixed attack-plus-burst, scalar buff, and creature-type protection/charm spells<br/>invalid: unsupported spell shape, no Magic action, no slot for prepared spell"]
   AttackOption["supported Attack action option<br/>source: BattleCreatureState.origin character weapon or StatBlockRecord named attack<br/>why: selected attack identity and authored damage facts stay coupled"]
   Target["target choice<br/>caller/table supplies spatially legal target using authored reach/range metadata; ranged facts carry normal or long range band<br/>needsHoles until caller selects a combatant"]
@@ -132,11 +133,12 @@ flowchart TD
   CurrentActor --> Attack --> AttackOption --> Target --> Roll --> HitCheck
   CurrentActor --> UnitFeature
   CurrentActor --> Magic
+  BardicDieUse --> Apply
   HitCheck -->|hit| DamageHole --> Apply
   HitCheck -->|miss| Apply
 
   classDef implemented fill:#eef6ff,stroke:#2563eb,color:#172554;
-  class Subject,CurrentActor,EndTurn,CommandDrop,CommandApproach,Attack,UnitFeature,Magic,AttackOption,Target,Roll,HitCheck,DamageHole,Apply implemented;
+  class Subject,CurrentActor,EndTurn,CommandDrop,CommandApproach,Attack,UnitFeature,BardicDieUse,Magic,AttackOption,Target,Roll,HitCheck,DamageHole,Apply implemented;
 ```
 
 ## Implemented Slice Boundaries
@@ -148,6 +150,10 @@ flowchart TD
   `runtimeCommand.commandDrop` and `runtimeCommand.commandApproach`. They select reusable runtime procedures; they
   are not a projected executable taxonomy and are not one reducer branch per
   authored slug.
+- `resolveBardicInspirationFailedD20Test` is a separate public helper, not a
+  `BattleSubject` replay path. It consumes an existing Bardic Inspiration die
+  effect after the caller has an already-failed attack roll, Saving Throw, or
+  Ability Check total, then returns the boosted success fact.
 - Fills are caller/session state, not durable `BattleState`. Command Drop uses
   a `heldObjectFacts` fill only when retained Character loadout facts do not
   already establish the target's held objects; resolved `droppedObjects` are

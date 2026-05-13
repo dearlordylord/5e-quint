@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points
@@ -23,7 +23,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.creature-type-protection-and-charm
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-object-light
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.reaction-hellish-rebuke spell.invocation-damage-save-or-attack
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.bardic-inspiration-grant
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test
 module battleRuntime {
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
@@ -2008,6 +2008,52 @@ module battleRuntime {
     grantAdmitted: bool,
   ): int =
     if (grantAdmitted) usesRemaining - 1 else usesRemaining
+
+  pure def bardicInspirationD20TestTotal(originalTotal: int, bardicInspirationRoll: int): int =
+    originalTotal + bardicInspirationRoll
+
+  pure def bardicInspirationDifficultyClassD20TestSucceeds(total: int, dc: int): bool =
+    total >= dc
+
+  pure def bardicInspirationAttackRollSucceeds(
+    total: int,
+    naturalD20: int,
+    armorClass: int,
+    criticalThreshold: int,
+  ): bool =
+    attackHits(total, naturalD20, armorClass, criticalThreshold)
+
+  pure def bardicInspirationDifficultyClassD20TestAdmitted(
+    hasBardicInspirationDie: bool,
+    dieSize: int,
+    originalTotal: int,
+    dc: int,
+    bardicInspirationRoll: int,
+  ): bool =
+    hasBardicInspirationDie
+      and not(bardicInspirationDifficultyClassD20TestSucceeds(originalTotal, dc))
+      and bardicInspirationRoll >= 1
+      and bardicInspirationRoll <= dieSize
+
+  pure def bardicInspirationAttackRollAdmitted(
+    hasBardicInspirationDie: bool,
+    dieSize: int,
+    originalTotal: int,
+    naturalD20: int,
+    armorClass: int,
+    criticalThreshold: int,
+    bardicInspirationRoll: int,
+  ): bool =
+    hasBardicInspirationDie
+      and not(bardicInspirationAttackRollSucceeds(originalTotal, naturalD20, armorClass, criticalThreshold))
+      and bardicInspirationRoll >= 1
+      and bardicInspirationRoll <= dieSize
+
+  pure def bardicInspirationEffectsAfterDieRoll(effects: Set[ActiveEffect]): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | BardicInspirationDie(_) => false
+      | _ => true
+    })
 
   pure def uncannyDodgeDamage(damage: int): int =
     battleRuntimeUncannyDodgeDamage(damage)
@@ -6485,6 +6531,27 @@ module battleRuntime {
       assert(hasBardicInspirationDie(granted)),
       assert(bardicInspirationUsesAfterGrant(2, true) == 1),
       assert(bardicInspirationUsesAfterGrant(2, false) == 2),
+    }
+  }
+
+  run test_bardic_inspiration_failed_d20_test_adds_die_and_expends_effect = {
+    val granted = bardicInspirationTargetEffectsAfterGrant(Set(BlessD20RollBonus), Fighter)
+    val convertedAbilityCheckTotal = bardicInspirationD20TestTotal(13, 3)
+    val stillFailedSavingThrowTotal = bardicInspirationD20TestTotal(10, 4)
+    val convertedAttackRollTotal = bardicInspirationD20TestTotal(14, 2)
+    val expended = bardicInspirationEffectsAfterDieRoll(granted)
+    all {
+      assert(bardicInspirationDifficultyClassD20TestAdmitted(hasBardicInspirationDie(granted), 6, 13, 15, 3)),
+      assert(bardicInspirationDifficultyClassD20TestSucceeds(convertedAbilityCheckTotal, 15)),
+      assert(bardicInspirationDifficultyClassD20TestAdmitted(hasBardicInspirationDie(granted), 6, 10, 15, 4)),
+      assert(not(bardicInspirationDifficultyClassD20TestSucceeds(stillFailedSavingThrowTotal, 15))),
+      assert(bardicInspirationAttackRollAdmitted(hasBardicInspirationDie(granted), 6, 14, 10, 15, 20, 2)),
+      assert(bardicInspirationAttackRollSucceeds(convertedAttackRollTotal, 10, 15, 20)),
+      assert(not(bardicInspirationDifficultyClassD20TestAdmitted(hasBardicInspirationDie(granted), 6, 15, 15, 1))),
+      assert(not(bardicInspirationDifficultyClassD20TestAdmitted(hasBardicInspirationDie(granted), 6, 10, 15, 7))),
+      assert(not(bardicInspirationAttackRollAdmitted(hasBardicInspirationDie(granted), 6, 15, 10, 15, 20, 1))),
+      assert(not(hasBardicInspirationDie(expended))),
+      assert(expended.contains(BlessD20RollBonus)),
     }
   }
 

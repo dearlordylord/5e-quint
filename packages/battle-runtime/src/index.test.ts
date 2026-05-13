@@ -1,7 +1,8 @@
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-beam-sequence spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-marked-damage-rider spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bardic-inspiration-failed-d20-test spell.invocation-beam-sequence spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-marked-damage-rider spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV72B bard_bardic_inspiration
 import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
@@ -38,6 +39,7 @@ import {
   initiativeScore,
   KNOCKED_OUT_UNCONSCIOUS,
   resolveBattleSubject,
+  resolveBardicInspirationFailedD20Test,
   resolveBattleReaction,
   resolveBattleConcentrationDamage,
   removeBattleCombatants,
@@ -11056,6 +11058,172 @@ describe("battle runtime", () => {
     ).toBe(false);
   });
 
+  test("Bardic Inspiration failed D20 Test use can turn attack roll, saving throw, and ability check failures into success", () => {
+    const attackRollState = grantBardicInspirationToGoblin();
+    const attackRoll = requireBardicInspirationD20TestResolved(
+      resolveBardicInspirationFailedD20Test({
+        state: attackRollState,
+        d20Test: {
+          kind: "attackRoll",
+          actorId: goblinId,
+          attackRoll: { total: 14, naturalD20: DieRollResult(10) },
+          armorClass: armorClass(15),
+        },
+        bardicInspirationRoll: 2,
+      }),
+    );
+
+    expect(attackRoll.bardicInspirationD20Test).toEqual({
+      boostedTotal: 16,
+      boostedSucceeded: true,
+    });
+    expect(combatantHasBardicInspirationDie(attackRoll.state, goblinId)).toBe(
+      false,
+    );
+
+    const savingThrow = requireBardicInspirationD20TestResolved(
+      resolveBardicInspirationFailedD20Test({
+        state: grantBardicInspirationToGoblin(),
+        d20Test: {
+          kind: "savingThrow",
+          actorId: goblinId,
+          ability: "wis",
+          originalTotal: 12,
+          dc: difficultyClass(15),
+        },
+        bardicInspirationRoll: 3,
+      }),
+    );
+
+    expect(savingThrow.bardicInspirationD20Test).toEqual({
+      boostedTotal: 15,
+      boostedSucceeded: true,
+    });
+    expect(combatantHasBardicInspirationDie(savingThrow.state, goblinId)).toBe(
+      false,
+    );
+
+    const abilityCheck = requireBardicInspirationD20TestResolved(
+      resolveBardicInspirationFailedD20Test({
+        state: grantBardicInspirationToGoblin(),
+        d20Test: {
+          kind: "abilityCheck",
+          actorId: goblinId,
+          ability: "dex",
+          skillOrToolLabel: "Stealth",
+          originalTotal: 13,
+          dc: difficultyClass(15),
+        },
+        bardicInspirationRoll: 2,
+      }),
+    );
+
+    expect(abilityCheck.bardicInspirationD20Test).toEqual({
+      boostedTotal: 15,
+      boostedSucceeded: true,
+    });
+    expect(combatantHasBardicInspirationDie(abilityCheck.state, goblinId)).toBe(
+      false,
+    );
+  });
+
+  test("Bardic Inspiration failed D20 Test use expends the die even when the boosted result still fails", () => {
+    const result = requireBardicInspirationD20TestResolved(
+      resolveBardicInspirationFailedD20Test({
+        state: grantBardicInspirationToGoblin(),
+        d20Test: {
+          kind: "savingThrow",
+          actorId: goblinId,
+          ability: "con",
+          originalTotal: 9,
+          dc: difficultyClass(15),
+        },
+        bardicInspirationRoll: 4,
+      }),
+    );
+
+    expect(result.bardicInspirationD20Test).toEqual({
+      boostedTotal: 13,
+      boostedSucceeded: false,
+    });
+    expect(combatantHasBardicInspirationDie(result.state, goblinId)).toBe(
+      false,
+    );
+  });
+
+  test("Bardic Inspiration failed D20 Test use rejects successes, invalid die rolls, and double spend", () => {
+    const state = grantBardicInspirationToGoblin();
+
+    expect(
+      resolveBardicInspirationFailedD20Test({
+        state,
+        d20Test: {
+          kind: "abilityCheck",
+          actorId: goblinId,
+          ability: "str",
+          originalTotal: 15,
+          dc: difficultyClass(15),
+        },
+        bardicInspirationRoll: 1,
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "Bardic Inspiration requires an already-failed D20 Test.",
+    });
+    expect(combatantHasBardicInspirationDie(state, goblinId)).toBe(true);
+
+    expect(
+      resolveBardicInspirationFailedD20Test({
+        state,
+        d20Test: {
+          kind: "savingThrow",
+          actorId: goblinId,
+          ability: "dex",
+          originalTotal: 12,
+          dc: difficultyClass(15),
+        },
+        bardicInspirationRoll: 7,
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "Bardic Inspiration roll must be a 1d6 result.",
+    });
+    expect(combatantHasBardicInspirationDie(state, goblinId)).toBe(true);
+
+    const spent = requireBardicInspirationD20TestResolved(
+      resolveBardicInspirationFailedD20Test({
+        state,
+        d20Test: {
+          kind: "attackRoll",
+          actorId: goblinId,
+          attackRoll: { total: 12, naturalD20: DieRollResult(10) },
+          armorClass: armorClass(15),
+        },
+        bardicInspirationRoll: 1,
+      }),
+    );
+
+    expect(
+      resolveBardicInspirationFailedD20Test({
+        state: spent.state,
+        d20Test: {
+          kind: "attackRoll",
+          actorId: goblinId,
+          attackRoll: { total: 12, naturalD20: DieRollResult(10) },
+          armorClass: armorClass(15),
+        },
+        bardicInspirationRoll: 1,
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Bardic Inspiration is no longer available for the D20 Test actor.",
+    });
+  });
+
   test("Uncanny Dodge is chosen when the attack hits and halves later attack damage", () => {
     const state = goblinAttacksReactionModifierCharacter({
       unit: uncannyDodgeUnit(),
@@ -20765,6 +20933,19 @@ function requireResolved(
   return result;
 }
 
+function requireBardicInspirationD20TestResolved(
+  result: ReturnType<typeof resolveBardicInspirationFailedD20Test>,
+): Extract<
+  ReturnType<typeof resolveBardicInspirationFailedD20Test>,
+  { readonly tag: "resolved" }
+> {
+  if (result.tag !== "resolved") {
+    throw new Error(`Expected resolved battle result, got ${result.tag}.`);
+  }
+
+  return result;
+}
+
 function requireNeedsHoles(
   result: ReturnType<typeof resolveBattleSubject>,
 ): Extract<
@@ -22820,6 +23001,35 @@ function bardicInspirationTargetFill(
         ]
       : []),
   ]);
+}
+
+function grantBardicInspirationToGoblin(): BattleState {
+  const bardicInspiration = bardicInspirationUnit();
+  const state = bardicInspirationBattle({ charismaModifier: 3 });
+  const subject = bardicInspirationSubject(bardicInspiration.id);
+  const target = findHole(
+    findAct(state, subject).initialHoles,
+    "targetChoice",
+  );
+  return requireResolved(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [bardicInspirationTargetFill(target, goblinId)],
+    }),
+  ).state;
+}
+
+function combatantHasBardicInspirationDie(
+  state: BattleState,
+  actorId: CombatantId,
+): boolean {
+  return (
+    state.combatants
+      .get(actorId)
+      ?.activeEffects.some((effect) => effect.kind === "bardicInspirationDie") ??
+    false
+  );
 }
 
 function bardicInspirationStaleTargetHole(): BattleHole {
