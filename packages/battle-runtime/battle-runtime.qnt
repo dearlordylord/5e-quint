@@ -21,7 +21,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-forced-reaction-movement
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-jump-movement-replacement
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.creature-type-protection-and-charm
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.reaction-hellish-rebuke
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.reaction-hellish-rebuke spell.invocation-damage-save-or-attack
 module battleRuntime {
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
@@ -131,7 +131,8 @@ module battleRuntime {
   //   UBIQUITOUS_LANGUAGE.md: Hellish Rebuke is a Reaction spell taken in
   //   response to taking damage from a visible creature within 60 feet. This
   //   spec models the after-damage Reaction discovery window and continuation
-  //   facts; the Dexterity save and Fire damage resolution remain separate.
+  //   facts plus the Dexterity save, Fire damage, half damage on success, and
+  //   slotted resource spend.
   // - Spells/Descriptions-M-P.md lines 5-15 and
   //   Spells/Gaining-and-Casting.md lines 142-149: Mage Armor is a timed
   //   ongoing spell effect whose target's base AC becomes 13 + Dexterity
@@ -275,14 +276,14 @@ module battleRuntime {
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | EldritchBlast | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | TrueStrike | Grease | Command | DissonantWhispers | FeatherFall
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | EldritchBlast | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | TrueStrike | Grease | Command | DissonantWhispers | FeatherFall | HellishRebuke
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | StarryWispSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack
   type SpellAttackBeamSequenceInvocation =
     | EldritchBlastBeamSequence
   type ChainedSpellAttackDamageInvocation =
     | ChromaticOrbChainedSpellAttack
   type ChromaticOrbDamageTypeChoice = ChromaticOrbAcid | ChromaticOrbCold | ChromaticOrbFire | ChromaticOrbLightning | ChromaticOrbPoison | ChromaticOrbThunder
-  type SaveGatedDamageInvocation = AcidSplashSaveGate | SacredFlameSaveGate | InflictWoundsSaveGate | BurningHandsSaveGate | ViciousMockerySaveGate | DissonantWhispersSaveGate
+  type SaveGatedDamageInvocation = AcidSplashSaveGate | SacredFlameSaveGate | InflictWoundsSaveGate | BurningHandsSaveGate | ViciousMockerySaveGate | DissonantWhispersSaveGate | HellishRebukeSaveGate
   type AttackBurstSaveDamageInvocation =
     | IceKnifeAttackBurstSaveDamage
   type SaveGatedConditionInvocation =
@@ -1390,6 +1391,52 @@ module battleRuntime {
       { ...applyShieldReactionSpell(state, reactor), spellSlotExpendedThisTurn: true }
     else
       state
+
+  pure def hellishRebukeDamageDice(slotLevel: int): int =
+    if (slotLevel < 1) 0 else 2 + (slotLevel - 1)
+
+  pure def resolveHellishRebukeAfterDamageReaction(
+    state: BattleState,
+    continuation: HellishRebukeAfterDamageContinuation,
+    savingThrowSucceeded: bool,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+  ): BattleState =
+    if (
+      continuation.damaged == continuation.damager or
+      continuation.slotLevel < 1 or
+      not(reactorCanReact(state, continuation.damaged)) or
+      not(canExpendSpellSlotThisTurn(state))
+    )
+      state
+    else {
+      val afterReactionSpend = spendReaction(state, continuation.damaged)
+      val damagedTarget = match continuation.damager {
+        | Fighter => {
+            ...afterReactionSpend,
+            fighter: saveGatedDamageTarget(
+              HellishRebukeSaveGate,
+              afterReactionSpend.fighter,
+              savingThrowSucceeded,
+              damageRoll,
+              concentrationSaveSucceeded,
+              continuation.damaged,
+            ),
+          }
+        | Goblin => {
+            ...afterReactionSpend,
+            goblin: saveGatedDamageTarget(
+              HellishRebukeSaveGate,
+              afterReactionSpend.goblin,
+              savingThrowSucceeded,
+              damageRoll,
+              concentrationSaveSucceeded,
+              continuation.damaged,
+            ),
+          }
+      }
+      { ...damagedTarget, spellSlotExpendedThisTurn: true }
+    }
 
   pure def reactionResolvesShieldSpell(state: BattleState, frame: PendingReactionFrame, reactor: Actor): bool =
     frame.trigger == SpellCast or (frame.trigger == AttackHit and not(state.fighterReadiedSpellHeld and reactor == Fighter))
@@ -4172,6 +4219,7 @@ module battleRuntime {
       | Command => true
       | DissonantWhispers => true
       | FeatherFall => true
+      | HellishRebuke => true
     }
 
   pure def canExpendSpellSlotThisTurn(state: BattleState): bool =
@@ -4213,6 +4261,7 @@ module battleRuntime {
       | BurningHandsSaveGate => BattleRuntimeBurningHandsSaveDamage
       | ViciousMockerySaveGate => BattleRuntimeViciousMockerySaveDamage
       | DissonantWhispersSaveGate => BattleRuntimeDissonantWhispersSaveDamage
+      | HellishRebukeSaveGate => BattleRuntimeHellishRebukeSaveDamage
     }
 
   pure def battleRuntimeSaveGatedConditionProfileForInvocation(
@@ -4686,6 +4735,7 @@ module battleRuntime {
       | InflictWoundsSaveGate => Set()
       | BurningHandsSaveGate => Set()
       | DissonantWhispersSaveGate => Set()
+      | HellishRebukeSaveGate => Set()
       | ViciousMockerySaveGate => Set(ViciousMockeryNextAttackDisadvantage)
     }
 
@@ -6946,7 +6996,11 @@ module battleRuntime {
       assert(saveGatedTargeting(DissonantWhispersSaveGate) == SingleSaveTarget),
       assert(saveGatedDamageSuccess(DissonantWhispersSaveGate) == HalfDamageOnSaveSuccess),
       assert(saveGatedDamageType(DissonantWhispersSaveGate) == Psychic),
+      assert(saveGatedTargeting(HellishRebukeSaveGate) == SingleSaveTarget),
+      assert(saveGatedDamageSuccess(HellishRebukeSaveGate) == HalfDamageOnSaveSuccess),
+      assert(saveGatedDamageType(HellishRebukeSaveGate) == Fire),
       assert(spellInvocationSpendsLevelOneSlot(DissonantWhispers)),
+      assert(spellInvocationSpendsLevelOneSlot(HellishRebuke)),
       assert(spellInvocationSpendsLevelOneSlot(IceKnife)),
       assert(spellInvocationSpendsLevelOneSlot(AnimalFriendship)),
       assert(spellInvocationSpendsLevelOneSlot(CharmPerson)),
@@ -8591,6 +8645,37 @@ module battleRuntime {
       assert(openHellishRebukeAfterDamageReactionWindow(noReaction, Goblin, Fighter, HellishRebukeDamageFromVisibleCreatureWithin60Feet, true, 1) == noReaction),
       assert(openHellishRebukeAfterDamageReactionWindow(noSlot, Goblin, Fighter, HellishRebukeDamageFromVisibleCreatureWithin60Feet, true, 1) == noSlot),
       assert(openHellishRebukeAfterDamageReactionWindow(initialState, Goblin, Fighter, HellishRebukeDamageFromVisibleCreatureWithin60Feet, false, 1) == initialState),
+    }
+  }
+
+  run test_hellish_rebuke_after_damage_reaction_resolves_save_damage_and_spend = {
+    val continuation = { damager: Goblin, damaged: Fighter, slotLevel: 2 }
+    val failedSave = resolveHellishRebukeAfterDamageReaction(initialState, continuation, false, 3, true)
+    val successfulSave = resolveHellishRebukeAfterDamageReaction(initialState, continuation, true, 5, true)
+    all {
+      assert(hellishRebukeDamageDice(1) == 2),
+      assert(hellishRebukeDamageDice(2) == 3),
+      assert(failedSave.goblin.hp == 7),
+      assert(failedSave.fighter.reactionAvailable == false),
+      assert(failedSave.spellSlotExpendedThisTurn),
+      assert(successfulSave.goblin.hp == 8),
+      assert(successfulSave.fighter.reactionAvailable == false),
+      assert(successfulSave.spellSlotExpendedThisTurn),
+    }
+  }
+
+  run test_hellish_rebuke_after_damage_reaction_rejects_invalid_continuation = {
+    val noReaction = {
+      ...initialState,
+      fighter: { ...initialState.fighter, reactionAvailable: false },
+    }
+    val noSlot = { ...initialState, spellSlotExpendedThisTurn: true }
+    val continuation = { damager: Goblin, damaged: Fighter, slotLevel: 1 }
+    all {
+      assert(resolveHellishRebukeAfterDamageReaction(noReaction, continuation, false, 3, true) == noReaction),
+      assert(resolveHellishRebukeAfterDamageReaction(noSlot, continuation, false, 3, true) == noSlot),
+      assert(resolveHellishRebukeAfterDamageReaction(initialState, { damager: Fighter, damaged: Fighter, slotLevel: 1 }, false, 3, true) == initialState),
+      assert(resolveHellishRebukeAfterDamageReaction(initialState, { damager: Goblin, damaged: Fighter, slotLevel: 0 }, false, 3, true) == initialState),
     }
   }
 

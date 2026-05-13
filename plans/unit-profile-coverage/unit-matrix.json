@@ -62,9 +62,9 @@
       "value": 130
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 67,
-      "numerator": 63,
-      "percent": "94%"
+      "denominator": 68,
+      "numerator": 64,
+      "percent": "94.1%"
     },
     "profileClassificationCoverage": {
       "denominator": 130,
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 67,
+      "denominator": 68,
       "numerator": 10,
-      "percent": "14.9%"
+      "percent": "14.7%"
     },
     "supportedProfileCoverage": {
       "denominator": 106,
-      "numerator": 67,
-      "percent": "63.2%"
+      "numerator": 68,
+      "percent": "64.2%"
     }
   },
   "metricSemantics": [
@@ -795,7 +795,8 @@
         "SRDINV51",
         "SRDINV52",
         "SRDINV64",
-        "SRDINV67"
+        "SRDINV67",
+        "SRDINV69B"
       ],
       "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
       "verificationOwners": [
@@ -804,8 +805,16 @@
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
         },
         {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
         }
       ]
     },
@@ -1125,9 +1134,10 @@
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-reducer/reaction-triggered-spells.ts"
       ],
-      "sourceBoundary": "The runtime consumes caller-supplied after-damage facts establishing that the damaged reactor took damage from a visible creature within 60 feet, requires Hellish Rebuke spell access, an available Reaction, and an available Spell Slot, then opens an after-damage Reaction frame carrying the damager, damaged reactor, and slot-level continuation facts. Dexterity save and Fire damage resolution are deferred to SRDINV69B.",
+      "sourceBoundary": "The runtime consumes caller-supplied after-damage facts establishing that the damaged reactor took damage from a visible creature within 60 feet, requires Hellish Rebuke spell access, an available Reaction, and an available Spell Slot, then opens an after-damage Reaction frame carrying the damager, damaged reactor, and slot-level continuation facts. The continuation resolves through the shared save-gated damage invocation profile.",
       "taskRefs": [
-        "SRDINV69A"
+        "SRDINV69A",
+        "SRDINV69B"
       ],
       "title": "Reaction spell opens Hellish Rebuke after-damage casting window",
       "verificationOwners": [
@@ -2503,6 +2513,24 @@
         "spell.reaction-hellish-rebuke"
       ],
       "taskId": "SRDINV69A"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Hellish Rebuke's after-damage Reaction continuation resolving through Dexterity Saving Throw, Fire damage, half damage on success, slot-level damage scaling, Reaction spend, Spell Slot spend, and invalid continuation rejection.",
+      "profileIds": [
+        "spell.reaction-hellish-rebuke",
+        "spell.invocation-damage-save-or-attack"
+      ],
+      "taskId": "SRDINV69B"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Hellish Rebuke failed-save full Fire damage, successful-save half Fire damage, level-2 slot scaling, Reaction and Spell Slot spend, stale continuation rejection, and no damage or resource spend when the offered Reaction is declined.",
+      "profileIds": [
+        "spell.reaction-hellish-rebuke",
+        "spell.invocation-damage-save-or-attack"
+      ],
+      "taskId": "SRDINV69B"
     },
     {
       "claimKind": "qnt-proof",
@@ -4804,7 +4832,8 @@
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
-            "SRDINV67"
+            "SRDINV67",
+            "SRDINV69B"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -4813,8 +4842,16 @@
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
             }
           ]
         },
@@ -5058,7 +5095,8 @@
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
-            "SRDINV67"
+            "SRDINV67",
+            "SRDINV69B"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -5067,8 +5105,16 @@
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
             }
           ]
         },
@@ -5160,7 +5206,8 @@
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
-            "SRDINV67"
+            "SRDINV67",
+            "SRDINV69B"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -5169,8 +5216,16 @@
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
             }
           ]
         },
@@ -5601,7 +5656,8 @@
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
-            "SRDINV67"
+            "SRDINV67",
+            "SRDINV69B"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -5610,8 +5666,16 @@
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
             }
           ]
         },
@@ -6309,7 +6373,8 @@
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
-            "SRDINV67"
+            "SRDINV67",
+            "SRDINV69B"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6318,8 +6383,16 @@
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
             }
           ]
         },
@@ -6525,7 +6598,8 @@
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
-            "SRDINV67"
+            "SRDINV67",
+            "SRDINV69B"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6534,8 +6608,16 @@
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
             }
           ]
         }
@@ -6588,7 +6670,8 @@
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
-            "SRDINV67"
+            "SRDINV67",
+            "SRDINV69B"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6597,8 +6680,16 @@
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
             }
           ]
         },
@@ -6828,7 +6919,8 @@
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
-            "SRDINV67"
+            "SRDINV67",
+            "SRDINV69B"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6837,8 +6929,16 @@
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
             }
           ]
         },
@@ -7005,7 +7105,8 @@
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
-            "SRDINV67"
+            "SRDINV67",
+            "SRDINV69B"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -7014,8 +7115,16 @@
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
             }
           ]
         }
@@ -7068,7 +7177,8 @@
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
-            "SRDINV67"
+            "SRDINV67",
+            "SRDINV69B"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -7077,8 +7187,16 @@
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
             }
           ]
         },
@@ -7158,7 +7276,8 @@
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
-            "SRDINV67"
+            "SRDINV67",
+            "SRDINV69B"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -7167,8 +7286,16 @@
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
             }
           ]
         },
@@ -7302,7 +7429,8 @@
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
-            "SRDINV67"
+            "SRDINV67",
+            "SRDINV69B"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -7311,8 +7439,16 @@
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
             }
           ]
         },
@@ -7446,7 +7582,8 @@
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
-            "SRDINV67"
+            "SRDINV67",
+            "SRDINV69B"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -7455,8 +7592,16 @@
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
             }
           ]
         },
@@ -7551,7 +7696,8 @@
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
-            "SRDINV67"
+            "SRDINV67",
+            "SRDINV69B"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -7560,8 +7706,16 @@
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
             }
           ]
         }
@@ -7614,7 +7768,8 @@
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
-            "SRDINV67"
+            "SRDINV67",
+            "SRDINV69B"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -7623,8 +7778,16 @@
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
             }
           ]
         },
@@ -7758,7 +7921,8 @@
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
-            "SRDINV67"
+            "SRDINV67",
+            "SRDINV69B"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -7767,8 +7931,16 @@
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
             }
           ]
         },
@@ -7848,7 +8020,8 @@
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
-            "SRDINV67"
+            "SRDINV67",
+            "SRDINV69B"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -7857,8 +8030,16 @@
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
             }
           ]
         },
@@ -8344,7 +8525,8 @@
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
-            "SRDINV67"
+            "SRDINV67",
+            "SRDINV69B"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -8353,8 +8535,16 @@
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
             }
           ]
         }
@@ -8573,31 +8763,22 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "followUpTaskId": "SRDINV69B",
-            "mechanic": "Dexterity Saving Throw and Fire damage resolution remain outside this trigger-window slice"
-          }
-        ],
         "profileIds": [
-          "spell.reaction-hellish-rebuke"
+          "spell.reaction-hellish-rebuke",
+          "spell.invocation-damage-save-or-attack"
         ],
         "rawRequirementIds": [
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001",
           "RAW-PTG-REACTIONS-002"
         ],
-        "supportedMechanics": [
-          "caller-supplied after-damage facts open a Reaction window when the damaged creature has Hellish Rebuke available, can see the damaging creature within 60 feet, has a Reaction available, and has an available Spell Slot",
-          "the after-damage Reaction frame carries damager, damaged reactor, and slot-level continuation facts for later resolution"
-        ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts",
           "tag": "deterministic-admission-projection",
-          "taskId": "SRDINV69A"
+          "taskId": "SRDINV69B"
         }
       ],
       "executableMechanics": true,
@@ -8614,15 +8795,57 @@
             "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
             "packages/battle-runtime/src/battle-reducer/reaction-triggered-spells.ts"
           ],
-          "sourceBoundary": "The runtime consumes caller-supplied after-damage facts establishing that the damaged reactor took damage from a visible creature within 60 feet, requires Hellish Rebuke spell access, an available Reaction, and an available Spell Slot, then opens an after-damage Reaction frame carrying the damager, damaged reactor, and slot-level continuation facts. Dexterity save and Fire damage resolution are deferred to SRDINV69B.",
+          "sourceBoundary": "The runtime consumes caller-supplied after-damage facts establishing that the damaged reactor took damage from a visible creature within 60 feet, requires Hellish Rebuke spell access, an available Reaction, and an available Spell Slot, then opens an after-damage Reaction frame carrying the damager, damaged reactor, and slot-level continuation facts. The continuation resolves through the shared save-gated damage invocation profile.",
           "taskRefs": [
-            "SRDINV69A"
+            "SRDINV69A",
+            "SRDINV69B"
           ],
           "title": "Reaction spell opens Hellish Rebuke after-damage casting window",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "spell.invocation-damage-save-or-attack",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE10",
+            "QMBT5",
+            "SRDINV29E",
+            "SRDINV32B",
+            "SRDINV34",
+            "SRDINV51",
+            "SRDINV52",
+            "SRDINV64",
+            "SRDINV67",
+            "SRDINV69B"
+          ],
+          "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
             },
             {
               "kind": "runtime-test",

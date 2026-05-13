@@ -34,6 +34,7 @@ module battleRuntimeSpellBridge {
     | BattleRuntimeViciousMockerySaveDamage
     | BattleRuntimeThunderwaveSaveDamage
     | BattleRuntimeDissonantWhispersSaveDamage
+    | BattleRuntimeHellishRebukeSaveDamage
 
   type BattleRuntimeSaveGatedConditionProfile =
     | BattleRuntimeColorSpraySaveCondition
@@ -202,6 +203,7 @@ module battleRuntimeSpellBridge {
       | BattleRuntimeViciousMockerySaveDamage => ViciousMockerySaveDamageProfile
       | BattleRuntimeThunderwaveSaveDamage => ThunderwaveSaveDamageProfile
       | BattleRuntimeDissonantWhispersSaveDamage => DissonantWhispersSaveDamageProfile
+      | BattleRuntimeHellishRebukeSaveDamage => HellishRebukeSaveDamageProfile
     }
 
   pure def battleRuntimeSaveGatedConditionProfile(
@@ -683,15 +685,19 @@ module battleRuntimeSpellBridge {
       assert(battleRuntimeSaveGatedDamageSuccess(BattleRuntimeInflictWoundsSaveDamage) == BattleRuntimeHalfDamageOnSaveSuccess),
       assert(battleRuntimeSaveGatedDamageSuccess(BattleRuntimeThunderwaveSaveDamage) == BattleRuntimeHalfDamageOnSaveSuccess),
       assert(battleRuntimeSaveGatedDamageSuccess(BattleRuntimeDissonantWhispersSaveDamage) == BattleRuntimeHalfDamageOnSaveSuccess),
+      assert(battleRuntimeSaveGatedDamageSuccess(BattleRuntimeHellishRebukeSaveDamage) == BattleRuntimeHalfDamageOnSaveSuccess),
       assert(battleRuntimeSaveGatedDamageType(BattleRuntimeViciousMockerySaveDamage) == PsychicDamage),
       assert(battleRuntimeSaveGatedDamageType(BattleRuntimeThunderwaveSaveDamage) == ThunderDamage),
       assert(battleRuntimeSaveGatedDamageType(BattleRuntimeDissonantWhispersSaveDamage) == PsychicDamage),
+      assert(battleRuntimeSaveGatedDamageType(BattleRuntimeHellishRebukeSaveDamage) == FireDamage),
       assert(battleRuntimeSaveGatedDamageRequiresSlot(BattleRuntimeBurningHandsSaveDamage)),
       assert(battleRuntimeSaveGatedDamageRequiresSlot(BattleRuntimeThunderwaveSaveDamage)),
       assert(battleRuntimeSaveGatedDamageRequiresSlot(BattleRuntimeDissonantWhispersSaveDamage)),
+      assert(battleRuntimeSaveGatedDamageRequiresSlot(BattleRuntimeHellishRebukeSaveDamage)),
       assert(not(battleRuntimeSaveGatedDamageRequiresSlot(BattleRuntimeAcidSplashSaveDamage))),
       assert(battleRuntimeSaveGatedDamageFailedSaveEffects(BattleRuntimeThunderwaveSaveDamage) == Set(BattleRuntimeThunderwavePush10FeetEffect)),
       assert(battleRuntimeSaveGatedDamageFailedSaveEffects(BattleRuntimeDissonantWhispersSaveDamage) == Set(BattleRuntimeDissonantWhispersForcedReactionMovementEffect)),
+      assert(battleRuntimeSaveGatedDamageFailedSaveEffects(BattleRuntimeHellishRebukeSaveDamage) == Set()),
       assert(battleRuntimeSaveGatedDamageFailedSaveEffects(BattleRuntimeViciousMockerySaveDamage) == Set(BattleRuntimeViciousMockeryNextAttackDisadvantageEffect)),
       assert(battleRuntimeSaveGatedConditionTargeting(BattleRuntimeColorSpraySaveCondition) == BattleRuntimeAreaSaveTargets),
       assert(battleRuntimeSaveGatedTargetMaxTargets(animalTargets, 2) == 2),

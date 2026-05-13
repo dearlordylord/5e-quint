@@ -81,6 +81,6 @@
 {"unitId":"expeditious_retreat","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV49","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"jump","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV53","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"feather_fall","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV56A","ownerPath":"packages/battle-runtime/src/feather-fall-reaction-spell.test.ts"}}
-{"unitId":"hellish_rebuke","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV69A","ownerPath":"packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"}}
+{"unitId":"hellish_rebuke","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV69B","ownerPath":"packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"}}
 {"unitId":"thunderwave","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV51","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"dissonant_whispers","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV52","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
