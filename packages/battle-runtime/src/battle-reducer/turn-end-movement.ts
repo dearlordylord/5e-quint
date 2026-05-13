@@ -1869,27 +1869,42 @@ export function expireEndOfTurnEffects(
 export function tickDurationEffects(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
-  return new Map(
+  const expiredConcentrationSources: ConcentrationEffectSource[] = [];
+  const tickedCombatants = new Map(
     [...combatants].map(([id, combatant]) => {
       const expiring: BattleActiveEffect[] = [];
       const activeEffects: BattleActiveEffect[] = [];
       for (const effect of combatant.activeEffects) {
-        if (!isDurationActiveEffect(effect)) {
+        if (!isTickingDurationActiveEffect(effect)) {
           activeEffects.push(effect);
           continue;
         }
         const remainingTicks = Number(effect.expiresAt.durationTicks) - 1;
         if (remainingTicks <= 0) {
           expiring.push(effect);
+          if (
+            "expiresAt" in effect &&
+            effect.expiresAt.kind === "concentration"
+          ) {
+            expiredConcentrationSources.push({
+              combatantId: effect.expiresAt.combatantId,
+              sourceSpellId: effect.sourceSpellId,
+            });
+          }
           continue;
         }
-        const ticked: BattleActiveEffect = {
+        // `isTickingDurationActiveEffect` proves this is a BattleActiveEffect
+        // whose expiration can be ticked. Replacing only the branded duration
+        // count preserves the original discriminant and variant fields; TS
+        // cannot re-correlate that nested update across the union, so this cast
+        // restores the already-proven union type.
+        const ticked = {
           ...effect,
           expiresAt: {
             ...effect.expiresAt,
             durationTicks: elapsedTimeTicks(remainingTicks),
           },
-        };
+        } as BattleActiveEffect;
         activeEffects.push(ticked);
       }
       const nextCombatant: BattleCreatureState =
@@ -1907,16 +1922,115 @@ export function tickDurationEffects(
       return [id, nextCombatant];
     }),
   );
+  return expireConcentrationDurationSources(
+    tickedCombatants,
+    expiredConcentrationSources,
+  );
 }
 
-function isDurationActiveEffect(
+type ConcentrationEffectSource = {
+  readonly combatantId: CombatantId;
+  readonly sourceSpellId: BattleActiveEffect["sourceSpellId"];
+};
+
+function activeEffectDurationTicks(
   effect: BattleActiveEffect,
-): effect is DurationActiveEffect {
-  return (
-    effect.kind !== "sleepPendingRepeatSave" &&
-    effect.kind !== "sleepUnconscious" &&
-    "expiresAt" in effect &&
-    effect.expiresAt.kind === "duration"
+): DurationActiveEffect["expiresAt"]["durationTicks"] | null {
+  if (
+    effect.kind === "sleepPendingRepeatSave" ||
+    effect.kind === "sleepUnconscious" ||
+    !("expiresAt" in effect)
+  ) {
+    return null;
+  }
+  if (effect.expiresAt.kind === "duration") {
+    return effect.expiresAt.durationTicks;
+  }
+  return effect.expiresAt.kind === "concentration" &&
+    effect.expiresAt.durationTicks !== undefined
+    ? effect.expiresAt.durationTicks
+    : null;
+}
+
+type TickingDurationActiveEffect = BattleActiveEffect & {
+  readonly expiresAt:
+    | DurationActiveEffect["expiresAt"]
+    | (Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "concentration" }
+      > & {
+        readonly durationTicks: DurationActiveEffect["expiresAt"]["durationTicks"];
+      });
+};
+
+function isTickingDurationActiveEffect(
+  effect: BattleActiveEffect,
+): effect is TickingDurationActiveEffect {
+  return activeEffectDurationTicks(effect) !== null;
+}
+
+function expireConcentrationDurationSources(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  sources: readonly ConcentrationEffectSource[],
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  const uniqueSources = [
+    ...new Map(
+      sources.map((source) => [
+        `${source.combatantId}\u0000${source.sourceSpellId}`,
+        source,
+      ]),
+    ).values(),
+  ];
+  return uniqueSources.reduce(
+    (currentCombatants, source) =>
+      expireConcentrationDurationSource(currentCombatants, source),
+    combatants,
+  );
+}
+
+function expireConcentrationDurationSource(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  source: ConcentrationEffectSource,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  return new Map(
+    [...combatants].map(([id, combatant]) => {
+      const expiring = combatant.activeEffects.filter(
+        (effect) =>
+          effect.sourceCombatantId === source.combatantId &&
+          effect.sourceSpellId === source.sourceSpellId &&
+          "expiresAt" in effect &&
+          effect.expiresAt.kind === "concentration",
+      );
+      const activeEffects = combatant.activeEffects.filter(
+        (effect) => !expiring.includes(effect),
+      );
+      const concentrationExpired =
+        id === source.combatantId &&
+        combatant.concentration?.effectKind === "spellEffect" &&
+        combatant.concentration.sourceSpellId === source.sourceSpellId;
+      const nextCombatant: BattleCreatureState =
+        combatant.positiveHpUnconscious === null
+          ? {
+              ...combatant,
+              concentration: concentrationExpired
+                ? null
+                : combatant.concentration,
+              activeEffects,
+              conditions: conditionsAfterExpiringSpellConditionEffects(
+                combatant.conditions,
+                activeEffects,
+                expiring,
+              ),
+            }
+          : {
+              ...combatant,
+              concentration: concentrationExpired
+                ? null
+                : combatant.concentration,
+              activeEffects,
+            };
+      return [id, nextCombatant];
+    }),
   );
 }
 

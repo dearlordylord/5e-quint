@@ -68,7 +68,11 @@ import {
   applyCondition,
   removeCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
-import { elapsedTimeTicksFromHours } from "@dnd/shared-algebras/elapsed-time-algebra";
+import {
+  elapsedTimeTicks,
+  elapsedTimeTicksFromHours,
+} from "@dnd/shared-algebras/elapsed-time-algebra";
+import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
 import {
   holeId,
   holeInstanceKey,
@@ -19175,6 +19179,168 @@ describe("battle runtime", () => {
     expect(broken.combatants.get(fighterId)?.activeEffects).toEqual([]);
   });
 
+  test("Hunter's Mark projects slot-scaled Concentration maximum duration", () => {
+    const expectedTicksBySlot = [
+      [1, 600],
+      [2, 600],
+      [3, 4_800],
+      [4, 4_800],
+      [5, 14_400],
+    ] as const;
+
+    for (const [slotLevel, expectedTicks] of expectedTicksBySlot) {
+      const state = startBattleRight({
+        battleId: battleId(`battle-hunters-mark-slot-${slotLevel}`),
+        combatants: [
+          characterSeed({
+            initiative: 20,
+            spellcasting: wizardSpellcasting({
+              preparedSpells: [spellRecord("hunters_mark")],
+              spellSlots: [{ spellLevel: slotLevel, count: 1 }],
+            }),
+          }),
+          statBlockCreatureInit({ initiative: 10 }),
+        ],
+      });
+      const subject = {
+        tag: "bonusActionSpell" as const,
+        actorId: fighterId,
+        invocation: spellSlotInvocationRef(
+          "hunters_mark",
+          slotLevel,
+          "markedDamageRider",
+        ),
+        mode: { tag: "cast" as const },
+      };
+      const act = findAct(state, subject);
+      const markTarget = findHole(act.initialHoles, "targetChoice");
+      const marked = requireResolved(
+        resolveBattleSubject({
+          state,
+          subject,
+          fills: [
+            targetFill(markTarget, goblinId, [
+              {
+                kind: "spellTarget",
+                casterId: fighterId,
+                targetId: goblinId,
+                spellId: "hunters_mark",
+              },
+            ]),
+          ],
+        }),
+      );
+
+      expect(marked.state.combatants.get(fighterId)?.activeEffects).toEqual([
+        expect.objectContaining({
+          kind: "spellMarkedDamageRider",
+          targetCombatantId: goblinId,
+          expiresAt: {
+            kind: "concentration",
+            combatantId: fighterId,
+            durationTicks: expectedTicks,
+          },
+        }),
+      ]);
+    }
+  });
+
+  test("Hunter's Mark maximum duration expiry clears Concentration and preserves damage behavior before expiry", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-hunters-mark-duration-expiry"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("hunters_mark")],
+            spellSlots: [{ spellLevel: 3, count: 1 }],
+          }),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject = {
+      tag: "bonusActionSpell" as const,
+      actorId: fighterId,
+      invocation: spellSlotInvocationRef(
+        "hunters_mark",
+        3,
+        "markedDamageRider",
+      ),
+      mode: { tag: "cast" as const },
+    };
+    const act = findAct(state, subject);
+    const markTarget = findHole(act.initialHoles, "targetChoice");
+    const marked = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(markTarget, goblinId, [
+            {
+              kind: "spellTarget",
+              casterId: fighterId,
+              targetId: goblinId,
+              spellId: "hunters_mark",
+            },
+          ]),
+        ],
+      }),
+    );
+    const caster = marked.state.combatants.get(fighterId);
+    const rider = caster?.activeEffects.find(
+      (effect) => effect.kind === "spellMarkedDamageRider",
+    );
+    if (caster === undefined || rider === undefined) {
+      throw new Error("Expected active Hunter's Mark rider.");
+    }
+    if (rider.expiresAt.kind !== "concentration") {
+      throw new Error("Expected Hunter's Mark to be Concentration-owned.");
+    }
+    const nearlyExpired: BattleState = {
+      ...marked.state,
+      combatants: new Map(marked.state.combatants).set(fighterId, {
+        ...caster,
+        activeEffects: [
+          {
+            ...rider,
+            expiresAt: {
+              kind: "concentration",
+              combatantId: rider.expiresAt.combatantId,
+              durationTicks: elapsedTimeTicks(1),
+            },
+          },
+        ],
+      }),
+    };
+
+    const target = attackInitialTargetHole(nearlyExpired);
+    const roll = attackRollHoleAfterTarget(
+      nearlyExpired,
+      target,
+      undefined,
+      goblinId,
+    );
+    const damage = attackDamageHoleAfterHit(
+      nearlyExpired,
+      target,
+      roll,
+      { total: 15, naturalD20: 10 },
+      undefined,
+      goblinId,
+    );
+    expect(damage).toMatchObject({
+      label: "Longsword damage (1d8+1d6+3-slashing)",
+      spellMarkedDamageRiders: [
+        expect.objectContaining({ targetCombatantId: goblinId }),
+      ],
+    });
+
+    const expiredCombatants = tickDurationEffects(nearlyExpired.combatants);
+    expect(expiredCombatants.get(fighterId)?.concentration).toBeNull();
+    expect(expiredCombatants.get(fighterId)?.activeEffects).toEqual([]);
+  });
+
   test("Hunter's Mark invocation holes reject contradictory cast and transfer shapes", () => {
     const spell = spellRecord("hunters_mark");
     const baseSpell = {
@@ -21846,7 +22012,7 @@ function wizardSpellcasting(input?: {
   readonly cantrips?: readonly SpellRecord[];
   readonly preparedSpells?: readonly SpellRecord[];
   readonly spellSlots?: readonly {
-    readonly spellLevel: 1 | 2;
+    readonly spellLevel: 1 | 2 | 3 | 4 | 5;
     readonly count: number;
   }[];
 }): NonNullable<

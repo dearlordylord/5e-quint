@@ -1160,8 +1160,13 @@ export function supportedPreparedMarkedDamageRiderSpellProfile(
         ]
       : [];
   }
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] =>
-    Number(slot.spellLevel) < spell.mechanics.level
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    const expiresAt = huntersMarkConcentrationExpirationForSlot(
+      actor.combatantId,
+      spell,
+      slot.spellLevel,
+    );
+    return Number(slot.spellLevel) < spell.mechanics.level || expiresAt === null
       ? []
       : [
           {
@@ -1174,12 +1179,61 @@ export function supportedPreparedMarkedDamageRiderSpellProfile(
             targeting: { kind: "singleCombatant" },
             damage: { expr, damageType: "force" },
             rangeFeet,
-            expiresAt: {
-              kind: "concentration",
-              combatantId: actor.combatantId,
-            },
+            expiresAt,
           },
-        ],
+        ];
+  });
+}
+
+function huntersMarkConcentrationExpirationForSlot(
+  actorId: CombatantId,
+  spell: SpellRecord,
+  slotLevel: SpellSlotLevel,
+): Extract<
+  BattleActiveEffectExpiration,
+  { readonly kind: "concentration" }
+> | null {
+  if (
+    spell.mechanics.duration.kind !== "concentration" ||
+    spell.mechanics.duration.upTo.unit !== "hour" ||
+    spell.mechanics.duration.upTo.amount !== 1 ||
+    !hasSupportedHuntersMarkDurationTiers(spell.mechanics.duration.upTo)
+  ) {
+    return null;
+  }
+  const upTo = spell.mechanics.duration.upTo;
+  const amount =
+    upTo.upcastTiers?.reduce(
+      (currentAmount, tier) =>
+        Number(slotLevel) >= tier.atSlot ? tier.amount : currentAmount,
+      upTo.amount,
+    ) ?? upTo.amount;
+  const ticks = elapsedTimeTicksFromTimeSpanDuration({
+    unit: upTo.unit,
+    amount,
+  });
+  return Either.isLeft(ticks)
+    ? null
+    : {
+        kind: "concentration",
+        combatantId: actorId,
+        durationTicks: ticks.right,
+      };
+}
+
+function hasSupportedHuntersMarkDurationTiers(
+  upTo: Extract<
+    SpellRecord["mechanics"]["duration"],
+    { readonly kind: "concentration" }
+  >["upTo"],
+): boolean {
+  const tiers = upTo.upcastTiers ?? [];
+  return (
+    tiers.length === 2 &&
+    tiers[0]?.atSlot === 3 &&
+    tiers[0].amount === 8 &&
+    tiers[1]?.atSlot === 5 &&
+    tiers[1].amount === 24
   );
 }
 

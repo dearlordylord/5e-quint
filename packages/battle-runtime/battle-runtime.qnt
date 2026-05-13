@@ -295,7 +295,7 @@ module battleRuntime {
   type SpellActionCost = SpellMagicAction | SpellBonusAction
   type CommandOption = CommandGrovelOption | CommandHaltOption | CommandDropOption | CommandApproachOption | CommandFleeOption
 
-  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodCreatureTypeProtection | ProduceFlameHeldLight({ durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
+  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool, durationTicks: int }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodCreatureTypeProtection | ProduceFlameHeldLight({ durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
   type PreventedProtectionCondition = PreventedCharmed | PreventedFrightened
   type PossessionAttemptDisposition = PossessionPreventedByCreatureTypeProtection | PossessionUnprevented
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
@@ -900,7 +900,11 @@ module battleRuntime {
         | DivineFavorWeaponDamageRider(data) => DivineFavorWeaponDamageRider({
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
-        | HuntersMarkDamageRider(data) => HuntersMarkDamageRider(data)
+        | HuntersMarkDamageRider(data) => HuntersMarkDamageRider({
+            target: data.target,
+            transferAvailable: data.transferAvailable,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | SearingSmiteBurning(data) => SearingSmiteBurning({
             damageDice: data.damageDice,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
@@ -931,7 +935,7 @@ module battleRuntime {
       })
       .filter(effect => match effect {
         | DivineFavorWeaponDamageRider(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
-        | HuntersMarkDamageRider(_) => true
+        | HuntersMarkDamageRider(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | SearingSmiteBurning(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | AnimalFriendshipCharmed(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | CharmPersonCharmed(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
@@ -942,12 +946,25 @@ module battleRuntime {
         | _ => true
       })
 
-  pure def tickRoundDurationSpellEffects(state: BattleState): BattleState =
+  pure def tickRoundDurationSpellEffects(state: BattleState): BattleState = {
+    val fighterEffects = tickDurationActiveEffects(state.fighter.activeEffects)
+    val goblinEffects = tickDurationActiveEffects(state.goblin.activeEffects)
     {
       ...state,
-      fighter: { ...state.fighter, activeEffects: tickDurationActiveEffects(state.fighter.activeEffects) },
-      goblin: { ...state.goblin, activeEffects: tickDurationActiveEffects(state.goblin.activeEffects) },
+      fighter: {
+        ...state.fighter,
+        concentrating: state.fighter.concentrating
+          and (not(activeEffectsContainHuntersMark(state.fighter.activeEffects)) or activeEffectsContainHuntersMark(fighterEffects)),
+        activeEffects: fighterEffects,
+      },
+      goblin: {
+        ...state.goblin,
+        concentrating: state.goblin.concentrating
+          and (not(activeEffectsContainHuntersMark(state.goblin.activeEffects)) or activeEffectsContainHuntersMark(goblinEffects)),
+        activeEffects: goblinEffects,
+      },
     }
+  }
 
   pure def normalizeFighterEarlyEndedOngoingFeatures(state: BattleState): BattleState =
     if (state.fighter.wearingHeavyArmor)
@@ -3429,10 +3446,16 @@ module battleRuntime {
         actionAvailable: false,
       }
 
-  pure def resolveHuntersMark(state: BattleState, target: Actor): BattleState =
+  pure def huntersMarkDurationTicks(slotLevel: int): int =
+    if (slotLevel >= 5) 24 * 60 * 10
+    else if (slotLevel >= 3) 8 * 60 * 10
+    else 60 * 10
+
+  pure def resolveHuntersMark(state: BattleState, target: Actor, slotLevel: int): BattleState =
     if (
       currentActor(state) == Fighter and
       target == Goblin and
+      slotLevel >= 1 and
       state.bonusActionAvailable and
       canExpendSpellSlotThisTurn(state) and
       not(state.fighter.unconscious) and
@@ -3445,7 +3468,11 @@ module battleRuntime {
           ...state.fighter,
           concentrating: true,
           activeEffects: activeEffectsWithoutHuntersMark(state.fighter.activeEffects)
-            .union(Set(HuntersMarkDamageRider({ target: target, transferAvailable: false }))),
+            .union(Set(HuntersMarkDamageRider({
+              target: target,
+              transferAvailable: false,
+              durationTicks: huntersMarkDurationTicks(slotLevel),
+            }))),
         },
         bonusActionAvailable: false,
         spellSlotExpendedThisTurn: true,
@@ -3466,7 +3493,11 @@ module battleRuntime {
         fighter: {
           ...state.fighter,
           activeEffects: activeEffectsWithoutHuntersMark(state.fighter.activeEffects)
-            .union(Set(HuntersMarkDamageRider({ target: target, transferAvailable: false }))),
+            .union(Set(HuntersMarkDamageRider({
+              target: target,
+              transferAvailable: false,
+              durationTicks: activeEffectsHuntersMarkDurationTicks(state.fighter.activeEffects),
+            }))),
         },
         bonusActionAvailable: false,
       }
@@ -3478,6 +3509,18 @@ module battleRuntime {
       | HuntersMarkDamageRider(_) => false
       | _ => true
     })
+
+  pure def activeEffectsContainHuntersMark(effects: Set[ActiveEffect]): bool =
+    effects.exists(effect => match effect {
+      | HuntersMarkDamageRider(_) => true
+      | _ => false
+    })
+
+  pure def activeEffectsHuntersMarkDurationTicks(effects: Set[ActiveEffect]): int =
+    effects.map(effect => match effect {
+      | HuntersMarkDamageRider(data) => data.durationTicks
+      | _ => 0
+    }).fold(0, (highest, ticks) => if (highest > ticks) highest else ticks)
 
   pure def activeEffectsContainTransferableHuntersMark(effects: Set[ActiveEffect]): bool =
     effects.exists(effect => match effect {
@@ -6775,9 +6818,14 @@ module battleRuntime {
       assert(divineSmiteDamageDice(1, HumanoidCreature) == 2),
       assert(divineSmiteDamageDice(1, UndeadCreature) == 3),
       assert(divineSmiteDamageDice(3, FiendCreature) == 5),
-      assert(fighterHuntersMarkDamage(4, Set(HuntersMarkDamageRider({ target: Goblin, transferAvailable: false })), Goblin) == 4),
-      assert(fighterHuntersMarkDamage(4, Set(HuntersMarkDamageRider({ target: Fighter, transferAvailable: false })), Goblin) == 0),
-      assert(resolveRayOfFrostWithDamageRoll({ ...initialState, fighter: { ...initialState.fighter, activeEffects: Set(HuntersMarkDamageRider({ target: Goblin, transferAvailable: false })) }, goblin: { ...initialState.goblin, reactionAvailable: false } }, 15, 10, fighterSpellAttackDamageRollWithHuntersMark(4, 6), true).goblin.hp == 0),
+      assert(huntersMarkDurationTicks(1) == 600),
+      assert(huntersMarkDurationTicks(2) == 600),
+      assert(huntersMarkDurationTicks(3) == 4800),
+      assert(huntersMarkDurationTicks(4) == 4800),
+      assert(huntersMarkDurationTicks(5) == 14400),
+      assert(fighterHuntersMarkDamage(4, Set(HuntersMarkDamageRider({ target: Goblin, transferAvailable: false, durationTicks: 600 })), Goblin) == 4),
+      assert(fighterHuntersMarkDamage(4, Set(HuntersMarkDamageRider({ target: Fighter, transferAvailable: false, durationTicks: 600 })), Goblin) == 0),
+      assert(resolveRayOfFrostWithDamageRoll({ ...initialState, fighter: { ...initialState.fighter, activeEffects: Set(HuntersMarkDamageRider({ target: Goblin, transferAvailable: false, durationTicks: 600 })) }, goblin: { ...initialState.goblin, reactionAvailable: false } }, 15, 10, fighterSpellAttackDamageRollWithHuntersMark(4, 6), true).goblin.hp == 0),
       assert(attackBurstSaveDamageSpendsLevelOneSlot(IceKnifeAttackBurstSaveDamage)),
       assert(attackBurstSaveDamageAttackType(IceKnifeAttackBurstSaveDamage) == Piercing),
       assert(attackBurstSaveDamageBurstType(IceKnifeAttackBurstSaveDamage) == Cold),

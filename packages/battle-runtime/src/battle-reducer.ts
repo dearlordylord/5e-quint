@@ -431,6 +431,7 @@ export type BattleActiveEffectExpiration =
   | {
       readonly kind: "concentration";
       readonly combatantId: CombatantId;
+      readonly durationTicks?: ElapsedTimeTicks;
     }
   | {
       readonly kind: "duration";

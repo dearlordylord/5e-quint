@@ -1352,9 +1352,10 @@
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
       "taskRefs": [
-        "SRDINV31B"
+        "SRDINV31B",
+        "SRDINV62"
       ],
-      "title": "Spell invocation creates a combat mark with attack-roll damage and 0-HP transfer",
+      "title": "Spell invocation creates a combat mark with attack-roll damage, Concentration duration, and 0-HP transfer",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -2122,7 +2123,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Promoted battle-runtime Quint facts for Hunter's Mark combat target marking, mark-scoped Force damage, and transfer after the marked target drops to 0 Hit Points; noncombat finding Advantage and upcast duration maxima remain deferred.",
+      "note": "Promoted battle-runtime Quint facts for Hunter's Mark combat target marking, mark-scoped Force damage, and transfer after the marked target drops to 0 Hit Points; noncombat finding Advantage remains deferred.",
       "profileIds": [
         "spell.invocation-marked-damage-rider"
       ],
@@ -2130,11 +2131,27 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime admission and reducer tests for Hunter's Mark combat target marking, mark-scoped Force damage, Concentration cleanup, and Bonus Action transfer; noncombat finding Advantage and upcast duration maxima remain deferred.",
+      "note": "Focused battle-runtime admission and reducer tests for Hunter's Mark combat target marking, mark-scoped Force damage, Concentration cleanup, and Bonus Action transfer; noncombat finding Advantage remains deferred.",
       "profileIds": [
         "spell.invocation-marked-damage-rider"
       ],
       "taskId": "SRDINV31B"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Hunter's Mark slot-scaled Concentration maximum duration: 1 hour at slots 1-2, 8 hours at slots 3-4, and 24 hours at slots 5+.",
+      "profileIds": [
+        "spell.invocation-marked-damage-rider"
+      ],
+      "taskId": "SRDINV62"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime reducer tests for Hunter's Mark slot-level duration boundaries, duration-owned Concentration cleanup, and existing weapon-hit damage rider preservation before expiry.",
+      "profileIds": [
+        "spell.invocation-marked-damage-rider"
+      ],
+      "taskId": "SRDINV62"
     },
     {
       "claimKind": "qnt-proof",
@@ -6298,12 +6315,8 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "SRDINV33",
+            "followUpTaskId": "SRDINV63",
             "mechanic": "Wisdom (Perception or Survival) Advantage to find the marked target"
-          },
-          {
-            "followUpTaskId": "SRDINV33",
-            "mechanic": "slot-scaled Concentration maximum of 8 hours at slots 3-4 and 24 hours at slots 5+"
           }
         ],
         "profileIds": [
@@ -6313,11 +6326,12 @@
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
         ],
         "supportedMechanics": [
-          "Bonus Action cast with level-1 Spell Slot spend",
+          "Bonus Action cast with Spell Slot spend",
           "Concentration-owned mark identity on one combatant target",
           "extra Force damage when the caster hits the marked target with an Attack Roll",
           "Bonus Action transfer only after the marked target drops to 0 Hit Points",
-          "Concentration cleanup removes the marked-target damage rider"
+          "slot-scaled Concentration maximum of 1 hour at slots 1-2, 8 hours at slots 3-4, and 24 hours at slots 5+",
+          "Concentration cleanup and maximum-duration expiration remove the marked-target damage rider"
         ],
         "tag": "profile-subset-supported"
       },
@@ -6342,9 +6356,10 @@
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
           "taskRefs": [
-            "SRDINV31B"
+            "SRDINV31B",
+            "SRDINV62"
           ],
-          "title": "Spell invocation creates a combat mark with attack-roll damage and 0-HP transfer",
+          "title": "Spell invocation creates a combat mark with attack-roll damage, Concentration duration, and 0-HP transfer",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
