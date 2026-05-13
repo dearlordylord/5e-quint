@@ -650,6 +650,10 @@ export function activeEffectKindForSpellPostDamageRider(
       { kind: "hitPointRegainPrevented" },
       () => "hitPointRegainPrevented" as const,
     ),
+    Match.when(
+      { kind: "invisibleBenefitDenied" },
+      () => "invisibleBenefitDenied" as const,
+    ),
     Match.exhaustive,
   );
 }
@@ -724,6 +728,12 @@ export function spellPostDamageRiderActiveEffect(input: {
     })),
     Match.when({ kind: "hitPointRegainPrevented" }, () => ({
       kind: "hitPointRegainPrevented" as const,
+      sourceSpellId: input.spellId,
+      sourceCombatantId: input.actorId,
+      expiresAt,
+    })),
+    Match.when({ kind: "invisibleBenefitDenied" }, () => ({
+      kind: "invisibleBenefitDenied" as const,
       sourceSpellId: input.spellId,
       sourceCombatantId: input.actorId,
       expiresAt,

@@ -216,8 +216,8 @@ module battleRuntime {
   //   Radiant damage on a hit, and makes the hit target emit Dim Light in a
   //   10-foot radius until the end of the caster's next turn. This object-
   //   target slice models caller-supplied object identity, range legality,
-  //   Armor Class, damage disposition, and source-owned light emitter
-  //   projection; its Invisible-benefit rider remains deferred.
+  //   Armor Class, damage disposition, source-owned light emitter projection,
+  //   and combatant-target Invisible-benefit denial.
   //   Spells/Descriptions-E-L.md lines 1307-1318: Ice Knife is a level-1
   //   Action spell with a primary ranged spell attack, hit-only Piercing
   //   damage, and an unconditional primary-target-anchored burst Dexterity
@@ -307,7 +307,7 @@ module battleRuntime {
   type SpellActionCost = SpellMagicAction | SpellBonusAction
   type CommandOption = CommandGrovelOption | CommandHaltOption | CommandDropOption | CommandApproachOption | CommandFleeOption
 
-  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool, durationTicks: int }) | RayOfSicknessPoisoned | ChillTouchHitPointRegainPrevented({ source: Actor, expiresAtRound: int }) | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodCreatureTypeProtection | ProduceFlameHeldLight({ durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
+  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool, durationTicks: int }) | RayOfSicknessPoisoned | ChillTouchHitPointRegainPrevented({ source: Actor, expiresAtRound: int }) | StarryWispInvisibleBenefitDenied({ source: Actor, expiresAtRound: int }) | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodCreatureTypeProtection | ProduceFlameHeldLight({ durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
   type PreventedProtectionCondition = PreventedCharmed | PreventedFrightened
   type PossessionAttemptDisposition = PossessionPreventedByCreatureTypeProtection | PossessionUnprevented
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
@@ -872,13 +872,14 @@ module battleRuntime {
       }
     }
 
-  pure def activeEffectsWithoutExpiredChillTouchHitPointRegainPrevention(
+  pure def activeEffectsWithoutExpiredEndOfTurnRiders(
     effects: Set[ActiveEffect],
     actor: Actor,
     round: int
   ): Set[ActiveEffect] =
     effects.filter(effect => match effect {
       | ChillTouchHitPointRegainPrevented(data) => data.source != actor or data.expiresAtRound != round
+      | StarryWispInvisibleBenefitDenied(data) => data.source != actor or data.expiresAtRound != round
       | _ => true
     })
 
@@ -899,11 +900,11 @@ module battleRuntime {
       lightEmitters: lightEmittersWithoutExpiredEndOfTurnEmitters(state.lightEmitters, actor, round),
       fighter: {
         ...state.fighter,
-        activeEffects: activeEffectsWithoutExpiredChillTouchHitPointRegainPrevention(state.fighter.activeEffects, actor, round),
+        activeEffects: activeEffectsWithoutExpiredEndOfTurnRiders(state.fighter.activeEffects, actor, round),
       },
       goblin: {
         ...state.goblin,
-        activeEffects: activeEffectsWithoutExpiredChillTouchHitPointRegainPrevention(state.goblin.activeEffects, actor, round),
+        activeEffects: activeEffectsWithoutExpiredEndOfTurnRiders(state.goblin.activeEffects, actor, round),
       },
     }
   }
@@ -1119,6 +1120,7 @@ module battleRuntime {
         | HuntersMarkDamageRider(_) => false
         | RayOfSicknessPoisoned => false
         | ChillTouchHitPointRegainPrevented(_) => false
+        | StarryWispInvisibleBenefitDenied(_) => false
         | ShockingGraspOpportunityAttackDenied => false
         | GuidingBoltNextAttackAdvantage => false
         | ViciousMockeryNextAttackDisadvantage => false
@@ -2203,6 +2205,19 @@ module battleRuntime {
         .union(Set(ChillTouchHitPointRegainPrevented({
           source: source,
           expiresAtRound: chillTouchHitPointRegainPreventionExpiresAtRound(state, source),
+        }))),
+    }
+
+  pure def applyStarryWispInvisibleBenefitDenied(state: BattleState, target: Combatant, source: Actor): Combatant =
+    { ...target,
+      activeEffects: target.activeEffects
+        .filter(effect => match effect {
+          | StarryWispInvisibleBenefitDenied(data) => data.source != source
+          | _ => true
+        })
+        .union(Set(StarryWispInvisibleBenefitDenied({
+          source: source,
+          expiresAtRound: endOfCasterNextTurnLightEmitterExpiresAtRound(state, source),
         }))),
     }
 
@@ -4414,6 +4429,7 @@ module battleRuntime {
     match effect {
       | BattleRuntimeRayOfFrostSpeedReductionHitEffect => RayOfFrostSpeedDelta
       | BattleRuntimeChillTouchHitPointRegainPreventionHitEffect => ChillTouchHitPointRegainPrevented({ source: Fighter, expiresAtRound: 0 })
+      | BattleRuntimeStarryWispInvisibleBenefitDeniedHitEffect => StarryWispInvisibleBenefitDenied({ source: Fighter, expiresAtRound: 0 })
       | BattleRuntimeShockingGraspOpportunityAttackDeniedHitEffect => ShockingGraspOpportunityAttackDenied
       | BattleRuntimeGuidingBoltNextAttackAdvantageHitEffect => GuidingBoltNextAttackAdvantage
       | BattleRuntimeRayOfSicknessPoisonedHitEffect => RayOfSicknessPoisoned
@@ -4817,7 +4833,10 @@ module battleRuntime {
       NormalSpellAttackRoll
 
   pure def activeEffectsDenyInvisibleBenefit(effects: Set[ActiveEffect]): bool =
-    effects.contains(FaerieFireOutline)
+    effects.contains(FaerieFireOutline) or effects.exists(effect => match effect {
+      | StarryWispInvisibleBenefitDenied(_) => true
+      | _ => false
+    })
 
   pure def protectionFromEvilAndGoodCreatureTypeIsScoped(creatureType: RuntimeCreatureType): bool =
     creatureType == AberrationCreature or
@@ -6927,7 +6946,7 @@ module battleRuntime {
       assert(spellAttackDamageType(RayOfSicknessSpellAttack) == Poison),
       assert(spellAttackDamageActiveEffects(RayOfSicknessSpellAttack) == Set(RayOfSicknessPoisoned)),
       assert(spellAttackDamageActiveEffects(ChillTouchSpellAttack) == Set(ChillTouchHitPointRegainPrevented({ source: Fighter, expiresAtRound: 0 }))),
-      assert(spellAttackDamageActiveEffects(StarryWispSpellAttack) == Set()),
+      assert(spellAttackDamageActiveEffects(StarryWispSpellAttack) == Set(StarryWispInvisibleBenefitDenied({ source: Fighter, expiresAtRound: 0 }))),
       assert(starryWispDimLightEmitter(initialState, Fighter, CombatantLightEmitter({ actor: Goblin })) == SpellLightEmitter({
         source: Fighter,
         sourceSpell: StarryWisp,
@@ -7007,6 +7026,7 @@ module battleRuntime {
       assert(saveGatedAttackRollAdvantageTargeting(FaerieFireSaveGate) == AreaSaveTargets),
       assert(saveGatedAttackRollAdvantageFailedSaveActiveEffects(FaerieFireSaveGate) == Set(FaerieFireOutline)),
       assert(activeEffectsDenyInvisibleBenefit(Set(FaerieFireOutline))),
+      assert(activeEffectsDenyInvisibleBenefit(Set(StarryWispInvisibleBenefitDenied({ source: Fighter, expiresAtRound: 2 })))),
       assert(not(activeEffectsDenyInvisibleBenefit(Set(GuidingBoltNextAttackAdvantage)))),
       assert(saveGatedConditionTargeting(AnimalFriendshipSaveGate) == TargetListSaveTargets({ minTargets: 1, baseSlotLevel: 1, baseTargets: 1, additionalTargetsPerSlotLevel: 1 })),
       assert(saveGatedTargetMaxTargets(saveGatedConditionTargeting(AnimalFriendshipSaveGate), 1) == 1),
@@ -7790,6 +7810,23 @@ module battleRuntime {
       assert(afterFighterTurn.lightEmitters.contains(emitter)),
       assert(afterGoblinTurn.lightEmitters.contains(emitter)),
       assert(not(afterFighterNextTurn.lightEmitters.contains(emitter))),
+    }
+  }
+
+  run test_starry_wisp_invisible_benefit_denial_expires_at_end_of_caster_next_turn = {
+    val hitGoblin = applyStarryWispInvisibleBenefitDenied(initialState, initialState.goblin, Fighter)
+    val hit = { ...initialState, goblin: hitGoblin }
+    val afterFighterTurn = endTurn(hit)
+    val afterGoblinTurn = endTurn(afterFighterTurn)
+    val afterFighterNextTurn = endTurn(afterGoblinTurn)
+    val effect = StarryWispInvisibleBenefitDenied({ source: Fighter, expiresAtRound: 2 })
+    all {
+      assert(hit.goblin.activeEffects.contains(effect)),
+      assert(activeEffectsDenyInvisibleBenefit(hit.goblin.activeEffects)),
+      assert(afterFighterTurn.goblin.activeEffects.contains(effect)),
+      assert(afterGoblinTurn.goblin.activeEffects.contains(effect)),
+      assert(not(afterFighterNextTurn.goblin.activeEffects.contains(effect))),
+      assert(not(activeEffectsDenyInvisibleBenefit(afterFighterNextTurn.goblin.activeEffects))),
     }
   }
 

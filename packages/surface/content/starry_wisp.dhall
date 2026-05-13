@@ -5,11 +5,11 @@
 -- battle-runtime spell invocation profile admits both combatant targets and a
 -- caller-supplied object-target branch with object identity, range fact,
 -- Armor Class, attack adjudication, and damage disposition.
--- PROMOTED RIDER: "emits Dim Light in a 10-foot radius" is authored as a
+-- PROMOTED RIDERS: "emits Dim Light in a 10-foot radius" is authored as a
 -- hit-applied Dim-only light emission for the shared battle-runtime emitter
--- projection.
--- DEFERRED RIDER: "can't benefit from the Invisible condition until end of
--- next turn" remains a later runtime slice.
+-- projection; "can't benefit from the Invisible condition" is authored as a
+-- hit-applied Invisible-benefit denial through the end-of-caster-next-turn
+-- active-effect boundary.
 -- Cantrip upgrade: 1d8 → 2d8 (L5) → 3d8 (L11) → 4d8 (L17).
 
 let starryWisp =
@@ -76,6 +76,23 @@ let starryWisp =
                             }
                       , radiusFeet = Some 10
                       , expiresAt = Some "end_of_caster_next_turn"
+                      }
+                    , { kind = "suppress_condition_benefit"
+                      , condition = "invisible"
+                      , damageType = None Text
+                      , amount =
+                          None
+                            { kind : Text
+                            , axis : Text
+                            , base : { dice : Natural, dieSize : Natural }
+                            , tiers :
+                                List
+                                  { atLevel : Natural
+                                  , override : { dice : Natural }
+                                  }
+                            }
+                      , radiusFeet = None Natural
+                      , expiresAt = None Text
                       }
                     ]
                 , onMiss = [ { kind = "none" } ]

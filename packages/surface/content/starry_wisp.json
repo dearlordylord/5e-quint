@@ -72,6 +72,10 @@
             "expiresAt": "end_of_caster_next_turn",
             "kind": "emit_dim_light",
             "radiusFeet": 10
+          },
+          {
+            "condition": "invisible",
+            "kind": "suppress_condition_benefit"
           }
         ],
         "onMiss": [

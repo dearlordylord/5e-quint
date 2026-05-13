@@ -66,6 +66,7 @@ import {
 import type { ConditionState } from "@dnd/shared-algebras/conditions-algebra";
 import {
   applyCondition,
+  hasCondition,
   removeCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
 import {
@@ -74,6 +75,7 @@ import {
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
+import { combatantCanSee } from "./battle-reducer/creature-state-leaves.ts";
 import {
   holeId,
   holeInstanceKey,
@@ -14883,6 +14885,10 @@ describe("battle runtime", () => {
             emission: { kind: "dim", radiusFeet: 10 },
             expiresAt: "endOfCasterNextTurn",
           },
+          {
+            kind: "invisibleBenefitDenied",
+            expiresAt: "endOfCasterNextTurn",
+          },
         ],
       }),
     });
@@ -14940,6 +14946,152 @@ describe("battle runtime", () => {
       actorId: wizardId,
     }));
     expect(afterWizardNextTurn.state.lightEmitters).toEqual([]);
+  });
+
+  test("Starry Wisp hit denies Invisible benefit without removing the condition until the caster's next turn ends", () => {
+    const allyId = combatantId("starry-wisp-ally");
+    const state = startBattleRight({
+      battleId: battleId("battle-starry-wisp-invisible-denial"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          classLevel: 5,
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("starry_wisp")],
+            preparedSpells: [],
+          }),
+        }),
+        characterSeed({
+          combatantId: allyId,
+          displayName: "Ally",
+          initiative: 15,
+        }),
+        skeletonCreatureInit({
+          initiative: 10,
+        }),
+      ],
+    });
+    const skeleton = state.combatants.get(skeletonId);
+    if (skeleton === undefined) {
+      throw new Error("Expected Starry Wisp target combatant.");
+    }
+    const invisibleState = {
+      ...state,
+      combatants: new Map(state.combatants).set(
+        skeletonId,
+        testBattleCreatureStateWithConditions(
+          skeleton,
+          applyCondition(skeleton.conditions, "invisible"),
+        ),
+      ),
+    };
+    const subject = magicSubject("starry_wisp");
+    const target = findHole(
+      findAct(invisibleState, subject).initialHoles,
+      "targetChoice",
+    );
+    const attackRoll = requireHole(
+      resolveBattleSubject({
+        state: invisibleState,
+        subject,
+        fills: [targetFill(target, skeletonId)],
+      }),
+      "attackRoll",
+    );
+    expect(combatantCanSee(invisibleState, allyId, skeletonId)).toBe(false);
+    const damage = requireHole(
+      resolveBattleSubject({
+        state: invisibleState,
+        subject,
+        fills: [
+          targetFill(target, skeletonId),
+          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    const hit = requireResolved(
+      resolveBattleSubject({
+        state: invisibleState,
+        subject,
+        fills: [
+          targetFill(target, skeletonId),
+          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+          damageRollFillWithGroups(damage, [[1, 1]]),
+        ],
+      }),
+    );
+    const hitTarget = hit.state.combatants.get(skeletonId);
+    if (hitTarget === undefined) {
+      throw new Error("Expected Starry Wisp hit target combatant.");
+    }
+    expect(hitTarget?.activeEffects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "invisibleBenefitDenied",
+          sourceSpellId: "starry_wisp",
+          sourceCombatantId: wizardId,
+          expiresAt: {
+            kind: "endOfTurn",
+            combatantId: wizardId,
+            round: 2,
+          },
+        }),
+      ]),
+    );
+    expect(hasCondition(hitTarget.conditions, "invisible")).toBe(true);
+    expect(combatantCanSee(hit.state, allyId, skeletonId)).toBe(true);
+
+    const allyTurn = requireResolved(
+      endTurn({ state: hit.state, actorId: wizardId }),
+    );
+    const allyAttack: BattleSubject = {
+      tag: "action",
+      actorId: allyId,
+      action: "attack",
+      attackName: "Longsword",
+    };
+    const allyTarget = requireHole(
+      resolveBattleSubject({
+        state: allyTurn.state,
+        subject: allyAttack,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const allyAttackRoll = requireHole(
+      resolveBattleSubject({
+        state: allyTurn.state,
+        subject: allyAttack,
+        fills: [attackTargetFill(allyTarget, allyId, skeletonId)],
+      }),
+      "attackRoll",
+    );
+    expect(allyAttackRoll).not.toHaveProperty("rollMode");
+
+    const skeletonTurn = requireResolved(
+      endTurn({ state: allyTurn.state, actorId: allyId }),
+    );
+    const wizardNextTurn = requireResolved(
+      endTurn({ state: skeletonTurn.state, actorId: skeletonId }),
+    );
+    const expired = requireResolved(
+      endTurn({ state: wizardNextTurn.state, actorId: wizardId }),
+    );
+    const expiredTarget = expired.state.combatants.get(skeletonId);
+    if (expiredTarget === undefined) {
+      throw new Error("Expected expired Starry Wisp target combatant.");
+    }
+    expect(expiredTarget?.activeEffects).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: "invisibleBenefitDenied" }),
+      ]),
+    );
+    expect(hasCondition(expiredTarget.conditions, "invisible")).toBe(true);
+    expect(combatantCanSee(expired.state, allyId, skeletonId)).toBe(false);
   });
 
   test("Eldritch Blast resolves independent creature and object beams for one Magic action", () => {

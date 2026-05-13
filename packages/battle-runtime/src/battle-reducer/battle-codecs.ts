@@ -544,6 +544,10 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
             kind: Schema.Literal("hitPointRegainPrevented"),
             expiresAt: Schema.Literal("endOfCasterNextTurn"),
           }),
+          Schema.Struct({
+            kind: Schema.Literal("invisibleBenefitDenied"),
+            expiresAt: Schema.Literal("endOfCasterNextTurn"),
+          }),
         ),
       ),
     }),
@@ -582,6 +586,10 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
           }),
           Schema.Struct({
             kind: Schema.Literal("hitPointRegainPrevented"),
+            expiresAt: Schema.Literal("endOfCasterNextTurn"),
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("invisibleBenefitDenied"),
             expiresAt: Schema.Literal("endOfCasterNextTurn"),
           }),
         ),

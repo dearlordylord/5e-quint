@@ -22,6 +22,7 @@ module battleRuntimeSpellBridge {
   type BattleRuntimeSpellAttackDamageHitEffect =
     | BattleRuntimeRayOfFrostSpeedReductionHitEffect
     | BattleRuntimeChillTouchHitPointRegainPreventionHitEffect
+    | BattleRuntimeStarryWispInvisibleBenefitDeniedHitEffect
     | BattleRuntimeShockingGraspOpportunityAttackDeniedHitEffect
     | BattleRuntimeGuidingBoltNextAttackAdvantageHitEffect
     | BattleRuntimeRayOfSicknessPoisonedHitEffect
@@ -176,6 +177,7 @@ module battleRuntimeSpellBridge {
     match effect {
       | RayOfFrostSpeedReductionHitEffect => BattleRuntimeRayOfFrostSpeedReductionHitEffect
       | ChillTouchHitPointRegainPreventionHitEffect => BattleRuntimeChillTouchHitPointRegainPreventionHitEffect
+      | StarryWispInvisibleBenefitDeniedHitEffect => BattleRuntimeStarryWispInvisibleBenefitDeniedHitEffect
       | ShockingGraspOpportunityAttackDeniedHitEffect => BattleRuntimeShockingGraspOpportunityAttackDeniedHitEffect
       | GuidingBoltNextAttackAdvantageHitEffect => BattleRuntimeGuidingBoltNextAttackAdvantageHitEffect
       | RayOfSicknessPoisonedHitEffect => BattleRuntimeRayOfSicknessPoisonedHitEffect

@@ -25,7 +25,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31F true_strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31B hunters_mark
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV32B produce_flame
-// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV59A starry_wisp
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV59B starry_wisp
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV38A sleep
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV50D2 command
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV39 eldritch_blast
@@ -5112,6 +5112,10 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
           {
             kind: "lightEmission",
             emission: { kind: "dim", radiusFeet: movementFeet(10) },
+            expiresAt: "endOfCasterNextTurn",
+          },
+          {
+            kind: "invisibleBenefitDenied",
             expiresAt: "endOfCasterNextTurn",
           },
         ],

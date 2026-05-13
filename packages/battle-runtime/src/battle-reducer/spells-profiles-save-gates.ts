@@ -1144,9 +1144,27 @@ export function supportedSpellPostDamageRiders(
       });
       continue;
     }
+    if (
+      effect.kind === "suppress_condition_benefit" &&
+      effect.condition === "invisible" &&
+      isStarryWispInvisibleBenefitDenialRiderShape(spell, phase)
+    ) {
+      riders.push({
+        kind: "invisibleBenefitDenied",
+        expiresAt: "endOfCasterNextTurn",
+      });
+      continue;
+    }
     return null;
   }
   return riders;
+}
+
+export function isStarryWispInvisibleBenefitDenialRiderShape(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
+): boolean {
+  return isStarryWispDimLightRiderShape(spell, phase);
 }
 
 export function isStarryWispDimLightRiderShape(

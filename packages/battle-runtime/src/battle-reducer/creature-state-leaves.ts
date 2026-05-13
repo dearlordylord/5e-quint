@@ -38,7 +38,9 @@ export function combatantInvisibleBenefitDenied(
 ): boolean {
   return (
     combatant?.activeEffects.some(
-      (effect) => effect.kind === "faerieFireOutline",
+      (effect) =>
+        effect.kind === "faerieFireOutline" ||
+        effect.kind === "invisibleBenefitDenied",
     ) === true
   );
 }

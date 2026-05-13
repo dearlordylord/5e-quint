@@ -53,6 +53,7 @@ module spellProcedureProfiles {
   type SpellAttackDamageHitEffect =
     | RayOfFrostSpeedReductionHitEffect
     | ChillTouchHitPointRegainPreventionHitEffect
+    | StarryWispInvisibleBenefitDeniedHitEffect
     | ShockingGraspOpportunityAttackDeniedHitEffect
     | GuidingBoltNextAttackAdvantageHitEffect
     | RayOfSicknessPoisonedHitEffect
@@ -374,7 +375,7 @@ module spellProcedureProfiles {
       | RayOfFrostSpellAttackProfile => Set(RayOfFrostSpeedReductionHitEffect)
       | PoisonSpraySpellAttackProfile => Set()
       | ChillTouchSpellAttackProfile => Set(ChillTouchHitPointRegainPreventionHitEffect)
-      | StarryWispSpellAttackProfile => Set()
+      | StarryWispSpellAttackProfile => Set(StarryWispInvisibleBenefitDeniedHitEffect)
       | ShockingGraspSpellAttackProfile => Set(ShockingGraspOpportunityAttackDeniedHitEffect)
       | GuidingBoltSpellAttackProfile => Set(GuidingBoltNextAttackAdvantageHitEffect)
       | RayOfSicknessSpellAttackProfile => Set(RayOfSicknessPoisonedHitEffect)
@@ -1182,7 +1183,7 @@ module spellProcedureProfiles {
       assert(spellAttackDamageProfileHitEffects(ShockingGraspSpellAttackProfile) == Set(ShockingGraspOpportunityAttackDeniedHitEffect)),
       assert(spellAttackDamageProfileHitEffects(GuidingBoltSpellAttackProfile) == Set(GuidingBoltNextAttackAdvantageHitEffect)),
       assert(spellAttackDamageProfileHitEffects(RayOfSicknessSpellAttackProfile) == Set(RayOfSicknessPoisonedHitEffect)),
-      assert(spellAttackDamageProfileHitEffects(StarryWispSpellAttackProfile) == Set()),
+      assert(spellAttackDamageProfileHitEffects(StarryWispSpellAttackProfile) == Set(StarryWispInvisibleBenefitDeniedHitEffect)),
       assert(spellAttackDamageProfileSupportsObjectTarget(StarryWispSpellAttackProfile)),
       assert(spellAttackDamageProfileSupportsObjectTarget(ProduceFlameHurlSpellAttackProfile)),
       assert(not(spellAttackDamageProfileSupportsObjectTarget(RayOfFrostSpellAttackProfile))),
