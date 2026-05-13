@@ -16,7 +16,7 @@ import {
   attackDamageHole,
   martialArtsBonusUnarmedStrikeActionOptionForActor,
   damageDispositionFillValidation,
-  offHandAttackActionOptionForActor,
+  offHandAttackActionOptionsForActor,
   offHandAttackPrerequisiteMet,
 } from "./attack-damage-apply.ts";
 
@@ -108,8 +108,10 @@ export function resolveOffHandAttack(
     label: "Light Property Bonus Action Attack",
     unavailableMessage:
       "Light Property Bonus Action Attack requires a prior Attack action attack with a different Light weapon.",
-    attackForInput: (state, actorId) =>
-      offHandAttackActionOptionForActor(state, actorId),
+    attackForInput: (state, actorId, attackName) =>
+      offHandAttackActionOptionsForActor(state, actorId).find(
+        (attack) => attackActionOptionName(attack) === attackName,
+      ),
     prerequisiteMet: (state, actorId, attack) =>
       attack.kind === "weapon" &&
       offHandAttackPrerequisiteMet(state, actorId, attack),
@@ -123,8 +125,16 @@ export function resolveMartialArtsBonusUnarmedStrike(
     label: "Martial Arts Bonus Unarmed Strike",
     unavailableMessage:
       "Martial Arts Bonus Unarmed Strike requires Martial Arts support and an unarmored, unshielded Monk loadout.",
-    attackForInput: (state, actorId) =>
-      martialArtsBonusUnarmedStrikeActionOptionForActor(state, actorId),
+    attackForInput: (state, actorId, attackName) => {
+      const attack = martialArtsBonusUnarmedStrikeActionOptionForActor(
+        state,
+        actorId,
+      );
+      return attack !== undefined &&
+        attackActionOptionName(attack) === attackName
+        ? attack
+        : undefined;
+    },
     prerequisiteMet: () => true,
   });
 }
@@ -139,6 +149,7 @@ type BonusActionAttackConfig = {
   readonly attackForInput: (
     state: BattleState,
     actorId: BonusActionAttackBattleResolutionInput["subject"]["actorId"],
+    attackName: BonusActionAttackBattleResolutionInput["subject"]["attackName"],
   ) => SupportedAttackActionOption | undefined;
   readonly prerequisiteMet: (
     state: BattleState,
@@ -155,10 +166,13 @@ function resolveBonusActionAttack(
   const pendingAttackDamageReductions =
     input.pendingAttackDamageReductions ?? [];
   const pendingAttackDamageAdditions = input.pendingAttackDamageAdditions ?? [];
-  const attack = config.attackForInput(input.state, input.subject.actorId);
+  const attack = config.attackForInput(
+    input.state,
+    input.subject.actorId,
+    input.subject.attackName,
+  );
   if (
     attack == null ||
-    attackActionOptionName(attack) !== input.subject.attackName ||
     !config.prerequisiteMet(input.state, input.subject.actorId, attack)
   ) {
     return invalidResult(

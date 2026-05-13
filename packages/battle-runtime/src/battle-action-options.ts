@@ -2,6 +2,7 @@ import type {
   AbilityModifier,
   AttackBonus,
   DamageDieSize,
+  ReadonlyNonEmptyArray,
   ResourceCount,
 } from "@dnd/shared/types";
 import type {
@@ -20,6 +21,19 @@ export type BattleWeaponDamage = Extract<
   { readonly kind: "dice" }
 >;
 
+export type CharacterWeaponAttackAbilityChoice = {
+  readonly ability: Ability;
+  readonly abilityModifier: AbilityModifier;
+  readonly attackBonus: AttackBonus;
+  readonly damageAbilityModifier: AbilityModifier;
+};
+
+export type CharacterWeaponAttackDamageTypeChoices = readonly [
+  DamageType,
+  DamageType,
+  ...DamageType[],
+];
+
 export type CharacterWeaponAttackActionOption = {
   readonly kind: "weapon";
   readonly weapon: WeaponRecord;
@@ -27,6 +41,8 @@ export type CharacterWeaponAttackActionOption = {
   readonly abilityModifier: AbilityModifier;
   readonly attackBonus?: AttackBonus;
   readonly damageAbilityModifier?: AbilityModifier;
+  readonly damageTypeChoices?: CharacterWeaponAttackDamageTypeChoices;
+  readonly alternateAbilityChoices?: ReadonlyNonEmptyArray<CharacterWeaponAttackAbilityChoice>;
 };
 
 export type UnarmedStrikeDamageProfile =

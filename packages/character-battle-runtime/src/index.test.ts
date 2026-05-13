@@ -19,6 +19,7 @@ import {
   characterEquipmentItemId,
   characterEquipmentItemUnitId,
   classUnitId,
+  eldritchInvocationId,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
 import {
@@ -564,6 +565,470 @@ describe("Character Build battle projection", () => {
     });
   });
 
+  test("projects Pact of the Blade onto the bonded melee weapon only", () => {
+    const build = pactBladeInvocationBuild("weapon_longsword");
+    const bondedItemId = build.equipment.loadout.weapon?.itemId;
+    if (bondedItemId === undefined) {
+      throw new Error("Expected Pact of the Blade test weapon.");
+    }
+    const init = expectRight(
+      battleCreatureInitFromCharacterBuild({
+        combatantId: combatantId("pact-blade-longsword"),
+        characterId: characterId("character:pact-blade-longsword"),
+        displayName: "Pact Blade Character",
+        build,
+        initiative: initiativeScore(10),
+        side: battleCombatantSide("party"),
+        unitLibrary,
+        pactBladeBondedWeaponItemId: bondedItemId,
+      }),
+    );
+
+    expect(init.creatureInit.kind).toBe("character");
+    if (init.creatureInit.kind !== "character") return;
+    expect(init.creatureInit.attack).toMatchObject({
+      kind: "weapon",
+      ability: "str",
+      abilityModifier: abilityModifier(-1),
+      attackBonus: 1,
+      damageAbilityModifier: abilityModifier(-1),
+      alternateAbilityChoices: [
+        {
+          ability: "cha",
+          abilityModifier: abilityModifier(3),
+          attackBonus: 5,
+          damageAbilityModifier: abilityModifier(3),
+        },
+      ],
+      damageTypeChoices: ["slashing", "necrotic", "psychic", "radiant"],
+      weapon: { id: "weapon_longsword" },
+    });
+  });
+
+  test("keeps Pact of the Blade Charisma selectable when the normal ability is better", () => {
+    const build = pactBladeInvocationBuild("weapon_longsword", {
+      str: 18,
+      cha: 14,
+    });
+    const bondedItemId = build.equipment.loadout.weapon?.itemId;
+    if (bondedItemId === undefined) {
+      throw new Error("Expected Pact of the Blade test weapon.");
+    }
+    const init = expectRight(
+      battleCreatureInitFromCharacterBuild({
+        combatantId: combatantId("pact-blade-stronger-strength"),
+        characterId: characterId("character:pact-blade-stronger-strength"),
+        displayName: "Strong Pact Blade Character",
+        build,
+        initiative: initiativeScore(10),
+        side: battleCombatantSide("party"),
+        unitLibrary,
+        pactBladeBondedWeaponItemId: bondedItemId,
+      }),
+    );
+
+    expect(init.creatureInit.kind).toBe("character");
+    if (init.creatureInit.kind !== "character") return;
+    expect(init.creatureInit.attack).toMatchObject({
+      kind: "weapon",
+      ability: "str",
+      abilityModifier: abilityModifier(4),
+      attackBonus: 6,
+      damageAbilityModifier: abilityModifier(4),
+      alternateAbilityChoices: [
+        {
+          ability: "cha",
+          abilityModifier: abilityModifier(2),
+          attackBonus: 4,
+          damageAbilityModifier: abilityModifier(2),
+        },
+      ],
+      damageTypeChoices: ["slashing", "necrotic", "psychic", "radiant"],
+    });
+  });
+
+  test("applies selected Pact of the Blade alternate damage in Attack action damage", () => {
+    const actorId = combatantId("pact-blade-necrotic-attacker");
+    const targetId = combatantId("pact-blade-necrotic-target");
+    const build = pactBladeInvocationBuild("weapon_longsword");
+    const bondedItemId = build.equipment.loadout.weapon?.itemId;
+    if (bondedItemId === undefined) {
+      throw new Error("Expected Pact of the Blade test weapon.");
+    }
+    const state = expectRight(
+      startBattleFromCharacterBuildAndStatBlock({
+        battleId: battleId("pact-blade-necrotic-attack"),
+        character: {
+          combatantId: actorId,
+          characterId: characterId("character:pact-blade-necrotic-attacker"),
+          displayName: "Pact Blade Character",
+          build,
+          initiative: initiativeScore(20),
+          side: battleCombatantSide("party"),
+          pactBladeBondedWeaponItemId: bondedItemId,
+        },
+        statBlockBattleInput: {
+          combatantId: targetId,
+          statBlock: statBlockCatalog.requireStatBlock(
+            "stat_block_goblin_warrior",
+          ),
+          initiative: initiativeScore(10),
+          side: battleCombatantSide("monsters"),
+        },
+        unitLibrary,
+      }),
+    );
+    const attackName = "Longsword (Charisma) (necrotic)";
+    const subject = {
+      tag: "action" as const,
+      actorId,
+      action: "attack" as const,
+      attackName,
+    };
+    const meleeReachFact = {
+      kind: "attackTargetInMeleeReach" as const,
+      actorId,
+      targetId,
+      attackName,
+    };
+    expect(
+      discoverBattleActs(state).map((act) =>
+        "attackName" in act.subject ? act.subject.attackName : undefined,
+      ),
+    ).toEqual(
+      expect.arrayContaining([
+        "Longsword (slashing)",
+        "Longsword (necrotic)",
+        "Longsword (psychic)",
+        "Longsword (radiant)",
+        "Longsword (Charisma) (slashing)",
+        "Longsword (Charisma) (necrotic)",
+        "Longsword (Charisma) (psychic)",
+        "Longsword (Charisma) (radiant)",
+      ]),
+    );
+    const target = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const attackRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFill(target, targetId, [meleeReachFact])],
+      }),
+      "attackRoll",
+    );
+    const damageRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(target, targetId, [meleeReachFact]),
+          attackRollFill(attackRoll, { total: 15, naturalD20: 10 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    expect(damageRoll.label).toBe(
+      "Longsword (Charisma) (necrotic) damage (1d8+3-necrotic)",
+    );
+    const hit = requireResolvedBattleSubject(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(target, targetId, [meleeReachFact]),
+          attackRollFill(attackRoll, { total: 15, naturalD20: 10 }),
+          rolledDiceFill(damageRoll, 1),
+        ],
+      }),
+    );
+
+    expect(hit.state.combatants.get(targetId)?.hp).toBe(Hp(6));
+  });
+
+  test("applies selected Pact of the Blade alternate damage for a bonded off-hand weapon", () => {
+    const actorId = combatantId("pact-blade-offhand-attacker");
+    const targetId = combatantId("pact-blade-offhand-target");
+    const build = pactBladeInvocationBuild("weapon_shortsword", {
+      offHandWeaponUnitId: "weapon_dagger",
+    });
+    const bondedItemId = build.equipment.loadout.offHandWeapon?.itemId;
+    if (bondedItemId === undefined) {
+      throw new Error("Expected Pact of the Blade off-hand test weapon.");
+    }
+    const state = expectRight(
+      startBattleFromCharacterBuildAndStatBlock({
+        battleId: battleId("pact-blade-offhand-radiant-attack"),
+        character: {
+          combatantId: actorId,
+          characterId: characterId("character:pact-blade-offhand-attacker"),
+          displayName: "Pact Blade Off-Hand Character",
+          build,
+          initiative: initiativeScore(20),
+          side: battleCombatantSide("party"),
+          pactBladeBondedWeaponItemId: bondedItemId,
+        },
+        statBlockBattleInput: {
+          combatantId: targetId,
+          statBlock: statBlockCatalog.requireStatBlock(
+            "stat_block_goblin_warrior",
+          ),
+          initiative: initiativeScore(10),
+          side: battleCombatantSide("monsters"),
+        },
+        unitLibrary,
+      }),
+    );
+    const mainAttackName = "Shortsword";
+    const mainSubject = {
+      tag: "action" as const,
+      actorId,
+      action: "attack" as const,
+      attackName: mainAttackName,
+    };
+    const mainTarget = requireHole(
+      resolveBattleSubject({ state, subject: mainSubject, fills: [] }),
+      "targetChoice",
+    );
+    const mainRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: mainSubject,
+        fills: [
+          targetFill(mainTarget, targetId, [
+            {
+              kind: "attackTargetInMeleeReach" as const,
+              actorId,
+              targetId,
+              attackName: mainAttackName,
+            },
+          ]),
+        ],
+      }),
+      "attackRoll",
+    );
+    const afterMainAttack = requireResolvedBattleSubject(
+      resolveBattleSubject({
+        state,
+        subject: mainSubject,
+        fills: [
+          targetFill(mainTarget, targetId, [
+            {
+              kind: "attackTargetInMeleeReach" as const,
+              actorId,
+              targetId,
+              attackName: mainAttackName,
+            },
+          ]),
+          attackRollFill(mainRoll, { total: 1, naturalD20: 1 }),
+        ],
+      }),
+    ).state;
+
+    const offHandAttackName = "Dagger (Charisma) (radiant)";
+    const offHandSubject = {
+      tag: "bonusAction" as const,
+      actorId,
+      action: "offHandAttack" as const,
+      attackName: offHandAttackName,
+    };
+    expect(
+      discoverBattleActs(afterMainAttack).map((act) =>
+        "attackName" in act.subject ? act.subject.attackName : undefined,
+      ),
+    ).toEqual(
+      expect.arrayContaining([
+        "Dagger (piercing)",
+        "Dagger (radiant)",
+        "Dagger (Charisma) (piercing)",
+        offHandAttackName,
+      ]),
+    );
+    const offHandTarget = requireHole(
+      resolveBattleSubject({
+        state: afterMainAttack,
+        subject: offHandSubject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const offHandRoll = requireHole(
+      resolveBattleSubject({
+        state: afterMainAttack,
+        subject: offHandSubject,
+        fills: [
+          targetFill(offHandTarget, targetId, [
+            {
+              kind: "attackTargetInMeleeReach" as const,
+              actorId,
+              targetId,
+              attackName: offHandAttackName,
+            },
+          ]),
+        ],
+      }),
+      "attackRoll",
+    );
+    const offHandDamage = requireHole(
+      resolveBattleSubject({
+        state: afterMainAttack,
+        subject: offHandSubject,
+        fills: [
+          targetFill(offHandTarget, targetId, [
+            {
+              kind: "attackTargetInMeleeReach" as const,
+              actorId,
+              targetId,
+              attackName: offHandAttackName,
+            },
+          ]),
+          attackRollFill(offHandRoll, { total: 15, naturalD20: 10 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    expect(offHandDamage.label).toBe(
+      "Dagger (Charisma) (radiant) damage (1d4-radiant)",
+    );
+    const offHandHit = requireResolvedBattleSubject(
+      resolveBattleSubject({
+        state: afterMainAttack,
+        subject: offHandSubject,
+        fills: [
+          targetFill(offHandTarget, targetId, [
+            {
+              kind: "attackTargetInMeleeReach" as const,
+              actorId,
+              targetId,
+              attackName: offHandAttackName,
+            },
+          ]),
+          attackRollFill(offHandRoll, { total: 15, naturalD20: 10 }),
+          rolledDiceFill(offHandDamage, 4),
+        ],
+      }),
+    );
+    expect(offHandHit.state.combatants.get(targetId)?.hp).toBe(Hp(6));
+  });
+
+  test("keeps non-bonded Pact of the Blade weapons as ordinary attacks", () => {
+    const meleeBuild = pactBladeInvocationBuild("weapon_longsword");
+    const meleeInit = expectRight(
+      battleCreatureInitFromCharacterBuild({
+        combatantId: combatantId("pact-blade-unbonded"),
+        characterId: characterId("character:pact-blade-unbonded"),
+        displayName: "Unbonded Blade Warlock",
+        build: meleeBuild,
+        initiative: initiativeScore(10),
+        side: battleCombatantSide("party"),
+        unitLibrary,
+      }),
+    );
+
+    expect(meleeInit.creatureInit.kind).toBe("character");
+    if (meleeInit.creatureInit.kind !== "character") return;
+    expect(meleeInit.creatureInit.attack).toMatchObject({
+      kind: "weapon",
+      ability: "str",
+      abilityModifier: abilityModifier(-1),
+    });
+    expect(meleeInit.creatureInit.attack).not.toHaveProperty(
+      "damageTypeChoices",
+    );
+  });
+
+  test("rejects impossible Pact of the Blade bond inputs", () => {
+    const noInvocationBuild = pactBladeInvocationBuild("weapon_longsword", {
+      pactOfTheBlade: false,
+    });
+    const noInvocationItemId =
+      noInvocationBuild.equipment.loadout.weapon?.itemId;
+    if (noInvocationItemId === undefined) {
+      throw new Error("Expected Pact of the Blade test weapon.");
+    }
+    expect(
+      Either.isLeft(
+        battleCreatureInitFromCharacterBuild({
+          combatantId: combatantId("pact-blade-no-invocation"),
+          characterId: characterId("character:pact-blade-no-invocation"),
+          displayName: "No Invocation Character",
+          build: noInvocationBuild,
+          initiative: initiativeScore(10),
+          side: battleCombatantSide("party"),
+          unitLibrary,
+          pactBladeBondedWeaponItemId: noInvocationItemId,
+        }),
+      ),
+    ).toBe(true);
+
+    const rangedBuild = pactBladeInvocationBuild("weapon_shortbow");
+    const rangedItemId = rangedBuild.equipment.loadout.weapon?.itemId;
+    if (rangedItemId === undefined) {
+      throw new Error("Expected Pact of the Blade ranged test weapon.");
+    }
+    expect(
+      Either.isLeft(
+        battleCreatureInitFromCharacterBuild({
+          combatantId: combatantId("pact-blade-shortbow"),
+          characterId: characterId("character:pact-blade-shortbow"),
+          displayName: "Ranged Blade Character",
+          build: rangedBuild,
+          initiative: initiativeScore(10),
+          side: battleCombatantSide("party"),
+          unitLibrary,
+          pactBladeBondedWeaponItemId: rangedItemId,
+        }),
+      ),
+    ).toBe(true);
+
+    const arbitraryItemId = characterEquipmentItemId({
+      slot: "main",
+      unitId: expectRight(characterEquipmentItemUnitId("weapon_dagger")),
+    });
+    expect(
+      Either.isLeft(
+        battleCreatureInitFromCharacterBuild({
+          combatantId: combatantId("pact-blade-not-loadout"),
+          characterId: characterId("character:pact-blade-not-loadout"),
+          displayName: "Invalid Bond Character",
+          build: pactBladeInvocationBuild("weapon_longsword"),
+          initiative: initiativeScore(10),
+          side: battleCombatantSide("party"),
+          unitLibrary,
+          pactBladeBondedWeaponItemId: arbitraryItemId,
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test("keeps non-melee Pact of the Blade weapons ordinary when no bond is supplied", () => {
+    const rangedInit = expectRight(
+      battleCreatureInitFromCharacterBuild({
+        combatantId: combatantId("pact-blade-shortbow"),
+        characterId: characterId("character:pact-blade-shortbow"),
+        displayName: "Ranged Blade Warlock",
+        build: pactBladeInvocationBuild("weapon_shortbow"),
+        initiative: initiativeScore(10),
+        side: battleCombatantSide("party"),
+        unitLibrary,
+      }),
+    );
+
+    expect(rangedInit.creatureInit.kind).toBe("character");
+    if (rangedInit.creatureInit.kind !== "character") return;
+    expect(rangedInit.creatureInit.attack).toMatchObject({
+      kind: "weapon",
+      ability: "str",
+      abilityModifier: abilityModifier(-1),
+      weapon: { id: "weapon_shortbow" },
+    });
+    expect(rangedInit.creatureInit.attack).not.toHaveProperty(
+      "damageTypeChoices",
+    );
+  });
+
   test("keeps Martial Arts Dexterity projection above the d6 die slice", () => {
     const init = expectRight(
       battleCreatureInitFromCharacterBuild({
@@ -873,6 +1338,88 @@ function monkBuild(input: {
   };
 }
 
+function pactBladeInvocationBuild(
+  weaponUnitId: CharacterBuild["equipment"]["owned"][number]["unitId"],
+  input: {
+    readonly offHandWeaponUnitId?: CharacterBuild["equipment"]["owned"][number]["unitId"];
+    readonly str?: number;
+    readonly cha?: number;
+    readonly pactOfTheBlade?: boolean;
+  } = {},
+): CharacterBuild {
+  const weaponItemId = characterEquipmentItemId({
+    slot: "main",
+    unitId: expectRight(characterEquipmentItemUnitId(weaponUnitId)),
+  });
+  const offHandWeaponItemId =
+    input.offHandWeaponUnitId === undefined
+      ? undefined
+      : characterEquipmentItemId({
+          slot: "off",
+          unitId: expectRight(
+            characterEquipmentItemUnitId(input.offHandWeaponUnitId),
+          ),
+        });
+  return {
+    progression: {
+      startingClass: classUnitId("class_fighter"),
+      advancements: [],
+    },
+    background: "background_soldier",
+    species: "species_orc",
+    originLanguages: ["Common", "Dwarvish", "Goblin"],
+    alignment: { order: "lawful", morality: "good" },
+    abilityScores: expectRight(
+      abilityScoreAssignment({
+        str: input.str ?? 8,
+        dex: 12,
+        con: 13,
+        int: 10,
+        wis: 10,
+        cha: input.cha ?? 16,
+      }),
+    ),
+    proficiencyChoices: [],
+    features:
+      input.pactOfTheBlade === false
+        ? []
+        : [
+            {
+              kind: "selectedEldritchInvocation",
+              selectedFromUnitId: "warlock_eldritch_invocations",
+              invocationId: eldritchInvocationId("pact_of_the_blade"),
+            },
+          ],
+    equipment: {
+      owned: [
+        { itemId: weaponItemId, unitId: weaponUnitId },
+        ...(input.offHandWeaponUnitId === undefined ||
+        offHandWeaponItemId === undefined
+          ? []
+          : [
+              {
+                itemId: offHandWeaponItemId,
+                unitId: input.offHandWeaponUnitId,
+              },
+            ]),
+      ],
+      loadout: {
+        weapon: {
+          itemId: weaponItemId,
+          grip: "one_handed",
+        },
+        ...(offHandWeaponItemId === undefined
+          ? {}
+          : {
+              offHandWeapon: {
+                itemId: offHandWeaponItemId,
+              },
+            }),
+      },
+    },
+  };
+}
+
 function requireHole<K extends BattleHole["kind"]>(
   result: ReturnType<typeof resolveBattleSubject>,
   kind: K,
@@ -892,7 +1439,10 @@ function requireHole<K extends BattleHole["kind"]>(
 
 function requireResolvedBattleSubject(
   result: ReturnType<typeof resolveBattleSubject>,
-): Extract<ReturnType<typeof resolveBattleSubject>, { readonly tag: "resolved" }> {
+): Extract<
+  ReturnType<typeof resolveBattleSubject>,
+  { readonly tag: "resolved" }
+> {
   if (result.tag !== "resolved") {
     throw new Error(`Expected resolved result, got ${result.tag}.`);
   }

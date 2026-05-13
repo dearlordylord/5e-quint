@@ -81,6 +81,7 @@ export type {
   CharacterAttackActionOption,
   CharacterUnarmedStrikeActionOption,
   CharacterWeaponAttackActionOption,
+  CharacterWeaponAttackDamageTypeChoices,
   StatBlockAttackActionOption,
   StatBlockDailyUseState,
   StatBlockLegendaryActionResourceSnapshot,

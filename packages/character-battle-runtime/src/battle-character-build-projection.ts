@@ -5,6 +5,7 @@ import {
   type CharacterBattleClassLevelInit,
   type CharacterUnarmedStrikeActionOption,
   type CharacterWeaponAttackActionOption,
+  type CharacterWeaponAttackDamageTypeChoices,
   type BattleCreatureInit,
   type CharacterBattleLoadoutRef,
   martialArtsAttackProjectionProfileForUnit,
@@ -17,7 +18,9 @@ import {
   classUnitIdToClassName,
   computeTotalLevel,
   characterEquipmentItemSourceFromId,
+  eldritchInvocationId,
   type CharacterBuild,
+  type CharacterEquipmentItemId,
   type CharacterBuildSpellcastingSource,
   type NonEmptyReadonlyArray,
 } from "@dnd/character-creation-runtime";
@@ -42,6 +45,7 @@ import {
 import type {
   Ability,
   ClassName,
+  DamageType,
   SpellRecord,
   UnitRecord,
   WeaponRecord,
@@ -98,22 +102,30 @@ export function characterAttackActionOption(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
   classLevels: readonly CharacterBattleClassLevelInit[] = [],
+  pactBladeBondedWeaponItemId?: CharacterEquipmentItemId,
 ): Either.Either<
   CharacterWeaponAttackActionOption | null,
   BattleCreatureInitIssue
 > {
+  const loadoutWeapon = build.equipment.loadout.weapon;
+  if (loadoutWeapon === undefined) {
+    return Either.right(null);
+  }
   const selectedWeapon = characterBuildEquipmentItemUnitId(
-    build.equipment.loadout.weapon?.itemId,
+    loadoutWeapon.itemId,
   );
   if (selectedWeapon == null) {
     return Either.right(null);
   }
+  const selectedWeaponItemId = loadoutWeapon.itemId;
 
   return characterWeaponAttackActionOption(
     selectedWeapon,
+    selectedWeaponItemId,
     build,
     unitLibrary,
     classLevels,
+    pactBladeBondedWeaponItemId,
   );
 }
 
@@ -121,22 +133,30 @@ export function characterOffHandAttackActionOption(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
   classLevels: readonly CharacterBattleClassLevelInit[] = [],
+  pactBladeBondedWeaponItemId?: CharacterEquipmentItemId,
 ): Either.Either<
   CharacterWeaponAttackActionOption | undefined,
   BattleCreatureInitIssue
 > {
+  const loadoutWeapon = build.equipment.loadout.offHandWeapon;
+  if (loadoutWeapon === undefined) {
+    return Either.right(undefined);
+  }
   const selectedWeapon = characterBuildEquipmentItemUnitId(
-    build.equipment.loadout.offHandWeapon?.itemId,
+    loadoutWeapon.itemId,
   );
   if (selectedWeapon == null) {
     return Either.right(undefined);
   }
+  const selectedWeaponItemId = loadoutWeapon.itemId;
 
   const option = characterWeaponAttackActionOption(
     selectedWeapon,
+    selectedWeaponItemId,
     build,
     unitLibrary,
     classLevels,
+    pactBladeBondedWeaponItemId,
   );
   return Either.isLeft(option)
     ? battleCreatureInitIssue(option.left.message)
@@ -192,11 +212,77 @@ function characterBuildEquipmentItemUnitId(
   return characterEquipmentItemSourceFromId(itemId).unitId;
 }
 
+export function characterPactBladeBondedWeaponItemId(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly itemId:
+    | NonNullable<CharacterBuild["equipment"]["loadout"]["weapon"]>["itemId"]
+    | NonNullable<
+        CharacterBuild["equipment"]["loadout"]["offHandWeapon"]
+      >["itemId"]
+    | undefined;
+}): Either.Either<
+  | NonNullable<CharacterBuild["equipment"]["loadout"]["weapon"]>["itemId"]
+  | NonNullable<
+      CharacterBuild["equipment"]["loadout"]["offHandWeapon"]
+    >["itemId"]
+  | undefined,
+  BattleCreatureInitIssue
+> {
+  if (input.itemId === undefined) {
+    return Either.right(undefined);
+  }
+  if (!hasPactOfTheBlade(input.build)) {
+    return battleCreatureInitIssue(
+      "Pact of the Blade bond requires selected pact_of_the_blade invocation ownership.",
+    );
+  }
+  const loadoutItemIds = [
+    input.build.equipment.loadout.weapon?.itemId,
+    input.build.equipment.loadout.offHandWeapon?.itemId,
+  ];
+  if (!loadoutItemIds.some((itemId) => itemId === input.itemId)) {
+    return battleCreatureInitIssue(
+      "Pact of the Blade bond must reference a wielded loadout weapon.",
+    );
+  }
+  if (
+    !input.build.equipment.owned.some((item) => item.itemId === input.itemId)
+  ) {
+    return battleCreatureInitIssue(
+      "Pact of the Blade bond must reference owned equipment.",
+    );
+  }
+  const weaponUnitId = characterBuildEquipmentItemUnitId(input.itemId);
+  if (weaponUnitId === undefined) {
+    return battleCreatureInitIssue(
+      "Pact of the Blade bond must reference a weapon item id.",
+    );
+  }
+  const unit = getRequiredUnit(input.unitLibrary, weaponUnitId);
+  if (Either.isLeft(unit)) {
+    return battleCreatureInitIssue(unit.left.message);
+  }
+  if (
+    unit.right.kind !== "weapon" ||
+    unit.right.usage !== "melee" ||
+    (unit.right.category !== "simple" && unit.right.category !== "martial") ||
+    unit.right.damage.kind !== "dice"
+  ) {
+    return battleCreatureInitIssue(
+      "Pact of the Blade bond must reference a Simple or Martial Melee weapon with dice damage.",
+    );
+  }
+  return Either.right(input.itemId);
+}
+
 function characterWeaponAttackActionOption(
   unitId: UnitRecord["id"],
+  itemId: CharacterEquipmentItemId,
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
   classLevels: readonly CharacterBattleClassLevelInit[],
+  pactBladeBondedWeaponItemId: CharacterEquipmentItemId | undefined,
 ): Either.Either<
   CharacterWeaponAttackActionOption | null,
   BattleCreatureInitIssue
@@ -225,10 +311,17 @@ function characterWeaponAttackActionOption(
   if (Either.isLeft(martialArts)) {
     return battleCreatureInitIssue(martialArts.left.message);
   }
-  return Either.right(
+  const projectedAttack =
     martialArts.right === null || !isMonkWeapon(unit.right)
       ? baseAttack
-      : martialArtsWeaponAttack(baseAttack, build, martialArts.right),
+      : martialArtsWeaponAttack(baseAttack, build, martialArts.right);
+  return Either.right(
+    pactBladeWeaponAttack(
+      projectedAttack,
+      build,
+      itemId,
+      pactBladeBondedWeaponItemId,
+    ),
   );
 }
 
@@ -273,6 +366,84 @@ export function characterBaseUnarmedStrikeActionOption(
 type MartialArtsAttackProjection = NonNullable<
   ReturnType<typeof martialArtsAttackProjectionProfileForUnit>
 >;
+
+const PACT_OF_THE_BLADE_INVOCATION_ID =
+  eldritchInvocationId("pact_of_the_blade");
+const PACT_OF_THE_BLADE_ADDITIONAL_DAMAGE_TYPE_CHOICES = [
+  "necrotic",
+  "psychic",
+  "radiant",
+] as const satisfies ReadonlyArray<DamageType>;
+
+function pactBladeDamageTypeChoices(
+  weaponDamageType: DamageType,
+): CharacterWeaponAttackDamageTypeChoices {
+  if (weaponDamageType === "necrotic") {
+    return [weaponDamageType, "psychic", "radiant"];
+  }
+  if (weaponDamageType === "psychic") {
+    return [weaponDamageType, "necrotic", "radiant"];
+  }
+  if (weaponDamageType === "radiant") {
+    return [weaponDamageType, "necrotic", "psychic"];
+  }
+  return [
+    weaponDamageType,
+    ...PACT_OF_THE_BLADE_ADDITIONAL_DAMAGE_TYPE_CHOICES,
+  ];
+}
+
+function pactBladeWeaponAttack(
+  attack: CharacterWeaponAttackActionOption,
+  build: CharacterBuild,
+  itemId: CharacterEquipmentItemId,
+  pactBladeBondedWeaponItemId: CharacterEquipmentItemId | undefined,
+): CharacterWeaponAttackActionOption {
+  if (
+    pactBladeBondedWeaponItemId !== itemId ||
+    attack.weapon.usage !== "melee" ||
+    attack.weapon.damage.kind !== "dice" ||
+    (attack.weapon.category !== "simple" &&
+      attack.weapon.category !== "martial") ||
+    !hasPactOfTheBlade(build)
+  ) {
+    return attack;
+  }
+
+  const charismaModifier = battleAbilityModifier(
+    scoreModifier(build.abilityScores.cha),
+  );
+  const characterProficiency = proficiencyBonus(characterLevel(build));
+  const charismaAttack = {
+    ability: "cha" as const,
+    abilityModifier: charismaModifier,
+    attackBonus: battleAttackBonus(
+      Number(charismaModifier) + Number(characterProficiency),
+    ),
+    damageAbilityModifier: charismaModifier,
+  };
+  return {
+    ...attack,
+    attackBonus: battleAttackBonus(
+      Number(attack.abilityModifier) + Number(characterProficiency),
+    ),
+    damageAbilityModifier: attack.abilityModifier,
+    ...(attack.ability === "cha"
+      ? {}
+      : { alternateAbilityChoices: [charismaAttack] }),
+    damageTypeChoices: pactBladeDamageTypeChoices(
+      attack.weapon.damage.damageType,
+    ),
+  };
+}
+
+function hasPactOfTheBlade(build: CharacterBuild): boolean {
+  return build.features.some(
+    (feature) =>
+      feature.kind === "selectedEldritchInvocation" &&
+      feature.invocationId === PACT_OF_THE_BLADE_INVOCATION_ID,
+  );
+}
 
 function martialArtsAttackProjectionForBuild(input: {
   readonly build: CharacterBuild;

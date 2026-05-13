@@ -1867,6 +1867,15 @@ module battleRuntime {
   pure def trueStrikeDamageTypeChoiceIsLegal(selectedDamageType: DamageType, weaponDamageType: DamageType): bool =
     selectedDamageType == Radiant or selectedDamageType == weaponDamageType
 
+  pure def pactBladeDamageTypeChoiceIsLegal(selectedDamageType: DamageType, weaponDamageType: DamageType): bool =
+    selectedDamageType == weaponDamageType or selectedDamageType == Necrotic or selectedDamageType == Psychic or selectedDamageType == Radiant
+
+  pure def pactBladeAbilityModifierChoiceIsLegal(selectedAbilityModifier: int, baseAbilityModifier: int, charismaModifier: int): bool =
+    selectedAbilityModifier == baseAbilityModifier or selectedAbilityModifier == charismaModifier
+
+  pure def pactBladeAttackModifier(selectedAbilityModifier: int, proficiencyBonus: int): int =
+    selectedAbilityModifier + proficiencyBonus
+
   pure def trueStrikeWeaponAttackModifier(spellcastingAbilityModifier: int, proficiencyBonus: int): int =
     spellcastingAbilityModifier + proficiencyBonus
 
@@ -8781,6 +8790,21 @@ module battleRuntime {
       assert(trueStrikeBonusDamageDice(5) == 1),
       assert(trueStrikeBonusDamageDice(11) == 2),
       assert(trueStrikeBonusDamageDice(17) == 3),
+    }
+  }
+
+  run test_pact_blade_damage_choice_and_charisma_option_projection = {
+    all {
+      assert(pactBladeDamageTypeChoiceIsLegal(Slashing, Slashing)),
+      assert(pactBladeDamageTypeChoiceIsLegal(Necrotic, Slashing)),
+      assert(pactBladeDamageTypeChoiceIsLegal(Psychic, Slashing)),
+      assert(pactBladeDamageTypeChoiceIsLegal(Radiant, Slashing)),
+      assert(not(pactBladeDamageTypeChoiceIsLegal(Fire, Slashing))),
+      assert(pactBladeAbilityModifierChoiceIsLegal(4, 4, 3)),
+      assert(pactBladeAbilityModifierChoiceIsLegal(3, 4, 3)),
+      assert(not(pactBladeAbilityModifierChoiceIsLegal(2, 4, 3))),
+      assert(pactBladeAttackModifier(3, 2) == 5),
+      assert(pactBladeAttackModifier(4, 2) == 6),
     }
   }
 

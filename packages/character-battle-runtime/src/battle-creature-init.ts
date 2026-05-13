@@ -43,6 +43,7 @@ import {
   characterBaseUnarmedStrikeActionOption,
   characterBattleLoadoutFromBuild,
   characterOffHandAttackActionOption,
+  characterPactBladeBondedWeaponItemId,
   characterSpellcasting,
   getRequiredUnit,
   type BattleCreatureInitIssue,
@@ -71,6 +72,11 @@ export type CharacterBuildCreatureInput = {
   readonly zeroHpLifecycle?: CharacterZeroHpLifecycleInit;
   readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
   readonly armorClassBaseChoice?: CharacterSheetArmorClassBaseChoice;
+  readonly pactBladeBondedWeaponItemId?:
+    | NonNullable<CharacterBuild["equipment"]["loadout"]["weapon"]>["itemId"]
+    | NonNullable<
+        CharacterBuild["equipment"]["loadout"]["offHandWeapon"]
+      >["itemId"];
 };
 
 export function startBattleFromCharacterBuildAndStatBlock(input: {
@@ -161,10 +167,19 @@ export function battleCreatureInitFromCharacterBuild(
   if (Either.isLeft(classLevels)) {
     return battleCreatureInitIssue(classLevels.left.message);
   }
+  const pactBladeBondedWeaponItemId = characterPactBladeBondedWeaponItemId({
+    build: input.build,
+    unitLibrary: input.unitLibrary,
+    itemId: input.pactBladeBondedWeaponItemId,
+  });
+  if (Either.isLeft(pactBladeBondedWeaponItemId)) {
+    return battleCreatureInitIssue(pactBladeBondedWeaponItemId.left.message);
+  }
   const attack = characterAttackActionOption(
     input.build,
     input.unitLibrary,
     classLevels.right,
+    pactBladeBondedWeaponItemId.right,
   );
   if (Either.isLeft(attack))
     return battleCreatureInitIssue(attack.left.message);
@@ -172,6 +187,7 @@ export function battleCreatureInitFromCharacterBuild(
     input.build,
     input.unitLibrary,
     classLevels.right,
+    pactBladeBondedWeaponItemId.right,
   );
   if (Either.isLeft(offHandAttack)) {
     return battleCreatureInitIssue(offHandAttack.left.message);

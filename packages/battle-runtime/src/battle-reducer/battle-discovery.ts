@@ -37,7 +37,7 @@ import { CombatantId, spellId } from "../identity.ts";
 import {
   attackActionOptionsForActor,
   martialArtsBonusUnarmedStrikeActionOptionForActor,
-  offHandAttackActionOptionForActor,
+  offHandAttackActionOptionsForActor,
   offHandAttackPrerequisiteMet,
 } from "./attack-damage-apply.ts";
 
@@ -441,25 +441,25 @@ export function discoverBattleActs(
       });
     }
   }
-  const offHand = offHandAttackActionOptionForActor(state, actorId);
-  if (
-    offHand !== undefined &&
-    combatantCanTakeActions(state.combatants.get(actorId)) &&
-    state.currentTurnResources.currentHasBonusAction &&
-    offHandAttackPrerequisiteMet(state, actorId, offHand) &&
-    attackTargetChoices(state, actorId, offHand).length > 0
-  ) {
-    acts.push({
-      subject: {
-        tag: "bonusAction",
-        actorId,
-        action: "offHandAttack",
-        attackName: attackActionOptionName(offHand),
-      },
-      label: "Light Property Bonus Action Attack",
-      summary: `Make the Light property Bonus Action attack with ${attackActionOptionName(offHand)}.`,
-      initialHoles: [attackTargetHole(state, actorId, offHand)],
-    });
+  for (const offHand of offHandAttackActionOptionsForActor(state, actorId)) {
+    if (
+      combatantCanTakeActions(state.combatants.get(actorId)) &&
+      state.currentTurnResources.currentHasBonusAction &&
+      offHandAttackPrerequisiteMet(state, actorId, offHand) &&
+      attackTargetChoices(state, actorId, offHand).length > 0
+    ) {
+      acts.push({
+        subject: {
+          tag: "bonusAction",
+          actorId,
+          action: "offHandAttack",
+          attackName: attackActionOptionName(offHand),
+        },
+        label: "Light Property Bonus Action Attack",
+        summary: `Make the Light property Bonus Action attack with ${attackActionOptionName(offHand)}.`,
+        initialHoles: [attackTargetHole(state, actorId, offHand)],
+      });
+    }
   }
   const martialArtsUnarmedStrike =
     martialArtsBonusUnarmedStrikeActionOptionForActor(state, actorId);

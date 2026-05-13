@@ -4,13 +4,10 @@
 // because all imported bindings are function values used only at call time.
 
 import { Match } from "effect";
-import {
-  attackBonus,
-  movementFeet,
-  type AttackBonus,
-} from "@dnd/shared/types";
+import { attackBonus, movementFeet, type AttackBonus } from "@dnd/shared/types";
 import { isIncapacitated } from "@dnd/shared-algebras/conditions-algebra";
 import type {
+  Ability,
   DamageType,
   DiceExpr,
   UnitRecord,
@@ -34,10 +31,7 @@ import type {
 } from "../battle-action-options.ts";
 import type { CreatureNamedAttackRoll } from "@dnd/surface/surface/types";
 import type { CombatantId } from "../identity.ts";
-import {
-  sameBattleSubject,
-  type BattleSubject,
-} from "../battle-subjects.ts";
+import { sameBattleSubject, type BattleSubject } from "../battle-subjects.ts";
 import {
   type AttackDamageRider,
   type AttackTargetConstraint,
@@ -53,9 +47,7 @@ import {
   type SpellAttackDamageComponent,
   type WeaponDamageDiceRollChoiceFill,
 } from "../battle-reducer.ts";
-import {
-  combatantsAreAllies,
-} from "./creature-state-leaves.ts";
+import { combatantsAreAllies } from "./creature-state-leaves.ts";
 import { isCharacterBattleCreatureState } from "./creature-state.ts";
 
 export function supportedStatBlockAttackDamage(
@@ -195,7 +187,9 @@ export function attackCanCarryKnockOutChoice(
   return attackTargetConstraint(attack).kind === "meleeReach";
 }
 
-export function weaponTargetConstraint(weapon: WeaponRecord): AttackTargetConstraint {
+export function weaponTargetConstraint(
+  weapon: WeaponRecord,
+): AttackTargetConstraint {
   const properties = weapon.properties ?? [];
   if (weapon.usage === "ranged") {
     const ammunition = properties.find(
@@ -229,7 +223,9 @@ export function selectedWeaponDamage(weapon: WeaponRecord): BattleWeaponDamage {
   return weapon.damage;
 }
 
-export function attackActionOptionName(attack: SupportedAttackActionOption): string {
+export function attackActionOptionName(
+  attack: SupportedAttackActionOption,
+): string {
   return Match.value(attack).pipe(
     Match.when({ kind: "weapon" }, (weaponAttack) => weaponAttack.weapon.name),
     Match.when({ kind: "unarmedStrike" }, () => "Unarmed Strike"),
@@ -239,6 +235,81 @@ export function attackActionOptionName(attack: SupportedAttackActionOption): str
     ),
     Match.exhaustive,
   );
+}
+
+export function attackActionVariantOptions(
+  attack: SupportedAttackActionOption,
+): readonly SupportedAttackActionOption[] {
+  if (attack.kind !== "weapon") {
+    return [attack];
+  }
+  return characterWeaponAttackAbilityOptions(attack).flatMap((abilityOption) =>
+    characterWeaponAttackDamageTypeOptions(abilityOption),
+  );
+}
+
+function characterWeaponAttackAbilityOptions(
+  attack: CharacterWeaponAttackActionOption,
+): readonly CharacterWeaponAttackActionOption[] {
+  if (attack.alternateAbilityChoices === undefined) {
+    return [attack];
+  }
+  const { alternateAbilityChoices: _alternateAbilityChoices, ...baseAttack } =
+    attack;
+  return [
+    baseAttack,
+    ...attack.alternateAbilityChoices.map((choice) => ({
+      ...baseAttack,
+      ...choice,
+      weapon: {
+        ...baseAttack.weapon,
+        name: `${baseAttack.weapon.name} (${abilityName(choice.ability)})`,
+      },
+    })),
+  ];
+}
+
+const ABILITY_NAMES = {
+  str: "Strength",
+  dex: "Dexterity",
+  con: "Constitution",
+  int: "Intelligence",
+  wis: "Wisdom",
+  cha: "Charisma",
+} as const satisfies Record<Ability, string>;
+
+function abilityName(ability: Ability): string {
+  return ABILITY_NAMES[ability];
+}
+
+function characterWeaponAttackDamageTypeOptions(
+  attack: CharacterWeaponAttackActionOption,
+): readonly CharacterWeaponAttackActionOption[] {
+  if (
+    attack.damageTypeChoices === undefined ||
+    attack.weapon.damage.kind !== "dice"
+  ) {
+    return [attack];
+  }
+  return attack.damageTypeChoices.map((damageType) =>
+    weaponAttackWithDamageType(attack, damageType),
+  );
+}
+
+function weaponAttackWithDamageType(
+  attack: CharacterWeaponAttackActionOption,
+  damageType: DamageType,
+): CharacterWeaponAttackActionOption {
+  const { damageTypeChoices: _damageTypeChoices, ...attackWithoutChoices } =
+    attack;
+  return {
+    ...attackWithoutChoices,
+    weapon: {
+      ...attack.weapon,
+      name: `${attack.weapon.name} (${damageType})`,
+      damage: { ...attack.weapon.damage, damageType },
+    },
+  };
 }
 
 export function attackDamage(attack: SupportedAttackActionOption): {
@@ -588,7 +659,9 @@ export function attackPotentialDamageTypes(
   ];
 }
 
-export function attackDamageModifier(attack: SupportedAttackActionOption): number {
+export function attackDamageModifier(
+  attack: SupportedAttackActionOption,
+): number {
   return Match.value(attack).pipe(
     Match.when({ kind: "weapon" }, (weaponAttack) =>
       Number(
@@ -613,10 +686,14 @@ export function attackDamageModifier(attack: SupportedAttackActionOption): numbe
   );
 }
 
-export function attackActionBonus(attack: SupportedAttackActionOption): AttackBonus {
+export function attackActionBonus(
+  attack: SupportedAttackActionOption,
+): AttackBonus {
   return Match.value(attack).pipe(
-    Match.when({ kind: "weapon" }, (weaponAttack) =>
-      weaponAttack.attackBonus ?? attackBonus(weaponAttack.abilityModifier),
+    Match.when(
+      { kind: "weapon" },
+      (weaponAttack) =>
+        weaponAttack.attackBonus ?? attackBonus(weaponAttack.abilityModifier),
     ),
     Match.when(
       { kind: "unarmedStrike" },

@@ -2,7 +2,7 @@
 // Cluster U (attack_damage_apply). Mechanical extraction — no behavior change.
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.martial-arts-attack-projection
 
-import { abilityModifier } from "@dnd/shared/types";
+import { abilityModifier, type ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import {
   holeId,
   holeInstanceKey,
@@ -14,6 +14,7 @@ import type { UnitRecord, WeaponRecord } from "@dnd/surface/surface/types";
 import type { CombatantId } from "../identity.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import type {
+  CharacterWeaponAttackAbilityChoice,
   CharacterUnarmedStrikeActionOption,
   CharacterWeaponAttackActionOption,
   SupportedAttackActionOption,
@@ -42,6 +43,7 @@ import {
 } from "./damage-apply.ts";
 import {
   attackActionOptionName,
+  attackActionVariantOptions,
   attackCanCarryKnockOutChoice,
   weaponAttackDamageExpression,
 } from "./statblock-attacks.ts";
@@ -331,7 +333,10 @@ export function attackActionOptionsForActor(
   if (actor?.origin.kind === "character") {
     return actor.origin.attack == null
       ? [actor.origin.unarmedStrike]
-      : [actor.origin.attack, actor.origin.unarmedStrike];
+      : [
+          ...attackActionVariantOptions(actor.origin.attack),
+          actor.origin.unarmedStrike,
+        ];
   }
 
   if (actor?.origin.kind === "statBlock") {
@@ -363,24 +368,62 @@ export function offHandAttackActionOptionForActor(
   state: BattleState,
   actorId: CombatantId,
 ): CharacterWeaponAttackActionOption | undefined {
+  return offHandAttackActionOptionsForActor(state, actorId)[0];
+}
+
+export function offHandAttackActionOptionsForActor(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly CharacterWeaponAttackActionOption[] {
   const actor = state.combatants.get(actorId);
-  if (actor?.origin.kind !== "character") return undefined;
+  if (actor?.origin.kind !== "character") return [];
   const main = actor.origin.attack;
   const offHand = actor.origin.offHandAttack;
-  if (main === null || offHand === undefined) return undefined;
+  if (main === null || offHand === undefined) return [];
   if (
     main.kind !== "weapon" ||
     !isLightMeleeWeapon(main.weapon) ||
     !isLightMeleeWeapon(offHand.weapon)
   ) {
-    return undefined;
+    return [];
   }
-  return {
+  const lightPropertyOffHand = {
     ...offHand,
     damageAbilityModifier:
       offHand.abilityModifier < 0
         ? offHand.abilityModifier
         : abilityModifier(0),
+    ...(offHand.alternateAbilityChoices === undefined
+      ? {}
+      : {
+          alternateAbilityChoices: lightPropertyAlternateAbilityChoices(
+            offHand.alternateAbilityChoices,
+          ),
+        }),
+  };
+  return attackActionVariantOptions(lightPropertyOffHand).filter(
+    (attack): attack is CharacterWeaponAttackActionOption =>
+      attack.kind === "weapon",
+  );
+}
+
+function lightPropertyAlternateAbilityChoices(
+  choices: ReadonlyNonEmptyArray<CharacterWeaponAttackAbilityChoice>,
+): ReadonlyNonEmptyArray<CharacterWeaponAttackAbilityChoice> {
+  const [first, ...rest] = choices;
+  return [
+    lightPropertyAbilityChoice(first),
+    ...rest.map(lightPropertyAbilityChoice),
+  ];
+}
+
+function lightPropertyAbilityChoice(
+  choice: CharacterWeaponAttackAbilityChoice,
+): CharacterWeaponAttackAbilityChoice {
+  return {
+    ...choice,
+    damageAbilityModifier:
+      choice.abilityModifier < 0 ? choice.abilityModifier : abilityModifier(0),
   };
 }
 

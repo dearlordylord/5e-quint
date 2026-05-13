@@ -260,7 +260,7 @@ const BattleSpellAreaChoiceSchema = Schema.Union(
 const CharacterWeaponAttackActionOptionSchema = Schema.Struct({
   kind: Schema.Literal("weapon"),
   weapon: BattleRuntimeObjectSchema,
-  ability: Schema.String,
+  ability: AbilitySchema,
   abilityModifier: AbilityModifier,
   attackBonus: Schema.optionalWith(AttackBonus, {
     exact: true,
@@ -268,6 +268,30 @@ const CharacterWeaponAttackActionOptionSchema = Schema.Struct({
   damageAbilityModifier: Schema.optionalWith(AbilityModifier, {
     exact: true,
   }),
+  damageTypeChoices: Schema.optionalWith(
+    Schema.NonEmptyArray(DamageTypeSchema).pipe(
+      Schema.filter((choices) => choices.length >= 2, {
+        message: () =>
+          "Weapon attack damage type choices must contain at least two choices.",
+      }),
+    ),
+    {
+      exact: true,
+    },
+  ),
+  alternateAbilityChoices: Schema.optionalWith(
+    Schema.NonEmptyArray(
+      Schema.Struct({
+        ability: AbilitySchema,
+        abilityModifier: AbilityModifier,
+        attackBonus: AttackBonus,
+        damageAbilityModifier: AbilityModifier,
+      }),
+    ),
+    {
+      exact: true,
+    },
+  ),
 });
 
 const SupportedAttackActionOptionSchema = Schema.Union(
