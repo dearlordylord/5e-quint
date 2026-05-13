@@ -22,15 +22,13 @@
 --   • family = activation with a single direct phase under
 --     concentration duration (same pattern as Fly's grant_speed — the
 --     effect persists for the concentration window).
---
--- DEFERRED. The "can't be Charmed/Frightened by them" immunity and
--- "Advantage on saves against already-applied charm/fright by them"
--- conditional re-roll are further benefits of the spell. Modeling
--- conditional condition-immunity scoped by attacker creature-type and
--- conditional save-advantage on ongoing effects requires more atoms
--- than fit one unit; left for a future tick as a focused widening.
--- The attack-roll disadvantage is the most RAW-visible effect and is
--- sufficient to exercise attackerTypeFilter as the validation goal.
+-- Runtime note: the battle runtime promotes the remaining protection
+-- clauses from this same retained spell shape as a creature-type
+-- protection active effect. The save-Advantage clause is not projected
+-- onto fresh spell-cast saves; RAW grants Advantage only on new saves
+-- against the already-applied relevant effect, and the runtime needs a
+-- true active-effect repeat-save or possession-save boundary before
+-- wiring that clause into production holes.
 
 let protectionFromEvilAndGood =
       { kind = "spell"

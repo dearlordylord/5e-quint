@@ -144,6 +144,7 @@ import {
 import { characterBattleResourceForUnit } from "./character-battle-resources.ts";
 import { conditionApplicationPreventedByCreatureTypeProtection } from "./battle-reducer/spell-condition-effects-helpers.ts";
 import { applyFailedSaveSpellConditionEffects } from "./battle-reducer/spells-active-effects.ts";
+import { spellSavingThrowOutcomeHole } from "./battle-reducer/spells-damage-fills.ts";
 import {
   ALTERNATE_ACTION_COST_ACTIONS,
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
@@ -10168,6 +10169,112 @@ describe("SRDINV30C deterministic protection and charm Spell Unit admission", ()
         }),
       ]),
     });
+  });
+
+  test("protection from evil and good does not project Advantage onto fresh spell-cast saves", () => {
+    const protection = spellRecord(protectionFromEvilAndGoodUnitId);
+    const charmPerson = spellRecord(charmPersonUnitId);
+    const feySourceId = combatantId(
+      "unit-profile-protection-save-hole-fey-source",
+    );
+    const state = spellBattle({
+      preparedSpells: [protection, charmPerson],
+      statBlockTargets: [
+        {
+          combatantId: feySourceId,
+          statBlock: statBlockWithCreatureType("fey"),
+          initiative: 9,
+        },
+      ],
+    });
+    const protectionAct = spellAct({
+      state,
+      spellId: protectionFromEvilAndGoodUnitId,
+    });
+    const targetHole = requireHole(protectionAct.initialHoles, "targetChoice");
+    const protectedResult = resolveBattleSubject({
+      state,
+      subject: protectionAct.subject,
+      fills: [
+        spellTargetFill(
+          targetHole,
+          protectionFromEvilAndGoodUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+      ],
+    });
+    if (protectedResult.tag !== "resolved") {
+      throw new Error("Expected Protection from Evil and Good to resolve.");
+    }
+
+    const charmInvocation = spellActInvocation(
+      spellAct({ state, spellId: charmPersonUnitId }),
+    );
+    if (charmInvocation.procedure !== "saveGatedCondition") {
+      throw new Error("Expected Charm Person to be a save-gated condition.");
+    }
+    const protectedTarget = requireCombatant(
+      protectedResult.state,
+      spellTargetId,
+    );
+    const charmedEffect = {
+      kind: "spellCondition",
+      sourceSpellId: charmPersonUnitId,
+      sourceCombatantId: feySourceId,
+      condition: "charmed",
+      conditionHadNonSpellSource: false,
+      escape: { kind: "targetDamagedByCasterOrAlly" },
+      turnStartDamage: null,
+      expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(600) },
+    } as const;
+    const protectedWithActiveCharm: BattleState = {
+      ...protectedResult.state,
+      combatants: new Map(protectedResult.state.combatants).set(spellTargetId, {
+        ...protectedTarget,
+        activeEffects: [...protectedTarget.activeEffects, charmedEffect],
+      }),
+    };
+
+    const activeCharmSaveHole = spellSavingThrowOutcomeHole(
+      protectedWithActiveCharm,
+      feySourceId,
+      charmInvocation,
+    );
+    expect(
+      activeCharmSaveHole.targetRollModes.filter(
+        (projection) => projection.targetId === spellTargetId,
+      ),
+    ).toEqual([]);
+    expect(
+      spellSavingThrowOutcomeHole(
+        protectedResult.state,
+        feySourceId,
+        charmInvocation,
+      ).targetRollModes.filter(
+        (projection) => projection.targetId === spellTargetId,
+      ),
+    ).toEqual([]);
+
+    const wrongSpellActiveCharm: BattleState = {
+      ...protectedResult.state,
+      combatants: new Map(protectedResult.state.combatants).set(spellTargetId, {
+        ...protectedTarget,
+        activeEffects: [
+          ...protectedTarget.activeEffects,
+          { ...charmedEffect, sourceSpellId: animalFriendshipUnitId },
+        ],
+      }),
+    };
+    expect(
+      spellSavingThrowOutcomeHole(
+        wrongSpellActiveCharm,
+        feySourceId,
+        charmInvocation,
+      ).targetRollModes.filter(
+        (projection) => projection.targetId === spellTargetId,
+      ),
+    ).toEqual([]);
   });
 });
 

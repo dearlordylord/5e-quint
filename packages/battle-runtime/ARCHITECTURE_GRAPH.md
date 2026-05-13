@@ -250,8 +250,10 @@ flowchart TD
   `protection_from_evil_and_good` adds a concentration protection active effect
   whose attacker creature-type filter feeds attack-roll Disadvantage, prevents
   scoped-creature possession attempts, and prevents scoped-creature Charmed or
-  Frightened condition application. Already-applied-effect save-Advantage
-  remains unsupported.
+  Frightened condition application. Its save-Advantage clause remains deferred
+  until the runtime has a real save boundary against an already-applied
+  possession, Charmed, or Frightened effect; fresh spell-cast condition saves are
+  not treated as that boundary.
 - Stat Block damage vulnerabilities, resistances, and immunities are read from
   the retained `StatBlockRecord` at the HP mutation boundary.
 - Optional attack damage riders are retained feature profiles, not named

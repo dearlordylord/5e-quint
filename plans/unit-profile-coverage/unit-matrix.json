@@ -2001,7 +2001,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime admission and reducer tests for Animal Friendship Beast-target Charmed application and Protection from Evil and Good attacker-creature-type attack Disadvantage. Animal Friendship damage-break and Protection from Evil and Good already-applied-effect save-Advantage clauses remain checker-visible deferred mechanics.",
+      "note": "Focused battle-runtime admission and reducer tests for Animal Friendship Beast-target Charmed application and Protection from Evil and Good attacker-creature-type attack Disadvantage. Animal Friendship damage-break remains checker-visible deferred mechanics.",
       "profileIds": [
         "spell.creature-type-protection-and-charm"
       ],
@@ -6753,8 +6753,12 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "SRDINV60B",
-            "mechanic": "Advantage on new saves against already-applied possession, Charmed, or Frightened effects from scoped creatures"
+            "followUpTaskId": "SRDINV60C",
+            "mechanic": "Advantage on new Saving Throws against active already-applied possession, Charmed, or Frightened effects from scoped creatures once a true active-effect repeat-save or possession-save boundary exists"
+          },
+          {
+            "followUpTaskId": "SRDINV66",
+            "mechanic": "RAW willing touched-creature target boundary beyond the runtime's current known-willing target fact"
           }
         ],
         "profileIds": [
@@ -6764,12 +6768,11 @@
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
         ],
         "supportedMechanics": [
-          "one touched target",
-          "concentration active effect",
-          "Aberration/Celestial/Elemental/Fey/Fiend/Undead attacker creature-type filter",
-          "attack-roll Disadvantage against the protected target",
-          "target can't be possessed by scoped creatures",
-          "target can't gain Charmed or Frightened from scoped creatures"
+          "1-action Spell Slot expenditure",
+          "concentration-owned protection active effect",
+          "attacker creature-type filter for attack-roll Disadvantage",
+          "scoped-creature possession-attempt prevention",
+          "scoped-creature Charmed and Frightened condition application prevention"
         ],
         "tag": "profile-subset-supported"
       },
