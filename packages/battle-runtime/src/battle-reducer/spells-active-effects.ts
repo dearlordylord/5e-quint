@@ -529,6 +529,10 @@ export function activeEffectKindForSpellPostDamageRider(
       { kind: "nextAttackRollAgainstTarget" },
       () => "nextAttackRollAgainstSelf" as const,
     ),
+    Match.when(
+      { kind: "hitPointRegainPrevented" },
+      () => "hitPointRegainPrevented" as const,
+    ),
     Match.exhaustive,
   );
 }
@@ -599,6 +603,12 @@ export function spellPostDamageRiderActiveEffect(input: {
       sourceSpellId: input.spellId,
       sourceCombatantId: input.actorId,
       mode: rider.mode,
+      expiresAt,
+    })),
+    Match.when({ kind: "hitPointRegainPrevented" }, () => ({
+      kind: "hitPointRegainPrevented" as const,
+      sourceSpellId: input.spellId,
+      sourceCombatantId: input.actorId,
       expiresAt,
     })),
     Match.exhaustive,

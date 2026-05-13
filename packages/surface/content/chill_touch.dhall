@@ -1,12 +1,57 @@
 -- Chill Touch — SRD 5.2.1 Cantrip, Necromancy.
 -- Family: activation (single attack_roll phase).
--- Melee spell attack; on hit: 1d10 Necrotic damage (cantrip scaling).
--- OMITTED RIDER: "can't regain Hit Points until end of your next turn"
--- → requires a new atom not in v4 (block_healing / suppress_healing).
+-- Melee spell attack; on hit: 1d10 Necrotic damage (cantrip scaling) and
+-- target can't regain Hit Points until end of your next turn.
 -- TARGET SUBSET: RAW says generic "target", not "creature"; battle-runtime
 -- projects this Task 200 subset to combatant targets. Non-combatant target
 -- eligibility remains deferred in the unit-profile claim/report.
 -- Cantrip upgrade: 1d10 → 2d10 (L5) → 3d10 (L11) → 4d10 (L17).
+
+let AmountRec
+    : Type
+    = { kind : Text
+      , axis : Text
+      , base : { dice : Natural, dieSize : Natural }
+      , tiers :
+          List
+            { atLevel : Natural
+            , override : { dice : Natural }
+            }
+      }
+
+let HitRider
+    : Type
+    = { kind : Text
+      , damageType : Optional Text
+      , amount : Optional AmountRec
+      , expiresAt : Optional Text
+      }
+
+let damageRider
+    : HitRider
+    = { kind = "damage"
+      , damageType = Some "necrotic"
+      , amount =
+          Some
+            { kind = "threshold_tiers"
+            , axis = "character"
+            , base = { dice = 1, dieSize = 10 }
+            , tiers =
+                [ { atLevel = 5, override = { dice = 2 } }
+                , { atLevel = 11, override = { dice = 3 } }
+                , { atLevel = 17, override = { dice = 4 } }
+                ]
+            }
+      , expiresAt = None Text
+      }
+
+let hitPointRegainPreventionRider
+    : HitRider
+    = { kind = "prevent_hit_point_regain"
+      , damageType = None Text
+      , amount = None AmountRec
+      , expiresAt = Some "end_of_caster_next_turn"
+      }
 
 let chillTouch =
       { kind = "spell"
@@ -38,21 +83,7 @@ let chillTouch =
                         }
                     }
                 , attackKind = "melee_spell_attack"
-                , onHit =
-                    [ { kind = "damage"
-                      , damageType = "necrotic"
-                      , amount =
-                          { kind = "threshold_tiers"
-                          , axis = "character"
-                          , base = { dice = 1, dieSize = 10 }
-                          , tiers =
-                              [ { atLevel = 5, override = { dice = 2 } }
-                              , { atLevel = 11, override = { dice = 3 } }
-                              , { atLevel = 17, override = { dice = 4 } }
-                              ]
-                          }
-                      }
-                    ]
+                , onHit = [ damageRider, hitPointRegainPreventionRider ]
                 , onMiss = [ { kind = "none" } ]
                 }
               ]

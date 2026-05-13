@@ -582,7 +582,11 @@ export function applyHpHealing(
   healingAmount: number,
 ): BattleCreatureState {
   const effectiveHealing = Math.max(0, Math.floor(healingAmount));
-  if (effectiveHealing <= 0 || zeroHpLifecycleIsTerminal(combatant)) {
+  if (
+    effectiveHealing <= 0 ||
+    zeroHpLifecycleIsTerminal(combatant) ||
+    hitPointRegainPrevented(combatant)
+  ) {
     return combatant;
   }
 
@@ -622,6 +626,12 @@ export function applyHpHealing(
         combatant.conditions,
       )
     : combatant;
+}
+
+function hitPointRegainPrevented(combatant: BattleCreatureState): boolean {
+  return combatant.activeEffects.some(
+    (effect) => effect.kind === "hitPointRegainPrevented",
+  );
 }
 
 export function applyInitialZeroHpLifecycle(

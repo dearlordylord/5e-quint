@@ -416,6 +416,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "prevent_hit_point_regain": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "prevent_hit_point_regain",
+        label: `prevent_hit_point_regain\nexpires: ${e.expiresAt}`,
+      });
+      return id;
+    }
     case "heal_to_max_hp": {
       const id = ids("eff");
       nodes.push({
@@ -2112,6 +2122,7 @@ function traceEffectAtomScaling(
     case "grant_temp_hp":
       traceDiceAmountScaling(e.amount, effectId, slotId, nodes, edges, ids);
       return;
+    case "prevent_hit_point_regain":
     case "heal_to_max_hp":
       return;
     case "modify_max_hp":

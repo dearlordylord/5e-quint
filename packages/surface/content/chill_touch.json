@@ -63,6 +63,10 @@
             },
             "damageType": "necrotic",
             "kind": "damage"
+          },
+          {
+            "expiresAt": "end_of_caster_next_turn",
+            "kind": "prevent_hit_point_regain"
           }
         ],
         "onMiss": [

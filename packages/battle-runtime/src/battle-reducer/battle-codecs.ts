@@ -540,6 +540,10 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
             mode: Schema.Literal("advantage"),
             expiresAt: Schema.Literal("endOfCasterNextTurn"),
           }),
+          Schema.Struct({
+            kind: Schema.Literal("hitPointRegainPrevented"),
+            expiresAt: Schema.Literal("endOfCasterNextTurn"),
+          }),
         ),
       ),
     }),
@@ -574,6 +578,10 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
           Schema.Struct({
             kind: Schema.Literal("nextAttackRollAgainstTarget"),
             mode: Schema.Literal("advantage"),
+            expiresAt: Schema.Literal("endOfCasterNextTurn"),
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("hitPointRegainPrevented"),
             expiresAt: Schema.Literal("endOfCasterNextTurn"),
           }),
         ),

@@ -47,9 +47,9 @@ the authored Starry Wisp definition directly and proves that even if supplied as
 cantrip spell access, it does not produce a supported battle act.
 
 Chill Touch remains a profile subset: the current runtime supports its
-combatant-target melee spell attack damage and cantrip scaling. The SRD generic
-"target" wording is not widened to non-combatant targets by this task, and the
-healing-suppression rider remains outside the selected executable subset.
+combatant-target melee spell attack damage, cantrip scaling, and hit-applied
+healing-suppression rider. The SRD generic "target" wording is not widened to
+non-combatant targets by this task.
 
 ## Reclassification Requirements
 
@@ -69,4 +69,4 @@ A later task may reclassify `starry_wisp` only after all of these agree:
   ids.
 
 Until then, Starry Wisp is an explicit object-target and rider blocker, while
-Chill Touch stays limited to the combatant-target damage subset.
+Chill Touch stays limited to the combatant-target subset.

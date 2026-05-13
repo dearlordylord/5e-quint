@@ -451,6 +451,10 @@ type EffectAtom =
       readonly amount: DiceAmount;
       readonly target: "self" | "target_creature";
     }
+  | {
+      readonly kind: "prevent_hit_point_regain";
+      readonly expiresAt: "end_of_caster_next_turn";
+    }
   | { readonly kind: "heal_to_max_hp"; readonly target: "target_creature" }
   | {
       readonly kind: "modify_max_hp";
@@ -1790,6 +1794,10 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         kind: Schema.Literal("heal_hp"),
         amount: DiceAmountSchema,
         target: Schema.Literal("self", "target_creature"),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("prevent_hit_point_regain"),
+        expiresAt: Schema.Literal("end_of_caster_next_turn"),
       }),
       Schema.Struct({
         kind: Schema.Literal("heal_to_max_hp"),

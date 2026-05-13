@@ -116,6 +116,9 @@ module battleRuntime {
   //   lines 41-52: Magic Missile can allocate darts to one creature or
   //   several and gains one dart per slot level above 1; Ray of Frost reduces
   //   Speed until the start of the caster's next turn.
+  // - Spells/Descriptions-A-D.md lines 709-716 and Rules-Glossary.md lines
+  //   520-562: Chill Touch prevents the hit target from regaining Hit Points
+  //   until the end of the caster's next turn.
   // - Spells/Descriptions-S-Z.md lines 215-224, Playing-the-Game.md lines
   //   326-332 and 582-589, and Rules-Glossary.md lines 112 and 918: Shield is
   //   a Reaction spell when hit by an attack roll, including a spell attack
@@ -193,9 +196,9 @@ module battleRuntime {
   // - Spells/Descriptions-M-P.md lines 643-654, Descriptions-S-Z.md lines
   //   7-18, Descriptions-E-L.md lines 1417-1428, and
   //   Descriptions-A-D.md lines 707-720: Poison Spray, Sacred Flame, Inflict
-  //   Wounds, Burning Hands, Color Spray, Entangle, and the damage-only slice
-  //   of Chill Touch are action-time spells with creature or table-supplied
-  //   area targets, cantrip/slot scaling, and the listed attack/save outcomes.
+  //   Wounds, Burning Hands, Color Spray, Entangle, and Chill Touch are
+  //   action-time spells with creature or table-supplied area targets,
+  //   cantrip/slot scaling, and the listed attack/save outcomes.
   //   Spells/Descriptions-E-L.md lines 30-41: Eldritch Blast creates ranged
   //   spell attack beams that can target creatures or objects, deal Force
   //   damage on a hit, scale to two/three/four beams at character levels
@@ -295,7 +298,7 @@ module battleRuntime {
   type SpellActionCost = SpellMagicAction | SpellBonusAction
   type CommandOption = CommandGrovelOption | CommandHaltOption | CommandDropOption | CommandApproachOption | CommandFleeOption
 
-  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool, durationTicks: int }) | RayOfSicknessPoisoned | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodCreatureTypeProtection | ProduceFlameHeldLight({ durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
+  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool, durationTicks: int }) | RayOfSicknessPoisoned | ChillTouchHitPointRegainPrevented({ source: Actor, expiresAtRound: int }) | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodCreatureTypeProtection | ProduceFlameHeldLight({ durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
   type PreventedProtectionCondition = PreventedCharmed | PreventedFrightened
   type PossessionAttemptDisposition = PossessionPreventedByCreatureTypeProtection | PossessionUnprevented
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
@@ -821,6 +824,32 @@ module battleRuntime {
       }
     }
 
+  pure def activeEffectsWithoutExpiredChillTouchHitPointRegainPrevention(
+    effects: Set[ActiveEffect],
+    actor: Actor,
+    round: int
+  ): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | ChillTouchHitPointRegainPrevented(data) => data.source != actor or data.expiresAtRound != round
+      | _ => true
+    })
+
+  pure def expireEndOfTurnSpellEffects(state: BattleState): BattleState = {
+    val actor = currentActor(state)
+    val round = state.initiative.round
+    {
+      ...state,
+      fighter: {
+        ...state.fighter,
+        activeEffects: activeEffectsWithoutExpiredChillTouchHitPointRegainPrevention(state.fighter.activeEffects, actor, round),
+      },
+      goblin: {
+        ...state.goblin,
+        activeEffects: activeEffectsWithoutExpiredChillTouchHitPointRegainPrevention(state.goblin.activeEffects, actor, round),
+      },
+    }
+  }
+
   pure def expireFighterStartOfTurnOngoingFeatures(state: BattleState, nextActor: Actor): BattleState =
     if (nextActor == Fighter)
       removeFighterFirstAttackRollOngoingFeature(state)
@@ -1031,6 +1060,7 @@ module battleRuntime {
         | DivineFavorWeaponDamageRider(_) => false
         | HuntersMarkDamageRider(_) => false
         | RayOfSicknessPoisoned => false
+        | ChillTouchHitPointRegainPrevented(_) => false
         | ShockingGraspOpportunityAttackDenied => false
         | GuidingBoltNextAttackAdvantage => false
         | ViciousMockeryNextAttackDisadvantage => false
@@ -1165,7 +1195,7 @@ module battleRuntime {
   }
 
   pure def endTurn(state: BattleState): BattleState = {
-    val featureChecked = normalizeFighterEarlyEndedOngoingFeatures(expireFighterEndOfTurnOngoingFeatures(state))
+    val featureChecked = normalizeFighterEarlyEndedOngoingFeatures(expireFighterEndOfTurnOngoingFeatures(expireEndOfTurnSpellEffects(state)))
     val advancedInitiative = nextInitiative(featureChecked.initiative)
     val nextActor = advancedInitiative.stillToAct[0]
     val featureAdvanced = applyStartOfTurnSpellEffects(expireStartOfTurnSpellEffects(expireFighterStartOfTurnOngoingFeatures(featureChecked, nextActor), nextActor), nextActor)
@@ -1976,7 +2006,23 @@ module battleRuntime {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
       val adjustedDamage = damageAfterAdjustments(damageRoll, Necrotic, Set(), Set(), Set())
       val damaged = applyDamageFromSource(state.goblin, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter)
-      { ...rolled, goblin: damaged, actionAvailable: false }
+      { ...rolled, goblin: applyChillTouchHitPointRegainPrevention(state, damaged, Fighter), actionAvailable: false }
+    }
+
+  pure def chillTouchHitPointRegainPreventionExpiresAtRound(state: BattleState, source: Actor): int =
+    if (currentActor(state) == source) state.initiative.round + 1 else state.initiative.round
+
+  pure def applyChillTouchHitPointRegainPrevention(state: BattleState, target: Combatant, source: Actor): Combatant =
+    { ...target,
+      activeEffects: target.activeEffects
+        .filter(effect => match effect {
+          | ChillTouchHitPointRegainPrevented(data) => data.source != source
+          | _ => true
+        })
+        .union(Set(ChillTouchHitPointRegainPrevented({
+          source: source,
+          expiresAtRound: chillTouchHitPointRegainPreventionExpiresAtRound(state, source),
+        }))),
     }
 
   pure def resolveEldritchBlastBeamAgainstGoblin(
@@ -2995,6 +3041,12 @@ module battleRuntime {
     else
       applyFighterMovementWithSpeedKind(state, speedKind, movementCost)
 
+  pure def activeEffectsPreventHitPointRegain(effects: Set[ActiveEffect]): bool =
+    effects.exists(effect => match effect {
+      | ChillTouchHitPointRegainPrevented(_) => true
+      | _ => false
+    })
+
   pure def applyHealing(target: Combatant, healing: int): Combatant = {
     val result = applyHitPointHealing(
       combatantVitals(target),
@@ -3002,7 +3054,10 @@ module battleRuntime {
       combatantPositiveHitPointUnconsciousRecovery(target),
       healing,
     )
-    combatantWithHitPointRecoveryResult(target, result)
+    if (activeEffectsPreventHitPointRegain(target.activeEffects))
+      target
+    else
+      combatantWithHitPointRecoveryResult(target, result)
   }
 
   pure def spendFighterSpellActionCost(state: BattleState, actionCost: SpellActionCost): BattleState =
@@ -4175,6 +4230,7 @@ module battleRuntime {
   ): ActiveEffect =
     match effect {
       | BattleRuntimeRayOfFrostSpeedReductionHitEffect => RayOfFrostSpeedDelta
+      | BattleRuntimeChillTouchHitPointRegainPreventionHitEffect => ChillTouchHitPointRegainPrevented({ source: Fighter, expiresAtRound: 0 })
       | BattleRuntimeShockingGraspOpportunityAttackDeniedHitEffect => ShockingGraspOpportunityAttackDenied
       | BattleRuntimeGuidingBoltNextAttackAdvantageHitEffect => GuidingBoltNextAttackAdvantage
       | BattleRuntimeRayOfSicknessPoisonedHitEffect => RayOfSicknessPoisoned
@@ -6686,6 +6742,7 @@ module battleRuntime {
       assert(spellAttackDamageType(GuidingBoltSpellAttack) == Radiant),
       assert(spellAttackDamageType(RayOfSicknessSpellAttack) == Poison),
       assert(spellAttackDamageActiveEffects(RayOfSicknessSpellAttack) == Set(RayOfSicknessPoisoned)),
+      assert(spellAttackDamageActiveEffects(ChillTouchSpellAttack) == Set(ChillTouchHitPointRegainPrevented({ source: Fighter, expiresAtRound: 0 }))),
       assert(spellAttackDamageActiveEffects(StarryWispSpellAttack) == Set()),
       assert(spellAttackDamageSupportsObjectTarget(StarryWispSpellAttack)),
       assert(not(spellAttackDamageSupportsObjectTarget(ChillTouchSpellAttack))),
@@ -7490,7 +7547,26 @@ module battleRuntime {
     all {
       assert(result.actionAvailable == false),
       assert(result.goblin.hp == 4),
+      assert(result.goblin.activeEffects.contains(ChillTouchHitPointRegainPrevented({ source: Fighter, expiresAtRound: 2 }))),
       assert(not(result.spellSlotExpendedThisTurn)),
+    }
+  }
+
+  run test_chill_touch_prevents_hit_point_regain_until_end_of_caster_next_turn = {
+    val noReaction = { ...initialState, goblin: { ...initialState.goblin, hp: 6, reactionAvailable: false } }
+    val hit = resolveChillTouch(noReaction, 15, 10, 3, true)
+    val blockedHealing = applyHealing(hit.goblin, 5)
+    val afterGoblinTurn = endTurn(endTurn(hit))
+    val afterFighterNextTurn = endTurn(afterGoblinTurn)
+    all {
+      assert(hit.goblin.hp == 3),
+      assert(blockedHealing.hp == 3),
+      assert(afterGoblinTurn.goblin.activeEffects.contains(ChillTouchHitPointRegainPrevented({ source: Fighter, expiresAtRound: 2 }))),
+      assert(not(afterFighterNextTurn.goblin.activeEffects.exists(effect => match effect {
+        | ChillTouchHitPointRegainPrevented(_) => true
+        | _ => false
+      }))),
+      assert(applyHealing(afterFighterNextTurn.goblin, 5).hp == 8),
     }
   }
 

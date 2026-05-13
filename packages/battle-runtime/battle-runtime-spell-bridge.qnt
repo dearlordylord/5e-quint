@@ -21,6 +21,7 @@ module battleRuntimeSpellBridge {
 
   type BattleRuntimeSpellAttackDamageHitEffect =
     | BattleRuntimeRayOfFrostSpeedReductionHitEffect
+    | BattleRuntimeChillTouchHitPointRegainPreventionHitEffect
     | BattleRuntimeShockingGraspOpportunityAttackDeniedHitEffect
     | BattleRuntimeGuidingBoltNextAttackAdvantageHitEffect
     | BattleRuntimeRayOfSicknessPoisonedHitEffect
@@ -173,6 +174,7 @@ module battleRuntimeSpellBridge {
   ): BattleRuntimeSpellAttackDamageHitEffect =
     match effect {
       | RayOfFrostSpeedReductionHitEffect => BattleRuntimeRayOfFrostSpeedReductionHitEffect
+      | ChillTouchHitPointRegainPreventionHitEffect => BattleRuntimeChillTouchHitPointRegainPreventionHitEffect
       | ShockingGraspOpportunityAttackDeniedHitEffect => BattleRuntimeShockingGraspOpportunityAttackDeniedHitEffect
       | GuidingBoltNextAttackAdvantageHitEffect => BattleRuntimeGuidingBoltNextAttackAdvantageHitEffect
       | RayOfSicknessPoisonedHitEffect => BattleRuntimeRayOfSicknessPoisonedHitEffect
@@ -665,6 +667,7 @@ module battleRuntimeSpellBridge {
       assert(battleRuntimeSpellAttackDamageType(BattleRuntimeRayOfFrostSpellAttack) == ColdDamage),
       assert(battleRuntimeSpellAttackDamageType(BattleRuntimeShockingGraspSpellAttack) == LightningDamage),
       assert(battleRuntimeSpellAttackDamageHitEffects(BattleRuntimeRayOfFrostSpellAttack) == Set(BattleRuntimeRayOfFrostSpeedReductionHitEffect)),
+      assert(battleRuntimeSpellAttackDamageHitEffects(BattleRuntimeChillTouchSpellAttack) == Set(BattleRuntimeChillTouchHitPointRegainPreventionHitEffect)),
       assert(battleRuntimeSpellAttackDamageHitEffects(BattleRuntimeGuidingBoltSpellAttack) == Set(BattleRuntimeGuidingBoltNextAttackAdvantageHitEffect)),
       assert(battleRuntimeSpellAttackDamageSupportsObjectTarget(BattleRuntimeStarryWispSpellAttack)),
       assert(not(battleRuntimeSpellAttackDamageSupportsObjectTarget(BattleRuntimeRayOfFrostSpellAttack))),

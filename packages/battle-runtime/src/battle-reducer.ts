@@ -584,6 +584,10 @@ export type BattleActiveEffect =
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {
+      readonly kind: "hitPointRegainPrevented";
+      readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
       readonly kind: "d20RollModifier";
       readonly on: readonly BattleD20RollModifierKind[];
       readonly delta: BattleD20RollModifierDelta;
@@ -1389,6 +1393,10 @@ export type SpellPostDamageRider =
   | {
       readonly kind: "nextAttackRollAgainstTarget";
       readonly mode: "advantage";
+      readonly expiresAt: "endOfCasterNextTurn";
+    }
+  | {
+      readonly kind: "hitPointRegainPrevented";
       readonly expiresAt: "endOfCasterNextTurn";
     };
 export type SpellPostDamageRiderExpiration = Exclude<

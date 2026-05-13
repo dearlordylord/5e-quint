@@ -1117,9 +1117,34 @@ export function supportedSpellPostDamageRiders(
       });
       continue;
     }
+    if (
+      effect.kind === "prevent_hit_point_regain" &&
+      effect.expiresAt === "end_of_caster_next_turn" &&
+      isChillTouchHitPointRegainPreventionRiderShape(spell, phase)
+    ) {
+      riders.push({
+        kind: "hitPointRegainPrevented",
+        expiresAt: "endOfCasterNextTurn",
+      });
+      continue;
+    }
     return null;
   }
   return riders;
+}
+
+export function isChillTouchHitPointRegainPreventionRiderShape(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
+): boolean {
+  return (
+    spell.name === "Chill Touch" &&
+    spell.provenance.kind === "srd-5.2.1" &&
+    spell.provenance.section === "Spells/Descriptions-A-D#Chill Touch" &&
+    spell.mechanics.level === 0 &&
+    spell.mechanics.duration.kind === "instantaneous" &&
+    phase.attackKind === "melee_spell_attack"
+  );
 }
 
 export function isRayOfSicknessPoisonedRiderShape(

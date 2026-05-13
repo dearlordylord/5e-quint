@@ -40,12 +40,14 @@ let Effect : Type =
       { kind : Text
       , damageType : Optional Text
       , amount : Optional DiceAmount
+      , expiresAt : Optional Text
       }
 
 let defaultEffect : Effect =
       { kind = ""
       , damageType = None Text
       , amount = None DiceAmount
+      , expiresAt = None Text
       }
 
 let Trigger : Type =
