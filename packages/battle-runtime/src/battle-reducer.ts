@@ -387,6 +387,7 @@ export {
 } from "./battle-reducer/spells-invocation-guards.ts";
 export {
   activeFeatherFallDescentRateCapFeetPerRound,
+  battleLightEmitters,
   FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
 } from "./battle-reducer/spells-active-effects.ts";
 export const BATTLE_SPECIAL_SPEED_KINDS = [
@@ -677,6 +678,30 @@ export type BattleActiveEffect =
 export type BattleConcentration = {
   readonly sourceSpellId: SpellRecord["id"];
   readonly effectKind: "spellEffect" | "readiedSpell";
+};
+export type BattleLightEmission =
+  | {
+      readonly kind: "dim";
+      readonly radiusFeet: MovementFeet;
+    }
+  | {
+      readonly kind: "brightAndDim";
+      readonly brightRadiusFeet: MovementFeet;
+      readonly dimAdditionalFeet: MovementFeet;
+    };
+export type BattleLightEmitterAttachment =
+  | {
+      readonly kind: "combatant";
+      readonly combatantId: CombatantId;
+    }
+  | {
+      readonly kind: "object";
+      readonly objectId: BattleObjectId;
+    };
+export type BattleLightEmitter = BattleSpellEffectBase & {
+  readonly attachment: BattleLightEmitterAttachment;
+  readonly emission: BattleLightEmission;
+  readonly expiresAt: BattleActiveEffectExpiration;
 };
 // SRD 5.2.1 Ready [Action]: this is the spell-specific Readied Response
 // created by taking Ready with an action-time spell. The caster spends the
@@ -1398,9 +1423,22 @@ export type SpellPostDamageRider =
   | {
       readonly kind: "hitPointRegainPrevented";
       readonly expiresAt: "endOfCasterNextTurn";
+    }
+  | {
+      readonly kind: "lightEmission";
+      readonly emission: Extract<BattleLightEmission, { readonly kind: "dim" }>;
+      readonly expiresAt: "endOfCasterNextTurn";
     };
-export type SpellPostDamageRiderExpiration = Exclude<
+export type SpellActiveEffectPostDamageRider = Exclude<
   SpellPostDamageRider,
+  { readonly kind: "lightEmission" }
+>;
+export type SpellLightEmissionPostDamageRider = Extract<
+  SpellPostDamageRider,
+  { readonly kind: "lightEmission" }
+>;
+export type SpellPostDamageRiderExpiration = Exclude<
+  SpellActiveEffectPostDamageRider,
   { readonly kind: "speedDelta" }
 >["expiresAt"];
 export type SpellFailedSavePostDamageRider =
@@ -2316,6 +2354,7 @@ export type BattleState = {
   readonly battleId: BattleId;
   readonly initiative: InitiativeStack<CombatantId>;
   readonly combatants: ReadonlyMap<CombatantId, BattleCreatureState>;
+  readonly lightEmitters: readonly BattleLightEmitter[];
   readonly hidePrerequisites: ReadonlyMap<CombatantId, BattleHidePrerequisite>;
   readonly currentTurnResources: BattleTurnResources;
   readonly readiedSpells: ReadonlyMap<CombatantId, BattleReadiedSpell>;
@@ -3233,6 +3272,7 @@ export type BattleSnapshot = {
   readonly currentActorId: CombatantId;
   readonly turnOrder: readonly CombatantId[];
   readonly combatants: readonly BattleCreatureSnapshot[];
+  readonly lightEmitters: readonly BattleLightEmitter[];
   readonly acts: readonly AvailableBattleAct[];
   readonly turn: BattleTurnSnapshot;
   readonly readiedResponses: {

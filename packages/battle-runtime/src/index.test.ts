@@ -14820,7 +14820,7 @@ describe("battle runtime", () => {
     expect(expendedLevelOneSlots(result, wizardId)).toBe(0);
   });
 
-  test("Starry Wisp offers creature and table-supplied object targets with its light riders deferred", () => {
+  test("Starry Wisp applies a shared Dim Light emitter to a hit creature until the caster's next turn ends", () => {
     const state = startBattleRight({
       battleId: battleId("battle-starry-wisp-creature"),
       combatants: [
@@ -14877,7 +14877,13 @@ describe("battle runtime", () => {
           expr: { dice: 2, dieSize: 8 },
           damageType: "radiant",
         },
-        postDamageRiders: [],
+        postDamageRiders: [
+          {
+            kind: "lightEmission",
+            emission: { kind: "dim", radiusFeet: 10 },
+            expiresAt: "endOfCasterNextTurn",
+          },
+        ],
       }),
     });
 
@@ -14894,6 +14900,19 @@ describe("battle runtime", () => {
     expect(result).toMatchObject({
       tag: "resolved",
       snapshot: {
+        lightEmitters: [
+          {
+            sourceSpellId: "starry_wisp",
+            sourceCombatantId: wizardId,
+            attachment: { kind: "combatant", combatantId: skeletonId },
+            emission: { kind: "dim", radiusFeet: movementFeet(10) },
+            expiresAt: {
+              kind: "endOfTurn",
+              combatantId: wizardId,
+              round: 2,
+            },
+          },
+        ],
         combatants: [
           { combatantId: wizardId, hp: 12 },
           { combatantId: skeletonId, hp: 2 },
@@ -14903,6 +14922,24 @@ describe("battle runtime", () => {
     });
     expect("objectDamages" in requireResolved(result)).toBe(false);
     expect(expendedLevelOneSlots(requireResolved(result), wizardId)).toBe(0);
+
+    const afterWizardTurn = requireResolved(endTurn({
+      state: requireResolved(result).state,
+      actorId: wizardId,
+    }));
+    expect(afterWizardTurn.state.lightEmitters).toHaveLength(1);
+
+    const afterSkeletonTurn = requireResolved(endTurn({
+      state: afterWizardTurn.state,
+      actorId: skeletonId,
+    }));
+    expect(afterSkeletonTurn.state.lightEmitters).toHaveLength(1);
+
+    const afterWizardNextTurn = requireResolved(endTurn({
+      state: afterSkeletonTurn.state,
+      actorId: wizardId,
+    }));
+    expect(afterWizardNextTurn.state.lightEmitters).toEqual([]);
   });
 
   test("Eldritch Blast resolves independent creature and object beams for one Magic action", () => {
@@ -15820,6 +15857,7 @@ describe("battle runtime", () => {
       },
     });
     expect("objectDamages" in requireResolved(result)).toBe(false);
+    expect(requireResolved(result).state.lightEmitters).toEqual([]);
   });
 
   test("Starry Wisp object attack rolls enforce attacker-wide disadvantage", () => {
@@ -15978,6 +16016,14 @@ describe("battle runtime", () => {
         },
       ],
       snapshot: {
+        lightEmitters: [
+          {
+            sourceSpellId: "starry_wisp",
+            sourceCombatantId: wizardId,
+            attachment: { kind: "object", objectId },
+            emission: { kind: "dim", radiusFeet: movementFeet(10) },
+          },
+        ],
         combatants: [
           { combatantId: wizardId, hp: 12 },
           { combatantId: skeletonId, hp: 13 },

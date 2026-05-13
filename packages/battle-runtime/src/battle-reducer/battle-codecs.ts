@@ -2724,12 +2724,40 @@ const BattlePendingReactionSnapshotSchema = Schema.Struct({
   stackDepth: Schema.Number,
 });
 
+const BattleLightEmitterSchema = Schema.Struct({
+  sourceSpellId: Schema.String,
+  sourceCombatantId: CombatantId,
+  attachment: Schema.Union(
+    Schema.Struct({
+      kind: Schema.Literal("combatant"),
+      combatantId: CombatantId,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("object"),
+      objectId: BattleObjectId,
+    }),
+  ),
+  emission: Schema.Union(
+    Schema.Struct({
+      kind: Schema.Literal("dim"),
+      radiusFeet: MovementFeet,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("brightAndDim"),
+      brightRadiusFeet: MovementFeet,
+      dimAdditionalFeet: MovementFeet,
+    }),
+  ),
+  expiresAt: BattleRuntimeObjectSchema,
+});
+
 export const BattleSnapshotSchema = Schema.Struct({
   battleId: BattleId,
   round: Schema.Number,
   currentActorId: CombatantId,
   turnOrder: Schema.Array(CombatantId),
   combatants: Schema.Array(BattleCreatureSnapshotSchema),
+  lightEmitters: Schema.Array(BattleLightEmitterSchema),
   acts: Schema.Array(AvailableBattleActSchema),
   turn: BattleTurnSnapshotSchema,
   readiedResponses: Schema.Struct({

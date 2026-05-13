@@ -67,6 +67,11 @@
             },
             "damageType": "radiant",
             "kind": "damage"
+          },
+          {
+            "expiresAt": "end_of_caster_next_turn",
+            "kind": "emit_dim_light",
+            "radiusFeet": 10
           }
         ],
         "onMiss": [

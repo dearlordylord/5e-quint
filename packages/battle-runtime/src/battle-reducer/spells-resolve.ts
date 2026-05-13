@@ -78,6 +78,7 @@ import {
 import {
   applyPersistentSpellActiveEffect,
   applySpellActiveEffects,
+  applySpellLightEmitterEffects,
   applySpellDamage,
   spellObjectDamageOutcome,
   spellObjectTargetFact,
@@ -922,8 +923,14 @@ export function resolveSpellAct(
     target.combatantId,
     invocation,
   );
+  const lit = applySpellLightEmitterEffects(
+    effected,
+    subject.actorId,
+    { kind: "combatant", combatantId: target.combatantId },
+    invocation,
+  );
   const spentResources = spendSpellCastResources({
-    state: effected,
+    state: lit,
     actorId: subject.actorId,
     invocation,
     errorState: input.state,
@@ -1098,8 +1105,14 @@ function resolveSpellAttackDamageObjectTarget(input: {
     );
   }
 
+  const lit = applySpellLightEmitterEffects(
+    attackRolledState,
+    input.actorId,
+    { kind: "object", objectId: input.fillSet.objectTarget.objectId },
+    input.invocation,
+  );
   const spentResources = spendSpellCastResources({
-    state: attackRolledState,
+    state: lit,
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,

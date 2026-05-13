@@ -212,11 +212,12 @@ module battleRuntime {
   //   damage on a hit, scale to two/three/four beams at character levels
   //   5/11/17, and use a separate attack roll for each beam.
   //   Spells/Descriptions-S-Z.md lines 529-540: Starry Wisp targets one
-  //   creature or object within range, makes a ranged spell attack, and deals
-  //   Radiant damage on a hit. This object-target slice models caller-supplied
-  //   object identity, range legality, Armor Class, and damage disposition;
-  //   its Dim Light and Invisible-benefit riders are not modeled as durable
-  //   object illumination state in this battle runtime.
+  //   creature or object within range, makes a ranged spell attack, deals
+  //   Radiant damage on a hit, and makes the hit target emit Dim Light in a
+  //   10-foot radius until the end of the caster's next turn. This object-
+  //   target slice models caller-supplied object identity, range legality,
+  //   Armor Class, damage disposition, and source-owned light emitter
+  //   projection; its Invisible-benefit rider remains deferred.
   //   Spells/Descriptions-E-L.md lines 1307-1318: Ice Knife is a level-1
   //   Action spell with a primary ranged spell attack, hit-only Piercing
   //   damage, and an unconditional primary-target-anchored burst Dexterity
@@ -333,6 +334,21 @@ module battleRuntime {
         object: ObjectTarget,
         damageType: DamageType,
         rolledDamage: int,
+      })
+  type LightEmitterAttachment =
+    | CombatantLightEmitter({ actor: Actor })
+    | ObjectLightEmitter({ object: ObjectTarget })
+  type LightEmission =
+    | DimLightEmission({ radiusFeet: int })
+    | BrightAndDimLightEmission({ brightRadiusFeet: int, dimAdditionalFeet: int })
+  type LightEmitter =
+    | SpellLightEmitter({
+        source: Actor,
+        sourceSpell: SpellInvocation,
+        attachment: LightEmitterAttachment,
+        emission: LightEmission,
+        expiresAtActor: Actor,
+        expiresAtRound: int,
       })
 
   type ChainedSpellAttackDamageHole =
@@ -628,6 +644,7 @@ module battleRuntime {
     initiative: Initiative,
     fighter: Combatant,
     goblin: Combatant,
+    lightEmitters: Set[LightEmitter],
     actionAvailable: bool,
     bonusActionAvailable: bool,
     spellSlotExpendedThisTurn: bool,
@@ -742,6 +759,7 @@ module battleRuntime {
       leftHandUse: HFree,
       rightHandUse: HFree,
     },
+    lightEmitters: Set(),
     actionAvailable: true,
     bonusActionAvailable: true,
     spellSlotExpendedThisTurn: false,
@@ -864,11 +882,21 @@ module battleRuntime {
       | _ => true
     })
 
+  pure def lightEmittersWithoutExpiredEndOfTurnEmitters(
+    emitters: Set[LightEmitter],
+    actor: Actor,
+    round: int
+  ): Set[LightEmitter] =
+    emitters.filter(emitter => match emitter {
+      | SpellLightEmitter(data) => data.expiresAtActor != actor or data.expiresAtRound != round
+    })
+
   pure def expireEndOfTurnSpellEffects(state: BattleState): BattleState = {
     val actor = currentActor(state)
     val round = state.initiative.round
     {
       ...state,
+      lightEmitters: lightEmittersWithoutExpiredEndOfTurnEmitters(state.lightEmitters, actor, round),
       fighter: {
         ...state.fighter,
         activeEffects: activeEffectsWithoutExpiredChillTouchHitPointRegainPrevention(state.fighter.activeEffects, actor, round),
@@ -2129,6 +2157,41 @@ module battleRuntime {
 
   pure def chillTouchHitPointRegainPreventionExpiresAtRound(state: BattleState, source: Actor): int =
     if (currentActor(state) == source) state.initiative.round + 1 else state.initiative.round
+
+  pure def endOfCasterNextTurnLightEmitterExpiresAtRound(state: BattleState, source: Actor): int =
+    if (currentActor(state) == source) state.initiative.round + 1 else state.initiative.round
+
+  pure def starryWispDimLightEmitter(
+    state: BattleState,
+    source: Actor,
+    attachment: LightEmitterAttachment,
+  ): LightEmitter =
+    SpellLightEmitter({
+      source: source,
+      sourceSpell: StarryWisp,
+      attachment: attachment,
+      emission: DimLightEmission({ radiusFeet: 10 }),
+      expiresAtActor: source,
+      expiresAtRound: endOfCasterNextTurnLightEmitterExpiresAtRound(state, source),
+    })
+
+  pure def applyStarryWispDimLightEmitter(
+    state: BattleState,
+    source: Actor,
+    attachment: LightEmitterAttachment,
+  ): BattleState = {
+    val emitter = starryWispDimLightEmitter(state, source, attachment)
+    { ...state,
+      lightEmitters: state.lightEmitters
+        .filter(candidate => match candidate {
+          | SpellLightEmitter(data) =>
+              data.source != source
+                or data.sourceSpell != StarryWisp
+                or data.attachment != attachment
+        })
+        .union(Set(emitter)),
+    }
+  }
 
   pure def applyChillTouchHitPointRegainPrevention(state: BattleState, target: Combatant, source: Actor): Combatant =
     { ...target,
@@ -6865,6 +6928,14 @@ module battleRuntime {
       assert(spellAttackDamageActiveEffects(RayOfSicknessSpellAttack) == Set(RayOfSicknessPoisoned)),
       assert(spellAttackDamageActiveEffects(ChillTouchSpellAttack) == Set(ChillTouchHitPointRegainPrevented({ source: Fighter, expiresAtRound: 0 }))),
       assert(spellAttackDamageActiveEffects(StarryWispSpellAttack) == Set()),
+      assert(starryWispDimLightEmitter(initialState, Fighter, CombatantLightEmitter({ actor: Goblin })) == SpellLightEmitter({
+        source: Fighter,
+        sourceSpell: StarryWisp,
+        attachment: CombatantLightEmitter({ actor: Goblin }),
+        emission: DimLightEmission({ radiusFeet: 10 }),
+        expiresAtActor: Fighter,
+        expiresAtRound: 2,
+      })),
       assert(spellAttackDamageSupportsObjectTarget(StarryWispSpellAttack)),
       assert(spellAttackDamageSupportsObjectTarget(ProduceFlameHurlSpellAttack)),
       assert(not(spellAttackDamageSupportsObjectTarget(ChillTouchSpellAttack))),
@@ -7705,6 +7776,20 @@ module battleRuntime {
         | _ => false
       }))),
       assert(applyHealing(afterFighterNextTurn.goblin, 5).hp == 8),
+    }
+  }
+
+  run test_starry_wisp_dim_light_emitter_expires_at_end_of_caster_next_turn = {
+    val hit = applyStarryWispDimLightEmitter(initialState, Fighter, CombatantLightEmitter({ actor: Goblin }))
+    val afterFighterTurn = endTurn(hit)
+    val afterGoblinTurn = endTurn(afterFighterTurn)
+    val afterFighterNextTurn = endTurn(afterGoblinTurn)
+    val emitter = starryWispDimLightEmitter(initialState, Fighter, CombatantLightEmitter({ actor: Goblin }))
+    all {
+      assert(hit.lightEmitters.contains(emitter)),
+      assert(afterFighterTurn.lightEmitters.contains(emitter)),
+      assert(afterGoblinTurn.lightEmitters.contains(emitter)),
+      assert(not(afterFighterNextTurn.lightEmitters.contains(emitter))),
     }
   }
 

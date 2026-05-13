@@ -47,6 +47,7 @@ import {
   applyHeldLightSpellEffect,
   applyMarkedDamageRiderSpellEffect,
   applySpellActiveEffects,
+  applySpellLightEmitterEffects,
   applySpellDamage,
   spellAttackRollHole,
   spellDamageAmountForTarget,
@@ -790,10 +791,19 @@ export function resolveSpellRelease(
     target.combatantId,
     invocation,
   );
+  const lit =
+    invocation.procedure === "spellAttackDamage"
+      ? applySpellLightEmitterEffects(
+          effected,
+          input.subject.actorId,
+          { kind: "combatant", combatantId: target.combatantId },
+          invocation,
+        )
+      : effected;
   const resolvedState = {
-    ...effected,
+    ...lit,
     currentTurnResources: clearPendingAttackRollMissToHitReplacementSelection(
-      effected.currentTurnResources,
+      lit.currentTurnResources,
       input.subject.actorId,
     ),
   };

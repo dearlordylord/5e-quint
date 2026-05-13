@@ -116,6 +116,7 @@ import { spellRequiresVerbal } from "./spells-discovery.ts";
 import {
   applyAfterHitTimedDamageAndSaveSpellEffect,
   applyFailedSaveSpellConditionEffects,
+  battleLightEmitters,
   applySpellDamage,
   applyShieldReactionSpellActiveEffect,
   featherFallLandingCleanupForCombatant,
@@ -3012,6 +3013,7 @@ export function snapshotBattle(state: BattleState): BattleSnapshot {
       const combatant = state.combatants.get(id);
       return combatant == null ? [] : [combatantSnapshot(state, combatant)];
     }),
+    lightEmitters: battleLightEmitters(state),
     acts: discoverBattleActs(state),
     turn: battleTurnSnapshot(state.currentTurnResources),
     readiedResponses: {

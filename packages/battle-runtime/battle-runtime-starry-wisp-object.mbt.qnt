@@ -10,6 +10,7 @@ module battleRuntimeStarryWispObjectMbt {
   var qActionAvailable: bool
   var qHoles: Set[Hole]
   var qObjectDamage: ObjectDamageOutcomeOption
+  var qLightEmitters: Set[LightEmitter]
   var qLastResult: str
   var qLastInvalidReason: str
 
@@ -20,6 +21,7 @@ module battleRuntimeStarryWispObjectMbt {
     qActionAvailable' = true,
     qHoles' = Set(TargetChoice, ObjectTargetChoice),
     qObjectDamage' = NoObjectDamage,
+    qLightEmitters' = Set(),
     qLastResult' = "init",
     qLastInvalidReason' = "",
   }
@@ -30,6 +32,7 @@ module battleRuntimeStarryWispObjectMbt {
     qActionAvailable' = qActionAvailable,
     qHoles' = Set(AttackRoll),
     qObjectDamage' = qObjectDamage,
+    qLightEmitters' = qLightEmitters,
     qLastResult' = "needsHoles",
     qLastInvalidReason' = "",
   }
@@ -40,6 +43,7 @@ module battleRuntimeStarryWispObjectMbt {
     qActionAvailable' = qActionAvailable,
     qHoles' = qHoles,
     qObjectDamage' = qObjectDamage,
+    qLightEmitters' = qLightEmitters,
     qLastResult' = "invalid",
     qLastInvalidReason' = "invalidFill",
   }
@@ -50,6 +54,7 @@ module battleRuntimeStarryWispObjectMbt {
     qActionAvailable' = false,
     qHoles' = Set(),
     qObjectDamage' = NoObjectDamage,
+    qLightEmitters' = Set(),
     qLastResult' = "resolved",
     qLastInvalidReason' = "",
   }
@@ -60,6 +65,7 @@ module battleRuntimeStarryWispObjectMbt {
     qActionAvailable' = qActionAvailable,
     qHoles' = Set(SpellDamageRoll),
     qObjectDamage' = qObjectDamage,
+    qLightEmitters' = qLightEmitters,
     qLastResult' = "needsHoles",
     qLastInvalidReason' = "",
   }
@@ -74,6 +80,11 @@ module battleRuntimeStarryWispObjectMbt {
       StarryWispObjectTarget,
       4,
       ObjectHitPoints({ hitPoints: starryWispObjectHitPoints }),
+    )),
+    qLightEmitters' = Set(starryWispDimLightEmitter(
+      initialState,
+      Fighter,
+      ObjectLightEmitter({ object: StarryWispObjectTarget }),
     )),
     qLastResult' = "resolved",
     qLastInvalidReason' = "",
@@ -90,6 +101,11 @@ module battleRuntimeStarryWispObjectMbt {
       6,
       ObjectHitPoints({ hitPoints: starryWispObjectHitPoints }),
     )),
+    qLightEmitters' = Set(starryWispDimLightEmitter(
+      initialState,
+      Fighter,
+      ObjectLightEmitter({ object: StarryWispObjectTarget }),
+    )),
     qLastResult' = "resolved",
     qLastInvalidReason' = "",
   }
@@ -100,6 +116,7 @@ module battleRuntimeStarryWispObjectMbt {
     qActionAvailable' = qActionAvailable,
     qHoles' = qHoles,
     qObjectDamage' = qObjectDamage,
+    qLightEmitters' = qLightEmitters,
     qLastResult' = "invalid",
     qLastInvalidReason' = "staleSubject",
   }

@@ -27,10 +27,14 @@ import {
   type BattleCommandOption,
   type BattleCreatureState,
   type BattleFill,
+  type BattleLightEmitter,
+  type BattleLightEmitterAttachment,
   type BattleSpellAreaChoice,
   type BattleState,
+  type SpellActiveEffectPostDamageRider,
   type SpellFailedSaveConditionEffect,
   type SpellFailedSavePostDamageRider,
+  type SpellLightEmissionPostDamageRider,
   type SpellPostDamageRider,
   type SpellPostDamageRiderExpiration,
   type SupportedSpellInvocation,
@@ -81,8 +85,9 @@ export function applySpellActiveEffects(
   if (target == null) {
     return state;
   }
-  const activeEffects = invocation.postDamageRiders.reduce(
-    (effects, rider): readonly BattleActiveEffect[] => {
+  const activeEffects = invocation.postDamageRiders
+    .filter(isSpellActiveEffectPostDamageRider)
+    .reduce((effects, rider): readonly BattleActiveEffect[] => {
       const replacedEffects = effects.filter((effect) =>
         spellPostDamageRiderReplacesActiveEffect(
           rider,
@@ -101,9 +106,7 @@ export function applySpellActiveEffects(
           rider,
         }),
       ];
-    },
-    target.activeEffects,
-  );
+    }, target.activeEffects);
 
   return {
     ...state,
@@ -112,6 +115,120 @@ export function applySpellActiveEffects(
       battleCreatureWithSpellActiveEffects(target, activeEffects),
     ),
   };
+}
+
+export function battleLightEmitters(
+  state: BattleState,
+): readonly BattleLightEmitter[] {
+  const heldLightEmitters = [...state.combatants.values()].flatMap(
+    (combatant): readonly BattleLightEmitter[] =>
+      combatant.activeEffects.flatMap((effect): readonly BattleLightEmitter[] =>
+        effect.kind === "heldLight"
+          ? [
+              {
+                sourceSpellId: effect.sourceSpellId,
+                sourceCombatantId: effect.sourceCombatantId,
+                attachment: {
+                  kind: "combatant",
+                  combatantId: combatant.combatantId,
+                },
+                emission: {
+                  kind: "brightAndDim",
+                  brightRadiusFeet: effect.brightRadiusFeet,
+                  dimAdditionalFeet: effect.dimAdditionalFeet,
+                },
+                expiresAt: effect.expiresAt,
+              },
+            ]
+          : [],
+      ),
+  );
+  return [...state.lightEmitters, ...heldLightEmitters];
+}
+
+export function applySpellLightEmitterEffects(
+  state: BattleState,
+  actorId: CombatantId,
+  attachment: BattleLightEmitterAttachment,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "heldLightHurl" | "spellAttackDamage" }
+  >,
+): BattleState {
+  if (invocation.procedure !== "spellAttackDamage") {
+    return state;
+  }
+  const lightRiders = invocation.postDamageRiders.filter(
+    isSpellLightEmissionPostDamageRider,
+  );
+  if (lightRiders.length === 0) {
+    return state;
+  }
+  const nextEmitters = lightRiders.reduce(
+    (emitters, rider): readonly BattleLightEmitter[] => [
+      ...emitters.filter(
+        (emitter) =>
+          !(
+            emitter.sourceSpellId === invocation.spell.id &&
+            emitter.sourceCombatantId === actorId &&
+            sameLightEmitterAttachment(emitter.attachment, attachment)
+          ),
+      ),
+      {
+        sourceSpellId: invocation.spell.id,
+        sourceCombatantId: actorId,
+        attachment,
+        emission: rider.emission,
+        expiresAt: activeEffectExpirationForPostDamageRider(
+          state,
+          actorId,
+          actorId,
+          rider.expiresAt,
+        ),
+      },
+    ],
+    state.lightEmitters,
+  );
+  return { ...state, lightEmitters: nextEmitters };
+}
+
+export function expireBattleLightEmitters(
+  emitters: readonly BattleLightEmitter[],
+  shouldExpire: (emitter: BattleLightEmitter) => boolean,
+): readonly BattleLightEmitter[] {
+  return emitters.filter((emitter) => !shouldExpire(emitter));
+}
+
+function sameLightEmitterAttachment(
+  left: BattleLightEmitterAttachment,
+  right: BattleLightEmitterAttachment,
+): boolean {
+  return Match.value(left).pipe(
+    Match.when(
+      { kind: "combatant" },
+      (leftCombatant) =>
+        right.kind === "combatant" &&
+        leftCombatant.combatantId === right.combatantId,
+    ),
+    Match.when(
+      { kind: "object" },
+      (leftObject) =>
+        right.kind === "object" && leftObject.objectId === right.objectId,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function isSpellActiveEffectPostDamageRider(
+  rider: SpellPostDamageRider,
+): rider is SpellActiveEffectPostDamageRider {
+  return rider.kind !== "lightEmission";
+}
+
+function isSpellLightEmissionPostDamageRider(
+  rider: SpellPostDamageRider,
+): rider is SpellLightEmissionPostDamageRider {
+  return rider.kind === "lightEmission";
 }
 
 export function battleCreatureWithSpellActiveEffects(
@@ -516,7 +633,7 @@ export function applyFailedSaveAttackRollAdvantageEffects(
 }
 
 export function activeEffectKindForSpellPostDamageRider(
-  rider: SpellPostDamageRider,
+  rider: SpellActiveEffectPostDamageRider,
 ): BattleActiveEffect["kind"] {
   return Match.value(rider).pipe(
     Match.when({ kind: "speedDelta" }, () => "speedDelta" as const),
@@ -538,7 +655,7 @@ export function activeEffectKindForSpellPostDamageRider(
 }
 
 export function spellPostDamageRiderReplacesActiveEffect(
-  rider: SpellPostDamageRider,
+  rider: SpellActiveEffectPostDamageRider,
   effect: BattleActiveEffect,
   spellId: SpellRecord["id"],
   actorId: CombatantId,
@@ -553,7 +670,7 @@ export function spellPostDamageRiderReplacesActiveEffect(
 }
 
 export function spellPostDamageRiderExpiration(
-  rider: SpellPostDamageRider,
+  rider: SpellActiveEffectPostDamageRider,
 ): SpellPostDamageRiderExpiration | undefined {
   return "expiresAt" in rider ? rider.expiresAt : undefined;
 }
@@ -563,7 +680,7 @@ export function spellPostDamageRiderActiveEffect(input: {
   readonly actorId: CombatantId;
   readonly target: BattleCreatureState;
   readonly spellId: SpellRecord["id"];
-  readonly rider: SpellPostDamageRider;
+  readonly rider: SpellActiveEffectPostDamageRider;
 }): BattleActiveEffect {
   const expiresAt = activeEffectExpirationForPostDamageRider(
     input.state,

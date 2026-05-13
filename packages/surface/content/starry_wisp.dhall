@@ -5,11 +5,11 @@
 -- battle-runtime spell invocation profile admits both combatant targets and a
 -- caller-supplied object-target branch with object identity, range fact,
 -- Armor Class, attack adjudication, and damage disposition.
--- DEFERRED RIDERS: "emits Dim Light in a 10-foot radius" and
---   "can't benefit from the Invisible condition until end of next turn"
---   → both require new atoms not in v4:
---     • emit_light (or grant_light_emission) — no such effect atom exists
---     • deny_condition_benefit (or suppress_invisible_benefit) — no such atom exists
+-- PROMOTED RIDER: "emits Dim Light in a 10-foot radius" is authored as a
+-- hit-applied Dim-only light emission for the shared battle-runtime emitter
+-- projection.
+-- DEFERRED RIDER: "can't benefit from the Invisible condition until end of
+-- next turn" remains a later runtime slice.
 -- Cantrip upgrade: 1d8 → 2d8 (L5) → 3d8 (L11) → 4d8 (L17).
 
 let starryWisp =
@@ -46,17 +46,36 @@ let starryWisp =
                 , attackKind = "ranged_spell_attack"
                 , onHit =
                     [ { kind = "damage"
-                      , damageType = "radiant"
+                      , damageType = Some "radiant"
                       , amount =
-                          { kind = "threshold_tiers"
-                          , axis = "character"
-                          , base = { dice = 1, dieSize = 8 }
-                          , tiers =
-                              [ { atLevel = 5, override = { dice = 2 } }
-                              , { atLevel = 11, override = { dice = 3 } }
-                              , { atLevel = 17, override = { dice = 4 } }
-                              ]
-                          }
+                          Some
+                            { kind = "threshold_tiers"
+                            , axis = "character"
+                            , base = { dice = 1, dieSize = 8 }
+                            , tiers =
+                                [ { atLevel = 5, override = { dice = 2 } }
+                                , { atLevel = 11, override = { dice = 3 } }
+                                , { atLevel = 17, override = { dice = 4 } }
+                                ]
+                            }
+                      , radiusFeet = None Natural
+                      , expiresAt = None Text
+                      }
+                    , { kind = "emit_dim_light"
+                      , damageType = None Text
+                      , amount =
+                          None
+                            { kind : Text
+                            , axis : Text
+                            , base : { dice : Natural, dieSize : Natural }
+                            , tiers :
+                                List
+                                  { atLevel : Natural
+                                  , override : { dice : Natural }
+                                  }
+                            }
+                      , radiusFeet = Some 10
+                      , expiresAt = Some "end_of_caster_next_turn"
                       }
                     ]
                 , onMiss = [ { kind = "none" } ]

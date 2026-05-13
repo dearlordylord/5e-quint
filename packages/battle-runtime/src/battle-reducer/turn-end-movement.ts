@@ -114,6 +114,7 @@ import { applyPreparedSlotSpellDamage } from "./spells-damage-fills.ts";
 import {
   applyCommandGrovelProneToTarget,
   applyGreaseProneToTarget,
+  expireBattleLightEmitters,
 } from "./spells-active-effects.ts";
 
 import {
@@ -250,6 +251,13 @@ export function resolveEndTurn(
     currentActorId(state),
     state.initiative.round,
   );
+  const lightEmittersAfterEndEffects = expireBattleLightEmitters(
+    state.lightEmitters,
+    (emitter) =>
+      emitter.expiresAt.kind === "endOfTurn" &&
+      emitter.expiresAt.combatantId === currentActorId(state) &&
+      emitter.expiresAt.round === state.initiative.round,
+  );
   const combatantsAfterStartOngoingFeatures = expireStartOfTurnOngoingFeatures(
     combatantsAfterEndEffects,
     nextActorId,
@@ -312,6 +320,7 @@ export function resolveEndTurn(
     ...state,
     initiative,
     combatants: combatantsAfterCommandHalt,
+    lightEmitters: lightEmittersAfterEndEffects,
     currentTurnResources,
     readiedSpells,
     readiedMovements,

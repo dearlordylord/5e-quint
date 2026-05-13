@@ -792,6 +792,7 @@
         "SRDINV29E",
         "SRDINV32B",
         "SRDINV34",
+        "SRDINV59A",
         "SRDINV51",
         "SRDINV52",
         "SRDINV64",
@@ -2308,7 +2309,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Promoted battle-runtime Quint facts for Starry Wisp's Radiant spell attack damage, empty active-effect rider subset, and cantrip slot behavior.",
+      "note": "Promoted battle-runtime Quint facts for Starry Wisp's creature-or-object target boundary, Radiant spell attack damage, object damage disposition, and cantrip slot behavior.",
       "profileIds": [
         "spell.invocation-damage-save-or-attack"
       ],
@@ -2316,11 +2317,27 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime admission and reducer tests for Starry Wisp's creature-or-object target boundary, caller-supplied object range/Armor Class/damage disposition facts, object hit/miss adjudication, and Radiant cantrip damage scaling with Dim Light and Invisible-denial riders deferred.",
+      "note": "Focused battle-runtime admission and reducer tests for Starry Wisp's creature-or-object target boundary, caller-supplied object range/Armor Class/damage disposition facts, object hit/miss adjudication, and Radiant cantrip damage scaling.",
       "profileIds": [
         "spell.invocation-damage-save-or-attack"
       ],
       "taskId": "SRDINV34"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Starry Wisp's hit-applied Dim Light source-owned emitter projection, object-target MBT parity state, and end-of-caster-next-turn expiry.",
+      "profileIds": [
+        "spell.invocation-damage-save-or-attack"
+      ],
+      "taskId": "SRDINV59A"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime reducer tests cover Starry Wisp hit-applied Dim Light emitters for combatant and object targets, miss non-application, snapshot projection, and expiry at the caster's next end turn; Invisible-benefit denial remains deferred to SRDINV59B.",
+      "profileIds": [
+        "spell.invocation-damage-save-or-attack"
+      ],
+      "taskId": "SRDINV59A"
     },
     {
       "claimKind": "qnt-proof",
@@ -4829,6 +4846,7 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
+            "SRDINV59A",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -5092,6 +5110,7 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
+            "SRDINV59A",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -5203,6 +5222,7 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
+            "SRDINV59A",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -5653,6 +5673,7 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
+            "SRDINV59A",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -6370,6 +6391,7 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
+            "SRDINV59A",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -6595,6 +6617,7 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
+            "SRDINV59A",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -6667,6 +6690,7 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
+            "SRDINV59A",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -6916,6 +6940,7 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
+            "SRDINV59A",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -7102,6 +7127,7 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
+            "SRDINV59A",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -7174,6 +7200,7 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
+            "SRDINV59A",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -7273,6 +7300,7 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
+            "SRDINV59A",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -7426,6 +7454,7 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
+            "SRDINV59A",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -7579,6 +7608,7 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
+            "SRDINV59A",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -7645,10 +7675,6 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "SRDINV59A",
-            "mechanic": "target emits Dim Light in a 10-foot radius until the end of the caster's next turn"
-          },
-          {
             "followUpTaskId": "SRDINV59B",
             "mechanic": "target can't benefit from the Invisible condition until the end of the caster's next turn"
           }
@@ -7663,7 +7689,8 @@
           "creature-or-object target boundary with combatant target choice or typed caller-supplied object identity",
           "caller-supplied object range, Armor Class, Hit Points or table-resolved damage disposition facts",
           "ranged spell attack hit/miss adjudication against combatant and object targets",
-          "Radiant damage and cantrip damage scaling"
+          "Radiant damage and cantrip damage scaling",
+          "target emits Dim Light in a 10-foot radius until the end of the caster's next turn through a source-owned light emitter projection"
         ],
         "tag": "profile-subset-supported"
       },
@@ -7672,7 +7699,7 @@
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
-          "taskId": "SRDINV34"
+          "taskId": "SRDINV59A"
         }
       ],
       "executableMechanics": true,
@@ -7693,6 +7720,7 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
+            "SRDINV59A",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -7765,6 +7793,7 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
+            "SRDINV59A",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -7918,6 +7947,7 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
+            "SRDINV59A",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -8017,6 +8047,7 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
+            "SRDINV59A",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -8522,6 +8553,7 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
+            "SRDINV59A",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -8827,6 +8859,7 @@
             "SRDINV29E",
             "SRDINV32B",
             "SRDINV34",
+            "SRDINV59A",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",

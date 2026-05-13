@@ -25,7 +25,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31F true_strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31B hunters_mark
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV32B produce_flame
-// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV34 starry_wisp
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV59A starry_wisp
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV38A sleep
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV50D2 command
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV39 eldritch_blast
@@ -5047,7 +5047,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     ).toBeUndefined();
   });
 
-  test("starry_wisp is admitted as creature-or-object ranged spell attack damage with visibility riders deferred", () => {
+  test("starry_wisp is admitted as creature-or-object ranged spell attack damage with Dim Light emitted on hit", () => {
     const unit = decodeUnitRecordSync(starryWispInput);
 
     expect(unit.kind).toBe("spell");
@@ -5108,7 +5108,13 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
           damageType: "radiant",
         },
         rangeFeet: 60,
-        postDamageRiders: [],
+        postDamageRiders: [
+          {
+            kind: "lightEmission",
+            emission: { kind: "dim", radiusFeet: movementFeet(10) },
+            expiresAt: "endOfCasterNextTurn",
+          },
+        ],
       }),
     );
   });

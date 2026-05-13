@@ -1128,9 +1128,39 @@ export function supportedSpellPostDamageRiders(
       });
       continue;
     }
+    if (
+      effect.kind === "emit_dim_light" &&
+      effect.radiusFeet === 10 &&
+      effect.expiresAt === "end_of_caster_next_turn" &&
+      isStarryWispDimLightRiderShape(spell, phase)
+    ) {
+      riders.push({
+        kind: "lightEmission",
+        emission: {
+          kind: "dim",
+          radiusFeet: movementFeet(effect.radiusFeet),
+        },
+        expiresAt: "endOfCasterNextTurn",
+      });
+      continue;
+    }
     return null;
   }
   return riders;
+}
+
+export function isStarryWispDimLightRiderShape(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
+): boolean {
+  return (
+    spell.name === "Starry Wisp" &&
+    spell.provenance.kind === "srd-5.2.1" &&
+    spell.provenance.section === "Spells/Descriptions-S-Z#Starry Wisp" &&
+    spell.mechanics.level === 0 &&
+    spell.mechanics.duration.kind === "instantaneous" &&
+    phase.attackKind === "ranged_spell_attack"
+  );
 }
 
 export function isChillTouchHitPointRegainPreventionRiderShape(

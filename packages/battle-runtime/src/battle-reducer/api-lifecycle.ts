@@ -143,6 +143,7 @@ export function startBattle(input: {
     battleId: input.battleId,
     initiative: initiative.right,
     combatants,
+    lightEmitters: [],
     hidePrerequisites: new Map(input.hidePrerequisites ?? []),
     currentTurnResources: INITIAL_TURN_RESOURCES,
     readiedSpells: new Map(),
@@ -242,6 +243,14 @@ export function removeBattleCombatants(input: {
       ...input.state,
       initiative: initiativeOption.value,
       combatants,
+      lightEmitters: input.state.lightEmitters.filter(
+        (emitter) =>
+          !removeIds.has(emitter.sourceCombatantId) &&
+          !(
+            emitter.attachment.kind === "combatant" &&
+            removeIds.has(emitter.attachment.combatantId)
+          ),
+      ),
       currentTurnResources: currentRemoved
         ? resetBattleTurnResources(input.state.currentTurnResources)
         : input.state.currentTurnResources,

@@ -846,6 +846,11 @@ type EffectAtom =
       readonly brightRadiusFeet: number;
       readonly dimAdditionalFeet?: number;
     }
+  | {
+      readonly kind: "emit_dim_light";
+      readonly radiusFeet: number;
+      readonly expiresAt: "end_of_caster_next_turn";
+    }
   | ({ readonly kind: "grant_feat" } & (
       | {
           readonly category:
@@ -2435,6 +2440,11 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         kind: Schema.Literal("emit_light"),
         brightRadiusFeet: Schema.Number,
         dimAdditionalFeet: optionalExact(Schema.Number),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("emit_dim_light"),
+        radiusFeet: Schema.Number,
+        expiresAt: Schema.Literal("end_of_caster_next_turn"),
       }),
       Schema.Struct({
         kind: Schema.Literal("composite"),

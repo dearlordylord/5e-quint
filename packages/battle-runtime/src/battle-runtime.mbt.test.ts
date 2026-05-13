@@ -54,6 +54,7 @@ import {
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
+  type BattleLightEmitter,
   type BattleResolutionResult,
   type BattleState,
   type BattleSubject,
@@ -144,11 +145,56 @@ type ObjectDamageMbtProjection =
       readonly nextHitPoints: number;
       readonly destroyed: boolean;
     };
+type LightEmitterAttachmentMbtProjection =
+  | {
+      readonly kind: "combatant";
+      readonly combatantId: string;
+    }
+  | {
+      readonly kind: "object";
+      readonly objectId: string;
+    };
+type LightEmissionMbtProjection =
+  | {
+      readonly kind: "dim";
+      readonly radiusFeet: number;
+    }
+  | {
+      readonly kind: "brightAndDim";
+      readonly brightRadiusFeet: number;
+      readonly dimAdditionalFeet: number;
+    };
+type LightEmitterExpirationMbtProjection =
+  | {
+      readonly kind: "startOfTurn";
+      readonly combatantId: string;
+    }
+  | {
+      readonly kind: "endOfTurn";
+      readonly combatantId: string;
+      readonly round: number;
+    }
+  | {
+      readonly kind: "concentration";
+      readonly combatantId: string;
+    }
+  | {
+      readonly kind: "duration";
+      readonly durationTicks: number;
+    };
+type LightEmitterMbtProjection = {
+  readonly sourceSpellId: string;
+  readonly sourceCombatantId: string;
+  readonly attachment: LightEmitterAttachmentMbtProjection;
+  readonly emission: LightEmissionMbtProjection;
+  readonly expiresAt: LightEmitterExpirationMbtProjection;
+};
 
 type StarryWispObjectMbtProjection = {
   readonly actionAvailable: boolean;
   readonly holes: readonly MbtHole[];
   readonly objectDamage: ObjectDamageMbtProjection;
+  readonly lightEmitters: readonly LightEmitterMbtProjection[];
   readonly lastResult: MbtLastResult;
   readonly lastInvalidReason: MbtLastInvalidReason;
 };
@@ -1199,6 +1245,7 @@ function normalizeStarryWispObjectQuintState(
     actionAvailable: booleanField(state, "qActionAvailable"),
     holes: quintHoleSet(state["qHoles"]).map(holeName).sort(),
     objectDamage: objectDamageFromQuint(state["qObjectDamage"]),
+    lightEmitters: lightEmittersFromQuint(state["qLightEmitters"]),
     lastResult: mbtLastResult(state["qLastResult"]),
     lastInvalidReason: mbtLastInvalidReason(state["qLastInvalidReason"]),
   };
@@ -1631,6 +1678,9 @@ function projectStarryWispObjectMbtState(input: {
     ),
     holes: input.holes.map(projectHole).sort(),
     objectDamage: input.objectDamage,
+    lightEmitters: snapshot.lightEmitters
+      .map(projectLightEmitter)
+      .sort(compareJsonStable),
     lastResult: input.lastResult,
     lastInvalidReason: input.lastInvalidReason,
   };
@@ -2765,6 +2815,76 @@ function projectObjectDamage(
   throw new Error("Starry Wisp object MBT expected hit point object damage.");
 }
 
+function projectLightEmitter(
+  emitter: BattleLightEmitter,
+): LightEmitterMbtProjection {
+  return {
+    sourceSpellId: emitter.sourceSpellId,
+    sourceCombatantId: emitter.sourceCombatantId,
+    attachment: projectLightEmitterAttachment(emitter.attachment),
+    emission: projectLightEmission(emitter.emission),
+    expiresAt: projectLightEmitterExpiration(emitter.expiresAt),
+  };
+}
+
+function projectLightEmitterAttachment(
+  attachment: BattleLightEmitter["attachment"],
+): LightEmitterAttachmentMbtProjection {
+  return Match.value(attachment).pipe(
+    Match.when({ kind: "combatant" }, (combatant) => ({
+      kind: "combatant" as const,
+      combatantId: combatant.combatantId,
+    })),
+    Match.when({ kind: "object" }, (object) => ({
+      kind: "object" as const,
+      objectId: object.objectId,
+    })),
+    Match.exhaustive,
+  );
+}
+
+function projectLightEmission(
+  emission: BattleLightEmitter["emission"],
+): LightEmissionMbtProjection {
+  return Match.value(emission).pipe(
+    Match.when({ kind: "dim" }, (dim) => ({
+      kind: "dim" as const,
+      radiusFeet: Number(dim.radiusFeet),
+    })),
+    Match.when({ kind: "brightAndDim" }, (brightAndDim) => ({
+      kind: "brightAndDim" as const,
+      brightRadiusFeet: Number(brightAndDim.brightRadiusFeet),
+      dimAdditionalFeet: Number(brightAndDim.dimAdditionalFeet),
+    })),
+    Match.exhaustive,
+  );
+}
+
+function projectLightEmitterExpiration(
+  expiration: BattleLightEmitter["expiresAt"],
+): LightEmitterExpirationMbtProjection {
+  return Match.value(expiration).pipe(
+    Match.when({ kind: "startOfTurn" }, (startOfTurn) => ({
+      kind: "startOfTurn" as const,
+      combatantId: startOfTurn.combatantId,
+    })),
+    Match.when({ kind: "endOfTurn" }, (endOfTurn) => ({
+      kind: "endOfTurn" as const,
+      combatantId: endOfTurn.combatantId,
+      round: Number(endOfTurn.round),
+    })),
+    Match.when({ kind: "concentration" }, (concentration) => ({
+      kind: "concentration" as const,
+      combatantId: concentration.combatantId,
+    })),
+    Match.when({ kind: "duration" }, (duration) => ({
+      kind: "duration" as const,
+      durationTicks: Number(duration.durationTicks),
+    })),
+    Match.exhaustive,
+  );
+}
+
 function objectDamageFromQuint(raw: unknown): ObjectDamageMbtProjection {
   const tag = quintVariantTag(raw);
   if (tag === "NoObjectDamage") {
@@ -2789,6 +2909,119 @@ function objectDamageFromQuint(raw: unknown): ObjectDamageMbtProjection {
     nextHitPoints: numberFromQuintInt(fields["nextHitPoints"], "nextHitPoints"),
     destroyed: booleanField(fields, "destroyed"),
   };
+}
+
+function lightEmittersFromQuint(
+  raw: unknown,
+): readonly LightEmitterMbtProjection[] {
+  return quintSet(raw, "qLightEmitters")
+    .map(lightEmitterFromQuint)
+    .sort(compareJsonStable);
+}
+
+function lightEmitterFromQuint(raw: unknown): LightEmitterMbtProjection {
+  const tag = quintVariantTag(raw);
+  if (tag !== "SpellLightEmitter") {
+    throw new Error(`Unknown Quint light emitter variant: ${tag}`);
+  }
+  const fields = quintVariantRecordValue(raw, "SpellLightEmitter");
+  return {
+    sourceSpellId: spellIdFromQuint(fields["sourceSpell"], "sourceSpell"),
+    sourceCombatantId: actorIdFromQuint(fields["source"], "source"),
+    attachment: lightEmitterAttachmentFromQuint(fields["attachment"]),
+    emission: lightEmissionFromQuint(fields["emission"]),
+    expiresAt: {
+      kind: "endOfTurn",
+      combatantId: actorIdFromQuint(
+        fields["expiresAtActor"],
+        "expiresAtActor",
+      ),
+      round: numberFromQuintInt(fields["expiresAtRound"], "expiresAtRound"),
+    },
+  };
+}
+
+function lightEmitterAttachmentFromQuint(
+  raw: unknown,
+): LightEmitterAttachmentMbtProjection {
+  const tag = quintVariantTag(raw);
+  if (tag === "CombatantLightEmitter") {
+    const fields = quintVariantRecordValue(raw, "CombatantLightEmitter");
+    return {
+      kind: "combatant",
+      combatantId: actorIdFromQuint(fields["actor"], "actor"),
+    };
+  }
+  if (tag === "ObjectLightEmitter") {
+    const fields = quintVariantRecordValue(raw, "ObjectLightEmitter");
+    return {
+      kind: "object",
+      objectId: objectIdFromQuint(fields["object"], "object"),
+    };
+  }
+
+  throw new Error(`Unknown Quint light emitter attachment variant: ${tag}`);
+}
+
+function lightEmissionFromQuint(raw: unknown): LightEmissionMbtProjection {
+  const tag = quintVariantTag(raw);
+  if (tag === "DimLightEmission") {
+    const fields = quintVariantRecordValue(raw, "DimLightEmission");
+    return {
+      kind: "dim",
+      radiusFeet: numberFromQuintInt(fields["radiusFeet"], "radiusFeet"),
+    };
+  }
+  if (tag === "BrightAndDimLightEmission") {
+    const fields = quintVariantRecordValue(raw, "BrightAndDimLightEmission");
+    return {
+      kind: "brightAndDim",
+      brightRadiusFeet: numberFromQuintInt(
+        fields["brightRadiusFeet"],
+        "brightRadiusFeet",
+      ),
+      dimAdditionalFeet: numberFromQuintInt(
+        fields["dimAdditionalFeet"],
+        "dimAdditionalFeet",
+      ),
+    };
+  }
+
+  throw new Error(`Unknown Quint light emission variant: ${tag}`);
+}
+
+function actorIdFromQuint(raw: unknown, field: string): string {
+  const tag = quintVariantTag(raw);
+  if (tag === "Fighter") {
+    return fighterId;
+  }
+  if (tag === "Goblin") {
+    return skeletonId;
+  }
+
+  throw new Error(`Unknown Quint actor field ${field}: ${tag}`);
+}
+
+function spellIdFromQuint(raw: unknown, field: string): string {
+  const tag = quintVariantTag(raw);
+  if (tag === "StarryWisp") {
+    return "starry_wisp";
+  }
+
+  throw new Error(`Unknown Quint spell field ${field}: ${tag}`);
+}
+
+function objectIdFromQuint(raw: unknown, field: string): string {
+  const tag = quintVariantTag(raw);
+  if (tag === "StarryWispObjectTarget") {
+    return starryWispObjectId;
+  }
+
+  throw new Error(`Unknown Quint object field ${field}: ${tag}`);
+}
+
+function compareJsonStable(left: unknown, right: unknown): number {
+  return JSON.stringify(left).localeCompare(JSON.stringify(right));
 }
 
 function projectHole(hole: BattleHole): MbtHole {
@@ -2953,11 +3186,15 @@ function booleanField(
 }
 
 function quintHoleSet(raw: unknown): readonly unknown[] {
+  return quintSet(raw, "qHoles");
+}
+
+function quintSet(raw: unknown, field: string): readonly unknown[] {
   if (raw instanceof Set) {
     return [...raw];
   }
 
-  throw new Error("Expected Quint qHoles field to be a Set.");
+  throw new Error(`Expected Quint ${field} field to be a Set.`);
 }
 
 function mbtLastResult(raw: unknown): MbtLastResult {

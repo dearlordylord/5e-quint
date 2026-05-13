@@ -1495,6 +1495,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "emit_dim_light": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "emit_dim_light",
+        label: `emit_dim_light\nradius: ${e.radiusFeet} ft`,
+      });
+      return id;
+    }
     case "block_reanimation": {
       const id = ids("eff");
       nodes.push({
@@ -2260,6 +2270,7 @@ function traceEffectAtomScaling(
     case "natural_weapons":
     case "water_breathing":
     case "emit_light":
+    case "emit_dim_light":
     case "block_reanimation":
     case "ignite_objects":
     case "create_object":
