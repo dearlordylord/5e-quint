@@ -124,25 +124,26 @@ export function battleLightEmitters(
 ): readonly BattleLightEmitter[] {
   const heldLightEmitters = [...state.combatants.values()].flatMap(
     (combatant): readonly BattleLightEmitter[] =>
-      combatant.activeEffects.flatMap((effect): readonly BattleLightEmitter[] =>
-        effect.kind === "heldLight"
-          ? [
-              {
-                sourceSpellId: effect.sourceSpellId,
-                sourceCombatantId: effect.sourceCombatantId,
-                attachment: {
-                  kind: "combatant",
-                  combatantId: combatant.combatantId,
+      combatant.activeEffects.flatMap(
+        (effect): readonly BattleLightEmitter[] =>
+          effect.kind === "heldLight"
+            ? [
+                {
+                  sourceSpellId: effect.sourceSpellId,
+                  sourceCombatantId: effect.sourceCombatantId,
+                  attachment: {
+                    kind: "combatant",
+                    combatantId: combatant.combatantId,
+                  },
+                  emission: {
+                    kind: "brightAndDim",
+                    brightRadiusFeet: effect.brightRadiusFeet,
+                    dimAdditionalFeet: effect.dimAdditionalFeet,
+                  },
+                  expiresAt: effect.expiresAt,
                 },
-                emission: {
-                  kind: "brightAndDim",
-                  brightRadiusFeet: effect.brightRadiusFeet,
-                  dimAdditionalFeet: effect.dimAdditionalFeet,
-                },
-                expiresAt: effect.expiresAt,
-              },
-            ]
-          : [],
+              ]
+            : [],
       ),
   );
   return [...state.lightEmitters, ...heldLightEmitters];
@@ -690,6 +691,7 @@ export function spellPostDamageRiderReplacesActiveEffect(
 ): boolean {
   if (
     effect.kind !== activeEffectKindForSpellPostDamageRider(rider) ||
+    !("sourceSpellId" in effect) ||
     effect.sourceSpellId !== spellId
   ) {
     return false;

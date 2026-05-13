@@ -7,148 +7,98 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
 import {
-grantUnitActionResource,
-spendActivationResource
+  grantUnitActionResource,
+  spendActivationResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
 
+import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 
+import { validateRolledDiceForDiceExpr } from "@dnd/shared-algebras/runtime-dice-algebra";
 
-
-
-
+import type { HoleInstanceKey } from "@dnd/shared-algebras/runtime-hole-algebra";
 
 import {
-validateRolledDiceForDiceExpr
-} from "@dnd/shared-algebras/runtime-dice-algebra";
-
-import type {
-HoleInstanceKey
+  holeId,
+  holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 
-import {
-holeId,
-holeInstanceKey
-} from "@dnd/shared-algebras/runtime-hole-algebra";
+import { MovementFeet } from "@dnd/shared/types";
 
-
-import {
-MovementFeet
-} from "@dnd/shared/types";
-
-
-import type {
-UnitRecord
-} from "@dnd/surface/surface/types";
-
-
-
+import type { UnitRecord } from "@dnd/surface/surface/types";
 
 import * as Either from "effect/Either";
 
-
-
-
-
-
 import {
-resourceHasUsesRemaining,
-spendCharacterResourceUse,
-type CharacterBattleResourceState
+  resourceHasUsesRemaining,
+  spendCharacterResourceUse,
+  type CharacterBattleResourceState,
 } from "../character-battle-resources.ts";
 
 import type { CharacterBattleClassLevel } from "../character-class-level.ts";
 
+import { CombatantId } from "../identity.ts";
 
 import {
-CombatantId
-} from "../identity.ts";
-
-import {
-parseSupportedUnitFeatureProfile,
-type SupportedUnitFeatureProfile
+  parseSupportedUnitFeatureProfile,
+  type SupportedUnitFeatureProfile,
 } from "../unit-feature-support.ts";
 
-
-
-
-
 import {
-combatantCanSee,
-combatantWearingArmorCategory
+  combatantCanSee,
+  combatantWearingArmorCategory,
 } from "./creature-state-leaves.ts";
 
 import {
-activeOngoingFeatureOccurrencesForCombatant,
-combatantCanTakeActions,
-combatantCanTakeReactions,
-isCharacterBattleCreatureState,
-ongoingFeatureSourceKeyForUnit,
-statBlockLegendaryActionWindowIsOpen
+  activeOngoingFeatureOccurrencesForCombatant,
+  combatantCanTakeActions,
+  combatantCanTakeReactions,
+  isCharacterBattleCreatureState,
+  ongoingFeatureSourceKeyForUnit,
+  statBlockLegendaryActionWindowIsOpen,
 } from "./creature-state.ts";
 
-import {
-applyHpHealing,
-breakBattleConcentration
-} from "./damage-apply.ts";
+import { applyHpHealing, breakBattleConcentration } from "./damage-apply.ts";
 
-
-import { snapshotBattle,spendReaction } from "./dispatcher.ts";
+import { snapshotBattle, spendReaction } from "./dispatcher.ts";
 import {
-reactionModifierResourceAvailable,
-reactionReductionResourceDieRollTotal,
-spendReactionModifierResource
+  reactionModifierResourceAvailable,
+  reactionReductionResourceDieRollTotal,
+  spendReactionModifierResource,
 } from "./reaction-modifiers.ts";
 
+import { attackActionOptionsForActor } from "./attack-damage-apply.ts";
 
-
-import {
-attackActionOptionsForActor
-} from "./attack-damage-apply.ts";
+import { needsHolesResult } from "./hole-helpers.ts";
 
 import {
-needsHolesResult
-} from "./hole-helpers.ts";
-
-
-import {
-activeOngoingFeatureOccurrenceFromProfile,
-extendOngoingFeatureToEndOfNextTurn,
-ongoingFeatureLifecycleHasExtensionTrigger,
+  activeOngoingFeatureOccurrenceFromProfile,
+  extendOngoingFeatureToEndOfNextTurn,
+  ongoingFeatureLifecycleHasExtensionTrigger,
 } from "./ongoing-feature-helpers.ts";
 
 import { invalidResult } from "./result-helpers.ts";
 
-import {
-attackActionOptionName
-} from "./statblock-attacks.ts";
+import { attackActionOptionName } from "./statblock-attacks.ts";
 
-import {
-attackTargetHole
-} from "./hole-helpers.ts";
-
-
-
-
-
-
-
+import { attackTargetHole } from "./hole-helpers.ts";
 
 import type {
-AvailableBattleAct,
-BattleCreatureState,
-BattleFill,
-BattleHoleId,
-BattleResolutionResult,
-BattleState,
-BattleTargetSpatialFact,
-BattleUnitFeatureRollHole,
-CharacterBattleCreatureState,
-FailedAbilityCheckResourceBoostResolutionInput,
-FailedAbilityCheckResourceBoostResolutionResult,
-SuccessfulAbilityCheckReactionReductionResolutionInput,
-SuccessfulAbilityCheckReactionReductionResolutionResult,
-UnitFeatureBattleResolutionInput,
-UnitFeatureRolledDiceFill,
+  AvailableBattleAct,
+  BattleCreatureState,
+  BattleFill,
+  BattleHoleId,
+  BattleResolutionResult,
+  BattleState,
+  BattleTargetChoiceHole,
+  BattleTargetSpatialFact,
+  BattleUnitFeatureRollHole,
+  CharacterBattleCreatureState,
+  FailedAbilityCheckResourceBoostResolutionInput,
+  FailedAbilityCheckResourceBoostResolutionResult,
+  SuccessfulAbilityCheckReactionReductionResolutionInput,
+  SuccessfulAbilityCheckReactionReductionResolutionResult,
+  UnitFeatureBattleResolutionInput,
+  UnitFeatureRolledDiceFill,
 } from "../battle-reducer.ts";
 export function supportedUnitFeatureActs(
   state: BattleState,
@@ -163,7 +113,7 @@ export function supportedUnitFeatureActs(
   }
 
   const classLevels = actor.origin.classLevels;
-  return actor.origin.resources.flatMap((resource) => {
+  return actor.origin.resources.flatMap<AvailableBattleAct>((resource) => {
     const unitFeature = supportedUnitFeatureProfileForResource(
       actor,
       resource,
@@ -207,6 +157,29 @@ export function supportedUnitFeatureActs(
       ];
     }
 
+    if (
+      unitFeature?.kind === "bardicInspirationGrant" &&
+      resourceHasUsesRemaining(resource) &&
+      state.currentTurnResources.currentHasBonusAction &&
+      bardicInspirationGrantTargetChoices(state, actorId).length > 0
+    ) {
+      return [
+        {
+          subject: {
+            tag: "unitFeature" as const,
+            actorId,
+            unitId: unitFeature.unit.id,
+          },
+          label: unitFeature.unit.name,
+          summary:
+            "Spend a Bonus Action and one use to grant one Bardic Inspiration die.",
+          initialHoles: [
+            bardicInspirationGrantTargetHole(state, actorId, unitFeature),
+          ],
+        },
+      ];
+    }
+
     return unitFeature?.kind === "selfBonusActionHealing" &&
       resourceHasUsesRemaining(resource) &&
       state.currentTurnResources.currentHasBonusAction
@@ -226,9 +199,6 @@ export function supportedUnitFeatureActs(
   });
 }
 
-
-
-
 export function supportedUnitFeatureProfileForResource(
   actor: CharacterBattleCreatureState,
   resource: CharacterBattleResourceState,
@@ -241,9 +211,7 @@ export function supportedUnitFeatureProfileForResource(
   );
 }
 
-export 
-
-function resolveUnitFeature(
+export function resolveUnitFeature(
   input: UnitFeatureBattleResolutionInput,
 ): BattleResolutionResult {
   const subject = input.subject;
@@ -283,6 +251,14 @@ function resolveUnitFeature(
           unitFeature,
         );
       }
+      if (unitFeature?.kind === "bardicInspirationGrant") {
+        return resolveBardicInspirationGrantUnitFeature(
+          input,
+          actor,
+          resource,
+          unitFeature,
+        );
+      }
     }
   }
 
@@ -301,7 +277,316 @@ function resolveUnitFeature(
   );
 }
 
+export function resolveBardicInspirationGrantUnitFeature(
+  input: UnitFeatureBattleResolutionInput,
+  actor: CharacterBattleCreatureState,
+  resource: CharacterBattleResourceState,
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "bardicInspirationGrant" }
+  >,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
+  if (
+    !resourceHasUsesRemaining(resource) ||
+    !input.state.currentTurnResources.currentHasBonusAction
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Bardic Inspiration is no longer available for the current actor.",
+    );
+  }
 
+  const targetFill = bardicInspirationGrantTargetFill(input.fills, unitFeature);
+  if (targetFill.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", targetFill.message);
+  }
+  if (targetFill.value === undefined) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Bardic Inspiration requires a target creature.",
+    );
+  }
+
+  const target = input.state.combatants.get(targetFill.value.value);
+  if (target === undefined || target.combatantId === input.subject.actorId) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Bardic Inspiration target must be another creature in this battle.",
+    );
+  }
+  if (
+    target.activeEffects.some(
+      (effect) => effect.kind === "bardicInspirationDie",
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Bardic Inspiration target already has a Bardic Inspiration die.",
+    );
+  }
+  if (!bardicInspirationTargetCanPerceiveSurroundings(target)) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Bardic Inspiration target must be able to see or hear the Bard.",
+    );
+  }
+  if (
+    !bardicInspirationGrantTargetChoices(
+      input.state,
+      input.subject.actorId,
+    ).includes(target.combatantId)
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Bardic Inspiration target must be another creature in this battle.",
+    );
+  }
+  if (
+    !hasBardicInspirationRangeFact(
+      targetFill.value.spatialFacts ?? [],
+      input.subject.actorId,
+      target.combatantId,
+      unitFeature,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Bardic Inspiration target must be within 60 feet.",
+    );
+  }
+  if (
+    !bardicInspirationTargetCanSeeOrHear(
+      input.state,
+      input.subject.actorId,
+      target,
+      targetFill.value.spatialFacts ?? [],
+      unitFeature,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Bardic Inspiration target must be able to see or hear the Bard.",
+    );
+  }
+
+  const spent = spendActivationResource(input.state.currentTurnResources, {
+    kind: "bonusAction",
+  });
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Bardic Inspiration is no longer available for the current actor.",
+    );
+  }
+
+  const nextActor: BattleCreatureState = {
+    ...actor,
+    origin: {
+      ...actor.origin,
+      resources: actor.origin.resources.map((candidate) =>
+        candidate.unit.id === unitFeature.spends.resourceUnitId
+          ? spendCharacterResourceUse(candidate)
+          : candidate,
+      ),
+    },
+  };
+  const nextTarget: BattleCreatureState = {
+    ...target,
+    activeEffects: [
+      ...target.activeEffects,
+      {
+        kind: "bardicInspirationDie",
+        sourceUnitId: unitFeature.unit.id,
+        sourceCombatantId: input.subject.actorId,
+        dieSize: unitFeature.dieSize,
+        expiresAt: {
+          kind: "duration",
+          durationTicks: unitFeature.durationTicks,
+        },
+      },
+    ],
+  };
+  const combatants = new Map(input.state.combatants)
+    .set(input.subject.actorId, nextActor)
+    .set(target.combatantId, nextTarget);
+  const nextState = {
+    ...input.state,
+    combatants,
+    currentTurnResources: spent.right,
+  };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function bardicInspirationGrantTargetChoices(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly CombatantId[] {
+  return [...state.combatants]
+    .filter(
+      ([id, combatant]) =>
+        id !== actorId &&
+        !combatantHasBardicInspirationDie(combatant) &&
+        bardicInspirationTargetCanPerceiveSurroundings(combatant),
+    )
+    .map(([id]) => id);
+}
+
+function bardicInspirationTargetCanPerceiveSurroundings(
+  combatant: BattleCreatureState,
+): boolean {
+  return !hasCondition(combatant.conditions, "unconscious");
+}
+
+function combatantHasBardicInspirationDie(
+  combatant: BattleCreatureState,
+): boolean {
+  return combatant.activeEffects.some(
+    (effect) => effect.kind === "bardicInspirationDie",
+  );
+}
+
+function bardicInspirationGrantTargetFill(
+  fills: readonly BattleFill[],
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "bardicInspirationGrant" }
+  >,
+):
+  | {
+      readonly tag: "ok";
+      readonly value:
+        | Extract<BattleFill, { readonly kind: "targetChoice" }>
+        | undefined;
+    }
+  | { readonly tag: "invalid"; readonly message: string } {
+  let target:
+    | Extract<BattleFill, { readonly kind: "targetChoice" }>
+    | undefined;
+  for (const fill of fills) {
+    if (
+      fill.kind === "targetChoice" &&
+      fill.holeId === bardicInspirationGrantTargetHoleId(unitFeature)
+    ) {
+      if (target !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Bardic Inspiration target was filled twice.",
+        };
+      }
+      target = fill;
+      continue;
+    }
+    return {
+      tag: "invalid",
+      message: `Fill ${fill.kind} does not match the Bardic Inspiration replay holes.`,
+    };
+  }
+  return { tag: "ok", value: target };
+}
+
+function bardicInspirationGrantTargetHole(
+  state: BattleState,
+  actorId: CombatantId,
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "bardicInspirationGrant" }
+  >,
+): BattleTargetChoiceHole {
+  return {
+    kind: "targetChoice",
+    holeId: bardicInspirationGrantTargetHoleId(unitFeature),
+    holeInstanceKey: bardicInspirationGrantTargetHoleInstanceKey(unitFeature),
+    label: `${unitFeature.unit.name} target`,
+    requiresTableSpatialFact: true,
+    choices: bardicInspirationGrantTargetChoices(state, actorId),
+  };
+}
+
+function bardicInspirationGrantTargetHoleId(
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "bardicInspirationGrant" }
+  >,
+): BattleHoleId {
+  return holeId(bardicInspirationGrantTargetProtocolId(unitFeature));
+}
+
+function bardicInspirationGrantTargetHoleInstanceKey(
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "bardicInspirationGrant" }
+  >,
+): HoleInstanceKey {
+  return holeInstanceKey(bardicInspirationGrantTargetProtocolId(unitFeature));
+}
+
+function bardicInspirationGrantTargetProtocolId(
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "bardicInspirationGrant" }
+  >,
+): string {
+  return `battle:unit-feature:${unitFeature.unit.id}:target`;
+}
+
+function hasBardicInspirationRangeFact(
+  facts: readonly BattleTargetSpatialFact[],
+  bardId: CombatantId,
+  targetId: CombatantId,
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "bardicInspirationGrant" }
+  >,
+): boolean {
+  return facts.some(
+    (fact) =>
+      fact.kind === "bardicInspirationTargetWithinRange" &&
+      fact.bardId === bardId &&
+      fact.targetId === targetId &&
+      fact.unitId === unitFeature.unit.id &&
+      fact.rangeFeet === unitFeature.rangeFeet,
+  );
+}
+
+function bardicInspirationTargetCanSeeOrHear(
+  state: BattleState,
+  bardId: CombatantId,
+  target: BattleCreatureState,
+  facts: readonly BattleTargetSpatialFact[],
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "bardicInspirationGrant" }
+  >,
+): boolean {
+  if (!bardicInspirationTargetCanPerceiveSurroundings(target)) {
+    return false;
+  }
+  return (
+    (!hasCondition(target.conditions, "blinded") &&
+      combatantCanSee(state, target.combatantId, bardId)) ||
+    (!hasCondition(target.conditions, "deafened") &&
+      facts.some(
+        (fact) =>
+          fact.kind === "bardicInspirationTargetCanHear" &&
+          fact.bardId === bardId &&
+          fact.targetId === target.combatantId &&
+          fact.unitId === unitFeature.unit.id,
+      ))
+  );
+}
 
 export function resolveFailedAbilityCheckResourceBoost(
   input: FailedAbilityCheckResourceBoostResolutionInput,
@@ -385,8 +670,6 @@ export function resolveFailedAbilityCheckResourceBoost(
     },
   };
 }
-
-
 
 export function resolveSuccessfulAbilityCheckReactionReduction(
   input: SuccessfulAbilityCheckReactionReductionResolutionInput,
@@ -502,8 +785,6 @@ export function resolveSuccessfulAbilityCheckReactionReduction(
   };
 }
 
-
-
 export function hasReactionRollOrDamageReductionRangeFact(
   facts: readonly BattleTargetSpatialFact[],
   reactorId: CombatantId,
@@ -520,8 +801,6 @@ export function hasReactionRollOrDamageReductionRangeFact(
       fact.rangeFeet === rangeFeet,
   );
 }
-
-
 
 export function resolveExtraActionGrantUnitFeature(
   input: UnitFeatureBattleResolutionInput,
@@ -590,8 +869,6 @@ export function resolveExtraActionGrantUnitFeature(
     snapshot: snapshotBattle(nextState),
   };
 }
-
-
 
 export function resolveSelfBonusActionHealingUnitFeature(
   input: UnitFeatureBattleResolutionInput,
@@ -663,8 +940,6 @@ export function resolveSelfBonusActionHealingUnitFeature(
   };
 }
 
-
-
 export function ongoingFeatureIsAvailable(
   state: BattleState,
   actor: BattleCreatureState,
@@ -699,8 +974,6 @@ export function ongoingFeatureIsAvailable(
     combatantWearingArmorCategory(actor, category),
   );
 }
-
-
 
 export function resolveOngoingFeatureUnitFeature(
   input: UnitFeatureBattleResolutionInput,
@@ -797,8 +1070,6 @@ export function resolveOngoingFeatureUnitFeature(
   };
 }
 
-
-
 export function selfBonusActionHealingRollFill(
   fills: readonly BattleFill[],
   unitFeature: Extract<
@@ -843,8 +1114,6 @@ export function selfBonusActionHealingRollFill(
     : { tag: "invalid", message: validation.reason };
 }
 
-
-
 export function selfBonusActionHealingRollHole(
   unitFeature: Extract<
     SupportedUnitFeatureProfile,
@@ -860,8 +1129,6 @@ export function selfBonusActionHealingRollHole(
   };
 }
 
-
-
 export function selfBonusActionHealingStaleMessage(
   unitFeature: Extract<
     SupportedUnitFeatureProfile,
@@ -870,8 +1137,6 @@ export function selfBonusActionHealingStaleMessage(
 ): string {
   return `${unitFeature.unit.name} is no longer available for the current actor.`;
 }
-
-
 
 export function selfBonusActionHealingRollProtocolId(
   unitFeature: Extract<
@@ -882,8 +1147,6 @@ export function selfBonusActionHealingRollProtocolId(
   return `battle:unit-feature:${unitFeature.unit.id}:healing-roll`;
 }
 
-
-
 export function selfBonusActionHealingRollHoleId(
   unitFeature: Extract<
     SupportedUnitFeatureProfile,
@@ -893,8 +1156,6 @@ export function selfBonusActionHealingRollHoleId(
   return holeId(selfBonusActionHealingRollProtocolId(unitFeature));
 }
 
-
-
 export function selfBonusActionHealingRollHoleInstanceKey(
   unitFeature: Extract<
     SupportedUnitFeatureProfile,
@@ -903,8 +1164,6 @@ export function selfBonusActionHealingRollHoleInstanceKey(
 ): HoleInstanceKey {
   return holeInstanceKey(selfBonusActionHealingRollProtocolId(unitFeature));
 }
-
-
 
 export function selfBonusActionHealingAmount(
   unitFeature: Extract<
@@ -929,7 +1188,6 @@ export function selfBonusActionHealingAmount(
       unitFeature.flatPerLevel
   );
 }
-
 
 export function discoverLegendaryActionActs(
   state: BattleState,

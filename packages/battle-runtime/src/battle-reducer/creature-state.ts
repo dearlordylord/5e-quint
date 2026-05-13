@@ -46,6 +46,7 @@ import type {
   CharacterBattleCreatureInit,
 } from "../battle-init.ts";
 import {
+  characterBattleResourceInitIssue,
   characterBattleResourceUsage,
   characterResourceState,
   characterSpellcastingState,
@@ -600,6 +601,22 @@ export function positiveHpUnconsciousInitIssue(
     return battleStateInitIssue(
       "Knocked Out Unconscious initialization requires the Unconscious condition.",
     );
+  }
+  return null;
+}
+
+export function characterResourceInitIssue(
+  input: BattleCreatureInit,
+): Either.Either<never, BattleStateInitIssue> | null {
+  const creatureInit = input.creatureInit;
+  if (creatureInit.kind !== "character") {
+    return null;
+  }
+  for (const resource of creatureInit.resources ?? []) {
+    const issue = characterBattleResourceInitIssue(resource);
+    if (issue !== null) {
+      return battleStateInitIssue(issue);
+    }
   }
   return null;
 }

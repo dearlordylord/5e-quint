@@ -57,6 +57,7 @@ normalizeBattleGrapples
 import {
 battleCreatureStateFromInit,
 combatantInitiativeInsertionIndex,
+characterResourceInitIssue,
 hidePrerequisitesReferenceCombatantsIssue,
 positiveHpUnconsciousInitIssue
 } from "./creature-state.ts";
@@ -105,6 +106,10 @@ export function startBattle(input: {
       positiveHpUnconsciousInitIssue(combatant);
     if (positiveHpUnconsciousIssue !== null) {
       return positiveHpUnconsciousIssue;
+    }
+    const characterResourceIssue = characterResourceInitIssue(combatant);
+    if (characterResourceIssue !== null) {
+      return characterResourceIssue;
     }
     combatants.set(
       combatant.combatantId,
@@ -172,6 +177,10 @@ export function addBattleCombatant(input: {
   );
   if (positiveHpUnconsciousIssue !== null) {
     return positiveHpUnconsciousIssue;
+  }
+  const characterResourceIssue = characterResourceInitIssue(input.combatant);
+  if (characterResourceIssue !== null) {
+    return characterResourceIssue;
   }
   const nextCombatants = new Map(input.state.combatants).set(
     input.combatant.combatantId,

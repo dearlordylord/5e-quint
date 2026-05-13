@@ -1,6 +1,7 @@
 import {
   battleCreatureInitFromStatBlock,
   characterBattleResourceSupportedForUnit,
+  scoreModifier,
   startBattle,
   type CharacterBattleFeatureInit,
   type CharacterBattleResourceInit,
@@ -26,7 +27,13 @@ import {
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
 import type { CharacterSheetArmorClassBaseChoice } from "@dnd/character-sheet-runtime";
-import { Hp, movementFeet, type Condition } from "@dnd/shared/types";
+import {
+  Hp,
+  abilityModifier,
+  movementFeet,
+  type Condition,
+} from "@dnd/shared/types";
+import type { UnitRecord } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either } from "effect";
 import {
@@ -290,9 +297,29 @@ function characterBattleResources(
       continue;
     }
 
-    resources.push({ unit: unit.right });
+    resources.push(characterBattleResourceInit(build, unit.right));
   }
   return Either.right(resources);
+}
+
+function characterBattleResourceInit(
+  build: CharacterBuild,
+  unit: Extract<
+    UnitRecord,
+    { readonly kind: "class_feature" | "species_trait" }
+  >,
+): CharacterBattleResourceInit {
+  const resource =
+    "resource" in unit.mechanics ? unit.mechanics.resource : undefined;
+  return resource?.kind === "use_count" &&
+    resource.cap.kind === "ability_modifier"
+    ? {
+        unit,
+        capAbilityModifier: abilityModifier(
+          scoreModifier(build.abilityScores[resource.cap.ability]),
+        ),
+      }
+    : { unit };
 }
 
 function characterBattleFeatures(

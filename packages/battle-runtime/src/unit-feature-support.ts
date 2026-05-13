@@ -1,8 +1,11 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
 import { Match } from "effect";
 import * as Either from "effect/Either";
-import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
+import {
+  elapsedTimeTicksFromTimeSpanDuration,
+  type ElapsedTimeTicks,
+} from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { zeroHitPointReplacementUnitProfile } from "@dnd/shared-algebras/zero-hit-point-replacement-algebra";
 import {
@@ -60,6 +63,9 @@ export const BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE =
   "bonusActionDashTemporaryHitPoints";
 export const FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE =
   "failedAbilityCheckResourceBoost";
+export const BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE =
+  "bardicInspirationGrant";
+const BARDIC_INSPIRATION_RANGE_FEET = 60;
 export const ALTERNATE_ACTION_COST_ACTIONS = [
   "dash",
   "disengage",
@@ -81,6 +87,7 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
+  BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE,
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
   FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE,
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
@@ -423,6 +430,17 @@ export function battleUnitSupportProfilesForUnit(input: {
     supportProfiles.push(failedAbilityCheckResourceBoostSupport);
   }
 
+  const bardicInspirationGrantSupport =
+    battleBardicInspirationGrantSupportForUnit(input.unit);
+  if (bardicInspirationGrantSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Bardic Inspiration grant Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (bardicInspirationGrantSupport !== null) {
+    supportProfiles.push(bardicInspirationGrantSupport);
+  }
+
   return Either.right(supportProfiles);
 }
 
@@ -586,11 +604,10 @@ function attackDamageReductionZeroDamageRedirectProjection(
   expectedResourceUnitId: UnitRecord["id"],
   classLevel: ClassLevel,
 ): AttackDamageReductionZeroDamageRedirectProfile | null {
-  const authored =
-    parseAuthoredAttackDamageReductionZeroDamageRedirect(
-      redirect,
-      expectedResourceUnitId,
-    );
+  const authored = parseAuthoredAttackDamageReductionZeroDamageRedirect(
+    redirect,
+    expectedResourceUnitId,
+  );
   if (authored === null) return null;
   return {
     spends: {
@@ -813,6 +830,17 @@ export type SupportedUnitFeatureProfile =
       readonly kind: "weaponDamageDiceRollChoice";
       readonly unit: UnitRecord;
       readonly damageDiceChoice: WeaponDamageDiceRollChoiceProfile;
+    }
+  | {
+      readonly kind: "bardicInspirationGrant";
+      readonly unit: UnitRecord;
+      readonly rangeFeet: MovementFeet;
+      readonly dieSize: DamageDieSize;
+      readonly durationTicks: ElapsedTimeTicks;
+      readonly spends: {
+        readonly resourceUnitId: UnitRecord["id"];
+        readonly amount: 1;
+      };
     }
   | {
       readonly kind: "attackActionAttackCountScaling";
@@ -1895,10 +1923,123 @@ export function parseSupportedUnitFeatureProfile(
     parsePassiveSpeedBonusUnitFeatureProfile(unit) ??
     parsePassiveSpeedKindGrantsUnitFeatureProfile(unit) ??
     parseWeaponDamageDiceRollChoiceUnitFeatureProfile(unit) ??
+    parseBardicInspirationGrantUnitFeatureProfile(unit, classLevels) ??
     attackActionAttackCountScalingProfileForUnit(unit) ??
     zeroHitPointReplacementProfileForUnit(unit) ??
     bonusActionDashTemporaryHitPointsProfileForUnit(unit) ??
     failedAbilityCheckResourceBoostProfileForUnit(unit)
+  );
+}
+
+export function battleBardicInspirationGrantSupportForUnit(
+  unit: UnitRecord,
+): typeof BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE | "unsupported" | null {
+  const profile = parseBardicInspirationGrantUnitFeatureProfile(unit, [
+    { className: "bard", level: classLevel(1) },
+  ]);
+  if (profile !== null) {
+    return BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE;
+  }
+  return unit.kind === "class_feature" &&
+    unit.mechanics.family === "activation" &&
+    unit.mechanics.phases.some((phase) =>
+      "effects" in phase
+        ? phase.effects?.some((effect) => effect.kind === "grant_die_token") ===
+          true
+        : false,
+    )
+    ? "unsupported"
+    : null;
+}
+
+function parseBardicInspirationGrantUnitFeatureProfile(
+  unit: UnitRecord,
+  classLevels: readonly CharacterBattleClassLevel[],
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "bardicInspirationGrant" }
+> | null {
+  if (unit.kind !== "class_feature" || unit.className !== "bard") {
+    return null;
+  }
+  const classLevel = findCharacterClassLevel(classLevels, unit.className);
+  if (classLevel === undefined || classLevel < unit.acquiredAtLevel) {
+    return null;
+  }
+  if (unit.mechanics.family !== "activation") {
+    return null;
+  }
+  const mechanics = unit.mechanics;
+  const range = mechanics.range;
+  if (
+    mechanics.activationCost.kind !== "bonus_action" ||
+    range === undefined ||
+    range.kind !== "point" ||
+    range.feet !== BARDIC_INSPIRATION_RANGE_FEET ||
+    mechanics.resource?.kind !== "use_count" ||
+    mechanics.resource.cap.kind !== "ability_modifier" ||
+    mechanics.resource.cap.ability !== "cha" ||
+    mechanics.resource.cap.minimum !== 1 ||
+    mechanics.resetCadence?.kind !== "long_rest" ||
+    mechanics.phases.length !== 1
+  ) {
+    return null;
+  }
+  const phase = mechanics.phases[0];
+  if (
+    phase?.kind !== "direct" ||
+    phase.attachment.kind !== "target" ||
+    phase.attachment.selection.mode !== "one" ||
+    phase.effects?.length !== 1
+  ) {
+    return null;
+  }
+  const effect = phase.effects[0];
+  if (
+    effect?.kind !== "grant_die_token" ||
+    effect.maxHeld !== 1 ||
+    effect.trigger !== "failed_d20_test" ||
+    effect.duration.unit !== "hour" ||
+    effect.duration.amount !== 1 ||
+    effect.die.kind !== "threshold_tiers" ||
+    effect.die.axis !== "class" ||
+    effect.die.base.dice !== 1
+  ) {
+    return null;
+  }
+  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(effect.duration);
+  if (
+    effect.die.base.dieSize !== 6 ||
+    bardicInspirationLaterLevelDieSizeApplies(effect.die, classLevel) ||
+    Either.isLeft(durationTicks)
+  ) {
+    return null;
+  }
+  return {
+    kind: "bardicInspirationGrant",
+    unit,
+    rangeFeet: movementFeet(BARDIC_INSPIRATION_RANGE_FEET),
+    dieSize: 6,
+    durationTicks: durationTicks.right,
+    spends: { resourceUnitId: unit.id, amount: 1 },
+  };
+}
+
+function bardicInspirationLaterLevelDieSizeApplies(
+  die: {
+    readonly tiers?: readonly {
+      readonly atLevel: number;
+      readonly override: { readonly dieSize?: number };
+    }[];
+    readonly base: { readonly dieSize?: number };
+  },
+  classLevel: ClassLevel,
+): boolean {
+  return (die.tiers ?? []).some(
+    (tier) =>
+      classLevel >= tier.atLevel &&
+      tier.override.dieSize !== undefined &&
+      tier.override.dieSize !== 6,
   );
 }
 

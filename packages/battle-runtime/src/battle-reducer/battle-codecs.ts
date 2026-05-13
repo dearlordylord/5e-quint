@@ -1621,6 +1621,19 @@ type BattleFillEncoded =
             readonly targetId: string;
           }
         | {
+            readonly kind: "bardicInspirationTargetWithinRange";
+            readonly bardId: string;
+            readonly targetId: string;
+            readonly unitId: string;
+            readonly rangeFeet: number;
+          }
+        | {
+            readonly kind: "bardicInspirationTargetCanHear";
+            readonly bardId: string;
+            readonly targetId: string;
+            readonly unitId: string;
+          }
+        | {
             readonly kind: "reactionRollOrDamageReductionTargetWithinRange";
             readonly reactorId: string;
             readonly targetId: string;
@@ -2087,6 +2100,19 @@ export const BattleFillSchema: Schema.Schema<
               ),
               sourceId: CombatantId,
               targetId: CombatantId,
+            }),
+            Schema.Struct({
+              kind: Schema.Literal("bardicInspirationTargetWithinRange"),
+              bardId: CombatantId,
+              targetId: CombatantId,
+              unitId: Schema.String,
+              rangeFeet: MovementFeet,
+            }),
+            Schema.Struct({
+              kind: Schema.Literal("bardicInspirationTargetCanHear"),
+              bardId: CombatantId,
+              targetId: CombatantId,
+              unitId: Schema.String,
             }),
             Schema.Struct({
               kind: Schema.Literal(

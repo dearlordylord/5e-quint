@@ -953,6 +953,7 @@ function concentrationBrokenEffectFrom(
   }
   if (
     concentration?.effectKind === "spellEffect" &&
+    "sourceSpellId" in effect &&
     effect.sourceSpellId === concentration.sourceSpellId &&
     "expiresAt" in effect &&
     effect.expiresAt.kind === "concentration"

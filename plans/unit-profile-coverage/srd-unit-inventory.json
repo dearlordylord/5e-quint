@@ -161,8 +161,8 @@
       "rowsByStatus": {
         "accepted": 214,
         "accepted-no-battle-effect": 69,
-        "battle-runtime-required": 30,
-        "partial-battle-runtime": 39,
+        "battle-runtime-required": 29,
+        "partial-battle-runtime": 40,
         "surface-widening-required": 15
       }
     },
@@ -3920,7 +3920,7 @@
         "state": "installed",
         "unitId": "bard_bardic_inspiration"
       },
-      "unitProfileDisposition": "unsupported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -3929,8 +3929,8 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime",
-          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV18 level-1 Bard class-feature support profile; Bardic Inspiration is retained through the finalized CharacterBuild feature Unit refs for supported Bard progressions; executable feature behavior remains owned by downstream feature/runtime projections.",
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV72A at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],

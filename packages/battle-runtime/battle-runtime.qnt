@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.reaction-roll-or-damage-reduction spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points
@@ -23,6 +23,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.creature-type-protection-and-charm
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-object-light
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.reaction-hellish-rebuke spell.invocation-damage-save-or-attack
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.bardic-inspiration-grant
 module battleRuntime {
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
@@ -97,6 +98,11 @@ module battleRuntime {
   //   Classes/Bard.md lines 332-334, and Playing-the-Game.md lines 326-332:
   //   Deflect Attacks, Uncanny Dodge, and Cutting Words are Reactions that
   //   modify an attack roll or attack damage at the relevant interrupt point.
+  // - Classes/Bard.md lines 57-65 and Rules-Glossary.md lines 138-140:
+  //   Bardic Inspiration is a Bonus Action grant to another creature within
+  //   60 feet who can see or hear the Bard. The target can hold only one die,
+  //   the die lasts for the next hour, and the Bard's use pool is Charisma
+  //   modifier with a minimum of one.
   // - Classes/Rogue.md lines 113-115, Classes/Monk.md lines 132-134, and
   //   Playing-the-Game.md lines 704-714: Evasion-style replacement riders
   //   apply only to Dexterity Saving Throw damage procedures whose successful
@@ -308,7 +314,7 @@ module battleRuntime {
   type SpellActionCost = SpellMagicAction | SpellBonusAction
   type CommandOption = CommandGrovelOption | CommandHaltOption | CommandDropOption | CommandApproachOption | CommandFleeOption
 
-  type ActiveEffect = MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool, durationTicks: int }) | RayOfSicknessPoisoned | ChillTouchHitPointRegainPrevented({ source: Actor, expiresAtRound: int }) | StarryWispInvisibleBenefitDenied({ source: Actor, expiresAtRound: int }) | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodCreatureTypeProtection | ProduceFlameHeldLight({ durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
+  type ActiveEffect = BardicInspirationDie({ source: Actor, dieSize: int, durationTicks: int }) | MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool, durationTicks: int }) | RayOfSicknessPoisoned | ChillTouchHitPointRegainPrevented({ source: Actor, expiresAtRound: int }) | StarryWispInvisibleBenefitDenied({ source: Actor, expiresAtRound: int }) | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodCreatureTypeProtection | ProduceFlameHeldLight({ durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
   type PreventedProtectionCondition = PreventedCharmed | PreventedFrightened
   type PossessionAttemptDisposition = PossessionPreventedByCreatureTypeProtection | PossessionUnprevented
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
@@ -1054,6 +1060,11 @@ module battleRuntime {
             areaId: data.areaId,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
+        | BardicInspirationDie(data) => BardicInspirationDie({
+            source: data.source,
+            dieSize: data.dieSize,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | _ => effect
       })
       .filter(effect => match effect {
@@ -1066,6 +1077,7 @@ module battleRuntime {
         | JumpMovementReplacement(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | FeatherFallMitigation(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | GreaseGroundHazard(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | BardicInspirationDie(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | _ => true
       })
 
@@ -1141,6 +1153,7 @@ module battleRuntime {
   pure def activeEffectArmorClass(baseAc: int, dexMod: int, effects: Set[ActiveEffect]): int =
     {
       val base = if (effects.exists(effect => match effect {
+        | BardicInspirationDie(_) => false
         | MageArmor => true
         | RayOfFrostSpeedDelta => false
         | ShieldArmorClassBonus => false
@@ -1954,6 +1967,47 @@ module battleRuntime {
     else
       { state: initialState, usesRemaining: bardicInspirationUsesRemaining }
   }
+
+  pure def bardicInspirationUses(charismaModifier: int): int =
+    if (charismaModifier > 1) charismaModifier else 1
+
+  pure def hasBardicInspirationDie(effects: Set[ActiveEffect]): bool =
+    effects.exists(effect => match effect {
+      | BardicInspirationDie(_) => true
+      | _ => false
+    })
+
+  pure def bardicInspirationGrantAdmitted(
+    targetWithinSixtyFeet: bool,
+    targetCanSeeBard: bool,
+    targetCanHearBard: bool,
+    targetUnconscious: bool,
+    bonusActionAvailable: bool,
+    usesRemaining: int,
+    targetHasBardicInspirationDie: bool,
+  ): bool =
+    targetWithinSixtyFeet
+      and not(targetUnconscious)
+      and (targetCanSeeBard or targetCanHearBard)
+      and bonusActionAvailable
+      and usesRemaining > 0
+      and not(targetHasBardicInspirationDie)
+
+  pure def bardicInspirationTargetEffectsAfterGrant(
+    effects: Set[ActiveEffect],
+    source: Actor,
+  ): Set[ActiveEffect] =
+    effects.union(Set(BardicInspirationDie({
+      source: source,
+      dieSize: 6,
+      durationTicks: 600,
+    })))
+
+  pure def bardicInspirationUsesAfterGrant(
+    usesRemaining: int,
+    grantAdmitted: bool,
+  ): int =
+    if (grantAdmitted) usesRemaining - 1 else usesRemaining
 
   pure def uncannyDodgeDamage(damage: int): int =
     battleRuntimeUncannyDodgeDamage(damage)
@@ -6411,6 +6465,26 @@ module battleRuntime {
       assert(stillSuccessful.usesRemaining == 0),
       assert(preReductionFailure.state.fighter.reactionAvailable),
       assert(preReductionFailure.usesRemaining == 1),
+    }
+  }
+
+  run test_bardic_inspiration_grant_admission = {
+    val emptyEffects = Set()
+    val granted = bardicInspirationTargetEffectsAfterGrant(emptyEffects, Fighter)
+    all {
+      assert(bardicInspirationUses(3) == 3),
+      assert(bardicInspirationUses(0) == 1),
+      assert(bardicInspirationGrantAdmitted(true, true, false, false, true, 1, false)),
+      assert(bardicInspirationGrantAdmitted(true, false, true, false, true, 1, false)),
+      assert(not(bardicInspirationGrantAdmitted(false, true, true, false, true, 1, false))),
+      assert(not(bardicInspirationGrantAdmitted(true, false, false, false, true, 1, false))),
+      assert(not(bardicInspirationGrantAdmitted(true, true, true, true, true, 1, false))),
+      assert(not(bardicInspirationGrantAdmitted(true, true, false, false, false, 1, false))),
+      assert(not(bardicInspirationGrantAdmitted(true, true, false, false, true, 0, false))),
+      assert(not(bardicInspirationGrantAdmitted(true, true, false, false, true, 1, true))),
+      assert(hasBardicInspirationDie(granted)),
+      assert(bardicInspirationUsesAfterGrant(2, true) == 1),
+      assert(bardicInspirationUsesAfterGrant(2, false) == 2),
     }
   }
 

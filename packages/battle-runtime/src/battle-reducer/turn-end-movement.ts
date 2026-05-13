@@ -1897,6 +1897,7 @@ export function tickDurationEffects(
         if (remainingTicks <= 0) {
           expiring.push(effect);
           if (
+            "sourceSpellId" in effect &&
             "expiresAt" in effect &&
             effect.expiresAt.kind === "concentration"
           ) {
@@ -1944,7 +1945,7 @@ export function tickDurationEffects(
 
 type ConcentrationEffectSource = {
   readonly combatantId: CombatantId;
-  readonly sourceSpellId: BattleActiveEffect["sourceSpellId"];
+  readonly sourceSpellId: string;
 };
 
 function activeEffectDurationTicks(
@@ -2011,6 +2012,7 @@ function expireConcentrationDurationSource(
       const expiring = combatant.activeEffects.filter(
         (effect) =>
           effect.sourceCombatantId === source.combatantId &&
+          "sourceSpellId" in effect &&
           effect.sourceSpellId === source.sourceSpellId &&
           "expiresAt" in effect &&
           effect.expiresAt.kind === "concentration",

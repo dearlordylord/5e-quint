@@ -20,6 +20,7 @@ import {
   type CharacterBattleClassLevelInit,
 } from "./character-class-level.ts";
 import {
+  battleBardicInspirationGrantSupportForUnit,
   battleReactionRollOrDamageReductionSupportForUnit,
   bonusActionDashTemporaryHitPointsProfileForUnit,
   requireCharacterClassLevel,
@@ -28,6 +29,7 @@ import {
 export type CharacterBattleResourceInit = {
   readonly unit: UnitRecord;
   readonly usesRemaining?: number;
+  readonly capAbilityModifier?: AbilityModifier;
 };
 
 export type CharacterBattleFeatureInit = {
@@ -165,9 +167,25 @@ export function characterResourceState(
         ? supportedUseCountCapForLevel(
             resource,
             unitClassLevel ?? characterLevel,
+            input.capAbilityModifier,
           )
         : resourceCount(input.usesRemaining),
   };
+}
+
+export function characterBattleResourceInitIssue(
+  input: CharacterBattleResourceInit,
+): string | null {
+  const resource = characterBattleActivationResourceForUnit(input.unit);
+  if (resource === null) {
+    return "Character battle resources must be supported limited-use Units.";
+  }
+  return resource?.kind === "use_count" &&
+    resource.cap.kind === "ability_modifier" &&
+    input.usesRemaining === undefined &&
+    input.capAbilityModifier === undefined
+    ? "Ability-modifier resource cap requires the projected ability modifier."
+    : null;
 }
 
 export function characterBattleResourceForUnit(
@@ -193,7 +211,8 @@ function characterBattleActivationResourceForUnit(
 ): CharacterBattleActivationResource | null {
   const zeroHitPointReplacement = zeroHitPointReplacementUnitProfile(unit);
   if (zeroHitPointReplacement !== null) {
-    return activationResourceIsSupportedByBattle(
+    return activationResourceIsSupportedByBattleForUnit(
+      unit,
       zeroHitPointReplacement.resource,
     )
       ? zeroHitPointReplacement.resource
@@ -206,7 +225,9 @@ function characterBattleActivationResourceForUnit(
   ) {
     const resource = unit.mechanics.resource;
     if (resource !== undefined) {
-      return activationResourceIsSupportedByBattle(resource) ? resource : null;
+      return activationResourceIsSupportedByBattleForUnit(unit, resource)
+        ? resource
+        : null;
     }
   }
   if (
@@ -234,7 +255,10 @@ function characterBattleActivationResourceForUnit(
   ) {
     return null;
   }
-  return activationResourceIsSupportedByBattle(unit.mechanics.resource)
+  return activationResourceIsSupportedByBattleForUnit(
+    unit,
+    unit.mechanics.resource,
+  )
     ? unit.mechanics.resource
     : null;
 }
@@ -280,6 +304,38 @@ function activationResourceIsSupportedByBattle(
       resource.cap.kind === "threshold_tiers" ||
       resource.cap.kind === "ability_modifier" ||
       resource.cap.kind === "unlimited")
+  );
+}
+
+function activationResourceIsSupportedByBattleForUnit(
+  unit: UnitRecord,
+  resource: ActivationResource,
+): resource is CharacterBattleActivationResource {
+  if (!activationResourceIsSupportedByBattle(resource)) {
+    return false;
+  }
+  return (
+    resource.cap.kind !== "ability_modifier" ||
+    unitHasSupportedAbilityModifierBattleResourceProfile(unit)
+  );
+}
+
+function unitHasSupportedAbilityModifierBattleResourceProfile(
+  unit: UnitRecord,
+): boolean {
+  if (unit.kind !== "class_feature") {
+    return false;
+  }
+  const reactionSupport = battleReactionRollOrDamageReductionSupportForUnit(unit);
+  if (reactionSupport !== null && reactionSupport !== "unsupported") {
+    return true;
+  }
+  const bardicInspirationSupport = battleBardicInspirationGrantSupportForUnit(
+    unit,
+  );
+  return (
+    bardicInspirationSupport !== null &&
+    bardicInspirationSupport !== "unsupported"
   );
 }
 
@@ -385,6 +441,7 @@ export function characterSpellcastingState(
 function supportedUseCountCapForLevel(
   resource: LimitedUseCountActivationResource,
   level: number,
+  capAbilityModifier: AbilityModifier | undefined,
 ): ResourceCount {
   if (resource.cap.kind === "fixed") {
     return resourceCount(resource.cap.uses);
@@ -400,10 +457,16 @@ function supportedUseCountCapForLevel(
     );
   }
   if (resource.cap.kind === "ability_modifier") {
+    if (capAbilityModifier === undefined) {
+      throw new Error(
+        "Ability-modifier resource cap requires the projected ability modifier.",
+      );
+    }
     return resourceCount(
       Math.max(
         resource.cap.minimum === undefined ? 1 : resource.cap.minimum,
         1,
+        Number(abilityModifier(capAbilityModifier)),
       ),
     );
   }

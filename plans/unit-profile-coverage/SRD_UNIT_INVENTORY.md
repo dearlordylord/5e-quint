@@ -21,8 +21,8 @@ This is the default `%` for level-1 readiness questions. A row counts only when 
 
 - accepted: 214
 - accepted-no-battle-effect: 69
-- battle-runtime-required: 30
-- partial-battle-runtime: 39
+- battle-runtime-required: 29
+- partial-battle-runtime: 40
 - surface-widening-required: 15
 
 ### Level-1 Rows by Disposition
@@ -153,7 +153,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Barbarian Weapon Mastery|mastery pressure||current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Barbarian.md:84|
 |Barbarian multiclass entry traits|character-creation or progression mechanic|class-container-owned-source-fact|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Barbarian.md:22|
 |Bard class container|class container||current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Bard.md:3|
-|Bard Bardic Inspiration|class feature||current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Bard.md:57|
+|Bard Bardic Inspiration|class feature||current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Bard.md:57|
 |Bard level 1 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Bard.md:36|
 |Bard Armor Training|character-creation or progression mechanic|class-container-owned-source-fact|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Bard.md:13|
 |Bard Hit Point Die|character-creation or progression mechanic|class-container-owned-source-fact|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Bard.md:8|

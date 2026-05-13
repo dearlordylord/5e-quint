@@ -72,23 +72,23 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 49,
-      "numerator": 49,
+      "denominator": 50,
+      "numerator": 50,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 49,
-      "numerator": 48,
+      "denominator": 50,
+      "numerator": 49,
       "percent": "98%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 49,
-      "numerator": 49,
+      "denominator": 50,
+      "numerator": 50,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 49,
-      "numerator": 49,
+      "denominator": 50,
+      "numerator": 50,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -332,6 +332,32 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.bardic-inspiration-grant",
+      "profileKind": "bonus-action",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "Caller-supplied range and hearing facts plus existing visibility state; runtime owns Bonus Action/resource spending, one held die per target, one-hour duration, and d6 grant at Bard level 1. Spending the die after a failed D20 Test is a later profile.",
+      "taskRefs": [
+        "SRDINV72A"
+      ],
+      "title": "Unit feature spends a Bonus Action and Bardic Inspiration use to grant a one-hour die",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
         }
       ]
     },
@@ -1950,6 +1976,22 @@
       "taskId": "QMBT65"
     },
     {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Bardic Inspiration's Bonus Action grant admission, 60-foot sight-or-hearing target gate, one held die per target, one-hour duration, and Charisma-modifier use pool minimum.",
+      "profileIds": [
+        "unit-feature.bardic-inspiration-grant"
+      ],
+      "taskId": "SRDINV72A"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime reducer and admission tests cover Bardic Inspiration target facts, Bonus Action and Charisma-derived resource spending, one held die, one-hour duration, and duplicate-die rejection. Die spending after a failed D20 Test remains deferred.",
+      "profileIds": [
+        "unit-feature.bardic-inspiration-grant"
+      ],
+      "taskId": "SRDINV72A"
+    },
+    {
       "claimKind": "completed-runtime-parity",
       "note": "Focused Character Sheet Armor Class base formula runtime tests for default unarmored, Barbarian and Monk Unarmored Defense, Shield gating, armor precedence, and multiclass formula choice.",
       "profileIds": [
@@ -3537,14 +3579,68 @@
         "status": "installed"
       },
       "claim": {
-        "reason": "Class feature source facts are authored for character and feature projection; generic D20 Test token use is not promoted as a battle Unit profile.",
-        "tag": "unsupported-profile"
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "SRDINV72B",
+            "mechanic": "spending the Bardic Inspiration die after a failed D20 Test"
+          },
+          {
+            "followUpTaskId": "SRDINV78",
+            "mechanic": "later-level Bardic Inspiration die size increases beyond d6"
+          }
+        ],
+        "profileIds": [
+          "unit-feature.bardic-inspiration-grant"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Bonus Action grant to another creature within 60 feet who can see or hear the Bard",
+          "one Bardic Inspiration die per creature",
+          "one-hour die ownership",
+          "d6 grant and Charisma-modifier use pool minimum"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV72A"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "unit-feature.bardic-inspiration-grant",
+          "profileKind": "bonus-action",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "Caller-supplied range and hearing facts plus existing visibility state; runtime owns Bonus Action/resource spending, one held die per target, one-hour duration, and d6 grant at Bard level 1. Spending the die after a failed D20 Test is a later profile.",
+          "taskRefs": [
+            "SRDINV72A"
+          ],
+          "title": "Unit feature spends a Bonus Action and Bardic Inspiration use to grant a one-hour die",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/bard_bardic_inspiration.json",
       "unitId": "bard_bardic_inspiration"
     },

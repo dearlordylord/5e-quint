@@ -9,6 +9,7 @@ import { describe, expect, test } from "vitest";
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
+  BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE,
   battleBonusActionStandardActionSupportForUnit,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
@@ -28,6 +29,7 @@ import {
   cantripSpellInvocationRef,
   breakBattleConcentration,
   characterBattleResourceUsage,
+  characterBattleResourceSupportedForUnit,
   characterId,
   concentrationSavingThrowDc,
   combatantId,
@@ -52,6 +54,7 @@ import {
   type BattleReadiedSpellTrigger,
   type BattleState,
   type BattleSubject,
+  type BattleCreatureState,
   type CombatantId,
   type BattleCreatureInit,
   type BattleUnitRef,
@@ -91,6 +94,8 @@ import {
   movementDeltaFeet,
   movementFeet,
   proficiencyBonus,
+  resourceCount,
+  type Condition,
 } from "@dnd/shared/types";
 import {
   buildStatBlockCatalog,
@@ -523,6 +528,28 @@ describe("battle runtime", () => {
     ).toThrow(
       "Character class feature resource requires a fighter class level.",
     );
+  });
+
+  test("startBattle returns typed issue when an ability-modifier resource lacks its projected modifier", () => {
+    const result = startBattle({
+      battleId: battleId("battle-bardic-resource-missing-ability-modifier"),
+      combatants: [
+        characterSeed({
+          initiative: 12,
+          classLevels: [{ className: "bard", level: 1 }],
+          resources: [{ unit: bardicInspirationUnit() }],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isRight(result)) return;
+    expect(result.left).toEqual({
+      tag: "battleStateInitIssue",
+      message:
+        "Ability-modifier resource cap requires the projected ability modifier.",
+    });
   });
 
   test("discoverBattleActs exposes attack, movement, and endTurn for the current actor", () => {
@@ -10686,6 +10713,349 @@ describe("battle runtime", () => {
     });
   });
 
+  test("Bardic Inspiration grants one one-hour d6 die and spends Bonus Action and Charisma-derived use", () => {
+    const bardicInspiration = bardicInspirationUnit();
+    const state = bardicInspirationBattle({ charismaModifier: 3 });
+    const subject = bardicInspirationSubject(bardicInspiration.id);
+    const target = findHole(
+      findAct(state, subject).initialHoles,
+      "targetChoice",
+    );
+
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [bardicInspirationTargetFill(target, goblinId)],
+      }),
+    );
+
+    expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
+      false,
+    );
+    expect(
+      resolved.state.combatants.get(fighterId)?.origin.kind === "character"
+        ? resolved.state.combatants.get(fighterId)?.origin.resources
+        : [],
+    ).toEqual([
+      expect.objectContaining({
+        unit: expect.objectContaining({ id: bardicInspiration.id }),
+        usesRemaining: resourceCount(2),
+      }),
+    ]);
+    expect(resolved.state.combatants.get(goblinId)?.activeEffects).toEqual([
+      {
+        kind: "bardicInspirationDie",
+        sourceUnitId: bardicInspiration.id,
+        sourceCombatantId: fighterId,
+        dieSize: 6,
+        expiresAt: {
+          kind: "duration",
+          durationTicks: requireElapsedHours(1),
+        },
+      },
+    ]);
+  });
+
+  test("Bardic Inspiration use count observes Charisma modifier minimum", () => {
+    const highCharisma = bardicInspirationBattle({ charismaModifier: 4 });
+    const lowCharisma = bardicInspirationBattle({ charismaModifier: -1 });
+
+    expect(characterResourceUses(highCharisma, fighterId)).toEqual([
+      resourceCount(4),
+    ]);
+    expect(characterResourceUses(lowCharisma, fighterId)).toEqual([
+      resourceCount(1),
+    ]);
+  });
+
+  test("ability-modifier battle resources require a supported battle profile", () => {
+    expect(characterBattleResourceSupportedForUnit(bardicInspirationUnit())).toBe(
+      true,
+    );
+    expect(characterBattleResourceSupportedForUnit(cuttingWordsUnit())).toBe(
+      true,
+    );
+    expect(
+      characterBattleResourceSupportedForUnit(
+        unsupportedAbilityModifierActivationUnit(),
+      ),
+    ).toBe(false);
+  });
+
+  test("Bardic Inspiration rejects missing range facts before spending resources", () => {
+    const bardicInspiration = bardicInspirationUnit();
+    const state = bardicInspirationBattle({ charismaModifier: 3 });
+    const subject = bardicInspirationSubject(bardicInspiration.id);
+    const target = findHole(
+      findAct(state, subject).initialHoles,
+      "targetChoice",
+    );
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFill(target, goblinId, [])],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "Bardic Inspiration target must be within 60 feet.",
+    });
+    expect(characterResourceUses(state, fighterId)).toEqual([resourceCount(3)]);
+  });
+
+  test("Bardic Inspiration accepts hearing when the target cannot see the Bard", () => {
+    const bardicInspiration = bardicInspirationUnit();
+    const state = bardicInspirationBattle({
+      charismaModifier: 1,
+      bardHidden: true,
+    });
+    const subject = bardicInspirationSubject(bardicInspiration.id);
+    const target = findHole(
+      findAct(state, subject).initialHoles,
+      "targetChoice",
+    );
+
+    expect(
+      requireResolved(
+        resolveBattleSubject({
+          state,
+          subject,
+          fills: [
+            bardicInspirationTargetFill(target, goblinId, {
+              canHear: true,
+            }),
+          ],
+        }),
+      ).state.combatants.get(goblinId)?.activeEffects,
+    ).toEqual([
+      expect.objectContaining({
+        kind: "bardicInspirationDie",
+        sourceUnitId: bardicInspiration.id,
+      }),
+    ]);
+  });
+
+  test("Bardic Inspiration rejects a Blinded target without a hearing fact", () => {
+    const bardicInspiration = bardicInspirationUnit();
+    const state = bardicInspirationBattle({
+      charismaModifier: 1,
+      targetConditions: ["blinded"],
+    });
+    const subject = bardicInspirationSubject(bardicInspiration.id);
+    const target = findHole(
+      findAct(state, subject).initialHoles,
+      "targetChoice",
+    );
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [bardicInspirationTargetFill(target, goblinId)],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Bardic Inspiration target must be able to see or hear the Bard.",
+    });
+  });
+
+  test("Bardic Inspiration accepts Blinded hearing but rejects Deafened hearing", () => {
+    const bardicInspiration = bardicInspirationUnit();
+    const subject = bardicInspirationSubject(bardicInspiration.id);
+    const blinded = bardicInspirationBattle({
+      charismaModifier: 1,
+      targetConditions: ["blinded"],
+    });
+    const blindedTarget = findHole(
+      findAct(blinded, subject).initialHoles,
+      "targetChoice",
+    );
+
+    expect(
+      requireResolved(
+        resolveBattleSubject({
+          state: blinded,
+          subject,
+          fills: [
+            bardicInspirationTargetFill(blindedTarget, goblinId, {
+              canHear: true,
+            }),
+          ],
+        }),
+      ).state.combatants.get(goblinId)?.activeEffects,
+    ).toEqual([
+      expect.objectContaining({
+        kind: "bardicInspirationDie",
+        sourceUnitId: bardicInspiration.id,
+      }),
+    ]);
+
+    const blindedAndDeafened = bardicInspirationBattle({
+      charismaModifier: 1,
+      targetConditions: ["blinded", "deafened"],
+    });
+    const blindedAndDeafenedTarget = findHole(
+      findAct(blindedAndDeafened, subject).initialHoles,
+      "targetChoice",
+    );
+
+    expect(
+      resolveBattleSubject({
+        state: blindedAndDeafened,
+        subject,
+        fills: [
+          bardicInspirationTargetFill(blindedAndDeafenedTarget, goblinId, {
+            canHear: true,
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Bardic Inspiration target must be able to see or hear the Bard.",
+    });
+  });
+
+  test("Bardic Inspiration rejects an Unconscious target even with a hearing fact", () => {
+    const bardicInspiration = bardicInspirationUnit();
+    const state = bardicInspirationBattle({
+      charismaModifier: 1,
+      targetConditions: ["unconscious"],
+    });
+    const subject = bardicInspirationSubject(bardicInspiration.id);
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          bardicInspirationTargetFill(
+            bardicInspirationStaleTargetHole(),
+            goblinId,
+            {
+              canHear: true,
+            },
+          ),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Bardic Inspiration target must be able to see or hear the Bard.",
+    });
+  });
+
+  test("Bardic Inspiration discovery omits Unconscious targets", () => {
+    const bardicInspiration = bardicInspirationUnit();
+    const state = bardicInspirationBattle({
+      charismaModifier: 1,
+      targetConditions: ["unconscious"],
+    });
+    const subject = bardicInspirationSubject(bardicInspiration.id);
+
+    expect(
+      discoverBattleActs(state).some((act) =>
+        sameBattleSubject(act.subject, subject),
+      ),
+    ).toBe(false);
+  });
+
+  test("Bardic Inspiration rejects targets that can neither see nor hear the Bard", () => {
+    const bardicInspiration = bardicInspirationUnit();
+    const state = bardicInspirationBattle({
+      charismaModifier: 1,
+      bardHidden: true,
+    });
+    const subject = bardicInspirationSubject(bardicInspiration.id);
+    const target = findHole(
+      findAct(state, subject).initialHoles,
+      "targetChoice",
+    );
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [bardicInspirationTargetFill(target, goblinId)],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Bardic Inspiration target must be able to see or hear the Bard.",
+    });
+  });
+
+  test("Bardic Inspiration rejects a second die on the same target", () => {
+    const bardicInspiration = bardicInspirationUnit();
+    const state = bardicInspirationBattle({ charismaModifier: 3 });
+    const subject = bardicInspirationSubject(bardicInspiration.id);
+    const target = findHole(
+      findAct(state, subject).initialHoles,
+      "targetChoice",
+    );
+    const granted = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [bardicInspirationTargetFill(target, goblinId)],
+      }),
+    ).state;
+
+    expect(
+      resolveBattleSubject({
+        state: {
+          ...granted,
+          currentTurnResources: {
+            ...granted.currentTurnResources,
+            currentHasBonusAction: true,
+          },
+        },
+        subject,
+        fills: [bardicInspirationTargetFill(target, goblinId)],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Bardic Inspiration target already has a Bardic Inspiration die.",
+    });
+  });
+
+  test("Bardic Inspiration discovery omits targets already holding a die", () => {
+    const bardicInspiration = bardicInspirationUnit();
+    const state = bardicInspirationBattle({ charismaModifier: 3 });
+    const subject = bardicInspirationSubject(bardicInspiration.id);
+    const target = findHole(
+      findAct(state, subject).initialHoles,
+      "targetChoice",
+    );
+    const granted = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [bardicInspirationTargetFill(target, goblinId)],
+      }),
+    ).state;
+
+    expect(
+      discoverBattleActs({
+        ...granted,
+        currentTurnResources: {
+          ...granted.currentTurnResources,
+          currentHasBonusAction: true,
+        },
+      }).some((act) => sameBattleSubject(act.subject, subject)),
+    ).toBe(false);
+  });
+
   test("Uncanny Dodge is chosen when the attack hits and halves later attack damage", () => {
     const state = goblinAttacksReactionModifierCharacter({
       unit: uncannyDodgeUnit(),
@@ -14929,22 +15299,28 @@ describe("battle runtime", () => {
     expect("objectDamages" in requireResolved(result)).toBe(false);
     expect(expendedLevelOneSlots(requireResolved(result), wizardId)).toBe(0);
 
-    const afterWizardTurn = requireResolved(endTurn({
-      state: requireResolved(result).state,
-      actorId: wizardId,
-    }));
+    const afterWizardTurn = requireResolved(
+      endTurn({
+        state: requireResolved(result).state,
+        actorId: wizardId,
+      }),
+    );
     expect(afterWizardTurn.state.lightEmitters).toHaveLength(1);
 
-    const afterSkeletonTurn = requireResolved(endTurn({
-      state: afterWizardTurn.state,
-      actorId: skeletonId,
-    }));
+    const afterSkeletonTurn = requireResolved(
+      endTurn({
+        state: afterWizardTurn.state,
+        actorId: skeletonId,
+      }),
+    );
     expect(afterSkeletonTurn.state.lightEmitters).toHaveLength(1);
 
-    const afterWizardNextTurn = requireResolved(endTurn({
-      state: afterSkeletonTurn.state,
-      actorId: wizardId,
-    }));
+    const afterWizardNextTurn = requireResolved(
+      endTurn({
+        state: afterSkeletonTurn.state,
+        actorId: wizardId,
+      }),
+    );
     expect(afterWizardNextTurn.state.lightEmitters).toEqual([]);
   });
 
@@ -22326,6 +22702,151 @@ function cuttingWordsResource(input?: {
   };
 }
 
+function bardicInspirationUnit(): Extract<
+  UnitRecord,
+  { readonly kind: "class_feature" }
+> {
+  const unit = unitLibrary.requireUnit("bard_bardic_inspiration");
+  if (unit.kind !== "class_feature") {
+    throw new Error("Expected Bardic Inspiration class feature Unit.");
+  }
+  return unit;
+}
+
+function bardicInspirationSubject(unitId: string): BattleSubject {
+  return { tag: "unitFeature", actorId: fighterId, unitId };
+}
+
+function bardicInspirationResource(input: {
+  readonly charismaModifier: number;
+  readonly usesRemaining?: number;
+}): NonNullable<
+  Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["resources"]
+>[number] {
+  return {
+    unit: bardicInspirationUnit(),
+    capAbilityModifier: battleAbilityModifier(input.charismaModifier),
+    ...(input.usesRemaining === undefined
+      ? {}
+      : { usesRemaining: input.usesRemaining }),
+  };
+}
+
+function bardicInspirationBattle(input: {
+  readonly charismaModifier: number;
+  readonly bardHidden?: boolean;
+  readonly targetConditions?: readonly Condition[];
+}): BattleState {
+  const state = startBattleRight({
+    battleId: battleId("battle-bardic-inspiration-grant"),
+    combatants: [
+      characterSeed({
+        combatantId: fighterId,
+        displayName: "Bard",
+        initiative: 20,
+        classLevels: [{ className: "bard", level: 1 }],
+        attack: null,
+        resources: [
+          bardicInspirationResource({
+            charismaModifier: input.charismaModifier,
+          }),
+        ],
+        characterUnitRefs: [
+          {
+            unitId: bardicInspirationUnit().id,
+            supportProfiles: [BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE],
+          },
+        ],
+      }),
+      statBlockCreatureInit({ initiative: 10 }),
+    ],
+  });
+  let combatants: Map<CombatantId, BattleCreatureState> = new Map(
+    state.combatants,
+  );
+  if (input.targetConditions !== undefined) {
+    const target = combatants.get(goblinId);
+    if (target === undefined) {
+      throw new Error("Expected Bardic Inspiration target fixture.");
+    }
+    if (target.positiveHpUnconscious !== null) {
+      throw new Error("Expected conscious Bardic Inspiration target fixture.");
+    }
+    combatants = combatants.set(goblinId, {
+      ...target,
+      conditions: input.targetConditions.reduce(
+        (conditions, condition) => applyCondition(conditions, condition),
+        target.conditions,
+      ),
+    });
+  }
+  if (input.bardHidden === true) {
+    const bard = combatants.get(fighterId);
+    if (bard === undefined) {
+      throw new Error("Expected Bard fixture.");
+    }
+    combatants = combatants.set(fighterId, {
+      ...bard,
+      hidden: { discoveryDc: difficultyClass(16) },
+    });
+  }
+  return { ...state, combatants };
+}
+
+function bardicInspirationTargetFill(
+  hole: BattleHole,
+  targetId: CombatantId,
+  input?: { readonly canHear?: boolean },
+): BattleFill {
+  return targetFill(hole, targetId, [
+    {
+      kind: "bardicInspirationTargetWithinRange",
+      bardId: fighterId,
+      targetId,
+      unitId: bardicInspirationUnit().id,
+      rangeFeet: movementFeet(60),
+    },
+    ...(input?.canHear === true
+      ? [
+          {
+            kind: "bardicInspirationTargetCanHear" as const,
+            bardId: fighterId,
+            targetId,
+            unitId: bardicInspirationUnit().id,
+          },
+        ]
+      : []),
+  ]);
+}
+
+function bardicInspirationStaleTargetHole(): BattleHole {
+  const unit = bardicInspirationUnit();
+  const protocolId = `battle:unit-feature:${unit.id}:target`;
+  return {
+    kind: "targetChoice",
+    holeId: holeId(protocolId),
+    holeInstanceKey: holeInstanceKey(protocolId),
+    label: `${unit.name} target`,
+    requiresTableSpatialFact: true,
+    choices: [goblinId],
+  };
+}
+
+function characterResourceUses(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly unknown[] {
+  const actor = state.combatants.get(actorId);
+  return actor?.origin.kind === "character"
+    ? actor.origin.resources.map((resource) =>
+        "usesRemaining" in resource ? resource.usesRemaining : undefined,
+      )
+    : [];
+}
+
 function goblinAttacksReactionModifierCharacter(input: {
   readonly unit: Extract<UnitRecord, { readonly kind: "class_feature" }>;
   readonly className: Extract<
@@ -22743,6 +23264,53 @@ function cuttingWordsAttackOnlyUnit(): Extract<
     mechanics: {
       ...unit.mechanics,
       modifiers: [attackRollModifier],
+    },
+  };
+}
+
+function unsupportedAbilityModifierActivationUnit(): Extract<
+  UnitRecord,
+  { readonly kind: "class_feature" }
+> {
+  return {
+    id: "ranger_tireless_test",
+    kind: "class_feature",
+    name: "Tireless Test",
+    className: "ranger",
+    acquiredAtLevel: 10,
+    description:
+      "Unsupported ability-modifier activation resource fixture for admission.",
+    provenance: {
+      kind: "xphb",
+      section: "structured-input-only",
+    },
+    mechanics: {
+      family: "activation",
+      activationCost: { kind: "standard_action", action: "magic" },
+      resource: {
+        kind: "use_count",
+        cap: { kind: "ability_modifier", ability: "wis" },
+      },
+      resetCadence: { kind: "long_rest" },
+      phases: [
+        {
+          kind: "direct",
+          attachment: { kind: "self" },
+          effects: [
+            {
+              kind: "grant_temp_hp",
+              amount: {
+                kind: "fixed",
+                expr: {
+                  dice: 1,
+                  dieSize: 8,
+                  abilityModifier: "wis",
+                },
+              },
+            },
+          ],
+        },
+      ],
     },
   };
 }
