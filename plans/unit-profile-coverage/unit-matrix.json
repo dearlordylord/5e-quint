@@ -6796,8 +6796,8 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "SRDINV60C",
-            "mechanic": "Advantage on new Saving Throws against active already-applied possession, Charmed, or Frightened effects from scoped creatures once a true active-effect repeat-save or possession-save boundary exists"
+            "followUpTaskId": "SRDINV66",
+            "mechanic": "classified gap: Advantage on new Saving Throws against active already-applied possession, Charmed, or Frightened effects from scoped creatures requires a future owning-effect repeat-save or possession-save boundary; no dedicated SRDINV60C implementation task"
           },
           {
             "followUpTaskId": "SRDINV66",
