@@ -105,10 +105,10 @@ module battleRuntime {
   //   modifier with a minimum of one.
   // - Classes/Monk.md lines 56-74 and Rules-Glossary.md lines 1066-1076:
   //   Martial Arts applies while unarmored, unshielded, and unarmed or wielding
-  //   only Monk weapons. This battle projection covers the level-1 d6 damage
-  //   replacement, Dexterity attack/damage choice, and Dexterity Grapple/Shove
-  //   save DC projection for the promoted Unarmed Strike Grapple and Shove
-  //   action paths.
+  //   only Monk weapons. This battle projection covers the Bonus Action
+  //   Unarmed Strike, level-1 d6 damage replacement, Dexterity attack/damage
+  //   choice, and Dexterity Grapple/Shove save DC projection for the promoted
+  //   Unarmed Strike Grapple and Shove action paths.
   // - Classes/Rogue.md lines 113-115, Classes/Monk.md lines 132-134, and
   //   Playing-the-Game.md lines 704-714: Evasion-style replacement riders
   //   apply only to Dexterity Saving Throw damage procedures whose successful

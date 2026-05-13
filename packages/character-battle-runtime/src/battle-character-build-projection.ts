@@ -28,6 +28,7 @@ import {
   armorClassDelta,
   type ArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
+import { isMonkWeapon } from "@dnd/shared-algebras/martial-arts-algebra";
 import {
   abilityModifier as battleAbilityModifier,
   attackBonus as battleAttackBonus,
@@ -317,17 +318,6 @@ function martialArtsLoadoutConditionHolds(input: {
       ? isMonkWeapon(unit.value)
       : false;
   });
-}
-
-function isMonkWeapon(weapon: WeaponRecord): boolean {
-  return (
-    weapon.usage === "melee" &&
-    (weapon.category === "simple" ||
-      (weapon.category === "martial" &&
-        (weapon.properties ?? []).some(
-          (property) => property.kind === "light",
-        )))
-  );
 }
 
 function martialArtsWeaponAttack(

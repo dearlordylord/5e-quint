@@ -760,6 +760,9 @@ export type MartialArtsAttackProjectionProfile = {
   readonly condition: {
     readonly kind: "unarmoredUnshieldedOnlyMonkWeapons";
   };
+  readonly bonusActionAttack: {
+    readonly kind: "unarmedStrike";
+  };
   readonly damageReplacement: MartialArtsDamageReplacementProfile | null;
   readonly abilitySubstitution: {
     readonly use: "dex";
@@ -1850,12 +1853,21 @@ function martialArtsAttackProjectionMechanicsForUnit(
   const abilitySubstitutions = unit.mechanics.grants.filter(
     (grant) => grant.kind === "substitute_ability_for_rolls",
   );
-  if (damageReplacements.length !== 1 || abilitySubstitutions.length !== 1) {
+  const bonusActionAttacks = unit.mechanics.grants.filter(
+    (grant) => grant.kind === "grant_bonus_action_attack",
+  );
+  if (
+    damageReplacements.length !== 1 ||
+    abilitySubstitutions.length !== 1 ||
+    bonusActionAttacks.length !== 1
+  ) {
     return null;
   }
   const [damageReplacement] = damageReplacements;
   const [abilitySubstitution] = abilitySubstitutions;
+  const [bonusActionAttack] = bonusActionAttacks;
   if (
+    bonusActionAttack?.attack !== "unarmed_strike" ||
     damageReplacement?.scope !== "unarmed_or_monk_weapon" ||
     damageReplacement.die.kind !== "threshold_tiers" ||
     damageReplacement.die.axis !== "class" ||
@@ -1876,6 +1888,9 @@ function martialArtsAttackProjectionMechanicsForUnit(
   return {
     condition: {
       kind: "unarmoredUnshieldedOnlyMonkWeapons",
+    },
+    bonusActionAttack: {
+      kind: "unarmedStrike",
     },
     damageReplacement: {
       scope: "unarmedOrMonkWeapon",

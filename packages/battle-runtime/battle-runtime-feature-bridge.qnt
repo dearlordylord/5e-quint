@@ -262,6 +262,21 @@ module battleRuntimeFeatureBridge {
       proficiencyBonus: proficiencyBonus,
     })
 
+  pure def battleRuntimeMartialArtsBonusUnarmedStrikeAdmitted(
+    bonusActionAvailable: bool,
+    unarmored: bool,
+    wieldingShield: bool,
+    attackForm: MartialArtsAttackForm
+  ): bool =
+    resolveMartialArtsBonusUnarmedStrike(
+      initialTurnProcedureState.with("bonusActionAvailable", bonusActionAvailable),
+      {
+        unarmored: unarmored,
+        wieldingShield: wieldingShield,
+        attackForm: attackForm,
+      },
+    ).admitted
+
   run test_rage_runtime_projection_uses_feature_profile = {
     all {
       assert(battleRuntimeRageDamageBonus(1) == 2),
@@ -332,6 +347,10 @@ module battleRuntimeFeatureBridge {
       assert(not(shielded.eligible)),
       assert(shielded.attackAbilityModifier == 1),
       assert(shielded.damageDieSize == 4),
+      assert(battleRuntimeMartialArtsBonusUnarmedStrikeAdmitted(true, true, false, MartialArtsUnarmedStrike)),
+      assert(not(battleRuntimeMartialArtsBonusUnarmedStrikeAdmitted(false, true, false, MartialArtsUnarmedStrike))),
+      assert(not(battleRuntimeMartialArtsBonusUnarmedStrikeAdmitted(true, true, true, MartialArtsUnarmedStrike))),
+      assert(not(battleRuntimeMartialArtsBonusUnarmedStrikeAdmitted(true, true, false, MartialArtsOtherWeapon))),
     }
   }
 }

@@ -1,7 +1,7 @@
 // Light-property off-hand attack resolution extracted from attack-resolution.ts.
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.martial-arts-attack-projection unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
 
@@ -14,6 +14,7 @@ import * as Either from "effect/Either";
 import {
   attackDamageDispositionHole,
   attackDamageHole,
+  martialArtsBonusUnarmedStrikeActionOptionForActor,
   damageDispositionFillValidation,
   offHandAttackActionOptionForActor,
   offHandAttackPrerequisiteMet,
@@ -89,8 +90,10 @@ import type {
   BattleAttackDamageEvent,
   BattleResolutionResult,
   BattleState,
+  MartialArtsBonusUnarmedStrikeBattleResolutionInput,
   OffHandAttackBattleResolutionInput,
 } from "../battle-reducer.ts";
+import type { SupportedAttackActionOption } from "../battle-action-options.ts";
 import {
   attackRollHitsWithCriticalThreshold,
   attackRollIsCriticalHit,
@@ -101,23 +104,71 @@ import {
 export function resolveOffHandAttack(
   input: OffHandAttackBattleResolutionInput,
 ): BattleResolutionResult {
+  return resolveBonusActionAttack(input, {
+    label: "Light Property Bonus Action Attack",
+    unavailableMessage:
+      "Light Property Bonus Action Attack requires a prior Attack action attack with a different Light weapon.",
+    attackForInput: (state, actorId) =>
+      offHandAttackActionOptionForActor(state, actorId),
+    prerequisiteMet: (state, actorId, attack) =>
+      attack.kind === "weapon" &&
+      offHandAttackPrerequisiteMet(state, actorId, attack),
+  });
+}
+
+export function resolveMartialArtsBonusUnarmedStrike(
+  input: MartialArtsBonusUnarmedStrikeBattleResolutionInput,
+): BattleResolutionResult {
+  return resolveBonusActionAttack(input, {
+    label: "Martial Arts Bonus Unarmed Strike",
+    unavailableMessage:
+      "Martial Arts Bonus Unarmed Strike requires Martial Arts support and an unarmored, unshielded Monk loadout.",
+    attackForInput: (state, actorId) =>
+      martialArtsBonusUnarmedStrikeActionOptionForActor(state, actorId),
+    prerequisiteMet: () => true,
+  });
+}
+
+type BonusActionAttackBattleResolutionInput =
+  | OffHandAttackBattleResolutionInput
+  | MartialArtsBonusUnarmedStrikeBattleResolutionInput;
+
+type BonusActionAttackConfig = {
+  readonly label: string;
+  readonly unavailableMessage: string;
+  readonly attackForInput: (
+    state: BattleState,
+    actorId: BonusActionAttackBattleResolutionInput["subject"]["actorId"],
+  ) => SupportedAttackActionOption | undefined;
+  readonly prerequisiteMet: (
+    state: BattleState,
+    actorId: BonusActionAttackBattleResolutionInput["subject"]["actorId"],
+    attack: SupportedAttackActionOption,
+  ) => boolean;
+};
+
+function resolveBonusActionAttack(
+  input: BonusActionAttackBattleResolutionInput,
+  config: BonusActionAttackConfig,
+): BattleResolutionResult {
+  const { label } = config;
   const pendingAttackDamageReductions =
     input.pendingAttackDamageReductions ?? [];
   const pendingAttackDamageAdditions = input.pendingAttackDamageAdditions ?? [];
-  const attack = offHandAttackActionOptionForActor(
-    input.state,
-    input.subject.actorId,
-  );
+  const attack = config.attackForInput(input.state, input.subject.actorId);
   if (
     attack == null ||
     attackActionOptionName(attack) !== input.subject.attackName ||
-    !offHandAttackPrerequisiteMet(input.state, input.subject.actorId, attack)
+    !config.prerequisiteMet(input.state, input.subject.actorId, attack)
   ) {
     return invalidResult(
       input.state,
       "unsupportedActOption",
-      "Light Property Bonus Action Attack requires a prior Attack action attack with a different Light weapon.",
+      config.unavailableMessage,
     );
+  }
+  if (!bonusActionCanBeSpent(input.state)) {
+    return staleBonusActionResult(input.state);
   }
 
   const fillSet = attackFillSet(input.fills);
@@ -144,7 +195,7 @@ export function resolveOffHandAttack(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Light Property Bonus Action Attack target is outside the selected attack's supported target constraint.",
+      `${label} target is outside the selected attack's supported target constraint.`,
     );
   }
   if (fillSet.attackRoll == null) {
@@ -152,7 +203,7 @@ export function resolveOffHandAttack(
       return invalidResult(
         input.state,
         "invalidFill",
-        "Light Property Bonus Action Attack roll must be filled before damage.",
+        `${label} roll must be filled before damage.`,
       );
     }
     return needsHolesResult(input.state, input.subject, [
@@ -178,7 +229,7 @@ export function resolveOffHandAttack(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Light Property Bonus Action Attack roll result is outside the d20 attack-roll protocol.",
+      `${label} roll result is outside the d20 attack-roll protocol.`,
     );
   }
   const activatedOngoingFeatureProfile =
@@ -196,7 +247,7 @@ export function resolveOffHandAttack(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Light Property Bonus Action Attack ongoing feature activation is not available for this attack roll.",
+      `${label} ongoing feature activation is not available for this attack roll.`,
     );
   }
   const requiredRollMode = attackRollModeWithOptionalOngoingFeature(
@@ -214,14 +265,14 @@ export function resolveOffHandAttack(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Light Property Bonus Action Attack roll mode does not match the activated ongoing feature rule.",
+      `${label} roll mode does not match the activated ongoing feature rule.`,
     );
   }
   if (!attackRollModeMatches(fillSet.attackRoll, requiredRollMode)) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Light Property Bonus Action Attack roll mode does not match the current attack-roll rule.",
+      `${label} roll mode does not match the current attack-roll rule.`,
     );
   }
   const criticalThreshold = criticalThresholdForAttack(
@@ -337,7 +388,7 @@ export function resolveOffHandAttack(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Light Property Bonus Action Attack damage can only be filled after a hit.",
+      `${label} damage can only be filled after a hit.`,
     );
   }
   if (!hit) {
@@ -549,11 +600,7 @@ export function spendOffHandBonusAction(
     kind: "bonusAction",
   });
   if (Either.isLeft(spent)) {
-    return invalidResult(
-      state,
-      "staleSubject",
-      "Bonus Action is no longer available for the current actor.",
-    );
+    return staleBonusActionResult(state);
   }
   const nextState = normalizeBattleGrapples({
     ...state,
@@ -564,4 +611,22 @@ export function spendOffHandBonusAction(
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
+}
+
+function bonusActionCanBeSpent(state: BattleState): boolean {
+  return Either.isRight(
+    spendActivationResource(state.currentTurnResources, {
+      kind: "bonusAction",
+    }),
+  );
+}
+
+function staleBonusActionResult(
+  state: BattleState,
+): Extract<BattleResolutionResult, { readonly tag: "invalid" }> {
+  return invalidResult(
+    state,
+    "staleSubject",
+    "Bonus Action is no longer available for the current actor.",
+  );
 }

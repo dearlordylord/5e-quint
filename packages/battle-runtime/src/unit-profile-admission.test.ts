@@ -780,6 +780,7 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
         classLevel: classLevel(1),
         martialArts: {
           condition: { kind: "unarmoredUnshieldedOnlyMonkWeapons" },
+          bonusActionAttack: { kind: "unarmedStrike" },
           damageReplacement: {
             scope: "unarmedOrMonkWeapon",
             dice: 1,
@@ -795,7 +796,7 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
     );
   });
 
-  test("monk_martial_arts attack projection admission does not require its later bonus action grant", () => {
+  test("monk_martial_arts admission requires its Bonus Action Unarmed Strike grant", () => {
     const unit = unitLibrary.requireUnit(monkMartialArtsUnitId);
     expect(unit.kind).toBe("class_feature");
     if (unit.kind !== "class_feature") {
@@ -817,16 +818,12 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
 
     expect(
       battleMartialArtsAttackProjectionSupportForUnit(attackProjectionUnit),
-    ).toBe(MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE);
+    ).toBe("unsupported");
     expect(
       parseSupportedUnitFeatureProfile(attackProjectionUnit, [
         { className: "monk", level: classLevel(1) },
       ]),
-    ).toEqual(
-      expect.objectContaining({
-        kind: "martialArtsAttackProjection",
-      }),
-    );
+    ).toBeNull();
   });
 
   test("monk_martial_arts keeps Dexterous Attacks while deferring later die scaling", () => {

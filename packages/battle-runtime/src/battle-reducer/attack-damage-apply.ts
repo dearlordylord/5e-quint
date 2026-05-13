@@ -1,5 +1,6 @@
 // Attack damage hole/disposition helpers extracted from battle-reducer.ts.
 // Cluster U (attack_damage_apply). Mechanical extraction — no behavior change.
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.martial-arts-attack-projection
 
 import { abilityModifier } from "@dnd/shared/types";
 import {
@@ -7,14 +8,17 @@ import {
   holeInstanceKey,
   type AttackRollResult,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
+import { isMonkWeapon } from "@dnd/shared-algebras/martial-arts-algebra";
 import type { HoleInstanceKey } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type { UnitRecord, WeaponRecord } from "@dnd/surface/surface/types";
 import type { CombatantId } from "../identity.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import type {
+  CharacterUnarmedStrikeActionOption,
   CharacterWeaponAttackActionOption,
   SupportedAttackActionOption,
 } from "../battle-action-options.ts";
+import { MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE } from "../unit-feature-support.ts";
 import {
   ATTACK_DAMAGE_DISPOSITION_HOLE_ID,
   ATTACK_DAMAGE_DISPOSITION_HOLE_INSTANCE,
@@ -174,7 +178,9 @@ export function iceKnifeDamageDispositionHoleKey(
   };
 }
 
-export function damageDispositionHoleIdForTarget(targetId: CombatantId): BattleHoleId {
+export function damageDispositionHoleIdForTarget(
+  targetId: CombatantId,
+): BattleHoleId {
   return holeId(`battle:damage-disposition:${targetId}`);
 }
 
@@ -378,6 +384,21 @@ export function offHandAttackActionOptionForActor(
   };
 }
 
+export function martialArtsBonusUnarmedStrikeActionOptionForActor(
+  state: BattleState,
+  actorId: CombatantId,
+): CharacterUnarmedStrikeActionOption | undefined {
+  const actor = state.combatants.get(actorId);
+  if (
+    actor?.origin.kind !== "character" ||
+    !hasMartialArtsAttackProjectionSupport(actor) ||
+    !martialArtsLoadoutEligible(actor.origin)
+  ) {
+    return undefined;
+  }
+  return actor.origin.unarmedStrike;
+}
+
 export function offHandAttackPrerequisiteMet(
   state: BattleState,
   actorId: CombatantId,
@@ -431,4 +452,38 @@ export function isLightMeleeWeapon(weapon: WeaponRecord): boolean {
     weapon.usage === "melee" &&
     (weapon.properties ?? []).some((property) => property.kind === "light")
   );
+}
+
+function hasMartialArtsAttackProjectionSupport(
+  actor: BattleCreatureState,
+): boolean {
+  if (actor.origin.kind !== "character") return false;
+  return actor.origin.characterUnitRefs.some((unitRef) =>
+    unitRef.supportProfiles.includes(
+      MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE,
+    ),
+  );
+}
+
+function martialArtsLoadoutEligible(
+  origin: Extract<
+    BattleCreatureState["origin"],
+    { readonly kind: "character" }
+  >,
+): boolean {
+  const loadout = origin.selectedLoadout;
+  if (loadout.armor !== undefined || loadout.shield !== undefined) {
+    return false;
+  }
+  const mainWeaponEligible =
+    loadout.weapon === undefined ||
+    (origin.attack !== null &&
+      loadout.weapon.unitId === origin.attack.weapon.id &&
+      isMonkWeapon(origin.attack.weapon));
+  const offHandWeaponEligible =
+    loadout.offHandWeapon === undefined ||
+    (origin.offHandAttack !== undefined &&
+      loadout.offHandWeapon.unitId === origin.offHandAttack.weapon.id &&
+      isMonkWeapon(origin.offHandAttack.weapon));
+  return mainWeaponEligible && offHandWeaponEligible;
 }

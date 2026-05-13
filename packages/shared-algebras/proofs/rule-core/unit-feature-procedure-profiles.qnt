@@ -375,6 +375,11 @@ module unitFeatureProcedureProfiles {
     unarmedStrikeSaveDc: int,
   }
 
+  type MartialArtsBonusUnarmedStrikeResult = {
+    turn: TurnProcedureState,
+    admitted: bool,
+  }
+
   type AttackRollMissToHitReplacementFacts = {
     naturalD20: int,
     total: int,
@@ -645,6 +650,17 @@ module unitFeatureProcedureProfiles {
       damageDice: damageDice,
       damageDieSize: damageDieSize,
       unarmedStrikeSaveDc: 8 + chosenModifier + facts.proficiencyBonus,
+    }
+  }
+
+  pure def resolveMartialArtsBonusUnarmedStrike(
+    turn: TurnProcedureState,
+    facts: MartialArtsEligibilityFacts
+  ): MartialArtsBonusUnarmedStrikeResult = {
+    val admitted = turn.bonusActionAvailable and martialArtsAttackEligible(facts)
+    {
+      turn: if (admitted) spendActionCost(turn, BonusActionCost) else turn,
+      admitted: admitted,
     }
   }
 
@@ -2080,6 +2096,30 @@ module unitFeatureProcedureProfiles {
       assert(shielded.damageDieSize == 4),
       assert(not(otherWeapon.eligible)),
       assert(otherWeapon.attackAbilityModifier == 2),
+    }
+  }
+
+  run test_martial_arts_bonus_unarmed_strike_spends_bonus_action_without_attack_prerequisite = {
+    val result = resolveMartialArtsBonusUnarmedStrike(
+      initialTurnProcedureState,
+      {
+        unarmored: true,
+        wieldingShield: false,
+        attackForm: MartialArtsUnarmedStrike,
+      },
+    )
+    val noBonusAction = resolveMartialArtsBonusUnarmedStrike(
+      initialTurnProcedureState.with("bonusActionAvailable", false),
+      {
+        unarmored: true,
+        wieldingShield: false,
+        attackForm: MartialArtsUnarmedStrike,
+      },
+    )
+    all {
+      assert(result.admitted),
+      assert(not(result.turn.bonusActionAvailable)),
+      assert(not(noBonusAction.admitted)),
     }
   }
 

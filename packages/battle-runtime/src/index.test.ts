@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bardic-inspiration-failed-d20-test spell.invocation-beam-sequence spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-marked-damage-rider spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bardic-inspiration-failed-d20-test unit-feature.martial-arts-attack-projection spell.invocation-beam-sequence spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-marked-damage-rider spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV72B bard_bardic_inspiration
 import { Schema } from "effect";
 import * as Either from "effect/Either";
@@ -4939,6 +4939,205 @@ describe("battle runtime", () => {
         ],
       },
     });
+  });
+
+  test("Martial Arts grants an eligible Bonus Action Unarmed Strike without an Attack-action prerequisite", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-martial-arts-bonus-unarmed-strike"),
+      combatants: [
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Monk",
+          initiative: 20,
+          classLevels: [{ className: "monk", level: 1 }],
+          attack: null,
+          unarmedStrike: testUnarmedStrikeDieAttack(),
+          selectedLoadout: {},
+          characterUnitRefs: [
+            supportedBattleUnitRef(
+              unitLibrary.requireUnit("monk_martial_arts"),
+            ),
+          ],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const act = discoverBattleActs(state).find(
+      (candidate) =>
+        candidate.subject.tag === "bonusAction" &&
+        candidate.subject.action === "martialArtsUnarmedStrike",
+    );
+    if (act === undefined) {
+      throw new Error("Expected Martial Arts Bonus Unarmed Strike act.");
+    }
+    const targetHole = findHole(act.initialHoles, "targetChoice");
+    const needsRoll = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill(targetHole, goblinId)],
+    });
+    const rollHole = requireHole(needsRoll, "attackRoll");
+    const needsDamage = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill(targetHole, goblinId),
+        attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+      ],
+    });
+    const damageHole = requireHole(needsDamage, "rolledDice");
+
+    const result = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill(targetHole, goblinId),
+        attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+        damageRollFill(damageHole, 4),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        turn: { bonusActionAvailable: false },
+        combatants: [
+          { combatantId: fighterId },
+          { combatantId: goblinId, hp: 3 },
+        ],
+      },
+    });
+  });
+
+  test("Martial Arts Bonus Action Unarmed Strike direct resolution requires an available Bonus Action", () => {
+    const eligibleState = startBattleRight({
+      battleId: battleId("battle-martial-arts-bonus-unarmed-strike-stale"),
+      combatants: [
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Monk",
+          initiative: 20,
+          classLevels: [{ className: "monk", level: 1 }],
+          attack: null,
+          unarmedStrike: testUnarmedStrikeDieAttack(),
+          selectedLoadout: {},
+          characterUnitRefs: [
+            supportedBattleUnitRef(
+              unitLibrary.requireUnit("monk_martial_arts"),
+            ),
+          ],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const state = {
+      ...eligibleState,
+      currentTurnResources: {
+        ...eligibleState.currentTurnResources,
+        currentHasBonusAction: false,
+      },
+    } satisfies BattleState;
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: {
+          tag: "bonusAction",
+          actorId: fighterId,
+          action: "martialArtsUnarmedStrike",
+          attackName: "Unarmed Strike",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Bonus Action is no longer available for the current actor.",
+    });
+  });
+
+  test("Martial Arts Bonus Action Unarmed Strike rejects armor, shield, and non-Monk-weapon loadouts", () => {
+    const rejectedLoadouts = [
+      {
+        name: "armor",
+        armorClass: heavyArmorClassState(),
+        selectedLoadout: {
+          armor: "equipment_chain_mail",
+          weapon: {
+            itemId: "main:weapon_dagger",
+            unitId: "weapon_dagger",
+            grip: "one_handed" as const,
+          },
+        },
+        attack: testDaggerAttack(),
+      },
+      {
+        name: "shield",
+        selectedLoadout: { shield: "equipment_shield" },
+        armorClass: {
+          ...defaultArmorClassState(),
+          leftHandUse: "shield" as const,
+        },
+        attack: null,
+      },
+      {
+        name: "non-monk weapon",
+        armorClass: undefined,
+        selectedLoadout: {
+          weapon: {
+            itemId: "main:weapon_longsword",
+            unitId: "weapon_longsword",
+            grip: "one_handed" as const,
+          },
+        },
+        attack: testLongswordAttack(),
+      },
+    ] as const;
+
+    for (const loadout of rejectedLoadouts) {
+      const state = startBattleRight({
+        battleId: battleId(`battle-martial-arts-reject-${loadout.name}`),
+        combatants: [
+          characterSeed({
+            combatantId: fighterId,
+            displayName: "Monk",
+            initiative: 20,
+            classLevels: [{ className: "monk", level: 1 }],
+            attack: loadout.attack,
+            selectedLoadout: loadout.selectedLoadout,
+            ...(loadout.armorClass === undefined
+              ? {}
+              : { armorClass: loadout.armorClass }),
+            characterUnitRefs: [
+              supportedBattleUnitRef(
+                unitLibrary.requireUnit("monk_martial_arts"),
+              ),
+            ],
+          }),
+          statBlockCreatureInit({ initiative: 10 }),
+        ],
+      });
+
+      expect(
+        discoverBattleActs(state).some(
+          (candidate) =>
+            candidate.subject.tag === "bonusAction" &&
+            candidate.subject.action === "martialArtsUnarmedStrike",
+        ),
+      ).toBe(false);
+      expect(
+        resolveBattleSubject({
+          state,
+          subject: {
+            tag: "bonusAction",
+            actorId: fighterId,
+            action: "martialArtsUnarmedStrike",
+            attackName: "Unarmed Strike",
+          },
+          fills: [],
+        }),
+      ).toMatchObject({ tag: "invalid", reason: "unsupportedActOption" });
+    }
   });
 
   test("natural 19 weapon attacks are ordinary hits without the admitted critical-range hook", () => {
@@ -10817,9 +11016,9 @@ describe("battle runtime", () => {
   });
 
   test("ability-modifier battle resources require a supported battle profile", () => {
-    expect(characterBattleResourceSupportedForUnit(bardicInspirationUnit())).toBe(
-      true,
-    );
+    expect(
+      characterBattleResourceSupportedForUnit(bardicInspirationUnit()),
+    ).toBe(true);
     expect(characterBattleResourceSupportedForUnit(cuttingWordsUnit())).toBe(
       true,
     );
@@ -21022,6 +21221,7 @@ function subjectName(
   | "escapeSpellRestraint"
   | "shakeAwakeFromSleep"
   | "offHandAttack"
+  | "martialArtsUnarmedStrike"
   | "statBlockActionOption"
   | "actionSpell"
   | "bonusActionSpell"
@@ -23072,10 +23272,7 @@ function grantBardicInspirationToGoblin(): BattleState {
   const bardicInspiration = bardicInspirationUnit();
   const state = bardicInspirationBattle({ charismaModifier: 3 });
   const subject = bardicInspirationSubject(bardicInspiration.id);
-  const target = findHole(
-    findAct(state, subject).initialHoles,
-    "targetChoice",
-  );
+  const target = findHole(findAct(state, subject).initialHoles, "targetChoice");
   return requireResolved(
     resolveBattleSubject({
       state,
@@ -23092,8 +23289,9 @@ function combatantHasBardicInspirationDie(
   return (
     state.combatants
       .get(actorId)
-      ?.activeEffects.some((effect) => effect.kind === "bardicInspirationDie") ??
-    false
+      ?.activeEffects.some(
+        (effect) => effect.kind === "bardicInspirationDie",
+      ) ?? false
   );
 }
 

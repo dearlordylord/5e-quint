@@ -27,6 +27,7 @@ export type BattleSubjectAction = (typeof BATTLE_SUBJECT_ACTIONS)[number];
 
 export const BATTLE_SUBJECT_BONUS_ACTIONS = [
   "offHandAttack",
+  "martialArtsUnarmedStrike",
   "statBlockActionOption",
 ] as const;
 export type BattleSubjectBonusAction =
@@ -294,12 +295,20 @@ export const BattleSubjectSchema = Schema.Union(
     actorId: CombatantId,
     action: Schema.Literal("shakeAwakeFromSleep"),
   }),
-  Schema.Struct({
-    tag: Schema.Literal("bonusAction"),
-    actorId: CombatantId,
-    action: Schema.Literal("offHandAttack"),
-    attackName: BattleSubjectTextSchema,
-  }),
+  Schema.Union(
+    Schema.Struct({
+      tag: Schema.Literal("bonusAction"),
+      actorId: CombatantId,
+      action: Schema.Literal("offHandAttack"),
+      attackName: BattleSubjectTextSchema,
+    }),
+    Schema.Struct({
+      tag: Schema.Literal("bonusAction"),
+      actorId: CombatantId,
+      action: Schema.Literal("martialArtsUnarmedStrike"),
+      attackName: BattleSubjectTextSchema,
+    }),
+  ),
   Schema.Struct({
     tag: Schema.Literal("bonusAction"),
     actorId: CombatantId,
@@ -539,6 +548,18 @@ function battleSubjectKey(subject: BattleSubject): string {
       subject.speedKind,
     ]);
   }
+  if (
+    subject.tag === "bonusAction" &&
+    (subject.action === "offHandAttack" ||
+      subject.action === "martialArtsUnarmedStrike")
+  ) {
+    return JSON.stringify([
+      subject.tag,
+      subject.actorId,
+      subject.action,
+      subject.attackName,
+    ]);
+  }
   return Match.value(subject).pipe(
     Match.when({ tag: "action", action: "attack" }, (attack) =>
       JSON.stringify([
@@ -614,14 +635,6 @@ function battleSubjectKey(subject: BattleSubject): string {
         action.targetId,
         action.sourceSpellId,
         action.sourceCombatantId,
-      ]),
-    ),
-    Match.when({ tag: "bonusAction", action: "offHandAttack" }, (attack) =>
-      JSON.stringify([
-        attack.tag,
-        attack.actorId,
-        attack.action,
-        attack.attackName,
       ]),
     ),
     Match.when(

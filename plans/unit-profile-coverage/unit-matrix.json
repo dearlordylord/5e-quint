@@ -288,14 +288,19 @@
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-offhand.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/character-battle-runtime/src/battle-character-build-projection.ts",
         "packages/battle-runtime/src/battle-reducer/movement-speed.ts"
       ],
       "sourceBoundary": "Character build class levels, retained monk_martial_arts Unit support profile, and canonical character loadout weapon/armor/shield facts",
       "taskRefs": [
-        "SRDINV73A"
+        "SRDINV73A",
+        "SRDINV73B"
       ],
-      "title": "Unit feature projects eligible Monk Martial Arts attack ability, damage die, and Grapple/Shove save DC facts",
+      "title": "Unit feature projects eligible Monk Martial Arts Bonus Action Unarmed Strike, attack ability, damage die, and Grapple/Shove save DC facts",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -304,6 +309,10 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/index.test.ts"
         },
         {
           "kind": "runtime-test",
@@ -2804,6 +2813,22 @@
         "unit-feature.martial-arts-attack-projection"
       ],
       "taskId": "SRDINV73A"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Shared Unit feature and promoted battle-runtime Quint facts cover Martial Arts Bonus Action Unarmed Strike admission, Bonus Action spending, and the same unarmored, unshielded, unarmed-or-Monk-weapon eligibility gate without an Attack-action prerequisite.",
+      "profileIds": [
+        "unit-feature.martial-arts-attack-projection"
+      ],
+      "taskId": "SRDINV73B"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Martial Arts Bonus Action Unarmed Strike discovery and resolution, Bonus Action spending, attack projection reuse, armor/shield/non-Monk-weapon rejection, and no Attack-action prerequisite.",
+      "profileIds": [
+        "unit-feature.martial-arts-attack-projection"
+      ],
+      "taskId": "SRDINV73B"
     }
   ],
   "units": [
@@ -3897,10 +3922,6 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "Task 280",
-            "mechanic": "Bonus Action Unarmed Strike after taking the Attack action"
-          },
-          {
             "followUpTaskId": "SRDINV78",
             "mechanic": "later-level Martial Arts die size increases beyond d6"
           }
@@ -3914,7 +3935,8 @@
         "supportedMechanics": [
           "while unarmored and not wielding a Shield, and unarmed or wielding only Monk weapons, eligible Unarmed Strikes and Monk weapons may use Dexterity instead of Strength for attack and damage rolls",
           "eligible Unarmed Strikes and eligible one-die Monk weapons may replace lower damage dice with the level-1 d6 Martial Arts die",
-          "eligible promoted Unarmed Strike Grapple and Shove save DCs may use Dexterity through the projected Unarmed Strike ability modifier"
+          "eligible promoted Unarmed Strike Grapple and Shove save DCs may use Dexterity through the projected Unarmed Strike ability modifier",
+          "while the same Martial Arts eligibility gate holds, the Monk can make an Unarmed Strike as a Bonus Action without an Attack-action prerequisite"
         ],
         "tag": "profile-subset-supported"
       },
@@ -3938,14 +3960,19 @@
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-offhand.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
             "packages/character-battle-runtime/src/battle-character-build-projection.ts",
             "packages/battle-runtime/src/battle-reducer/movement-speed.ts"
           ],
           "sourceBoundary": "Character build class levels, retained monk_martial_arts Unit support profile, and canonical character loadout weapon/armor/shield facts",
           "taskRefs": [
-            "SRDINV73A"
+            "SRDINV73A",
+            "SRDINV73B"
           ],
-          "title": "Unit feature projects eligible Monk Martial Arts attack ability, damage die, and Grapple/Shove save DC facts",
+          "title": "Unit feature projects eligible Monk Martial Arts Bonus Action Unarmed Strike, attack ability, damage die, and Grapple/Shove save DC facts",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -3954,6 +3981,10 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/index.test.ts"
             },
             {
               "kind": "runtime-test",

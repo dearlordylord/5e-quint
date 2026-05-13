@@ -219,6 +219,7 @@ import {
   resolveJumpMovementReplacementCommand,
   resolveMoveCommand,
   resolveMultiattack,
+  resolveMartialArtsBonusUnarmedStrike,
   resolveOffHandAttack,
   resolveOpportunityAttackCommand,
   resolveReady,
@@ -596,6 +597,36 @@ export function resolveBattleSubjectInternal(
     }
     if (subject.tag === "bonusAction" && subject.action === "offHandAttack") {
       return resolveOffHandAttack({
+        ...input,
+        subject,
+        ...(options.replayingInterruptedProcedure === undefined
+          ? {}
+          : {
+              replayingInterruptedProcedure:
+                options.replayingInterruptedProcedure,
+            }),
+        ...(options.suppressedReactionTrigger === undefined
+          ? {}
+          : { suppressedReactionTrigger: options.suppressedReactionTrigger }),
+        ...(options.pendingAttackDamageReductions === undefined
+          ? {}
+          : {
+              pendingAttackDamageReductions:
+                options.pendingAttackDamageReductions,
+            }),
+        ...(options.pendingAttackDamageAdditions === undefined
+          ? {}
+          : {
+              pendingAttackDamageAdditions:
+                options.pendingAttackDamageAdditions,
+            }),
+      });
+    }
+    if (
+      subject.tag === "bonusAction" &&
+      subject.action === "martialArtsUnarmedStrike"
+    ) {
+      return resolveMartialArtsBonusUnarmedStrike({
         ...input,
         subject,
         ...(options.replayingInterruptedProcedure === undefined
