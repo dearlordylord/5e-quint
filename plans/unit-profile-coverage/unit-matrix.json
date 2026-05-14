@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 359,
-      "numerator": 111,
-      "percent": "30.9%"
+      "denominator": 360,
+      "numerator": 112,
+      "percent": "31.1%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 426,
-      "numerator": 137,
-      "percent": "32.2%"
+      "denominator": 427,
+      "numerator": 138,
+      "percent": "32.3%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 138
+      "value": 139
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 73,
@@ -67,8 +67,8 @@
       "percent": "90.4%"
     },
     "profileClassificationCoverage": {
-      "denominator": 138,
-      "numerator": 138,
+      "denominator": 139,
+      "numerator": 139,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -97,9 +97,9 @@
       "percent": "13.7%"
     },
     "supportedProfileCoverage": {
-      "denominator": 112,
+      "denominator": 113,
       "numerator": 73,
-      "percent": "65.2%"
+      "percent": "64.6%"
     }
   },
   "metricSemantics": [
@@ -9378,6 +9378,24 @@
       ],
       "sourceRecordPath": "packages/surface/content/shield_of_faith.json",
       "unitId": "shield_of_faith"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Shillelagh's held Club or Quarterstaff weapon override, spellcasting ability attack and damage option, character-level damage die scaling, Force-or-normal damage choice, or recast/let-go early-end lifecycle.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/shillelagh.json",
+      "unitId": "shillelagh"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

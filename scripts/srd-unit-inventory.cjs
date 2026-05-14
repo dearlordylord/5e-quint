@@ -312,14 +312,6 @@ const spellUnitMissingClassifications = new Map([
     },
   ],
   [
-    "shillelagh",
-    {
-      kind: "needs-surface-widening",
-      missingConstruct:
-        "Spell Definition held Club or Quarterstaff weapon override: spellcasting ability for attacks and damage, character-level damage die upgrade, Force-or-normal damage choice, and early end on recast or let-go",
-    },
-  ],
-  [
     "sorcerous_burst",
     {
       kind: "needs-surface-widening",

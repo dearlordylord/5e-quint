@@ -1,0 +1,97 @@
+{
+  "description": "A Club or Quarterstaff you are holding is imbued with nature's power. For the duration, you can use your spellcasting ability instead of Strength for the attack and damage rolls of melee attacks using that weapon, and the weapon's damage die becomes a d8. If the attack deals damage, it can be Force damage or the weapon's normal damage type (your choice). The spell ends early if you cast it again or if you let go of the weapon. Cantrip Upgrade. The damage die changes when you reach levels 5 (d10), 11 (d12), and 17 (2d6).",
+  "id": "shillelagh",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "count": 1,
+      "heldBy": "caster",
+      "kind": "held_weapon",
+      "weaponIds": [
+        "weapon_club",
+        "weapon_quarterstaff"
+      ]
+    },
+    "castingTime": {
+      "kind": "bonus_action"
+    },
+    "components": {
+      "m": "mistletoe",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "earlyEnd": [
+        {
+          "kind": "caster_recasts_spell"
+        },
+        {
+          "kind": "caster_lets_go_of_attached_weapon"
+        }
+      ],
+      "kind": "timed",
+      "value": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 0,
+    "operations": [
+      {
+        "effect": {
+          "attackRollAbility": "spellcasting",
+          "attackScope": "melee_attacks_using_attached_weapon",
+          "damageDie": {
+            "axis": "character",
+            "base": {
+              "dice": 1,
+              "dieSize": 8
+            },
+            "kind": "threshold_tiers",
+            "tiers": [
+              {
+                "atLevel": 5,
+                "override": {
+                  "dieSize": 10
+                }
+              },
+              {
+                "atLevel": 11,
+                "override": {
+                  "dieSize": 12
+                }
+              },
+              {
+                "atLevel": 17,
+                "override": {
+                  "dice": 2,
+                  "dieSize": 6
+                }
+              }
+            ]
+          },
+          "damageRollAbility": "spellcasting",
+          "damageTypeChoice": [
+            "force",
+            "weapon_normal"
+          ],
+          "kind": "override_attached_weapon_attack",
+          "replacesAbility": "str"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      }
+    ],
+    "range": {
+      "kind": "self"
+    },
+    "school": "transmutation"
+  },
+  "name": "Shillelagh",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Shillelagh"
+  }
+}

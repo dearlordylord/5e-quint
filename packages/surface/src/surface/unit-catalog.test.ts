@@ -345,6 +345,57 @@ describe("SRD Unit catalog boundary", () => {
     }
   });
 
+  test("decodes Shillelagh as a held-weapon attack override", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const shillelagh = result.catalog.requireUnit("shillelagh");
+      expect(shillelagh.kind).toBe("spell");
+      if (shillelagh.kind !== "spell") return;
+      expect(shillelagh.mechanics.family).toBe("ongoing_effect");
+      if (shillelagh.mechanics.family !== "ongoing_effect") return;
+
+      expect(shillelagh.mechanics.duration).toEqual({
+        kind: "timed",
+        value: { unit: "minute", amount: 1 },
+        earlyEnd: [
+          { kind: "caster_recasts_spell" },
+          { kind: "caster_lets_go_of_attached_weapon" },
+        ],
+      });
+      expect(shillelagh.mechanics.attachment).toEqual({
+        kind: "held_weapon",
+        heldBy: "caster",
+        count: 1,
+        weaponIds: ["weapon_club", "weapon_quarterstaff"],
+      });
+      expect(shillelagh.mechanics.operations).toEqual([
+        {
+          trigger: { kind: "passive" },
+          effect: {
+            kind: "override_attached_weapon_attack",
+            replacesAbility: "str",
+            attackRollAbility: "spellcasting",
+            damageRollAbility: "spellcasting",
+            attackScope: "melee_attacks_using_attached_weapon",
+            damageDie: {
+              kind: "threshold_tiers",
+              axis: "character",
+              base: { dice: 1, dieSize: 8 },
+              tiers: [
+                { atLevel: 5, override: { dieSize: 10 } },
+                { atLevel: 11, override: { dieSize: 12 } },
+                { atLevel: 17, override: { dice: 2, dieSize: 6 } },
+              ],
+            },
+            damageTypeChoice: ["force", "weapon_normal"],
+          },
+        },
+      ]);
+    }
+  });
+
   test("decodes Dissonant Whispers as damage plus forced Reaction movement", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 

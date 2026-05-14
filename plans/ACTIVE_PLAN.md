@@ -208,7 +208,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 301,
       "id": "SRDINV80E",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Widen Shillelagh Weapon Override Surface"
     },
     {
@@ -303,7 +303,7 @@ Keep it synchronized with the DAG table and task details.
 | 298   | SRDINV80B - Widen Fog Cloud Spell Definition Surface                    | done                                          | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Fog Cloud](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Heavily Obscured](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: authored and installed Fog Cloud Surface facts for the point-origin slot-scaled fog Sphere, passive Heavily Obscured projection, Concentration duration, and strong-wind dispersal early end; promoted battle-runtime execution remains owner-evidence work tracked by generated inventory rows. |
 | 299   | SRDINV80C - Widen Spare the Dying Stable Lifecycle Surface              | done                                          | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Spare the Dying](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Stable](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: authored and installed Spare the Dying Surface facts for zero-Hit-Point not-dead creature targeting, Stable lifecycle application, and character-level range scaling; promoted battle-runtime execution remains owner-evidence work tracked by generated inventory rows. |
 | 300   | SRDINV80D - Widen Sanctuary Targeting Interdiction Surface              | done                                          | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Sanctuary](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Target](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: authored and installed Sanctuary Surface facts for the warded creature attachment, Wisdom-save interdiction when targeted by attack rolls or damaging spells, choose-new-target-or-lose outcome, area-effect exclusion, and warded-creature attack/spell/damage early end; promoted battle-runtime execution remains owner-evidence work tracked by the generated inventory rows. |
-| 301   | SRDINV80E - Widen Shillelagh Weapon Override Surface                    | ready-for-research                            | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Shillelagh](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Weapon Attack](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface Spell Definition facts for Shillelagh's held Club or Quarterstaff weapon override, spellcasting ability attack/damage option, level-scaled damage die, Force-or-normal damage choice, and early end on recast or let-go. |
+| 301   | SRDINV80E - Widen Shillelagh Weapon Override Surface                    | done                                          | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Shillelagh](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Weapon Attack](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: authored and installed Shillelagh Surface facts for the held Club or Quarterstaff attachment, spellcasting ability attack/damage option, level-scaled damage die, Force-or-normal damage choice, and recast/let-go early end; promoted battle-runtime execution remains owner-evidence work tracked by the generated inventory rows. |
 | 302   | SRDINV80F - Widen Fire Bolt and Sorcerous Burst Cantrip Surface         | ready-for-research                            | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Fire Bolt](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Sorcerous Burst](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface Spell Definition facts for Fire Bolt object targeting and ignition, plus Sorcerous Burst's chosen damage type, exploding d8 loop cap, object target branch, and cantrip damage scaling. |
 | 303   | SRDINV80G - Widen Hex Curse Spell Definition Surface                    | ready-for-research                            | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Hex](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Ability Check](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface Spell Definition facts for Hex's curse retargeting, chosen-ability Ability Check Disadvantage, attack-hit bonus damage, and slot-scaled Concentration duration. |
 | 304   | SRDINV81 - Promote Pact of the Chain Find Familiar Access               | ready-for-research                            | SRDINV76E, SRDINV78 | SRDINV83 | [Pact of the Chain research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76E_PACT_OF_THE_CHAIN_FAMILIAR_BOUNDARY_RESEARCH.md), [Pact of the Chain](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Find Familiar](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Magic Action](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote selected Pact of the Chain into Find Familiar Spell Access with Magic-action no-slot invocation and form eligibility references; leave companion lifecycle and familiar Reaction attack for later companion-owner work. |
@@ -1155,7 +1155,7 @@ convergence.
 
 ### Task 301 - SRDINV80E - Widen Shillelagh Weapon Override Surface
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV78
 
@@ -1181,6 +1181,12 @@ Holding/Wielding vocabulary, and cantrip damage scaling; Surface parser/schema
 tests; content regeneration if Dhall changes; `pnpm
 unit-profile-coverage:check --write`; `pnpm quality`; `/simplify`
 convergence.
+
+Completed: authored and installed Shillelagh Surface facts for the held Club or
+Quarterstaff attachment, spellcasting ability attack/damage option, level-scaled
+damage die, Force-or-normal damage choice, and recast/let-go early end; promoted
+battle-runtime execution remains owner-evidence work tracked by the generated
+inventory rows.
 
 ### Task 302 - SRDINV80F - Widen Fire Bolt and Sorcerous Burst Cantrip Surface
 

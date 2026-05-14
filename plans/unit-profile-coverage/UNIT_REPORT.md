@@ -8,16 +8,16 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Metric | Value |
 | --- | ---: |
-| Installed collection inventory count | 138 Units |
+| Installed collection inventory count | 139 Units |
 
 ## Coverage Metrics
 
 | Metric | Covered | Percent |
 | --- | ---: | ---: |
-| Authored Surface Unit catalog admission | 137/426 | 32.2% |
-| Authored Surface executable catalog admission | 111/359 | 30.9% |
-| Installed Unit profile classification coverage | 138/138 | 100% |
-| Supported executable Unit coverage | 73/112 | 65.2% |
+| Authored Surface Unit catalog admission | 138/427 | 32.3% |
+| Authored Surface executable catalog admission | 112/360 | 31.1% |
+| Installed Unit profile classification coverage | 139/139 | 100% |
+| Supported executable Unit coverage | 73/113 | 64.6% |
 | QNT profile modeling coverage | 56/56 | 100% |
 | QNT proof coverage | 55/56 | 98.2% |
 | Runtime mapping coverage | 56/56 | 100% |
@@ -915,6 +915,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `detect_evil_and_good` | unsupported-profile | Detection/occlusion search semantics and Hallow discovery are not promoted as battle Unit profiles. |
 | `detect_magic` | unsupported-profile | Detection/concentration search semantics are not promoted as a battle Unit profile. |
 | `detect_poison_and_disease` | unsupported-profile | Detection/occlusion search semantics and poison/disease identification are not promoted as battle Unit profiles. |
+| `shillelagh` | unsupported-profile | Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Shillelagh's held Club or Quarterstaff weapon override, spellcasting ability attack and damage option, character-level damage die scaling, Force-or-normal damage choice, or recast/let-go early-end lifecycle. |
 | `sleep` | profile-subset-supported | supported subset: point-origin 5-foot-radius Sphere target admission; Wisdom Saving Throw holes for selected targets that are not automatic successes; Exhaustion-immunity automatic success derived from retained Stat Block condition-immunity facts; Magic action and Spell Slot spend; failed initial save applies Sleep-owned Incapacitated until the end of the target's next turn with a repeat Wisdom save; repeat success ends that target's Sleep effect; failed repeat save escalates to spell-owned Unconscious for the remaining Concentration duration; damage from any source ends that target's Sleep effect with Sleep-owned condition cleanup; caller-supplied adjacent action shakes a target out of Sleep's effect and spends the actor's action; deferred: creatures that do not sleep automatically succeed only when an executable non-sleeper fact is supported (SRDINV41) |
 | `thunderwave` | profile-subset-supported | supported subset: self-origin 15-foot Cube Constitution Saving Throw boundary with table-supplied affected creatures; slot-scaled Thunder damage with half damage on successful saves; failed-save creature push consumed from caller-supplied legal destination or blocked-push facts; unsecured-object push disposition consumed from caller-supplied object facts; audible thunderous boom evidence within 300 feet; deferred: runtime-owned push geometry, collision/pathfinding, and final-position derivation (SRDINV55); broad object inventory simulation and sound propagation simulation (SRDINV55) |
 | `minor_illusion` | unsupported-profile | Sound/image illusion creation, physical-interaction reveal, faint rendering after Study, and recast expiry are illusion/exploration state outside promoted runtime owners. |
@@ -935,7 +936,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
-| srd-5.2.1 | unassigned | unsupported-profile | 49 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `rogue_expertise`, `rogue_thieves_cant`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `orc_darkvision`, `fog_cloud`, `sanctuary`, `spare_the_dying`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `minor_illusion`, `hideous_laughter`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff` |
+| srd-5.2.1 | unassigned | unsupported-profile | 50 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `rogue_expertise`, `rogue_thieves_cant`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `orc_darkvision`, `fog_cloud`, `sanctuary`, `spare_the_dying`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `shillelagh`, `minor_illusion`, `hideous_laughter`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff` |
 | srd-5.2.1 | unassigned | profile-subset-supported | 15 | `bard_bardic_inspiration`, `monk_martial_arts`, `ranger_favored_enemy`, `chill_touch`, `faerie_fire`, `feather_fall`, `grease`, `hunters_mark`, `jump`, `light`, `protection_from_evil_and_good`, `produce_flame`, `sleep`, `thunderwave`, `charm_person` |
 | srd-5.2.1 | QCORE10 | needs-surface-widening | 1 | `fire_bolt` |
 

@@ -1455,6 +1455,22 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "override_attached_weapon_attack": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "override_attached_weapon_attack",
+        label:
+          `override_attached_weapon_attack\n` +
+          `attack: ${e.attackRollAbility} for ${e.replacesAbility}\n` +
+          `damage: ${e.damageRollAbility} for ${e.replacesAbility}\n` +
+          `${describeDiceAmount(e.damageDie)}\n` +
+          `damage choice: ${e.damageTypeChoice.join(" or ")}\n` +
+          e.attackScope,
+      });
+      return id;
+    }
     case "container_storage": {
       const id = ids("eff");
       nodes.push({
@@ -2198,6 +2214,9 @@ function traceEffectAtomScaling(
           ids,
         );
       }
+      return;
+    case "override_attached_weapon_attack":
+      traceDiceAmountScaling(e.damageDie, effectId, slotId, nodes, edges, ids);
       return;
     case "none":
     case "modify_ac":
@@ -4764,6 +4783,15 @@ function traceAttachment(
       });
       return id;
     }
+    case "held_weapon": {
+      nodes.push({
+        id,
+        category: "attachment",
+        atomKind: "held_weapon",
+        label: describeHeldWeaponAttachment(a),
+      });
+      return id;
+    }
     case "location": {
       nodes.push({
         id,
@@ -4821,6 +4849,8 @@ function describeAttachmentHole(
       const filterLabel = describeObjectFilter(a.value.filter);
       return `${labelPrefix}\n${countLabel}${filterLabel}\nrange ${describeAttachmentRange(range, a.value.rangeOrigin)}`;
     }
+    case "held_weapon":
+      return `${labelPrefix}\n${describeHeldWeaponAttachment(a.value)}`;
     case "location":
       return `${labelPrefix}\nlocation\n${a.value.description}\nrange ${describeAttachmentRange(range, a.value.rangeOrigin)}`;
     default: {
@@ -4828,6 +4858,15 @@ function describeAttachmentHole(
       throw new Error(`unhandled attachment hole value: ${String(_)}`);
     }
   }
+}
+
+function describeHeldWeaponAttachment(
+  attachment: Extract<Attachment, { readonly kind: "held_weapon" }> | Extract<
+    Extract<Attachment, { readonly kind: "hole" }>["value"],
+    { readonly kind: "held_weapon" }
+  >,
+): string {
+  return `held_weapon\nheld by ${attachment.heldBy}\n${attachment.weaponIds.join(" or ")}`;
 }
 
 function describeOngoingCasterActionCost(

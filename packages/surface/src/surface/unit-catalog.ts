@@ -117,6 +117,7 @@ import rogueWeaponMasteryInput from "../../content/rogue_weapon_mastery.json";
 import sanctuaryInput from "../../content/sanctuary.json";
 import shieldInput from "../../content/shield.json";
 import shieldOfFaithInput from "../../content/shield_of_faith.json";
+import shillelaghInput from "../../content/shillelagh.json";
 import shockingGraspInput from "../../content/shocking_grasp.json";
 import sleepInput from "../../content/sleep.json";
 import sacredFlameInput from "../../content/sacred_flame.json";
@@ -362,6 +363,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     healingWordInput,
     shieldInput,
     shieldOfFaithInput,
+    shillelaghInput,
     sleepInput,
     thunderwaveInput,
     trueStrikeInput,

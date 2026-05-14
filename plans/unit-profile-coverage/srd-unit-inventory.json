@@ -161,9 +161,9 @@
       "rowsByStatus": {
         "accepted": 217,
         "accepted-no-battle-effect": 69,
-        "battle-runtime-required": 36,
+        "battle-runtime-required": 37,
         "partial-battle-runtime": 40,
-        "surface-widening-required": 5
+        "surface-widening-required": 4
       }
     },
     "levelOneClassContainers": 12,
@@ -175,14 +175,14 @@
       "catalog-installed-owner-evidence-present": 264,
       "non-runtime": 12,
       "catalog-only/dead-for-now": 76,
-      "catalog-installed-owner-evidence-required": 10,
-      "needs-surface-widening": 5
+      "catalog-installed-owner-evidence-required": 11,
+      "needs-surface-widening": 4
     },
     "spellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 76,
       "catalog-installed-owner-evidence-present": 120,
-      "catalog-installed-owner-evidence-required": 10,
-      "needs-surface-widening": 5
+      "catalog-installed-owner-evidence-required": 11,
+      "needs-surface-widening": 4
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -530,7 +530,7 @@
       "title": "Classify Installed Cantrip and Level-1 Spell Units",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Classify installed SRD cantrip and level-1 Spell Unit owner evidence separately from missing and catalog-only spell rows.",
-      "rowCount": 150,
+      "rowCount": 151,
       "rowIds": [
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_light",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_minor_illusion",
@@ -575,6 +575,7 @@
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_poison_spray",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_produce_flame",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_resistance",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_shillelagh",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_spare_the_dying",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_starry_wisp",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_animal_friendship",
@@ -778,9 +779,8 @@
       "title": "Review Catalog-Only and Surface-Widening Rows",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Preserve catalog-only/dead-for-now rows and name missing Surface constructs for nonspell and spell Surface-widening blockers.",
-      "rowCount": 5,
+      "rowCount": 4,
       "rowIds": [
-        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_shillelagh",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_fire_bolt",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_sorcerous_burst",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hex",
@@ -8021,19 +8021,32 @@
       "detail": "Shillelagh (Transmutation; —)",
       "candidateUnitId": "shillelagh",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "Spell Definition held Club or Quarterstaff weapon override: spellcasting ability for attacks and damage, character-level damage die upgrade, Force-or-normal damage choice, and early end on recast or let-go"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "shillelagh",
+        "sourceRecordPath": "packages/surface/content/shillelagh.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "shillelagh"
       },
-      "finalDisposition": "needs-surface-widening",
-      "ownerEvidence": [],
-      "nextAction": "Widen Surface: Spell Definition held Club or Quarterstaff weapon override: spellcasting ability for attacks and damage, character-level damage die upgrade, Force-or-normal damage choice, and early end on recast or let-go."
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit shillelagh is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Unit matrix records unsupported-profile: Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Shillelagh's held Club or Quarterstaff weapon override, spellcasting ability attack and damage option, character-level damage die scaling, Force-or-normal damage choice, or recast/let-go early-end lifecycle. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Unit matrix records unsupported-profile: Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Shillelagh's held Club or Quarterstaff weapon override, spellcasting ability attack and damage option, character-level damage die scaling, Force-or-normal damage choice, or recast/let-go early-end lifecycle. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_spare_the_dying",

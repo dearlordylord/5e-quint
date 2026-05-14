@@ -290,6 +290,15 @@ type SpellGrantedWeaponAttack = {
     readonly amount: DiceAmount;
   };
 };
+type SpellWeaponAttackOverride = {
+  readonly kind: "override_attached_weapon_attack";
+  readonly replacesAbility: "str";
+  readonly attackRollAbility: "spellcasting";
+  readonly damageRollAbility: "spellcasting";
+  readonly attackScope: "melee_attacks_using_attached_weapon";
+  readonly damageDie: DiceAmount;
+  readonly damageTypeChoice: readonly ["force", "weapon_normal"];
+};
 type ContainerStorageProfile = {
   readonly maxWeightPounds: number;
   readonly maxVolumeCubicFeet: number;
@@ -828,6 +837,7 @@ type EffectAtom =
     }
   | { readonly kind: "transport_exile"; readonly destination: ExileDestination }
   | SpellGrantedWeaponAttack
+  | SpellWeaponAttackOverride
   | {
       readonly kind: "container_storage";
       readonly storage: ContainerStorageProfile;
@@ -1268,6 +1278,7 @@ export const DurationEndTriggerSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("target_takes_damage") }),
   Schema.Struct({ kind: Schema.Literal("caster_recasts_spell") }),
   Schema.Struct({ kind: Schema.Literal("area_dispersed_by_strong_wind") }),
+  Schema.Struct({ kind: Schema.Literal("caster_lets_go_of_attached_weapon") }),
 );
 
 export const DurationSchema = Schema.Union(
@@ -1532,6 +1543,12 @@ export const AttachmentBaseSchema = Schema.Union(
     count: Schema.Literal(1, 2),
     filter: optionalExact(ObjectFilterSchema),
     rangeOrigin: optionalExact(AttachmentRangeOriginSchema),
+  }),
+  strictStruct({
+    kind: Schema.Literal("held_weapon"),
+    heldBy: Schema.Literal("caster"),
+    count: Schema.Literal(1),
+    weaponIds: nonEmpty(Schema.String),
   }),
   Schema.Struct({
     kind: Schema.Literal("location"),
@@ -2423,6 +2440,18 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
             damageType: DamageTypeRefSchema,
             amount: DiceAmountSchema,
           }),
+        ),
+      }),
+      strictStruct({
+        kind: Schema.Literal("override_attached_weapon_attack"),
+        replacesAbility: Schema.Literal("str"),
+        attackRollAbility: Schema.Literal("spellcasting"),
+        damageRollAbility: Schema.Literal("spellcasting"),
+        attackScope: Schema.Literal("melee_attacks_using_attached_weapon"),
+        damageDie: DiceAmountSchema,
+        damageTypeChoice: Schema.Tuple(
+          Schema.Literal("force"),
+          Schema.Literal("weapon_normal"),
         ),
       }),
       Schema.Struct({
