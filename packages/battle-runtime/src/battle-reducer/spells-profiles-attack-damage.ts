@@ -26,6 +26,7 @@ import {
   type SpellAttackBeamSequenceTargeting,
   type SpellAttackDamageTargeting,
   type SpellAttackHitEffect,
+  type SpellObjectHitEffect,
   type SpellTargeting,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
@@ -532,21 +533,20 @@ export function supportedSpellAttackDamageProfile(
   ) {
     return [];
   }
-  if (
-    spellAttackDamageHasUnprojectedObjectHitEffect({
-      spell,
-      phase,
-      targeting,
-      damageEffect,
-      postDamageEffects,
-    })
-  ) {
+  const objectHitProjection = supportedSpellObjectHitEffect({
+    spell,
+    phase,
+    targeting,
+    damageEffect,
+    postDamageEffects,
+  });
+  if (objectHitProjection === null) {
     return [];
   }
   const postDamageRiders = supportedSpellPostDamageRiders(
     spell,
     phase,
-    postDamageEffects,
+    objectHitProjection.postDamageEffects,
   );
   if (postDamageRiders === null) {
     return [];
@@ -576,6 +576,7 @@ export function supportedSpellAttackDamageProfile(
         Number(input.proficiencyBonus),
     ),
     postDamageRiders,
+    objectHitEffect: objectHitProjection.objectHitEffect,
   };
 
   return [{ ...damageSpellSource(input), ...attackDamageInvocation }];
@@ -714,7 +715,7 @@ function eldritchBlastBeamCount(
   );
 }
 
-function spellAttackDamageHasUnprojectedObjectHitEffect(input: {
+function supportedSpellObjectHitEffect(input: {
   readonly spell: SpellRecord;
   readonly phase: Extract<
     SpellActivationPhase,
@@ -723,14 +724,26 @@ function spellAttackDamageHasUnprojectedObjectHitEffect(input: {
   readonly targeting: SpellAttackDamageTargeting;
   readonly damageEffect: SpellAttackHitEffect;
   readonly postDamageEffects: readonly SpellAttackHitEffect[];
-}): boolean {
-  return (
+}): {
+  readonly objectHitEffect: SpellObjectHitEffect;
+  readonly postDamageEffects: readonly SpellAttackHitEffect[];
+} | null {
+  if (
     input.targeting.kind === "singleCreatureOrObject" &&
-    isCanonicalSrdFireBoltWithDeferredObjectIgnition(input)
-  );
+    isCanonicalSrdFireBoltObjectIgnition(input)
+  ) {
+    return {
+      objectHitEffect: { kind: "igniteFlammableUnattended" },
+      postDamageEffects: [],
+    };
+  }
+  return {
+    objectHitEffect: { kind: "none" },
+    postDamageEffects: input.postDamageEffects,
+  };
 }
 
-function isCanonicalSrdFireBoltWithDeferredObjectIgnition(input: {
+function isCanonicalSrdFireBoltObjectIgnition(input: {
   readonly spell: SpellRecord;
   readonly phase: Extract<
     SpellActivationPhase,
@@ -748,7 +761,10 @@ function isCanonicalSrdFireBoltWithDeferredObjectIgnition(input: {
     input.phase.attackKind === "ranged_spell_attack" &&
     input.damageEffect.kind === "damage" &&
     input.damageEffect.damageType === "fire" &&
-    input.postDamageEffects.length === 0
+    input.postDamageEffects.length === 1 &&
+    input.postDamageEffects[0]?.kind === "ignite_objects" &&
+    input.postDamageEffects[0].filter.material === "flammable" &&
+    input.postDamageEffects[0].filter.heldOrWorn === "forbidden"
   );
 }
 

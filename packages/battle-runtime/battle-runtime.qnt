@@ -263,6 +263,12 @@ module battleRuntime {
   //   spellcasting ability for attack and damage rolls instead of Strength or
   //   Dexterity, lets the weapon damage type be Radiant or normal, and adds
   //   Radiant cantrip-scaling damage at levels 5, 11, and 17.
+  // - Spells/Descriptions-E-L.md lines 435-446, Rules-Glossary.md lines
+  //   110-112, 142-176, 331-350, and 730-732, and
+  //   UBIQUITOUS_LANGUAGE.md: Fire Bolt is an Action cantrip with a ranged
+  //   spell attack against a creature or object within 120 feet. On a hit it
+  //   deals Fire damage with character-level cantrip scaling, and a flammable
+  //   object starts burning if it is not worn or carried.
   // - Character-Origins.md lines 253-255, Playing-the-Game.md lines 788-806,
   //   Rules-Glossary.md lines 361-365, and UBIQUITOUS_LANGUAGE.md:
   //   Orc Adrenaline Rush spends a limited-use Bonus Action Dash, grants
@@ -297,8 +303,8 @@ module battleRuntime {
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | EldritchBlast | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | Light | TrueStrike | Grease | Command | DissonantWhispers | FeatherFall | HellishRebuke
-  type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | StarryWispSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | FireBolt | EldritchBlast | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | Light | TrueStrike | Grease | Command | DissonantWhispers | FeatherFall | HellishRebuke
+  type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | StarryWispSpellAttack | FireBoltSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack
   type SpellAttackBeamSequenceInvocation =
     | EldritchBlastBeamSequence
   type ChainedSpellAttackDamageInvocation =
@@ -337,6 +343,7 @@ module battleRuntime {
   type ObjectTarget =
     | StarryWispObjectTarget
     | EldritchBlastObjectTarget
+    | FireBoltObjectTarget
     | ProduceFlameObjectTarget
     | LightObjectTarget
     | PriorLightObjectTarget
@@ -363,6 +370,16 @@ module battleRuntime {
         object: ObjectTarget,
         damageType: DamageType,
         rolledDamage: int,
+      })
+  type ObjectIgnitionDisposition =
+    | ObjectFlammableUnattended
+    | ObjectNotFlammable
+    | ObjectWornOrCarried
+  type ObjectIgnitionOutcome =
+    | ObjectStartsBurning({
+        object: ObjectTarget,
+        source: Actor,
+        sourceSpell: SpellInvocation,
       })
   type LightEmitterAttachment =
     | CombatantLightEmitter({ actor: Actor })
@@ -4674,6 +4691,7 @@ module battleRuntime {
       | PoisonSpray => false
       | ChillTouch => false
       | StarryWisp => false
+      | FireBolt => false
       | EldritchBlast => false
       | SacredFlame => false
       | InflictWounds => true
@@ -4763,6 +4781,7 @@ module battleRuntime {
       | PoisonSpraySpellAttack => BattleRuntimePoisonSpraySpellAttack
       | ChillTouchSpellAttack => BattleRuntimeChillTouchSpellAttack
       | StarryWispSpellAttack => BattleRuntimeStarryWispSpellAttack
+      | FireBoltSpellAttack => BattleRuntimeFireBoltSpellAttack
       | ShockingGraspSpellAttack => BattleRuntimeShockingGraspSpellAttack
       | GuidingBoltSpellAttack => BattleRuntimeGuidingBoltSpellAttack
       | RayOfSicknessSpellAttack => BattleRuntimeRayOfSicknessSpellAttack
@@ -4983,6 +5002,34 @@ module battleRuntime {
             fill.damageThreshold,
           )
     }
+
+  pure def spellAttackDamageSpellInvocation(invocation: SpellAttackDamageInvocation): SpellInvocation =
+    match invocation {
+      | RayOfFrostSpellAttack => RayOfFrost
+      | PoisonSpraySpellAttack => PoisonSpray
+      | ChillTouchSpellAttack => ChillTouch
+      | StarryWispSpellAttack => StarryWisp
+      | FireBoltSpellAttack => FireBolt
+      | ShockingGraspSpellAttack => ShockingGrasp
+      | GuidingBoltSpellAttack => GuidingBolt
+      | RayOfSicknessSpellAttack => RayOfSickness
+      | ProduceFlameHurlSpellAttack => ProduceFlame
+    }
+
+  pure def spellObjectIgnitionOutcomes(
+    invocation: SpellAttackDamageInvocation,
+    object: ObjectTarget,
+    source: Actor,
+    disposition: ObjectIgnitionDisposition,
+  ): Set[ObjectIgnitionOutcome] =
+    if (invocation == FireBoltSpellAttack and disposition == ObjectFlammableUnattended)
+      Set(ObjectStartsBurning({
+        object: object,
+        source: source,
+        sourceSpell: spellAttackDamageSpellInvocation(invocation),
+      }))
+    else
+      Set()
 
   pure def spellAttackBeamSequenceObjectDamageOutcome(
     invocation: SpellAttackBeamSequenceInvocation,
@@ -7487,6 +7534,7 @@ module battleRuntime {
       assert(spellAttackDamageType(PoisonSpraySpellAttack) == Poison),
       assert(spellAttackDamageType(ChillTouchSpellAttack) == Necrotic),
       assert(spellAttackDamageType(StarryWispSpellAttack) == Radiant),
+      assert(spellAttackDamageType(FireBoltSpellAttack) == Fire),
       assert(spellAttackDamageType(ShockingGraspSpellAttack) == Lightning),
       assert(spellAttackDamageType(GuidingBoltSpellAttack) == Radiant),
       assert(spellAttackDamageType(RayOfSicknessSpellAttack) == Poison),
@@ -7501,6 +7549,7 @@ module battleRuntime {
         expiresAt: EndOfTurnLightEmitterExpiration({ actor: Fighter, round: 2 }),
       })),
       assert(spellAttackDamageSupportsObjectTarget(StarryWispSpellAttack)),
+      assert(spellAttackDamageSupportsObjectTarget(FireBoltSpellAttack)),
       assert(spellAttackDamageSupportsObjectTarget(ProduceFlameHurlSpellAttack)),
       assert(not(spellAttackDamageSupportsObjectTarget(ChillTouchSpellAttack))),
       assert(spellAttackBeamSequenceDamageType(EldritchBlastBeamSequence) == Force),
@@ -7516,6 +7565,10 @@ module battleRuntime {
       assert(spellAttackDamageObjectReplayHoles(StarryWispSpellAttack, true, true, false, false, false) == Set(AttackRoll)),
       assert(spellAttackDamageObjectReplayHoles(StarryWispSpellAttack, true, true, true, true, false) == Set(SpellDamageRoll)),
       assert(spellAttackDamageObjectReplayHoles(StarryWispSpellAttack, true, true, true, false, false) == Set()),
+      assert(spellAttackDamageObjectReplayHoles(FireBoltSpellAttack, true, false, false, false, false) == Set(ObjectTargetChoice)),
+      assert(spellAttackDamageObjectReplayHoles(FireBoltSpellAttack, true, true, false, false, false) == Set(AttackRoll)),
+      assert(spellAttackDamageObjectReplayHoles(FireBoltSpellAttack, true, true, true, true, false) == Set(SpellDamageRoll)),
+      assert(spellAttackDamageObjectReplayHoles(FireBoltSpellAttack, true, true, true, false, false) == Set()),
       assert(spellAttackDamageObjectReplayHoles(ProduceFlameHurlSpellAttack, true, false, false, false, false) == Set(ObjectTargetChoice)),
       assert(spellAttackDamageObjectReplayHoles(ProduceFlameHurlSpellAttack, true, true, false, false, false) == Set(AttackRoll)),
       assert(spellAttackDamageObjectReplayHoles(ProduceFlameHurlSpellAttack, true, true, true, true, false) == Set(SpellDamageRoll)),
@@ -7537,6 +7590,22 @@ module battleRuntime {
         nextHitPoints: 10,
         destroyed: false,
       })),
+      assert(spellObjectDamageOutcome(FireBoltSpellAttack, FireBoltObjectTarget, 9, ObjectHitPoints({ hitPoints: 8 })) == ObjectHitPointDamage({
+        object: FireBoltObjectTarget,
+        damageType: Fire,
+        rolledDamage: 9,
+        effectiveDamage: 9,
+        priorHitPoints: 8,
+        nextHitPoints: 0,
+        destroyed: true,
+      })),
+      assert(spellObjectIgnitionOutcomes(FireBoltSpellAttack, FireBoltObjectTarget, Fighter, ObjectFlammableUnattended) == Set(ObjectStartsBurning({
+        object: FireBoltObjectTarget,
+        source: Fighter,
+        sourceSpell: FireBolt,
+      }))),
+      assert(spellObjectIgnitionOutcomes(FireBoltSpellAttack, FireBoltObjectTarget, Fighter, ObjectWornOrCarried) == Set()),
+      assert(spellObjectIgnitionOutcomes(StarryWispSpellAttack, StarryWispObjectTarget, Fighter, ObjectFlammableUnattended) == Set()),
       assert(spellObjectDamageOutcome(ProduceFlameHurlSpellAttack, ProduceFlameObjectTarget, 6, ObjectHitPoints({ hitPoints: 5 })) == ObjectHitPointDamage({
         object: ProduceFlameObjectTarget,
         damageType: Fire,

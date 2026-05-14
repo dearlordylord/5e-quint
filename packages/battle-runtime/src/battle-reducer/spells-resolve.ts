@@ -36,7 +36,7 @@ import {
   type SpellMarkedDamageRider,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
-import type { CombatantId } from "../identity.ts";
+import { spellId, type CombatantId } from "../identity.ts";
 import {
   damageDispositionFillFor,
   damageDispositionFillsValidation,
@@ -87,6 +87,7 @@ import {
   spellDamageHole,
   spellDamageTypes,
   spellObjectAttackRollHole,
+  spellObjectIgnitionFact,
   spellTargetHole,
   spellTargetIsLegal,
   supportedSpellInvocationMatchesRef,
@@ -516,24 +517,7 @@ export function resolveSpellAct(
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
-      fillSet: {
-        ...fillSet,
-        objectTarget: {
-          ...objectTarget,
-          spatialFacts: objectTarget.spatialFacts.filter(
-            (
-              fact,
-            ): fact is Extract<
-              (typeof objectTarget.spatialFacts)[number],
-              {
-                readonly kind: "spellObjectTarget" | "spellObjectTargetSight";
-              }
-            > =>
-              fact.kind === "spellObjectTarget" ||
-              fact.kind === "spellObjectTargetSight",
-          ),
-        },
-      },
+      fillSet: { ...fillSet, objectTarget },
     });
   }
   if (fillSet.targetId == null) {
@@ -1032,6 +1016,34 @@ function resolveSpellAttackDamageObjectTarget(input: {
       "Spell object target must include a matching table-supplied object sight fact.",
     );
   }
+  const ignitionFact =
+    input.invocation.procedure === "spellAttackDamage" &&
+    input.invocation.objectHitEffect.kind === "igniteFlammableUnattended"
+      ? spellObjectIgnitionFact(
+          input.fillSet.objectTarget.spatialFacts.filter(
+            (
+              fact,
+            ): fact is Extract<
+              (typeof input.fillSet.objectTarget.spatialFacts)[number],
+              { readonly kind: "spellObjectIgnition" }
+            > => fact.kind === "spellObjectIgnition",
+          ),
+          input.actorId,
+          input.fillSet.objectTarget.objectId,
+          input.invocation,
+        )
+      : null;
+  if (
+    input.invocation.procedure === "spellAttackDamage" &&
+    input.invocation.objectHitEffect.kind === "igniteFlammableUnattended" &&
+    ignitionFact === null
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Spell object target must include a matching table-supplied object ignition fact.",
+    );
+  }
 
   const spellCastReactionWindow = maybeOpenReactionWindow(
     input.input.state,
@@ -1167,12 +1179,24 @@ function resolveSpellAttackDamageObjectTarget(input: {
     critical,
     disposition: objectFact.damageDisposition,
   });
+  const objectIgnitions =
+    ignitionFact?.disposition.kind === "flammableUnattended"
+      ? [
+          {
+            kind: "startsBurning" as const,
+            objectId: input.fillSet.objectTarget.objectId,
+            sourceCombatantId: input.actorId,
+            sourceSpellId: spellId(input.invocation.spell.id),
+          },
+        ]
+      : [];
 
   return {
     tag: "resolved",
     state: spentResources.state,
     snapshot: snapshotBattle(spentResources.state),
     objectDamages: [objectDamage],
+    ...(objectIgnitions.length === 0 ? {} : { objectIgnitions }),
   };
 }
 

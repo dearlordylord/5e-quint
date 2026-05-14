@@ -386,6 +386,12 @@ const BattleObjectDamageDispositionSchema = Schema.Union(
   }),
 );
 
+const BattleObjectIgnitionDispositionSchema = Schema.Union(
+  Schema.Struct({ kind: Schema.Literal("flammableUnattended") }),
+  Schema.Struct({ kind: Schema.Literal("notFlammable") }),
+  Schema.Struct({ kind: Schema.Literal("wornOrCarried") }),
+);
+
 export const BattleObjectDamageOutcomeSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("hitPoints"),
@@ -404,6 +410,13 @@ export const BattleObjectDamageOutcomeSchema = Schema.Union(
     rolledDamage: DamageAmount,
   }),
 );
+
+export const BattleObjectIgnitionOutcomeSchema = Schema.Struct({
+  kind: Schema.Literal("startsBurning"),
+  objectId: BattleObjectId,
+  sourceCombatantId: CombatantId,
+  sourceSpellId: Schema.String,
+});
 
 const SupportedHealingSpellInvocationSchema = Schema.Struct({
   access: PreparedSpellAccessSchema,
@@ -606,6 +619,12 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
           }),
         ),
       ),
+      objectHitEffect: Schema.Union(
+        Schema.Struct({ kind: Schema.Literal("none") }),
+        Schema.Struct({
+          kind: Schema.Literal("igniteFlammableUnattended"),
+        }),
+      ),
     }),
     Schema.Struct({
       access: PreparedSpellAccessSchema,
@@ -649,6 +668,12 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
             expiresAt: Schema.Literal("endOfCasterNextTurn"),
           }),
         ),
+      ),
+      objectHitEffect: Schema.Union(
+        Schema.Struct({ kind: Schema.Literal("none") }),
+        Schema.Struct({
+          kind: Schema.Literal("igniteFlammableUnattended"),
+        }),
       ),
     }),
     Schema.Struct({
@@ -1654,6 +1679,16 @@ type BattleFillEncoded =
               | { readonly kind: "tableResolved" };
           }
         | {
+            readonly kind: "spellObjectIgnition";
+            readonly casterId: string;
+            readonly objectId: string;
+            readonly spellId: string;
+            readonly disposition:
+              | { readonly kind: "flammableUnattended" }
+              | { readonly kind: "notFlammable" }
+              | { readonly kind: "wornOrCarried" };
+          }
+        | {
             readonly kind: "spellObjectTargetSight";
             readonly casterId: string;
             readonly objectId: string;
@@ -1799,6 +1834,16 @@ type BattleFillEncoded =
                   readonly damageThreshold: number;
                 }
               | { readonly kind: "tableResolved" };
+          }
+        | {
+            readonly kind: "spellObjectIgnition";
+            readonly casterId: string;
+            readonly objectId: string;
+            readonly spellId: string;
+            readonly disposition:
+              | { readonly kind: "flammableUnattended" }
+              | { readonly kind: "notFlammable" }
+              | { readonly kind: "wornOrCarried" };
           }
         | {
             readonly kind: "spellObjectTargetSight";
@@ -2190,6 +2235,13 @@ export const BattleFillSchema: Schema.Schema<
               damageDisposition: BattleObjectDamageDispositionSchema,
             }),
             Schema.Struct({
+              kind: Schema.Literal("spellObjectIgnition"),
+              casterId: CombatantId,
+              objectId: BattleObjectId,
+              spellId: Schema.String,
+              disposition: BattleObjectIgnitionDispositionSchema,
+            }),
+            Schema.Struct({
               kind: Schema.Literal("spellObjectTargetSight"),
               casterId: CombatantId,
               objectId: BattleObjectId,
@@ -2342,6 +2394,13 @@ export const BattleFillSchema: Schema.Schema<
             rangeFeet: MovementFeet,
             armorClass: BattleArmorClassSchema,
             damageDisposition: BattleObjectDamageDispositionSchema,
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("spellObjectIgnition"),
+            casterId: CombatantId,
+            objectId: BattleObjectId,
+            spellId: Schema.String,
+            disposition: BattleObjectIgnitionDispositionSchema,
           }),
           Schema.Struct({
             kind: Schema.Literal("spellObjectTargetSight"),

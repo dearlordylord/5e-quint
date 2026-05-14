@@ -62,6 +62,10 @@ type ObjectTargetSightFact = Extract<
   BattleTargetSpatialFact,
   { readonly kind: "spellObjectTargetSight" }
 >;
+type ObjectIgnitionFact = Extract<
+  BattleTargetSpatialFact,
+  { readonly kind: "spellObjectIgnition" }
+>;
 type ObjectLightTargetSize = ObjectLightTargetFact["size"];
 
 const OBJECT_LIGHT_ALLOWED_SIZES = [
@@ -358,6 +362,25 @@ export function spellObjectTargetSightFact(
   );
 }
 
+export function spellObjectIgnitionFact(
+  facts: readonly ObjectIgnitionFact[],
+  actorId: CombatantId,
+  objectId: BattleObjectId,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spellAttackDamage" }
+  >,
+): ObjectIgnitionFact | null {
+  return (
+    facts.find(
+      (fact) =>
+        fact.casterId === actorId &&
+        fact.objectId === objectId &&
+        fact.spellId === invocation.spell.id,
+    ) ?? null
+  );
+}
+
 export function spellObjectLightTargetFact(
   facts: readonly ObjectLightTargetFact[],
   actorId: CombatantId,
@@ -379,7 +402,9 @@ export function spellObjectLightTargetFact(
   );
 }
 
-function objectSizeIsLargeOrSmaller(objectSize: ObjectLightTargetSize): boolean {
+function objectSizeIsLargeOrSmaller(
+  objectSize: ObjectLightTargetSize,
+): boolean {
   return OBJECT_LIGHT_ALLOWED_SIZES.some((allowed) => allowed === objectSize);
 }
 

@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bardic-inspiration-failed-d20-test unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.invocation-beam-sequence spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-marked-damage-rider spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bardic-inspiration-failed-d20-test unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.invocation-beam-sequence spell.invocation-condition-save spell.invocation-damage-save-or-attack spell.invocation-grease-ground-hazard spell.invocation-marked-damage-rider spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV72B bard_bardic_inspiration
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV75B sorcerer_innate_sorcery
 import { Schema } from "effect";
@@ -138,6 +138,7 @@ import inflictWoundsInput from "../../surface/content/inflict_wounds.json";
 import shockingGraspInput from "../../surface/content/shocking_grasp.json";
 import guidingBoltInput from "../../surface/content/guiding_bolt.json";
 import rayOfSicknessInput from "../../surface/content/ray_of_sickness.json";
+import fireBoltInput from "../../surface/content/fire_bolt.json";
 import starryWispInput from "../../surface/content/starry_wisp.json";
 import viciousMockeryInput from "../../surface/content/vicious_mockery.json";
 import burningHandsInput from "../../surface/content/burning_hands.json";
@@ -274,6 +275,7 @@ const testSpellRecords = new Map(
     shockingGraspInput,
     guidingBoltInput,
     rayOfSicknessInput,
+    fireBoltInput,
     starryWispInput,
     viciousMockeryInput,
     burningHandsInput,
@@ -19242,6 +19244,275 @@ describe("battle runtime", () => {
     ).toBe(false);
   });
 
+  test("Fire Bolt object target requires ignition facts before resolving the object attack", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-fire-bolt-object-missing-ignition"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          classLevel: 5,
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("fire_bolt")],
+            preparedSpells: [],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject = magicSubject("fire_bolt");
+    const objectTarget = findHole(
+      findAct(state, subject).initialHoles,
+      "objectTargetChoice",
+    );
+
+    const result = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        objectTargetFill({
+          hole: objectTarget,
+          spellId: "fire_bolt",
+          rangeFeet: movementFeet(120),
+        }),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Spell object target must include a matching table-supplied object ignition fact.",
+    });
+  });
+
+  test("Fire Bolt applies cantrip-scaled Fire damage and ignites unattended flammable object hits", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-fire-bolt-object-hit"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          classLevel: 5,
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("fire_bolt")],
+            preparedSpells: [],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject = magicSubject("fire_bolt");
+    const objectTarget = findHole(
+      findAct(state, subject).initialHoles,
+      "objectTargetChoice",
+    );
+    const objectId = battleObjectId("dry-training-dummy");
+    const targetFillForObject = objectTargetFill({
+      hole: objectTarget,
+      objectId,
+      spellId: "fire_bolt",
+      rangeFeet: movementFeet(120),
+      damageDisposition: { kind: "hitPoints", hitPoints: Hp(8) },
+      spatialFacts: [
+        {
+          kind: "spellObjectTarget",
+          casterId: wizardId,
+          objectId,
+          spellId: "fire_bolt",
+          rangeFeet: movementFeet(120),
+          armorClass: armorClass(13),
+          damageDisposition: { kind: "hitPoints", hitPoints: Hp(8) },
+        },
+        {
+          kind: "spellObjectIgnition",
+          casterId: wizardId,
+          objectId,
+          spellId: "fire_bolt",
+          disposition: { kind: "flammableUnattended" },
+        },
+      ],
+    });
+    const attackRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFillForObject],
+      }),
+      "attackRoll",
+    );
+    const damage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFillForObject,
+          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        ],
+      }),
+      "rolledDice",
+    );
+
+    expect(damage).toMatchObject({
+      label: "Fire Bolt damage (2d10-fire)",
+      spell: {
+        damage: {
+          expr: { dice: 2, dieSize: 10 },
+          damageType: "fire",
+        },
+      },
+    });
+
+    const result = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFillForObject,
+        attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        damageRollFillWithGroups(damage, [[4, 5]]),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      objectDamages: [
+        {
+          kind: "hitPoints",
+          objectId,
+          damageType: "fire",
+          rolledDamage: damageAmount(9),
+          effectiveDamage: damageAmount(9),
+          priorHitPoints: Hp(8),
+          nextHitPoints: Hp(0),
+          destroyed: true,
+        },
+      ],
+      objectIgnitions: [
+        {
+          kind: "startsBurning",
+          objectId,
+          sourceCombatantId: wizardId,
+          sourceSpellId: "fire_bolt",
+        },
+      ],
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId, hp: 12 },
+          { combatantId: skeletonId, hp: 13 },
+        ],
+        turn: { actionResources: [] },
+      },
+    });
+  });
+
+  test("Fire Bolt object miss and non-igniting object hit do not emit object ignition outcomes", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-fire-bolt-object-no-ignition"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("fire_bolt")],
+            preparedSpells: [],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject = magicSubject("fire_bolt");
+    const objectTarget = findHole(
+      findAct(state, subject).initialHoles,
+      "objectTargetChoice",
+    );
+    const objectId = battleObjectId("training-object");
+    const targetFillForObject = objectTargetFill({
+      hole: objectTarget,
+      objectId,
+      spellId: "fire_bolt",
+      rangeFeet: movementFeet(120),
+      damageDisposition: { kind: "tableResolved" },
+      spatialFacts: [
+        {
+          kind: "spellObjectTarget",
+          casterId: wizardId,
+          objectId,
+          spellId: "fire_bolt",
+          rangeFeet: movementFeet(120),
+          armorClass: armorClass(13),
+          damageDisposition: { kind: "tableResolved" },
+        },
+        {
+          kind: "spellObjectIgnition",
+          casterId: wizardId,
+          objectId,
+          spellId: "fire_bolt",
+          disposition: { kind: "wornOrCarried" },
+        },
+      ],
+    });
+    const attackRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFillForObject],
+      }),
+      "attackRoll",
+    );
+
+    const miss = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFillForObject,
+        attackRollFill(attackRoll, { total: 12, naturalD20: 7 }),
+      ],
+    });
+
+    expect(miss).toMatchObject({ tag: "resolved" });
+    expect("objectDamages" in requireResolved(miss)).toBe(false);
+    expect("objectIgnitions" in requireResolved(miss)).toBe(false);
+
+    const damage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFillForObject,
+          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    const hit = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFillForObject,
+        attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        damageRollFillWithGroups(damage, [[6]]),
+      ],
+    });
+
+    expect(hit).toMatchObject({
+      tag: "resolved",
+      objectDamages: [
+        {
+          kind: "tableResolved",
+          damageType: "fire",
+          rolledDamage: damageAmount(6),
+        },
+      ],
+    });
+    expect("objectIgnitions" in requireResolved(hit)).toBe(false);
+  });
+
   test("Starry Wisp object attack rolls enforce attacker-wide disadvantage", () => {
     const state = startBattleRight({
       battleId: battleId("battle-starry-wisp-object-poisoned"),
@@ -25170,6 +25441,7 @@ function spellIdFromTargetHoleLabel(label: string | undefined): string {
   if (label?.startsWith("Poison Spray") === true) return "poison_spray";
   if (label?.startsWith("Chill Touch") === true) return "chill_touch";
   if (label?.startsWith("Eldritch Blast") === true) return "eldritch_blast";
+  if (label?.startsWith("Fire Bolt") === true) return "fire_bolt";
   if (label?.startsWith("Starry Wisp") === true) return "starry_wisp";
   if (label?.startsWith("Sacred Flame") === true) return "sacred_flame";
   if (label?.startsWith("Inflict Wounds") === true) return "inflict_wounds";
@@ -27418,6 +27690,7 @@ function spellRecord(
     | "shocking_grasp"
     | "guiding_bolt"
     | "ray_of_sickness"
+    | "fire_bolt"
     | "starry_wisp"
     | "vicious_mockery"
     | "burning_hands"
@@ -27462,6 +27735,7 @@ function magicSubject(
     | "shocking_grasp"
     | "guiding_bolt"
     | "ray_of_sickness"
+    | "fire_bolt"
     | "starry_wisp"
     | "vicious_mockery"
     | "burning_hands"
@@ -27501,6 +27775,7 @@ function magicSubject(
                             spellId === "poison_spray" ||
                             spellId === "chill_touch" ||
                             spellId === "shocking_grasp" ||
+                            spellId === "fire_bolt" ||
                             spellId === "starry_wisp"
                           ? cantripSpellInvocationRef(
                               spellId,

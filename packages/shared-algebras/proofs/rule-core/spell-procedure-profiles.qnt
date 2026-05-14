@@ -45,6 +45,7 @@ module spellProcedureProfiles {
     | PoisonSpraySpellAttackProfile
     | ChillTouchSpellAttackProfile
     | StarryWispSpellAttackProfile
+    | FireBoltSpellAttackProfile
     | ShockingGraspSpellAttackProfile
     | GuidingBoltSpellAttackProfile
     | RayOfSicknessSpellAttackProfile
@@ -364,6 +365,7 @@ module spellProcedureProfiles {
       | PoisonSpraySpellAttackProfile => PoisonDamage
       | ChillTouchSpellAttackProfile => NecroticDamage
       | StarryWispSpellAttackProfile => RadiantDamage
+      | FireBoltSpellAttackProfile => FireDamage
       | ShockingGraspSpellAttackProfile => LightningDamage
       | GuidingBoltSpellAttackProfile => RadiantDamage
       | RayOfSicknessSpellAttackProfile => PoisonDamage
@@ -376,6 +378,7 @@ module spellProcedureProfiles {
       | PoisonSpraySpellAttackProfile => Set()
       | ChillTouchSpellAttackProfile => Set(ChillTouchHitPointRegainPreventionHitEffect)
       | StarryWispSpellAttackProfile => Set(StarryWispInvisibleBenefitDeniedHitEffect)
+      | FireBoltSpellAttackProfile => Set()
       | ShockingGraspSpellAttackProfile => Set(ShockingGraspOpportunityAttackDeniedHitEffect)
       | GuidingBoltSpellAttackProfile => Set(GuidingBoltNextAttackAdvantageHitEffect)
       | RayOfSicknessSpellAttackProfile => Set(RayOfSicknessPoisonedHitEffect)
@@ -383,7 +386,7 @@ module spellProcedureProfiles {
     }
 
   pure def spellAttackDamageProfileSupportsObjectTarget(profile: SpellAttackDamageProfile): bool =
-    profile == StarryWispSpellAttackProfile or profile == ProduceFlameHurlSpellAttackProfile
+    profile == StarryWispSpellAttackProfile or profile == FireBoltSpellAttackProfile or profile == ProduceFlameHurlSpellAttackProfile
 
   pure def spellSaveGatedDamageTargeting(profile: SpellSaveGatedDamageProfile): SpellSaveGatedTargeting =
     match profile {
@@ -1174,6 +1177,7 @@ module spellProcedureProfiles {
       assert(spellAttackDamageProfileDamageType(PoisonSpraySpellAttackProfile) == PoisonDamage),
       assert(spellAttackDamageProfileDamageType(ChillTouchSpellAttackProfile) == NecroticDamage),
       assert(spellAttackDamageProfileDamageType(StarryWispSpellAttackProfile) == RadiantDamage),
+      assert(spellAttackDamageProfileDamageType(FireBoltSpellAttackProfile) == FireDamage),
       assert(spellAttackDamageProfileDamageType(ShockingGraspSpellAttackProfile) == LightningDamage),
       assert(spellAttackDamageProfileDamageType(GuidingBoltSpellAttackProfile) == RadiantDamage),
       assert(spellAttackDamageProfileDamageType(RayOfSicknessSpellAttackProfile) == PoisonDamage),
@@ -1185,6 +1189,7 @@ module spellProcedureProfiles {
       assert(spellAttackDamageProfileHitEffects(RayOfSicknessSpellAttackProfile) == Set(RayOfSicknessPoisonedHitEffect)),
       assert(spellAttackDamageProfileHitEffects(StarryWispSpellAttackProfile) == Set(StarryWispInvisibleBenefitDeniedHitEffect)),
       assert(spellAttackDamageProfileSupportsObjectTarget(StarryWispSpellAttackProfile)),
+      assert(spellAttackDamageProfileSupportsObjectTarget(FireBoltSpellAttackProfile)),
       assert(spellAttackDamageProfileSupportsObjectTarget(ProduceFlameHurlSpellAttackProfile)),
       assert(not(spellAttackDamageProfileSupportsObjectTarget(RayOfFrostSpellAttackProfile))),
     }

@@ -17,13 +17,13 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Authored Surface Unit catalog admission | 141/429 | 32.9% |
 | Authored Surface executable catalog admission | 115/362 | 31.8% |
 | Installed Unit profile classification coverage | 142/142 | 100% |
-| Supported executable Unit coverage | 73/116 | 62.9% |
+| Supported executable Unit coverage | 74/116 | 63.8% |
 | QNT profile modeling coverage | 56/56 | 100% |
 | QNT proof coverage | 55/56 | 98.2% |
 | Runtime mapping coverage | 56/56 | 100% |
 | Runtime parity coverage | 56/56 | 100% |
-| Deterministic admission/projection coverage | 66/73 | 90.4% |
-| Selected identity MBT coverage | 10/73 | 13.7% |
+| Deterministic admission/projection coverage | 67/74 | 90.5% |
+| Selected identity MBT coverage | 10/74 | 13.5% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -94,6 +94,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `entangle` | srd-5.2.1 | `spell.invocation-condition-save` |
 | `expeditious_retreat` | srd-5.2.1 | `spell.invocation-expeditious-retreat-dash` |
 | `false_life` | srd-5.2.1 | `spell.scalar-buff` |
+| `fire_bolt` | srd-5.2.1 | `spell.invocation-damage-save-or-attack` |
 | `guidance` | srd-5.2.1 | `spell.invocation-roll-modifier` |
 | `guiding_bolt` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
 | `heroism` | srd-5.2.1 | `spell.invocation-condition-immunity-turn-start-temporary-hit-points` |
@@ -797,6 +798,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `entangle` | `spell.invocation-condition-save` | SRDINV29C | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `expeditious_retreat` | `spell.invocation-expeditious-retreat-dash` | SRDINV49 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `false_life` | `spell.scalar-buff` | SRDINV30A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `fire_bolt` | `spell.invocation-damage-save-or-attack` | SRDINV84A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `guidance` | `spell.invocation-roll-modifier` | SRDINV30B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `guiding_bolt` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28D | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `heroism` | `spell.invocation-condition-immunity-turn-start-temporary-hit-points` | SRDINV30D | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
@@ -900,7 +902,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `chill_touch` | profile-subset-supported | supported subset: combatant-target melee spell attack damage; cantrip damage scaling; hit-applied target can't regain Hit Points until the end of the caster's next turn; readied Action-time spell release; deferred: non-combatant target eligibility for the SRD generic target wording (SRDINV34) |
 | `faerie_fire` | profile-subset-supported | supported subset: 20-foot point-origin Cube affected-creature boundary with table-supplied area membership; Dexterity save-gated affected creatures; Concentration-owned outline effect that grants attack-roll Advantage against failed-save affected creatures when the attacker can see them and denies benefits from the Invisible condition; caller-supplied object ids for objects in the Cube create concentration-owned object outline projections; object-target spell attacks consume caller-supplied object sight facts to grant attack-roll Advantage against outlined objects; deferred: Dim Light emitted by affected creatures and objects (SRDINV70A) |
 | `feather_fall` | profile-subset-supported | supported subset: caller-supplied falling Reaction trigger for the caster or a visible creature within 60 feet; up-to-five falling creature target admission using caller-supplied falling and range facts; Reaction and level-1 Spell Slot spend; one-minute per-target Feather Fall mitigation effect; active 60-foot-per-round descent-rate cap projection; caller-supplied landing cleanup that ends the landed target's mitigation, emits no-fall-damage outcome, and suppresses Falling-Prone when Feather Fall prevents damage; deferred: fall-distance derivation, map elevation, and landing geometry simulation remain outside the runtime boundary (SRDINV55) |
-| `fire_bolt` | unsupported-profile | Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Fire Bolt's ranged spell attack against object targets or unattended flammable-object ignition. |
 | `find_familiar` | unsupported-profile | Find Familiar's Spell Definition is catalog-installed, but promoted battle runtime does not yet execute familiar creation, chosen named form or CR 0 Beast stat-block resolution, caster-chosen Celestial/Fey/Fiend type, one-familiar lifecycle and replacement, independent Initiative, familiar turns, telepathy, touch-spell delivery, dismissal, or disappearance/reappearance. |
 | `fog_cloud` | unsupported-profile | Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Fog Cloud's area-created Heavily Obscured projection, slot-scaled area geometry, or strong-wind dispersal lifecycle. |
 | `grease` | profile-subset-supported | supported subset: one-minute Grease ground hazard lifecycle keyed by caller-supplied ground-area id; on-cast Dexterity Saving Throw for caller-supplied affected creatures; Prone application on failed Grease saves; table-triggered enter-area and end-turn-in-area Dexterity save procedures; caller-supplied Grease Difficult Terrain movement facts that validate active hazard identity and spend total Movement distance plus one extra foot per foot moved through Grease; deferred: automatic area membership, pathfinding, and grid geometry derivation for Grease movement (SRDINV66) |
@@ -937,7 +938,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
-| srd-5.2.1 | unassigned | unsupported-profile | 54 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `rogue_expertise`, `rogue_thieves_cant`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `orc_darkvision`, `fire_bolt`, `find_familiar`, `fog_cloud`, `hex`, `sanctuary`, `sorcerous_burst`, `spare_the_dying`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `shillelagh`, `minor_illusion`, `hideous_laughter`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff` |
+| srd-5.2.1 | unassigned | unsupported-profile | 53 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `rogue_expertise`, `rogue_thieves_cant`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `orc_darkvision`, `find_familiar`, `fog_cloud`, `hex`, `sanctuary`, `sorcerous_burst`, `spare_the_dying`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `shillelagh`, `minor_illusion`, `hideous_laughter`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff` |
 | srd-5.2.1 | unassigned | profile-subset-supported | 15 | `bard_bardic_inspiration`, `monk_martial_arts`, `ranger_favored_enemy`, `chill_touch`, `faerie_fire`, `feather_fall`, `grease`, `hunters_mark`, `jump`, `light`, `protection_from_evil_and_good`, `produce_flame`, `sleep`, `thunderwave`, `charm_person` |
 
 ## Profile Claims By Task
@@ -1085,6 +1086,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 | SRDINV75B | completed-runtime-parity | `unit-feature.innate-sorcery-activation` |
 | SRDINV77 | qnt-proof | `spell.invocation-marked-damage-rider` |
 | SRDINV77 | completed-runtime-parity | `spell.invocation-marked-damage-rider` |
+| SRDINV84A | qnt-proof | `spell.invocation-damage-save-or-attack` |
+| SRDINV84A | completed-runtime-parity | `spell.invocation-damage-save-or-attack` |
 
 ## Supported Profiles Lacking Runtime Parity
 

@@ -14,6 +14,7 @@ module battleRuntimeSpellBridge {
     | BattleRuntimePoisonSpraySpellAttack
     | BattleRuntimeChillTouchSpellAttack
     | BattleRuntimeStarryWispSpellAttack
+    | BattleRuntimeFireBoltSpellAttack
     | BattleRuntimeShockingGraspSpellAttack
     | BattleRuntimeGuidingBoltSpellAttack
     | BattleRuntimeRayOfSicknessSpellAttack
@@ -160,6 +161,7 @@ module battleRuntimeSpellBridge {
       | BattleRuntimePoisonSpraySpellAttack => PoisonSpraySpellAttackProfile
       | BattleRuntimeChillTouchSpellAttack => ChillTouchSpellAttackProfile
       | BattleRuntimeStarryWispSpellAttack => StarryWispSpellAttackProfile
+      | BattleRuntimeFireBoltSpellAttack => FireBoltSpellAttackProfile
       | BattleRuntimeShockingGraspSpellAttack => ShockingGraspSpellAttackProfile
       | BattleRuntimeGuidingBoltSpellAttack => GuidingBoltSpellAttackProfile
       | BattleRuntimeRayOfSicknessSpellAttack => RayOfSicknessSpellAttackProfile
@@ -670,10 +672,12 @@ module battleRuntimeSpellBridge {
     all {
       assert(battleRuntimeSpellAttackDamageType(BattleRuntimeRayOfFrostSpellAttack) == ColdDamage),
       assert(battleRuntimeSpellAttackDamageType(BattleRuntimeShockingGraspSpellAttack) == LightningDamage),
+      assert(battleRuntimeSpellAttackDamageType(BattleRuntimeFireBoltSpellAttack) == FireDamage),
       assert(battleRuntimeSpellAttackDamageHitEffects(BattleRuntimeRayOfFrostSpellAttack) == Set(BattleRuntimeRayOfFrostSpeedReductionHitEffect)),
       assert(battleRuntimeSpellAttackDamageHitEffects(BattleRuntimeChillTouchSpellAttack) == Set(BattleRuntimeChillTouchHitPointRegainPreventionHitEffect)),
       assert(battleRuntimeSpellAttackDamageHitEffects(BattleRuntimeGuidingBoltSpellAttack) == Set(BattleRuntimeGuidingBoltNextAttackAdvantageHitEffect)),
       assert(battleRuntimeSpellAttackDamageSupportsObjectTarget(BattleRuntimeStarryWispSpellAttack)),
+      assert(battleRuntimeSpellAttackDamageSupportsObjectTarget(BattleRuntimeFireBoltSpellAttack)),
       assert(battleRuntimeSpellAttackDamageSupportsObjectTarget(BattleRuntimeProduceFlameHurlSpellAttack)),
       assert(not(battleRuntimeSpellAttackDamageSupportsObjectTarget(BattleRuntimeRayOfFrostSpellAttack))),
     }

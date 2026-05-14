@@ -17,7 +17,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30D heroism
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV58C faerie_fire
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30F resistance
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage spell.invocation-damage-reduction spell.invocation-spell-hosted-weapon-attack
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-spell-hosted-weapon-attack
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31A divine_favor
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31C divine_smite
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31D ensnaring_strike
@@ -25,6 +25,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31F true_strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31B hunters_mark
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV32B produce_flame
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84A fire_bolt
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV59B starry_wisp
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV70B light
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV38A sleep
@@ -150,6 +151,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleObjectDamageDisposition,
+  type BattleObjectIgnitionDisposition,
   type BattleSpellAreaChoice,
   type BattleSpellSavingThrowOutcomeHole,
   type BattleState,
@@ -3260,9 +3262,9 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
       },
     ];
 
-    expect(supportedPreparedSaveGateConditionProfile(spell, spellSlots)).toEqual(
-      [],
-    );
+    expect(
+      supportedPreparedSaveGateConditionProfile(spell, spellSlots),
+    ).toEqual([]);
     expect(
       supportedPreparedSleepTargetAdmissionProfile(spell, spellSlots),
     ).toEqual([
@@ -5311,17 +5313,66 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
 });
 
 describe("QMBT15 Spell Unit admission candidate narrowing", () => {
-  test("fire_bolt is not counted as deterministic admission while object targeting and burning are unprojected", () => {
+  test("fire_bolt is admitted as creature-or-object ranged spell attack damage with object ignition projection", () => {
     const spell = spellRecord(fireBoltUnitId);
 
     expect(spell.mechanics.family).toBe("activation");
     expect(spell.mechanics.level).toBe(0);
-    expect(
-      maybeSpellAct({
-        state: spellBattle({ cantrips: [spell] }),
-        spellId: fireBoltUnitId,
+    const state = spellBattle({ cantrips: [spell] });
+    const act = spellAct({
+      state,
+      spellId: fireBoltUnitId,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: cantripSpellInvocationRef(
+        fireBoltUnitId,
+        "spellAttackDamage",
+      ),
+      mode: { tag: "cast" },
+    });
+    expect(act.initialHoles).toEqual([
+      expect.objectContaining({
+        kind: "targetChoice",
+        choices: expect.arrayContaining([spellTargetId]),
       }),
-    ).toBeUndefined();
+      expect.objectContaining({
+        kind: "objectTargetChoice",
+        requiresTableSpatialFact: true,
+      }),
+    ]);
+    const attackRoll = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          spellTargetFill(
+            requireHole(act.initialHoles, "targetChoice"),
+            fireBoltUnitId,
+            spellCasterId,
+            spellTargetId,
+          ),
+        ],
+      }),
+      "attackRoll",
+    );
+    expect(spellHoleInvocation([attackRoll])).toEqual(
+      expect.objectContaining({
+        procedure: "spellAttackDamage",
+        spell,
+        targeting: { kind: "singleCreatureOrObject" },
+        attackKind: "ranged_spell_attack",
+        damage: {
+          expr: { dice: 1, dieSize: 10 },
+          damageType: "fire",
+        },
+        rangeFeet: 120,
+        postDamageRiders: [],
+        objectHitEffect: { kind: "igniteFlammableUnattended" },
+      }),
+    );
   });
 
   test("starry_wisp is admitted as creature-or-object ranged spell attack damage with Dim Light emitted on hit", () => {
@@ -15739,6 +15790,7 @@ function spellObjectTargetFill(input: {
   readonly spellId: string;
   readonly casterId: CombatantId;
   readonly damageDisposition?: BattleObjectDamageDisposition;
+  readonly ignitionDisposition?: BattleObjectIgnitionDisposition;
   readonly attackerCanSeeObject?: boolean;
 }): ObjectTargetChoiceFill {
   const objectId = input.objectId ?? battleObjectId("produce-flame-object");
@@ -15756,6 +15808,17 @@ function spellObjectTargetFill(input: {
         armorClass: armorClass(13),
         damageDisposition: input.damageDisposition ?? { kind: "tableResolved" },
       },
+      ...(input.ignitionDisposition === undefined
+        ? []
+        : [
+            {
+              kind: "spellObjectIgnition" as const,
+              casterId: input.casterId,
+              objectId,
+              spellId: input.spellId,
+              disposition: input.ignitionDisposition,
+            },
+          ]),
       ...(input.attackerCanSeeObject === undefined
         ? []
         : [

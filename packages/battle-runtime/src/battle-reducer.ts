@@ -1281,6 +1281,13 @@ export type BattleTargetSpatialFact =
       readonly damageDisposition: BattleObjectDamageDisposition;
     }
   | {
+      readonly kind: "spellObjectIgnition";
+      readonly casterId: CombatantId;
+      readonly objectId: BattleObjectId;
+      readonly spellId: SpellRecord["id"];
+      readonly disposition: BattleObjectIgnitionDisposition;
+    }
+  | {
       readonly kind: "spellObjectTargetSight";
       readonly casterId: CombatantId;
       readonly objectId: BattleObjectId;
@@ -1488,6 +1495,9 @@ export type SpellAttackHitEffect = Extract<
   SpellActivationPhase,
   { readonly kind: "attack_roll" }
 >["onHit"][number];
+export type SpellObjectHitEffect =
+  | { readonly kind: "none" }
+  | { readonly kind: "igniteFlammableUnattended" };
 export type SaveGateFailureEffect = Extract<
   SpellActivationPhase,
   { readonly kind: "save_gate" }
@@ -1982,6 +1992,7 @@ export type SupportedSpellInvocation =
       readonly attackKind: SpellAttackKind;
       readonly attackBonus: AttackBonus;
       readonly postDamageRiders: readonly SpellPostDamageRider[];
+      readonly objectHitEffect: SpellObjectHitEffect;
     })
   | {
       readonly access: ClassCantripSpellAccess;
@@ -2679,6 +2690,10 @@ export type BattleObjectDamageDisposition =
   | {
       readonly kind: "tableResolved";
     };
+export type BattleObjectIgnitionDisposition =
+  | { readonly kind: "flammableUnattended" }
+  | { readonly kind: "notFlammable" }
+  | { readonly kind: "wornOrCarried" };
 export type BattleObjectDamageOutcome =
   | {
       readonly kind: "hitPoints";
@@ -2696,6 +2711,12 @@ export type BattleObjectDamageOutcome =
       readonly damageType: DamageType;
       readonly rolledDamage: DamageAmount;
     };
+export type BattleObjectIgnitionOutcome = {
+  readonly kind: "startsBurning";
+  readonly objectId: BattleObjectId;
+  readonly sourceCombatantId: CombatantId;
+  readonly sourceSpellId: SpellId;
+};
 export type BattleDroppedObjectOutcome = {
   readonly kind: "heldObjectDropped";
   readonly actorId: CombatantId;
@@ -3287,6 +3308,7 @@ export type BattleFill =
         {
           readonly kind:
             | "spellObjectLightTarget"
+            | "spellObjectIgnition"
             | "spellObjectTarget"
             | "spellObjectTargetSight";
         }
@@ -3507,6 +3529,7 @@ export type BattleResolutionResult =
       readonly state: BattleState;
       readonly snapshot: BattleSnapshot;
       readonly objectDamages?: readonly BattleObjectDamageOutcome[];
+      readonly objectIgnitions?: readonly BattleObjectIgnitionOutcome[];
       readonly droppedObjects?: readonly BattleDroppedObjectOutcome[];
       readonly shovePushes?: readonly BattleShovePushOutcome[];
     }
@@ -3740,5 +3763,6 @@ export {
   BattleFillSchema,
   BattleHoleSchema,
   BattleObjectDamageOutcomeSchema,
+  BattleObjectIgnitionOutcomeSchema,
   BattleSnapshotSchema,
 } from "./battle-reducer/battle-codecs.ts";
