@@ -312,14 +312,6 @@ const spellUnitMissingClassifications = new Map([
     },
   ],
   [
-    "sorcerous_burst",
-    {
-      kind: "needs-surface-widening",
-      missingConstruct:
-        "Spell Definition exploding d8 damage loop capped by spellcasting ability modifier, cast-time damage type choice, object target branch, and cantrip damage scaling",
-    },
-  ],
-  [
     "thaumaturgy",
     {
       kind: "catalog-only-closure",

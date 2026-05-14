@@ -10,20 +10,67 @@
 --
 -- Family: activation (single attack_roll phase).
 -- Ranged spell attack; on hit: 1d10 Fire damage (cantrip scaling).
---
--- PARTIAL: the ignition rider ("a flammable object hit by this spell
--- starts burning if it isn't being worn or carried") is DEFERRED as
--- DM agenda (world-object / narrative mutation per
--- plans/CONTENT_SURFACE_DEFERRED.md §B — same class as
--- create_food_and_water, stone_shape, gentle_repose). Igniting
--- unattended flammable objects is a world-state effect the session
--- owns; the content surface does not model object material, the
--- worn/carried predicate, nor burning-object state. Core attack +
--- damage authored here; ignition rider omitted.
---
--- The "creature or object" target is authored as a target-kind list. Runtime
--- admission stays deferred until the object-ignition rider has an executable
--- world-object boundary; Fire damage alone is not the support gate.
+-- The "creature or object" target is authored as a target-kind list. The
+-- flammable object rider is authored with the shared object filter used by
+-- Fire Storm: material=flammable and heldOrWorn=forbidden. Burning hazard
+-- consequences remain runtime/session execution facts, not duplicate Surface
+-- state.
+
+let AmountRec
+    : Type
+    = { kind : Text
+      , axis : Text
+      , base : { dice : Natural, dieSize : Natural }
+      , tiers :
+          List
+            { atLevel : Natural
+            , override : { dice : Natural }
+            }
+      }
+
+let HitRider
+    : Type
+    = { kind : Text
+      , damageType : Optional Text
+      , amount : Optional AmountRec
+      , filter :
+          Optional
+            { material : Optional Text
+            , heldOrWorn : Optional Text
+            }
+      }
+
+let fireDamage : HitRider =
+      { kind = "damage"
+      , damageType = Some "fire"
+      , amount =
+          Some
+            { kind = "threshold_tiers"
+            , axis = "character"
+            , base = { dice = 1, dieSize = 10 }
+            , tiers =
+                [ { atLevel = 5, override = { dice = 2 } }
+                , { atLevel = 11, override = { dice = 3 } }
+                , { atLevel = 17, override = { dice = 4 } }
+                ]
+            }
+      , filter =
+          None
+            { material : Optional Text
+            , heldOrWorn : Optional Text
+            }
+      }
+
+let igniteUnattendedFlammableObject : HitRider =
+      { kind = "ignite_objects"
+      , damageType = None Text
+      , amount = None AmountRec
+      , filter =
+          Some
+            { material = Some "flammable"
+            , heldOrWorn = Some "forbidden"
+            }
+      }
 
 let fireBolt =
       { kind = "spell"
@@ -51,25 +98,13 @@ let fireBolt =
                     , label = "fire bolt target"
                     , value =
                         { kind = "target"
-                        , selection = { mode = "one" }
+                        , selection =
+                            { mode = "one" }
+                              // { targetKinds = [ "creature", "object" ] }
                         }
                     }
                 , attackKind = "ranged_spell_attack"
-                , onHit =
-                    [ { kind = "damage"
-                      , damageType = "fire"
-                      , amount =
-                          { kind = "threshold_tiers"
-                          , axis = "character"
-                          , base = { dice = 1, dieSize = 10 }
-                          , tiers =
-                              [ { atLevel = 5, override = { dice = 2 } }
-                              , { atLevel = 11, override = { dice = 3 } }
-                              , { atLevel = 17, override = { dice = 4 } }
-                              ]
-                          }
-                      }
-                    ]
+                , onHit = [ fireDamage, igniteUnattendedFlammableObject ]
                 , onMiss = [ { kind = "none" } ]
                 }
               ]

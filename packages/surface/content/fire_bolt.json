@@ -67,6 +67,13 @@
             },
             "damageType": "fire",
             "kind": "damage"
+          },
+          {
+            "filter": {
+              "heldOrWorn": "forbidden",
+              "material": "flammable"
+            },
+            "kind": "ignite_objects"
           }
         ],
         "onMiss": [

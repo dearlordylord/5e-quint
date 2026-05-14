@@ -573,6 +573,14 @@ const ReadonlyNonEmptyArrayDiceAmountThresholdTierSchema = Schema.NonEmptyArray(
   DiceAmountThresholdTierSchema,
 );
 
+const ExplodingMaxDieThresholdTierSchema = Schema.Struct({
+  atLevel: Schema.Number,
+  dice: Schema.Number,
+});
+
+const ReadonlyNonEmptyArrayExplodingMaxDieThresholdTierSchema =
+  Schema.NonEmptyArray(ExplodingMaxDieThresholdTierSchema);
+
 export const LinkedSpeedSchema = Schema.Struct({
   kind: Schema.Literal("walk_speed"),
 });
@@ -600,6 +608,14 @@ export const DiceAmountSchema = Schema.suspend(() =>
       base: DiceExprSchema,
       perLevel: DiceExprDeltaSchema,
       startingAtLevel: Schema.Number,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("threshold_tiers_exploding_max_die"),
+      axis: LevelAxisSchema,
+      baseDice: Schema.Number,
+      dieSize: Schema.Number,
+      tiers: ReadonlyNonEmptyArrayExplodingMaxDieThresholdTierSchema,
+      maxAdditionalDice: Schema.Literal("spellcasting_ability_modifier"),
     }),
     Schema.Struct({
       kind: Schema.Literal("resource_spent"),

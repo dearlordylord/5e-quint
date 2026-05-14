@@ -96,6 +96,7 @@ const requiredFirstVerticalUnitIds = [
   "thunderwave",
   "eldritch_blast",
   "minor_illusion",
+  "sorcerous_burst",
   "charm_person",
   "command",
   "dissonant_whispers",
@@ -390,6 +391,117 @@ describe("SRD Unit catalog boundary", () => {
               ],
             },
             damageTypeChoice: ["force", "weapon_normal"],
+          },
+        },
+      ]);
+    }
+  });
+
+  test("decodes Fire Bolt object ignition and Sorcerous Burst exploding cantrip damage", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const fireBolt = result.catalog.requireUnit("fire_bolt");
+      expect(fireBolt.kind).toBe("spell");
+      if (fireBolt.kind !== "spell") return;
+      expect(fireBolt.mechanics.family).toBe("activation");
+      if (fireBolt.mechanics.family !== "activation") return;
+
+      const fireBoltPhase = fireBolt.mechanics.phases[0];
+      expect(fireBoltPhase?.kind).toBe("attack_roll");
+      if (fireBoltPhase?.kind !== "attack_roll") return;
+
+      expect(fireBoltPhase.attachment).toEqual({
+        kind: "hole",
+        holeId: "fire_bolt_target",
+        label: "fire bolt target",
+        value: {
+          kind: "target",
+          selection: {
+            mode: "one",
+            targetKinds: ["creature", "object"],
+          },
+        },
+      });
+      expect(fireBoltPhase.onHit).toEqual([
+        {
+          kind: "damage",
+          damageType: "fire",
+          amount: {
+            kind: "threshold_tiers",
+            axis: "character",
+            base: { dice: 1, dieSize: 10 },
+            tiers: [
+              { atLevel: 5, override: { dice: 2 } },
+              { atLevel: 11, override: { dice: 3 } },
+              { atLevel: 17, override: { dice: 4 } },
+            ],
+          },
+        },
+        {
+          kind: "ignite_objects",
+          filter: {
+            material: "flammable",
+            heldOrWorn: "forbidden",
+          },
+        },
+      ]);
+
+      const sorcerousBurst = result.catalog.requireUnit("sorcerous_burst");
+      expect(sorcerousBurst.kind).toBe("spell");
+      if (sorcerousBurst.kind !== "spell") return;
+      expect(sorcerousBurst.mechanics.family).toBe("activation");
+      if (sorcerousBurst.mechanics.family !== "activation") return;
+
+      const burstPhase = sorcerousBurst.mechanics.phases[0];
+      expect(burstPhase?.kind).toBe("attack_roll");
+      if (burstPhase?.kind !== "attack_roll") return;
+
+      expect(burstPhase.attachment).toEqual({
+        kind: "hole",
+        holeId: "sorcerous_burst_target",
+        label: "target",
+        value: {
+          kind: "target",
+          selection: {
+            mode: "one",
+            targetKinds: ["creature", "object"],
+          },
+        },
+      });
+      expect(burstPhase.onHit).toEqual([
+        {
+          kind: "damage",
+          damageType: {
+            kind: "hole",
+            holeId: "sorcerous_burst_damage_type",
+            label: "sorcerous damage type",
+            value: {
+              kind: "choice",
+              label: "sorcerous damage type",
+              options: [
+                "acid",
+                "cold",
+                "fire",
+                "lightning",
+                "poison",
+                "psychic",
+                "thunder",
+              ],
+            },
+          },
+          amount: {
+            kind: "threshold_tiers_exploding_max_die",
+            axis: "character",
+            baseDice: 1,
+            dieSize: 8,
+            tiers: [
+              { atLevel: 5, dice: 2 },
+              { atLevel: 11, dice: 3 },
+              { atLevel: 17, dice: 4 },
+            ],
+            maxAdditionalDice: "spellcasting_ability_modifier",
           },
         },
       ]);

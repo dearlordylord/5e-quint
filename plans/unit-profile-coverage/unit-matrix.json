@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 360,
-      "numerator": 112,
-      "percent": "31.1%"
+      "denominator": 361,
+      "numerator": 113,
+      "percent": "31.3%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 427,
-      "numerator": 138,
-      "percent": "32.3%"
+      "denominator": 428,
+      "numerator": 139,
+      "percent": "32.5%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 139
+      "value": 140
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 73,
@@ -67,8 +67,8 @@
       "percent": "90.4%"
     },
     "profileClassificationCoverage": {
-      "denominator": 139,
-      "numerator": 139,
+      "denominator": 140,
+      "numerator": 140,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -97,9 +97,9 @@
       "percent": "13.7%"
     },
     "supportedProfileCoverage": {
-      "denominator": 113,
+      "denominator": 114,
       "numerator": 73,
-      "percent": "64.6%"
+      "percent": "64%"
     }
   },
   "metricSemantics": [
@@ -7068,9 +7068,8 @@
         "status": "installed"
       },
       "claim": {
-        "futureProfileOwner": "QCORE10",
-        "issue": "QMBT23 keeps SRD Fire Bolt out of supported spell evidence until promoted spell invocation has an explicit object-target branch and object-ignition effect outcome; table-supplied object facts are required but are not a complete runtime boundary.",
-        "tag": "needs-surface-widening"
+        "reason": "Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Fire Bolt's ranged spell attack against object targets or unattended flammable-object ignition.",
+        "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [],
@@ -8637,6 +8636,24 @@
       ],
       "sourceRecordPath": "packages/surface/content/shocking_grasp.json",
       "unitId": "shocking_grasp"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Sorcerous Burst's cast-time damage type choice, exploding d8 damage loop capped by spellcasting ability modifier, object target branch, or cantrip damage scaling.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/sorcerous_burst.json",
+      "unitId": "sorcerous_burst"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

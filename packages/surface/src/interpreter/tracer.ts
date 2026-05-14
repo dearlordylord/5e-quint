@@ -5150,6 +5150,26 @@ function traceDiceAmountScaling(
       }
       return;
     }
+    case "threshold_tiers_exploding_max_die": {
+      const scId = ids("sc");
+      const tierText = amt.tiers
+        .map((t) => `L${t.atLevel}:${t.dice}d${amt.dieSize}`)
+        .join(" | ");
+      nodes.push({
+        id: scId,
+        category: "scaling",
+        atomKind: scalingAtomFor(amt),
+        label:
+          `${scalingAtomFor(amt)}\naxis=${amt.axis}\n` +
+          `base ${amt.baseDice}d${amt.dieSize}; tiers: ${tierText}\n` +
+          `explode on d${amt.dieSize} max; max extra dice=spellcasting ability modifier`,
+      });
+      edges.push({ from: scId, to: effectId, relation: "modifies" });
+      if (amt.axis === "slot" && slotId !== null) {
+        edges.push({ from: slotId, to: scId, relation: "modifies" });
+      }
+      return;
+    }
     case "resource_spent":
       // No scaling node — the amount is determined by the activation's
       // resource expenditure, not a character or slot axis. The
@@ -5214,6 +5234,9 @@ function scalingAtomFor(amt: DiceAmount): string {
     if (amt.perLevel.dieSize !== undefined) return "scale_die_size";
     if (amt.perLevel.dice !== undefined) return "scale_die_count";
     return "scale_numeric_bonus";
+  }
+  if (amt.kind === "threshold_tiers_exploding_max_die") {
+    return "scale_die_count";
   }
   if (amt.kind === "resource_spent_linear") {
     if (amt.perResource.dieSize !== undefined) return "scale_die_size";
@@ -8067,6 +8090,11 @@ function describeDiceAmount(a: DiceAmount): string {
       return `${describeExpr(a.base)} (tiered by ${a.axis} level)`;
     case "linear_per_level":
       return `${describeExpr(a.base)} (linear per ${a.axis} level)`;
+    case "threshold_tiers_exploding_max_die":
+      return (
+        `${a.baseDice}d${a.dieSize} (tiered by ${a.axis} level; ` +
+        `d${a.dieSize} explodes up to spellcasting ability modifier extra dice)`
+      );
     case "resource_spent":
       return "= charges spent (player choice)";
     case "proficiency_bonus":

@@ -1,0 +1,100 @@
+{
+  "description": "You cast sorcerous energy at one creature or object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d8 damage of a type you choose: Acid, Cold, Fire, Lightning, Poison, Psychic, or Thunder. If you roll an 8 on a d8 for this spell, you can roll another d8, and add it to the damage. When you cast this spell, the maximum number of these d8s you can add to the spell's damage equals your spellcasting ability modifier. Cantrip Upgrade: The damage increases by 1d8 when you reach levels 5 (2d8), 11 (3d8), and 17 (4d8).",
+  "id": "sorcerous_burst",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 0,
+    "phases": [
+      {
+        "attachment": {
+          "holeId": "sorcerous_burst_target",
+          "kind": "hole",
+          "label": "target",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "mode": "one",
+              "targetKinds": [
+                "creature",
+                "object"
+              ]
+            }
+          }
+        },
+        "attackKind": "ranged_spell_attack",
+        "kind": "attack_roll",
+        "onHit": [
+          {
+            "amount": {
+              "axis": "character",
+              "baseDice": 1,
+              "dieSize": 8,
+              "kind": "threshold_tiers_exploding_max_die",
+              "maxAdditionalDice": "spellcasting_ability_modifier",
+              "tiers": [
+                {
+                  "atLevel": 5,
+                  "dice": 2
+                },
+                {
+                  "atLevel": 11,
+                  "dice": 3
+                },
+                {
+                  "atLevel": 17,
+                  "dice": 4
+                }
+              ]
+            },
+            "damageType": {
+              "holeId": "sorcerous_burst_damage_type",
+              "kind": "hole",
+              "label": "sorcerous damage type",
+              "value": {
+                "kind": "choice",
+                "label": "sorcerous damage type",
+                "options": [
+                  "acid",
+                  "cold",
+                  "fire",
+                  "lightning",
+                  "poison",
+                  "psychic",
+                  "thunder"
+                ]
+              }
+            },
+            "kind": "damage"
+          }
+        ],
+        "onMiss": [
+          {
+            "kind": "none"
+          }
+        ]
+      }
+    ],
+    "range": {
+      "feet": 120,
+      "kind": "point"
+    },
+    "school": "evocation"
+  },
+  "name": "Sorcerous Burst",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Sorcerous Burst"
+  }
+}
