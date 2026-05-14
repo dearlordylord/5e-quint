@@ -479,6 +479,10 @@ export function discoverSupportedSpellInvocations(
       ) {
         const targetHole = spellTargetHole(state, actorId, invocation);
         const initialHoles = [
+          ...(invocation.procedure === "spellAttackDamage" &&
+          invocation.damage.kind === "sorcerousBurstDamageTypeChoice"
+            ? [spellDamageTypeChoiceHole(invocation)]
+            : []),
           ...(targetHole.choices.length === 0 ? [] : [targetHole]),
           spellObjectTargetHole(invocation),
         ];
@@ -764,6 +768,8 @@ export function readiedSpellAct(
     invocation.procedure === "command" ||
     invocation.procedure === "greaseGroundHazard" ||
     invocation.procedure === "shieldReaction" ||
+    (invocation.procedure === "spellAttackDamage" &&
+      invocation.damage.kind === "sorcerousBurstDamageTypeChoice") ||
     state.readiedSpells.has(actorId)
   ) {
     return [];

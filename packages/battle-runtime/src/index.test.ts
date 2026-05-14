@@ -386,6 +386,69 @@ describe("battle runtime", () => {
     });
   });
 
+  test("prepared spell attack hole codec preserves discriminated spell damage payload", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-prepared-spell-attack-codec"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("guiding_bolt")],
+            cantrips: [],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject = magicSubject("guiding_bolt");
+    const target = findHole(
+      findAct(state, subject).initialHoles,
+      "targetChoice",
+    );
+    const attackRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFill(target, goblinId)],
+      }),
+      "attackRoll",
+    );
+    if (!("spell" in attackRoll)) {
+      throw new Error("Expected prepared spell attack-roll hole.");
+    }
+    if (attackRoll.spell.procedure !== "spellAttackDamage") {
+      throw new Error("Expected spellAttackDamage invocation.");
+    }
+
+    const encoded = Schema.encodeSync(BattleHoleSchema)(attackRoll);
+    expect(encoded).toMatchObject({
+      kind: "attackRoll",
+      spell: {
+        access: { tag: "prepared" },
+        procedure: "spellAttackDamage",
+        damage: {
+          kind: "fixedSpellAttackDamage",
+          damageType: "radiant",
+        },
+      },
+    });
+
+    const decoded = Schema.decodeUnknownSync(BattleHoleSchema)(encoded);
+    if (!("spell" in decoded)) {
+      throw new Error("Expected decoded prepared spell attack-roll hole.");
+    }
+    if (decoded.spell.procedure !== "spellAttackDamage") {
+      throw new Error("Expected decoded spellAttackDamage invocation.");
+    }
+    expect(decoded.spell.damage).toMatchObject({
+      kind: "fixedSpellAttackDamage",
+      damageType: "radiant",
+    });
+  });
+
   test("startBattle preserves caller-supplied order among tied Initiative scores", () => {
     const state = startBattleRight({
       battleId: battleId("battle-tied-initiative"),
@@ -18096,6 +18159,7 @@ describe("battle runtime", () => {
         targeting: { kind: "singleCreatureOrObject" },
         attackKind: "ranged_spell_attack",
         damage: {
+          kind: "fixedSpellAttackDamage",
           expr: { dice: 2, dieSize: 8 },
           damageType: "radiant",
         },

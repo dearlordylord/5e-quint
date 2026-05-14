@@ -26,6 +26,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31B hunters_mark
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV32B produce_flame
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84A fire_bolt
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84B sorcerous_burst
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV59B starry_wisp
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV70B light
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV38A sleep
@@ -160,12 +161,18 @@ import {
   type CombatantId,
   type SupportedSpellInvocation,
 } from "./index.ts";
+import type {
+  SpellMarkedDamageRider,
+  SupportedDamageSpellInvocation,
+} from "./battle-reducer.ts";
 import { characterBattleResourceForUnit } from "./character-battle-resources.ts";
 import { conditionApplicationPreventedByCreatureTypeProtection } from "./battle-reducer/spell-condition-effects-helpers.ts";
 import { applyFailedSaveSpellConditionEffects } from "./battle-reducer/spells-active-effects.ts";
 import {
   applyPreparedSlotSpellDamage,
+  spellDamageHole,
   spellSavingThrowOutcomeHole,
+  validateSpellDamageFill,
 } from "./battle-reducer/spells-damage-fills.ts";
 import { supportedPreparedHellishRebukeReactionSpellProfile } from "./battle-reducer/spells-profiles.ts";
 import {
@@ -266,6 +273,7 @@ const protectionFromEvilAndGoodUnitId = "protection_from_evil_and_good";
 const produceFlameUnitId = "produce_flame";
 const resistanceUnitId = "resistance";
 const sacredFlameUnitId = "sacred_flame";
+const sorcerousBurstUnitId = "sorcerous_burst";
 const cureWoundsUnitId = "cure_wounds";
 const healingWordUnitId = "healing_word";
 const massCureWoundsUnitId = "mass_cure_wounds";
@@ -2570,6 +2578,7 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
         spell,
         targeting: { kind: "singleCombatant" },
         damage: {
+          kind: "fixedSpellAttackDamage",
           expr: { dice: 1, dieSize: 12 },
           damageType: "poison",
         },
@@ -2619,6 +2628,7 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
         spell,
         targeting: { kind: "singleCombatant" },
         damage: {
+          kind: "fixedSpellAttackDamage",
           expr: { dice: 1, dieSize: 10 },
           damageType: "necrotic",
         },
@@ -2677,6 +2687,7 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
         spell,
         attackKind: "melee_spell_attack",
         damage: {
+          kind: "fixedSpellAttackDamage",
           expr: { dice: 1, dieSize: 8 },
           damageType: "lightning",
         },
@@ -2728,6 +2739,7 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
         spell,
         attackKind: "ranged_spell_attack",
         damage: {
+          kind: "fixedSpellAttackDamage",
           expr: { dice: 4, dieSize: 6 },
           damageType: "radiant",
         },
@@ -2780,6 +2792,7 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
         spell,
         attackKind: "ranged_spell_attack",
         damage: {
+          kind: "fixedSpellAttackDamage",
           expr: { dice: 2, dieSize: 8 },
           damageType: "poison",
         },
@@ -5233,6 +5246,7 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
         targeting: { kind: "singleCombatant" },
         attackKind: "ranged_spell_attack",
         damage: {
+          kind: "fixedSpellAttackDamage",
           expr: { dice: 1, dieSize: 8 },
           damageType: "cold",
         },
@@ -5365,6 +5379,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
         targeting: { kind: "singleCreatureOrObject" },
         attackKind: "ranged_spell_attack",
         damage: {
+          kind: "fixedSpellAttackDamage",
           expr: { dice: 1, dieSize: 10 },
           damageType: "fire",
         },
@@ -5432,6 +5447,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
         targeting: { kind: "singleCreatureOrObject" },
         attackKind: "ranged_spell_attack",
         damage: {
+          kind: "fixedSpellAttackDamage",
           expr: { dice: 1, dieSize: 8 },
           damageType: "radiant",
         },
@@ -5449,6 +5465,256 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
         ],
       }),
     );
+  });
+
+  test("sorcerous_burst is admitted with damage-type choice, capped exploding d8 damage, object target, and cantrip scaling", () => {
+    const spell = spellRecord(sorcerousBurstUnitId);
+    const state = spellBattle({
+      cantrips: [spell],
+      casterClassLevels: [{ className: "sorcerer", level: classLevel(5) }],
+      targetHp: 30,
+      targetMaxHp: 30,
+    });
+    const act = spellAct({ state, spellId: sorcerousBurstUnitId });
+    const readiedSorcerousBurstActs = discoverBattleActs(state).filter(
+      (candidate) =>
+        candidate.subject.tag === "actionSpell" &&
+        candidate.subject.invocation.spellId === sorcerousBurstUnitId &&
+        candidate.subject.mode.tag === "ready",
+    );
+    expect(readiedSorcerousBurstActs).toEqual([]);
+    const damageType = requireHole(act.initialHoles, "damageTypeChoice");
+    const target = requireHole(act.initialHoles, "targetChoice");
+
+    expect(damageType.choices).toEqual([
+      "acid",
+      "cold",
+      "fire",
+      "lightning",
+      "poison",
+      "psychic",
+      "thunder",
+    ]);
+    expect(act.initialHoles).toEqual([
+      expect.objectContaining({ kind: "damageTypeChoice" }),
+      expect.objectContaining({
+        kind: "targetChoice",
+        choices: expect.arrayContaining([spellTargetId]),
+      }),
+      expect.objectContaining({ kind: "objectTargetChoice" }),
+    ]);
+
+    const damageTypeFill = {
+      kind: "damageTypeChoice" as const,
+      holeId: damageType.holeId,
+      value: "thunder" as const,
+    };
+    const targetFill = spellTargetFill(
+      target,
+      sorcerousBurstUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+    const attack = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [damageTypeFill, targetFill],
+      }),
+      "attackRoll",
+    );
+    const damage = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          damageTypeFill,
+          targetFill,
+          attackRollFill(attack, { total: 18, naturalD20: 12 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    expect(spellHoleInvocation([damage])).toEqual(
+      expect.objectContaining({
+        procedure: "spellAttackDamage",
+        spell,
+        targeting: { kind: "singleCreatureOrObject" },
+        attackKind: "ranged_spell_attack",
+        damage: {
+          kind: "selectedSorcerousBurstDamage",
+          expr: { dice: 2, dieSize: 8 },
+          damageType: "thunder",
+          maxDieAdditionalDiceLimit: 3,
+        },
+        rangeFeet: 120,
+      }),
+    );
+    expect(damage).toMatchObject({
+      label: "Sorcerous Burst damage (2d8-thunder)",
+    });
+    const selectedSorcerousBurstInvocation = spellHoleInvocation([damage]);
+    if (
+      !isSelectedSorcerousBurstDamageInvocation(
+        selectedSorcerousBurstInvocation,
+      )
+    ) {
+      throw new Error("Expected selected Sorcerous Burst spell attack damage.");
+    }
+    const markedDamageRider = {
+      kind: "spellMarkedDamageRider" as const,
+      sourceSpellId: spellId("hunters_mark"),
+      sourceCombatantId: spellCasterId,
+      targetCombatantId: spellTargetId,
+      transferAvailable: false,
+      damage: { expr: { dice: 1, dieSize: 6 }, damageType: "force" as const },
+      expiresAt: { kind: "concentration" as const, combatantId: spellCasterId },
+    } satisfies SpellMarkedDamageRider;
+    expect(
+      validateSpellDamageFill(
+        damageRollFillWithGroups(
+          spellDamageHole(selectedSorcerousBurstInvocation, false, [
+            markedDamageRider,
+          ]),
+          [
+            [8, 3, 4],
+            [2],
+          ],
+        ),
+        selectedSorcerousBurstInvocation,
+        false,
+        [markedDamageRider],
+      ),
+    ).toBeNull();
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        damageTypeFill,
+        targetFill,
+        attackRollFill(attack, { total: 18, naturalD20: 12 }),
+        damageRollFillWithGroups(damage, [[8, 8, 5, 4]]),
+      ],
+    });
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.anything(),
+          expect.objectContaining({ combatantId: spellTargetId, hp: Hp(5) }),
+        ],
+      },
+    });
+
+    const invalidExplodingDamage = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        damageTypeFill,
+        targetFill,
+        attackRollFill(attack, { total: 18, naturalD20: 12 }),
+        damageRollFillWithGroups(damage, [[8, 7, 5, 4]]),
+      ],
+    });
+    expect(invalidExplodingDamage).toMatchObject({
+      tag: "invalid",
+      message:
+        "filled additional max-die damage dice require a rolled maximum on a prior spell damage die.",
+    });
+
+    const invalidSelfAuthorizingExplodingDamage = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        damageTypeFill,
+        targetFill,
+        attackRollFill(attack, { total: 18, naturalD20: 12 }),
+        damageRollFillWithGroups(damage, [[1, 2, 8]]),
+      ],
+    });
+    expect(invalidSelfAuthorizingExplodingDamage).toMatchObject({
+      tag: "invalid",
+      message:
+        "filled additional max-die damage dice require a rolled maximum on a prior spell damage die.",
+    });
+  });
+
+  test("sorcerous_burst applies object poison and psychic immunity to caller-supplied object damage facts", () => {
+    const spell = spellRecord(sorcerousBurstUnitId);
+    const state = spellBattle({
+      cantrips: [spell],
+      casterClassLevels: [{ className: "sorcerer", level: classLevel(5) }],
+    });
+    const act = spellAct({ state, spellId: sorcerousBurstUnitId });
+    const damageType = requireHole(act.initialHoles, "damageTypeChoice");
+    const immuneDamageTypes = ["poison", "psychic"] as const;
+
+    for (const immuneDamageType of immuneDamageTypes) {
+      const objectId = battleObjectId(
+        `unit-profile-sorcerous-burst-${immuneDamageType}-object`,
+      );
+      const damageTypeFill = {
+        kind: "damageTypeChoice" as const,
+        holeId: damageType.holeId,
+        value: immuneDamageType,
+      };
+      const objectFill = spellObjectTargetFill({
+        hole: requireHole(act.initialHoles, "objectTargetChoice"),
+        objectId,
+        spellId: sorcerousBurstUnitId,
+        casterId: spellCasterId,
+        rangeFeet: movementFeet(120),
+        damageDisposition: { kind: "hitPoints", hitPoints: Hp(10) },
+      });
+      const attack = requireResultHole(
+        resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [damageTypeFill, objectFill],
+        }),
+        "attackRoll",
+      );
+      const damage = requireResultHole(
+        resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [
+            damageTypeFill,
+            objectFill,
+            attackRollFill(attack, { total: 18, naturalD20: 12 }),
+          ],
+        }),
+        "rolledDice",
+      );
+
+      const resolved = resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          damageTypeFill,
+          objectFill,
+          attackRollFill(attack, { total: 18, naturalD20: 12 }),
+          damageRollFillWithGroups(damage, [[8, 4, 3]]),
+        ],
+      });
+
+      expect(resolved).toMatchObject({
+        tag: "resolved",
+        objectDamages: [
+          {
+            kind: "hitPoints",
+            objectId,
+            damageType: immuneDamageType,
+            rolledDamage: damageAmount(15),
+            effectiveDamage: damageAmount(0),
+            priorHitPoints: Hp(10),
+            nextHitPoints: Hp(10),
+            destroyed: false,
+          },
+        ],
+      });
+    }
   });
 
   test("starry_wisp object hit projects Invisible-benefit denial from the object Dim Light emitter", () => {
@@ -15789,6 +16055,7 @@ function spellObjectTargetFill(input: {
   readonly objectId?: ObjectTargetChoiceFill["value"];
   readonly spellId: string;
   readonly casterId: CombatantId;
+  readonly rangeFeet?: ReturnType<typeof movementFeet>;
   readonly damageDisposition?: BattleObjectDamageDisposition;
   readonly ignitionDisposition?: BattleObjectIgnitionDisposition;
   readonly attackerCanSeeObject?: boolean;
@@ -15804,7 +16071,7 @@ function spellObjectTargetFill(input: {
         casterId: input.casterId,
         objectId,
         spellId: input.spellId,
-        rangeFeet: movementFeet(60),
+        rangeFeet: input.rangeFeet ?? movementFeet(60),
         armorClass: armorClass(13),
         damageDisposition: input.damageDisposition ?? { kind: "tableResolved" },
       },
@@ -16157,6 +16424,18 @@ function skillChoiceFill(
   value: Extract<BattleFill, { readonly kind: "skillChoice" }>["value"],
 ): Extract<BattleFill, { readonly kind: "skillChoice" }> {
   return { kind: "skillChoice", holeId: hole.holeId, value };
+}
+
+function isSelectedSorcerousBurstDamageInvocation(
+  invocation: SupportedSpellInvocation,
+): invocation is Extract<
+  SupportedDamageSpellInvocation,
+  { readonly procedure: "spellAttackDamage" }
+> {
+  return (
+    invocation.procedure === "spellAttackDamage" &&
+    invocation.damage.kind === "selectedSorcerousBurstDamage"
+  );
 }
 
 function damageRollFillWithGroups(

@@ -23,6 +23,7 @@ import {
   attackRollResultIsValid,
 } from "@dnd/shared-algebras/attack-roll-algebra";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
+import type { DamageType } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import {
   activeOngoingFeaturesPreventSpellcasting,
@@ -34,6 +35,7 @@ import {
   type BonusActionDashSpellBattleResolutionInput,
   type BonusActionSpellBattleResolutionInput,
   type SpellMarkedDamageRider,
+  type SupportedDamageSpellInvocation,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import { spellId, type CombatantId } from "../identity.ts";
@@ -86,6 +88,7 @@ import {
   spellDamageByTypeForTarget,
   spellDamageHole,
   spellDamageTypes,
+  spellDamageTypeChoiceHole,
   spellObjectAttackRollHole,
   spellObjectIgnitionFact,
   spellTargetHole,
@@ -209,6 +212,68 @@ import {
 } from "./spells-resolve-release.ts";
 import { resolveSpellHostedWeaponAttackSpellAct } from "./spells-resolve-weapon-attack.ts";
 export * from "./spells-resolve-release.ts";
+
+type SpellAttackDamageInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "spellAttackDamage" }
+>;
+
+function isSupportedDamageSpellInvocation(
+  invocation: SupportedSpellInvocation,
+): invocation is SupportedDamageSpellInvocation {
+  return (
+    invocation.procedure === "heldLightHurl" ||
+    invocation.procedure === "repeatedDamageAllocation" ||
+    (invocation.procedure === "spellAttackDamage" &&
+      invocation.damage.kind !== "sorcerousBurstDamageTypeChoice") ||
+    invocation.procedure === "spellAttackBeamSequence" ||
+    invocation.procedure === "saveGatedDamage" ||
+    invocation.procedure === "attackBurstSaveDamage"
+  );
+}
+
+function selectedSpellAttackDamageInvocation(
+  invocation: SupportedSpellInvocation,
+  damageTypeChoice:
+    | Extract<SpellFillSet, { readonly tag: "ok" }>["damageTypeChoice"]
+    | undefined,
+):
+  | { readonly tag: "ok"; readonly invocation: SupportedSpellInvocation }
+  | {
+      readonly tag: "needsHoles";
+      readonly hole: ReturnType<typeof spellDamageTypeChoiceHole>;
+    }
+  | { readonly tag: "invalid"; readonly message: string } {
+  if (
+    invocation.procedure !== "spellAttackDamage" ||
+    invocation.damage.kind !== "sorcerousBurstDamageTypeChoice"
+  ) {
+    return { tag: "ok", invocation };
+  }
+  if (damageTypeChoice === undefined) {
+    return { tag: "needsHoles", hole: spellDamageTypeChoiceHole(invocation) };
+  }
+  const selectedDamageType: DamageType = damageTypeChoice.value;
+  if (!invocation.damage.damageTypeChoices.includes(selectedDamageType)) {
+    return {
+      tag: "invalid",
+      message:
+        "Spell attack damage type must be one of the selected spell's choices.",
+    };
+  }
+  return {
+    tag: "ok",
+    invocation: {
+      ...invocation,
+      damage: {
+        kind: "selectedSorcerousBurstDamage",
+        expr: invocation.damage.expr,
+        damageType: selectedDamageType,
+        maxDieAdditionalDiceLimit: invocation.damage.maxDieAdditionalDiceLimit,
+      },
+    } satisfies SpellAttackDamageInvocation,
+  };
+}
 
 export function resolveSpellAct(
   input: ActionSpellBattleResolutionInput,
@@ -490,22 +555,39 @@ export function resolveSpellAct(
       "Spell target must choose either one combatant or one object, not both.",
     );
   }
+  const selectedInvocation = selectedSpellAttackDamageInvocation(
+    invocation,
+    fillSet.damageTypeChoice,
+  );
+  if (selectedInvocation.tag === "needsHoles") {
+    return needsHolesResult(castingState, input.subject, [
+      selectedInvocation.hole,
+    ]);
+  }
+  if (selectedInvocation.tag === "invalid") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      selectedInvocation.message,
+    );
+  }
+  const invocationForResolution = selectedInvocation.invocation;
   if (fillSet.targetId == null && fillSet.objectTarget === undefined) {
     return needsHolesResult(castingState, input.subject, [
-      spellTargetHole(castingState, subject.actorId, invocation),
-      ...((invocation.procedure === "heldLightHurl" ||
-        invocation.procedure === "spellAttackDamage") &&
-      invocation.targeting.kind === "singleCreatureOrObject"
-        ? [spellObjectTargetHole(invocation)]
+      spellTargetHole(castingState, subject.actorId, invocationForResolution),
+      ...((invocationForResolution.procedure === "heldLightHurl" ||
+        invocationForResolution.procedure === "spellAttackDamage") &&
+      invocationForResolution.targeting.kind === "singleCreatureOrObject"
+        ? [spellObjectTargetHole(invocationForResolution)]
         : []),
     ]);
   }
   const objectTarget = fillSet.objectTarget;
   if (objectTarget !== undefined) {
     if (
-      (invocation.procedure !== "heldLightHurl" &&
-        invocation.procedure !== "spellAttackDamage") ||
-      invocation.targeting.kind !== "singleCreatureOrObject"
+      (invocationForResolution.procedure !== "heldLightHurl" &&
+        invocationForResolution.procedure !== "spellAttackDamage") ||
+      invocationForResolution.targeting.kind !== "singleCreatureOrObject"
     ) {
       return invalidResult(
         input.state,
@@ -513,10 +595,20 @@ export function resolveSpellAct(
         "Object target fill does not match this spell act.",
       );
     }
+    if (
+      invocationForResolution.procedure === "spellAttackDamage" &&
+      !isSupportedDamageSpellInvocation(invocationForResolution)
+    ) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Object-target spell attack damage requires a selected damage type.",
+      );
+    }
     return resolveSpellAttackDamageObjectTarget({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
-      invocation,
+      invocation: invocationForResolution,
       fillSet: { ...fillSet, objectTarget },
     });
   }
@@ -534,7 +626,7 @@ export function resolveSpellAct(
       input.state,
       subject.actorId,
       target.combatantId,
-      invocation,
+      invocationForResolution,
       fillSet.targetSpatialFacts,
     )
   ) {
@@ -545,7 +637,7 @@ export function resolveSpellAct(
     );
   }
 
-  if (invocation.procedure === "persistentArmorEffect") {
+  if (invocationForResolution.procedure === "persistentArmorEffect") {
     if (
       fillSet.attackRoll != null ||
       fillSet.damageRoll != null ||
@@ -561,12 +653,12 @@ export function resolveSpellAct(
       castingState,
       subject.actorId,
       target.combatantId,
-      invocation,
+      invocationForResolution,
     );
     return spendSpellCastResources({
       state: effected,
       actorId: subject.actorId,
-      invocation,
+      invocation: invocationForResolution,
       errorState: input.state,
       startConcentration: false,
     });
@@ -577,7 +669,7 @@ export function resolveSpellAct(
     {
       trigger: "spellCast",
       casterId: subject.actorId,
-      spellId: invocation.spell.id,
+      spellId: invocationForResolution.spell.id,
       targetIds: [target.combatantId],
       continuation: {
         kind: "replay",
@@ -593,21 +685,21 @@ export function resolveSpellAct(
 
   let spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [];
   if (
-    invocation.procedure === "spellAttackDamage" ||
-    invocation.procedure === "heldLightHurl"
+    invocationForResolution.procedure === "spellAttackDamage" ||
+    invocationForResolution.procedure === "heldLightHurl"
   ) {
     const requiredRollMode = requiredSpellAttackRollMode(
       castingState,
       subject.actorId,
       target.combatantId,
-      invocation,
+      invocationForResolution,
     );
     if (fillSet.attackRoll == null) {
       return needsHolesResult(castingState, input.subject, [
         spellAttackRollHole(
           castingState,
           subject.actorId,
-          invocation,
+          invocationForResolution,
           requiredRollMode,
         ),
       ]);
@@ -685,11 +777,13 @@ export function resolveSpellAct(
           attackerId: subject.actorId,
           targetId: target.combatantId,
           attackRoll: fillSet.attackRoll,
-          attackKind: spellAttackKindForRedirect(invocation.attackKind),
+          attackKind: spellAttackKindForRedirect(
+            invocationForResolution.attackKind,
+          ),
           attackHitTriggerKind: "otherAttack",
           damageTypes: [
             ...new Set([
-              ...spellDamageTypes(invocation),
+              ...spellDamageTypes(invocationForResolution),
               ...spellMarkedDamageRiders.map(
                 (rider) => rider.damage.damageType,
               ),
@@ -708,8 +802,19 @@ export function resolveSpellAct(
       }
     }
     if (hit && fillSet.damageRoll == null) {
+      if (!isSupportedDamageSpellInvocation(invocationForResolution)) {
+        return invalidResult(
+          input.state,
+          "invalidFill",
+          "Selected spell act does not use a damage roll.",
+        );
+      }
       return needsHolesResult(attackRolledState, input.subject, [
-        spellDamageHole(invocation, critical, spellMarkedDamageRiders),
+        spellDamageHole(
+          invocationForResolution,
+          critical,
+          spellMarkedDamageRiders,
+        ),
       ]);
     }
     if (
@@ -726,7 +831,7 @@ export function resolveSpellAct(
       return spendSpellCastResources({
         state: attackRolledState,
         actorId: subject.actorId,
-        invocation,
+        invocation: invocationForResolution,
         errorState: input.state,
       });
     }
@@ -738,14 +843,22 @@ export function resolveSpellAct(
     );
   }
 
+  if (!isSupportedDamageSpellInvocation(invocationForResolution)) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Selected spell act does not use a damage roll.",
+    );
+  }
+  const damageInvocation = invocationForResolution;
   if (fillSet.damageRoll == null) {
     return needsHolesResult(castingState, input.subject, [
-      spellDamageHole(invocation),
+      spellDamageHole(damageInvocation),
     ]);
   }
   const spellAttackMissToHitReplacement =
-    (invocation.procedure === "spellAttackDamage" ||
-      invocation.procedure === "heldLightHurl") &&
+    (invocationForResolution.procedure === "spellAttackDamage" ||
+      invocationForResolution.procedure === "heldLightHurl") &&
     fillSet.attackRoll != null
       ? selectedAttackRollMissToHitReplacement({
           state: castingState,
@@ -760,8 +873,8 @@ export function resolveSpellAct(
         })
       : null;
   const spellResolutionState =
-    (invocation.procedure === "spellAttackDamage" ||
-      invocation.procedure === "heldLightHurl") &&
+    (invocationForResolution.procedure === "spellAttackDamage" ||
+      invocationForResolution.procedure === "heldLightHurl") &&
     fillSet.attackRoll != null
       ? recordAttackRollMissToHitReplacementUsed(
           consumeHelpAttackForAttackRoll(
@@ -784,13 +897,13 @@ export function resolveSpellAct(
         )
       : castingState;
   const critical =
-    (invocation.procedure === "spellAttackDamage" ||
-      invocation.procedure === "heldLightHurl") &&
+    (invocationForResolution.procedure === "spellAttackDamage" ||
+      invocationForResolution.procedure === "heldLightHurl") &&
     fillSet.attackRoll != null &&
     attackRollIsCriticalHit(fillSet.attackRoll);
   const damageValidation = validateSpellDamageFill(
     fillSet.damageRoll,
-    invocation,
+    damageInvocation,
     critical,
     spellMarkedDamageRiders,
   );
@@ -805,7 +918,7 @@ export function resolveSpellAct(
     target,
     spellDamageByTypeForTarget(
       target,
-      invocation,
+      damageInvocation,
       fillSet.damageRoll,
       "full",
       spellMarkedDamageRiders,
@@ -890,7 +1003,7 @@ export function resolveSpellAct(
   const damaged = applySpellDamage(
     spellResolutionState,
     target.combatantId,
-    invocation,
+    damageInvocation,
     fillSet.damageRoll,
     critical,
     {
@@ -909,18 +1022,22 @@ export function resolveSpellAct(
     damaged,
     subject.actorId,
     target.combatantId,
-    invocation,
+    invocationForResolution,
   );
-  const lit = applySpellLightEmitterEffects(
-    effected,
-    subject.actorId,
-    { kind: "combatant", combatantId: target.combatantId },
-    invocation,
-  );
+  const lit =
+    invocationForResolution.procedure === "heldLightHurl" ||
+    invocationForResolution.procedure === "spellAttackDamage"
+      ? applySpellLightEmitterEffects(
+          effected,
+          subject.actorId,
+          { kind: "combatant", combatantId: target.combatantId },
+          invocationForResolution,
+        )
+      : effected;
   const spentResources = spendSpellCastResources({
     state: lit,
     actorId: subject.actorId,
-    invocation,
+    invocation: invocationForResolution,
     errorState: input.state,
   });
   if (spentResources.tag !== "resolved") {
@@ -960,10 +1077,12 @@ export function resolveSpellAct(
 function resolveSpellAttackDamageObjectTarget(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "heldLightHurl" | "spellAttackDamage" }
-  >;
+  readonly invocation:
+    | Extract<SupportedSpellInvocation, { readonly procedure: "heldLightHurl" }>
+    | Extract<
+        SupportedDamageSpellInvocation,
+        { readonly procedure: "spellAttackDamage" }
+      >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }> & {
     readonly objectTarget: NonNullable<
       Extract<SpellFillSet, { readonly tag: "ok" }>["objectTarget"]

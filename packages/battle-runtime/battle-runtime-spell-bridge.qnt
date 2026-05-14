@@ -112,6 +112,15 @@ module battleRuntimeSpellBridge {
     | BattleRuntimeBeamSequenceNeedsDamageRoll
     | BattleRuntimeBeamSequenceComplete
 
+  type BattleRuntimeSorcerousBurstDamageTypeChoice =
+    | BattleRuntimeSorcerousBurstAcidDamage
+    | BattleRuntimeSorcerousBurstColdDamage
+    | BattleRuntimeSorcerousBurstFireDamage
+    | BattleRuntimeSorcerousBurstLightningDamage
+    | BattleRuntimeSorcerousBurstPoisonDamage
+    | BattleRuntimeSorcerousBurstPsychicDamage
+    | BattleRuntimeSorcerousBurstThunderDamage
+
   type BattleRuntimeSleepRepeatSaveLifecycle =
     | BattleRuntimeNoSleepRepeatSaveLifecycle
     | BattleRuntimePendingSleepRepeatSaveLifecycle({ hadIncapacitated: bool })
@@ -582,6 +591,51 @@ module battleRuntimeSpellBridge {
       )
     )
 
+  pure def battleRuntimeSorcerousBurstDamageTypeChoices: Set[BattleRuntimeSorcerousBurstDamageTypeChoice] =
+    Set(
+      BattleRuntimeSorcerousBurstAcidDamage,
+      BattleRuntimeSorcerousBurstColdDamage,
+      BattleRuntimeSorcerousBurstFireDamage,
+      BattleRuntimeSorcerousBurstLightningDamage,
+      BattleRuntimeSorcerousBurstPoisonDamage,
+      BattleRuntimeSorcerousBurstPsychicDamage,
+      BattleRuntimeSorcerousBurstThunderDamage,
+    )
+
+  pure def battleRuntimeSorcerousBurstDamageType(
+    choice: BattleRuntimeSorcerousBurstDamageTypeChoice
+  ): RuleDamageType =
+    match choice {
+      | BattleRuntimeSorcerousBurstAcidDamage => AcidDamage
+      | BattleRuntimeSorcerousBurstColdDamage => ColdDamage
+      | BattleRuntimeSorcerousBurstFireDamage => FireDamage
+      | BattleRuntimeSorcerousBurstLightningDamage => LightningDamage
+      | BattleRuntimeSorcerousBurstPoisonDamage => PoisonDamage
+      | BattleRuntimeSorcerousBurstPsychicDamage => PsychicDamage
+      | BattleRuntimeSorcerousBurstThunderDamage => ThunderDamage
+    }
+
+  pure def battleRuntimeSorcerousBurstBaseDamageDice(characterLevel: int): int =
+    if (characterLevel >= 17) 4
+    else if (characterLevel >= 11) 3
+    else if (characterLevel >= 5) 2
+    else 1
+
+  pure def battleRuntimeSorcerousBurstMaximumAdditionalDice(spellcastingAbilityModifier: int): int =
+    if (spellcastingAbilityModifier > 0) spellcastingAbilityModifier else 0
+
+  pure def battleRuntimeSorcerousBurstCanRollAdditionalD8(
+    maximumD8sRolledSoFar: int,
+    spellcastingAbilityModifier: int,
+    additionalDiceAlreadyAdded: int,
+  ): bool =
+    all {
+      maximumD8sRolledSoFar >= 0,
+      additionalDiceAlreadyAdded >= 0,
+      additionalDiceAlreadyAdded < battleRuntimeSorcerousBurstMaximumAdditionalDice(spellcastingAbilityModifier),
+      additionalDiceAlreadyAdded < maximumD8sRolledSoFar,
+    }
+
   pure def battleRuntimeSleepRepeatSaveLifecycle(
     lifecycle: SleepRepeatSaveLifecycle
   ): BattleRuntimeSleepRepeatSaveLifecycle =
@@ -623,12 +677,14 @@ module battleRuntimeSpellBridge {
     sleepEffectEndsOnAdjacentShakeAwakeAction
 
   pure def battleRuntimeObjectHitPointDamageResult(
+    damageType: RuleDamageType,
     rolledDamage: int,
     priorHitPoints: int,
     damageThreshold: int
   ): BattleRuntimeObjectHitPointDamageResult = {
+    val damageAfterObjectImmunity = if (battleRuntimeObjectDamageTypeIsImmune(damageType)) 0 else rolledDamage
     val result = objectHitPointDamageResult({
-      rolledDamage: rolledDamage,
+      rolledDamage: damageAfterObjectImmunity,
       priorHitPoints: priorHitPoints,
       damageThreshold: damageThreshold,
     })
@@ -639,6 +695,9 @@ module battleRuntimeSpellBridge {
       destroyed: result.destroyed,
     }
   }
+
+  pure def battleRuntimeObjectDamageTypeIsImmune(damageType: RuleDamageType): bool =
+    damageType == PoisonDamage or damageType == PsychicDamage
 
   pure def battleRuntimeTurnStartTemporaryHitPoints(
     existingTemporaryHitPoints: int,
@@ -800,6 +859,27 @@ module battleRuntimeSpellBridge {
     }
   }
 
+  run test_sorcerous_burst_projection = {
+    all {
+      assert(battleRuntimeSorcerousBurstDamageTypeChoices.contains(BattleRuntimeSorcerousBurstAcidDamage)),
+      assert(battleRuntimeSorcerousBurstDamageTypeChoices.contains(BattleRuntimeSorcerousBurstPsychicDamage)),
+      assert(battleRuntimeSorcerousBurstDamageTypeChoices.contains(BattleRuntimeSorcerousBurstThunderDamage)),
+      assert(battleRuntimeSorcerousBurstDamageType(BattleRuntimeSorcerousBurstPsychicDamage) == PsychicDamage),
+      assert(battleRuntimeSorcerousBurstBaseDamageDice(1) == 1),
+      assert(battleRuntimeSorcerousBurstBaseDamageDice(5) == 2),
+      assert(battleRuntimeSorcerousBurstBaseDamageDice(11) == 3),
+      assert(battleRuntimeSorcerousBurstBaseDamageDice(17) == 4),
+      assert(battleRuntimeSorcerousBurstMaximumAdditionalDice(3) == 3),
+      assert(battleRuntimeSorcerousBurstMaximumAdditionalDice(-1) == 0),
+      assert(not(battleRuntimeSorcerousBurstCanRollAdditionalD8(0, 3, 0))),
+      assert(battleRuntimeSorcerousBurstCanRollAdditionalD8(1, 3, 0)),
+      assert(not(battleRuntimeSorcerousBurstCanRollAdditionalD8(1, 3, 1))),
+      assert(battleRuntimeSorcerousBurstCanRollAdditionalD8(2, 3, 1)),
+      assert(not(battleRuntimeSorcerousBurstCanRollAdditionalD8(4, 3, 3))),
+      assert(not(battleRuntimeSorcerousBurstCanRollAdditionalD8(1, -1, 0))),
+    }
+  }
+
   run test_sleep_repeat_save_lifecycle_projection = {
     val pending = battleRuntimeSleepInitialSaveLifecycle(false, true)
     val saved = battleRuntimeSleepRepeatSaveLifecycleAfterSave(pending, true, false)
@@ -818,8 +898,10 @@ module battleRuntimeSpellBridge {
   }
 
   run test_object_hit_point_damage_projection = {
-    val damaged = battleRuntimeObjectHitPointDamageResult(6, 5, 0)
-    val thresholdBlocked = battleRuntimeObjectHitPointDamageResult(6, 10, 10)
+    val damaged = battleRuntimeObjectHitPointDamageResult(FireDamage, 6, 5, 0)
+    val thresholdBlocked = battleRuntimeObjectHitPointDamageResult(FireDamage, 6, 10, 10)
+    val poisonImmune = battleRuntimeObjectHitPointDamageResult(PoisonDamage, 6, 5, 0)
+    val psychicImmune = battleRuntimeObjectHitPointDamageResult(PsychicDamage, 6, 5, 0)
     all {
       assert(damaged.effectiveDamage == 6),
       assert(damaged.priorHitPoints == 5),
@@ -828,6 +910,12 @@ module battleRuntimeSpellBridge {
       assert(thresholdBlocked.effectiveDamage == 0),
       assert(thresholdBlocked.nextHitPoints == 10),
       assert(not(thresholdBlocked.destroyed)),
+      assert(poisonImmune.effectiveDamage == 0),
+      assert(poisonImmune.nextHitPoints == 5),
+      assert(not(poisonImmune.destroyed)),
+      assert(psychicImmune.effectiveDamage == 0),
+      assert(psychicImmune.nextHitPoints == 5),
+      assert(not(psychicImmune.destroyed)),
     }
   }
 

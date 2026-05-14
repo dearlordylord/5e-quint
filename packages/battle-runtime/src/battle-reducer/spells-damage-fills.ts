@@ -5,10 +5,16 @@ import {
   holeId,
   holeInstanceKey,
   type AttackRollMode,
+  type RolledDiceGroup,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { validateRolledDiceForDiceExpr } from "@dnd/shared-algebras/runtime-dice-algebra";
 import { isIncapacitated } from "@dnd/shared-algebras/conditions-algebra";
-import { damageAmount, Hp, type DamageAmount } from "@dnd/shared/types";
+import {
+  damageAmount,
+  Hp,
+  type DamageAmount,
+  type DieRollResult,
+} from "@dnd/shared/types";
 import type {
   Ability,
   DamageType,
@@ -58,12 +64,38 @@ import {
   type BattleState,
   type BattleTargetChoiceHole,
   type BattleTargetSpatialFact,
+  spellAttackDamagePayloadIsResolved,
   type SaveDamageResult,
   type SpellMarkedDamageRider,
   type SpellTargeting,
   type SupportedDamageSpellInvocation,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
+
+const OBJECT_DAMAGE_IMMUNITIES = [
+  "poison",
+  "psychic",
+] as const satisfies ReadonlyArray<DamageType>;
+
+type SpellAttackDamageInvocationWithMaxDieAdditionalDiceLimit = Extract<
+  SupportedDamageSpellInvocation,
+  { readonly procedure: "spellAttackDamage" }
+> & {
+  readonly damage: {
+    readonly kind: "selectedSorcerousBurstDamage";
+    readonly maxDieAdditionalDiceLimit: number;
+  };
+};
+
+type SpellObjectDamageInvocation =
+  | Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "heldLightHurl" | "spellAttackBeamSequence" }
+    >
+  | Extract<
+      SupportedDamageSpellInvocation,
+      { readonly procedure: "spellAttackDamage" }
+    >;
 
 export function spellAttackRollHole(
   state: BattleState,
@@ -165,6 +197,7 @@ export function spellDamageTypeChoiceHole(
       readonly procedure:
         | "chainedSpellAttackDamage"
         | "damageReduction"
+        | "spellAttackDamage"
         | "spellHostedWeaponAttack";
     }
   >,
@@ -173,13 +206,19 @@ export function spellDamageTypeChoiceHole(
     invocation.procedure === "spellHostedWeaponAttack"
       ? `battle:spell:damage-type:${invocation.spell.id}:${invocation.componentWeapon.itemId}`
       : `battle:spell:damage-type:${invocation.spell.id}`;
+  const choices =
+    invocation.procedure === "spellAttackDamage"
+      ? invocation.damage.kind === "sorcerousBurstDamageTypeChoice"
+        ? invocation.damage.damageTypeChoices
+        : []
+      : invocation.damageTypeChoices;
   return {
     kind: "damageTypeChoice",
     holeId: holeId(protocolId),
     holeInstanceKey: holeInstanceKey(protocolId),
     label: `${invocation.spell.name} damage type`,
     spell: invocation,
-    choices: invocation.damageTypeChoices,
+    choices,
   };
 }
 
@@ -381,6 +420,11 @@ export function spellDamageTypes(
     }
   >,
 ): readonly DamageType[] {
+  if (invocation.procedure === "spellAttackDamage") {
+    return spellAttackDamagePayloadIsResolved(invocation.damage)
+      ? [invocation.damage.damageType]
+      : invocation.damage.damageTypeChoices;
+  }
   return [invocation.damage.damageType];
 }
 
@@ -787,11 +831,37 @@ export function validateSpellDamageFill(
       if (group === undefined) {
         return "filled spell damage groups do not match current spell damage";
       }
-      const validation = validateRolledDiceForDiceExpr([group], component.expr);
-      if (validation !== null) {
-        return validation.reason;
+      if (index === 0 && hasMaxDieAdditionalDiceLimit(invocation)) {
+        const validation = validateMaxDieAdditionalDiceFill(
+          { ...fill, value: [group] },
+          invocation,
+          critical,
+        );
+        if (validation !== null) {
+          return validation;
+        }
+      } else {
+        const validation = validateRolledDiceForDiceExpr(
+          [group],
+          component.expr,
+        );
+        if (validation !== null) {
+          return validation.reason;
+        }
       }
     }
+    return null;
+  }
+  const explodingError = hasMaxDieAdditionalDiceLimit(invocation)
+    ? validateMaxDieAdditionalDiceFill(fill, invocation, critical)
+    : null;
+  if (explodingError !== null) {
+    return explodingError;
+  }
+  if (
+    invocation.procedure === "spellAttackDamage" &&
+    invocation.damage.kind === "selectedSorcerousBurstDamage"
+  ) {
     return null;
   }
   const validation = validateRolledDiceForDiceExpr(fill.value, {
@@ -809,6 +879,73 @@ export function validateSpellDamageFill(
     dieSize: invocation.damage.expr.dieSize,
   });
   return validation?.reason ?? null;
+}
+
+function validateMaxDieAdditionalDiceFill(
+  fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+  invocation: SpellAttackDamageInvocationWithMaxDieAdditionalDiceLimit,
+  critical: boolean,
+): string | null {
+  const baseDice = invocation.damage.expr.dice * (critical ? 2 : 1);
+  const rolledResults = fill.value.flatMap((group: RolledDiceGroup): number[] =>
+    group.results.map((result: DieRollResult): number => Number(result)),
+  );
+  const rolledDiceCount = rolledResults.length;
+  const additionalDice = rolledDiceCount - baseDice;
+  if (additionalDice < 0) {
+    return "filled dice count is below the spell's base damage dice";
+  }
+  if (additionalDice > invocation.damage.maxDieAdditionalDiceLimit) {
+    return "filled additional max-die damage dice exceed this caster's spellcasting ability modifier.";
+  }
+  const validation = validateRolledDiceForDiceExpr(fill.value, {
+    dice: rolledDiceCount,
+    dieSize: invocation.damage.expr.dieSize,
+  });
+  if (validation !== null) {
+    return validation.reason;
+  }
+  const authorizationError = validateMaxDieAdditionalDiceSequence(
+    rolledResults,
+    baseDice,
+    invocation.damage.expr.dieSize,
+    additionalDice,
+  );
+  if (authorizationError !== null) {
+    return authorizationError;
+  }
+  return null;
+}
+
+function hasMaxDieAdditionalDiceLimit(
+  invocation: SupportedDamageSpellInvocation,
+): invocation is SpellAttackDamageInvocationWithMaxDieAdditionalDiceLimit {
+  return (
+    invocation.procedure === "spellAttackDamage" &&
+    invocation.damage.kind === "selectedSorcerousBurstDamage"
+  );
+}
+
+function validateMaxDieAdditionalDiceSequence(
+  rolledResults: readonly number[],
+  baseDice: number,
+  dieSize: number,
+  additionalDice: number,
+): string | null {
+  for (
+    let additionalDieIndex = 0;
+    additionalDieIndex < additionalDice;
+    additionalDieIndex += 1
+  ) {
+    const currentRollIndex = baseDice + additionalDieIndex;
+    const priorMaxDieResults = rolledResults
+      .slice(0, currentRollIndex)
+      .filter((result): boolean => result === dieSize).length;
+    if (additionalDieIndex >= priorMaxDieResults) {
+      return "filled additional max-die damage dice require a rolled maximum on a prior spell damage die.";
+    }
+  }
+  return null;
 }
 
 export function validateSpellBeamDamageFill(
@@ -1079,7 +1216,8 @@ export function spellDamageByTypeForTarget(
         return totals;
       }
       const diceTotal = group.results.reduce(
-        (groupTotal, dieResult) => groupTotal + Number(dieResult),
+        (groupTotal: number, dieResult: DieRollResult): number =>
+          groupTotal + Number(dieResult),
         0,
       );
       const unadjusted = diceTotal + component.flat;
@@ -1088,10 +1226,11 @@ export function spellDamageByTypeForTarget(
     return damageByType;
   }
   const diceTotal = damageRoll.value.reduce(
-    (total, group) =>
+    (total: number, group: RolledDiceGroup): number =>
       total +
       group.results.reduce(
-        (groupTotal, dieResult) => groupTotal + Number(dieResult),
+        (groupTotal: number, dieResult: DieRollResult): number =>
+          groupTotal + Number(dieResult),
         0,
       ),
     0,
@@ -1114,15 +1253,7 @@ export function spellDamageByTypeForTarget(
 
 export function spellObjectDamageOutcome(input: {
   readonly objectId: BattleObjectId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    {
-      readonly procedure:
-        | "heldLightHurl"
-        | "spellAttackBeamSequence"
-        | "spellAttackDamage";
-    }
-  >;
+  readonly invocation: SpellObjectDamageInvocation;
   readonly damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>;
   readonly critical: boolean;
   readonly disposition: BattleObjectDamageDisposition;
@@ -1132,17 +1263,18 @@ export function spellObjectDamageOutcome(input: {
     input.damageRoll,
     input.critical,
   );
+  const damageType = input.invocation.damage.damageType;
   return Match.value(input.disposition).pipe(
     Match.when({ kind: "tableResolved" }, () => ({
       kind: "tableResolved" as const,
       objectId: input.objectId,
-      damageType: input.invocation.damage.damageType,
+      damageType,
       rolledDamage: damageAmount(rolledDamage),
     })),
     Match.when({ kind: "hitPoints" }, (disposition) =>
       objectHitPointDamageOutcome({
         objectId: input.objectId,
-        damageType: input.invocation.damage.damageType,
+        damageType,
         rolledDamage,
         priorHitPoints: disposition.hitPoints,
         damageThreshold: null,
@@ -1151,7 +1283,7 @@ export function spellObjectDamageOutcome(input: {
     Match.when({ kind: "hitPointsWithDamageThreshold" }, (disposition) =>
       objectHitPointDamageOutcome({
         objectId: input.objectId,
-        damageType: input.invocation.damage.damageType,
+        damageType,
         rolledDamage,
         priorHitPoints: disposition.hitPoints,
         damageThreshold: disposition.damageThreshold,
@@ -1162,23 +1294,16 @@ export function spellObjectDamageOutcome(input: {
 }
 
 export function spellObjectRolledDamage(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    {
-      readonly procedure:
-        | "heldLightHurl"
-        | "spellAttackBeamSequence"
-        | "spellAttackDamage";
-    }
-  >,
+  invocation: SpellObjectDamageInvocation,
   damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
   _critical: boolean,
 ): number {
   const diceTotal = damageRoll.value.reduce(
-    (total, group) =>
+    (total: number, group: RolledDiceGroup): number =>
       total +
       group.results.reduce(
-        (groupTotal, dieResult) => groupTotal + Number(dieResult),
+        (groupTotal: number, dieResult: DieRollResult): number =>
+          groupTotal + Number(dieResult),
         0,
       ),
     0,
@@ -1193,11 +1318,12 @@ function objectHitPointDamageOutcome(input: {
   readonly priorHitPoints: Hp;
   readonly damageThreshold: DamageAmount | null;
 }): Extract<BattleObjectDamageOutcome, { readonly kind: "hitPoints" }> {
-  const effectiveDamage =
+  const objectImmune = objectDamageTypeIsImmune(input.damageType);
+  const thresholdBlocksDamage =
     input.damageThreshold !== null &&
-    input.rolledDamage < Number(input.damageThreshold)
-      ? 0
-      : input.rolledDamage;
+    input.rolledDamage < Number(input.damageThreshold);
+  const effectiveDamage =
+    objectImmune || thresholdBlocksDamage ? 0 : input.rolledDamage;
   const nextHitPoints = Hp(
     Math.max(0, Number(input.priorHitPoints) - effectiveDamage),
   );
@@ -1213,6 +1339,12 @@ function objectHitPointDamageOutcome(input: {
   };
 }
 
+function objectDamageTypeIsImmune(damageType: DamageType): boolean {
+  return OBJECT_DAMAGE_IMMUNITIES.some(
+    (immuneDamageType): boolean => immuneDamageType === damageType,
+  );
+}
+
 export function spellBurstDamageAmountForTarget(
   target: BattleCreatureState,
   invocation: Extract<
@@ -1223,10 +1355,11 @@ export function spellBurstDamageAmountForTarget(
   saveDamageResult: SaveDamageResult,
 ): number {
   const diceTotal = damageRoll.value.reduce(
-    (total, group) =>
+    (total: number, group: RolledDiceGroup): number =>
       total +
       group.results.reduce(
-        (groupTotal, dieResult) => groupTotal + Number(dieResult),
+        (groupTotal: number, dieResult: DieRollResult): number =>
+          groupTotal + Number(dieResult),
         0,
       ),
     0,
@@ -1255,7 +1388,8 @@ export function repeatedDamageAllocationSpellDamageAmount(
   const group = damageRoll.value[allocationIndex];
   const diceTotal =
     group?.results.reduce(
-      (groupTotal, dieResult) => groupTotal + Number(dieResult),
+      (groupTotal: number, dieResult: DieRollResult): number =>
+        groupTotal + Number(dieResult),
       0,
     ) ?? 0;
   const flat = (invocation.damage.expr.flat ?? 0) * repeatedEffectCount;

@@ -303,8 +303,9 @@ module battleRuntime {
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | FireBolt | EldritchBlast | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | Light | TrueStrike | Grease | Command | DissonantWhispers | FeatherFall | HellishRebuke
-  type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | StarryWispSpellAttack | FireBoltSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | FireBolt | EldritchBlast | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | Light | TrueStrike | Grease | Command | DissonantWhispers | FeatherFall | HellishRebuke | SorcerousBurst
+  type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | StarryWispSpellAttack | FireBoltSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack | SorcerousBurstSpellAttack({ damageTypeChoice: BattleRuntimeSorcerousBurstDamageTypeChoice, spellcastingAbilityModifier: int, characterLevel: int })
+  type FixedSpellAttackDamageInvocation = RayOfFrostFixedSpellAttack | PoisonSprayFixedSpellAttack | ChillTouchFixedSpellAttack | StarryWispFixedSpellAttack | FireBoltFixedSpellAttack | ShockingGraspFixedSpellAttack | GuidingBoltFixedSpellAttack | RayOfSicknessFixedSpellAttack | ProduceFlameHurlFixedSpellAttack
   type SpellAttackBeamSequenceInvocation =
     | EldritchBlastBeamSequence
   type ChainedSpellAttackDamageInvocation =
@@ -4731,6 +4732,7 @@ module battleRuntime {
       | DissonantWhispers => true
       | FeatherFall => true
       | HellishRebuke => true
+      | SorcerousBurst => false
     }
 
   pure def canExpendSpellSlotThisTurn(state: BattleState): bool =
@@ -4774,18 +4776,18 @@ module battleRuntime {
       baseline
 
   pure def battleRuntimeSpellAttackDamageProfileForInvocation(
-    invocation: SpellAttackDamageInvocation
+    invocation: FixedSpellAttackDamageInvocation
   ): BattleRuntimeSpellAttackDamageProfile =
     match invocation {
-      | RayOfFrostSpellAttack => BattleRuntimeRayOfFrostSpellAttack
-      | PoisonSpraySpellAttack => BattleRuntimePoisonSpraySpellAttack
-      | ChillTouchSpellAttack => BattleRuntimeChillTouchSpellAttack
-      | StarryWispSpellAttack => BattleRuntimeStarryWispSpellAttack
-      | FireBoltSpellAttack => BattleRuntimeFireBoltSpellAttack
-      | ShockingGraspSpellAttack => BattleRuntimeShockingGraspSpellAttack
-      | GuidingBoltSpellAttack => BattleRuntimeGuidingBoltSpellAttack
-      | RayOfSicknessSpellAttack => BattleRuntimeRayOfSicknessSpellAttack
-      | ProduceFlameHurlSpellAttack => BattleRuntimeProduceFlameHurlSpellAttack
+      | RayOfFrostFixedSpellAttack => BattleRuntimeRayOfFrostSpellAttack
+      | PoisonSprayFixedSpellAttack => BattleRuntimePoisonSpraySpellAttack
+      | ChillTouchFixedSpellAttack => BattleRuntimeChillTouchSpellAttack
+      | StarryWispFixedSpellAttack => BattleRuntimeStarryWispSpellAttack
+      | FireBoltFixedSpellAttack => BattleRuntimeFireBoltSpellAttack
+      | ShockingGraspFixedSpellAttack => BattleRuntimeShockingGraspSpellAttack
+      | GuidingBoltFixedSpellAttack => BattleRuntimeGuidingBoltSpellAttack
+      | RayOfSicknessFixedSpellAttack => BattleRuntimeRayOfSicknessSpellAttack
+      | ProduceFlameHurlFixedSpellAttack => BattleRuntimeProduceFlameHurlSpellAttack
     }
 
   pure def battleRuntimeSaveGatedDamageProfileForInvocation(
@@ -4876,11 +4878,21 @@ module battleRuntime {
       magicMissileAllocatedDamage(dieTotal, dartCount, flatPerDart)
 
   pure def spellAttackDamageType(invocation: SpellAttackDamageInvocation): DamageType =
-    damageTypeFromRuleDamageType(
-      battleRuntimeSpellAttackDamageType(
-        battleRuntimeSpellAttackDamageProfileForInvocation(invocation),
-      ),
-    )
+    match invocation {
+      | RayOfFrostSpellAttack => Cold
+      | PoisonSpraySpellAttack => Poison
+      | ChillTouchSpellAttack => Necrotic
+      | StarryWispSpellAttack => Radiant
+      | FireBoltSpellAttack => Fire
+      | ShockingGraspSpellAttack => Lightning
+      | GuidingBoltSpellAttack => Radiant
+      | RayOfSicknessSpellAttack => Poison
+      | ProduceFlameHurlSpellAttack => Fire
+      | SorcerousBurstSpellAttack(fill) =>
+          damageTypeFromRuleDamageType(
+            battleRuntimeSorcerousBurstDamageType(fill.damageTypeChoice)
+          )
+    }
 
   pure def spellAttackDamageActiveEffectForHitEffect(
     effect: BattleRuntimeSpellAttackDamageHitEffect
@@ -4895,14 +4907,32 @@ module battleRuntime {
     }
 
   pure def spellAttackDamageActiveEffects(invocation: SpellAttackDamageInvocation): Set[ActiveEffect] =
-    battleRuntimeSpellAttackDamageHitEffects(
-      battleRuntimeSpellAttackDamageProfileForInvocation(invocation),
-    ).map(spellAttackDamageActiveEffectForHitEffect)
+    match invocation {
+      | RayOfFrostSpellAttack => Set(RayOfFrostSpeedDelta)
+      | PoisonSpraySpellAttack => Set()
+      | ChillTouchSpellAttack => Set(ChillTouchHitPointRegainPrevented({ source: Fighter, expiresAtRound: 0 }))
+      | StarryWispSpellAttack => Set(StarryWispInvisibleBenefitDenied({ source: Fighter, expiresAtRound: 0 }))
+      | FireBoltSpellAttack => Set()
+      | ShockingGraspSpellAttack => Set(ShockingGraspOpportunityAttackDenied)
+      | GuidingBoltSpellAttack => Set(GuidingBoltNextAttackAdvantage)
+      | RayOfSicknessSpellAttack => Set(RayOfSicknessPoisoned)
+      | ProduceFlameHurlSpellAttack => Set()
+      | SorcerousBurstSpellAttack(_) => Set()
+    }
 
   pure def spellAttackDamageSupportsObjectTarget(invocation: SpellAttackDamageInvocation): bool =
-    battleRuntimeSpellAttackDamageSupportsObjectTarget(
-      battleRuntimeSpellAttackDamageProfileForInvocation(invocation),
-    )
+    match invocation {
+      | RayOfFrostSpellAttack => false
+      | PoisonSpraySpellAttack => false
+      | ChillTouchSpellAttack => false
+      | StarryWispSpellAttack => true
+      | FireBoltSpellAttack => true
+      | ShockingGraspSpellAttack => false
+      | GuidingBoltSpellAttack => false
+      | RayOfSicknessSpellAttack => false
+      | ProduceFlameHurlSpellAttack => true
+      | SorcerousBurstSpellAttack(_) => true
+    }
 
   pure def battleRuntimeSpellAttackBeamSequenceProfileForInvocation(
     invocation: SpellAttackBeamSequenceInvocation
@@ -4956,6 +4986,7 @@ module battleRuntime {
     damageThreshold: int,
   ): ObjectDamageOutcome = {
     val result = battleRuntimeObjectHitPointDamageResult(
+      ruleDamageType(damageType),
       rolledDamage,
       priorHitPoints,
       damageThreshold,
@@ -5014,6 +5045,7 @@ module battleRuntime {
       | GuidingBoltSpellAttack => GuidingBolt
       | RayOfSicknessSpellAttack => RayOfSickness
       | ProduceFlameHurlSpellAttack => ProduceFlame
+      | SorcerousBurstSpellAttack(_) => SorcerousBurst
     }
 
   pure def spellObjectIgnitionOutcomes(
@@ -7538,6 +7570,10 @@ module battleRuntime {
       assert(spellAttackDamageType(ShockingGraspSpellAttack) == Lightning),
       assert(spellAttackDamageType(GuidingBoltSpellAttack) == Radiant),
       assert(spellAttackDamageType(RayOfSicknessSpellAttack) == Poison),
+      assert(spellAttackDamageType(SorcerousBurstSpellAttack({ damageTypeChoice: BattleRuntimeSorcerousBurstThunderDamage, spellcastingAbilityModifier: 3, characterLevel: 5 })) == Thunder),
+      assert(battleRuntimeSorcerousBurstBaseDamageDice(5) == 2),
+      assert(battleRuntimeSorcerousBurstCanRollAdditionalD8(1, 3, 0)),
+      assert(not(battleRuntimeSorcerousBurstCanRollAdditionalD8(1, 3, 1))),
       assert(spellAttackDamageActiveEffects(RayOfSicknessSpellAttack) == Set(RayOfSicknessPoisoned)),
       assert(spellAttackDamageActiveEffects(ChillTouchSpellAttack) == Set(ChillTouchHitPointRegainPrevented({ source: Fighter, expiresAtRound: 0 }))),
       assert(spellAttackDamageActiveEffects(StarryWispSpellAttack) == Set(StarryWispInvisibleBenefitDenied({ source: Fighter, expiresAtRound: 0 }))),
@@ -7551,6 +7587,7 @@ module battleRuntime {
       assert(spellAttackDamageSupportsObjectTarget(StarryWispSpellAttack)),
       assert(spellAttackDamageSupportsObjectTarget(FireBoltSpellAttack)),
       assert(spellAttackDamageSupportsObjectTarget(ProduceFlameHurlSpellAttack)),
+      assert(spellAttackDamageSupportsObjectTarget(SorcerousBurstSpellAttack({ damageTypeChoice: BattleRuntimeSorcerousBurstPsychicDamage, spellcastingAbilityModifier: 3, characterLevel: 5 }))),
       assert(not(spellAttackDamageSupportsObjectTarget(ChillTouchSpellAttack))),
       assert(spellAttackBeamSequenceDamageType(EldritchBlastBeamSequence) == Force),
       assert(eldritchBlastBeamCount(1) == 1),
@@ -7572,6 +7609,7 @@ module battleRuntime {
       assert(spellAttackDamageObjectReplayHoles(ProduceFlameHurlSpellAttack, true, false, false, false, false) == Set(ObjectTargetChoice)),
       assert(spellAttackDamageObjectReplayHoles(ProduceFlameHurlSpellAttack, true, true, false, false, false) == Set(AttackRoll)),
       assert(spellAttackDamageObjectReplayHoles(ProduceFlameHurlSpellAttack, true, true, true, true, false) == Set(SpellDamageRoll)),
+      assert(spellAttackDamageObjectReplayHoles(SorcerousBurstSpellAttack({ damageTypeChoice: BattleRuntimeSorcerousBurstThunderDamage, spellcastingAbilityModifier: 3, characterLevel: 5 }), true, false, false, false, false) == Set(ObjectTargetChoice)),
       assert(spellObjectDamageOutcome(StarryWispSpellAttack, StarryWispObjectTarget, 6, ObjectHitPoints({ hitPoints: 5 })) == ObjectHitPointDamage({
         object: StarryWispObjectTarget,
         damageType: Radiant,
@@ -7580,6 +7618,15 @@ module battleRuntime {
         priorHitPoints: 5,
         nextHitPoints: 0,
         destroyed: true,
+      })),
+      assert(spellObjectDamageOutcome(SorcerousBurstSpellAttack({ damageTypeChoice: BattleRuntimeSorcerousBurstPsychicDamage, spellcastingAbilityModifier: 3, characterLevel: 5 }), FireBoltObjectTarget, 9, ObjectHitPoints({ hitPoints: 8 })) == ObjectHitPointDamage({
+        object: FireBoltObjectTarget,
+        damageType: Psychic,
+        rolledDamage: 9,
+        effectiveDamage: 0,
+        priorHitPoints: 8,
+        nextHitPoints: 8,
+        destroyed: false,
       })),
       assert(spellObjectDamageOutcome(StarryWispSpellAttack, StarryWispObjectTarget, 6, ObjectHitPointsWithDamageThreshold({ hitPoints: 10, damageThreshold: 10 })) == ObjectHitPointDamage({
         object: StarryWispObjectTarget,

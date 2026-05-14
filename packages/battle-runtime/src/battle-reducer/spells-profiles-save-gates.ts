@@ -87,6 +87,11 @@ type SleepTargetAdmissionPhase = Extract<
     };
   };
 };
+
+type ExplodingMaxDieThresholdTier = {
+  readonly atLevel: number;
+  readonly dice: number;
+};
 type GreaseGroundHazardPhase = Extract<
   ActivationPhase,
   { readonly kind: "save_gate" }
@@ -1556,6 +1561,20 @@ export function supportedDamageAmountExpr(input: {
           ? diceExprWithDelta(expr, tier.override)
           : expr,
       amount.base,
+    );
+  }
+  if (
+    amount.kind === "threshold_tiers_exploding_max_die" &&
+    amount.axis === "character" &&
+    input.characterLevel !== undefined
+  ) {
+    return amount.tiers.reduce<DiceExpr>(
+      (expr: DiceExpr, tier: ExplodingMaxDieThresholdTier): DiceExpr =>
+        input.characterLevel !== undefined &&
+        input.characterLevel >= tier.atLevel
+          ? diceExprWithDelta(expr, { dice: tier.dice })
+          : expr,
+      { dice: amount.baseDice, dieSize: amount.dieSize },
     );
   }
   if (

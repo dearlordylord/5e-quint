@@ -18,7 +18,6 @@ import type {
 import { Match } from "effect";
 import {
   SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET,
-  damageSpellSource,
   type BattleCreatureState,
   type DamageSpellSource,
   type PreparedDamageSpellSource,
@@ -74,6 +73,15 @@ const TRUE_STRIKE_DAMAGE_TYPE_CHOICES = [
   "radiant",
   "weapon_normal",
 ] as const satisfies readonly string[];
+const SORCEROUS_BURST_DAMAGE_TYPES = [
+  "acid",
+  "cold",
+  "fire",
+  "lightning",
+  "poison",
+  "psychic",
+  "thunder",
+] as const satisfies readonly DamageType[];
 
 export function supportedCantripSpellHostedWeaponAttackProfile(
   actor: BattleCreatureState,
@@ -527,10 +535,19 @@ export function supportedSpellAttackDamageProfile(
     return [];
   }
   const [damageEffect, ...postDamageEffects] = phase.onHit;
-  if (
-    damageEffect?.kind !== "damage" ||
-    typeof damageEffect.damageType !== "string"
-  ) {
+  if (damageEffect?.kind !== "damage") {
+    return [];
+  }
+  const fixedDamageType =
+    typeof damageEffect.damageType === "string"
+      ? damageEffect.damageType
+      : null;
+  const sorcerousBurstProjection = supportedSorcerousBurstProjection(
+    spell,
+    damageEffect,
+    input.spellcastingAbilityModifier,
+  );
+  if (fixedDamageType === null && sorcerousBurstProjection === null) {
     return [];
   }
   const objectHitProjection = supportedSpellObjectHitEffect({
@@ -557,18 +574,33 @@ export function supportedSpellAttackDamageProfile(
     slotLevel: input.slotLevel,
     characterLevel: input.characterLevel,
   });
-  if (damageExpr == null || typeof damageEffect.damageType !== "string") {
+  if (damageExpr == null) {
     return [];
   }
-
+  const chosenDamageProjection = sorcerousBurstProjection;
+  const damage =
+    chosenDamageProjection === null
+      ? fixedDamageType === null
+        ? null
+        : {
+            kind: "fixedSpellAttackDamage" as const,
+            expr: damageExpr,
+            damageType: fixedDamageType,
+          }
+      : {
+          kind: "sorcerousBurstDamageTypeChoice" as const,
+          expr: damageExpr,
+          damageTypeChoices: chosenDamageProjection.damageTypes,
+          maxDieAdditionalDiceLimit: chosenDamageProjection.maxAdditionalDice,
+        };
+  if (damage === null) {
+    return [];
+  }
   const attackDamageInvocation = {
     procedure: "spellAttackDamage" as const,
     spell,
     targeting,
-    damage: {
-      expr: damageExpr,
-      damageType: damageEffect.damageType,
-    },
+    damage,
     rangeFeet,
     attackKind: phase.attackKind,
     attackBonus: attackBonus(
@@ -579,7 +611,67 @@ export function supportedSpellAttackDamageProfile(
     objectHitEffect: objectHitProjection.objectHitEffect,
   };
 
-  return [{ ...damageSpellSource(input), ...attackDamageInvocation }];
+  if (input.access.tag === "classCantrip" && input.resource.tag === "none") {
+    return [
+      {
+        access: { tag: "classCantrip" },
+        resource: { tag: "none" },
+        ...attackDamageInvocation,
+      } satisfies SupportedSpellInvocation,
+    ];
+  }
+  if (input.access.tag !== "prepared" || input.resource.tag !== "spellSlot") {
+    return [];
+  }
+  return [
+    {
+      access: { tag: "prepared" },
+      resource: input.resource,
+      ...attackDamageInvocation,
+    } satisfies SupportedSpellInvocation,
+  ];
+}
+
+function supportedSorcerousBurstProjection(
+  spell: SpellRecord,
+  damageEffect: SpellAttackHitEffect,
+  spellcastingAbilityModifier: AbilityModifier,
+): {
+  readonly damageTypes: readonly [DamageType, ...DamageType[]];
+  readonly maxAdditionalDice: number;
+} | null {
+  if (
+    damageEffect.kind !== "damage" ||
+    !isCanonicalSrdSorcerousBurstSpellDefinition(spell) ||
+    typeof damageEffect.damageType !== "object" ||
+    damageEffect.damageType.kind !== "hole" ||
+    typeof damageEffect.damageType.value !== "object" ||
+    damageEffect.damageType.value.kind !== "choice" ||
+    !sameStringSet(damageEffect.damageType.value.options, [
+      ...SORCEROUS_BURST_DAMAGE_TYPES,
+    ]) ||
+    damageEffect.amount.kind !== "threshold_tiers_exploding_max_die" ||
+    damageEffect.amount.axis !== "character" ||
+    damageEffect.amount.baseDice !== 1 ||
+    damageEffect.amount.dieSize !== 8 ||
+    damageEffect.amount.maxAdditionalDice !== "spellcasting_ability_modifier"
+  ) {
+    return null;
+  }
+  return {
+    damageTypes: SORCEROUS_BURST_DAMAGE_TYPES,
+    maxAdditionalDice: Math.max(0, Number(spellcastingAbilityModifier)),
+  };
+}
+
+export function isCanonicalSrdSorcerousBurstSpellDefinition(
+  spell: SpellRecord,
+): boolean {
+  return (
+    spell.name === "Sorcerous Burst" &&
+    spell.provenance.kind === "srd-5.2.1" &&
+    spell.provenance.section === "Spells/Descriptions-S-Z#Sorcerous Burst"
+  );
 }
 
 export function supportedCantripSpellAttackBeamSequenceProfile(

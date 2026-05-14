@@ -156,12 +156,12 @@
     "spellPressureRows": 211,
     "levelOneBattleReadiness": {
       "denominator": 367,
-      "numerator": 288,
-      "percent": "78.5%",
+      "numerator": 289,
+      "percent": "78.7%",
       "rowsByStatus": {
-        "accepted": 219,
+        "accepted": 220,
         "accepted-no-battle-effect": 69,
-        "battle-runtime-required": 39,
+        "battle-runtime-required": 38,
         "partial-battle-runtime": 40
       }
     },
@@ -171,15 +171,15 @@
       "non-runtime": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 266,
+      "catalog-installed-owner-evidence-present": 267,
       "non-runtime": 12,
       "catalog-only/dead-for-now": 75,
-      "catalog-installed-owner-evidence-required": 14
+      "catalog-installed-owner-evidence-required": 13
     },
     "spellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 75,
-      "catalog-installed-owner-evidence-present": 122,
-      "catalog-installed-owner-evidence-required": 14
+      "catalog-installed-owner-evidence-present": 123,
+      "catalog-installed-owner-evidence-required": 13
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -13982,8 +13982,8 @@
         "state": "installed",
         "unitId": "sorcerous_burst"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -13992,11 +13992,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Unit matrix records unsupported-profile: Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Sorcerous Burst's cast-time damage type choice, exploding d8 damage loop capped by spellcasting ability modifier, object target branch, or cantrip damage scaling. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84B at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Unit matrix records unsupported-profile: Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Sorcerous Burst's cast-time damage type choice, exploding d8 damage loop capped by spellcasting ability modifier, object target branch, or cantrip damage scaling. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_true_strike",

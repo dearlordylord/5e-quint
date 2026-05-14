@@ -570,6 +570,10 @@ export function spellFillSet(
     if (fill.kind === "damageTypeChoice") {
       if (
         invocation.procedure !== "damageReduction" &&
+        !(
+          invocation.procedure === "spellAttackDamage" &&
+          invocation.damage.kind === "sorcerousBurstDamageTypeChoice"
+        ) &&
         invocation.procedure !== "spellHostedWeaponAttack"
       ) {
         return {

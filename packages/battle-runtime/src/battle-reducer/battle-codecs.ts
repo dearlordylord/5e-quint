@@ -371,6 +371,32 @@ const SpellAttackDamageTargetingSchema = Schema.Union(
   SingleCreatureOrObjectSpellTargetingSchema,
 );
 
+const SpellAttackDamagePayloadSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("fixedSpellAttackDamage"),
+    expr: BattleRuntimeObjectSchema,
+    damageType: DamageTypeSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("sorcerousBurstDamageTypeChoice"),
+    expr: BattleRuntimeObjectSchema,
+    damageTypeChoices: Schema.NonEmptyArray(DamageTypeSchema),
+    maxDieAdditionalDiceLimit: Schema.Number.pipe(
+      Schema.int(),
+      Schema.greaterThanOrEqualTo(0),
+    ),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("selectedSorcerousBurstDamage"),
+    expr: BattleRuntimeObjectSchema,
+    damageType: DamageTypeSchema,
+    maxDieAdditionalDiceLimit: Schema.Number.pipe(
+      Schema.int(),
+      Schema.greaterThanOrEqualTo(0),
+    ),
+  }),
+);
+
 const BattleObjectDamageDispositionSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("hitPoints"),
@@ -582,10 +608,7 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       procedure: Schema.Literal("spellAttackDamage"),
       spell: BattleRuntimeObjectSchema,
       targeting: SpellAttackDamageTargetingSchema,
-      damage: Schema.Struct({
-        expr: BattleRuntimeObjectSchema,
-        damageType: Schema.String,
-      }),
+      damage: SpellAttackDamagePayloadSchema,
       rangeFeet: MovementFeet,
       attackKind: Schema.Literal("melee_spell_attack", "ranged_spell_attack"),
       attackBonus: AttackBonus,
@@ -632,10 +655,7 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       procedure: Schema.Literal("spellAttackDamage"),
       spell: BattleRuntimeObjectSchema,
       targeting: SpellAttackDamageTargetingSchema,
-      damage: Schema.Struct({
-        expr: BattleRuntimeObjectSchema,
-        damageType: Schema.String,
-      }),
+      damage: SpellAttackDamagePayloadSchema,
       rangeFeet: MovementFeet,
       attackKind: Schema.Literal("melee_spell_attack", "ranged_spell_attack"),
       attackBonus: AttackBonus,

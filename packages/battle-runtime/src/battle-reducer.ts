@@ -1956,6 +1956,43 @@ export type PersistentArmorSpellInvocation =
         { readonly kind: "spellBaseArmorClass" }
       >;
     };
+export type SpellAttackDamagePayload =
+  | {
+      readonly kind: "fixedSpellAttackDamage";
+      readonly expr: DiceExpr;
+      readonly damageType: DamageType;
+    }
+  | {
+      readonly kind: "sorcerousBurstDamageTypeChoice";
+      readonly expr: DiceExpr;
+      readonly damageTypeChoices: readonly [DamageType, ...DamageType[]];
+      readonly maxDieAdditionalDiceLimit: number;
+    }
+  | {
+      readonly kind: "selectedSorcerousBurstDamage";
+      readonly expr: DiceExpr;
+      readonly damageType: DamageType;
+      readonly maxDieAdditionalDiceLimit: number;
+    };
+
+export type ResolvedSpellAttackDamagePayload = Extract<
+  SpellAttackDamagePayload,
+  {
+    readonly kind:
+      | "fixedSpellAttackDamage"
+      | "selectedSorcerousBurstDamage";
+  }
+>;
+
+export function spellAttackDamagePayloadIsResolved(
+  damage: SpellAttackDamagePayload,
+): damage is ResolvedSpellAttackDamagePayload {
+  return (
+    damage.kind === "fixedSpellAttackDamage" ||
+    damage.kind === "selectedSorcerousBurstDamage"
+  );
+}
+
 // SupportedAttackActionOption is a currently executable option for spending an
 // immediate attack made as part of the Attack action. It is narrower than all
 export type SupportedSpellInvocation =
@@ -1984,10 +2021,7 @@ export type SupportedSpellInvocation =
       readonly procedure: "spellAttackDamage";
       readonly spell: SpellRecord;
       readonly targeting: SpellAttackDamageTargeting;
-      readonly damage: {
-        readonly expr: DiceExpr;
-        readonly damageType: DamageType;
-      };
+      readonly damage: SpellAttackDamagePayload;
       readonly rangeFeet: MovementFeet;
       readonly attackKind: SpellAttackKind;
       readonly attackBonus: AttackBonus;
@@ -2214,7 +2248,7 @@ export type HealingSpellTargeting =
       };
     };
 
-export type SupportedDamageSpellInvocation = Exclude<
+type AnySupportedDamageSpellInvocation = Exclude<
   SupportedSpellInvocation,
   {
     readonly procedure:
@@ -2245,6 +2279,17 @@ export type SupportedDamageSpellInvocation = Exclude<
       | "chainedSpellAttackDamage";
   }
 >;
+export type SupportedDamageSpellInvocation =
+  | Exclude<
+      AnySupportedDamageSpellInvocation,
+      { readonly procedure: "spellAttackDamage" }
+    >
+  | (Extract<
+      AnySupportedDamageSpellInvocation,
+      { readonly procedure: "spellAttackDamage" }
+    > & {
+      readonly damage: ResolvedSpellAttackDamagePayload;
+    });
 export type ReadiedSpellInvocation =
   | Exclude<
       SupportedDamageSpellInvocation,
@@ -2735,6 +2780,7 @@ export type BattleSpellDamageTypeChoiceHole = {
       readonly procedure:
         | "chainedSpellAttackDamage"
         | "damageReduction"
+        | "spellAttackDamage"
         | "spellHostedWeaponAttack";
     }
   >;
