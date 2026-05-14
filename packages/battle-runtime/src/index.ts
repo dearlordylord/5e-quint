@@ -185,6 +185,7 @@ export {
   type BattleMovementHole,
   type BattleObjectDamageDisposition,
   type BattleObjectDamageOutcome,
+  type BattleObjectOutline,
   type BattleObjectTargetChoiceHole,
   type BattlePossessionAttemptDisposition,
   type BattleReactionDecision,

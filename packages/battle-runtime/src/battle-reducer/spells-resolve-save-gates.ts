@@ -45,6 +45,7 @@ import {
   applySleepPendingRepeatSaveEffects,
   applyFailedSaveSpellActiveEffects,
   applyFailedSaveSpellConditionEffects,
+  saveGatedAttackRollAdvantageInvocationIsFaerieFire,
   applySpellDamage,
   saveGateDamageResultForOutcome,
   commandOptionChoiceHole,
@@ -1196,6 +1197,7 @@ export function resolveSaveGateAttackRollAdvantageSpellAct(input: {
     resourced.state,
     input.actorId,
     failedTargets,
+    "area" in savingThrowOutcomes ? savingThrowOutcomes.area : undefined,
     input.invocation,
   );
   const nextState = extendSavingThrowOngoingFeatures(
@@ -1315,6 +1317,18 @@ export function validateSavingThrowOutcomes(
   }
   if ("sleepNonSleeperFacts" in value.area) {
     return "Sleep non-sleeper facts are only valid for Sleep target admission.";
+  }
+  if ("kind" in value.area && value.area.kind === "faerieFireArea") {
+    if (hole.spell.procedure !== "saveGatedAttackRollAdvantage") {
+      return "Faerie Fire object area facts are only valid for Faerie Fire.";
+    }
+    if (!saveGatedAttackRollAdvantageInvocationIsFaerieFire(hole.spell)) {
+      return "Faerie Fire object area facts are only valid for Faerie Fire.";
+    }
+    const affectedObjects = new Set(value.area.affectedObjectIds);
+    if (affectedObjects.size !== value.area.affectedObjectIds.length) {
+      return "Faerie Fire area affected objects must not duplicate object ids.";
+    }
   }
   if (!state.combatants.has(value.area.originAnchorId)) {
     return "Save-gate spell area origin anchor must be a combatant in this battle.";

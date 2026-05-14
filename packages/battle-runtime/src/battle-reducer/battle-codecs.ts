@@ -225,6 +225,13 @@ const BattleSpellAreaChoiceSchema = Schema.Union(
   }),
   Schema.Struct({
     ...BattleSpellAreaChoiceBaseSchema,
+    kind: Schema.Literal("faerieFireArea"),
+    affectedObjectIds: Schema.Array(BattleObjectId),
+    areaId: Schema.optionalWith(Schema.Never, { exact: true }),
+    sleepNonSleeperFacts: Schema.optionalWith(Schema.Never, { exact: true }),
+  }),
+  Schema.Struct({
+    ...BattleSpellAreaChoiceBaseSchema,
     kind: Schema.Literal("greaseGroundArea"),
     areaId: Schema.String,
     sleepNonSleeperFacts: Schema.optionalWith(Schema.Never, { exact: true }),
@@ -1516,6 +1523,12 @@ type BattleSpellAreaChoiceEncoded = {
       }[];
     }
   | {
+      readonly kind: "faerieFireArea";
+      readonly affectedObjectIds: readonly string[];
+      readonly areaId?: never;
+      readonly sleepNonSleeperFacts?: never;
+    }
+  | {
       readonly kind: "greaseGroundArea";
       readonly areaId: string;
       readonly sleepNonSleeperFacts?: never;
@@ -1609,6 +1622,13 @@ type BattleFillEncoded =
                   readonly damageThreshold: number;
                 }
               | { readonly kind: "tableResolved" };
+          }
+        | {
+            readonly kind: "spellObjectTargetSight";
+            readonly casterId: string;
+            readonly objectId: string;
+            readonly spellId: string;
+            readonly attackerCanSeeObject: boolean;
           }
         | {
             readonly kind: "spellObjectLightTarget";
@@ -1749,6 +1769,13 @@ type BattleFillEncoded =
                   readonly damageThreshold: number;
                 }
               | { readonly kind: "tableResolved" };
+          }
+        | {
+            readonly kind: "spellObjectTargetSight";
+            readonly casterId: string;
+            readonly objectId: string;
+            readonly spellId: string;
+            readonly attackerCanSeeObject: boolean;
           }
         | {
             readonly kind: "spellObjectLightTarget";
@@ -2120,6 +2147,13 @@ export const BattleFillSchema: Schema.Schema<
               damageDisposition: BattleObjectDamageDispositionSchema,
             }),
             Schema.Struct({
+              kind: Schema.Literal("spellObjectTargetSight"),
+              casterId: CombatantId,
+              objectId: BattleObjectId,
+              spellId: Schema.String,
+              attackerCanSeeObject: Schema.Boolean,
+            }),
+            Schema.Struct({
               kind: Schema.Literal("spellObjectLightTarget"),
               casterId: CombatantId,
               objectId: BattleObjectId,
@@ -2265,6 +2299,13 @@ export const BattleFillSchema: Schema.Schema<
             rangeFeet: MovementFeet,
             armorClass: BattleArmorClassSchema,
             damageDisposition: BattleObjectDamageDispositionSchema,
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("spellObjectTargetSight"),
+            casterId: CombatantId,
+            objectId: BattleObjectId,
+            spellId: Schema.String,
+            attackerCanSeeObject: Schema.Boolean,
           }),
           Schema.Struct({
             kind: Schema.Literal("spellObjectLightTarget"),

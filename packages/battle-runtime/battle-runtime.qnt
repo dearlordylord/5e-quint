@@ -339,6 +339,9 @@ module battleRuntime {
     | ProduceFlameObjectTarget
     | LightObjectTarget
     | PriorLightObjectTarget
+    | FaerieFireObjectTarget
+  type ObjectOutline =
+    | FaerieFireObjectOutline({ source: Actor, object: ObjectTarget })
   type ObjectSize = ObjectTiny | ObjectSmall | ObjectMedium | ObjectLarge | ObjectHuge | ObjectGargantuan
   type ObjectWearCarry = ObjectNotWornOrCarriedBySomeoneElse | ObjectWornOrCarriedByCaster | ObjectWornBySomeoneElse | ObjectCarriedBySomeoneElse
   type ObjectDamageDisposition =
@@ -671,6 +674,7 @@ module battleRuntime {
     initiative: Initiative,
     fighter: Combatant,
     goblin: Combatant,
+    objectOutlines: Set[ObjectOutline],
     lightEmitters: Set[LightEmitter],
     actionAvailable: bool,
     bonusActionAvailable: bool,
@@ -787,6 +791,7 @@ module battleRuntime {
       leftHandUse: HFree,
       rightHandUse: HFree,
     },
+    objectOutlines: Set(),
     lightEmitters: Set(),
     actionAvailable: true,
     bonusActionAvailable: true,
@@ -5149,10 +5154,39 @@ module battleRuntime {
     else
       NormalSpellAttackRoll
 
+  pure def objectOutlinesGrantAttackRollAdvantage(
+    outlines: Set[ObjectOutline],
+    objectTarget: ObjectTarget,
+    attackerCanSeeObject: bool,
+  ): bool =
+    attackerCanSeeObject and outlines.exists(outline => match outline {
+      | FaerieFireObjectOutline(data) => data.object == objectTarget
+    })
+
+  pure def spellObjectAttackRollModeFromActiveEffects(
+    attackerEffects: Set[ActiveEffect],
+    objectOutlines: Set[ObjectOutline],
+    objectTarget: ObjectTarget,
+    attackerCanSeeObject: bool,
+  ): SpellAttackRollMode =
+    if ((attackerEffects.contains(ViciousMockeryNextAttackDisadvantage) or attackerEffects.exists(effect => match effect { | WeaponMasterySapNextAttackDisadvantage(_) => true | _ => false })) and objectOutlinesGrantAttackRollAdvantage(objectOutlines, objectTarget, attackerCanSeeObject))
+      NormalSpellAttackRoll
+    else if (objectOutlinesGrantAttackRollAdvantage(objectOutlines, objectTarget, attackerCanSeeObject))
+      AdvantageSpellAttackRoll
+    else if (attackerEffects.contains(ViciousMockeryNextAttackDisadvantage) or attackerEffects.exists(effect => match effect { | WeaponMasterySapNextAttackDisadvantage(_) => true | _ => false }))
+      DisadvantageSpellAttackRoll
+    else
+      NormalSpellAttackRoll
+
   pure def activeEffectsDenyInvisibleBenefit(effects: Set[ActiveEffect]): bool =
     effects.contains(FaerieFireOutline) or effects.exists(effect => match effect {
       | StarryWispInvisibleBenefitDenied(_) => true
       | _ => false
+    })
+
+  pure def objectOutlinesDenyInvisibleBenefit(outlines: Set[ObjectOutline], objectTarget: ObjectTarget): bool =
+    outlines.exists(outline => match outline {
+      | FaerieFireObjectOutline(data) => data.object == objectTarget
     })
 
   pure def protectionFromEvilAndGoodCreatureTypeIsScoped(creatureType: RuntimeCreatureType): bool =
@@ -6189,19 +6223,26 @@ module battleRuntime {
           ...state,
           fighter: breakConcentration(state.fighter),
           goblin: combatantWithoutSpellEffectConcentrationEffects(state.goblin),
+          objectOutlines: state.objectOutlines.filter(outline => match outline {
+            | FaerieFireObjectOutline(data) => data.source != Fighter
+          }),
         }
       | Goblin =>
         {
           ...state,
           goblin: breakConcentration(state.goblin),
           fighter: combatantWithoutSpellEffectConcentrationEffects(state.fighter),
+          objectOutlines: state.objectOutlines.filter(outline => match outline {
+            | FaerieFireObjectOutline(data) => data.source != Goblin
+          }),
         }
     }
 
-  pure def resolveFaerieFire(
+  pure def resolveFaerieFireWithObjects(
     state: BattleState,
     fighterSavingThrowSucceeded: bool,
     goblinSavingThrowSucceeded: bool,
+    objectTargets: Set[ObjectTarget],
   ): BattleState =
     if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)))
       state
@@ -6211,10 +6252,20 @@ module battleRuntime {
         ...withoutPrior,
         fighter: { ...saveGatedAttackRollAdvantageTarget(FaerieFireSaveGate, withoutPrior.fighter, fighterSavingThrowSucceeded), concentrating: true },
         goblin: saveGatedAttackRollAdvantageTarget(FaerieFireSaveGate, withoutPrior.goblin, goblinSavingThrowSucceeded),
+        objectOutlines: withoutPrior.objectOutlines.union(
+          objectTargets.map(objectTarget => FaerieFireObjectOutline({ source: Fighter, object: objectTarget }))
+        ),
         actionAvailable: false,
         spellSlotExpendedThisTurn: true,
       }
     }
+
+  pure def resolveFaerieFire(
+    state: BattleState,
+    fighterSavingThrowSucceeded: bool,
+    goblinSavingThrowSucceeded: bool,
+  ): BattleState =
+    resolveFaerieFireWithObjects(state, fighterSavingThrowSucceeded, goblinSavingThrowSucceeded, Set())
 
   pure def resolveEntangle(
     state: BattleState,
@@ -7937,6 +7988,20 @@ module battleRuntime {
       assert(spellAttackRollModeFromActiveEffects(Set(), lit.goblin.activeEffects, false) == NormalSpellAttackRoll),
       assert(not(broken.goblin.activeEffects.contains(FaerieFireOutline))),
       assert(not(activeEffectsDenyInvisibleBenefit(broken.goblin.activeEffects))),
+    }
+  }
+
+  run test_faerie_fire_object_outline_until_concentration_break = {
+    val lit = resolveFaerieFireWithObjects(initialState, true, true, Set(FaerieFireObjectTarget))
+    val broken = breakConcentrationSpellEffects(lit, Fighter)
+    all {
+      assert(lit.objectOutlines.contains(FaerieFireObjectOutline({ source: Fighter, object: FaerieFireObjectTarget }))),
+      assert(objectOutlinesDenyInvisibleBenefit(lit.objectOutlines, FaerieFireObjectTarget)),
+      assert(spellObjectAttackRollModeFromActiveEffects(Set(), lit.objectOutlines, FaerieFireObjectTarget, true) == AdvantageSpellAttackRoll),
+      assert(spellObjectAttackRollModeFromActiveEffects(Set(), lit.objectOutlines, FaerieFireObjectTarget, false) == NormalSpellAttackRoll),
+      assert(spellObjectAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), lit.objectOutlines, FaerieFireObjectTarget, true) == NormalSpellAttackRoll),
+      assert(not(broken.objectOutlines.contains(FaerieFireObjectOutline({ source: Fighter, object: FaerieFireObjectTarget })))),
+      assert(not(objectOutlinesDenyInvisibleBenefit(broken.objectOutlines, FaerieFireObjectTarget))),
     }
   }
 

@@ -107,6 +107,9 @@ export function breakBattleConcentration(
   return {
     ...state,
     combatants: breakCombatantConcentration(state.combatants, combatantId),
+    objectOutlines: state.objectOutlines.filter(
+      (outline) => outline.expiresAt.combatantId !== combatantId,
+    ),
     readiedSpells,
   };
 }

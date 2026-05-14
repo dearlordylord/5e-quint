@@ -49,7 +49,7 @@ export type SpellBeamTargetFill =
       readonly objectId: BattleObjectId;
       readonly spatialFacts: readonly Extract<
         BattleTargetSpatialFact,
-        { readonly kind: "spellObjectTarget" }
+        { readonly kind: "spellObjectTarget" | "spellObjectTargetSight" }
       >[];
     };
 
@@ -60,9 +60,14 @@ export type SpellBeamFillSet = {
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
     | undefined;
 };
-type SpellObjectDamageTargetFact = Extract<
+type SpellObjectTargetFact = Extract<
   BattleTargetSpatialFact,
-  { readonly kind: "spellObjectTarget" }
+  {
+    readonly kind:
+      | "spellObjectLightTarget"
+      | "spellObjectTarget"
+      | "spellObjectTargetSight";
+  }
 >;
 
 export type SpellFillSet =
@@ -75,7 +80,10 @@ export type SpellFillSet =
             readonly spatialFacts: readonly Extract<
               BattleTargetSpatialFact,
               {
-                readonly kind: "spellObjectLightTarget" | "spellObjectTarget";
+                readonly kind:
+                  | "spellObjectLightTarget"
+                  | "spellObjectTarget"
+                  | "spellObjectTargetSight";
               }
             >[];
           }
@@ -140,7 +148,12 @@ export function spellFillSet(
         readonly objectId: BattleObjectId;
         readonly spatialFacts: readonly Extract<
           BattleTargetSpatialFact,
-          { readonly kind: "spellObjectLightTarget" | "spellObjectTarget" }
+          {
+            readonly kind:
+              | "spellObjectLightTarget"
+              | "spellObjectTarget"
+              | "spellObjectTargetSight";
+          }
         >[];
       }
     | undefined;
@@ -266,8 +279,18 @@ export function spellFillSet(
               kind: "object",
               objectId: fill.value,
               spatialFacts: fill.spatialFacts.filter(
-                (fact): fact is SpellObjectDamageTargetFact =>
-                  fact.kind === "spellObjectTarget",
+                (
+                  fact,
+                ): fact is Extract<
+                  BattleTargetSpatialFact,
+                  {
+                    readonly kind:
+                      | "spellObjectTarget"
+                      | "spellObjectTargetSight";
+                  }
+                > =>
+                  fact.kind === "spellObjectTarget" ||
+                  fact.kind === "spellObjectTargetSight",
               ),
             },
           };
@@ -301,7 +324,12 @@ export function spellFillSet(
       }
       objectTarget = {
         objectId: fill.value,
-        spatialFacts: fill.spatialFacts,
+        spatialFacts: fill.spatialFacts.filter(
+          (fact): fact is SpellObjectTargetFact =>
+            fact.kind === "spellObjectLightTarget" ||
+            fact.kind === "spellObjectTarget" ||
+            fact.kind === "spellObjectTargetSight",
+        ),
       };
       continue;
     }

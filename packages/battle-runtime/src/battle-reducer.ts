@@ -700,6 +700,14 @@ export type BattleConcentration = {
   readonly sourceSpellId: SpellRecord["id"];
   readonly effectKind: "spellEffect" | "readiedSpell";
 };
+export type BattleObjectOutline = BattleSpellEffectBase & {
+  readonly kind: "faerieFireObjectOutline";
+  readonly objectId: BattleObjectId;
+  readonly expiresAt: Extract<
+    BattleActiveEffectExpiration,
+    { readonly kind: "concentration" }
+  >;
+};
 export type BattleLightEmission =
   | {
       readonly kind: "dim";
@@ -1241,6 +1249,13 @@ export type BattleTargetSpatialFact =
       readonly rangeFeet: MovementFeet;
       readonly armorClass: ArmorClass;
       readonly damageDisposition: BattleObjectDamageDisposition;
+    }
+  | {
+      readonly kind: "spellObjectTargetSight";
+      readonly casterId: CombatantId;
+      readonly objectId: BattleObjectId;
+      readonly spellId: SpellRecord["id"];
+      readonly attackerCanSeeObject: boolean;
     }
   | {
       readonly kind: "spellObjectLightTarget";
@@ -2457,6 +2472,7 @@ export type BattleState = {
   readonly battleId: BattleId;
   readonly initiative: InitiativeStack<CombatantId>;
   readonly combatants: ReadonlyMap<CombatantId, BattleCreatureState>;
+  readonly objectOutlines: readonly BattleObjectOutline[];
   readonly lightEmitters: readonly BattleLightEmitter[];
   readonly hidePrerequisites: ReadonlyMap<CombatantId, BattleHidePrerequisite>;
   readonly currentTurnResources: BattleTurnResources;
@@ -2925,6 +2941,10 @@ type BattleSpellAreaChoiceKind =
       readonly sleepNonSleeperFacts: readonly BattleSleepNonSleeperFact[];
     }
   | {
+      readonly kind: "faerieFireArea";
+      readonly affectedObjectIds: readonly BattleObjectId[];
+    }
+  | {
       readonly kind: "greaseGroundArea";
       readonly areaId: string;
     }
@@ -3200,7 +3220,12 @@ export type BattleFill =
       readonly value: BattleObjectId;
       readonly spatialFacts: readonly Extract<
         BattleTargetSpatialFact,
-        { readonly kind: "spellObjectLightTarget" | "spellObjectTarget" }
+        {
+          readonly kind:
+            | "spellObjectLightTarget"
+            | "spellObjectTarget"
+            | "spellObjectTargetSight";
+        }
       >[];
     }
   | {

@@ -30,6 +30,7 @@ import {
   type BattleFill,
   type BattleLightEmitter,
   type BattleLightEmitterAttachment,
+  type BattleObjectOutline,
   type BattleSpellAreaChoice,
   type BattleState,
   type SpellActiveEffectPostDamageRider,
@@ -43,6 +44,24 @@ import {
 import type { BattleObjectId } from "../identity.ts";
 
 export const FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND = 60;
+
+export type SaveGatedAttackRollAdvantageInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "saveGatedAttackRollAdvantage" }
+>;
+
+export function saveGatedAttackRollAdvantageInvocationIsFaerieFire(
+  invocation: SaveGatedAttackRollAdvantageInvocation,
+): boolean {
+  return (
+    invocation.spell.name === "Faerie Fire" &&
+    invocation.spell.provenance.kind === "srd-5.2.1" &&
+    invocation.spell.provenance.section ===
+      "Spells/Descriptions-E-L#Faerie Fire" &&
+    invocation.effect.kind === "faerieFireOutline" &&
+    invocation.effect.sourceSpellId === invocation.spell.id
+  );
+}
 
 export function activeFeatherFallDescentRateCapFeetPerRound(
   combatant: BattleCreatureState,
@@ -627,10 +646,8 @@ export function applyFailedSaveAttackRollAdvantageEffects(
   state: BattleState,
   actorId: CombatantId,
   targetIds: readonly CombatantId[],
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "saveGatedAttackRollAdvantage" }
-  >,
+  area: BattleSpellAreaChoice | undefined,
+  invocation: SaveGatedAttackRollAdvantageInvocation,
 ): BattleState {
   const combatants = new Map(state.combatants);
   for (const targetId of targetIds) {
@@ -655,7 +672,40 @@ export function applyFailedSaveAttackRollAdvantageEffects(
     ];
     combatants.set(targetId, { ...target, activeEffects });
   }
-  return { ...state, combatants };
+  return {
+    ...state,
+    combatants,
+    objectOutlines: [
+      ...state.objectOutlines.filter(
+        (outline) =>
+          !(
+            outline.sourceSpellId === invocation.spell.id &&
+            outline.sourceCombatantId === actorId
+          ),
+      ),
+      ...faerieFireObjectOutlines(actorId, area, invocation),
+    ],
+  };
+}
+
+function faerieFireObjectOutlines(
+  actorId: CombatantId,
+  area: BattleSpellAreaChoice | undefined,
+  invocation: SaveGatedAttackRollAdvantageInvocation,
+): readonly BattleObjectOutline[] {
+  if (
+    area?.kind !== "faerieFireArea" ||
+    !saveGatedAttackRollAdvantageInvocationIsFaerieFire(invocation)
+  ) {
+    return [];
+  }
+  return area.affectedObjectIds.map((objectId) => ({
+    kind: "faerieFireObjectOutline",
+    objectId,
+    sourceSpellId: invocation.spell.id,
+    sourceCombatantId: actorId,
+    expiresAt: { kind: "concentration", combatantId: actorId },
+  }));
 }
 
 export function activeEffectKindForSpellPostDamageRider(

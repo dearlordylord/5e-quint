@@ -50,6 +50,7 @@ import {
   attackRollModeMatches,
   consumeSelfAttackRollEffects,
   consumeHelpAttackForAttackRoll,
+  objectTargetAttackNeedsSightFact,
   recordAttackRollOngoingFeatures,
   requiredSpellObjectTargetAttackRollMode,
   requiredSpellAttackRollMode,
@@ -82,6 +83,7 @@ import {
   applySpellDamage,
   spellObjectDamageOutcome,
   spellObjectTargetFact,
+  spellObjectTargetSightFact,
   spellObjectTargetHole,
   spellAttackRollHole,
   spellDamageByTypeForTarget,
@@ -526,8 +528,12 @@ export function resolveSpellAct(
               fact,
             ): fact is Extract<
               (typeof objectTarget.spatialFacts)[number],
-              { readonly kind: "spellObjectTarget" }
-            > => fact.kind === "spellObjectTarget",
+              {
+                readonly kind: "spellObjectTarget" | "spellObjectTargetSight";
+              }
+            > =>
+              fact.kind === "spellObjectTarget" ||
+              fact.kind === "spellObjectTargetSight",
           ),
         },
       },
@@ -1026,6 +1032,32 @@ function resolveSpellAttackDamageObjectTarget(input: {
       "Spell object target must include a matching table-supplied range and object Armor Class fact.",
     );
   }
+  const sightFact = spellObjectTargetSightFact(
+    input.fillSet.objectTarget.spatialFacts.filter(
+      (
+        fact,
+      ): fact is Extract<
+        (typeof input.fillSet.objectTarget.spatialFacts)[number],
+        { readonly kind: "spellObjectTargetSight" }
+      > => fact.kind === "spellObjectTargetSight",
+    ),
+    input.actorId,
+    input.fillSet.objectTarget.objectId,
+    input.invocation,
+  );
+  if (
+    sightFact === null &&
+    objectTargetAttackNeedsSightFact(
+      input.input.state,
+      input.fillSet.objectTarget.objectId,
+    )
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Spell object target must include a matching table-supplied object sight fact.",
+    );
+  }
 
   const spellCastReactionWindow = maybeOpenReactionWindow(
     input.input.state,
@@ -1050,6 +1082,8 @@ function resolveSpellAttackDamageObjectTarget(input: {
     input.input.state,
     input.actorId,
     input.invocation,
+    input.fillSet.objectTarget.objectId,
+    sightFact?.attackerCanSeeObject,
   );
   if (input.fillSet.attackRoll == null) {
     return needsHolesResult(input.input.state, input.input.subject, [

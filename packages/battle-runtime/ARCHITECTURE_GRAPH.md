@@ -224,8 +224,10 @@ flowchart TD
   `faerie_fire` uses a non-excluding point-origin Cube affected-target outcome
   hole and stores one concentration-owned outline effect on failed-save
   creatures; that effect drives sight-gated attack-roll Advantage and
-  Invisible-benefit denial. Object outline and light remain outside this
-  runtime subset.
+  Invisible-benefit denial. Caller-supplied object ids in the same area fill
+  store concentration-owned object outlines, and caller-supplied object sight
+  facts drive object-target attack-roll Advantage and Invisible-benefit denial
+  for those objects. Dim Light remains outside this runtime subset.
   `dissonant_whispers` is a one-creature Wisdom save-for-half branch whose
   failed-save rider spends the target's Reaction when available, accepts a
   caller-supplied safest-route Movement fill, and uses table-supplied movement

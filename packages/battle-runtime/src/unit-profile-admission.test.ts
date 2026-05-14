@@ -15,7 +15,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV60A protection_from_evil_and_good
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV37 charm_person
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30D heroism
-// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30E faerie_fire
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV58C faerie_fire
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30F resistance
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage spell.invocation-damage-reduction spell.invocation-spell-hosted-weapon-attack
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31A divine_favor
@@ -148,6 +148,7 @@ import {
   type BattleHole,
   type BattleObjectDamageDisposition,
   type BattleSpellAreaChoice,
+  type BattleSpellSavingThrowOutcomeHole,
   type BattleState,
   type BattleSubject,
   type BattleTargetSpatialFact,
@@ -161,6 +162,7 @@ import {
   applyPreparedSlotSpellDamage,
   spellSavingThrowOutcomeHole,
 } from "./battle-reducer/spells-damage-fills.ts";
+import { validateSavingThrowOutcomes } from "./battle-reducer/spells-resolve-save-gates.ts";
 import {
   ALTERNATE_ACTION_COST_ACTIONS,
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
@@ -6322,6 +6324,146 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
     expect(broken.state.combatants.get(spellTargetId)?.activeEffects).toEqual(
       [],
     );
+  });
+
+  test("faerie_fire stores caller-supplied object outlines until Concentration ends", () => {
+    const spell = spellRecord(faerieFireUnitId);
+    const objectId = battleObjectId("faerie-fire-object");
+    const state = spellBattle({ preparedSpells: [spell] });
+    const act = spellAct({ state, spellId: faerieFireUnitId });
+    const savingThrows = requireHole(act.initialHoles, "savingThrowOutcome");
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [faerieFireObjectOutlineFill(savingThrows, [objectId])],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Faerie Fire object outline to resolve.");
+    }
+    expect(resolved.state.objectOutlines).toEqual([
+      {
+        kind: "faerieFireObjectOutline",
+        objectId,
+        sourceSpellId: faerieFireUnitId,
+        sourceCombatantId: spellCasterId,
+        expiresAt: { kind: "concentration", combatantId: spellCasterId },
+      },
+    ]);
+    expect(
+      breakBattleConcentration(resolved.state, spellCasterId).objectOutlines,
+    ).toEqual([]);
+  });
+
+  test("faerie_fire object area facts require the Faerie Fire spell identity", () => {
+    const spell = spellRecord(faerieFireUnitId);
+    const objectId = battleObjectId("faerie-fire-rejected-object");
+    const state = spellBattle({ preparedSpells: [spell] });
+    const act = spellAct({ state, spellId: faerieFireUnitId });
+    const savingThrows = requireHole(act.initialHoles, "savingThrowOutcome");
+    if (!("spell" in savingThrows) || !("areaChoices" in savingThrows)) {
+      throw new Error("Expected spell Saving Throw outcome hole.");
+    }
+    const spellSavingThrows: BattleSpellSavingThrowOutcomeHole = savingThrows;
+    const invocation = spellHoleInvocation([savingThrows]);
+    if (invocation.procedure !== "saveGatedAttackRollAdvantage") {
+      throw new Error("Expected Faerie Fire save-gated attack Advantage.");
+    }
+    const sameProcedureNonFaerieFireHole: BattleSpellSavingThrowOutcomeHole = {
+      ...spellSavingThrows,
+      spell: {
+        ...invocation,
+        spell: {
+          ...spell,
+          name: "Future Save Advantage",
+        },
+      },
+    };
+    const fill = faerieFireObjectOutlineFill(savingThrows, [objectId]);
+
+    expect(
+      validateSavingThrowOutcomes(
+        fill.value,
+        sameProcedureNonFaerieFireHole,
+        state,
+        spellCasterId,
+        undefined,
+      ),
+    ).toBe("Faerie Fire object area facts are only valid for Faerie Fire.");
+  });
+
+  test("faerie_fire object outline grants object-target attack Advantage from supplied sight facts", () => {
+    const faerieFire = spellRecord(faerieFireUnitId);
+    const starryWisp = spellRecord(starryWispUnitId);
+    const objectId = battleObjectId("faerie-fire-starry-wisp-object");
+    const state = spellBattle({
+      preparedSpells: [faerieFire],
+      cantrips: [starryWisp],
+    });
+    const faerieFireAct = spellAct({ state, spellId: faerieFireUnitId });
+    const savingThrows = requireHole(
+      faerieFireAct.initialHoles,
+      "savingThrowOutcome",
+    );
+    const outlined = resolveBattleSubject({
+      state,
+      subject: faerieFireAct.subject,
+      fills: [faerieFireObjectOutlineFill(savingThrows, [objectId])],
+    });
+    if (outlined.tag !== "resolved") {
+      throw new Error("Expected Faerie Fire object outline to resolve.");
+    }
+    const afterCasterTurn = resolveBattleSubject({
+      state: outlined.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellCasterId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+    if (afterCasterTurn.tag !== "resolved") {
+      throw new Error("Expected Faerie Fire caster end turn to resolve.");
+    }
+    const afterTargetTurn = resolveBattleSubject({
+      state: afterCasterTurn.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellTargetId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+    if (afterTargetTurn.tag !== "resolved") {
+      throw new Error("Expected Faerie Fire target end turn to resolve.");
+    }
+    const attackAct = spellAct({
+      state: afterTargetTurn.state,
+      spellId: starryWispUnitId,
+    });
+    const objectTarget = requireHole(
+      attackAct.initialHoles,
+      "objectTargetChoice",
+    );
+    const objectFill = spellObjectTargetFill({
+      hole: objectTarget,
+      objectId,
+      spellId: starryWispUnitId,
+      casterId: attackAct.subject.actorId,
+      attackerCanSeeObject: true,
+    });
+    const attackRequest = resolveBattleSubject({
+      state: afterTargetTurn.state,
+      subject: attackAct.subject,
+      fills: [objectFill],
+    });
+    if (attackRequest.tag === "invalid") {
+      throw new Error(attackRequest.message);
+    }
+    const attackRoll = requireResultHole(attackRequest, "attackRoll");
+
+    expect(attackRoll).toMatchObject({ rollMode: "advantage" });
   });
 });
 
@@ -15390,6 +15532,7 @@ function spellObjectTargetFill(input: {
   readonly spellId: string;
   readonly casterId: CombatantId;
   readonly damageDisposition?: BattleObjectDamageDisposition;
+  readonly attackerCanSeeObject?: boolean;
 }): ObjectTargetChoiceFill {
   const objectId = input.objectId ?? battleObjectId("produce-flame-object");
   return {
@@ -15406,6 +15549,17 @@ function spellObjectTargetFill(input: {
         armorClass: armorClass(13),
         damageDisposition: input.damageDisposition ?? { kind: "tableResolved" },
       },
+      ...(input.attackerCanSeeObject === undefined
+        ? []
+        : [
+            {
+              kind: "spellObjectTargetSight" as const,
+              casterId: input.casterId,
+              objectId,
+              spellId: input.spellId,
+              attackerCanSeeObject: input.attackerCanSeeObject,
+            },
+          ]),
     ],
   };
 }
@@ -15525,6 +15679,25 @@ function savingThrowOutcomeFill(
             outcomes,
           }
         : { outcomes },
+  };
+}
+
+function faerieFireObjectOutlineFill(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+  affectedObjectIds: readonly ReturnType<typeof battleObjectId>[],
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value: {
+      area: {
+        kind: "faerieFireArea",
+        originAnchorId: spellCasterId,
+        affectedTargetIds: [],
+        affectedObjectIds,
+      },
+      outcomes: [],
+    },
   };
 }
 

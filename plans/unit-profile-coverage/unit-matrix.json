@@ -1742,9 +1742,10 @@
       ],
       "taskRefs": [
         "SRDINV30E",
-        "SRDINV58A"
+        "SRDINV58A",
+        "SRDINV58C"
       ],
-      "title": "Spell invocation applies save-gated attack-roll Advantage against affected combatants",
+      "title": "Spell invocation applies save-gated attack-roll Advantage against affected creatures or objects",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -2338,7 +2339,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime admission and reducer tests for Faerie Fire point-origin Cube targeting, Dexterity save outcomes, concentration cleanup, and one concentration-owned outline effect that grants sight-gated attack-roll Advantage and denies Invisible benefits for failed-save creatures. Object outline and Dim Light remain deferred.",
+      "note": "Focused battle-runtime admission and reducer tests for Faerie Fire point-origin Cube targeting, Dexterity save outcomes, concentration cleanup, and one concentration-owned outline effect that grants sight-gated attack-roll Advantage and denies Invisible benefits for failed-save creatures. Dim Light remains deferred.",
       "profileIds": [
         "spell.invocation-attack-roll-advantage-save"
       ],
@@ -2359,6 +2360,22 @@
         "spell.invocation-attack-roll-advantage-save"
       ],
       "taskId": "SRDINV58A"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Faerie Fire's caller-supplied object outline projections, concentration cleanup, and object attack-roll Advantage from caller-supplied object sight facts.",
+      "profileIds": [
+        "spell.invocation-attack-roll-advantage-save"
+      ],
+      "taskId": "SRDINV58C"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Faerie Fire caller-supplied object-id admission, Faerie-Fire-only object-area validation, concentration-owned object outline cleanup, and object-target attack Advantage from supplied sight facts.",
+      "profileIds": [
+        "spell.invocation-attack-roll-advantage-save"
+      ],
+      "taskId": "SRDINV58C"
     },
     {
       "claimKind": "qnt-proof",
@@ -6636,10 +6653,6 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "SRDINV58C",
-            "mechanic": "object outline and object attack-roll Advantage"
-          },
-          {
             "followUpTaskId": "SRDINV70A",
             "mechanic": "Dim Light emitted by affected creatures and objects"
           }
@@ -6653,7 +6666,9 @@
         "supportedMechanics": [
           "20-foot point-origin Cube affected-creature boundary with table-supplied area membership",
           "Dexterity save-gated affected creatures",
-          "Concentration-owned outline effect that grants attack-roll Advantage against failed-save affected creatures when the attacker can see them and denies benefits from the Invisible condition"
+          "Concentration-owned outline effect that grants attack-roll Advantage against failed-save affected creatures when the attacker can see them and denies benefits from the Invisible condition",
+          "caller-supplied object ids for objects in the Cube create concentration-owned object outline projections",
+          "object-target spell attacks consume caller-supplied object sight facts to grant attack-roll Advantage against outlined objects"
         ],
         "tag": "profile-subset-supported"
       },
@@ -6662,7 +6677,7 @@
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
-          "taskId": "SRDINV30E"
+          "taskId": "SRDINV58C"
         }
       ],
       "executableMechanics": true,
@@ -6679,9 +6694,10 @@
           ],
           "taskRefs": [
             "SRDINV30E",
-            "SRDINV58A"
+            "SRDINV58A",
+            "SRDINV58C"
           ],
-          "title": "Spell invocation applies save-gated attack-roll Advantage against affected combatants",
+          "title": "Spell invocation applies save-gated attack-roll Advantage against affected creatures or objects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",

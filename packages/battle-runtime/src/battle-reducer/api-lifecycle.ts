@@ -153,6 +153,7 @@ export function startBattle(input: {
     battleId: input.battleId,
     initiative: initiative.right,
     combatants,
+    objectOutlines: [],
     lightEmitters: [],
     hidePrerequisites: new Map(input.hidePrerequisites ?? []),
     currentTurnResources: INITIAL_TURN_RESOURCES,
@@ -263,6 +264,11 @@ export function removeBattleCombatants(input: {
       ...input.state,
       initiative: initiativeOption.value,
       combatants,
+      objectOutlines: input.state.objectOutlines.filter(
+        (outline) =>
+          !removeIds.has(outline.sourceCombatantId) &&
+          !removeIds.has(outline.expiresAt.combatantId),
+      ),
       lightEmitters: input.state.lightEmitters.filter(
         (emitter) =>
           !removeIds.has(emitter.sourceCombatantId) &&

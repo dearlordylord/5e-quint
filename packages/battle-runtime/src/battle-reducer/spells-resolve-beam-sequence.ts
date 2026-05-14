@@ -33,6 +33,7 @@ import {
   attackRollModeMatches,
   consumeHelpAttackForAttackRoll,
   consumeSelfAttackRollEffects,
+  objectTargetAttackNeedsSightFact,
   recordAttackRollOngoingFeatures,
   requiredSpellObjectTargetAttackRollMode,
   requiredSpellAttackRollMode,
@@ -64,6 +65,7 @@ import {
   spellBeamObjectTargetHole,
   spellObjectDamageOutcome,
   spellObjectTargetFact,
+  spellObjectTargetSightFact,
   spellTargetIsLegal,
   validateSpellBeamDamageFill,
 } from "./spells-holes-fills.ts";
@@ -597,7 +599,14 @@ function resolveEldritchBlastObjectBeam(input: {
     }
   | Exclude<BattleResolutionResult, { readonly tag: "resolved" }> {
   const objectFact = spellObjectTargetFact(
-    input.target.spatialFacts,
+    input.target.spatialFacts.filter(
+      (
+        fact,
+      ): fact is Extract<
+        (typeof input.target.spatialFacts)[number],
+        { readonly kind: "spellObjectTarget" }
+      > => fact.kind === "spellObjectTarget",
+    ),
     input.actorId,
     input.target.objectId,
     input.invocation,
@@ -609,10 +618,35 @@ function resolveEldritchBlastObjectBeam(input: {
       "Eldritch Blast object beam must include a matching table-supplied range and object Armor Class fact.",
     );
   }
+  const sightFact = spellObjectTargetSightFact(
+    input.target.spatialFacts.filter(
+      (
+        fact,
+      ): fact is Extract<
+        (typeof input.target.spatialFacts)[number],
+        { readonly kind: "spellObjectTargetSight" }
+      > => fact.kind === "spellObjectTargetSight",
+    ),
+    input.actorId,
+    input.target.objectId,
+    input.invocation,
+  );
+  if (
+    sightFact === null &&
+    objectTargetAttackNeedsSightFact(input.state, input.target.objectId)
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Eldritch Blast object beam must include a matching table-supplied object sight fact.",
+    );
+  }
   const requiredRollMode = requiredSpellObjectTargetAttackRollMode(
     input.state,
     input.actorId,
     input.invocation,
+    input.target.objectId,
+    sightFact?.attackerCanSeeObject,
   );
   if (input.beam.attackRoll === undefined) {
     return needsHolesResult(input.state, input.input.subject, [

@@ -776,8 +776,12 @@ Feature and spell resources:
   affected creatures in the point-origin Cube make Dexterity saves, and failed
   saves receive a single concentration-owned outline effect that grants
   attack-roll Advantage against them when the attacker can see the affected
-  creature and denies benefits from the Invisible condition. Object
-  outline/Advantage and Dim Light emission remain explicit planning follow-ups.
+  creature and denies benefits from the Invisible condition. The same
+  save-gate area fill can supply object ids in the Cube; those create
+  concentration-owned object outlines that grant object-target attack-roll
+  Advantage from a caller-supplied object sight fact and deny Invisible
+  benefits for those objects. Dim Light emission remains a shared
+  illumination follow-up rather than Faerie-Fire-specific battle state.
 - creature-type-scoped spell effects admit `animal_friendship`,
   `charm_person`, and `protection_from_evil_and_good` from retained Spell
   Records. Animal Friendship filters targets by Beast creature type. Charm

@@ -11,7 +11,7 @@ import {
 } from "@dnd/shared-algebras/conditions-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type { UnitRecord } from "@dnd/surface/surface/types";
-import type { CombatantId } from "../identity.ts";
+import type { BattleObjectId, CombatantId } from "../identity.ts";
 import type {
   CharacterWeaponAttackActionOption,
   SupportedAttackActionOption,
@@ -32,6 +32,7 @@ import {
   type BattleAttackRollHole,
   type BattleAttackRollResult,
   type BattleCreatureState,
+  type BattleObjectOutline,
   type BattleState,
   type BattleTargetSpatialFact,
   type SupportedSpellInvocation,
@@ -142,14 +143,22 @@ export function requiredAttackRollMode(
 export function requiredObjectTargetAttackRollMode(
   state: BattleState,
   attackerId: CombatantId,
+  targetObjectId: BattleObjectId | undefined,
+  attackerCanSeeObject: boolean | undefined,
 ): AttackRollMode | undefined {
   const attacker = state.combatants.get(attackerId);
-  const hasAdvantage = activeEffectGrantsAttackRollMode(
-    state,
-    attacker,
-    undefined,
-    "advantage",
-  );
+  const hasAdvantage =
+    activeEffectGrantsAttackRollMode(
+      state,
+      attacker,
+      undefined,
+      "advantage",
+    ) ||
+    objectOutlineGrantsAttackRollAdvantage(
+      state.objectOutlines,
+      targetObjectId,
+      attackerCanSeeObject,
+    );
   const hasDisadvantage =
     hasCondition(attacker?.conditions ?? EMPTY_CONDITION_STATE, "poisoned") ||
     activeEffectGrantsAttackRollMode(
@@ -165,9 +174,16 @@ export function requiredSpellObjectTargetAttackRollMode(
   state: BattleState,
   attackerId: CombatantId,
   invocation: SupportedSpellInvocation,
+  targetObjectId: BattleObjectId,
+  attackerCanSeeObject: boolean | undefined,
 ): AttackRollMode | undefined {
   const attacker = state.combatants.get(attackerId);
-  const baseMode = requiredObjectTargetAttackRollMode(state, attackerId);
+  const baseMode = requiredObjectTargetAttackRollMode(
+    state,
+    attackerId,
+    targetObjectId,
+    attackerCanSeeObject,
+  );
   const hasAdvantage =
     baseMode === "advantage" ||
     ongoingFeatureGrantsSpellAttackRollMode(
@@ -183,6 +199,27 @@ export function requiredSpellObjectTargetAttackRollMode(
       "disadvantage",
     );
   return attackRollModeFromSources(hasAdvantage, hasDisadvantage);
+}
+
+export function objectTargetAttackNeedsSightFact(
+  state: BattleState,
+  targetObjectId: BattleObjectId,
+): boolean {
+  return state.objectOutlines.some(
+    (outline) => outline.objectId === targetObjectId,
+  );
+}
+
+function objectOutlineGrantsAttackRollAdvantage(
+  outlines: readonly BattleObjectOutline[],
+  targetObjectId: BattleObjectId | undefined,
+  attackerCanSeeObject: boolean | undefined,
+): boolean {
+  return (
+    targetObjectId !== undefined &&
+    attackerCanSeeObject === true &&
+    outlines.some((outline) => outline.objectId === targetObjectId)
+  );
 }
 
 export function requiredSpellAttackRollMode(
