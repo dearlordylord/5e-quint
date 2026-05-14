@@ -800,7 +800,7 @@ export function resolveHide(
   }
   if (check.value === undefined) {
     return needsHolesResult(input.state, input.subject, [
-      hideAbilityCheckHole(),
+      hideAbilityCheckHole(input.state, input.subject.actorId),
     ]);
   }
 
@@ -965,7 +965,11 @@ export function resolveSearch(
   }
   if (check.value === undefined) {
     return needsHolesResult(input.state, input.subject, [
-      searchAbilityCheckHole(target.hidden.discoveryDc),
+      searchAbilityCheckHole(
+        target.hidden.discoveryDc,
+        input.state,
+        input.subject.actorId,
+      ),
     ]);
   }
   const spent = spendAction(input.state.currentTurnResources, "search");
@@ -1189,7 +1193,7 @@ export function resolveStatBlockBonusActionHide(
   }
   if (check.value === undefined) {
     return needsHolesResult(input.state, input.subject, [
-      hideAbilityCheckHole(),
+      hideAbilityCheckHole(input.state, input.subject.actorId),
     ]);
   }
   const spent = spendActivationResource(input.state.currentTurnResources, {
@@ -1721,8 +1725,7 @@ function activeOngoingFeatureSpellSaveDcBonus(
       return (
         total +
         profile.spellModifiers.reduce(
-          (modifierTotal, modifier) =>
-            modifierTotal + modifier.saveDcBonus,
+          (modifierTotal, modifier) => modifierTotal + modifier.saveDcBonus,
           0,
         )
       );

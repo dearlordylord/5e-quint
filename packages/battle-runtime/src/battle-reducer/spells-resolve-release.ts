@@ -40,6 +40,7 @@ import {
   requiredSpellAttackRollMode,
 } from "./attack-roll.ts";
 import { activeEffectArmorClass } from "./creature-state.ts";
+import { currentActorId } from "./creature-state-leaves.ts";
 import {
   breakBattleConcentration,
   concentrationSavingThrowHole,
@@ -58,6 +59,7 @@ import {
   applySpellActiveEffects,
   applySpellLightEmitterEffects,
   applySpellDamage,
+  spellAbilityChoiceHole,
   spellAttackRollHole,
   spellDamageAmountForTarget,
   spellDamageHole,
@@ -105,6 +107,8 @@ export function resolveHeldLightSpellAct(input: {
     input.fillSet.attackBurstDamageRoll !== undefined ||
     input.fillSet.healingRoll !== undefined ||
     input.fillSet.damageDispositions.length > 0 ||
+    input.fillSet.skillChoice !== undefined ||
+    input.fillSet.commandOptionChoice !== undefined ||
     input.fillSet.savingThrowOutcomes !== undefined ||
     input.fillSet.concentrationSavingThrows.length > 0
   ) {
@@ -387,13 +391,32 @@ export function resolveMarkedDamageRiderSpellAct(input: {
       input.input.state.combatants.get(input.actorId),
       input.invocation.spell.id,
     );
-    if (activeMark === null || !activeMark.transferAvailable) {
+    if (
+      activeMark === null ||
+      !markedDamageRiderTransferIsAvailable(input.input.state, activeMark)
+    ) {
       return invalidResult(
         input.input.state,
         "staleSubject",
-        "Hunter's Mark can move only after the marked target drops to 0 Hit Points.",
+        "Marked damage rider spells can move only after the marked target drops to 0 Hit Points and any later-turn timing is satisfied.",
       );
     }
+  }
+  if (
+    input.invocation.action === "cast" &&
+    input.invocation.abilityChoices !== null
+  ) {
+    if (input.fillSet.abilityChoice === undefined) {
+      return needsHolesResult(input.input.state, input.input.subject, [
+        spellAbilityChoiceHole(input.invocation),
+      ]);
+    }
+  } else if (input.fillSet.abilityChoice !== undefined) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "This marked damage rider spell does not choose an ability.",
+    );
   }
   if (input.invocation.action === "cast") {
     const spellCastReactionWindow = maybeOpenReactionWindow(
@@ -442,6 +465,7 @@ export function resolveMarkedDamageRiderSpellAct(input: {
       input.actorId,
       input.fillSet.targetId,
       input.invocation,
+      input.fillSet.abilityChoice,
     );
     return {
       tag: "resolved",
@@ -485,6 +509,7 @@ export function resolveMarkedDamageRiderSpellAct(input: {
     input.actorId,
     input.fillSet.targetId,
     input.invocation,
+    input.fillSet.abilityChoice,
   );
   const nextState = startSpellEffectConcentration(
     effected,
@@ -531,6 +556,22 @@ function spendMarkedDamageRiderSpellSlot(
       slotLevel,
     ),
   };
+}
+
+function markedDamageRiderTransferIsAvailable(
+  state: BattleState,
+  activeMark: SpellMarkedDamageRider,
+): boolean {
+  if (activeMark.transfer.kind === "available") {
+    return true;
+  }
+  if (activeMark.transfer.kind === "awaitingTargetDrop") {
+    return false;
+  }
+  return (
+    currentActorId(state) !== activeMark.transfer.droppedOnTurn.actorId ||
+    state.initiative.round !== activeMark.transfer.droppedOnTurn.round
+  );
 }
 
 function spendClassFeatureFreeCastResource(

@@ -25,6 +25,7 @@ import {
 } from "@dnd/surface/surface/schema";
 import {
   SKILLS as SURFACE_SKILLS,
+  type Ability,
   type DamageType,
   type Skill,
 } from "@dnd/surface/surface/types";
@@ -1127,6 +1128,7 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       actionCost: Schema.Literal("bonusAction"),
       targeting: Schema.Struct({ kind: Schema.Literal("singleCombatant") }),
       damage: BattleRuntimeObjectSchema,
+      abilityChoices: Schema.Union(Schema.Array(AbilitySchema), Schema.Null),
       rangeFeet: MovementFeet,
       expiresAt: BattleRuntimeObjectSchema,
     }),
@@ -1370,6 +1372,13 @@ export const BattleHoleSchema = Schema.Union(
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
+    kind: Schema.Literal("abilityChoice"),
+    label: Schema.String,
+    spell: SupportedSpellInvocationSchema,
+    choices: Schema.Array(AbilitySchema),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
     kind: Schema.Literal("commandOptionChoice"),
     label: Schema.String,
     spell: SupportedSpellInvocationSchema,
@@ -1510,9 +1519,12 @@ export const BattleHoleSchema = Schema.Union(
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("abilityCheck"),
     label: Schema.String,
-    ability: Schema.String,
+    ability: AbilitySchema,
     skill: Schema.Literal("stealth", "perception", "athletics"),
     dc: DifficultyClass,
+    rollMode: Schema.optionalWith(Schema.Literal(...ATTACK_ROLL_MODES), {
+      exact: true,
+    }),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2001,6 +2013,11 @@ type BattleFillEncoded =
       readonly kind: "skillChoice";
       readonly holeId: string;
       readonly value: Skill;
+    }
+  | {
+      readonly kind: "abilityChoice";
+      readonly holeId: string;
+      readonly value: Ability;
     }
   | {
       readonly kind: "commandOptionChoice";
@@ -2567,6 +2584,11 @@ export const BattleFillSchema: Schema.Schema<
       kind: Schema.Literal("skillChoice"),
       holeId: BattleHoleIdSchema,
       value: Schema.Literal(...BATTLE_SURFACE_SKILLS),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("abilityChoice"),
+      holeId: BattleHoleIdSchema,
+      value: AbilitySchema,
     }),
     Schema.Struct({
       kind: Schema.Literal("commandOptionChoice"),

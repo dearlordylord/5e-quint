@@ -32,6 +32,7 @@ import { representedMovementSpeedKinds } from "./movement-speed.ts";
 import {
   scalarBuffInitialHoles,
   commandOptionChoiceHole,
+  spellAbilityChoiceHole,
   spellDamageTypeChoiceHole,
   spellBeamObjectTargetHole,
   spellBeamTargetHole,
@@ -55,7 +56,7 @@ export function discoverSupportedSpellInvocations(
     return [];
   }
   const spellcastingPrevented = activeOngoingFeaturesPreventSpellcasting(actor);
-  return supportedSpellActs(actor).flatMap(
+  return supportedSpellActs(actor, state).flatMap(
     (invocation): readonly AvailableBattleAct[] => {
       if (invocation.procedure === "shieldReaction") {
         return [];
@@ -287,6 +288,10 @@ export function discoverSupportedSpellInvocations(
       }
       if (invocation.procedure === "markedDamageRider") {
         const targetHole = spellTargetHole(state, actorId, invocation);
+        const initialHoles =
+          invocation.action === "cast" && invocation.abilityChoices !== null
+            ? [targetHole, spellAbilityChoiceHole(invocation)]
+            : [targetHole];
         return targetHole.choices.length === 0
           ? []
           : [
@@ -299,7 +304,7 @@ export function discoverSupportedSpellInvocations(
                 },
                 label: invocation.spell.name,
                 summary: spellInvocationCastSummary(invocation),
-                initialHoles: [targetHole],
+                initialHoles,
               },
             ];
       }

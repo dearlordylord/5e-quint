@@ -1258,7 +1258,7 @@ export function resolveCastTriggeredReactionSpellCommand(
   const reactor = input.state.combatants.get(input.subject.reactorId);
   const invocation =
     reactor?.origin.kind === "character"
-      ? supportedSpellActs(reactor).find(
+      ? supportedSpellActs(reactor, input.state).find(
           (candidate) =>
             (candidate.procedure === "shieldReaction" ||
               candidate.procedure === "saveGatedDamage" ||
@@ -1772,7 +1772,7 @@ export function resolveCastAttackHitBonusActionSpellCommand(
       : undefined;
   const invocation =
     actor?.origin.kind === "character"
-      ? supportedSpellActs(actor).find(
+      ? supportedSpellActs(actor, input.state).find(
           (candidate) =>
             (candidate.procedure === "afterHitDamage" ||
               candidate.procedure === "afterHitSaveGatedCondition" ||
@@ -3359,7 +3359,7 @@ export function attackHitBonusActionSpellReactionChoices(
   ) {
     return [];
   }
-  return supportedSpellActs(actor).flatMap(
+  return supportedSpellActs(actor, state).flatMap(
     (invocation): readonly BattleReactionProcedureChoice[] => {
       if (
         (invocation.procedure !== "afterHitDamage" &&

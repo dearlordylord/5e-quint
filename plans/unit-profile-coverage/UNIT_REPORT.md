@@ -17,13 +17,13 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Authored Surface Unit catalog admission | 141/429 | 32.9% |
 | Authored Surface executable catalog admission | 115/362 | 31.8% |
 | Installed Unit profile classification coverage | 142/142 | 100% |
-| Supported executable Unit coverage | 76/116 | 65.5% |
+| Supported executable Unit coverage | 77/116 | 66.4% |
 | QNT profile modeling coverage | 57/57 | 100% |
 | QNT proof coverage | 56/57 | 98.2% |
 | Runtime mapping coverage | 57/57 | 100% |
 | Runtime parity coverage | 57/57 | 100% |
-| Deterministic admission/projection coverage | 68/76 | 89.5% |
-| Selected identity MBT coverage | 10/76 | 13.2% |
+| Deterministic admission/projection coverage | 69/77 | 89.6% |
+| Selected identity MBT coverage | 10/77 | 13% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -98,6 +98,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `guidance` | srd-5.2.1 | `spell.invocation-roll-modifier` |
 | `guiding_bolt` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
 | `heroism` | srd-5.2.1 | `spell.invocation-condition-immunity-turn-start-temporary-hit-points` |
+| `hex` | srd-5.2.1 | `spell.invocation-marked-damage-rider` |
 | `ice_knife` | srd-5.2.1 | `spell.invocation-damage-save-or-attack` |
 | `inflict_wounds` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
 | `longstrider` | srd-5.2.1 | `spell.scalar-buff` |
@@ -804,6 +805,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `guidance` | `spell.invocation-roll-modifier` | SRDINV30B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `guiding_bolt` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28D | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `heroism` | `spell.invocation-condition-immunity-turn-start-temporary-hit-points` | SRDINV30D | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `hex` | `spell.invocation-marked-damage-rider` | SRDINV84D | `packages/battle-runtime/src/index.test.ts` |
 | `ice_knife` | `spell.invocation-damage-save-or-attack` | SRDINV29E | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `inflict_wounds` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `longstrider` | `spell.scalar-buff` | SRDINV30A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
@@ -908,7 +910,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `find_familiar` | unsupported-profile | Find Familiar's Spell Definition is catalog-installed, but promoted battle runtime does not yet execute familiar creation, chosen named form or CR 0 Beast stat-block resolution, caster-chosen Celestial/Fey/Fiend type, one-familiar lifecycle and replacement, independent Initiative, familiar turns, telepathy, touch-spell delivery, dismissal, or disappearance/reappearance. |
 | `fog_cloud` | unsupported-profile | Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Fog Cloud's area-created Heavily Obscured projection, slot-scaled area geometry, or strong-wind dispersal lifecycle. |
 | `grease` | profile-subset-supported | supported subset: one-minute Grease ground hazard lifecycle keyed by caller-supplied ground-area id; on-cast Dexterity Saving Throw for caller-supplied affected creatures; Prone application on failed Grease saves; table-triggered enter-area and end-turn-in-area Dexterity save procedures; caller-supplied Grease Difficult Terrain movement facts that validate active hazard identity and spend total Movement distance plus one extra foot per foot moved through Grease; deferred: automatic area membership, pathfinding, and grid geometry derivation for Grease movement (SRDINV66) |
-| `hex` | unsupported-profile | Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Hex's curse retargeting, chosen-ability Ability Check Disadvantage, attack-hit Necrotic damage, or slot-scaled Concentration duration. |
 | `hunters_mark` | profile-subset-supported | supported subset: Bonus Action cast with Spell Slot spend; Concentration-owned mark identity on one combatant target; extra Force damage when the caster hits the marked target with an Attack Roll; Bonus Action transfer only after the marked target drops to 0 Hit Points; slot-scaled Concentration maximum of 1 hour at slots 1-2, 8 hours at slots 3-4, and 24 hours at slots 5+; Concentration cleanup and maximum-duration expiration remove the marked-target damage rider; deferred: classified gap: caller-supplied Wisdom (Perception or Survival) Advantage roll-mode projection to find the marked target; no dedicated SRDINV63 implementation task (SRDINV66) |
 | `jump` | profile-subset-supported | supported subset: Bonus Action Spell Slot casting; touched willing creature targets; slot-scaled target count; one-minute spell-owned duration; once on each target turn use marker; 10-foot Movement spend for up to 30 feet of jump movement; caller-supplied legal landing facts; Prone outcome for caller-supplied failed Difficult Terrain landing Acrobatics facts; deferred: runtime-owned jump arc, pathfinding, collision, and final-position derivation (SRDINV55); runtime-owned Difficult Terrain landing Acrobatics check derivation (SRDINV55) |
 | `light` | profile-subset-supported | supported subset: Magic Action cantrip cast with no Spell Slot spend; caller-supplied touched object identity, size, and worn/carried facts; Large-or-smaller object admission; rejection when the object is worn or carried by someone else; source-owned object-attached Bright Light 20-foot radius plus Dim Light for an additional 20 feet; one-hour duration cleanup; same-caster recast replacement of the prior Light emitter; deferred: opaque-cover suppression, map illumination, obscured-area derivation, Darkvision-adjusted sight, and colored-light presentation remain outside the object-emitter runtime boundary (SRDINV78) |
@@ -939,7 +940,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
-| srd-5.2.1 | unassigned | unsupported-profile | 51 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `rogue_expertise`, `rogue_thieves_cant`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `orc_darkvision`, `find_familiar`, `fog_cloud`, `hex`, `sanctuary`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `shillelagh`, `minor_illusion`, `hideous_laughter`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff` |
+| srd-5.2.1 | unassigned | unsupported-profile | 50 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `rogue_expertise`, `rogue_thieves_cant`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `orc_darkvision`, `find_familiar`, `fog_cloud`, `sanctuary`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `shillelagh`, `minor_illusion`, `hideous_laughter`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff` |
 | srd-5.2.1 | unassigned | profile-subset-supported | 15 | `bard_bardic_inspiration`, `monk_martial_arts`, `ranger_favored_enemy`, `chill_touch`, `faerie_fire`, `feather_fall`, `grease`, `hunters_mark`, `jump`, `light`, `protection_from_evil_and_good`, `produce_flame`, `sleep`, `thunderwave`, `charm_person` |
 
 ## Profile Claims By Task

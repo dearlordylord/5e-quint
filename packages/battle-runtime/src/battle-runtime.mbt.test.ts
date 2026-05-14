@@ -198,7 +198,10 @@ type LightEmitterMbtProjection =
       readonly sourceSpellId: string;
       readonly sourceCombatantId: string;
       readonly objectId: string;
-      readonly emission: Extract<LightEmissionMbtProjection, { readonly kind: "dim" }>;
+      readonly emission: Extract<
+        LightEmissionMbtProjection,
+        { readonly kind: "dim" }
+      >;
       readonly expiresAt: Extract<
         LightEmitterExpirationMbtProjection,
         { readonly kind: "endOfTurn" }
@@ -3163,6 +3166,9 @@ function projectHole(hole: BattleHole): MbtHole {
     throw new Error(
       "Battle runtime MBT does not model Unit Feature decision holes.",
     );
+  }
+  if (hole.kind === "abilityChoice") {
+    throw new Error("Battle runtime MBT does not model ability choice holes.");
   }
   return Match.value(hole).pipe(
     Match.when({ kind: "targetChoice" }, () => "TargetChoice" as const),

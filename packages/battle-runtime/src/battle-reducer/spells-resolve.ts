@@ -284,7 +284,7 @@ export function resolveSpellAct(
   const actor = input.state.combatants.get(subject.actorId);
   const invocation =
     actor?.origin.kind === "character"
-      ? supportedSpellActs(actor).find(
+      ? supportedSpellActs(actor, input.state).find(
           (candidate) =>
             supportedSpellInvocationMatchesRef(candidate, subject.invocation) &&
             (candidate.procedure !== "spellHostedWeaponAttack" ||
@@ -1336,7 +1336,7 @@ export function resolveBonusActionSpellAct(
   const actor = input.state.combatants.get(subject.actorId);
   const invocation =
     actor?.origin.kind === "character"
-      ? supportedSpellActs(actor).find((candidate) =>
+      ? supportedSpellActs(actor, input.state).find((candidate) =>
           supportedSpellInvocationMatchesRef(candidate, subject.invocation),
         )
       : undefined;
@@ -1488,7 +1488,7 @@ export function resolveBonusActionDashSpellAct(
   const actor = input.state.combatants.get(subject.actorId);
   const invocation =
     actor?.origin.kind === "character"
-      ? supportedSpellActs(actor).find(
+      ? supportedSpellActs(actor, input.state).find(
           (
             candidate,
           ): candidate is Extract<

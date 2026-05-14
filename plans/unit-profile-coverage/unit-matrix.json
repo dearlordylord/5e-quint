@@ -62,9 +62,9 @@
       "value": 142
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 76,
-      "numerator": 68,
-      "percent": "89.5%"
+      "denominator": 77,
+      "numerator": 69,
+      "percent": "89.6%"
     },
     "profileClassificationCoverage": {
       "denominator": 142,
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 76,
+      "denominator": 77,
       "numerator": 10,
-      "percent": "13.2%"
+      "percent": "13%"
     },
     "supportedProfileCoverage": {
       "denominator": 116,
-      "numerator": 76,
-      "percent": "65.5%"
+      "numerator": 77,
+      "percent": "66.4%"
     }
   },
   "metricSemantics": [
@@ -7551,14 +7551,70 @@
         "status": "installed"
       },
       "claim": {
-        "reason": "Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Hex's curse retargeting, chosen-ability Ability Check Disadvantage, attack-hit Necrotic damage, or slot-scaled Concentration duration.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "spell.invocation-marked-damage-rider"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Bonus Action cast with Spell Slot spend",
+          "Concentration-owned curse identity on one combatant target",
+          "extra Necrotic damage when the caster hits the cursed target with an Attack Roll",
+          "cast-time chosen ability stored on the curse rider",
+          "Disadvantage on the cursed target's Ability Check holes for the chosen ability",
+          "Bonus Action retarget only after the cursed target drops to 0 Hit Points",
+          "slot-scaled Concentration maximum of 1 hour at slot 1, 4 hours at slot 2, 8 hours at slots 3-4, and 24 hours at slots 5+"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV84D"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-marked-damage-rider",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/character-battle-runtime/src/battle-character-build-projection.ts"
+          ],
+          "taskRefs": [
+            "SRDINV31B",
+            "SRDINV62",
+            "SRDINV77"
+          ],
+          "title": "Spell invocation creates a combat mark with attack-roll damage, Concentration duration, and 0-HP transfer",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/hex.json",
       "unitId": "hex"
     },

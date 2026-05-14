@@ -26,6 +26,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either, Match } from "effect";
 import {
   type BattleCreatureState,
+  type BattleState,
   type BattleTurnResources,
   type PersistentArmorSpellInvocation,
   type SupportedSpellInvocation,
@@ -115,6 +116,7 @@ export {
 } from "./spells-profiles-save-gates.ts";
 export function supportedSpellActs(
   actor: BattleCreatureState,
+  state?: BattleState,
 ): readonly SupportedSpellInvocation[] {
   if (actor.origin.kind !== "character") {
     return [];
@@ -244,6 +246,7 @@ export function supportedSpellActs(
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedMarkedDamageRiderSpellProfile(
         actor,
+        state,
         spell,
         spellcasting.spellSlots,
       ),

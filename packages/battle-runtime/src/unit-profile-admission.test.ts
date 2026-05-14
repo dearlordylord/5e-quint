@@ -5566,7 +5566,11 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
       sourceSpellId: spellId("hunters_mark"),
       sourceCombatantId: spellCasterId,
       targetCombatantId: spellTargetId,
-      transferAvailable: false,
+      transfer: {
+        kind: "awaitingTargetDrop",
+        retargetTiming: "sameTurn",
+      },
+      abilityCheckDisadvantage: null,
       damage: { expr: { dice: 1, dieSize: 6 }, damageType: "force" as const },
       expiresAt: { kind: "concentration" as const, combatantId: spellCasterId },
     } satisfies SpellMarkedDamageRider;
@@ -5576,10 +5580,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
           spellDamageHole(selectedSorcerousBurstInvocation, false, [
             markedDamageRider,
           ]),
-          [
-            [8, 3, 4],
-            [2],
-          ],
+          [[8, 3, 4], [2]],
         ),
         selectedSorcerousBurstInvocation,
         false,

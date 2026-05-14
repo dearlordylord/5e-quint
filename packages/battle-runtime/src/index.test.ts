@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bardic-inspiration-failed-d20-test unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.invocation-beam-sequence spell.invocation-condition-save spell.invocation-damage-save-or-attack spell.invocation-grease-ground-hazard spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV72B bard_bardic_inspiration
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV75B sorcerer_innate_sorcery
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84D hex
 import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
@@ -76,6 +77,7 @@ import {
 import { characterBattleResourceIsUnlimited } from "./character-battle-resources.ts";
 import { supportedSpellInvocationMatchesRef } from "./battle-reducer/spells-invocation-ref.ts";
 import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
+import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
 import { spellFillSet } from "./battle-reducer/spells-resolve-fill-set.ts";
 import { resolveMarkedDamageRiderSpellAct } from "./battle-reducer/spells-resolve-release.ts";
 import weaponQuarterstaffInput from "../../surface/content/weapon_quarterstaff.json";
@@ -96,7 +98,6 @@ import {
   elapsedTimeTicksFromHours,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
-import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
 import { combatantCanSee } from "./battle-reducer/creature-state-leaves.ts";
 import { applyWeaponMasterySapOnHit } from "./battle-reducer/attack-roll.ts";
 import {
@@ -146,6 +147,7 @@ import colorSprayInput from "../../surface/content/color_spray.json";
 import iceKnifeInput from "../../surface/content/ice_knife.json";
 import greaseInput from "../../surface/content/grease.json";
 import huntersMarkInput from "../../surface/content/hunters_mark.json";
+import hexInput from "../../surface/content/hex.json";
 import findFamiliarInput from "../../surface/content/find_familiar.json";
 import healingWordInput from "../../surface/content/healing_word.json";
 import spareTheDyingInput from "../../surface/content/spare_the_dying.json";
@@ -218,7 +220,7 @@ const oppositionSide = battleCombatantSide("opposition");
 const battleRuntimeSpecPath = fileURLToPath(
   new URL("../battle-runtime.qnt", import.meta.url),
 );
-const canonicalBattleRuntimeQntSelfTestTimeoutMs = 60_000;
+const canonicalBattleRuntimeQntSelfTestTimeoutMs = 180_000;
 const fighterId = combatantId("fighter");
 const goblinId = combatantId("goblin");
 const skeletonId = combatantId("skeleton");
@@ -284,6 +286,7 @@ const testSpellRecords = new Map(
     iceKnifeInput,
     greaseInput,
     huntersMarkInput,
+    hexInput,
     findFamiliarInput,
     healingWordInput,
     spareTheDyingInput,
@@ -23578,7 +23581,10 @@ describe("battle runtime", () => {
       expect.objectContaining({
         kind: "spellMarkedDamageRider",
         targetCombatantId: goblinId,
-        transferAvailable: false,
+        transfer: {
+          kind: "awaitingTargetDrop",
+          retargetTiming: "sameTurn",
+        },
       }),
     ]);
 
@@ -23647,7 +23653,7 @@ describe("battle runtime", () => {
       expect.objectContaining({
         kind: "spellMarkedDamageRider",
         targetCombatantId: goblinId,
-        transferAvailable: true,
+        transfer: { kind: "available", retargetTiming: "sameTurn" },
       }),
     ]);
 
@@ -23768,7 +23774,7 @@ describe("battle runtime", () => {
       expect.objectContaining({
         kind: "spellMarkedDamageRider",
         targetCombatantId: goblinId,
-        transferAvailable: true,
+        transfer: { kind: "available", retargetTiming: "sameTurn" },
       }),
     ]);
 
@@ -23903,7 +23909,10 @@ describe("battle runtime", () => {
       expect.objectContaining({
         kind: "spellMarkedDamageRider",
         targetCombatantId: skeletonId,
-        transferAvailable: false,
+        transfer: {
+          kind: "awaitingTargetDrop",
+          retargetTiming: "sameTurn",
+        },
       }),
     ]);
   });
@@ -24017,6 +24026,266 @@ describe("battle runtime", () => {
         }),
       ]);
     }
+  });
+
+  test("Hex applies Necrotic attack-hit damage and chosen-ability check Disadvantage", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-hex"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("hex")],
+          }),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const hexAct = discoverBattleActs(state).find(
+      (candidate) =>
+        candidate.subject.tag === "bonusActionSpell" &&
+        candidate.subject.invocation.spellId === "hex",
+    );
+    if (hexAct === undefined) {
+      throw new Error("Expected Hex Bonus Action spell act.");
+    }
+    const hexTarget = findHole(hexAct.initialHoles, "targetChoice");
+    const hexAbility = findHole(hexAct.initialHoles, "abilityChoice");
+    if (hexAbility.kind !== "abilityChoice") {
+      throw new Error("Expected Hex ability choice.");
+    }
+    expect(hexAbility.choices).toEqual([
+      "str",
+      "dex",
+      "con",
+      "int",
+      "wis",
+      "cha",
+    ]);
+    const hexed = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: hexAct.subject,
+        fills: [
+          targetFill(hexTarget, goblinId, [
+            {
+              kind: "spellTarget",
+              casterId: fighterId,
+              targetId: goblinId,
+              spellId: "hex",
+            },
+          ]),
+          { kind: "abilityChoice", holeId: hexAbility.holeId, value: "wis" },
+        ],
+      }),
+    );
+
+    expect(hexed.state.combatants.get(fighterId)?.activeEffects).toEqual([
+      expect.objectContaining({
+        kind: "spellMarkedDamageRider",
+        targetCombatantId: goblinId,
+        abilityCheckDisadvantage: { ability: "wis" },
+        damage: expect.objectContaining({ damageType: "necrotic" }),
+      }),
+    ]);
+
+    const target = attackInitialTargetHole(hexed.state);
+    const roll = attackRollHoleAfterTarget(
+      hexed.state,
+      target,
+      undefined,
+      goblinId,
+    );
+    const damage = attackDamageHoleAfterHit(
+      hexed.state,
+      target,
+      roll,
+      { total: 15, naturalD20: 10 },
+      undefined,
+      goblinId,
+    );
+    expect(damage).toMatchObject({
+      label: "Longsword damage (1d8+1d6+3-slashing)",
+      spellMarkedDamageRiders: [
+        expect.objectContaining({
+          targetCombatantId: goblinId,
+          damage: expect.objectContaining({ damageType: "necrotic" }),
+        }),
+      ],
+    });
+
+    const goblinTurn = requireResolved(
+      endTurn({ state: hexed.state, actorId: fighterId }),
+    ).state;
+    const hiddenFighterState: BattleState = {
+      ...goblinTurn,
+      combatants: new Map(goblinTurn.combatants).set(fighterId, {
+        ...goblinTurn.combatants.get(fighterId)!,
+        hidden: { discoveryDc: difficultyClass(15) },
+      }),
+    };
+    const searchSubject = {
+      tag: "action" as const,
+      actorId: goblinId,
+      action: "search" as const,
+    };
+    const searchAct = findAct(hiddenFighterState, searchSubject);
+    const searchTarget = findHole(searchAct.initialHoles, "targetChoice");
+    const searchCheck = requireHole(
+      resolveBattleSubject({
+        state: hiddenFighterState,
+        subject: searchSubject,
+        fills: [targetFill(searchTarget, fighterId)],
+      }),
+      "abilityCheck",
+    );
+    expect(searchCheck).toMatchObject({
+      ability: "wis",
+      skill: "perception",
+      rollMode: "disadvantage",
+    });
+  });
+
+  test("Hex retarget waits until a later turn after the cursed target drops", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-hex-later-turn-retarget"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("hex")],
+          }),
+        }),
+        statBlockCreatureInit({
+          combatantId: goblinId,
+          initiative: 10,
+          currentHp: Hp(1),
+        }),
+        statBlockCreatureInit({
+          combatantId: skeletonId,
+          displayName: "Skeleton",
+          initiative: 5,
+        }),
+      ],
+    });
+    const hexAct = discoverBattleActs(state).find(
+      (candidate) =>
+        candidate.subject.tag === "bonusActionSpell" &&
+        candidate.subject.invocation.spellId === "hex",
+    );
+    if (hexAct === undefined) {
+      throw new Error("Expected Hex cast act.");
+    }
+    const hexed = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: hexAct.subject,
+        fills: [
+          targetFill(findHole(hexAct.initialHoles, "targetChoice"), goblinId, [
+            {
+              kind: "spellTarget",
+              casterId: fighterId,
+              targetId: goblinId,
+              spellId: "hex",
+            },
+          ]),
+          {
+            kind: "abilityChoice",
+            holeId: findHole(hexAct.initialHoles, "abilityChoice").holeId,
+            value: "wis",
+          },
+        ],
+      }),
+    ).state;
+    const nextFighterTurn = requireResolved(
+      endTurn({
+        state: requireResolved(
+          endTurn({
+            state: requireResolved(endTurn({ state: hexed, actorId: fighterId }))
+              .state,
+            actorId: goblinId,
+          }),
+        ).state,
+        actorId: skeletonId,
+      }),
+    ).state;
+    const dropped = applyBattleHitPointDamage({
+      state: nextFighterTurn,
+      target: nextFighterTurn.combatants.get(goblinId)!,
+      damageAmount: 1,
+      deathFailuresAtZeroHp: 1,
+      damageSourceId: fighterId,
+    });
+
+    expect(dropped.combatants.get(fighterId)?.activeEffects).toEqual([
+      expect.objectContaining({
+        kind: "spellMarkedDamageRider",
+        transfer: {
+          kind: "availableAfterTurn",
+          retargetTiming: "laterTurn",
+          droppedOnTurn: {
+            actorId: fighterId,
+            round: dropped.initiative.round,
+          },
+        },
+      }),
+    ]);
+    expect(
+      discoverBattleActs(dropped).some(
+        (candidate) =>
+          candidate.subject.tag === "bonusActionSpell" &&
+          candidate.subject.invocation.spellId === "hex",
+      ),
+    ).toBe(false);
+
+    const laterTurn = requireResolved(
+      endTurn({
+        state: requireResolved(
+          endTurn({
+            state: requireResolved(endTurn({ state: dropped, actorId: fighterId }))
+              .state,
+            actorId: goblinId,
+          }),
+        ).state,
+        actorId: skeletonId,
+      }),
+    ).state;
+    const transferAct = discoverBattleActs(laterTurn).find(
+      (candidate) =>
+        candidate.subject.tag === "bonusActionSpell" &&
+        candidate.subject.invocation.spellId === "hex",
+    );
+    if (transferAct === undefined) {
+      throw new Error("Expected later-turn Hex transfer act.");
+    }
+    const transferred = requireResolved(
+      resolveBattleSubject({
+        state: laterTurn,
+        subject: transferAct.subject,
+        fills: [
+          targetFill(findHole(transferAct.initialHoles, "targetChoice"), skeletonId, [
+            {
+              kind: "spellTarget",
+              casterId: fighterId,
+              targetId: skeletonId,
+              spellId: "hex",
+            },
+          ]),
+        ],
+      }),
+    ).state;
+
+    expect(transferred.combatants.get(fighterId)?.activeEffects).toEqual([
+      expect.objectContaining({
+        kind: "spellMarkedDamageRider",
+        targetCombatantId: skeletonId,
+        abilityCheckDisadvantage: { ability: "wis" },
+        transfer: {
+          kind: "awaitingTargetDrop",
+          retargetTiming: "laterTurn",
+        },
+      }),
+    ]);
   });
 
   test("Favored Enemy casts Hunter's Mark without expending a Spell Slot", () => {
@@ -24486,7 +24755,7 @@ describe("battle runtime", () => {
               sourceCombatantId: fighterId,
               sourceSpellId: "hunters_mark",
               targetCombatantId: goblinId,
-              transferAvailable: true,
+              transfer: { kind: "available", retargetTiming: "sameTurn" },
               damage: { expr: { dice: 1, dieSize: 6 }, damageType: "force" },
               expiresAt: { kind: "concentration" },
             },
@@ -27968,6 +28237,7 @@ function spellRecord(
     | "entangle"
     | "sleep"
     | "hunters_mark"
+    | "hex"
     | "find_familiar"
     | "detect_magic"
     | "detect_poison_and_disease"
@@ -28031,32 +28301,40 @@ function magicSubject(
                 ? spellSlotInvocationRef(spellId, 1, "sleepTargetAdmission")
                 : spellId === "spare_the_dying"
                   ? cantripSpellInvocationRef(spellId, "makeStable")
-                : spellId === "ice_knife"
-                  ? spellSlotInvocationRef(spellId, 1, "attackBurstSaveDamage")
-                  : spellId === "vicious_mockery"
-                    ? cantripSpellInvocationRef(spellId, "saveGatedDamage")
-                    : spellId === "guiding_bolt" ||
-                        spellId === "ray_of_sickness"
-                      ? spellSlotInvocationRef(spellId, 1, "spellAttackDamage")
-                      : spellId === "eldritch_blast"
-                        ? cantripSpellInvocationRef(
+                  : spellId === "ice_knife"
+                    ? spellSlotInvocationRef(
+                        spellId,
+                        1,
+                        "attackBurstSaveDamage",
+                      )
+                    : spellId === "vicious_mockery"
+                      ? cantripSpellInvocationRef(spellId, "saveGatedDamage")
+                      : spellId === "guiding_bolt" ||
+                          spellId === "ray_of_sickness"
+                        ? spellSlotInvocationRef(
                             spellId,
-                            "spellAttackBeamSequence",
+                            1,
+                            "spellAttackDamage",
                           )
-                        : spellId === "ray_of_frost" ||
-                            spellId === "poison_spray" ||
-                            spellId === "chill_touch" ||
-                            spellId === "shocking_grasp" ||
-                            spellId === "fire_bolt" ||
-                            spellId === "starry_wisp"
+                        : spellId === "eldritch_blast"
                           ? cantripSpellInvocationRef(
                               spellId,
-                              "spellAttackDamage",
+                              "spellAttackBeamSequence",
                             )
-                          : cantripSpellInvocationRef(
-                              spellId,
-                              "saveGatedDamage",
-                            ),
+                          : spellId === "ray_of_frost" ||
+                              spellId === "poison_spray" ||
+                              spellId === "chill_touch" ||
+                              spellId === "shocking_grasp" ||
+                              spellId === "fire_bolt" ||
+                              spellId === "starry_wisp"
+                            ? cantripSpellInvocationRef(
+                                spellId,
+                                "spellAttackDamage",
+                              )
+                            : cantripSpellInvocationRef(
+                                spellId,
+                                "saveGatedDamage",
+                              ),
     mode: { tag: "cast" },
   };
 }

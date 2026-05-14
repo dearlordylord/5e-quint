@@ -5,6 +5,7 @@ import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { type Round as RoundType } from "@dnd/shared/types";
 import type {
+  Ability,
   DamageType,
   Skill,
   SpellRecord,
@@ -23,6 +24,7 @@ import {
   conditionHadNonSpellSourceBeforeSpellEffect,
 } from "./spell-condition-effects-helpers.ts";
 import {
+  type MarkedDamageRiderTransferState,
   type BattleActiveEffect,
   type BattleActiveEffectExpiration,
   type BattleCommandOption,
@@ -197,7 +199,13 @@ export function applySpellLightEmitterEffects(
             lightEmitterMatchesAttachment(emitter, attachment)
           ),
       ),
-      lightEmitterFromPostDamageRider(state, actorId, attachment, invocation, rider),
+      lightEmitterFromPostDamageRider(
+        state,
+        actorId,
+        attachment,
+        invocation,
+        rider,
+      ),
     ],
     state.lightEmitters,
   );
@@ -1032,6 +1040,7 @@ export function applyMarkedDamageRiderSpellEffect(
     SupportedSpellInvocation,
     { readonly procedure: "markedDamageRider" }
   >,
+  selectedAbility?: Ability,
 ): BattleState {
   const caster = state.combatants.get(actorId);
   if (caster === undefined) {
@@ -1041,6 +1050,13 @@ export function applyMarkedDamageRiderSpellEffect(
     invocation.action === "transfer"
       ? invocation.activeEffect.expiresAt
       : invocation.expiresAt;
+  const transfer: MarkedDamageRiderTransferState = {
+    kind: "awaitingTargetDrop",
+    retargetTiming:
+      invocation.action === "transfer"
+        ? invocation.activeEffect.transfer.retargetTiming
+        : invocation.retargetTiming,
+  };
   const activeEffects = [
     ...caster.activeEffects.filter(
       (effect) =>
@@ -1055,7 +1071,13 @@ export function applyMarkedDamageRiderSpellEffect(
       sourceSpellId: invocation.spell.id,
       sourceCombatantId: actorId,
       targetCombatantId: targetId,
-      transferAvailable: false,
+      transfer,
+      abilityCheckDisadvantage:
+        invocation.action === "transfer"
+          ? invocation.activeEffect.abilityCheckDisadvantage
+          : selectedAbility === undefined
+            ? null
+            : { ability: selectedAbility },
       damage: invocation.damage,
       expiresAt: existingExpiresAt,
     },

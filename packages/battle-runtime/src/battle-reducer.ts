@@ -506,6 +506,25 @@ export type SpellTurnStartDamageSave = {
   readonly dc: DcSource;
   readonly successEnds: "spell";
 };
+export type MarkedDamageRiderRetargetTiming = "sameTurn" | "laterTurn";
+export type BattleTurnAnchor = {
+  readonly actorId: CombatantId;
+  readonly round: RoundType;
+};
+export type MarkedDamageRiderTransferState =
+  | {
+      readonly kind: "awaitingTargetDrop";
+      readonly retargetTiming: MarkedDamageRiderRetargetTiming;
+    }
+  | {
+      readonly kind: "available";
+      readonly retargetTiming: "sameTurn";
+    }
+  | {
+      readonly kind: "availableAfterTurn";
+      readonly retargetTiming: "laterTurn";
+      readonly droppedOnTurn: BattleTurnAnchor;
+    };
 export type BattleActiveEffect =
   | (BattleUnitFeatureEffectBase & {
       readonly kind: "bardicInspirationDie";
@@ -663,7 +682,8 @@ export type BattleActiveEffect =
   | (BattleSpellEffectBase & {
       readonly kind: "spellMarkedDamageRider";
       readonly targetCombatantId: CombatantId;
-      readonly transferAvailable: boolean;
+      readonly transfer: MarkedDamageRiderTransferState;
+      readonly abilityCheckDisadvantage: { readonly ability: Ability } | null;
       readonly damage: {
         readonly expr: DiceExpr;
         readonly damageType: DamageType;
@@ -1844,6 +1864,8 @@ export type MarkedDamageRiderSpellInvocation =
         readonly expr: DiceExpr;
         readonly damageType: DamageType;
       };
+      readonly abilityChoices: readonly Ability[] | null;
+      readonly retargetTiming: MarkedDamageRiderRetargetTiming;
       readonly rangeFeet: MovementFeet;
       readonly expiresAt: BattleActiveEffectExpiration;
     }
@@ -1978,9 +2000,7 @@ export type SpellAttackDamagePayload =
 export type ResolvedSpellAttackDamagePayload = Extract<
   SpellAttackDamagePayload,
   {
-    readonly kind:
-      | "fixedSpellAttackDamage"
-      | "selectedSorcerousBurstDamage";
+    readonly kind: "fixedSpellAttackDamage" | "selectedSorcerousBurstDamage";
   }
 >;
 
@@ -3018,6 +3038,17 @@ export type BattleSpellSkillChoiceHole = {
   >;
   readonly choices: readonly Skill[];
 };
+export type BattleSpellAbilityChoiceHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "abilityChoice";
+  readonly label: string;
+  readonly spell: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "markedDamageRider"; readonly action: "cast" }
+  >;
+  readonly choices: readonly Ability[];
+};
 export type BattleCommandOption = (typeof COMMAND_OPTIONS)[number];
 export type BattleCommandOptionChoiceHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -3206,6 +3237,7 @@ export type BattleAbilityCheckHole = {
   readonly ability: Ability;
   readonly skill: "stealth" | "perception" | "athletics";
   readonly dc: DifficultyClass;
+  readonly rollMode?: AttackRollMode;
   readonly requiresTableSpatialFact?: boolean;
 };
 export type BattleGrappleOutcomeHole = {
@@ -3264,6 +3296,7 @@ export type BattleHole =
   | BattleSpellTurnStartDamageRollHole
   | BattleSpellHealingRollHole
   | BattleSpellSkillChoiceHole
+  | BattleSpellAbilityChoiceHole
   | BattleCommandOptionChoiceHole
   | BattleSpellSavingThrowOutcomeHole
   | BattleSpellTurnStartSavingThrowOutcomeHole
@@ -3330,6 +3363,11 @@ export type BattleFill =
       readonly kind: "skillChoice";
       readonly holeId: BattleHoleId;
       readonly value: Skill;
+    }
+  | {
+      readonly kind: "abilityChoice";
+      readonly holeId: BattleHoleId;
+      readonly value: Ability;
     }
   | {
       readonly kind: "commandOptionChoice";

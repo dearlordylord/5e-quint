@@ -68,6 +68,7 @@ import { parseSupportedUnitFeatureProfile } from "../unit-feature-support.ts";
 import type { ZeroHpLifecycle } from "../zero-hp-lifecycle.ts";
 import {
   combatantsAreAllies,
+  currentActorId,
   normalizeBattleGrapples,
 } from "./creature-state-leaves.ts";
 import {
@@ -356,13 +357,29 @@ export function markMarkedDamageRiderTransferAvailable(
   const combatants = new Map(state.combatants);
   let changed = false;
   for (const [combatantId, combatant] of combatants) {
-    const activeEffects = combatant.activeEffects.map((effect) =>
-      effect.kind === "spellMarkedDamageRider" &&
-      effect.targetCombatantId === targetId &&
-      !effect.transferAvailable
-        ? { ...effect, transferAvailable: true }
-        : effect,
-    );
+    const activeEffects = combatant.activeEffects.map((effect) => {
+      if (
+        effect.kind !== "spellMarkedDamageRider" ||
+        effect.targetCombatantId !== targetId ||
+        effect.transfer.kind !== "awaitingTargetDrop"
+      ) {
+        return effect;
+      }
+      return {
+        ...effect,
+        transfer:
+          effect.transfer.retargetTiming === "sameTurn"
+            ? { kind: "available", retargetTiming: "sameTurn" }
+            : {
+                kind: "availableAfterTurn",
+                retargetTiming: "laterTurn",
+                droppedOnTurn: {
+                  actorId: currentActorId(state),
+                  round: state.initiative.round,
+                },
+              },
+      } satisfies BattleActiveEffect;
+    });
     if (
       activeEffects.some(
         (effect, index) => effect !== combatant.activeEffects[index],

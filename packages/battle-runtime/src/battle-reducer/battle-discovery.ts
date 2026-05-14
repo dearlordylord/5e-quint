@@ -351,7 +351,7 @@ export function discoverBattleActs(
       subject: { tag: "action", actorId, action: "hide" },
       label: "Hide",
       summary: "Make a Dexterity (Stealth) check to become hidden.",
-      initialHoles: [hideAbilityCheckHole()],
+      initialHoles: [hideAbilityCheckHole(state, actorId)],
     });
   }
   const hiddenTargets = hiddenSearchTargetChoices(state, actorId);
@@ -775,7 +775,9 @@ export function statBlockBonusActionOptionActs(
             label: option.option.name,
             summary: `Use ${option.option.name} to ${standardActionLabel(standardAction)} as a Bonus Action.`,
             initialHoles:
-              standardAction === "hide" ? [hideAbilityCheckHole()] : [],
+              standardAction === "hide"
+                ? [hideAbilityCheckHole(state, actorId)]
+                : [],
           },
         ];
       }),

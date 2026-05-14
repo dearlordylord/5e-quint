@@ -1883,8 +1883,7 @@ export function martialArtsAttackProjectionProfileForUnit(
     classLevel: monkLevel,
     martialArts: {
       ...martialArts,
-      damageReplacement:
-        monkLevel < 5 ? martialArts.damageReplacement : null,
+      damageReplacement: monkLevel < 5 ? martialArts.damageReplacement : null,
     },
   };
 }
@@ -3016,17 +3015,20 @@ function parseOngoingFeatureEffects(
       ) {
         return null;
       }
-      rollModifiers.push({
+      const abilityFilter: readonly Ability[] | undefined =
+        "abilityFilter" in effect && Array.isArray(effect.abilityFilter)
+          ? effect.abilityFilter
+          : undefined;
+      const rollModifier: OngoingFeatureRollModifier = {
         mode: effect.mode,
         affects:
           effect.affects === "rolls_against_self"
             ? "rollsAgainstSelf"
             : "selfRoll",
         on: "attackRoll",
-        ...(effect.abilityFilter === undefined
-          ? {}
-          : { abilityFilter: effect.abilityFilter }),
-      });
+        ...(abilityFilter === undefined ? {} : { abilityFilter }),
+      };
+      rollModifiers.push(rollModifier);
       continue;
     }
     if (effect.kind === "modify_damage_numeric") {

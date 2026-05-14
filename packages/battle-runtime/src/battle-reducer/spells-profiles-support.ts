@@ -13,6 +13,7 @@ import {
 import { DamageTypeSchema } from "@dnd/surface/surface/schema";
 import { isEffectAtom } from "@dnd/surface/surface/types";
 import type {
+  Ability,
   Attachment,
   DamageType,
   DiceExpr,
@@ -28,6 +29,7 @@ import {
   BATTLE_D20_ROLL_MODIFIER_KINDS,
   type BattleActiveEffectExpiration,
   type BattleCreatureState,
+  type BattleState,
   type BattleD20RollModifierDelta,
   type BattleD20RollModifierKind,
   type AfterHitTimedDamageAndSaveSpellInvocation,
@@ -36,6 +38,7 @@ import {
   type DamageReductionSpellInvocation,
   type JumpMovementReplacementSpellInvocation,
   type HealingSpellActionCost,
+  type MarkedDamageRiderRetargetTiming,
   type RollModifierSpellEffect,
   type RollModifierSpellInvocation,
   type RollModifierSpellTargeting,
@@ -49,6 +52,7 @@ import {
   type CharacterBattleSpellcastingState,
 } from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
+import { currentActorId } from "./creature-state-leaves.ts";
 import { activeMarkedDamageRiderEffect } from "./damage-helpers.ts";
 import {
   PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES,
@@ -1107,47 +1111,23 @@ export function afterHitDamageSpellProjection(spell: SpellRecord): {
 
 export function supportedPreparedMarkedDamageRiderSpellProfile(
   actor: BattleCreatureState,
+  state: BattleState | undefined,
   spell: SpellRecord,
   spellSlots: CharacterBattleSpellcastingState["spellSlots"],
 ): readonly SupportedSpellInvocation[] {
-  if (
-    spell.name !== "Hunter's Mark" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-G-P#Hunter's Mark" ||
-    spell.mechanics.family !== "ongoing_effect" ||
-    spell.mechanics.level !== 1 ||
-    spell.mechanics.castingTime.kind !== "bonus_action" ||
-    spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== 90 ||
-    spell.mechanics.attachment.kind !== "hole" ||
-    spell.mechanics.attachment.value.kind !== "mark" ||
-    spell.mechanics.attachment.value.selection.mode !== "one" ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.operations.length !== 1
-  ) {
+  const projection = markedDamageRiderSpellProjection(spell);
+  if (projection === null) {
     return [];
   }
-  const operation = spell.mechanics.operations[0];
-  if (
-    operation?.trigger.kind !== "on_caster_attack_hit" ||
-    operation.effect.kind !== "damage" ||
-    operation.effect.damageType !== "force" ||
-    operation.effect.amount === undefined
-  ) {
-    return [];
-  }
-  const expr = supportedDamageAmountExpr({ amount: operation.effect.amount });
-  if (expr === null) {
-    return [];
-  }
-  const rangeFeet = movementFeet(spell.mechanics.range.feet);
+  const { abilityChoices, damageType, expr, rangeFeet, retargetTiming } =
+    projection;
   const activeMark = activeMarkedDamageRiderEffect(actor, spell.id);
   if (activeMark !== null) {
     // TODO: Allow an ordinary recast while the current mark is still active.
     // RAW permits replacing Concentration by casting the spell again and
     // choosing a new quarry; this branch currently exposes only the slotless
     // Bonus Action transfer after the marked target drops to 0 Hit Points.
-    return activeMark.transferAvailable
+    return markedDamageRiderTransferIsDiscoverable(activeMark, state)
       ? [
           {
             access: { tag: "prepared" },
@@ -1157,7 +1137,7 @@ export function supportedPreparedMarkedDamageRiderSpellProfile(
             spell,
             actionCost: "bonusAction",
             targeting: { kind: "singleCombatant" },
-            damage: { expr, damageType: "force" },
+            damage: { expr, damageType },
             rangeFeet,
             activeEffect: activeMark,
           },
@@ -1172,7 +1152,7 @@ export function supportedPreparedMarkedDamageRiderSpellProfile(
             resourceHasUsesRemaining(resource),
         )
       : undefined;
-  const favoredEnemyExpiresAt = huntersMarkConcentrationExpirationForSlot(
+  const favoredEnemyExpiresAt = markedDamageRiderConcentrationExpirationForSlot(
     actor.combatantId,
     spell,
     spellSlotLevel(1),
@@ -1192,14 +1172,16 @@ export function supportedPreparedMarkedDamageRiderSpellProfile(
             spell,
             actionCost: "bonusAction",
             targeting: { kind: "singleCombatant" },
-            damage: { expr, damageType: "force" },
+            damage: { expr, damageType },
+            abilityChoices,
+            retargetTiming,
             rangeFeet,
             expiresAt: favoredEnemyExpiresAt,
           },
         ];
   const slotInvocations = spellSlots.flatMap(
     (slot): readonly SupportedSpellInvocation[] => {
-      const expiresAt = huntersMarkConcentrationExpirationForSlot(
+      const expiresAt = markedDamageRiderConcentrationExpirationForSlot(
         actor.combatantId,
         spell,
         slot.spellLevel,
@@ -1216,7 +1198,9 @@ export function supportedPreparedMarkedDamageRiderSpellProfile(
               spell,
               actionCost: "bonusAction",
               targeting: { kind: "singleCombatant" },
-              damage: { expr, damageType: "force" },
+              damage: { expr, damageType },
+              abilityChoices,
+              retargetTiming,
               rangeFeet,
               expiresAt,
             },
@@ -1226,7 +1210,159 @@ export function supportedPreparedMarkedDamageRiderSpellProfile(
   return [...freeCastInvocations, ...slotInvocations];
 }
 
-function huntersMarkConcentrationExpirationForSlot(
+function markedDamageRiderTransferIsDiscoverable(
+  activeMark: Extract<
+    BattleCreatureState["activeEffects"][number],
+    { readonly kind: "spellMarkedDamageRider" }
+  >,
+  state: BattleState | undefined,
+): boolean {
+  if (activeMark.transfer.kind === "available") {
+    return true;
+  }
+  if (activeMark.transfer.kind === "awaitingTargetDrop") {
+    return false;
+  }
+  return (
+    state !== undefined &&
+    (currentActorId(state) !== activeMark.transfer.droppedOnTurn.actorId ||
+      state.initiative.round !== activeMark.transfer.droppedOnTurn.round)
+  );
+}
+
+function markedDamageRiderSpellProjection(spell: SpellRecord): {
+  readonly abilityChoices: readonly Ability[] | null;
+  readonly damageType: DamageType;
+  readonly expr: DiceExpr;
+  readonly rangeFeet: MovementFeet;
+  readonly retargetTiming: MarkedDamageRiderRetargetTiming;
+} | null {
+  if (
+    spell.mechanics.family !== "ongoing_effect" ||
+    spell.mechanics.level !== 1 ||
+    spell.mechanics.castingTime.kind !== "bonus_action" ||
+    spell.mechanics.range.kind !== "point" ||
+    spell.mechanics.range.feet !== 90 ||
+    spell.mechanics.attachment.kind !== "hole" ||
+    spell.mechanics.attachment.value.kind !== "mark" ||
+    spell.mechanics.attachment.value.selection.mode !== "one" ||
+    spell.mechanics.duration.kind !== "concentration"
+  ) {
+    return null;
+  }
+
+  if (
+    spell.name === "Hunter's Mark" &&
+    spell.provenance.kind === "srd-5.2.1" &&
+    spell.provenance.section === "Spells/Descriptions-G-P#Hunter's Mark" &&
+    spell.mechanics.operations.length === 1
+  ) {
+    return markedDamageRiderDamageProjection(spell, "force", null, "sameTurn");
+  }
+
+  if (
+    spell.name === "Hex" &&
+    spell.provenance.kind === "srd-5.2.1" &&
+    spell.provenance.section === "Spells/Descriptions-E-L#Hex" &&
+    spell.mechanics.operations.length === 2
+  ) {
+    const passive = spell.mechanics.operations[1];
+    const abilityChoices = hexAbilityChoices(passive?.effect);
+    return abilityChoices === null
+      ? null
+      : markedDamageRiderDamageProjection(
+          spell,
+          "necrotic",
+          abilityChoices,
+          "laterTurn",
+        );
+  }
+
+  return null;
+}
+
+function markedDamageRiderDamageProjection(
+  spell: SpellRecord,
+  damageType: DamageType,
+  abilityChoices: readonly Ability[] | null,
+  retargetTiming: MarkedDamageRiderRetargetTiming,
+): {
+  readonly abilityChoices: readonly Ability[] | null;
+  readonly damageType: DamageType;
+  readonly expr: DiceExpr;
+  readonly rangeFeet: MovementFeet;
+  readonly retargetTiming: MarkedDamageRiderRetargetTiming;
+} | null {
+  const mechanics = spell.mechanics;
+  if (
+    mechanics.family !== "ongoing_effect" ||
+    mechanics.range.kind !== "point" ||
+    typeof mechanics.range.feet !== "number"
+  ) {
+    return null;
+  }
+  const operation = mechanics.operations[0];
+  if (
+    operation?.trigger.kind !== "on_caster_attack_hit" ||
+    operation.effect.kind !== "damage" ||
+    operation.effect.damageType !== damageType ||
+    operation.effect.amount === undefined
+  ) {
+    return null;
+  }
+  const expr = supportedDamageAmountExpr({ amount: operation.effect.amount });
+  return expr === null
+    ? null
+    : {
+        abilityChoices,
+        damageType,
+        expr,
+        rangeFeet: movementFeet(mechanics.range.feet),
+        retargetTiming,
+      };
+}
+
+function hexAbilityChoices(effect: unknown): readonly Ability[] | null {
+  const candidate =
+    typeof effect === "object" && effect !== null
+      ? (effect as Partial<
+          Extract<EffectAtom, { readonly kind: "modify_roll_advantage" }>
+        >)
+      : null;
+  const abilityFilter = candidate?.abilityFilter as unknown;
+  if (
+    candidate?.kind !== "modify_roll_advantage" ||
+    candidate.mode !== "disadvantage" ||
+    (candidate.affects ?? "self_roll") !== "self_roll" ||
+    candidate.on === undefined ||
+    !sameStringSet(candidate.on, ["ability_check"]) ||
+    abilityFilter === undefined ||
+    Array.isArray(abilityFilter) ||
+    typeof abilityFilter !== "object" ||
+    abilityFilter === null
+  ) {
+    return null;
+  }
+  const filter = abilityFilter as {
+    readonly kind?: unknown;
+    readonly value?: {
+      readonly kind?: unknown;
+      readonly options?: readonly Ability[];
+    };
+  };
+  if (filter.kind !== "hole" || filter.value?.kind !== "choice") {
+    return null;
+  }
+  const options = filter.value.options;
+  if (options === undefined) {
+    return null;
+  }
+  return sameStringSet(options, ["str", "dex", "con", "int", "wis", "cha"])
+    ? options
+    : null;
+}
+
+function markedDamageRiderConcentrationExpirationForSlot(
   actorId: CombatantId,
   spell: SpellRecord,
   slotLevel: SpellSlotLevel,
@@ -1238,7 +1374,7 @@ function huntersMarkConcentrationExpirationForSlot(
     spell.mechanics.duration.kind !== "concentration" ||
     spell.mechanics.duration.upTo.unit !== "hour" ||
     spell.mechanics.duration.upTo.amount !== 1 ||
-    !hasSupportedHuntersMarkDurationTiers(spell.mechanics.duration.upTo)
+    !hasSupportedMarkedDamageRiderDurationTiers(spell.mechanics.duration.upTo)
   ) {
     return null;
   }
@@ -1262,7 +1398,7 @@ function huntersMarkConcentrationExpirationForSlot(
       };
 }
 
-function hasSupportedHuntersMarkDurationTiers(
+function hasSupportedMarkedDamageRiderDurationTiers(
   upTo: Extract<
     SpellRecord["mechanics"]["duration"],
     { readonly kind: "concentration" }
@@ -1270,11 +1406,29 @@ function hasSupportedHuntersMarkDurationTiers(
 ): boolean {
   const tiers = upTo.upcastTiers ?? [];
   return (
-    tiers.length === 2 &&
-    tiers[0]?.atSlot === 3 &&
-    tiers[0].amount === 8 &&
-    tiers[1]?.atSlot === 5 &&
-    tiers[1].amount === 24
+    durationTiersEqual(tiers, [
+      { atSlot: 3, amount: 8 },
+      { atSlot: 5, amount: 24 },
+    ]) ||
+    durationTiersEqual(tiers, [
+      { atSlot: 2, amount: 4 },
+      { atSlot: 3, amount: 8 },
+      { atSlot: 5, amount: 24 },
+    ])
+  );
+}
+
+function durationTiersEqual(
+  tiers: readonly { readonly atSlot: number; readonly amount: number }[],
+  expected: readonly { readonly atSlot: number; readonly amount: number }[],
+): boolean {
+  return (
+    tiers.length === expected.length &&
+    tiers.every(
+      (tier, index) =>
+        tier.atSlot === expected[index]?.atSlot &&
+        tier.amount === expected[index]?.amount,
+    )
   );
 }
 
