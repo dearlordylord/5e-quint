@@ -50,6 +50,7 @@ let wizard =
         }
       , spellcasting =
           { kind = "wizard_spellcasting_creation"
+          , featureLevel = 1
           , spellcastingAbility = "int"
           , cantripAccess =
               { kind = "known_cantrips"

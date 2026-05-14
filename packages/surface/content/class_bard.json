@@ -11,10 +11,6 @@
     {
       "level": 1,
       "unitId": "bard_bardic_inspiration"
-    },
-    {
-      "level": 1,
-      "unitId": "bard_spellcasting"
     }
   ],
   "hitPointDie": 8,
@@ -171,6 +167,7 @@
       ]
     },
     "kind": "list_prepared_spellcasting_creation",
+    "featureLevel": 1,
     "preparedAccess": {
       "changeOn": {
         "kind": "class_level",

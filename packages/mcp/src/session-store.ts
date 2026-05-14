@@ -65,6 +65,10 @@ export type BattleFillSession = {
   readonly fills: readonly BattleFill[];
 };
 
+export type PendingBattleFillSession = BattleFillSession & {
+  readonly baseState: BattleState;
+};
+
 export type McpSessionSnapshot = {
   readonly draftIds: readonly CharacterDraftId[];
   readonly characterIds: readonly CharacterId[];
@@ -82,7 +86,7 @@ export type McpSessionStore = {
   readonly drafts: Map<CharacterDraftId, CharacterDraft>;
   readonly characters: CharacterSessionRegistry;
   battleState: BattleState | null;
-  transientBattleFills: BattleFillSession | null;
+  pendingBattleFills: PendingBattleFillSession | null;
   clearSelectedStatBlock(): void;
   getSelectedStatBlock(): StatBlockRecord | null;
   selectStatBlock(
@@ -137,7 +141,7 @@ export function createMcpSessionStore(
     drafts,
     characters,
     battleState: null,
-    transientBattleFills: null,
+    pendingBattleFills: null,
     clearSelectedStatBlock(): void {
       selectedStatBlockId = null;
     },
@@ -164,7 +168,13 @@ export function createMcpSessionStore(
           store.battleState === null
             ? null
             : battleSessionSnapshot(store.battleState),
-        transientBattleFills: store.transientBattleFills,
+        transientBattleFills:
+          store.pendingBattleFills === null
+            ? null
+            : {
+                subject: store.pendingBattleFills.subject,
+                fills: store.pendingBattleFills.fills,
+              },
       };
     },
   } satisfies McpSessionStore;

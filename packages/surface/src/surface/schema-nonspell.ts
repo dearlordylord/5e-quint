@@ -1509,6 +1509,7 @@ const spellSlotProjectionMatchesLevelOneFacts = (
 
 export const ListPreparedSpellcastingCreationSchema = Schema.Struct({
   kind: Schema.Literal("list_prepared_spellcasting_creation"),
+  featureLevel: Schema.Literal(1),
   spellcastingAbility: Schema.Literal("cha", "wis"),
   cantripAccess: exactOptional(ClassCantripAccessSchema),
   preparedAccess: ClassPreparedAccessSchema,
@@ -1546,6 +1547,7 @@ export const ListPreparedSpellcastingCreationSchema = Schema.Struct({
 
 export const PactMagicSpellcastingCreationSchema = Schema.Struct({
   kind: Schema.Literal("pact_magic_spellcasting_creation"),
+  featureLevel: Schema.Literal(1),
   spellcastingAbility: Schema.Literal("cha"),
   cantripAccess: Schema.Struct({
     kind: Schema.Literal("known_cantrips_from_class_spell_list"),
@@ -1605,6 +1607,7 @@ export const PactMagicSpellcastingCreationSchema = Schema.Struct({
 
 export const WizardSpellcastingCreationSchema = Schema.Struct({
   kind: Schema.Literal("wizard_spellcasting_creation"),
+  featureLevel: Schema.Literal(1),
   spellcastingAbility: Schema.Literal("int"),
   cantripAccess: Schema.Struct({
     kind: Schema.Literal("known_cantrips"),

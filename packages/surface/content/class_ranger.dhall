@@ -15,8 +15,7 @@ let ranger =
       , className = "ranger"
       , description = "SRD Ranger class creation facts for a level-1 character, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts."
       , featureGrants =
-        [ { level = 1, unitId = "ranger_spellcasting" }
-        , { level = 1, unitId = "ranger_favored_enemy" }
+        [ { level = 1, unitId = "ranger_favored_enemy" }
         , { level = 1, unitId = "ranger_weapon_mastery" }
         ]
       , hitPointDie = 10
@@ -52,6 +51,7 @@ let ranger =
       , skillProficiencyChoice = { choose = 3, options = rangerSkills }
       , spellcasting =
           { kind = "list_prepared_spellcasting_creation"
+          , featureLevel = 1
           , spellcastingAbility = "wis"
           , preparedAccess =
               { kind = "prepared_from_class_spell_list"

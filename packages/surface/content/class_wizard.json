@@ -62,6 +62,7 @@
       ]
     },
     "kind": "wizard_spellcasting_creation",
+    "featureLevel": 1,
     "preparedAccess": {
       "changeOn": {
         "kind": "long_rest"

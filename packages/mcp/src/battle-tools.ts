@@ -34,7 +34,10 @@ import {
 } from "./battle-tool-output.ts";
 import { handleStartBattleToolCall } from "./start-battle-tool.ts";
 import { startBattleInputSchema } from "./start-battle-tool-input.ts";
-import type { BattleFillSession } from "./session-store.ts";
+import type {
+  BattleFillSession,
+  PendingBattleFillSession,
+} from "./session-store.ts";
 import {
   mcpOutputJsonSchema,
   schemaJsonContent,
@@ -145,11 +148,11 @@ export function handleBattleToolCall(
       ),
     ),
     Match.when({ name: battleToolNames.fillBattleHole }, (matched) => {
-      const state = root.sessionStore.battleState;
-      if (state == null) return noStoredBattleContent();
+      const visibleState = root.sessionStore.battleState;
+      if (visibleState == null) return noStoredBattleContent();
 
       const subject = matched.args.subject;
-      const previous = root.sessionStore.transientBattleFills;
+      const previous = root.sessionStore.pendingBattleFills;
       if (previous !== null && !sameBattleSubject(previous.subject, subject)) {
         return errorContent("A different battle subject has pending fills.", {
           code: "BATTLE_FILL_SUBJECT_MISMATCH",
@@ -159,14 +162,29 @@ export function handleBattleToolCall(
       }
 
       const fills = [...(previous?.fills ?? []), matched.args.fill];
+      const replayState =
+        matched.args.fill.kind === "reactionDecision"
+          ? visibleState
+          : (previous?.baseState ?? visibleState);
       const result =
         matched.args.fill.kind === "reactionDecision"
-          ? resolveBattleReaction({ state, fill: matched.args.fill })
-          : resolveBattleSubject({ state, subject, fills });
+          ? resolveBattleReaction({
+              state: replayState,
+              fill: matched.args.fill,
+            })
+          : resolveBattleSubject({ state: replayState, subject, fills });
+      const pendingTransaction = pendingTransactionForResult({
+        result,
+        filledSubject: subject,
+        previous,
+        fills,
+        replayState,
+        isReactionDecision: matched.args.fill.kind === "reactionDecision",
+      });
       storeBattleResolution(
         root,
         result,
-        matched.args.fill.kind === "reactionDecision" ? [] : fills,
+        pendingTransaction,
       );
       return schemaJsonContent(
         BattleResolutionOutputSchema,
@@ -199,7 +217,14 @@ export function handleBattleToolCall(
         subject: matched.args.subject,
         fills: [],
       });
-      storeBattleResolution(root, result, []);
+      storeBattleResolution(root, result, pendingTransactionForResult({
+        result,
+        filledSubject: matched.args.subject,
+        previous: null,
+        fills: [],
+        replayState: state.right,
+        isReactionDecision: false,
+      }));
       return schemaJsonContent(
         BattleResolutionOutputSchema,
         battleResolutionPayload(root, result),
@@ -220,7 +245,18 @@ export function handleBattleToolCall(
         },
         fills: [],
       });
-      storeBattleResolution(root, result, []);
+      storeBattleResolution(root, result, pendingTransactionForResult({
+        result,
+        filledSubject: {
+          tag: "runtimeCommand",
+          actorId: matched.args.actorId,
+          command: "endTurn",
+        },
+        previous: null,
+        fills: [],
+        replayState: state.right,
+        isReactionDecision: false,
+      }));
       return schemaJsonContent(
         BattleResolutionOutputSchema,
         battleResolutionPayload(root, result),
@@ -236,7 +272,7 @@ export function handleBattleToolCall(
       const handoff = finalizeCharacterSessionsFromBattle(root, state.right);
       if (handoff !== null) return handoff;
       root.sessionStore.battleState = null;
-      root.sessionStore.transientBattleFills = null;
+      root.sessionStore.pendingBattleFills = null;
 
       return schemaJsonContent(EndBattleOutputSchema, {
         endedBattleId: state.right.battleId,
@@ -256,20 +292,51 @@ export function handleBattleToolCall(
 function storeBattleResolution(
   root: McpCompositionRoot,
   result: BattleResolutionResult,
-  fills: readonly BattleFill[],
+  pendingTransaction: PendingBattleFillSession | null,
 ): void {
   if (result.tag === "resolved") {
     root.sessionStore.battleState = result.state;
-    root.sessionStore.transientBattleFills = null;
+    root.sessionStore.pendingBattleFills = null;
     return;
   }
   if (result.tag === "needsHoles") {
     root.sessionStore.battleState = result.state;
-    root.sessionStore.transientBattleFills = {
+    root.sessionStore.pendingBattleFills = pendingTransaction;
+  }
+}
+
+function pendingTransactionForResult({
+  result,
+  filledSubject,
+  previous,
+  fills,
+  replayState,
+  isReactionDecision,
+}: {
+  readonly result: BattleResolutionResult;
+  readonly filledSubject: BattleFillSession["subject"];
+  readonly previous: PendingBattleFillSession | null;
+  readonly fills: readonly BattleFill[];
+  readonly replayState: BattleState;
+  readonly isReactionDecision: boolean;
+}): PendingBattleFillSession | null {
+  if (result.tag !== "needsHoles") return null;
+  if (
+    isReactionDecision &&
+    previous !== null &&
+    sameBattleSubject(result.subject, filledSubject)
+  ) {
+    return {
+      baseState: previous.baseState,
       subject: result.subject,
-      fills,
+      fills: previous.fills,
     };
   }
+  return {
+    baseState: isReactionDecision ? result.state : replayState,
+    subject: result.subject,
+    fills: isReactionDecision ? [] : fills,
+  };
 }
 
 function unknownStatBlockContent(statBlockId: string, error: unknown) {
@@ -309,6 +376,15 @@ function battleResolutionResultPayload(result: BattleResolutionResult) {
       ...(result.objectDamages === undefined
         ? {}
         : { objectDamages: result.objectDamages }),
+      ...(result.objectIgnitions === undefined
+        ? {}
+        : { objectIgnitions: result.objectIgnitions }),
+      ...(result.droppedObjects === undefined
+        ? {}
+        : { droppedObjects: result.droppedObjects }),
+      ...(result.shovePushes === undefined
+        ? {}
+        : { shovePushes: result.shovePushes }),
     };
   }
   if (result.tag === "needsHoles") {
@@ -335,7 +411,7 @@ function activeBattleWithoutPendingFills(
 ): Either.Either<BattleState, ToolError> {
   const state = root.sessionStore.battleState;
   if (state == null) return Either.left(noStoredBattleContent());
-  const pendingFills = root.sessionStore.transientBattleFills;
+  const pendingFills = root.sessionStore.pendingBattleFills;
   return pendingFills === null
     ? Either.right(state)
     : Either.left(pendingBattleFillsContent(pendingFills, pendingMessage));

@@ -651,6 +651,7 @@ export function buildCharacterBuild(input: {
   const buildSpellcasting = finalizedBuildSpellcasting(
     selectedClassUnitId,
     classFacts,
+    classLevelForUnit(selections.progression, selectedClassUnitId),
     input.supportedSelections,
   );
   const buildFeatures: readonly CharacterBuildFeature[] = [
@@ -1239,6 +1240,10 @@ function supportedFinalizationChoiceHoles(input: {
   const spellcastingHoles = classSpellcastingChoiceHoles(
     startingClassUnitId(input.selections.progression),
     input.classFacts,
+    classLevelForUnit(
+      input.selections.progression,
+      startingClassUnitId(input.selections.progression),
+    ),
   ).flatMap((hole) => compact([requireUnitChoiceCreationHole(hole)]));
   const backgroundToolHole = backgroundToolChoiceSpec(
     input.backgroundFacts.toolProficiency,
@@ -1690,9 +1695,10 @@ function finalizedBuildEquipmentForSupportedLoadoutChoices(
 export function finalizedBuildSpellcasting(
   classUnitId: UnitRecord["id"],
   classFacts: ClassCreationFacts,
+  classLevel: number,
   supportedSelections: ExecutableSupportSelections,
 ): CharacterBuildSpellcasting | undefined {
-  const spellcasting = classSpellcastingCreation(classFacts);
+  const spellcasting = classSpellcastingCreation(classFacts, classLevel);
   if (spellcasting == null) {
     return undefined;
   }
@@ -1781,8 +1787,12 @@ function isWizardClassCreationFacts(
 
 function classSpellcastingCreation(
   facts: ClassCreationFacts,
+  classLevel: number,
 ): ReadableClassSpellcasting | undefined {
   if (!("spellcasting" in facts) || facts.spellcasting == null) {
+    return undefined;
+  }
+  if (facts.spellcasting.featureLevel > classLevel) {
     return undefined;
   }
 

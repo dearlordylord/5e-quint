@@ -9,10 +9,20 @@ export const GENERIC_COMBAT_ACTION_LABELS = [
   ...GENERIC_READY_TRIGGERS.map(() => "Ready" as const),
 ] as const;
 
+export const GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE = [
+  ...GENERIC_COMBAT_ACTION_LABELS,
+  "Unarmed Strike (Shove)",
+] as const;
+
 export const GENERIC_COMBAT_ACTION_LABELS_WITH_HELP = [
   "Dash",
   "Disengage",
   "Dodge",
   "Help",
   ...GENERIC_READY_TRIGGERS.map(() => "Ready" as const),
+] as const;
+
+export const GENERIC_COMBAT_ACTION_LABELS_WITH_HELP_AND_SHOVE = [
+  ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
+  "Unarmed Strike (Shove)",
 ] as const;

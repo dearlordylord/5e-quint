@@ -17,10 +17,6 @@
     },
     {
       "level": 1,
-      "unitId": "paladin_spellcasting"
-    },
-    {
-      "level": 1,
       "unitId": "paladin_weapon_mastery"
     }
   ],
@@ -77,6 +73,7 @@
   },
   "spellcasting": {
     "kind": "list_prepared_spellcasting_creation",
+    "featureLevel": 1,
     "preparedAccess": {
       "changeOn": {
         "kind": "long_rest",

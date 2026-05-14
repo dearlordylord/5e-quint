@@ -69,7 +69,7 @@ export function handleStartBattleToolCall(
     });
   }
   root.sessionStore.battleState = state.right;
-  root.sessionStore.transientBattleFills = null;
+  root.sessionStore.pendingBattleFills = null;
   for (const { session } of combatants.right.characterSessions) {
     root.sessionStore.characters.set({
       tag: "inBattle",

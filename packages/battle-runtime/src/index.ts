@@ -134,10 +134,12 @@ export { KNOCKED_OUT_UNCONSCIOUS } from "./battle-init.ts";
 export {
   ActiveOngoingFeatureOccurrenceSnapshotSchema,
   BATTLE_INVALID_REASON_CODES,
+  BattleDroppedObjectOutcomeSchema,
   BattleFillSchema,
   BattleHoleSchema,
   BattleObjectDamageOutcomeSchema,
   BattleObjectIgnitionOutcomeSchema,
+  BattleShovePushOutcomeSchema,
   BattleSnapshotSchema,
   addBattleCombatant,
   activeFeatherFallDescentRateCapFeetPerRound,

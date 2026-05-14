@@ -208,7 +208,12 @@ export function discoverClassGrantedHoles(input: {
         facts.value.startingEquipment,
       ),
     ),
-    ...discoverClassSpellcastingHoles(classUnitId, facts.value, input.draft),
+    ...discoverClassSpellcastingHoles(
+      classUnitId,
+      classLevel,
+      facts.value,
+      input.draft,
+    ),
     ...progressionClassUnitIds(progression).flatMap((progressionClassUnitId) =>
       progressionClassUnitId === startingUnitId
         ? []
@@ -232,19 +237,23 @@ type ReadableClassSpellcasting =
 
 function discoverClassSpellcastingHoles(
   classUnitId: UnitRecord["id"],
+  classLevel: number,
   facts: ReadableClassCreationFacts,
   draft: CharacterDraft,
 ): readonly CreationHole[] {
-  return classSpellcastingChoiceHoles(classUnitId, facts).flatMap((hole) =>
-    unselectedUnitChoiceHole(draft, hole),
-  );
+  return classSpellcastingChoiceHoles(
+    classUnitId,
+    facts,
+    classLevel,
+  ).flatMap((hole) => unselectedUnitChoiceHole(draft, hole));
 }
 
 export function classSpellcastingChoiceHoles(
   classUnitId: UnitRecord["id"],
   facts: ReadableClassCreationFacts,
+  classLevel: number,
 ): readonly ChoiceCreationHole[] {
-  const spellcasting = classSpellcastingCreation(facts);
+  const spellcasting = classSpellcastingCreation(facts, classLevel);
   if (spellcasting == null) {
     return [];
   }
@@ -321,8 +330,12 @@ function compactChoiceHoles(
 
 function classSpellcastingCreation(
   facts: ReadableClassCreationFacts,
+  classLevel: number,
 ): ReadableClassSpellcasting | undefined {
   if (!("spellcasting" in facts) || facts.spellcasting == null) {
+    return undefined;
+  }
+  if (facts.spellcasting.featureLevel > classLevel) {
     return undefined;
   }
 

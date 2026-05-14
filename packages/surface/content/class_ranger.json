@@ -12,10 +12,6 @@
   "featureGrants": [
     {
       "level": 1,
-      "unitId": "ranger_spellcasting"
-    },
-    {
-      "level": 1,
       "unitId": "ranger_favored_enemy"
     },
     {
@@ -116,6 +112,7 @@
   },
   "spellcasting": {
     "kind": "list_prepared_spellcasting_creation",
+    "featureLevel": 1,
     "preparedAccess": {
       "changeOn": {
         "kind": "long_rest",

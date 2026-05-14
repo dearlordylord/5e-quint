@@ -6,7 +6,8 @@ import { characterIdFromDraftId } from "../src/session-store.ts";
 
 import {
   GENERIC_COMBAT_ACTION_LABELS,
-  GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
+  GENERIC_COMBAT_ACTION_LABELS_WITH_HELP_AND_SHOVE,
+  GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
 } from "./battle-act-labels.ts";
 import { loadoutHoleId, unitHoleId } from "./creation-hole-ids.ts";
 
@@ -415,7 +416,7 @@ export async function verifyBaselineVertical(client: Client) {
     [
       "Attack",
       "Attack",
-      ...GENERIC_COMBAT_ACTION_LABELS,
+      ...GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
       "Second Wind",
       "Move",
       "End Turn",
@@ -456,13 +457,23 @@ export async function verifyBaselineVertical(client: Client) {
     ],
   );
 
-  await callTool(client, "fill_battle_hole", {
+  const goblinTarget = await callTool(client, "fill_battle_hole", {
     subject: attackSubject("goblin", "Scimitar"),
     fill: targetFill("fighter"),
   });
+  const goblinAttackRoll = (
+    get(goblinTarget, "result.holes") as JsonObject[]
+  ).find((hole) => hole.kind === "attackRoll");
+  assert.ok(goblinAttackRoll);
   await callTool(client, "fill_battle_hole", {
     subject: attackSubject("goblin", "Scimitar"),
-    fill: attackRollFill(20, 18),
+    fill: attackRollFill(
+      20,
+      18,
+      typeof goblinAttackRoll.rollMode === "string"
+        ? goblinAttackRoll.rollMode
+        : undefined,
+    ),
   });
   const goblinDamage = await callTool(client, "fill_battle_hole", {
     subject: attackSubject("goblin", "Scimitar"),
@@ -575,7 +586,7 @@ export async function verifyWidthVertical(client: Client) {
     [
       "Attack",
       "Attack",
-      ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
+      ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP_AND_SHOVE,
       "Second Wind",
       "Action Surge",
       "Move",
@@ -666,13 +677,23 @@ export async function verifyWidthVertical(client: Client) {
   const skeletonActs = await callTool(client, "discover_battle_acts", {});
   assert.ok(actionLabels(skeletonActs).includes("Attack"));
 
-  await callTool(client, "fill_battle_hole", {
+  const skeletonTarget = await callTool(client, "fill_battle_hole", {
     subject: attackSubject("skeleton", "Shortsword"),
     fill: targetFill("fighter"),
   });
+  const skeletonAttackRoll = (
+    get(skeletonTarget, "result.holes") as JsonObject[]
+  ).find((hole) => hole.kind === "attackRoll");
+  assert.ok(skeletonAttackRoll);
   await callTool(client, "fill_battle_hole", {
     subject: attackSubject("skeleton", "Shortsword"),
-    fill: attackRollFill(20, 15),
+    fill: attackRollFill(
+      20,
+      15,
+      typeof skeletonAttackRoll.rollMode === "string"
+        ? skeletonAttackRoll.rollMode
+        : undefined,
+    ),
   });
   const afterSkeletonAttack = await callTool(client, "fill_battle_hole", {
     subject: attackSubject("skeleton", "Shortsword"),
@@ -980,7 +1001,20 @@ function attackSubject(actorId: string, attackName: string) {
 }
 
 function magicSubject(actorId: string, spellId: string) {
-  return { tag: "actionSpell", actorId, spellId };
+  return {
+    tag: "actionSpell",
+    actorId,
+    invocation:
+      spellId === "magic_missile"
+        ? {
+            tag: "spellSlot",
+            spellId,
+            slotLevel: 1,
+            procedure: "repeatedDamageAllocation",
+          }
+        : { tag: "cantrip", spellId, procedure: "spellAttackDamage" },
+    mode: { tag: "cast" },
+  };
 }
 
 function targetFill(value: string) {
@@ -1029,11 +1063,15 @@ function targetFill(value: string) {
   };
 }
 
-function attackRollFill(total: number, naturalD20: number) {
+function attackRollFill(total: number, naturalD20: number, rollMode?: string) {
   return {
     kind: "attackRoll",
     holeId: "battle:attack:roll",
-    value: { total, naturalD20 },
+    value: {
+      total,
+      naturalD20,
+      ...(rollMode === undefined ? {} : { rollMode }),
+    },
   };
 }
 

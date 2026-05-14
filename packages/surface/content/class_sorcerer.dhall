@@ -12,9 +12,7 @@ let sorcerer =
       , className = "sorcerer"
       , description = "SRD Sorcerer class creation facts for a level-1 character, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts."
       , featureGrants =
-        [ { level = 1, unitId = "sorcerer_spellcasting" }
-        , { level = 1, unitId = "sorcerer_innate_sorcery" }
-        ]
+        [ { level = 1, unitId = "sorcerer_innate_sorcery" } ]
       , hitPointDie = 6
       , id = "class_sorcerer"
       , kind = "class"
@@ -27,6 +25,7 @@ let sorcerer =
         { choose = 2, options = [ "arcana", "deception", "insight", "intimidation", "persuasion", "religion" ] }
       , spellcasting =
           { kind = "list_prepared_spellcasting_creation"
+          , featureLevel = 1
           , spellcastingAbility = "cha"
           , cantripAccess =
               { kind = "known_cantrips_from_class_spell_list"

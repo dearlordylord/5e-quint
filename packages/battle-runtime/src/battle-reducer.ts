@@ -3815,9 +3815,11 @@ export {
 
 export {
   ActiveOngoingFeatureOccurrenceSnapshotSchema,
+  BattleDroppedObjectOutcomeSchema,
   BattleFillSchema,
   BattleHoleSchema,
   BattleObjectDamageOutcomeSchema,
   BattleObjectIgnitionOutcomeSchema,
+  BattleShovePushOutcomeSchema,
   BattleSnapshotSchema,
 } from "./battle-reducer/battle-codecs.ts";

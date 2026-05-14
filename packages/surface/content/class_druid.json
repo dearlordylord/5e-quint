@@ -11,10 +11,6 @@
   "featureGrants": [
     {
       "level": 1,
-      "unitId": "druid_spellcasting"
-    },
-    {
-      "level": 1,
       "unitId": "druid_druidic"
     },
     {
@@ -80,6 +76,7 @@
       ]
     },
     "kind": "list_prepared_spellcasting_creation",
+    "featureLevel": 1,
     "preparedAccess": {
       "changeOn": {
         "kind": "long_rest",

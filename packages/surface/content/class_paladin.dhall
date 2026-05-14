@@ -13,7 +13,6 @@ let paladin =
       , description = "SRD Paladin class creation facts for a level-1 character, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts."
       , featureGrants =
         [ { level = 1, unitId = "paladin_lay_on_hands" }
-        , { level = 1, unitId = "paladin_spellcasting" }
         , { level = 1, unitId = "paladin_weapon_mastery" }
         ]
       , hitPointDie = 10
@@ -36,6 +35,7 @@ let paladin =
         { choose = 2, options = [ "athletics", "insight", "intimidation", "medicine", "persuasion", "religion" ] }
       , spellcasting =
           { kind = "list_prepared_spellcasting_creation"
+          , featureLevel = 1
           , spellcastingAbility = "cha"
           , preparedAccess =
               { kind = "prepared_from_class_spell_list"

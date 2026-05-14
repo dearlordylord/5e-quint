@@ -16,6 +16,7 @@ import {
   snapshotBattle,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   type BattleCreatureState,
+  type BattleSubject,
   type BattleState,
 } from "@dnd/battle-runtime";
 import {
@@ -61,6 +62,7 @@ import {
 } from "./session-store.ts";
 import {
   GENERIC_COMBAT_ACTION_LABELS,
+  GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
   GENERIC_READY_TRIGGERS,
 } from "../test-support/battle-act-labels.ts";
 import {
@@ -133,12 +135,14 @@ function testWizardSpellcasting(input: {
   readonly spellbook?: readonly string[];
   readonly preparedSpells: readonly string[];
   readonly spellSlots: readonly { readonly spellLevel: 1; readonly count: 2 }[];
+  readonly sourceUnitId?: string;
+  readonly spellcastingAbility?: CharacterBuildSpellcasting["sources"][number]["spellcastingAbility"];
 }): CharacterBuildSpellcasting {
   return {
     sources: [
       {
-        sourceUnitId: "class_wizard",
-        spellcastingAbility: "int",
+        sourceUnitId: input.sourceUnitId ?? "class_wizard",
+        spellcastingAbility: input.spellcastingAbility ?? "int",
         cantrips: input.cantrips,
         spellbook: input.spellbook ?? input.preparedSpells,
         preparedSpells: input.preparedSpells,
@@ -163,10 +167,19 @@ function characterBuildMaximumHp(
 
 function wizardProgression(
   root: ReturnType<typeof createMcpCompositionRoot>,
+  level = 1,
 ): CharacterBuild["progression"] {
   const wizard = root.unitLibrary.requireUnit("class_wizard");
   if (wizard.kind !== "class") {
     throw new Error("Expected Wizard class Unit.");
+  }
+  if (level !== 1) {
+    return characterBuildForClassProgression({
+      base: fighterCharacterBuild(root.unitLibrary),
+      classUnit: wizard,
+      level,
+      keepClassChoices: false,
+    }).progression;
   }
   return {
     startingClass: expectRight(classUnitIdFromClassUnit(wizard)),
@@ -265,7 +278,7 @@ describe("MCP server route", () => {
     });
 
     root.sessionStore.battleState = state;
-    root.sessionStore.transientBattleFills = null;
+    root.sessionStore.pendingBattleFills = null;
 
     expect(snapshotBattle(state)).toMatchObject({
       battleId: battleId("battle-root"),
@@ -1238,7 +1251,7 @@ describe("MCP server route", () => {
     ).toEqual([
       "Attack",
       "Attack",
-      ...GENERIC_COMBAT_ACTION_LABELS,
+      ...GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
       "Second Wind",
       "Move",
       "End Turn",
@@ -1309,46 +1322,36 @@ describe("MCP server route", () => {
     );
     expect(opened.result.tag).toBe("resolved");
     expect(opened.snapshot.currentActorId).toBe("goblin");
-    expect(opened.snapshot.turn.actionResources).toEqual([
-      expect.objectContaining({
-        source: "statBlockMultiattack",
-        sourceOwnerId: "goblin",
-      }),
-      expect.objectContaining({
-        source: "statBlockMultiattack",
-        sourceOwnerId: "goblin",
-      }),
-    ]);
+    expect(opened.snapshot.turn.actionResources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          source: "statBlockMultiattack",
+          sourceOwnerId: "goblin",
+        }),
+      ]),
+    );
     expect(
       root.sessionStore.battleState?.currentTurnResources.actionResources,
-    ).toEqual([
-      expect.objectContaining({
-        source: "statBlockMultiattack",
-        sourceOwnerId: "goblin",
-      }),
-      expect.objectContaining({
-        source: "statBlockMultiattack",
-        sourceOwnerId: "goblin",
-      }),
-    ]);
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          source: "statBlockMultiattack",
+          sourceOwnerId: "goblin",
+        }),
+      ]),
+    );
 
     const continuation = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
     expect(
       continuation.snapshot.acts.map((act: { label: string }) => act.label),
-    ).toEqual(["Attack", "Attack", "Move", "End Turn"]);
+    ).toEqual(["Attack", "Move", "End Turn"]);
     expect(
       continuation.snapshot.acts.map(
         (act: { subject: unknown }) => act.subject,
       ),
     ).toEqual([
-      {
-        tag: "action",
-        actorId: "goblin",
-        action: "attack",
-        attackName: "Scimitar",
-      },
       {
         tag: "action",
         actorId: "goblin",
@@ -1406,6 +1409,7 @@ describe("MCP server route", () => {
           kind: "movement",
           holeId: "battle:movement",
           value: {
+            speedKind: "walk",
             movementCostFeet: 10,
             provokedOpportunityAttacks: [],
           },
@@ -1671,7 +1675,7 @@ describe("MCP server route", () => {
         code: "BATTLE_FILLS_PENDING",
       },
     });
-    expect(root.sessionStore.transientBattleFills).not.toBeNull();
+    expect(root.sessionStore.pendingBattleFills).not.toBeNull();
 
     const afterAttackRoll = readPayload(
       handleToolCall(root, "fill_battle_hole", {
@@ -1723,7 +1727,7 @@ describe("MCP server route", () => {
     expect(
       afterDamage.snapshot.acts.map((act: { label: string }) => act.label),
     ).toEqual(["Second Wind", "Move", "End Turn"]);
-    expect(root.sessionStore.transientBattleFills).toBeNull();
+    expect(root.sessionStore.pendingBattleFills).toBeNull();
 
     const afterEndTurn = readPayload(
       handleToolCall(root, "end_turn", { actorId: "fighter" }),
@@ -1776,7 +1780,7 @@ describe("MCP server route", () => {
       "End Turn",
     ]);
 
-    readPayload(
+    const afterGoblinTarget = readPayload(
       handleToolCall(root, "fill_battle_hole", {
         subject: {
           tag: "action",
@@ -1799,6 +1803,12 @@ describe("MCP server route", () => {
         },
       }),
     );
+    const goblinAttackRoll = afterGoblinTarget.result.holes.find(
+      (hole: { readonly kind?: string }) => hole.kind === "attackRoll",
+    );
+    if (goblinAttackRoll === undefined) {
+      throw new Error("Expected Goblin attack roll hole.");
+    }
     const afterGoblinAttackRoll = readPayload(
       handleToolCall(root, "fill_battle_hole", {
         subject: {
@@ -1809,8 +1819,14 @@ describe("MCP server route", () => {
         },
         fill: {
           kind: "attackRoll",
-          holeId: "battle:attack:roll",
-          value: { total: 20, naturalD20: 18 },
+          holeId: goblinAttackRoll.holeId,
+          value: {
+            total: 20,
+            naturalD20: 18,
+            ...("rollMode" in goblinAttackRoll
+              ? { rollMode: goblinAttackRoll.rollMode }
+              : {}),
+          },
         },
       }),
     );
@@ -1873,7 +1889,7 @@ describe("MCP server route", () => {
         },
         unitLibrary: root.unitLibrary,
       });
-    root.sessionStore.transientBattleFills = null;
+    root.sessionStore.pendingBattleFills = null;
 
     const afterTarget = fillBattleHoleThroughTool(root, "goblin", "Shortbow", {
       kind: "targetChoice",
@@ -1907,6 +1923,7 @@ describe("MCP server route", () => {
         },
       ],
     });
+    expect(root.sessionStore.pendingBattleFills).not.toBeNull();
   });
 
   test("rejects contradictory long-range and normal-range attack target facts", () => {
@@ -1932,7 +1949,7 @@ describe("MCP server route", () => {
         },
         unitLibrary: root.unitLibrary,
       });
-    root.sessionStore.transientBattleFills = null;
+    root.sessionStore.pendingBattleFills = null;
 
     const afterTarget = fillBattleHoleThroughTool(root, "goblin", "Shortbow", {
       kind: "targetChoice",
@@ -2002,9 +2019,9 @@ describe("MCP server route", () => {
       ...battleState,
       combatants,
     };
-    root.sessionStore.transientBattleFills = null;
+    root.sessionStore.pendingBattleFills = null;
 
-    fillBattleHoleThroughTool(root, "fighter", "Dagger", {
+    const afterTarget = fillBattleHoleThroughTool(root, "fighter", "Dagger", {
       kind: "targetChoice",
       holeId: "battle:attack:target",
       value: "goblin",
@@ -2018,6 +2035,7 @@ describe("MCP server route", () => {
         holeId: "battle:attack:roll",
         value: { total: 16, naturalD20: 14 },
       },
+      afterTarget.result.subject,
     );
 
     expect(afterAttackRoll.result).toMatchObject({
@@ -2042,7 +2060,7 @@ describe("MCP server route", () => {
       holeId: "battle:attack:damage-result:1d4+3-piercing",
       selectedAttackDamageRiderUnitIds: ["rogue_sneak_attack"],
       value: [{ results: [2] }, { results: [3] }],
-    });
+    }, afterAttackRoll.result.subject);
 
     expect(afterDamage.result).toMatchObject({ tag: "resolved" });
     expect(afterDamage.snapshot.combatants).toEqual(
@@ -2595,13 +2613,13 @@ describe("MCP server route", () => {
     ).toEqual([
       "Attack",
       "Attack",
-      ...GENERIC_COMBAT_ACTION_LABELS,
+      ...GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
       "Second Wind",
       "Move",
       "End Turn",
     ]);
 
-    fillBattleHoleThroughTool(root, "fighter", "Longsword", {
+    const afterFighterTarget = fillBattleHoleThroughTool(root, "fighter", "Longsword", {
       kind: "targetChoice",
       holeId: "battle:attack:target",
       value: "goblin",
@@ -2609,16 +2627,16 @@ describe("MCP server route", () => {
     expect(root.sessionStore.battleState?.combatants.get(goblinId)?.hp).toBe(
       10,
     );
-    expect(root.sessionStore.transientBattleFills).toMatchObject({
+    expect(root.sessionStore.pendingBattleFills).toMatchObject({
       subject: { actorId: "fighter", attackName: "Longsword" },
       fills: [{ kind: "targetChoice", value: "goblin" }],
     });
 
-    fillBattleHoleThroughTool(root, "fighter", "Longsword", {
+    const afterFighterAttackRoll = fillBattleHoleThroughTool(root, "fighter", "Longsword", {
       kind: "attackRoll",
       holeId: "battle:attack:roll",
       value: { total: 16, naturalD20: 14 },
-    });
+    }, afterFighterTarget.result.subject);
     const afterFighterDamage = fillBattleHoleThroughTool(
       root,
       "fighter",
@@ -2628,6 +2646,7 @@ describe("MCP server route", () => {
         holeId: "battle:attack:damage-result:1d8+3-slashing",
         value: [{ results: [5] }],
       },
+      afterFighterAttackRoll.result.subject,
     );
 
     expect(afterFighterDamage.result.tag).toBe("resolved");
@@ -2681,16 +2700,25 @@ describe("MCP server route", () => {
       "End Turn",
     ]);
 
-    fillBattleHoleThroughTool(root, "goblin", "Scimitar", {
+    const afterGoblinTarget = fillBattleHoleThroughTool(root, "goblin", "Scimitar", {
       kind: "targetChoice",
       holeId: "battle:attack:target",
       value: "fighter",
     });
-    fillBattleHoleThroughTool(root, "goblin", "Scimitar", {
+    const goblinAttackRoll = afterGoblinTarget.result.holes.find(
+      (hole: { kind: string }) => hole.kind === "attackRoll",
+    );
+    const afterGoblinAttackRoll = fillBattleHoleThroughTool(root, "goblin", "Scimitar", {
       kind: "attackRoll",
       holeId: "battle:attack:roll",
-      value: { total: 20, naturalD20: 18 },
-    });
+      value: {
+        total: 20,
+        naturalD20: 18,
+        ...(goblinAttackRoll?.rollMode === undefined
+          ? {}
+          : { rollMode: goblinAttackRoll.rollMode }),
+      },
+    }, afterGoblinTarget.result.subject);
     const afterGoblinDamage = fillBattleHoleThroughTool(
       root,
       "goblin",
@@ -2700,6 +2728,7 @@ describe("MCP server route", () => {
         holeId: "battle:attack:damage-result:1d6+2-slashing",
         value: [{ results: [5] }],
       },
+      afterGoblinAttackRoll.result.subject,
     );
 
     expect(afterGoblinDamage.result.tag).toBe("resolved");
@@ -2753,6 +2782,95 @@ describe("MCP server route", () => {
           character.displayName === "Goblin Warrior",
       ),
     ).toBe(false);
+  });
+
+  test("returns Shove push outcomes through MCP battle resolution output", () => {
+    const root = createMcpCompositionRoot();
+    root.sessionStore.battleState =
+      startBattleFromCharacterBuildAndStatBlockRight({
+        battleId: battleId("battle:mcp-shove-push-outcome"),
+        character: {
+          combatantId: fighterId,
+          characterId: characterId("fighter-character"),
+          displayName: "Orc Soldier Fighter",
+          build: fighterCharacterBuild(root.unitLibrary),
+          initiative: initiativeScore(18),
+          side: partySide,
+        },
+        statBlockBattleInput: {
+          combatantId: goblinId,
+          statBlock: root.statBlockCatalog.requireStatBlock(
+            "stat_block_goblin_warrior",
+          ),
+          initiative: initiativeScore(7),
+          side: oppositionSide,
+        },
+        unitLibrary: root.unitLibrary,
+      });
+
+    const acts = readPayload(handleToolCall(root, "discover_battle_acts", {}));
+    const shove = acts.snapshot.acts.find(
+      (act: { label: string }) => act.label === "Unarmed Strike (Shove)",
+    );
+    expect(shove).toBeDefined();
+
+    const afterTarget = readPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: shove.subject,
+        fill: {
+          kind: "targetChoice",
+          holeId: "battle:shove:target",
+          value: "goblin",
+          spatialFacts: [
+            {
+              kind: "shoveTargetWithinReach",
+              shoverId: "fighter",
+              targetId: "goblin",
+            },
+          ],
+        },
+      }),
+    );
+    const shoveOutcome = afterTarget.result.holes.find(
+      (hole: { kind: string }) => hole.kind === "shoveOutcome",
+    );
+
+    const afterShove = readPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: afterTarget.result.subject,
+        fill: {
+          kind: "shoveOutcome",
+          holeId: shoveOutcome.holeId,
+          value: {
+            succeeded: false,
+            failedEffect: {
+              kind: "pushAway",
+              disposition: {
+                kind: "pushed",
+                distanceFeet: 5,
+                destinationId: "square:goblin:pushed",
+                provokesOpportunityAttacks: false,
+              },
+            },
+          },
+        },
+      }),
+    );
+
+    expect(afterShove.result).toMatchObject({
+      tag: "resolved",
+      shovePushes: [
+        {
+          targetId: "goblin",
+          disposition: {
+            kind: "pushed",
+            distanceFeet: 5,
+            destinationId: "square:goblin:pushed",
+            provokesOpportunityAttacks: false,
+          },
+        },
+      ],
+    });
   });
 
   test("ends battle with a Stable zero-HP character session lifecycle", () => {
@@ -3785,30 +3903,30 @@ describe("MCP server route", () => {
       unitLibrary: root.unitLibrary,
     });
     root.sessionStore.battleState = state;
-    root.sessionStore.transientBattleFills = null;
+    root.sessionStore.pendingBattleFills = null;
 
-    const subject = {
-      tag: "actionSpell",
-      actorId: "fighter",
-      spellId: "acid_splash",
-      spellActId: "cantripSaveGateDamage:acid_splash",
-    };
     const discovered = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
-    expect(discovered.snapshot.acts).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject,
-          initialHoles: [
-            expect.objectContaining({
-              kind: "savingThrowOutcome",
-              areaChoices: [],
-            }),
-          ],
-        }),
-      ]),
+    const act = discovered.snapshot.acts.find(
+      (candidate: {
+        readonly subject?: {
+          readonly invocation?: { readonly spellId?: string };
+        };
+      }) => candidate.subject?.invocation?.spellId === "acid_splash",
     );
+    if (act === undefined) {
+      throw new Error("Expected Acid Splash battle act.");
+    }
+    expect(act).toMatchObject({
+      initialHoles: [
+        expect.objectContaining({
+          kind: "savingThrowOutcome",
+          areaChoices: [],
+        }),
+      ],
+    });
+    const subject = act.subject;
 
     const afterSavingThrow = readPayload(
       handleToolCall(root, "fill_battle_hole", {
@@ -3856,7 +3974,490 @@ describe("MCP server route", () => {
         turn: { actionResources: [] },
       },
     });
-    expect(root.sessionStore.transientBattleFills).toBeNull();
+    expect(root.sessionStore.pendingBattleFills).toBeNull();
+  });
+
+  test("returns Fire Bolt object damage and ignition through MCP battle fills", () => {
+    const root = createMcpCompositionRoot();
+    const build = fighterCharacterBuild(root.unitLibrary);
+    const state = startBattleFromCharacterBuildAndStatBlockRight({
+      battleId: battleId("battle-root-fire-bolt-object"),
+      character: {
+        combatantId: fighterId,
+        characterId: characterId("fighter-character"),
+        displayName: "Fire Bolt Spellcaster",
+        initiative: initiativeScore(12),
+        side: partySide,
+        build: {
+          ...build,
+          progression: wizardProgression(root),
+          equipment: {
+            ...build.equipment,
+            loadout: {
+              shield: testCharacterEquipmentItemId(
+                "shield",
+                "equipment_shield",
+              ),
+            },
+          },
+          spellcasting: testWizardSpellcasting({
+            cantrips: ["fire_bolt"],
+            preparedSpells: [],
+            spellSlots: [{ spellLevel: 1, count: 2 }],
+          }),
+        },
+      },
+      statBlockBattleInput: {
+        combatantId: goblinId,
+        statBlock: root.statBlockCatalog.requireStatBlock(
+          "stat_block_goblin_warrior",
+        ),
+        initiative: initiativeScore(10),
+        side: oppositionSide,
+      },
+      unitLibrary: root.unitLibrary,
+    });
+    root.sessionStore.battleState = state;
+    root.sessionStore.pendingBattleFills = null;
+
+    const discovered = readPayload(
+      handleToolCall(root, "discover_battle_acts", {}),
+    );
+    const act = discovered.snapshot.acts.find(
+      (candidate: {
+        readonly subject?: {
+          readonly invocation?: { readonly spellId?: string };
+        };
+      }) => candidate.subject?.invocation?.spellId === "fire_bolt",
+    );
+    if (act === undefined) {
+      throw new Error("Expected Fire Bolt battle act.");
+    }
+    const objectTarget = act.initialHoles.find(
+      (hole: { readonly kind?: string }) => hole.kind === "objectTargetChoice",
+    );
+    if (objectTarget === undefined) {
+      throw new Error("Expected Fire Bolt object target hole.");
+    }
+
+    const afterObjectTarget = readPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: act.subject,
+        fill: {
+          kind: "objectTargetChoice",
+          holeId: objectTarget.holeId,
+          value: "dry-training-dummy",
+          spatialFacts: [
+            {
+              kind: "spellObjectTarget",
+              casterId: "fighter",
+              objectId: "dry-training-dummy",
+              spellId: "fire_bolt",
+              rangeFeet: 120,
+              armorClass: 13,
+              damageDisposition: { kind: "hitPoints", hitPoints: 8 },
+            },
+            {
+              kind: "spellObjectIgnition",
+              casterId: "fighter",
+              objectId: "dry-training-dummy",
+              spellId: "fire_bolt",
+              disposition: { kind: "flammableUnattended" },
+            },
+          ],
+        },
+      }),
+    );
+    const attackRoll = afterObjectTarget.result.holes.find(
+      (hole: { readonly kind?: string }) => hole.kind === "attackRoll",
+    );
+    if (attackRoll === undefined) {
+      throw new Error("Expected Fire Bolt object attack roll hole.");
+    }
+
+    const afterAttackRoll = readPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: act.subject,
+        fill: {
+          kind: "attackRoll",
+          holeId: attackRoll.holeId,
+          value: { total: 18, naturalD20: 12 },
+        },
+      }),
+    );
+    const damage = afterAttackRoll.result.holes.find(
+      (hole: { readonly kind?: string }) => hole.kind === "rolledDice",
+    );
+    if (damage === undefined) {
+      throw new Error("Expected Fire Bolt object damage hole.");
+    }
+
+    const afterDamage = readPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: act.subject,
+        fill: {
+          kind: "rolledDice",
+          holeId: damage.holeId,
+          value: [{ results: [4] }],
+        },
+      }),
+    );
+
+    expect(afterDamage.result).toMatchObject({
+      tag: "resolved",
+      objectDamages: [
+        {
+          kind: "hitPoints",
+          objectId: "dry-training-dummy",
+          damageType: "fire",
+          rolledDamage: 4,
+          effectiveDamage: 4,
+          priorHitPoints: 8,
+          nextHitPoints: 4,
+          destroyed: false,
+        },
+      ],
+      objectIgnitions: [
+        {
+          kind: "startsBurning",
+          objectId: "dry-training-dummy",
+          sourceCombatantId: "fighter",
+          sourceSpellId: "fire_bolt",
+        },
+      ],
+    });
+    expect(root.sessionStore.pendingBattleFills).toBeNull();
+  });
+
+  test("replays Sorcerous Burst damage-type and exploding damage through MCP battle fills", () => {
+    const root = createMcpCompositionRoot();
+    const build = fighterCharacterBuild(root.unitLibrary);
+    const sorcerer = root.unitLibrary.requireUnit("class_sorcerer");
+    if (sorcerer.kind !== "class") {
+      throw new Error("Expected Sorcerer class Unit.");
+    }
+    const state = startBattleFromCharacterBuildAndStatBlockRight({
+      battleId: battleId("battle-root-sorcerous-burst"),
+      character: {
+        combatantId: fighterId,
+        characterId: characterId("fighter-character"),
+        displayName: "Sorcerous Burst Spellcaster",
+        initiative: initiativeScore(12),
+        side: partySide,
+        build: {
+          ...build,
+          progression: characterBuildForClassProgression({
+            base: build,
+            classUnit: sorcerer,
+            level: 5,
+            keepClassChoices: false,
+          }).progression,
+          equipment: {
+            ...build.equipment,
+            loadout: {
+              shield: testCharacterEquipmentItemId(
+                "shield",
+                "equipment_shield",
+              ),
+            },
+          },
+          spellcasting: testWizardSpellcasting({
+            sourceUnitId: "class_sorcerer",
+            spellcastingAbility: "cha",
+            cantrips: ["sorcerous_burst"],
+            preparedSpells: [],
+            spellSlots: [{ spellLevel: 1, count: 2 }],
+          }),
+        },
+      },
+      statBlockBattleInput: {
+        combatantId: goblinId,
+        statBlock: root.statBlockCatalog.requireStatBlock(
+          "stat_block_goblin_warrior",
+        ),
+        initiative: initiativeScore(10),
+        side: oppositionSide,
+      },
+      unitLibrary: root.unitLibrary,
+    });
+    root.sessionStore.battleState = state;
+    root.sessionStore.pendingBattleFills = null;
+
+    const discovered = readPayload(
+      handleToolCall(root, "discover_battle_acts", {}),
+    );
+    const act = discovered.snapshot.acts.find(
+      (candidate: {
+        readonly subject?: {
+          readonly invocation?: { readonly spellId?: string };
+        };
+      }) => candidate.subject?.invocation?.spellId === "sorcerous_burst",
+    );
+    if (act === undefined) {
+      throw new Error("Expected Sorcerous Burst battle act.");
+    }
+    expect(act.initialHoles).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "damageTypeChoice",
+          choices: [
+            "acid",
+            "cold",
+            "fire",
+            "lightning",
+            "poison",
+            "psychic",
+            "thunder",
+          ],
+        }),
+        expect.objectContaining({
+          kind: "targetChoice",
+          choices: expect.arrayContaining(["goblin"]),
+        }),
+        expect.objectContaining({ kind: "objectTargetChoice" }),
+      ]),
+    );
+    const damageType = act.initialHoles.find(
+      (hole: { readonly kind?: string }) => hole.kind === "damageTypeChoice",
+    );
+    const target = act.initialHoles.find(
+      (hole: { readonly kind?: string }) => hole.kind === "targetChoice",
+    );
+    if (damageType === undefined || target === undefined) {
+      throw new Error("Expected Sorcerous Burst damage type and target holes.");
+    }
+
+    readPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: act.subject,
+        fill: {
+          kind: "damageTypeChoice",
+          holeId: damageType.holeId,
+          value: "thunder",
+        },
+      }),
+    );
+    const afterTarget = readPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: act.subject,
+        fill: {
+          kind: "targetChoice",
+          holeId: target.holeId,
+          value: "goblin",
+          spatialFacts: [
+            {
+              kind: "spellTarget",
+              casterId: "fighter",
+              targetId: "goblin",
+              spellId: "sorcerous_burst",
+            },
+          ],
+        },
+      }),
+    );
+    const attackRoll = afterTarget.result.holes.find(
+      (hole: { readonly kind?: string }) => hole.kind === "attackRoll",
+    );
+    if (attackRoll === undefined) {
+      throw new Error("Expected Sorcerous Burst attack roll hole.");
+    }
+
+    const afterAttackRoll = readPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: act.subject,
+        fill: {
+          kind: "attackRoll",
+          holeId: attackRoll.holeId,
+          value: { total: 18, naturalD20: 12 },
+        },
+      }),
+    );
+    const damage = afterAttackRoll.result.holes.find(
+      (hole: { readonly kind?: string }) => hole.kind === "rolledDice",
+    );
+    if (damage === undefined) {
+      throw new Error("Expected Sorcerous Burst damage hole.");
+    }
+    expect(damage).toMatchObject({
+      label: "Sorcerous Burst damage (2d8-thunder)",
+    });
+
+    const afterDamage = readPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: act.subject,
+        fill: {
+          kind: "rolledDice",
+          holeId: damage.holeId,
+          value: [{ results: [8, 3, 5] }],
+        },
+      }),
+    );
+
+    expect(afterDamage.result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: "fighter" },
+          { combatantId: "goblin", hp: 0 },
+        ],
+        turn: { actionResources: [] },
+      },
+    });
+    expect(root.sessionStore.pendingBattleFills).toBeNull();
+  });
+
+  test("replays Spare the Dying stable lifecycle through MCP battle tools", () => {
+    const root = createMcpCompositionRoot();
+    const casterBuild = {
+      ...fighterCharacterBuild(root.unitLibrary),
+      progression: wizardProgression(root),
+      equipment: {
+        ...fighterCharacterBuild(root.unitLibrary).equipment,
+        loadout: {
+          shield: testCharacterEquipmentItemId("shield", "equipment_shield"),
+        },
+      },
+      spellcasting: testWizardSpellcasting({
+        cantrips: ["spare_the_dying"],
+        preparedSpells: [],
+        spellSlots: [{ spellLevel: 1, count: 2 }],
+      }),
+    };
+    const targetBuild = fighterCharacterBuild(root.unitLibrary);
+    root.sessionStore.characters.set(
+      availableCharacterSessionRight({
+        characterId: characterId("spare-the-dying-caster-character"),
+        build: casterBuild,
+        maximumHp: Hp(characterBuildMaximumHp(casterBuild, root.unitLibrary)),
+        currentHp: Hp(characterBuildMaximumHp(casterBuild, root.unitLibrary)),
+        tempHp: Hp(0),
+        unitLibrary: root.unitLibrary,
+      }),
+    );
+    root.sessionStore.characters.set(
+      availableCharacterSessionRight({
+        characterId: characterId("spare-the-dying-target-character"),
+        build: targetBuild,
+        maximumHp: Hp(characterBuildMaximumHp(targetBuild, root.unitLibrary)),
+        currentHp: Hp(characterBuildMaximumHp(targetBuild, root.unitLibrary)),
+        tempHp: Hp(0),
+        unitLibrary: root.unitLibrary,
+      }),
+    );
+
+    readPayload(
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:spare-the-dying-mcp",
+        initialCombatants: [
+          {
+            kind: "characterSession",
+            characterId: "spare-the-dying-caster-character",
+            combatantId: "fighter",
+            initiative: 18,
+            side: "party",
+          },
+          {
+            kind: "characterSession",
+            characterId: "spare-the-dying-target-character",
+            combatantId: "dying-ally",
+            initiative: 7,
+            side: "party",
+          },
+        ],
+      }),
+    );
+    const battleState = root.sessionStore.battleState;
+    const targetCombatant = battleState?.combatants.get(
+      combatantId("dying-ally"),
+    );
+    if (
+      battleState === null ||
+      targetCombatant === undefined ||
+      targetCombatant.zeroHpLifecycle.policy !== "usesDeathSavingThrows"
+    ) {
+      throw new Error("Expected in-battle dying ally character combatant.");
+    }
+    root.sessionStore.battleState = {
+      ...battleState,
+      combatants: new Map(battleState.combatants).set(
+        combatantId("dying-ally"),
+        {
+          ...testBattleCreatureStateWithoutKnockOut(targetCombatant, {
+            hp: Hp(0),
+            conditions: targetCombatant.conditions,
+          }),
+          zeroHpLifecycle: {
+            ...targetCombatant.zeroHpLifecycle,
+            deathSaves: {
+              deathSaves: { successes: 2, failures: 1 },
+              stable: false,
+              dead: false,
+              hpRegained: false,
+            },
+          },
+        },
+      ),
+    } satisfies BattleState;
+    const discovered = readPayload(
+      handleToolCall(root, "discover_battle_acts", {}),
+    );
+    const act = discovered.snapshot.acts.find(
+      (candidate: {
+        readonly subject?: {
+          readonly invocation?: { readonly spellId?: string };
+        };
+      }) => candidate.subject?.invocation?.spellId === "spare_the_dying",
+    );
+    if (act === undefined) {
+      throw new Error("Expected Spare the Dying battle act.");
+    }
+    const target = act.initialHoles.find(
+      (hole: { readonly kind?: string }) => hole.kind === "targetChoice",
+    );
+    if (target === undefined) {
+      throw new Error("Expected Spare the Dying target hole.");
+    }
+    expect(target).toMatchObject({ choices: ["dying-ally"] });
+
+    const afterTarget = readPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: act.subject,
+        fill: {
+          kind: "targetChoice",
+          holeId: target.holeId,
+          value: "dying-ally",
+          spatialFacts: [
+            {
+              kind: "spellTarget",
+              casterId: "fighter",
+              targetId: "dying-ally",
+              spellId: "spare_the_dying",
+            },
+          ],
+        },
+      }),
+    );
+
+    expect(afterTarget.result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: "fighter" },
+          {
+            combatantId: "dying-ally",
+            hp: 0,
+            zeroHpLifecycle: {
+              policy: "usesDeathSavingThrows",
+              deathSaves: { successes: 0, failures: 0 },
+              stable: true,
+              dead: false,
+            },
+          },
+        ],
+        turn: { actionResources: [] },
+      },
+    });
+    expect(root.sessionStore.pendingBattleFills).toBeNull();
   });
 
   test("returns Starry Wisp object damage through MCP battle fills", () => {
@@ -3900,7 +4501,7 @@ describe("MCP server route", () => {
       unitLibrary: root.unitLibrary,
     });
     root.sessionStore.battleState = state;
-    root.sessionStore.transientBattleFills = null;
+    root.sessionStore.pendingBattleFills = null;
 
     const discovered = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
@@ -3993,7 +4594,7 @@ describe("MCP server route", () => {
         },
       ],
     });
-    expect(root.sessionStore.transientBattleFills).toBeNull();
+    expect(root.sessionStore.pendingBattleFills).toBeNull();
   });
 
   test("preserves pending reaction state while MCP replays a readied spell procedure", () => {
@@ -4037,16 +4638,19 @@ describe("MCP server route", () => {
       unitLibrary: root.unitLibrary,
     });
     root.sessionStore.battleState = state;
-    root.sessionStore.transientBattleFills = null;
+    root.sessionStore.pendingBattleFills = null;
 
     readPayload(
       handleToolCall(root, "resolve_battle_act", {
         subject: {
           tag: "actionSpell",
           actorId: "fighter",
-          spellId: "ray_of_frost",
-          spellActId: "readiedSpell:cantripSpellAttack:ray_of_frost",
-          readyTrigger: "attackHit",
+          invocation: {
+            tag: "cantrip",
+            spellId: "ray_of_frost",
+            procedure: "spellAttackDamage",
+          },
+          mode: { tag: "ready", trigger: "attackHit" },
         },
       }),
     );
@@ -4138,6 +4742,33 @@ describe("MCP server route", () => {
       subject: {
         command: "releaseReadiedSpell",
       },
+    });
+
+    const releaseSubject = afterReactionDecision.result.subject;
+    const spellTarget = afterReactionDecision.result.holes.find(
+      (hole: { readonly kind?: string }) => hole.kind === "targetChoice",
+    );
+    const afterReadiedTarget = readPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: releaseSubject,
+        fill: {
+          kind: "targetChoice",
+          holeId: spellTarget.holeId,
+          value: "goblin",
+          spatialFacts: [
+            {
+              kind: "spellTarget",
+              casterId: "fighter",
+              targetId: "goblin",
+              spellId: "ray_of_frost",
+            },
+          ],
+        },
+      }),
+    );
+    expect(afterReadiedTarget.result).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "attackRoll" }],
     });
   });
 
@@ -4605,6 +5236,12 @@ function fillBattleHoleThroughTool(
     readonly selectedAttackDamageRiderUnitIds?: readonly string[];
     readonly value: unknown;
   },
+  subject: BattleSubject = {
+    tag: "action",
+    actorId: combatantId(actorId),
+    action: "attack",
+    attackName,
+  },
 ) {
   const battleFill =
     fill.kind === "targetChoice" && fill.spatialFacts === undefined
@@ -4640,17 +5277,16 @@ function fillBattleHoleThroughTool(
           ],
         }
       : fill;
-  return readPayload(
+  const payload = readPayload(
     handleToolCall(root, "fill_battle_hole", {
-      subject: {
-        tag: "action",
-        actorId,
-        action: "attack",
-        attackName,
-      },
+      subject,
       fill: battleFill,
     }),
   );
+  if ("error" in payload) {
+    throw new Error(JSON.stringify(payload));
+  }
+  return payload;
 }
 
 function readPayload(response: CharacterToolResult | BattleToolResult) {

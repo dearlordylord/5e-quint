@@ -1883,8 +1883,7 @@ export function martialArtsAttackProjectionProfileForUnit(
     classLevel: monkLevel,
     martialArts: {
       ...martialArts,
-      damageReplacement:
-        monkLevel < 5 ? martialArts.damageReplacement : null,
+      damageReplacement: monkLevel < 5 ? martialArts.damageReplacement : null,
     },
   };
 }
@@ -2994,6 +2993,8 @@ function parseOngoingFeatureEffects(
       effect.kind === "modify_roll_advantage" &&
       effect.on.includes("attack_roll")
     ) {
+      const abilityFilter =
+        "abilityFilter" in effect ? effect.abilityFilter : undefined;
       if (effect.on.some((target) => target !== "attack_roll")) {
         return null;
       }
@@ -3002,9 +3003,7 @@ function parseOngoingFeatureEffects(
           effect.attackerTypeFilter !== undefined) ||
         ("skillFilter" in effect && effect.skillFilter !== undefined) ||
         ("conditionFilter" in effect && effect.conditionFilter !== undefined) ||
-        ("abilityFilter" in effect &&
-          effect.abilityFilter !== undefined &&
-          !Array.isArray(effect.abilityFilter)) ||
+        (abilityFilter !== undefined && !Array.isArray(abilityFilter)) ||
         ("saveAbilityFilter" in effect &&
           effect.saveAbilityFilter !== undefined) ||
         ("saveSourceFilter" in effect &&
@@ -3023,9 +3022,7 @@ function parseOngoingFeatureEffects(
             ? "rollsAgainstSelf"
             : "selfRoll",
         on: "attackRoll",
-        ...(effect.abilityFilter === undefined
-          ? {}
-          : { abilityFilter: effect.abilityFilter }),
+        ...(abilityFilter === undefined ? {} : { abilityFilter }),
       });
       continue;
     }

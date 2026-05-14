@@ -7,10 +7,6 @@
   "featureGrants": [
     {
       "level": 1,
-      "unitId": "sorcerer_spellcasting"
-    },
-    {
-      "level": 1,
       "unitId": "sorcerer_innate_sorcery"
     }
   ],
@@ -62,6 +58,7 @@
       ]
     },
     "kind": "list_prepared_spellcasting_creation",
+    "featureLevel": 1,
     "preparedAccess": {
       "changeOn": {
         "kind": "class_level",

@@ -37,7 +37,10 @@ import {
 import type {
   ActiveOngoingFeatureOccurrenceSnapshotEncoded,
   BattleAttackRangeBand,
+  BattleDroppedObjectOutcome,
   BattleFill,
+  BattleObjectIgnitionOutcome,
+  BattleShovePushOutcome,
   BattleSpellAreaChoice,
   SupportedSpellInvocation,
 } from "../battle-reducer.ts";
@@ -55,6 +58,7 @@ import {
   BattleObjectId,
   BattleTablePositionId,
   CombatantId,
+  SpellId,
 } from "../identity.ts";
 import {
   BATTLE_ATTACK_RANGE_BANDS,
@@ -202,6 +206,43 @@ const SpellFailedSavePostDamageRiderSchema = Schema.Union(
     route: Schema.Literal("safest"),
     distance: Schema.Literal("asFarAsPossible"),
     cost: Schema.Literal("targetReactionIfAvailable"),
+  }),
+);
+
+const SpellPostDamageRiderSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("speedDelta"),
+    deltaFeet: MovementDeltaFeet,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("condition"),
+    condition: Schema.Literal(...ALL_CONDITIONS),
+    expiresAt: Schema.Literal("endOfCasterNextTurn"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("opportunityAttackDenied"),
+    expiresAt: Schema.Literal("startOfTargetNextTurn"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("nextAttackRollAgainstTarget"),
+    mode: Schema.Literal("advantage"),
+    expiresAt: Schema.Literal("endOfCasterNextTurn"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("hitPointRegainPrevented"),
+    expiresAt: Schema.Literal("endOfCasterNextTurn"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("invisibleBenefitDenied"),
+    expiresAt: Schema.Literal("endOfCasterNextTurn"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("lightEmission"),
+    emission: Schema.Struct({
+      kind: Schema.Literal("dim"),
+      radiusFeet: MovementFeet,
+    }),
+    expiresAt: Schema.Literal("endOfCasterNextTurn"),
   }),
 );
 
@@ -437,12 +478,44 @@ export const BattleObjectDamageOutcomeSchema = Schema.Union(
   }),
 );
 
+// Effect Schema encodes branded ids as plain strings at the JSON boundary; the
+// decoder restores the domain brands before the value reaches runtime code.
 export const BattleObjectIgnitionOutcomeSchema = Schema.Struct({
   kind: Schema.Literal("startsBurning"),
   objectId: BattleObjectId,
   sourceCombatantId: CombatantId,
-  sourceSpellId: Schema.String,
-});
+  sourceSpellId: SpellId,
+}) as unknown as Schema.Schema<BattleObjectIgnitionOutcome>;
+
+// Effect Schema encodes branded ids as plain strings at the JSON boundary; the
+// decoder restores the domain brands before the value reaches runtime code.
+export const BattleDroppedObjectOutcomeSchema = Schema.Struct({
+  kind: Schema.Literal("heldObjectDropped"),
+  actorId: CombatantId,
+  objectId: BattleObjectId,
+  sourceCombatantId: CombatantId,
+  sourceSpellId: SpellId,
+}) as unknown as Schema.Schema<BattleDroppedObjectOutcome>;
+
+// Effect Schema encodes branded ids as plain strings at the JSON boundary; the
+// decoder restores the domain brands before the value reaches runtime code.
+export const BattleShovePushOutcomeSchema = Schema.Struct({
+  targetId: CombatantId,
+  disposition: Schema.Union(
+    Schema.Struct({
+      kind: Schema.Literal("pushed"),
+      distanceFeet: MovementFeet,
+      destinationId: BattleTablePositionId,
+      provokesOpportunityAttacks: Schema.Literal(false),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("blocked"),
+      distanceFeet: MovementFeet,
+      reason: Schema.Literal("blocked", "noLegalDestination"),
+      provokesOpportunityAttacks: Schema.Literal(false),
+    }),
+  ),
+}) as unknown as Schema.Schema<BattleShovePushOutcome>;
 
 const SupportedHealingSpellInvocationSchema = Schema.Struct({
   access: PreparedSpellAccessSchema,
@@ -620,36 +693,7 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       rangeFeet: MovementFeet,
       attackKind: Schema.Literal("melee_spell_attack", "ranged_spell_attack"),
       attackBonus: AttackBonus,
-      postDamageRiders: Schema.Array(
-        Schema.Union(
-          Schema.Struct({
-            kind: Schema.Literal("speedDelta"),
-            deltaFeet: MovementDeltaFeet,
-          }),
-          Schema.Struct({
-            kind: Schema.Literal("condition"),
-            condition: Schema.Literal(...ALL_CONDITIONS),
-            expiresAt: Schema.Literal("endOfCasterNextTurn"),
-          }),
-          Schema.Struct({
-            kind: Schema.Literal("opportunityAttackDenied"),
-            expiresAt: Schema.Literal("startOfTargetNextTurn"),
-          }),
-          Schema.Struct({
-            kind: Schema.Literal("nextAttackRollAgainstTarget"),
-            mode: Schema.Literal("advantage"),
-            expiresAt: Schema.Literal("endOfCasterNextTurn"),
-          }),
-          Schema.Struct({
-            kind: Schema.Literal("hitPointRegainPrevented"),
-            expiresAt: Schema.Literal("endOfCasterNextTurn"),
-          }),
-          Schema.Struct({
-            kind: Schema.Literal("invisibleBenefitDenied"),
-            expiresAt: Schema.Literal("endOfCasterNextTurn"),
-          }),
-        ),
-      ),
+      postDamageRiders: Schema.Array(SpellPostDamageRiderSchema),
       objectHitEffect: Schema.Union(
         Schema.Struct({ kind: Schema.Literal("none") }),
         Schema.Struct({
@@ -667,36 +711,7 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       rangeFeet: MovementFeet,
       attackKind: Schema.Literal("melee_spell_attack", "ranged_spell_attack"),
       attackBonus: AttackBonus,
-      postDamageRiders: Schema.Array(
-        Schema.Union(
-          Schema.Struct({
-            kind: Schema.Literal("speedDelta"),
-            deltaFeet: MovementDeltaFeet,
-          }),
-          Schema.Struct({
-            kind: Schema.Literal("condition"),
-            condition: Schema.Literal(...ALL_CONDITIONS),
-            expiresAt: Schema.Literal("endOfCasterNextTurn"),
-          }),
-          Schema.Struct({
-            kind: Schema.Literal("opportunityAttackDenied"),
-            expiresAt: Schema.Literal("startOfTargetNextTurn"),
-          }),
-          Schema.Struct({
-            kind: Schema.Literal("nextAttackRollAgainstTarget"),
-            mode: Schema.Literal("advantage"),
-            expiresAt: Schema.Literal("endOfCasterNextTurn"),
-          }),
-          Schema.Struct({
-            kind: Schema.Literal("hitPointRegainPrevented"),
-            expiresAt: Schema.Literal("endOfCasterNextTurn"),
-          }),
-          Schema.Struct({
-            kind: Schema.Literal("invisibleBenefitDenied"),
-            expiresAt: Schema.Literal("endOfCasterNextTurn"),
-          }),
-        ),
-      ),
+      postDamageRiders: Schema.Array(SpellPostDamageRiderSchema),
       objectHitEffect: Schema.Union(
         Schema.Struct({ kind: Schema.Literal("none") }),
         Schema.Struct({
@@ -861,7 +876,7 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
           Schema.Literal("endOfCasterNextTurn", "concentration"),
           Schema.Struct({
             kind: Schema.Literal("duration"),
-            durationTicks: BattleRuntimeObjectSchema,
+            durationTicks: Schema.Number,
           }),
         ),
         escape: Schema.NullOr(
@@ -929,7 +944,7 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
         kind: Schema.Literal("pointOriginCube"),
         sideFeet: MovementFeet,
       }),
-      durationTicks: BattleRuntimeObjectSchema,
+      durationTicks: Schema.Number,
       rangeFeet: MovementFeet,
     }),
     Schema.Struct({

@@ -12,9 +12,7 @@ let cleric =
       , className = "cleric"
       , description = "SRD Cleric class creation facts for a level-1 character, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts."
       , featureGrants =
-        [ { level = 1, unitId = "cleric_spellcasting" }
-        , { level = 1, unitId = "cleric_divine_order" }
-        ]
+        [ { level = 1, unitId = "cleric_divine_order" } ]
       , hitPointDie = 8
       , id = "class_cleric"
       , kind = "class"
@@ -34,6 +32,7 @@ let cleric =
         { choose = 2, options = [ "history", "insight", "medicine", "persuasion", "religion" ] }
       , spellcasting =
           { kind = "list_prepared_spellcasting_creation"
+          , featureLevel = 1
           , spellcastingAbility = "wis"
           , cantripAccess =
               { kind = "known_cantrips_from_class_spell_list"

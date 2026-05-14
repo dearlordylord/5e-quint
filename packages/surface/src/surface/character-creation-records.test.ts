@@ -79,6 +79,7 @@ const listPreparedSpellcasting = (input: {
         },
       }),
   kind: "list_prepared_spellcasting_creation",
+  featureLevel: 1,
   preparedAccess: {
     changeOn: {
       kind: input.preparedChangeOn,
@@ -179,6 +180,7 @@ describe("character-creation Surface records", () => {
         ]),
         spellcasting: {
           kind: "wizard_spellcasting_creation",
+          featureLevel: 1,
           spellcastingAbility: "int",
           cantripAccess: {
             choose: 3,
@@ -226,6 +228,7 @@ describe("character-creation Surface records", () => {
         className: "warlock",
         spellcasting: {
           kind: "pact_magic_spellcasting_creation",
+          featureLevel: 1,
           spellcastingAbility: "cha",
           cantripAccess: {
             choose: 2,

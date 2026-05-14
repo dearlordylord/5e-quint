@@ -5,7 +5,8 @@ import { characterDraftId } from "@dnd/character-creation-runtime";
 import { characterIdFromDraftId } from "./session-store.ts";
 import {
   GENERIC_COMBAT_ACTION_LABELS,
-  GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
+  GENERIC_COMBAT_ACTION_LABELS_WITH_HELP_AND_SHOVE,
+  GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
 } from "../test-support/battle-act-labels.ts";
 import {
   loadoutHoleId,
@@ -172,7 +173,7 @@ describe("end-user MCP vertical", () => {
     expect(actionLabels(callTool(root, "discover_battle_acts", {}))).toEqual([
       "Attack",
       "Attack",
-      ...GENERIC_COMBAT_ACTION_LABELS,
+      ...GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
       "Second Wind",
       "Move",
       "End Turn",
@@ -245,7 +246,7 @@ describe("end-user MCP vertical", () => {
       "End Turn",
     ]);
 
-    callTool(root, "fill_battle_hole", {
+    const goblinTarget = callTool(root, "fill_battle_hole", {
       subject: {
         tag: "action",
         actorId: "goblin",
@@ -266,6 +267,12 @@ describe("end-user MCP vertical", () => {
         ],
       },
     });
+    const goblinAttackRoll = goblinTarget.result.holes.find(
+      (hole: { readonly kind?: string }) => hole.kind === "attackRoll",
+    );
+    if (goblinAttackRoll === undefined) {
+      throw new Error("Expected Goblin attack roll hole.");
+    }
     callTool(root, "fill_battle_hole", {
       subject: {
         tag: "action",
@@ -275,8 +282,14 @@ describe("end-user MCP vertical", () => {
       },
       fill: {
         kind: "attackRoll",
-        holeId: "battle:attack:roll",
-        value: { total: 20, naturalD20: 18 },
+        holeId: goblinAttackRoll.holeId,
+        value: {
+          total: 20,
+          naturalD20: 18,
+          ...("rollMode" in goblinAttackRoll
+            ? { rollMode: goblinAttackRoll.rollMode }
+            : {}),
+        },
       },
     });
     const goblinDamage = callTool(root, "fill_battle_hole", {
@@ -421,7 +434,7 @@ describe("end-user MCP vertical", () => {
     expect(actionLabels(fighterActs)).toEqual([
       "Attack",
       "Attack",
-      ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
+      ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP_AND_SHOVE,
       "Second Wind",
       "Action Surge",
       "Move",
@@ -474,7 +487,7 @@ describe("end-user MCP vertical", () => {
     expect(actionLabels(surged)).toEqual([
       "Attack",
       "Attack",
-      ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP,
+      ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP_AND_SHOVE,
       "Second Wind",
       "Move",
       "End Turn",
@@ -564,15 +577,31 @@ describe("end-user MCP vertical", () => {
         }),
       ]),
     );
-    fillBattleSubject(root, attackSubject("skeleton", "Shortsword"), {
-      kind: "targetChoice",
-      holeId: "battle:attack:target",
-      value: "fighter",
-    });
+    const skeletonTarget = fillBattleSubject(
+      root,
+      attackSubject("skeleton", "Shortsword"),
+      {
+        kind: "targetChoice",
+        holeId: "battle:attack:target",
+        value: "fighter",
+      },
+    );
+    const skeletonAttackRoll = skeletonTarget.result.holes.find(
+      (hole: { readonly kind?: string }) => hole.kind === "attackRoll",
+    );
+    if (skeletonAttackRoll === undefined) {
+      throw new Error("Expected Skeleton attack roll hole.");
+    }
     fillBattleSubject(root, attackSubject("skeleton", "Shortsword"), {
       kind: "attackRoll",
-      holeId: "battle:attack:roll",
-      value: { total: 20, naturalD20: 15 },
+      holeId: skeletonAttackRoll.holeId,
+      value: {
+        total: 20,
+        naturalD20: 15,
+        ...("rollMode" in skeletonAttackRoll
+          ? { rollMode: skeletonAttackRoll.rollMode }
+          : {}),
+      },
     });
     const afterSkeletonAttack = fillBattleSubject(
       root,
@@ -900,7 +929,20 @@ function attackSubject(actorId: string, attackName: string) {
 }
 
 function magicSubject(actorId: string, spellId: string) {
-  return { tag: "actionSpell", actorId, spellId };
+  return {
+    tag: "actionSpell",
+    actorId,
+    invocation:
+      spellId === "magic_missile"
+        ? {
+            tag: "spellSlot",
+            spellId,
+            slotLevel: 1,
+            procedure: "repeatedDamageAllocation",
+          }
+        : { tag: "cantrip", spellId, procedure: "spellAttackDamage" },
+    mode: { tag: "cast" },
+  };
 }
 
 function unitFeatureSubject(actorId: string, unitId: string) {
@@ -924,18 +966,22 @@ function fillBattleSubject(
     readonly value: unknown;
   },
 ) {
+  const spellId =
+    "invocation" in subject && "spellId" in subject.invocation
+      ? subject.invocation.spellId
+      : null;
   const battleFill =
     fill.kind === "targetChoice" && fill.spatialFacts === undefined
       ? {
           ...fill,
           spatialFacts:
-            "spellId" in subject
+            spellId !== null
               ? [
                   {
                     kind: "spellTarget",
                     casterId: subject.actorId,
                     targetId: String(fill.value),
-                    spellId: subject.spellId,
+                    spellId,
                   },
                 ]
               : "attackName" in subject
@@ -951,7 +997,7 @@ function fillBattleSubject(
         }
       : fill.kind === "spellTargetAllocation" &&
           fill.spatialFacts === undefined &&
-          "spellId" in subject &&
+          spellId !== null &&
           typeof fill.value === "object" &&
           fill.value !== null &&
           "allocations" in fill.value &&
@@ -962,7 +1008,7 @@ function fillBattleSubject(
               kind: "spellTarget",
               casterId: subject.actorId,
               targetId: String(allocation.targetId),
-              spellId: subject.spellId,
+              spellId,
             })),
           }
         : fill;

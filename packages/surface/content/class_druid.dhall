@@ -12,8 +12,7 @@ let druid =
       , className = "druid"
       , description = "SRD Druid class creation facts for a level-1 character, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts."
       , featureGrants =
-        [ { level = 1, unitId = "druid_spellcasting" }
-        , { level = 1, unitId = "druid_druidic" }
+        [ { level = 1, unitId = "druid_druidic" }
         , { level = 1, unitId = "druid_primal_order" }
         ]
       , hitPointDie = 8
@@ -34,6 +33,7 @@ let druid =
         { choose = 2, options = [ "animal_handling", "arcana", "insight", "medicine", "nature", "perception", "religion", "survival" ] }
       , spellcasting =
           { kind = "list_prepared_spellcasting_creation"
+          , featureLevel = 1
           , spellcastingAbility = "wis"
           , cantripAccess =
               { kind = "known_cantrips_from_class_spell_list"

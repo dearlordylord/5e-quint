@@ -22,9 +22,7 @@ let bard =
       , className = "bard"
       , description = "SRD Bard class creation facts for a level-1 character, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts."
       , featureGrants =
-        [ { level = 1, unitId = "bard_bardic_inspiration" }
-        , { level = 1, unitId = "bard_spellcasting" }
-        ]
+        [ { level = 1, unitId = "bard_bardic_inspiration" } ]
       , hitPointDie = 8
       , id = "class_bard"
       , kind = "class"
@@ -74,6 +72,7 @@ let bard =
       , skillProficiencyChoice = { choose = 3, options = allSkills }
       , spellcasting =
           { kind = "list_prepared_spellcasting_creation"
+          , featureLevel = 1
           , spellcastingAbility = "cha"
           , cantripAccess =
               { kind = "known_cantrips_from_class_spell_list"

@@ -1,7 +1,10 @@
 import {
+  BattleDroppedObjectOutcomeSchema,
   BattleFillSchema,
   BattleHoleSchema,
   BattleObjectDamageOutcomeSchema,
+  BattleObjectIgnitionOutcomeSchema,
+  BattleShovePushOutcomeSchema,
   BattleSnapshotSchema,
   BattleSubjectSchema,
 } from "@dnd/battle-runtime";
@@ -38,6 +41,17 @@ const BattleResolutionResultSchema = Schema.Union(
       Schema.Array(BattleObjectDamageOutcomeSchema),
       { exact: true },
     ),
+    objectIgnitions: Schema.optionalWith(
+      Schema.Array(BattleObjectIgnitionOutcomeSchema),
+      { exact: true },
+    ),
+    droppedObjects: Schema.optionalWith(
+      Schema.Array(BattleDroppedObjectOutcomeSchema),
+      { exact: true },
+    ),
+    shovePushes: Schema.optionalWith(Schema.Array(BattleShovePushOutcomeSchema), {
+      exact: true,
+    }),
   }),
   Schema.Struct({
     tag: Schema.Literal("needsHoles"),

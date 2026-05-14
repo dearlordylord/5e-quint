@@ -375,7 +375,7 @@ export function discoverBattleActs(
   ) {
     acts.push({
       subject: { tag: "action", actorId, action: "grapple" },
-      label: "Grapple",
+      label: "Unarmed Strike (Grapple)",
       summary: "Replace one attack with an Unarmed Strike Grapple.",
       initialHoles: [grappleTargetHole(state, actorId)],
     });
@@ -388,7 +388,7 @@ export function discoverBattleActs(
   ) {
     acts.push({
       subject: { tag: "action", actorId, action: "shove" },
-      label: "Shove",
+      label: "Unarmed Strike (Shove)",
       summary: "Replace one attack with an Unarmed Strike Shove.",
       initialHoles: [shoveTargetHole(state, actorId)],
     });

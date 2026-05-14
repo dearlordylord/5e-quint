@@ -35,6 +35,7 @@ let warlock =
               , spellIds = [ "eldritch_blast", "minor_illusion" ]
               }
           , kind = "pact_magic_spellcasting_creation"
+          , featureLevel = 1
           , pactSlotProjection =
               { count = 1
               , kind = "pact_slots"
