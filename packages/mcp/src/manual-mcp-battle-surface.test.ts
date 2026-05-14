@@ -398,6 +398,94 @@ describe("manual MCP battle surface coverage", () => {
     ]);
   });
 
+  test("uses Shield triggered reaction through MCP battle tools", () => {
+    const root = createMcpCompositionRoot();
+    root.sessionStore.battleState = startBattleRight(root, [
+      statBlock(root, { combatantId: goblinId, initiative: 20 }),
+      character(root, {
+        combatantId: fighterId,
+        displayName: "Shield Caster",
+        initiative: 10,
+        attack: null,
+        spellcasting: spellcasting(root, {
+          sourceClassName: "wizard",
+          abilityModifier: 3,
+          preparedSpells: ["shield"],
+          slots: [{ spellLevel: 1, count: 1 }],
+        }),
+      }),
+    ]);
+
+    const goblinAttack = requireAct(root, "Attack", "Scimitar");
+    const afterTarget = call(root, "fill_battle_hole", {
+      subject: goblinAttack.subject,
+      fill: attackTargetFill(
+        "battle:attack:target",
+        "goblin",
+        "fighter",
+        "Scimitar",
+      ),
+    });
+    const attackRoll = requireHole(afterTarget.result.holes, "attackRoll");
+    const afterAttackRoll = call(root, "fill_battle_hole", {
+      subject: goblinAttack.subject,
+      fill: attackRollFill(attackRoll.holeId, 14, 10, attackRoll.rollMode),
+    });
+
+    expect(afterAttackRoll.result).toMatchObject({
+      tag: "needsHoles",
+      holes: [expect.objectContaining({ kind: "reactionDecision" })],
+      snapshot: { pendingReaction: { trigger: "attackHit" } },
+    });
+    const reactionHole = requireHole(afterAttackRoll.result.holes, "reactionDecision");
+    const shieldChoice = afterAttackRoll.result.snapshot.pendingReaction.choices.find(
+      (choice: Json) =>
+        choice.kind === "castTriggeredReactionSpell" &&
+        choice.invocation.spellId === "shield",
+    );
+    if (shieldChoice === undefined) {
+      throw new Error("Expected Shield reaction choice.");
+    }
+
+    const afterShield = call(root, "fill_battle_hole", {
+      subject: goblinAttack.subject,
+      fill: {
+        kind: "reactionDecision",
+        holeId: reactionHole.holeId,
+        value: {
+          kind: "resolve",
+          reactorId: "fighter",
+          choice: {
+            kind: "castTriggeredReactionSpell",
+            invocation: shieldChoice.invocation,
+            fills: [],
+          },
+        },
+      },
+    });
+
+    expect(afterShield.result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.objectContaining({ combatantId: "goblin" }),
+          expect.objectContaining({
+            combatantId: "fighter",
+            armorClass: 15,
+            hp: 12,
+            reactionAvailable: false,
+            origin: expect.objectContaining({
+              kind: "character",
+              spellcasting: expect.objectContaining({
+                spellSlots: [{ spellLevel: 1, count: 1, expended: 1 }],
+              }),
+            }),
+          }),
+        ],
+      },
+    });
+  });
+
   test("retains Pact of the Chain and uses Pact of the Tome cantrips through MCP battle tools", () => {
     const chainRoot = createMcpCompositionRoot();
     chainRoot.sessionStore.battleState = startBattleRight(chainRoot, [
