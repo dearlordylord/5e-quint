@@ -601,6 +601,112 @@ describe("manual MCP battle surface coverage", () => {
     });
   });
 
+  test("uses Feather Fall falling-trigger reaction through MCP battle tools", () => {
+    const root = createMcpCompositionRoot();
+    root.sessionStore.battleState = startBattleRight(root, [
+      character(root, {
+        combatantId: fighterId,
+        displayName: "Feather Fall Caster",
+        initiative: 20,
+        attack: null,
+        spellcasting: spellcasting(root, {
+          sourceClassName: "wizard",
+          abilityModifier: 3,
+          preparedSpells: ["feather_fall"],
+          slots: [{ spellLevel: 1, count: 1 }],
+        }),
+      }),
+      statBlock(root, {
+        combatantId: allyId,
+        displayName: "Falling Ally",
+        initiative: 10,
+      }),
+    ]);
+
+    const falling = call(root, "resolve_battle_act", {
+      subject: {
+        tag: "runtimeCommand",
+        actorId: "fighter",
+        command: "creatureFalls",
+        fallingCreatureId: "ally",
+      },
+      reactionSpellTargetFacts: [
+        {
+          kind: "featherFallTriggerSelfOrVisibleCreatureWithinRange",
+          reactorId: "fighter",
+          fallingCreatureId: "ally",
+          spellId: "feather_fall",
+          rangeFeet: 60,
+        },
+      ],
+    });
+
+    expect(falling.result).toMatchObject({
+      tag: "needsHoles",
+      holes: [expect.objectContaining({ kind: "reactionDecision" })],
+      snapshot: { pendingReaction: { trigger: "creatureFalls" } },
+    });
+    const featherFallChoice = falling.result.snapshot.pendingReaction.choices.find(
+      (choice: Json) =>
+        choice.kind === "castTriggeredReactionSpell" &&
+        choice.invocation.spellId === "feather_fall",
+    );
+    if (featherFallChoice === undefined) {
+      throw new Error("Expected Feather Fall reaction choice.");
+    }
+    const targetList = requireHole(featherFallChoice.initialHoles, "spellTargetList");
+    const reactionHole = requireHole(falling.result.holes, "reactionDecision");
+    const resolved = call(root, "fill_battle_hole", {
+      subject: falling.result.subject,
+      fill: {
+        kind: "reactionDecision",
+        holeId: reactionHole.holeId,
+        value: {
+          kind: "resolve",
+          reactorId: "fighter",
+          choice: {
+            kind: "castTriggeredReactionSpell",
+            invocation: featherFallChoice.invocation,
+            fills: [
+              {
+                kind: "spellTargetList",
+                holeId: targetList.holeId,
+                value: { targetIds: ["ally"] },
+                spatialFacts: [
+                  {
+                    kind: "featherFallTargetFallingWithinRange",
+                    casterId: "fighter",
+                    targetId: "ally",
+                    spellId: "feather_fall",
+                    rangeFeet: 60,
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      },
+    });
+
+    expect(resolved.result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.objectContaining({
+            combatantId: "fighter",
+            reactionAvailable: false,
+          }),
+          expect.objectContaining({ combatantId: "ally" }),
+        ],
+      },
+    });
+    expect(
+      root.sessionStore.battleState?.combatants
+        .get(allyId)
+        ?.activeEffects.some((effect) => effect.kind === "featherFallMitigation"),
+    ).toBe(true);
+  });
+
   test("retains Pact of the Chain and uses Pact of the Tome cantrips through MCP battle tools", () => {
     const chainRoot = createMcpCompositionRoot();
     chainRoot.sessionStore.battleState = startBattleRight(chainRoot, [

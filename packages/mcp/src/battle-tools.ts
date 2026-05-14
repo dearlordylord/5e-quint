@@ -1,5 +1,6 @@
 import {
   discoverBattleActs,
+  openCreatureFallsReactionWindow,
   resolveBattleReaction,
   resolveBattleSubject,
   sameBattleSubject,
@@ -197,6 +198,28 @@ export function handleBattleToolCall(
         "Cannot resolve another act with pending fills.",
       );
       if (Either.isLeft(state)) return state.left;
+      if (
+        matched.args.subject.tag === "runtimeCommand" &&
+        matched.args.subject.command === "creatureFalls"
+      ) {
+        const result = openCreatureFallsReactionWindow({
+          state: state.right,
+          fallingCreatureId: matched.args.subject.fallingCreatureId,
+          reactionSpellTargetFacts: matched.args.reactionSpellTargetFacts,
+        });
+        storeBattleResolution(root, result, pendingTransactionForResult({
+          result,
+          filledSubject: matched.args.subject,
+          previous: null,
+          fills: [],
+          replayState: state.right,
+          isReactionDecision: false,
+        }));
+        return schemaJsonContent(
+          BattleResolutionOutputSchema,
+          battleResolutionPayload(root, result),
+        );
+      }
       const availableAct = discoverBattleActs(state.right).find((act) =>
         sameBattleSubject(act.subject, matched.args.subject),
       );

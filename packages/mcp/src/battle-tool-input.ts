@@ -4,8 +4,10 @@ import {
   combatantId,
   type BattleFill,
   type BattleSubject,
+  type BattleTargetSpatialFact,
   type CombatantId,
 } from "@dnd/battle-runtime";
+import { movementFeet } from "@dnd/shared/types";
 import type { StatBlockId } from "@dnd/surface/surface/stat-block-catalog";
 import { Either, Match, Schema } from "effect";
 
@@ -43,6 +45,23 @@ const ResolveBattleActArgsSchema = Schema.Struct({
   subject: BattleSubjectSchema.annotations({
     description:
       "No-hole battle act subject returned by discover_battle_acts, such as Action Surge.",
+  }),
+  reactionSpellTargetFacts: Schema.optionalWith(
+    Schema.Array(
+      Schema.Struct({
+        kind: Schema.Literal(
+          "featherFallTriggerSelfOrVisibleCreatureWithinRange",
+        ),
+        reactorId: CombatantIdTextSchema,
+        fallingCreatureId: CombatantIdTextSchema,
+        spellId: Schema.NonEmptyTrimmedString,
+        rangeFeet: Schema.Number.pipe(Schema.int(), Schema.positive()),
+      }),
+    ),
+    { exact: true },
+  ).annotations({
+    description:
+      "Table-supplied reaction spell facts for runtime commands that open a reaction window, currently creatureFalls for Feather Fall.",
   }),
 });
 const EndTurnArgsSchema = Schema.Struct({ actorId: CombatantIdTextSchema });
@@ -99,6 +118,7 @@ type FillBattleHoleToolInput = {
 
 type ResolveBattleActToolInput = {
   readonly subject: BattleSubject;
+  readonly reactionSpellTargetFacts: readonly BattleTargetSpatialFact[];
 };
 
 type EmptyToolInput = Record<string, never>;
@@ -240,7 +260,18 @@ function decodeResolveBattleActArgs(
     args,
     battleToolNames.resolveBattleAct,
   );
-  return Either.map(record, (value) => ({ subject: value.subject }));
+  return Either.map(record, (value) => ({
+    subject: value.subject,
+    reactionSpellTargetFacts: (value.reactionSpellTargetFacts ?? []).map(
+      (fact) => ({
+        kind: fact.kind,
+        reactorId: combatantId(fact.reactorId),
+        fallingCreatureId: combatantId(fact.fallingCreatureId),
+        spellId: fact.spellId,
+        rangeFeet: movementFeet(fact.rangeFeet),
+      }),
+    ),
+  }));
 }
 
 function decodeEndTurnArgs(
