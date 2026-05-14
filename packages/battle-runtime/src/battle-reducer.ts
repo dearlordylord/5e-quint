@@ -731,11 +731,24 @@ export type BattleLightEmitterAttachment =
       readonly kind: "object";
       readonly objectId: BattleObjectId;
     };
-export type BattleLightEmitter = BattleSpellEffectBase & {
+export type BattleSpellLightEmitter = BattleSpellEffectBase & {
+  readonly kind: "spellLightEmitter";
   readonly attachment: BattleLightEmitterAttachment;
   readonly emission: BattleLightEmission;
   readonly expiresAt: BattleActiveEffectExpiration;
 };
+export type BattleObjectInvisibleRevealLightEmitter = BattleSpellEffectBase & {
+  readonly kind: "objectInvisibleRevealLightEmitter";
+  readonly objectId: BattleObjectId;
+  readonly emission: Extract<BattleLightEmission, { readonly kind: "dim" }>;
+  readonly expiresAt: Extract<
+    BattleActiveEffectExpiration,
+    { readonly kind: "endOfTurn" }
+  >;
+};
+export type BattleLightEmitter =
+  | BattleSpellLightEmitter
+  | BattleObjectInvisibleRevealLightEmitter;
 // SRD 5.2.1 Ready [Action]: this is the spell-specific Readied Response
 // created by taking Ready with an action-time spell. The caster spends the
 // spell's resources immediately, holds the energy with Concentration, and

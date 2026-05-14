@@ -3050,32 +3050,51 @@ const BattlePendingReactionSnapshotSchema = Schema.Struct({
   stackDepth: Schema.Number,
 });
 
-const BattleLightEmitterSchema = Schema.Struct({
-  sourceSpellId: Schema.String,
-  sourceCombatantId: CombatantId,
-  attachment: Schema.Union(
-    Schema.Struct({
-      kind: Schema.Literal("combatant"),
-      combatantId: CombatantId,
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("object"),
-      objectId: BattleObjectId,
-    }),
-  ),
-  emission: Schema.Union(
-    Schema.Struct({
-      kind: Schema.Literal("dim"),
-      radiusFeet: MovementFeet,
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("brightAndDim"),
-      brightRadiusFeet: MovementFeet,
-      dimAdditionalFeet: MovementFeet,
-    }),
-  ),
-  expiresAt: BattleRuntimeObjectSchema,
+const BattleDimLightEmissionSchema = Schema.Struct({
+  kind: Schema.Literal("dim"),
+  radiusFeet: MovementFeet,
 });
+
+const BattleLightEmitterEndOfTurnExpirationSchema = Schema.Struct({
+  kind: Schema.Literal("endOfTurn"),
+  combatantId: CombatantId,
+  round: Schema.Number,
+});
+
+const BattleLightEmitterSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("spellLightEmitter"),
+    sourceSpellId: Schema.String,
+    sourceCombatantId: CombatantId,
+    attachment: Schema.Union(
+      Schema.Struct({
+        kind: Schema.Literal("combatant"),
+        combatantId: CombatantId,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("object"),
+        objectId: BattleObjectId,
+      }),
+    ),
+    emission: Schema.Union(
+      BattleDimLightEmissionSchema,
+      Schema.Struct({
+        kind: Schema.Literal("brightAndDim"),
+        brightRadiusFeet: MovementFeet,
+        dimAdditionalFeet: MovementFeet,
+      }),
+    ),
+    expiresAt: BattleRuntimeObjectSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("objectInvisibleRevealLightEmitter"),
+    sourceSpellId: Schema.String,
+    sourceCombatantId: CombatantId,
+    objectId: BattleObjectId,
+    emission: BattleDimLightEmissionSchema,
+    expiresAt: BattleLightEmitterEndOfTurnExpirationSchema,
+  }),
+);
 
 export const BattleSnapshotSchema = Schema.Struct({
   battleId: BattleId,

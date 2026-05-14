@@ -129,6 +129,7 @@ import {
   discoverBattleActs,
   endTurn,
   initiativeScore,
+  objectInvisibleBenefitDenied,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   resolveBattleReaction,
   resolveBattlePossessionAttempt,
@@ -5341,6 +5342,114 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     );
   });
 
+  test("starry_wisp object hit projects Invisible-benefit denial from the object Dim Light emitter", () => {
+    const spell = decodeUnitRecordSync(starryWispInput);
+    if (spell.kind !== "spell") return;
+
+    const state = spellBattle({ cantrips: [spell] });
+    const act = spellAct({ state, spellId: spell.id });
+    const objectId = battleObjectId("unit-profile-starry-wisp-object");
+    const objectFill = spellObjectTargetFill({
+      hole: requireHole(act.initialHoles, "objectTargetChoice"),
+      objectId,
+      spellId: starryWispUnitId,
+      casterId: spellCasterId,
+      damageDisposition: { kind: "tableResolved" },
+    });
+    const attackRoll = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [objectFill],
+      }),
+      "attackRoll",
+    );
+    const damage = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          objectFill,
+          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        objectFill,
+        attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        damageRollFillWithGroups(damage, [[4]]),
+      ],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Starry Wisp object hit to resolve.");
+    }
+
+    expect(objectInvisibleBenefitDenied(resolved.state, objectId)).toBe(true);
+    expect(resolved.state.objectOutlines).toEqual([]);
+    expect(resolved.state.lightEmitters).toEqual([
+      expect.objectContaining({
+        kind: "objectInvisibleRevealLightEmitter",
+        sourceSpellId: starryWispUnitId,
+        sourceCombatantId: spellCasterId,
+        objectId,
+        emission: { kind: "dim", radiusFeet: movementFeet(10) },
+      }),
+    ]);
+
+    const afterCasterTurn = resolveBattleSubject({
+      state: resolved.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellCasterId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+    if (afterCasterTurn.tag !== "resolved") {
+      throw new Error("Expected caster end turn to resolve.");
+    }
+    const afterTargetTurn = resolveBattleSubject({
+      state: afterCasterTurn.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellTargetId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+    if (afterTargetTurn.tag !== "resolved") {
+      throw new Error("Expected target end turn to resolve.");
+    }
+    const afterCasterNextTurn = resolveBattleSubject({
+      state: afterTargetTurn.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellCasterId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+    if (afterCasterNextTurn.tag !== "resolved") {
+      throw new Error("Expected caster next end turn to resolve.");
+    }
+
+    expect(objectInvisibleBenefitDenied(afterCasterTurn.state, objectId)).toBe(
+      true,
+    );
+    expect(objectInvisibleBenefitDenied(afterTargetTurn.state, objectId)).toBe(
+      true,
+    );
+    expect(
+      objectInvisibleBenefitDenied(afterCasterNextTurn.state, objectId),
+    ).toBe(false);
+    expect(afterCasterNextTurn.state.lightEmitters).toEqual([]);
+    expect(afterCasterNextTurn.state.objectOutlines).toEqual([]);
+  });
+
   test("shield is admitted through catalog Spell Access and projected as a triggered Reaction spell", () => {
     const spell = spellRecord(shieldUnitId);
 
@@ -7142,6 +7251,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
       ...spellBattle({ cantrips: [spell] }),
       lightEmitters: [
         {
+          kind: "spellLightEmitter" as const,
           sourceSpellId: lightUnitId,
           sourceCombatantId: spellCasterId,
           attachment: {
@@ -7206,6 +7316,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
       ...state,
       lightEmitters: [
         {
+          kind: "spellLightEmitter",
           sourceSpellId: lightUnitId,
           sourceCombatantId: spellCasterId,
           attachment: {

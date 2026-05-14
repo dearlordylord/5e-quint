@@ -156,13 +156,13 @@
     "spellPressureRows": 211,
     "levelOneBattleReadiness": {
       "denominator": 367,
-      "numerator": 284,
-      "percent": "77.4%",
+      "numerator": 286,
+      "percent": "77.9%",
       "rowsByStatus": {
-        "accepted": 215,
+        "accepted": 217,
         "accepted-no-battle-effect": 69,
         "battle-runtime-required": 26,
-        "partial-battle-runtime": 42,
+        "partial-battle-runtime": 40,
         "surface-widening-required": 15
       }
     },
@@ -4698,7 +4698,7 @@
         "state": "installed",
         "unitId": "starry_wisp"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -8049,7 +8049,7 @@
         "state": "installed",
         "unitId": "starry_wisp"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {

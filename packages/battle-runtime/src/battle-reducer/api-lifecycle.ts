@@ -273,6 +273,7 @@ export function removeBattleCombatants(input: {
         (emitter) =>
           !removeIds.has(emitter.sourceCombatantId) &&
           !(
+            emitter.kind === "spellLightEmitter" &&
             emitter.attachment.kind === "combatant" &&
             removeIds.has(emitter.attachment.combatantId)
           ),

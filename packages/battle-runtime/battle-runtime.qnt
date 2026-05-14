@@ -381,6 +381,14 @@ module battleRuntime {
         emission: LightEmission,
         expiresAt: LightEmitterExpiration,
       })
+    | ObjectInvisibleRevealLightEmitter({
+        source: Actor,
+        sourceSpell: SpellInvocation,
+        object: ObjectTarget,
+        dimLightRadiusFeet: int,
+        expiresAtActor: Actor,
+        expiresAtRound: int,
+      })
 
   type ChainedSpellAttackDamageHole =
     | ChainedSpellDamageTypeChoice
@@ -943,6 +951,7 @@ module battleRuntime {
           | EndOfTurnLightEmitterExpiration(expiresAt) => expiresAt.actor != actor or expiresAt.round != round
           | DurationLightEmitterExpiration(_) => true
         }
+      | ObjectInvisibleRevealLightEmitter(data) => data.expiresAtActor != actor or data.expiresAtRound != round
     })
 
   pure def tickDurationLightEmitters(emitters: Set[LightEmitter]): Set[LightEmitter] =
@@ -961,6 +970,7 @@ module battleRuntime {
               emitter
           | EndOfTurnLightEmitterExpiration(_) => emitter
         }
+        | ObjectInvisibleRevealLightEmitter(_) => emitter
       })
       .filter(emitter => match emitter {
         | SpellLightEmitter(data) => match data.expiresAt {
@@ -968,6 +978,7 @@ module battleRuntime {
             battleRuntimeTimedSpellEffectRemainsActive(expiresAt.durationTicks)
           | EndOfTurnLightEmitterExpiration(_) => true
         }
+        | ObjectInvisibleRevealLightEmitter(_) => true
       })
 
   pure def expireEndOfTurnSpellEffects(state: BattleState): BattleState = {
@@ -2440,16 +2451,26 @@ module battleRuntime {
     source: Actor,
     attachment: LightEmitterAttachment,
   ): LightEmitter =
-    SpellLightEmitter({
-      source: source,
-      sourceSpell: StarryWisp,
-      attachment: attachment,
-      emission: DimLightEmission({ radiusFeet: 10 }),
-      expiresAt: EndOfTurnLightEmitterExpiration({
-        actor: source,
-        round: endOfCasterNextTurnLightEmitterExpiresAtRound(state, source),
-      }),
-    })
+    match attachment {
+      | CombatantLightEmitter(_) => SpellLightEmitter({
+          source: source,
+          sourceSpell: StarryWisp,
+          attachment: attachment,
+          emission: DimLightEmission({ radiusFeet: 10 }),
+          expiresAt: EndOfTurnLightEmitterExpiration({
+            actor: source,
+            round: endOfCasterNextTurnLightEmitterExpiresAtRound(state, source),
+          }),
+        })
+      | ObjectLightEmitter(data) => ObjectInvisibleRevealLightEmitter({
+          source: source,
+          sourceSpell: StarryWisp,
+          object: data.object,
+          dimLightRadiusFeet: 10,
+          expiresAtActor: source,
+          expiresAtRound: endOfCasterNextTurnLightEmitterExpiresAtRound(state, source),
+        })
+    }
 
   pure def applyStarryWispDimLightEmitter(
     state: BattleState,
@@ -2464,6 +2485,13 @@ module battleRuntime {
               data.source != source
                 or data.sourceSpell != StarryWisp
                 or data.attachment != attachment
+          | ObjectInvisibleRevealLightEmitter(data) =>
+              data.source != source
+                or data.sourceSpell != StarryWisp
+                or match attachment {
+                  | CombatantLightEmitter(_) => true
+                  | ObjectLightEmitter(objectAttachment) => data.object != objectAttachment.object
+                }
         })
         .union(Set(emitter)),
     }
@@ -4219,6 +4247,7 @@ module battleRuntime {
   pure def lightEmittersWithoutLightFromSource(emitters: Set[LightEmitter], source: Actor): Set[LightEmitter] =
     emitters.filter(emitter => match emitter {
       | SpellLightEmitter(data) => data.source != source or data.sourceSpell != Light
+      | ObjectInvisibleRevealLightEmitter(_) => true
     })
 
   pure def resolveLightObject(
@@ -5277,6 +5306,18 @@ module battleRuntime {
     outlines.exists(outline => match outline {
       | FaerieFireObjectOutline(data) => data.object == objectTarget
     })
+
+  pure def objectLightEmitterDeniesInvisibleBenefit(emitter: LightEmitter, objectTarget: ObjectTarget): bool =
+    match emitter {
+      | SpellLightEmitter(_) => false
+      | ObjectInvisibleRevealLightEmitter(data) => data.object == objectTarget
+    }
+
+  pure def objectInvisibleBenefitDenied(state: BattleState, objectTarget: ObjectTarget): bool =
+    objectOutlinesDenyInvisibleBenefit(state.objectOutlines, objectTarget)
+    or state.lightEmitters.exists(emitter =>
+      objectLightEmitterDeniesInvisibleBenefit(emitter, objectTarget)
+    )
 
   pure def protectionFromEvilAndGoodCreatureTypeIsScoped(creatureType: RuntimeCreatureType): bool =
     creatureType == AberrationCreature or
@@ -8349,6 +8390,22 @@ module battleRuntime {
       assert(afterGoblinTurn.goblin.activeEffects.contains(effect)),
       assert(not(afterFighterNextTurn.goblin.activeEffects.contains(effect))),
       assert(not(activeEffectsDenyInvisibleBenefit(afterFighterNextTurn.goblin.activeEffects))),
+    }
+  }
+
+  run test_starry_wisp_object_invisible_benefit_denial_projects_from_light_emitter = {
+    val hit = applyStarryWispDimLightEmitter(initialState, Fighter, ObjectLightEmitter({ object: StarryWispObjectTarget }))
+    val miss = initialState
+    val afterFighterTurn = endTurn(hit)
+    val afterGoblinTurn = endTurn(afterFighterTurn)
+    val afterFighterNextTurn = endTurn(afterGoblinTurn)
+    all {
+      assert(objectInvisibleBenefitDenied(hit, StarryWispObjectTarget)),
+      assert(not(objectInvisibleBenefitDenied(miss, StarryWispObjectTarget))),
+      assert(objectInvisibleBenefitDenied(afterFighterTurn, StarryWispObjectTarget)),
+      assert(objectInvisibleBenefitDenied(afterGoblinTurn, StarryWispObjectTarget)),
+      assert(not(objectInvisibleBenefitDenied(afterFighterNextTurn, StarryWispObjectTarget))),
+      assert(hit.objectOutlines == Set()),
     }
   }
 

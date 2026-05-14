@@ -30,6 +30,7 @@ export {
   type BattleTraceCheckpoint,
   type BattleTraceHoleKind,
 } from "./battle-trace-contract.ts";
+export { objectInvisibleBenefitDenied } from "./battle-reducer/attack-roll.ts";
 export type {
   CharacterBattleClassLevel,
   CharacterBattleClassLevelInit,

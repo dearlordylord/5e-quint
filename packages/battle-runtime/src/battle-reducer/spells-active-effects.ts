@@ -148,6 +148,7 @@ export function battleLightEmitters(
           effect.kind === "heldLight"
             ? [
                 {
+                  kind: "spellLightEmitter",
                   sourceSpellId: effect.sourceSpellId,
                   sourceCombatantId: effect.sourceCombatantId,
                   attachment: {
@@ -193,21 +194,10 @@ export function applySpellLightEmitterEffects(
           !(
             emitter.sourceSpellId === invocation.spell.id &&
             emitter.sourceCombatantId === actorId &&
-            sameLightEmitterAttachment(emitter.attachment, attachment)
+            lightEmitterMatchesAttachment(emitter, attachment)
           ),
       ),
-      {
-        sourceSpellId: invocation.spell.id,
-        sourceCombatantId: actorId,
-        attachment,
-        emission: rider.emission,
-        expiresAt: activeEffectExpirationForPostDamageRider(
-          state,
-          actorId,
-          actorId,
-          rider.expiresAt,
-        ),
-      },
+      lightEmitterFromPostDamageRider(state, actorId, attachment, invocation, rider),
     ],
     state.lightEmitters,
   );
@@ -225,6 +215,9 @@ export function tickDurationBattleLightEmitters(
   emitters: readonly BattleLightEmitter[],
 ): readonly BattleLightEmitter[] {
   return emitters.flatMap((emitter): readonly BattleLightEmitter[] => {
+    if (emitter.kind === "objectInvisibleRevealLightEmitter") {
+      return [emitter];
+    }
     if (emitter.expiresAt.kind !== "duration") {
       return [emitter];
     }
@@ -261,6 +254,68 @@ function sameLightEmitterAttachment(
     ),
     Match.exhaustive,
   );
+}
+
+function lightEmitterMatchesAttachment(
+  emitter: BattleLightEmitter,
+  attachment: BattleLightEmitterAttachment,
+): boolean {
+  return Match.value(emitter).pipe(
+    Match.when({ kind: "spellLightEmitter" }, (spellEmitter) =>
+      sameLightEmitterAttachment(spellEmitter.attachment, attachment),
+    ),
+    Match.when(
+      { kind: "objectInvisibleRevealLightEmitter" },
+      (objectRevealEmitter) =>
+        attachment.kind === "object" &&
+        objectRevealEmitter.objectId === attachment.objectId,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function lightEmitterFromPostDamageRider(
+  state: BattleState,
+  actorId: CombatantId,
+  attachment: BattleLightEmitterAttachment,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spellAttackDamage" }
+  >,
+  rider: SpellLightEmissionPostDamageRider,
+): BattleLightEmitter {
+  const expiresAt = activeEffectExpirationForPostDamageRider(
+    state,
+    actorId,
+    actorId,
+    rider.expiresAt,
+  );
+  const base = {
+    sourceSpellId: invocation.spell.id,
+    sourceCombatantId: actorId,
+  };
+  return attachment.kind === "object" &&
+    rider.emission.kind === "dim" &&
+    Number(rider.emission.radiusFeet) === 10 &&
+    expiresAt.kind === "endOfTurn" &&
+    invocation.postDamageRiders.some(
+      (postDamageRider) => postDamageRider.kind === "invisibleBenefitDenied",
+    )
+    ? {
+        kind: "objectInvisibleRevealLightEmitter",
+        sourceSpellId: invocation.spell.id,
+        sourceCombatantId: actorId,
+        objectId: attachment.objectId,
+        emission: rider.emission,
+        expiresAt,
+      }
+    : {
+        ...base,
+        kind: "spellLightEmitter",
+        attachment,
+        emission: rider.emission,
+        expiresAt,
+      };
 }
 
 function isSpellActiveEffectPostDamageRider(
@@ -958,6 +1013,7 @@ export function applyObjectLightSpellEffect(
           ),
       ),
       {
+        kind: "spellLightEmitter",
         sourceSpellId: invocation.spell.id,
         sourceCombatantId: actorId,
         attachment: { kind: "object", objectId },

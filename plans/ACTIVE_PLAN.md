@@ -178,7 +178,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 296,
       "id": "SRDINV79",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Starry Wisp Object Invisible-Benefit Projection"
     },
     {
@@ -298,7 +298,7 @@ Keep it synchronized with the DAG table and task details.
 | 293   | SRDINV76D - Promote Eldritch Mind Concentration Save Advantage          | done | SRDINV76A | SRDINV78 | [SRDINV76A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76A_WARLOCK_LEVEL_1_INVOCATION_BOUNDARY_RESEARCH.md), [Eldritch Mind](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Concentration](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Saving Throw](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                | Completed: promoted selected Eldritch Mind invocation ownership into battle state and projects Advantage only on damage-triggered Concentration maintenance Saving Throw holes, leaving ordinary Constitution Saving Throws and other Saving Throws unaffected.                                                                  |
 | 294   | SRDINV76E - Research Pact of the Chain Familiar Boundary                | done                                          | SRDINV76A | SRDINV78 | [SRDINV76E research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76E_PACT_OF_THE_CHAIN_FAMILIAR_BOUNDARY_RESEARCH.md), [SRDINV76A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76A_WARLOCK_LEVEL_1_INVOCATION_BOUNDARY_RESEARCH.md), [Pact of the Chain](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Find Familiar](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Magic Action](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                | Completed: split Pact of the Chain into Find Familiar Spell Access plus companion runtime ownership; recommended no-slot Magic-action access, form references, and a later atomic Warlock attack-forgo plus familiar Reaction attack procedure without duplicating familiar state. |
 | 295   | SRDINV76F - Research Pact of the Tome Spell Access Boundary             | done                                          | SRDINV76A | SRDINV78 | [SRDINV76F research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76F_PACT_OF_THE_TOME_SPELL_ACCESS_BOUNDARY_RESEARCH.md), [SRDINV76A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76A_WARLOCK_LEVEL_1_INVOCATION_BOUNDARY_RESEARCH.md), [Pact of the Tome](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Ritual](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Spellcasting Focus](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                | Completed: split Pact of the Tome into conditional Book of Shadows Spell Access plus future component/focus legality; selected spells stay in one Book of Shadows access source and effective prepared Warlock access is derived only while the book is on the Warlock's person. |
-| 296   | SRDINV79 - Promote Starry Wisp Object Invisible-Benefit Projection      | ready-for-research                            | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Invisible](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Starry Wisp's hit-applied object-target Invisible-condition benefit denial through the existing caller-supplied object target boundary, without adding object inventory, visibility, or map state. |
+| 296   | SRDINV79 - Promote Starry Wisp Object Invisible-Benefit Projection      | done                                          | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Invisible](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: promoted Starry Wisp object-hit Invisible-benefit denial through a typed object Dim Light reveal emitter, with caster-next-turn expiry and no object inventory, visibility, line-of-sight, cover, or map-light state. |
 | 297   | SRDINV80A - Widen Hideous Laughter Spell Definition Surface             | ready-for-research                            | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Hideous Laughter](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface Spell Definition facts for Hideous Laughter's initial save, end-turn repeat save, damage-triggered repeat save with Advantage, Prone self-end suppression, and slot-scaled additional targets. |
 | 298   | SRDINV80B - Widen Fog Cloud Spell Definition Surface                    | ready-for-research                            | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Fog Cloud](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Heavily Obscured](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface Spell Definition facts for Fog Cloud's slot-scaled fog Sphere, Heavily Obscured projection, Concentration duration, and strong-wind dispersal boundary. |
 | 299   | SRDINV80C - Widen Spare the Dying Stable Lifecycle Surface              | ready-for-research                            | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Spare the Dying](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Stable](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface Spell Definition facts for Spare the Dying's zero-HP creature targeting, Stable application, and character-level range scaling. |
@@ -1001,7 +1001,7 @@ active-plan consistency updated; `pnpm quality`.
 
 ### Task 296 - SRDINV79 - Promote Starry Wisp Object Invisible-Benefit Projection
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV78
 
@@ -1024,12 +1024,12 @@ line of sight, cover derivation, or generic object condition state beyond the
 projection needed to deny Invisible benefits for the hit object until the end
 of the caster's next turn.
 
-Verification: RAW/source review for Starry Wisp, Object, Target, and Invisible;
-package-local Quint update before runtime divergence; focused tests for
-object-hit Invisible-benefit denial, miss non-application, expiration at end of
+Verification: completed RAW/source review for Starry Wisp, Object, Target, and
+Invisible; package-local Quint and runtime parity updated for object-hit
+Invisible-benefit denial, miss non-application, expiration at end of the
 caster's next turn, coexistence with object Dim Light emitters, and no object
-inventory/visibility state; `pnpm unit-profile-coverage:check --write` if
-evidence changes; `pnpm quality`; `/simplify` convergence.
+inventory/visibility state; refreshed unit-profile coverage evidence; `pnpm
+quality`.
 
 ### Task 297 - SRDINV80A - Widen Hideous Laughter Spell Definition Surface
 

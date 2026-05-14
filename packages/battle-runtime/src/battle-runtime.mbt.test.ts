@@ -47,6 +47,7 @@ import {
   combatantId,
   discoverBattleActs,
   initiativeScore,
+  objectInvisibleBenefitDenied,
   resolveBattleSubject,
   snapshotBattle,
   spellSlotInvocationRef,
@@ -55,6 +56,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleLightEmitter,
+  type BattleLightEmitterAttachment,
   type BattleResolutionResult,
   type BattleState,
   type BattleSubject,
@@ -182,19 +184,33 @@ type LightEmitterExpirationMbtProjection =
       readonly kind: "duration";
       readonly durationTicks: number;
     };
-type LightEmitterMbtProjection = {
-  readonly sourceSpellId: string;
-  readonly sourceCombatantId: string;
-  readonly attachment: LightEmitterAttachmentMbtProjection;
-  readonly emission: LightEmissionMbtProjection;
-  readonly expiresAt: LightEmitterExpirationMbtProjection;
-};
+type LightEmitterMbtProjection =
+  | {
+      readonly kind: "spellLightEmitter";
+      readonly sourceSpellId: string;
+      readonly sourceCombatantId: string;
+      readonly attachment: LightEmitterAttachmentMbtProjection;
+      readonly emission: LightEmissionMbtProjection;
+      readonly expiresAt: LightEmitterExpirationMbtProjection;
+    }
+  | {
+      readonly kind: "objectInvisibleRevealLightEmitter";
+      readonly sourceSpellId: string;
+      readonly sourceCombatantId: string;
+      readonly objectId: string;
+      readonly emission: Extract<LightEmissionMbtProjection, { readonly kind: "dim" }>;
+      readonly expiresAt: Extract<
+        LightEmitterExpirationMbtProjection,
+        { readonly kind: "endOfTurn" }
+      >;
+    };
 
 type StarryWispObjectMbtProjection = {
   readonly actionAvailable: boolean;
   readonly holes: readonly MbtHole[];
   readonly objectDamage: ObjectDamageMbtProjection;
   readonly lightEmitters: readonly LightEmitterMbtProjection[];
+  readonly objectInvisibleBenefitDenied: boolean;
   readonly lastResult: MbtLastResult;
   readonly lastInvalidReason: MbtLastInvalidReason;
 };
@@ -1240,11 +1256,14 @@ function normalizeStarryWispObjectQuintState(
 ): StarryWispObjectMbtProjection {
   const state = quintStateRecord(raw);
 
+  const lightEmitters = lightEmittersFromQuint(state["qLightEmitters"]);
   return {
     actionAvailable: booleanField(state, "qActionAvailable"),
     holes: quintHoleSet(state["qHoles"]).map(holeName).sort(),
     objectDamage: objectDamageFromQuint(state["qObjectDamage"]),
-    lightEmitters: lightEmittersFromQuint(state["qLightEmitters"]),
+    lightEmitters,
+    objectInvisibleBenefitDenied:
+      objectInvisibleBenefitDeniedFromLightEmitters(lightEmitters),
     lastResult: mbtLastResult(state["qLastResult"]),
     lastInvalidReason: mbtLastInvalidReason(state["qLastInvalidReason"]),
   };
@@ -1680,6 +1699,10 @@ function projectStarryWispObjectMbtState(input: {
     lightEmitters: snapshot.lightEmitters
       .map(projectLightEmitter)
       .sort(compareJsonStable),
+    objectInvisibleBenefitDenied: objectInvisibleBenefitDenied(
+      input.state,
+      starryWispObjectId,
+    ),
     lastResult: input.lastResult,
     lastInvalidReason: input.lastInvalidReason,
   };
@@ -2832,17 +2855,39 @@ function projectObjectDamage(
 function projectLightEmitter(
   emitter: BattleLightEmitter,
 ): LightEmitterMbtProjection {
-  return {
-    sourceSpellId: emitter.sourceSpellId,
-    sourceCombatantId: emitter.sourceCombatantId,
-    attachment: projectLightEmitterAttachment(emitter.attachment),
-    emission: projectLightEmission(emitter.emission),
-    expiresAt: projectLightEmitterExpiration(emitter.expiresAt),
-  };
+  return Match.value(emitter).pipe(
+    Match.when({ kind: "spellLightEmitter" }, (spellEmitter) => ({
+      kind: "spellLightEmitter" as const,
+      sourceSpellId: spellEmitter.sourceSpellId,
+      sourceCombatantId: spellEmitter.sourceCombatantId,
+      attachment: projectLightEmitterAttachment(spellEmitter.attachment),
+      emission: projectLightEmission(spellEmitter.emission),
+      expiresAt: projectLightEmitterExpiration(spellEmitter.expiresAt),
+    })),
+    Match.when(
+      { kind: "objectInvisibleRevealLightEmitter" },
+      (objectRevealEmitter) => ({
+        kind: "objectInvisibleRevealLightEmitter" as const,
+        sourceSpellId: objectRevealEmitter.sourceSpellId,
+        sourceCombatantId: objectRevealEmitter.sourceCombatantId,
+        objectId: objectRevealEmitter.objectId,
+        emission: {
+          kind: "dim" as const,
+          radiusFeet: Number(objectRevealEmitter.emission.radiusFeet),
+        },
+        expiresAt: {
+          kind: "endOfTurn" as const,
+          combatantId: objectRevealEmitter.expiresAt.combatantId,
+          round: Number(objectRevealEmitter.expiresAt.round),
+        },
+      }),
+    ),
+    Match.exhaustive,
+  );
 }
 
 function projectLightEmitterAttachment(
-  attachment: BattleLightEmitter["attachment"],
+  attachment: BattleLightEmitterAttachment,
 ): LightEmitterAttachmentMbtProjection {
   return Match.value(attachment).pipe(
     Match.when({ kind: "combatant" }, (combatant) => ({
@@ -2935,17 +2980,55 @@ function lightEmittersFromQuint(
 
 function lightEmitterFromQuint(raw: unknown): LightEmitterMbtProjection {
   const tag = quintVariantTag(raw);
-  if (tag !== "SpellLightEmitter") {
-    throw new Error(`Unknown Quint light emitter variant: ${tag}`);
+  if (tag === "SpellLightEmitter") {
+    const fields = quintVariantRecordValue(raw, "SpellLightEmitter");
+    return {
+      kind: "spellLightEmitter",
+      sourceSpellId: spellIdFromQuint(fields["sourceSpell"], "sourceSpell"),
+      sourceCombatantId: actorIdFromQuint(fields["source"], "source"),
+      attachment: lightEmitterAttachmentFromQuint(fields["attachment"]),
+      emission: lightEmissionFromQuint(fields["emission"]),
+      expiresAt: lightEmitterExpirationFromQuint(fields["expiresAt"]),
+    };
   }
-  const fields = quintVariantRecordValue(raw, "SpellLightEmitter");
-  return {
-    sourceSpellId: spellIdFromQuint(fields["sourceSpell"], "sourceSpell"),
-    sourceCombatantId: actorIdFromQuint(fields["source"], "source"),
-    attachment: lightEmitterAttachmentFromQuint(fields["attachment"]),
-    emission: lightEmissionFromQuint(fields["emission"]),
-    expiresAt: lightEmitterExpirationFromQuint(fields["expiresAt"]),
-  };
+  if (tag === "ObjectInvisibleRevealLightEmitter") {
+    const fields = quintVariantRecordValue(
+      raw,
+      "ObjectInvisibleRevealLightEmitter",
+    );
+    return {
+      kind: "objectInvisibleRevealLightEmitter",
+      sourceSpellId: spellIdFromQuint(fields["sourceSpell"], "sourceSpell"),
+      sourceCombatantId: actorIdFromQuint(fields["source"], "source"),
+      objectId: objectIdFromQuint(fields["object"], "object"),
+      emission: {
+        kind: "dim",
+        radiusFeet: numberFromQuintInt(
+          fields["dimLightRadiusFeet"],
+          "dimLightRadiusFeet",
+        ),
+      },
+      expiresAt: {
+        kind: "endOfTurn",
+        combatantId: actorIdFromQuint(
+          fields["expiresAtActor"],
+          "expiresAtActor",
+        ),
+        round: numberFromQuintInt(fields["expiresAtRound"], "expiresAtRound"),
+      },
+    };
+  }
+  throw new Error(`Unknown Quint light emitter variant: ${tag}`);
+}
+
+function objectInvisibleBenefitDeniedFromLightEmitters(
+  lightEmitters: readonly LightEmitterMbtProjection[],
+): boolean {
+  return lightEmitters.some(
+    (emitter) =>
+      emitter.kind === "objectInvisibleRevealLightEmitter" &&
+      emitter.objectId === starryWispObjectId,
+  );
 }
 
 function lightEmitterExpirationFromQuint(
@@ -3235,7 +3318,10 @@ function booleanField(
   state: Readonly<Record<string, unknown>>,
   field: string,
 ): boolean {
-  const value = state[field];
+  return booleanFromQuint(state[field], field);
+}
+
+function booleanFromQuint(value: unknown, field: string): boolean {
   if (typeof value === "boolean") {
     return value;
   }

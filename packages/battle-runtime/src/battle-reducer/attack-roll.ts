@@ -46,6 +46,7 @@ import {
   type BattleTargetChoiceHole,
   type BattleUnitFeatureSavingThrowOutcomeHole,
   type BattleUnitFeatureDecisionHole,
+  type BattleLightEmitter,
   type BattleObjectOutline,
   type BattleState,
   type BattleTargetSpatialFact,
@@ -187,12 +188,7 @@ export function requiredObjectTargetAttackRollMode(
 ): AttackRollMode | undefined {
   const attacker = state.combatants.get(attackerId);
   const hasAdvantage =
-    activeEffectGrantsAttackRollMode(
-      state,
-      attacker,
-      undefined,
-      "advantage",
-    ) ||
+    activeEffectGrantsAttackRollMode(state, attacker, undefined, "advantage") ||
     objectOutlineGrantsAttackRollAdvantage(
       state.objectOutlines,
       targetObjectId,
@@ -225,11 +221,7 @@ export function requiredSpellObjectTargetAttackRollMode(
   );
   const hasAdvantage =
     baseMode === "advantage" ||
-    ongoingFeatureGrantsSpellAttackRollMode(
-      attacker,
-      invocation,
-      "advantage",
-    );
+    ongoingFeatureGrantsSpellAttackRollMode(attacker, invocation, "advantage");
   const hasDisadvantage =
     baseMode === "disadvantage" ||
     ongoingFeatureGrantsSpellAttackRollMode(
@@ -246,6 +238,30 @@ export function objectTargetAttackNeedsSightFact(
 ): boolean {
   return state.objectOutlines.some(
     (outline) => outline.objectId === targetObjectId,
+  );
+}
+
+export function objectInvisibleBenefitDenied(
+  state: BattleState,
+  targetObjectId: BattleObjectId,
+): boolean {
+  return (
+    state.objectOutlines.some(
+      (outline) => outline.objectId === targetObjectId,
+    ) ||
+    state.lightEmitters.some((emitter) =>
+      objectLightEmitterDeniesInvisibleBenefit(emitter, targetObjectId),
+    )
+  );
+}
+
+function objectLightEmitterDeniesInvisibleBenefit(
+  emitter: BattleLightEmitter,
+  targetObjectId: BattleObjectId,
+): boolean {
+  return (
+    emitter.kind === "objectInvisibleRevealLightEmitter" &&
+    emitter.objectId === targetObjectId
   );
 }
 
@@ -278,11 +294,7 @@ export function requiredSpellAttackRollMode(
   );
   const hasAdvantage =
     baseMode === "advantage" ||
-    ongoingFeatureGrantsSpellAttackRollMode(
-      attacker,
-      invocation,
-      "advantage",
-    );
+    ongoingFeatureGrantsSpellAttackRollMode(attacker, invocation, "advantage");
   const hasDisadvantage =
     baseMode === "disadvantage" ||
     ongoingFeatureGrantsSpellAttackRollMode(
@@ -677,7 +689,9 @@ export function weaponMasteryToppleSavingThrowHole(
     dc: {
       kind: "fixed",
       dc: difficultyClass(
-        8 + Number(attack.abilityModifier) + combatantProficiencyBonus(attacker),
+        8 +
+          Number(attack.abilityModifier) +
+          combatantProficiencyBonus(attacker),
       ),
     },
     targetIds: [targetId],

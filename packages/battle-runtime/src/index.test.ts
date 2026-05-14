@@ -44,6 +44,7 @@ import {
   endTurn,
   initiativeScore,
   KNOCKED_OUT_UNCONSCIOUS,
+  objectInvisibleBenefitDenied,
   resolveBattleSubject,
   resolveBardicInspirationFailedD20Test,
   resolveBattleReaction,
@@ -4069,12 +4070,12 @@ describe("battle runtime", () => {
     if (resolvedFailureTarget === undefined) {
       throw new Error("Expected Goblin after Topple resolution.");
     }
-    expect(
-      hasCondition(resolvedFailureTarget.conditions, "prone"),
-    ).toBe(true);
+    expect(hasCondition(resolvedFailureTarget.conditions, "prone")).toBe(true);
 
     for (const toppleFill of [
-      savingThrowOutcomeFill(saveHole, [{ targetId: goblinId, succeeded: true }]),
+      savingThrowOutcomeFill(saveHole, [
+        { targetId: goblinId, succeeded: true },
+      ]),
       savingThrowOutcomeFill(saveHole, []),
     ]) {
       const noOp = resolveBattleSubject({
@@ -19029,6 +19030,12 @@ describe("battle runtime", () => {
     });
     expect("objectDamages" in requireResolved(result)).toBe(false);
     expect(requireResolved(result).state.lightEmitters).toEqual([]);
+    expect(
+      objectInvisibleBenefitDenied(
+        requireResolved(result).state,
+        targetFillForObject.value,
+      ),
+    ).toBe(false);
   });
 
   test("Starry Wisp object attack rolls enforce attacker-wide disadvantage", () => {
@@ -19189,9 +19196,10 @@ describe("battle runtime", () => {
       snapshot: {
         lightEmitters: [
           {
+            kind: "objectInvisibleRevealLightEmitter",
             sourceSpellId: "starry_wisp",
             sourceCombatantId: wizardId,
-            attachment: { kind: "object", objectId },
+            objectId,
             emission: { kind: "dim", radiusFeet: movementFeet(10) },
           },
         ],
@@ -19202,6 +19210,9 @@ describe("battle runtime", () => {
         turn: { actionResources: [] },
       },
     });
+    const resolved = requireResolved(result);
+    expect(objectInvisibleBenefitDenied(resolved.state, objectId)).toBe(true);
+    expect(resolved.state.objectOutlines).toEqual([]);
 
     const thresholdObjectId = battleObjectId("reinforced-training-crystal");
     const thresholdTargetFill = objectTargetFill({
@@ -19249,6 +19260,95 @@ describe("battle runtime", () => {
         },
       ],
     });
+  });
+
+  test("Starry Wisp object Invisible-benefit denial expires with its object Dim Light emitter", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-starry-wisp-object-invisible-denial"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          classLevel: 5,
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("starry_wisp")],
+            preparedSpells: [],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject = magicSubject("starry_wisp");
+    const objectId = battleObjectId("invisible-training-crystal");
+    const objectTarget = findHole(
+      findAct(state, subject).initialHoles,
+      "objectTargetChoice",
+    );
+    const objectFill = objectTargetFill({
+      hole: objectTarget,
+      objectId,
+      spellId: "starry_wisp",
+      damageDisposition: { kind: "tableResolved" },
+    });
+    const attackRoll = requireHole(
+      resolveBattleSubject({ state, subject, fills: [objectFill] }),
+      "attackRoll",
+    );
+    const damage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          objectFill,
+          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    const hit = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          objectFill,
+          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+          damageRollFillWithGroups(damage, [[3, 3]]),
+        ],
+      }),
+    );
+
+    expect(objectInvisibleBenefitDenied(hit.state, objectId)).toBe(true);
+    expect(hit.state.lightEmitters).toEqual([
+      expect.objectContaining({
+        kind: "objectInvisibleRevealLightEmitter",
+        sourceSpellId: "starry_wisp",
+        objectId,
+      }),
+    ]);
+
+    const afterWizardTurn = requireResolved(
+      endTurn({ state: hit.state, actorId: wizardId }),
+    );
+    const afterSkeletonTurn = requireResolved(
+      endTurn({ state: afterWizardTurn.state, actorId: skeletonId }),
+    );
+    const afterWizardNextTurn = requireResolved(
+      endTurn({ state: afterSkeletonTurn.state, actorId: wizardId }),
+    );
+
+    expect(objectInvisibleBenefitDenied(afterWizardTurn.state, objectId)).toBe(
+      true,
+    );
+    expect(
+      objectInvisibleBenefitDenied(afterSkeletonTurn.state, objectId),
+    ).toBe(true);
+    expect(
+      objectInvisibleBenefitDenied(afterWizardNextTurn.state, objectId),
+    ).toBe(false);
+    expect(afterWizardNextTurn.state.lightEmitters).toEqual([]);
+    expect(afterWizardNextTurn.state.objectOutlines).toEqual([]);
   });
 
   test("Sacred Flame uses a creature target before Dexterity Saving Throw damage", () => {
@@ -24918,10 +25018,7 @@ function attackRollFill(
 
 function unitFeatureDecisionFill(
   hole: BattleHole,
-  value: Extract<
-    BattleFill,
-    { readonly kind: "unitFeatureDecision" }
-  >["value"],
+  value: Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>["value"],
 ): BattleFill {
   if (hole.kind !== "unitFeatureDecision") {
     throw new Error("Expected unitFeatureDecision hole.");

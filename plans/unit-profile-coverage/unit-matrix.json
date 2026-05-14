@@ -62,9 +62,9 @@
       "value": 134
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 72,
-      "numerator": 65,
-      "percent": "90.3%"
+      "denominator": 73,
+      "numerator": 66,
+      "percent": "90.4%"
     },
     "profileClassificationCoverage": {
       "denominator": 134,
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 72,
+      "denominator": 73,
       "numerator": 10,
-      "percent": "13.9%"
+      "percent": "13.7%"
     },
     "supportedProfileCoverage": {
       "denominator": 108,
-      "numerator": 72,
-      "percent": "66.7%"
+      "numerator": 73,
+      "percent": "67.6%"
     }
   },
   "metricSemantics": [
@@ -1004,6 +1004,7 @@
         "SRDINV34",
         "SRDINV59A",
         "SRDINV59B",
+        "SRDINV79",
         "SRDINV51",
         "SRDINV52",
         "SRDINV64",
@@ -2645,6 +2646,22 @@
         "spell.invocation-damage-save-or-attack"
       ],
       "taskId": "SRDINV59B"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Starry Wisp's hit-applied object Invisible-benefit denial projection derived from the object Dim Light emitter through end-of-caster-next-turn expiry.",
+      "profileIds": [
+        "spell.invocation-damage-save-or-attack"
+      ],
+      "taskId": "SRDINV79"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Starry Wisp object-hit Invisible-benefit denial, miss non-application, expiry with the object Dim Light emitter, and no generic object inventory or visibility state.",
+      "profileIds": [
+        "spell.invocation-damage-save-or-attack"
+      ],
+      "taskId": "SRDINV79"
     },
     {
       "claimKind": "qnt-proof",
@@ -5684,6 +5701,7 @@
             "SRDINV34",
             "SRDINV59A",
             "SRDINV59B",
+            "SRDINV79",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -5949,6 +5967,7 @@
             "SRDINV34",
             "SRDINV59A",
             "SRDINV59B",
+            "SRDINV79",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -6062,6 +6081,7 @@
             "SRDINV34",
             "SRDINV59A",
             "SRDINV59B",
+            "SRDINV79",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -6514,6 +6534,7 @@
             "SRDINV34",
             "SRDINV59A",
             "SRDINV59B",
+            "SRDINV79",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -7232,6 +7253,7 @@
             "SRDINV34",
             "SRDINV59A",
             "SRDINV59B",
+            "SRDINV79",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -7465,6 +7487,7 @@
             "SRDINV34",
             "SRDINV59A",
             "SRDINV59B",
+            "SRDINV79",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -7539,6 +7562,7 @@
             "SRDINV34",
             "SRDINV59A",
             "SRDINV59B",
+            "SRDINV79",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -7842,6 +7866,7 @@
             "SRDINV34",
             "SRDINV59A",
             "SRDINV59B",
+            "SRDINV79",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -8030,6 +8055,7 @@
             "SRDINV34",
             "SRDINV59A",
             "SRDINV59B",
+            "SRDINV79",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -8104,6 +8130,7 @@
             "SRDINV34",
             "SRDINV59A",
             "SRDINV59B",
+            "SRDINV79",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -8205,6 +8232,7 @@
             "SRDINV34",
             "SRDINV59A",
             "SRDINV59B",
+            "SRDINV79",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -8360,6 +8388,7 @@
             "SRDINV34",
             "SRDINV59A",
             "SRDINV59B",
+            "SRDINV79",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -8515,6 +8544,7 @@
             "SRDINV34",
             "SRDINV59A",
             "SRDINV59B",
+            "SRDINV79",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -8579,27 +8609,13 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "followUpTaskId": "SRDINV79",
-            "mechanic": "object-target Invisible-condition benefit denial requires a promoted object condition-benefit projection boundary"
-          }
-        ],
         "profileIds": [
           "spell.invocation-damage-save-or-attack"
         ],
         "rawRequirementIds": [
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
         ],
-        "supportedMechanics": [
-          "creature-or-object target boundary with combatant target choice or typed caller-supplied object identity",
-          "caller-supplied object range, Armor Class, Hit Points or table-resolved damage disposition facts",
-          "ranged spell attack hit/miss adjudication against combatant and object targets",
-          "Radiant damage and cantrip damage scaling",
-          "target emits Dim Light in a 10-foot radius until the end of the caster's next turn through a source-owned light emitter projection",
-          "hit combatant targets can't benefit from the Invisible condition until the end of the caster's next turn without removing the condition"
-        ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -8629,6 +8645,7 @@
             "SRDINV34",
             "SRDINV59A",
             "SRDINV59B",
+            "SRDINV79",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -8703,6 +8720,7 @@
             "SRDINV34",
             "SRDINV59A",
             "SRDINV59B",
+            "SRDINV79",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -8858,6 +8876,7 @@
             "SRDINV34",
             "SRDINV59A",
             "SRDINV59B",
+            "SRDINV79",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -8959,6 +8978,7 @@
             "SRDINV34",
             "SRDINV59A",
             "SRDINV59B",
+            "SRDINV79",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -9466,6 +9486,7 @@
             "SRDINV34",
             "SRDINV59A",
             "SRDINV59B",
+            "SRDINV79",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
@@ -9773,6 +9794,7 @@
             "SRDINV34",
             "SRDINV59A",
             "SRDINV59B",
+            "SRDINV79",
             "SRDINV51",
             "SRDINV52",
             "SRDINV64",
