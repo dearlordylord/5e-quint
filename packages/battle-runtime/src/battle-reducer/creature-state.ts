@@ -195,6 +195,7 @@ export function battleCreatureStateFromInit(
         weaponProficiencies: creatureInit.weaponProficiencies ?? [],
         selectedLoadout: creatureInit.selectedLoadout,
         weaponMasteries: creatureInit.weaponMasteries ?? [],
+        invocationFeatures: creatureInit.invocationFeatures ?? [],
         speed: creatureInit.speed,
         attack: creatureInit.attack,
         unarmedStrike: creatureInit.unarmedStrike,

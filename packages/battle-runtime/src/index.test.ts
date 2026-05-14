@@ -16760,6 +16760,137 @@ describe("battle runtime", () => {
     });
   });
 
+  test("Eldritch Mind gives Advantage only to damage-triggered Concentration saves", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-eldritch-mind-concentration-save"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Warlock",
+          initiative: 20,
+          attack: null,
+          invocationFeatures: [{ tag: "eldritchMind" }],
+          spellcasting: wizardSpellcasting(),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const readied = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: {
+          tag: "actionSpell" as const,
+          actorId: wizardId,
+          invocation: cantripSpellInvocationRef(
+            "ray_of_frost",
+            "spellAttackDamage",
+          ),
+          mode: { tag: "ready" as const, trigger: "spellCast" as const },
+        },
+        fills: [],
+      }),
+    );
+    const goblinTurn = requireResolved(
+      endTurn({ state: readied.state, actorId: wizardId }),
+    );
+    const target = attackInitialTargetHole(
+      goblinTurn.state,
+      goblinAttackSubject("Scimitar"),
+    );
+    const roll = attackRollHoleAfterTarget(
+      goblinTurn.state,
+      target,
+      goblinAttackSubject("Scimitar"),
+      wizardId,
+    );
+    const damage = attackDamageHoleAfterHit(
+      goblinTurn.state,
+      target,
+      roll,
+      { total: 14, naturalD20: 10 },
+      goblinAttackSubject("Scimitar"),
+      wizardId,
+    );
+    const concentration = requireHole(
+      resolveBattleSubject({
+        state: goblinTurn.state,
+        subject: goblinAttackSubject("Scimitar"),
+        fills: [
+          targetFill(target, wizardId),
+          attackRollFill(roll, { total: 14, naturalD20: 10 }),
+          damageRollFill(damage, 3),
+        ],
+      }),
+      "concentrationSavingThrow",
+    );
+
+    expect(concentration).toMatchObject({
+      combatantId: wizardId,
+      dc: 10,
+      damageAmount: 5,
+      rollMode: "advantage",
+    });
+
+    const maintained = requireResolved(
+      resolveBattleSubject({
+        state: goblinTurn.state,
+        subject: goblinAttackSubject("Scimitar"),
+        fills: [
+          targetFill(target, wizardId),
+          attackRollFill(roll, { total: 14, naturalD20: 10 }),
+          damageRollFill(damage, 3),
+          concentrationSavingThrowFill(concentration, true),
+        ],
+      }),
+    );
+
+    expect(maintained.state.combatants.get(wizardId)?.concentration).toEqual({
+      sourceSpellId: "ray_of_frost",
+      effectKind: "readiedSpell",
+    });
+  });
+
+  test("Eldritch Mind does not affect ordinary Constitution spell saves", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-eldritch-mind-ordinary-con-save"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Warlock",
+          initiative: 20,
+          attack: null,
+          invocationFeatures: [{ tag: "eldritchMind" }],
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("inflict_wounds")],
+          }),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+
+    const target = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: magicSubject("inflict_wounds"),
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const savingThrow = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: magicSubject("inflict_wounds"),
+        fills: [targetFill(target, goblinId)],
+      }),
+      "savingThrowOutcome",
+    );
+
+    expect(savingThrow).toMatchObject({
+      ability: "con",
+      targetRollModes: [],
+    });
+  });
+
   test("attack damage disposition replay accepts the following Concentration save", () => {
     const state = startBattleRight({
       battleId: battleId("battle-knock-out-concentration-damage"),
@@ -25132,6 +25263,10 @@ function characterSeed(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["unitFeatures"];
+  readonly invocationFeatures?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["invocationFeatures"];
   readonly characterUnitRefs?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -25195,6 +25330,9 @@ function characterSeed(input: {
       ...(input.unitFeatures === undefined
         ? {}
         : { unitFeatures: input.unitFeatures }),
+      ...(input.invocationFeatures === undefined
+        ? {}
+        : { invocationFeatures: input.invocationFeatures }),
       ...(input.resources === undefined ? {} : { resources: input.resources }),
       ...(input.spellcasting === undefined
         ? {}

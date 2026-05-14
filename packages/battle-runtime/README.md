@@ -181,6 +181,12 @@ existing `persistentArmorEffect` procedure. The Mage Armor Spell Effect remains
 the same source-owned base-AC effect and still ends early when the target dons
 armor.
 
+Selected invocation ownership can also project non-spell battle features.
+`eldritchMind` is the promoted narrow case: damage-triggered Constitution
+Saving Throws made to maintain Concentration expose Advantage on the
+`concentrationSavingThrow` hole. Ordinary Constitution Saving Throws and other
+Saving Throws use their existing roll-mode projections.
+
 ### Support-profile Boundary
 
 `@dnd/battle-runtime` admits authored Surface records through support profiles:

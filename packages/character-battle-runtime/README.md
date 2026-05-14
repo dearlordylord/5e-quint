@@ -16,6 +16,9 @@ Owned boundary functions:
 - `characterSpellcasting` projects selected Armor of Shadows invocation
   ownership into `armorOfShadowsMageArmor` Spell Access for battle-runtime,
   without adding Mage Armor to ordinary prepared-spell slot access.
+- `battleCreatureInitFromCharacterBuild` projects selected Eldritch Mind
+  invocation ownership into the `eldritchMind` battle invocation feature, which
+  battle-runtime uses only for Concentration maintenance Saving Throws.
 - `applyBattleHandoffToCharacterSheet` settles battle-owned HP, Knock Out,
   zero-HP lifecycle, and Spell Slot expenditure state back onto the same
   Character Sheet identity after confirming the battle combatant's max HP still

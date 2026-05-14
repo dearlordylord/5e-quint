@@ -1429,6 +1429,9 @@ export const BattleHoleSchema = Schema.Union(
     combatantId: CombatantId,
     dc: DifficultyClass,
     damageAmount: DamageAmount,
+    rollMode: Schema.optionalWith(Schema.Literal(...ATTACK_ROLL_MODES), {
+      exact: true,
+    }),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,

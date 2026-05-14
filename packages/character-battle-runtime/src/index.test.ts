@@ -604,6 +604,36 @@ describe("Character Build battle projection", () => {
     expect(spellcasting.invocationSpellAccesses).toEqual([]);
   });
 
+  test("projects selected Eldritch Mind as a battle invocation feature", () => {
+    const warlockId = combatantId("character-battle-eldritch-mind-warlock");
+    const targetId = combatantId("character-battle-eldritch-mind-target");
+    const state = expectRight(
+      startBattleFromCharacterBuildAndStatBlock({
+        battleId: battleId("character-battle-eldritch-mind"),
+        character: {
+          combatantId: warlockId,
+          characterId: characterId("character:eldritch-mind-warlock"),
+          displayName: "Eldritch Mind Warlock",
+          build: eldritchMindInvocationBuild(),
+          initiative: initiativeScore(20),
+          side: battleCombatantSide("party"),
+        },
+        statBlockBattleInput: {
+          combatantId: targetId,
+          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          initiative: initiativeScore(10),
+          side: battleCombatantSide("monsters"),
+        },
+        unitLibrary,
+      }),
+    );
+
+    expect(state.combatants.get(warlockId)?.origin).toMatchObject({
+      kind: "character",
+      invocationFeatures: [{ tag: "eldritchMind" }],
+    });
+  });
+
   test("does not promote unrelated passive prepared Spell Access during Favored Enemy projection", () => {
     const spellcasting = expectRight(
       characterSpellcasting({
@@ -2124,6 +2154,17 @@ function favoredEnemyRangerResourceBuild(): CharacterBuild {
 function armorOfShadowsWarlockBuild(
   input: { readonly armorOfShadows?: boolean } = {},
 ): CharacterBuild {
+  const features: CharacterBuild["features"] = [
+    ...(input.armorOfShadows === false
+      ? []
+      : [
+          {
+            kind: "selectedEldritchInvocation" as const,
+            selectedFromUnitId: "warlock_eldritch_invocations",
+            invocationId: eldritchInvocationId("armor_of_shadows"),
+          },
+        ]),
+  ];
   return {
     progression: {
       startingClass: classUnitId("class_warlock"),
@@ -2144,16 +2185,7 @@ function armorOfShadowsWarlockBuild(
       }),
     ),
     proficiencyChoices: [],
-    features:
-      input.armorOfShadows === false
-        ? []
-        : [
-            {
-              kind: "selectedEldritchInvocation",
-              selectedFromUnitId: "warlock_eldritch_invocations",
-              invocationId: eldritchInvocationId("armor_of_shadows"),
-            },
-          ],
+    features,
     equipment: {
       owned: [],
       loadout: {},
@@ -2177,6 +2209,21 @@ function armorOfShadowsWarlockBuild(
         },
       },
     },
+  };
+}
+
+function eldritchMindInvocationBuild(): CharacterBuild {
+  return {
+    ...pactBladeInvocationBuild("weapon_longsword", {
+      pactOfTheBlade: false,
+    }),
+    features: [
+      {
+        kind: "selectedEldritchInvocation",
+        selectedFromUnitId: "warlock_eldritch_invocations",
+        invocationId: eldritchInvocationId("eldritch_mind"),
+      },
+    ],
   };
 }
 

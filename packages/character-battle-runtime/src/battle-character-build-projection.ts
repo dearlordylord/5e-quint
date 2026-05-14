@@ -2,6 +2,7 @@
 import {
   scoreModifier,
   type CharacterBattleSpellSlotState,
+  type CharacterBattleInvocationFeature,
   type CharacterBattleClassLevelInit,
   type CharacterBattleFeaturePreparedSpellInit,
   type CharacterBattleInvocationSpellAccessInit,
@@ -374,6 +375,7 @@ type MartialArtsAttackProjection = NonNullable<
 const PACT_OF_THE_BLADE_INVOCATION_ID =
   eldritchInvocationId("pact_of_the_blade");
 const ARMOR_OF_SHADOWS_INVOCATION_ID = eldritchInvocationId("armor_of_shadows");
+const ELDRITCH_MIND_INVOCATION_ID = eldritchInvocationId("eldritch_mind");
 const ARMOR_OF_SHADOWS_SPELL_ID = "mage_armor";
 const PACT_OF_THE_BLADE_ADDITIONAL_DAMAGE_TYPE_CHOICES = [
   "necrotic",
@@ -445,6 +447,14 @@ function pactBladeWeaponAttack(
 
 function hasPactOfTheBlade(build: CharacterBuild): boolean {
   return hasSelectedEldritchInvocation(build, PACT_OF_THE_BLADE_INVOCATION_ID);
+}
+
+export function characterInvocationFeatures(
+  build: CharacterBuild,
+): readonly CharacterBattleInvocationFeature[] {
+  return hasSelectedEldritchInvocation(build, ELDRITCH_MIND_INVOCATION_ID)
+    ? [{ tag: "eldritchMind" }]
+    : [];
 }
 
 function hasSelectedEldritchInvocation(

@@ -65,6 +65,7 @@ import type {
 } from "./battle-action-options.ts";
 import type {
   BattlePositiveHpUnconscious,
+  CharacterBattleInvocationFeature,
   BattleUnitRef,
   BattleWalkSpeed,
   CharacterBattleLoadoutRef,
@@ -2442,6 +2443,7 @@ type BattleCreatureStateCommon = {
         readonly weaponProficiencies: readonly WeaponProficiency[];
         readonly selectedLoadout: CharacterBattleLoadoutRef;
         readonly weaponMasteries: readonly CharacterBattleWeaponMasterySelection[];
+        readonly invocationFeatures: readonly CharacterBattleInvocationFeature[];
         readonly speed: BattleWalkSpeed;
         readonly attack: CharacterWeaponAttackActionOption | null;
         readonly unarmedStrike: CharacterUnarmedStrikeActionOption;
@@ -3085,6 +3087,7 @@ export type BattleConcentrationSavingThrowHole = {
   readonly combatantId: CombatantId;
   readonly dc: DifficultyClass;
   readonly damageAmount: DamageAmount;
+  readonly rollMode?: AttackRollMode;
 };
 export type BattleReactionDecisionHole = {
   readonly holeInstanceKey: HoleInstanceKey;

@@ -109,6 +109,7 @@ export type {
   BattleUnitRef,
   BattleWalkSpeed,
   CharacterBattleCreatureInit,
+  CharacterBattleInvocationFeature,
   CharacterBattleLoadoutRef,
   CharacterBattleWeaponMasterySelection,
   StatBlockBattleCreatureInit,

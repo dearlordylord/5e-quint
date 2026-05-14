@@ -30,6 +30,10 @@ export type BattleUnitRef = {
   readonly supportProfiles: readonly BattleUnitSupportProfile[];
 };
 
+export type CharacterBattleInvocationFeature = {
+  readonly tag: "eldritchMind";
+};
+
 export type CharacterBattleLoadoutRef = {
   readonly armor?: UnitRecord["id"];
   readonly shield?: UnitRecord["id"];
@@ -85,6 +89,7 @@ export type CharacterBattleCreatureInit = {
   readonly unarmedStrike: CharacterUnarmedStrikeActionOption;
   readonly offHandAttack?: CharacterWeaponAttackActionOption | undefined;
   readonly unitFeatures?: readonly CharacterBattleFeatureInit[];
+  readonly invocationFeatures?: readonly CharacterBattleInvocationFeature[];
   readonly resources?: readonly CharacterBattleResourceInit[];
   readonly spellcasting?: CharacterBattleSpellcastingInit;
 };

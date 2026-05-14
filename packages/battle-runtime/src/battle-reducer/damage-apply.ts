@@ -855,7 +855,19 @@ export function concentrationSavingThrowHole(
     combatantId: combatant.combatantId,
     dc: concentrationSavingThrowDc(effectiveDamage),
     damageAmount: toDamageAmount(effectiveDamage),
+    ...(combatantHasEldritchMind(combatant)
+      ? { rollMode: "advantage" as const }
+      : {}),
   };
+}
+
+function combatantHasEldritchMind(combatant: BattleCreatureState): boolean {
+  return (
+    combatant.origin.kind === "character" &&
+    combatant.origin.invocationFeatures.some(
+      (feature) => feature.tag === "eldritchMind",
+    )
+  );
 }
 
 function applyInstantDeath(

@@ -46,6 +46,7 @@ import {
   characterAttackActionOption,
   characterBaseUnarmedStrikeActionOption,
   characterBattleLoadoutFromBuild,
+  characterInvocationFeatures,
   characterOffHandAttackActionOption,
   characterPactBladeBondedWeaponItemId,
   characterSpellcasting,
@@ -277,6 +278,7 @@ export function battleCreatureInitFromCharacterBuild(
       ...(weaponMasteries.right.length === 0
         ? {}
         : { weaponMasteries: weaponMasteries.right }),
+      invocationFeatures: characterInvocationFeatures(input.build),
       attack: attack.right,
       unarmedStrike: unarmedStrike.right,
       ...(offHandAttack.right === undefined

@@ -331,6 +331,7 @@ module battleRuntime {
   type PreventedProtectionCondition = PreventedCharmed | PreventedFrightened
   type PossessionAttemptDisposition = PossessionPreventedByCreatureTypeProtection | PossessionUnprevented
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
+  type SavingThrowRollMode = NormalSavingThrow | AdvantageSavingThrow | DisadvantageSavingThrow
   type SpellSourceClass = SorcererSpellSource | NonSorcererSpellSource
   type RuntimeCreatureType = HumanoidCreature | BeastCreature | AberrationCreature | CelestialCreature | ElementalCreature | FeyCreature | FiendCreature | UndeadCreature
   type ObjectTarget =
@@ -2531,6 +2532,12 @@ module battleRuntime {
   pure def concentrationSavingThrowDc(damage: int): int = {
     battleRuntimeConcentrationSavingThrowDc(damage)
   }
+
+  pure def eldritchMindConcentrationSavingThrowMode(hasEldritchMind: bool): SavingThrowRollMode =
+    if (hasEldritchMind)
+      AdvantageSavingThrow
+    else
+      NormalSavingThrow
 
   pure def spellEffectConcentrationActiveEffects(): Set[ActiveEffect] =
     Set(ShieldOfFaithArmorClassBonus, HeroismFrightenedImmunity, BaneD20RollPenalty, BlessD20RollBonus, GuidanceAbilityCheckBonus, EntangleRestrained, FaerieFireOutline, ProtectionFromEvilAndGoodCreatureTypeProtection, ExpeditiousRetreatDashBonusAction)
@@ -9221,6 +9228,13 @@ module battleRuntime {
     all {
       assert(concentrationSavingThrowDc(24) == 12),
       assert(concentrationSavingThrowDc(80) == 30),
+    }
+  }
+
+  run test_eldritch_mind_only_changes_concentration_saving_throw_mode = {
+    all {
+      assert(eldritchMindConcentrationSavingThrowMode(true) == AdvantageSavingThrow),
+      assert(eldritchMindConcentrationSavingThrowMode(false) == NormalSavingThrow),
     }
   }
 
