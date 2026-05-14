@@ -576,6 +576,46 @@ export function applyGreaseGroundHazardCastEffects(input: {
   };
 }
 
+export function applyFogCloudObscurementCastEffect(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly areaId: string;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "fogCloudObscurement" }
+  >;
+}): BattleState {
+  const combatants = new Map(input.state.combatants);
+  const caster = combatants.get(input.actorId);
+  if (caster === undefined) {
+    return input.state;
+  }
+  const replacing = caster.activeEffects.filter(
+    (effect) =>
+      effect.kind === "fogCloudObscurement" &&
+      effect.sourceSpellId === input.invocation.spell.id &&
+      effect.sourceCombatantId === input.actorId &&
+      effect.areaId === input.areaId,
+  );
+  const activeEffects = [
+    ...caster.activeEffects.filter((effect) => !replacing.includes(effect)),
+    {
+      kind: "fogCloudObscurement" as const,
+      sourceSpellId: input.invocation.spell.id,
+      sourceCombatantId: input.actorId,
+      areaId: input.areaId,
+      radiusFeet: input.invocation.targeting.radiusFeet,
+      expiresAt: {
+        kind: "concentration" as const,
+        combatantId: input.actorId,
+        durationTicks: input.invocation.durationTicks,
+      },
+    },
+  ];
+  combatants.set(input.actorId, { ...caster, activeEffects });
+  return { ...input.state, combatants };
+}
+
 export function applyGreaseProneToTarget(
   state: BattleState,
   targetId: CombatantId,

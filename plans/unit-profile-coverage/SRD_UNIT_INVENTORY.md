@@ -21,8 +21,8 @@ This is the default `%` for level-1 readiness questions. A row counts only when 
 
 - accepted: 221
 - accepted-no-battle-effect: 69
-- battle-runtime-required: 37
-- partial-battle-runtime: 40
+- battle-runtime-required: 33
+- partial-battle-runtime: 44
 
 ### Level-1 Rows by Disposition
 
@@ -45,8 +45,8 @@ This is the default `%` for level-1 readiness questions. A row counts only when 
 
 ### Spell Unit Pressure by Disposition
 
-- catalog-installed-owner-evidence-present: 124
-- catalog-installed-owner-evidence-required: 12
+- catalog-installed-owner-evidence-present: 128
+- catalog-installed-owner-evidence-required: 8
 - catalog-only/dead-for-now: 75
 
 ## Recommended Ralph Batches

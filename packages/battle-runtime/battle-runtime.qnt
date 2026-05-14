@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points
@@ -12,6 +12,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-damage-reduction
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-sleep-repeat-save-lifecycle
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-grease-ground-hazard
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-fog-cloud-obscurement
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-command-halt-grovel
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-command-drop-held-object
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-command-approach-route
@@ -250,6 +251,12 @@ module battleRuntime {
   //   minute, and forces Dexterity Saving Throws when the grease appears, when
   //   a creature enters the area, and when a creature ends its turn there; a
   //   failed save gives the Prone condition.
+  //   Spells/Descriptions-E-L.md lines 584-595, Rules-Glossary.md lines
+  //   239-247, 524-526, and 924-928, and UBIQUITOUS_LANGUAGE.md: Fog Cloud is a
+  //   level-1 Action spell that creates a caller-supplied 20-foot-radius
+  //   Sphere of fog, makes that area Heavily Obscured while Concentration
+  //   lasts up to 1 hour, increases the radius by 20 feet per slot above 1,
+  //   and ends early when the table supplies the strong-wind dispersal fact.
   //   Spells/Descriptions-A-D.md lines 820-835, Playing-the-Game.md lines
   //   533-551 and 634-640, Rules-Glossary.md lines 738-740 and 904-910,
   //   and UBIQUITOUS_LANGUAGE.md: Command is a level-1 Action spell whose
@@ -310,7 +317,7 @@ module battleRuntime {
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
   type Ability = StrAbility | DexAbility | ConAbility | IntAbility | WisAbility | ChaAbility
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | FireBolt | EldritchBlast | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | Hex | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | Light | TrueStrike | Grease | Command | DissonantWhispers | FeatherFall | HellishRebuke | SorcerousBurst | SpareTheDying
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | FireBolt | EldritchBlast | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | Hex | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | Light | TrueStrike | Grease | FogCloud | Command | DissonantWhispers | FeatherFall | HellishRebuke | SorcerousBurst | SpareTheDying
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | StarryWispSpellAttack | FireBoltSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack | SorcerousBurstSpellAttack({ damageTypeChoice: BattleRuntimeSorcerousBurstDamageTypeChoice, spellcastingAbilityModifier: int, characterLevel: int })
   type FixedSpellAttackDamageInvocation = RayOfFrostFixedSpellAttack | PoisonSprayFixedSpellAttack | ChillTouchFixedSpellAttack | StarryWispFixedSpellAttack | FireBoltFixedSpellAttack | ShockingGraspFixedSpellAttack | GuidingBoltFixedSpellAttack | RayOfSicknessFixedSpellAttack | ProduceFlameHurlFixedSpellAttack
   type SpellAttackBeamSequenceInvocation =
@@ -342,7 +349,7 @@ module battleRuntime {
   type CommandOption = CommandGrovelOption | CommandHaltOption | CommandDropOption | CommandApproachOption | CommandFleeOption
 
   type MarkedDamageRiderTransfer = AwaitingTargetDrop | TransferAvailable | TransferAvailableAfterTurn({ actor: Actor, round: int })
-  type ActiveEffect = BardicInspirationDie({ source: Actor, dieSize: int, durationTicks: int }) | MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | HexDamageRider({ target: Actor, ability: Ability, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | RayOfSicknessPoisoned | ChillTouchHitPointRegainPrevented({ source: Actor, expiresAtRound: int }) | StarryWispInvisibleBenefitDenied({ source: Actor, expiresAtRound: int }) | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | WeaponMasterySapNextAttackDisadvantage({ source: Actor }) | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodCreatureTypeProtection | ProduceFlameHeldLight({ durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
+  type ActiveEffect = BardicInspirationDie({ source: Actor, dieSize: int, durationTicks: int }) | MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | HexDamageRider({ target: Actor, ability: Ability, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | RayOfSicknessPoisoned | ChillTouchHitPointRegainPrevented({ source: Actor, expiresAtRound: int }) | StarryWispInvisibleBenefitDenied({ source: Actor, expiresAtRound: int }) | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | WeaponMasterySapNextAttackDisadvantage({ source: Actor }) | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodCreatureTypeProtection | ProduceFlameHeldLight({ durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | FogCloudObscurement({ areaId: int, radiusFeet: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
   type PreventedProtectionCondition = PreventedCharmed | PreventedFrightened
   type PossessionAttemptDisposition = PossessionPreventedByCreatureTypeProtection | PossessionUnprevented
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
@@ -1164,6 +1171,11 @@ module battleRuntime {
             areaId: data.areaId,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
+        | FogCloudObscurement(data) => FogCloudObscurement({
+            areaId: data.areaId,
+            radiusFeet: data.radiusFeet,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | BardicInspirationDie(data) => BardicInspirationDie({
             source: data.source,
             dieSize: data.dieSize,
@@ -1182,6 +1194,7 @@ module battleRuntime {
         | JumpMovementReplacement(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | FeatherFallMitigation(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | GreaseGroundHazard(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | FogCloudObscurement(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | BardicInspirationDie(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | _ => true
       })
@@ -1195,13 +1208,13 @@ module battleRuntime {
       fighter: {
         ...state.fighter,
         concentrating: state.fighter.concentrating
-          and (not(activeEffectsContainMarkedDamageRider(state.fighter.activeEffects)) or activeEffectsContainMarkedDamageRider(fighterEffects)),
+          and (not(activeEffectsContainTimedConcentrationSpellEffect(state.fighter.activeEffects)) or activeEffectsContainTimedConcentrationSpellEffect(fighterEffects)),
         activeEffects: fighterEffects,
       },
       goblin: {
         ...state.goblin,
         concentrating: state.goblin.concentrating
-          and (not(activeEffectsContainMarkedDamageRider(state.goblin.activeEffects)) or activeEffectsContainMarkedDamageRider(goblinEffects)),
+          and (not(activeEffectsContainTimedConcentrationSpellEffect(state.goblin.activeEffects)) or activeEffectsContainTimedConcentrationSpellEffect(goblinEffects)),
         activeEffects: goblinEffects,
       },
     }
@@ -1295,6 +1308,7 @@ module battleRuntime {
         | SleepPendingRepeatSave(_) => false
         | SleepUnconscious(_) => false
         | GreaseGroundHazard(_) => false
+        | FogCloudObscurement(_) => false
         | CommandPending(_) => false
       })) 13 + dexMod else baseAc
       val shieldBonus = if (effects.contains(ShieldArmorClassBonus)) 5 else 0
@@ -2612,6 +2626,7 @@ module battleRuntime {
         | HeroismTurnStartTemporaryHitPoints(_) => false
         | EnsnaringStrikeRestrained(_) => false
         | SearingSmiteBurning(_) => false
+        | FogCloudObscurement(_) => false
         | ResistanceDamageReduction(_) => false
         | SleepPendingRepeatSave(_) => false
         | SleepUnconscious(_) => false
@@ -4250,6 +4265,14 @@ module battleRuntime {
       | _ => false
     })
 
+  pure def activeEffectsContainTimedConcentrationSpellEffect(effects: Set[ActiveEffect]): bool =
+    effects.exists(effect => match effect {
+      | HuntersMarkDamageRider(_) => true
+      | HexDamageRider(_) => true
+      | FogCloudObscurement(_) => true
+      | _ => false
+    })
+
   pure def activeEffectsContainHuntersMark(effects: Set[ActiveEffect]): bool =
     effects.exists(effect => match effect {
       | HuntersMarkDamageRider(_) => true
@@ -4882,6 +4905,7 @@ module battleRuntime {
       | Light => false
       | TrueStrike => false
       | Grease => true
+      | FogCloud => true
       | Command => true
       | DissonantWhispers => true
       | FeatherFall => true
@@ -6110,6 +6134,10 @@ module battleRuntime {
 
   pure val greaseDurationTicks = 10
   pure val greaseAreaId = 1
+  pure val fogCloudDurationTicks = 600
+  pure val fogCloudAreaId = 2
+  pure val fogCloudBaseRadiusFeet = 20
+  pure val fogCloudRadiusFeetPerSlotAboveFirst = 20
 
   pure def activeEffectsWithoutGreaseGroundHazard(effects: Set[ActiveEffect], areaId: int): Set[ActiveEffect] =
     effects.filter(effect => match effect {
@@ -6185,6 +6213,53 @@ module battleRuntime {
     savingThrowSucceeded: bool,
   ): BattleState =
     endTurn(resolveGreaseGroundHazardSave(state, targetActor, areaId, savingThrowSucceeded))
+
+  pure def fogCloudRadiusFeet(slotLevel: int): int =
+    fogCloudBaseRadiusFeet + ((slotLevel - 1) * fogCloudRadiusFeetPerSlotAboveFirst)
+
+  pure def activeEffectsWithoutFogCloudObscurement(effects: Set[ActiveEffect], areaId: int): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | FogCloudObscurement(data) => data.areaId != areaId
+      | _ => true
+    })
+
+  pure def resolveFogCloud(
+    state: BattleState,
+    areaId: int,
+    slotLevel: int,
+  ): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)) or slotLevel < 1)
+      state
+    else {
+      val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
+      {
+        ...withoutPrior,
+        fighter: {
+          ...withoutPrior.fighter,
+          concentrating: true,
+          activeEffects: activeEffectsWithoutFogCloudObscurement(withoutPrior.fighter.activeEffects, areaId)
+            .union(Set(FogCloudObscurement({
+              areaId: areaId,
+              radiusFeet: fogCloudRadiusFeet(slotLevel),
+              durationTicks: fogCloudDurationTicks,
+            }))),
+        },
+        actionAvailable: false,
+        spellSlotExpendedThisTurn: true,
+      }
+    }
+
+  pure def fogCloudObscurementActive(state: BattleState, areaId: int): bool =
+    state.fighter.activeEffects.exists(effect => match effect {
+      | FogCloudObscurement(data) => data.areaId == areaId
+      | _ => false
+    })
+
+  pure def disperseFogCloudByStrongWind(state: BattleState, areaId: int): BattleState =
+    if (fogCloudObscurementActive(state, areaId))
+      breakConcentrationSpellEffects(state, Fighter)
+    else
+      state
 
   pure def commandMaxTargets(slotLevel: int): int =
     slotLevel
@@ -7402,6 +7477,7 @@ module battleRuntime {
       assert(expendedSlotsAfterInvocation(Bless, 0) == 1),
       assert(expendedSlotsAfterInvocation(Guidance, 0) == 0),
       assert(expendedSlotsAfterInvocation(Grease, 0) == 1),
+      assert(expendedSlotsAfterInvocation(FogCloud, 0) == 1),
       assert(expendedSlotsAfterInvocation(Command, 0) == 1),
     }
   }
@@ -7451,6 +7527,51 @@ module battleRuntime {
     all {
       assert(endTurnFailed.goblin.prone),
       assert(currentActor(endTurnFailed) == Fighter),
+    }
+  }
+
+  run test_fog_cloud_records_heavily_obscured_area_and_concentration = {
+    val resolved = resolveFogCloud(initialState, fogCloudAreaId, 1)
+    all {
+      assert(resolved.fighter.activeEffects.contains(FogCloudObscurement({
+        areaId: fogCloudAreaId,
+        radiusFeet: 20,
+        durationTicks: fogCloudDurationTicks,
+      }))),
+      assert(resolved.fighter.concentrating),
+      assert(not(resolved.actionAvailable)),
+      assert(resolved.spellSlotExpendedThisTurn),
+    }
+  }
+
+  run test_fog_cloud_slot_scaling_increases_radius_by_twenty_feet = {
+    val resolved = resolveFogCloud(initialState, fogCloudAreaId, 3)
+    all {
+      assert(fogCloudRadiusFeet(1) == 20),
+      assert(fogCloudRadiusFeet(3) == 60),
+      assert(resolved.fighter.activeEffects.contains(FogCloudObscurement({
+        areaId: fogCloudAreaId,
+        radiusFeet: 60,
+        durationTicks: fogCloudDurationTicks,
+      }))),
+    }
+  }
+
+  run test_fog_cloud_concentration_break_removes_obscurement = {
+    val resolved = resolveFogCloud(initialState, fogCloudAreaId, 1)
+    val broken = breakConcentrationSpellEffects(resolved, Fighter)
+    all {
+      assert(not(fogCloudObscurementActive(broken, fogCloudAreaId))),
+      assert(not(broken.fighter.concentrating)),
+    }
+  }
+
+  run test_fog_cloud_strong_wind_dispersal_removes_obscurement = {
+    val resolved = resolveFogCloud(initialState, fogCloudAreaId, 1)
+    val dispersed = disperseFogCloudByStrongWind(resolved, fogCloudAreaId)
+    all {
+      assert(not(fogCloudObscurementActive(dispersed, fogCloudAreaId))),
+      assert(not(dispersed.fighter.concentrating)),
     }
   }
 
@@ -7916,6 +8037,7 @@ module battleRuntime {
       assert(spellInvocationSpendsLevelOneSlot(DivineSmite)),
       assert(spellInvocationSpendsLevelOneSlot(HuntersMark)),
       assert(spellInvocationSpendsLevelOneSlot(Hex)),
+      assert(spellInvocationSpendsLevelOneSlot(FogCloud)),
       assert(fighterDivineFavorDamage(3, Set(DivineFavorWeaponDamageRider({ durationTicks: 1 }))) == 3),
       assert(fighterDivineFavorDamage(3, Set()) == 0),
       assert(divineSmiteDamageDice(1, HumanoidCreature) == 2),

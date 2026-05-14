@@ -3170,6 +3170,9 @@ function projectHole(hole: BattleHole): MbtHole {
   if (hole.kind === "abilityChoice") {
     throw new Error("Battle runtime MBT does not model ability choice holes.");
   }
+  if (hole.kind === "spellAreaChoice") {
+    throw new Error("Battle runtime MBT does not model spell area holes.");
+  }
   return Match.value(hole).pipe(
     Match.when({ kind: "targetChoice" }, () => "TargetChoice" as const),
     Match.when(

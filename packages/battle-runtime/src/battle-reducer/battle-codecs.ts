@@ -936,6 +936,18 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("fogCloudObscurement"),
+      spell: BattleRuntimeObjectSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("pointOriginSphere"),
+        radiusFeet: MovementFeet,
+      }),
+      durationTicks: BattleRuntimeObjectSchema,
+      rangeFeet: MovementFeet,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("command"),
       spell: BattleRuntimeObjectSchema,
       actionCost: Schema.Literal("magicAction"),
@@ -1383,6 +1395,16 @@ export const BattleHoleSchema = Schema.Union(
     label: Schema.String,
     spell: SupportedSpellInvocationSchema,
     choices: Schema.Array(Schema.Literal(...COMMAND_OPTIONS)),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("spellAreaChoice"),
+    label: Schema.String,
+    spell: SupportedSpellInvocationSchema,
+    area: Schema.Struct({
+      kind: Schema.Literal("pointOriginSphere"),
+      radiusFeet: MovementFeet,
+    }),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -1918,6 +1940,14 @@ type BattleFillEncoded =
       readonly kind: "damageTypeChoice";
       readonly holeId: string;
       readonly value: DamageType;
+    }
+  | {
+      readonly kind: "spellAreaChoice";
+      readonly holeId: string;
+      readonly value: {
+        readonly kind: "fogCloudArea";
+        readonly areaId: string;
+      };
     }
   | {
       readonly kind: "spellTargetAllocation";
@@ -2555,6 +2585,14 @@ export const BattleFillSchema: Schema.Schema<
       kind: Schema.Literal("damageTypeChoice"),
       holeId: BattleHoleIdSchema,
       value: DamageTypeSchema,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("spellAreaChoice"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Struct({
+        kind: Schema.Literal("fogCloudArea"),
+        areaId: Schema.String,
+      }),
     }),
     Schema.Struct({
       kind: Schema.Literal("savingThrowOutcome"),

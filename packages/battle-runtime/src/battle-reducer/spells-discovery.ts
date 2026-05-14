@@ -37,6 +37,7 @@ import {
   spellBeamObjectTargetHole,
   spellBeamTargetHole,
   spellObjectTargetHole,
+  spellAreaChoiceHole,
   spellRollModifierSkillChoiceHole,
   spellSavingThrowAbility,
   spellSavingThrowOutcomeHole,
@@ -95,6 +96,21 @@ export function discoverSupportedSpellInvocations(
                 initialHoles: [targetHole, commandOptionChoiceHole(invocation)],
               },
             ];
+      }
+      if (invocation.procedure === "fogCloudObscurement") {
+        return [
+          {
+            subject: {
+              tag: "actionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: invocation.spell.name,
+            summary: `${spellActivationInvocationCastSummary(invocation)} The table supplies the fog area identity.`,
+            initialHoles: [spellAreaChoiceHole(invocation)],
+          },
+        ];
       }
       if (
         invocation.procedure === "saveGatedDamage" ||
@@ -641,6 +657,7 @@ export function spellActivationInvocationCastSummary(
         | "sleepTargetAdmission"
         | "command"
         | "greaseGroundHazard"
+        | "fogCloudObscurement"
         | "jumpMovementReplacement"
         | "featherFallMitigation";
     }
@@ -742,6 +759,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "sleepTargetAdmission" &&
     invocation.procedure !== "command" &&
     invocation.procedure !== "greaseGroundHazard" &&
+    invocation.procedure !== "fogCloudObscurement" &&
     invocation.procedure !== "spellAttackBeamSequence" &&
     invocation.procedure !== "shieldReaction"
   );
@@ -777,6 +795,7 @@ export function readiedSpellAct(
     invocation.procedure === "sleepTargetAdmission" ||
     invocation.procedure === "command" ||
     invocation.procedure === "greaseGroundHazard" ||
+    invocation.procedure === "fogCloudObscurement" ||
     invocation.procedure === "shieldReaction" ||
     (invocation.procedure === "spellAttackDamage" &&
       invocation.damage.kind === "sorcerousBurstDamageTypeChoice") ||

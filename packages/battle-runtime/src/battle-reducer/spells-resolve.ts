@@ -112,7 +112,9 @@ import {
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 
 import { resolveChainedSpellAttackDamageAct } from "./spells-resolve-chained.ts";
+import { resolveFogCloudObscurementSpellAct } from "./spells-resolve-area-effects.ts";
 import { resolveSpellAttackBeamSequenceAct } from "./spells-resolve-beam-sequence.ts";
+export { resolveFogCloudObscurementSpellAct } from "./spells-resolve-area-effects.ts";
 export { resolveAttackBurstSaveDamageSpellAct } from "./spells-resolve-attack-burst.ts";
 export {
   applyChainedSpellDamage,
@@ -339,6 +341,7 @@ export function resolveSpellAct(
       invocation.procedure === "saveGatedCondition" ||
       invocation.procedure === "saveGatedAttackRollAdvantage" ||
       invocation.procedure === "command" ||
+      invocation.procedure === "fogCloudObscurement" ||
       invocation.procedure === "spellAttackBeamSequence")
   ) {
     return invalidResult(
@@ -477,6 +480,14 @@ export function resolveSpellAct(
   }
   if (invocation.procedure === "greaseGroundHazard") {
     return resolveGreaseGroundHazardSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "fogCloudObscurement") {
+    return resolveFogCloudObscurementSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

@@ -161,8 +161,8 @@
       "rowsByStatus": {
         "accepted": 221,
         "accepted-no-battle-effect": 69,
-        "battle-runtime-required": 37,
-        "partial-battle-runtime": 40
+        "battle-runtime-required": 33,
+        "partial-battle-runtime": 44
       }
     },
     "levelOneClassContainers": 12,
@@ -171,15 +171,15 @@
       "non-runtime": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 268,
+      "catalog-installed-owner-evidence-present": 272,
       "non-runtime": 12,
       "catalog-only/dead-for-now": 75,
-      "catalog-installed-owner-evidence-required": 12
+      "catalog-installed-owner-evidence-required": 8
     },
     "spellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 75,
-      "catalog-installed-owner-evidence-present": 124,
-      "catalog-installed-owner-evidence-required": 12
+      "catalog-installed-owner-evidence-present": 128,
+      "catalog-installed-owner-evidence-required": 8
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -8474,8 +8474,8 @@
         "state": "installed",
         "unitId": "fog_cloud"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -8484,11 +8484,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Unit matrix records unsupported-profile: Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Fog Cloud's area-created Heavily Obscured projection, slot-scaled area geometry, or strong-wind dispersal lifecycle. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84E at packages/battle-runtime/src/index.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Unit matrix records unsupported-profile: Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Fog Cloud's area-created Heavily Obscured projection, slot-scaled area geometry, or strong-wind dispersal lifecycle. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_goodberry",
@@ -12026,8 +12026,8 @@
         "state": "installed",
         "unitId": "fog_cloud"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -12036,11 +12036,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Unit matrix records unsupported-profile: Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Fog Cloud's area-created Heavily Obscured projection, slot-scaled area geometry, or strong-wind dispersal lifecycle. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84E at packages/battle-runtime/src/index.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Unit matrix records unsupported-profile: Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Fog Cloud's area-created Heavily Obscured projection, slot-scaled area geometry, or strong-wind dispersal lifecycle. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_goodberry",
@@ -14460,8 +14460,8 @@
         "state": "installed",
         "unitId": "fog_cloud"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -14470,11 +14470,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Unit matrix records unsupported-profile: Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Fog Cloud's area-created Heavily Obscured projection, slot-scaled area geometry, or strong-wind dispersal lifecycle. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84E at packages/battle-runtime/src/index.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Unit matrix records unsupported-profile: Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Fog Cloud's area-created Heavily Obscured projection, slot-scaled area geometry, or strong-wind dispersal lifecycle. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_grease",
@@ -17804,8 +17804,8 @@
         "state": "installed",
         "unitId": "fog_cloud"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -17814,11 +17814,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Unit matrix records unsupported-profile: Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Fog Cloud's area-created Heavily Obscured projection, slot-scaled area geometry, or strong-wind dispersal lifecycle. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84E at packages/battle-runtime/src/index.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Unit matrix records unsupported-profile: Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Fog Cloud's area-created Heavily Obscured projection, slot-scaled area geometry, or strong-wind dispersal lifecycle. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_grease",

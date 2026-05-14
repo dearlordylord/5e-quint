@@ -14,6 +14,7 @@ import {
   type BattleHoleId,
   type BattleCommandOptionChoiceHole,
   type BattleSpellTargetAllocation,
+  type BattleSpellAreaChoiceHole,
   type BattleSpellTargetAllocationHole,
   type BattleSpellTargetListHole,
   type BattleSpellTargetListSpatialFact,
@@ -274,6 +275,32 @@ export function commandOptionChoiceHoleId(
   >,
 ): BattleHoleId {
   return holeId(`battle:spell:command-option:${invocation.spell.id}`);
+}
+
+export function spellAreaChoiceHole(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "fogCloudObscurement" }
+  >,
+): BattleSpellAreaChoiceHole {
+  const holeKey = `battle:spell:area-choice:${invocation.spell.id}`;
+  return {
+    kind: "spellAreaChoice",
+    holeId: spellAreaChoiceHoleId(invocation),
+    holeInstanceKey: holeInstanceKey(holeKey),
+    label: `${invocation.spell.name} fog area`,
+    spell: invocation,
+    area: invocation.targeting,
+  };
+}
+
+export function spellAreaChoiceHoleId(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "fogCloudObscurement" }
+  >,
+): BattleHoleId {
+  return holeId(`battle:spell:area-choice:${invocation.spell.id}`);
 }
 
 export function spellTargetIsLegal(

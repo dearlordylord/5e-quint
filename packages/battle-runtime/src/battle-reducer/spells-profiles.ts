@@ -186,6 +186,12 @@ export function supportedSpellActs(
       ),
     ),
     ...preparedSpells.flatMap((spell) =>
+      supportedPreparedFogCloudObscurementProfile(
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
       supportedPreparedCommandProfile(spell, spellcasting.spellSlots),
     ),
     ...preparedSpells.flatMap((spell) =>
@@ -497,6 +503,88 @@ export function supportedCantripMakeStableSpellProfile(
       rangeFeet,
     },
   ];
+}
+
+export function supportedPreparedFogCloudObscurementProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  if (spell.mechanics.family !== "ongoing_effect") {
+    return [];
+  }
+  const attachment = spell.mechanics.attachment;
+  const operation = spell.mechanics.operations[0];
+  const earlyEnd =
+    spell.mechanics.duration.kind === "concentration"
+      ? (spell.mechanics.duration.earlyEnd ?? [])
+      : [];
+  const durationTicks =
+    spell.mechanics.duration.kind === "concentration"
+      ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.upTo)
+      : null;
+  const rangeFeet =
+    spell.mechanics.range.kind === "point" ? spell.mechanics.range.feet : null;
+  const area =
+    attachment.kind === "hole" &&
+    attachment.value.kind === "area" &&
+    "shape" in attachment.value
+      ? attachment.value
+      : null;
+  const radius =
+    area?.shape.kind === "sphere" ? area.shape.radiusFeet : null;
+  if (
+    spell.name !== "Fog Cloud" ||
+    spell.provenance.kind !== "srd-5.2.1" ||
+    spell.provenance.section !== "Spells/Descriptions-E-L#Fog Cloud" ||
+    spell.mechanics.level !== 1 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    rangeFeet !== 120 ||
+    spell.mechanics.duration.kind !== "concentration" ||
+    spell.mechanics.duration.upTo.unit !== "hour" ||
+    spell.mechanics.duration.upTo.amount !== 1 ||
+    earlyEnd.length !== 1 ||
+    earlyEnd[0]?.kind !== "area_dispersed_by_strong_wind" ||
+    spell.mechanics.operations.length !== 1 ||
+    operation?.trigger.kind !== "passive" ||
+    operation.effect.kind !== "area_is_heavily_obscured" ||
+    area?.origin.kind !== "point_within_range" ||
+    radius === null ||
+    typeof radius !== "object" ||
+    radius.kind !== "linear_per_level" ||
+    radius.axis !== "slot" ||
+    radius.startingAtLevel !== 1 ||
+    radius.base !== 20 ||
+    radius.perLevel !== 20 ||
+    durationTicks === null ||
+    Either.isLeft(durationTicks)
+  ) {
+    return [];
+  }
+  const slotRadius = radius;
+
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    const radiusFeet =
+      slotRadius.base +
+      Math.max(0, Number(slot.spellLevel) - slotRadius.startingAtLevel) *
+        slotRadius.perLevel;
+    return [
+      {
+        access: { tag: "prepared" },
+        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        procedure: "fogCloudObscurement",
+        spell,
+        targeting: {
+          kind: "pointOriginSphere",
+          radiusFeet: movementFeet(radiusFeet),
+        },
+        durationTicks: durationTicks.right,
+        rangeFeet: movementFeet(rangeFeet),
+      },
+    ];
+  });
 }
 
 function spareTheDyingRangeFeet(
