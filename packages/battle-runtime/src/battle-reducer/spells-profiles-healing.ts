@@ -83,7 +83,8 @@ export function healingSpellTargeting(
     if (
       targetBounds === null ||
       attachment.origin.kind !== "point_within_range" ||
-      attachment.shape.kind !== "sphere"
+      attachment.shape.kind !== "sphere" ||
+      typeof attachment.shape.radiusFeet !== "number"
     ) {
       return null;
     }
@@ -131,7 +132,9 @@ export function healingSpellRangeFeet(
   range: SpellRecord["mechanics"]["range"],
 ): MovementFeet | null {
   return Match.value(range).pipe(
-    Match.when({ kind: "point" }, (point) => movementFeet(point.feet)),
+    Match.when({ kind: "point" }, (point) =>
+      typeof point.feet === "number" ? movementFeet(point.feet) : null,
+    ),
     Match.when({ kind: "touch" }, () => movementFeet(5)),
     Match.orElse(() => null),
   );

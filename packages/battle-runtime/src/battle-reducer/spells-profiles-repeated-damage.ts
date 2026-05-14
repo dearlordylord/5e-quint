@@ -18,6 +18,7 @@ export function supportedPreparedSlotSpellProfile(
     spell.mechanics.level !== 1 ||
     spell.mechanics.castingTime.kind !== "action" ||
     spell.mechanics.range.kind !== "point" ||
+    typeof spell.mechanics.range.feet !== "number" ||
     spell.mechanics.phases.length !== 1 ||
     phase?.kind !== "direct" ||
     phase.attachment.kind !== "hole" ||

@@ -1017,15 +1017,11 @@ export function areaSaveGateSpellRangeFeet(
   >,
 ): MovementFeet | null {
   return Match.value(targeting).pipe(
-    Match.when({ kind: "pointOriginSphere" }, () =>
-      range.kind === "point" ? movementFeet(range.feet) : null,
-    ),
+    Match.when({ kind: "pointOriginSphere" }, () => fixedPointRangeFeet(range)),
     Match.when({ kind: "pointOriginCubeExcludingCaster" }, () =>
-      range.kind === "point" ? movementFeet(range.feet) : null,
+      fixedPointRangeFeet(range),
     ),
-    Match.when({ kind: "pointOriginCube" }, () =>
-      range.kind === "point" ? movementFeet(range.feet) : null,
-    ),
+    Match.when({ kind: "pointOriginCube" }, () => fixedPointRangeFeet(range)),
     Match.when({ kind: "selfOriginCube" }, () =>
       range.kind === "self" ? movementFeet(0) : null,
     ),
@@ -1033,11 +1029,9 @@ export function areaSaveGateSpellRangeFeet(
       range.kind === "self" ? movementFeet(0) : null,
     ),
     Match.when({ kind: "primaryTargetOriginEmanation" }, () =>
-      range.kind === "point" ? movementFeet(range.feet) : null,
+      fixedPointRangeFeet(range),
     ),
-    Match.when({ kind: "targetList" }, () =>
-      range.kind === "point" ? movementFeet(range.feet) : null,
-    ),
+    Match.when({ kind: "targetList" }, () => fixedPointRangeFeet(range)),
     Match.exhaustive,
   );
 }
@@ -1046,10 +1040,20 @@ export function singleTargetSpellRangeFeet(
   range: SpellRecord["mechanics"]["range"],
 ): MovementFeet | null {
   return Match.value(range).pipe(
-    Match.when({ kind: "point" }, (point) => movementFeet(point.feet)),
+    Match.when({ kind: "point" }, (point) =>
+      typeof point.feet === "number" ? movementFeet(point.feet) : null,
+    ),
     Match.when({ kind: "touch" }, () => movementFeet(5)),
     Match.orElse(() => null),
   );
+}
+
+function fixedPointRangeFeet(
+  range: SpellRecord["mechanics"]["range"],
+): MovementFeet | null {
+  return range.kind === "point" && typeof range.feet === "number"
+    ? movementFeet(range.feet)
+    : null;
 }
 
 export function supportedSpellAttackKind(

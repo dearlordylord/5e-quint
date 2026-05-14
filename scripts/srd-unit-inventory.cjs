@@ -336,14 +336,6 @@ const spellUnitMissingClassifications = new Map([
     },
   ],
   [
-    "spare_the_dying",
-    {
-      kind: "needs-surface-widening",
-      missingConstruct:
-        "Spell Definition Stable zero-HP lifecycle application plus character-level range scaling",
-    },
-  ],
-  [
     "thaumaturgy",
     {
       kind: "catalog-only-closure",

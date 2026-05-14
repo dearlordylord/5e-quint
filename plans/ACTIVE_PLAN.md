@@ -196,7 +196,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 299,
       "id": "SRDINV80C",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Widen Spare the Dying Stable Lifecycle Surface"
     },
     {
@@ -301,7 +301,7 @@ Keep it synchronized with the DAG table and task details.
 | 296   | SRDINV79 - Promote Starry Wisp Object Invisible-Benefit Projection      | done                                          | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Invisible](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: promoted Starry Wisp object-hit Invisible-benefit denial through a typed object Dim Light reveal emitter, with caster-next-turn expiry and no object inventory, visibility, line-of-sight, cover, or map-light state. |
 | 297   | SRDINV80A - Widen Hideous Laughter Spell Definition Surface             | done                                          | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Hideous Laughter](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: authored Hideous Laughter Surface facts for the initial Wisdom save, end-turn repeat save, damage-triggered repeat save with Advantage, Prone and Incapacitated application, Prone self-end suppression, and slot-scaled additional targets; runtime execution remains owner-evidence work tracked by the generated inventory rows. |
 | 298   | SRDINV80B - Widen Fog Cloud Spell Definition Surface                    | done                                          | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Fog Cloud](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Heavily Obscured](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: authored and installed Fog Cloud Surface facts for the point-origin slot-scaled fog Sphere, passive Heavily Obscured projection, Concentration duration, and strong-wind dispersal early end; promoted battle-runtime execution remains owner-evidence work tracked by generated inventory rows. |
-| 299   | SRDINV80C - Widen Spare the Dying Stable Lifecycle Surface              | ready-for-research                            | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Spare the Dying](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Stable](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface Spell Definition facts for Spare the Dying's zero-HP creature targeting, Stable application, and character-level range scaling. |
+| 299   | SRDINV80C - Widen Spare the Dying Stable Lifecycle Surface              | done                                          | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Spare the Dying](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Stable](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: authored and installed Spare the Dying Surface facts for zero-Hit-Point not-dead creature targeting, Stable lifecycle application, and character-level range scaling; promoted battle-runtime execution remains owner-evidence work tracked by generated inventory rows. |
 | 300   | SRDINV80D - Widen Sanctuary Targeting Interdiction Surface              | ready-for-research                            | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Sanctuary](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Target](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface Spell Definition facts for Sanctuary's attack/spell target interdiction, choose-new-target-or-lose outcome, area exclusion, and early end on the warded creature's attack, spell, or damage. |
 | 301   | SRDINV80E - Widen Shillelagh Weapon Override Surface                    | ready-for-research                            | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Shillelagh](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Weapon Attack](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface Spell Definition facts for Shillelagh's held Club or Quarterstaff weapon override, spellcasting ability attack/damage option, level-scaled damage die, Force-or-normal damage choice, and early end on recast or let-go. |
 | 302   | SRDINV80F - Widen Fire Bolt and Sorcerous Burst Cantrip Surface         | ready-for-research                            | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Fire Bolt](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Sorcerous Burst](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface Spell Definition facts for Fire Bolt object targeting and ignition, plus Sorcerous Burst's chosen damage type, exploding d8 loop cap, object target branch, and cantrip damage scaling. |
@@ -1097,7 +1097,7 @@ rounds and converged with no follow-up code changes.
 
 ### Task 299 - SRDINV80C - Widen Spare the Dying Stable Lifecycle Surface
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV78
 
@@ -1119,7 +1119,9 @@ promotion before the Surface shape exists.
 Verification: RAW/source review for Spare the Dying, Stable, Hit Points, Death
 Saving Throw, and cantrip range scaling; Surface parser/schema tests; content
 regeneration if Dhall changes; `pnpm unit-profile-coverage:check --write`;
-`pnpm quality`; `/simplify` convergence.
+`pnpm quality`; `/simplify` convergence. Completed with Spare the Dying catalog
+admission and unsupported-profile inventory evidence; promoted battle-runtime
+execution remains outside this task.
 
 ### Task 300 - SRDINV80D - Widen Sanctuary Targeting Interdiction Surface
 

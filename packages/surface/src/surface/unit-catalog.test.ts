@@ -245,6 +245,52 @@ describe("SRD Unit catalog boundary", () => {
     }
   });
 
+  test("decodes Spare the Dying as zero-HP not-dead Stable lifecycle application", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const spareTheDying = result.catalog.requireUnit("spare_the_dying");
+      expect(spareTheDying.kind).toBe("spell");
+      if (spareTheDying.kind !== "spell") return;
+      expect(spareTheDying.mechanics.family).toBe("activation");
+      if (spareTheDying.mechanics.family !== "activation") return;
+
+      expect(spareTheDying.mechanics.range).toEqual({
+        kind: "point",
+        feet: {
+          kind: "threshold_tiers",
+          axis: "character",
+          base: 15,
+          tiers: [
+            { atLevel: 5, value: 30 },
+            { atLevel: 11, value: 60 },
+            { atLevel: 17, value: 120 },
+          ],
+        },
+      });
+
+      const phase = spareTheDying.mechanics.phases[0];
+      expect(phase?.kind).toBe("direct");
+      if (phase?.kind !== "direct") return;
+
+      expect(phase.attachment).toEqual({
+        kind: "hole",
+        holeId: "spare_the_dying_target",
+        label: "target",
+        value: {
+          kind: "target",
+          selection: {
+            mode: "one",
+            targetKinds: ["creature"],
+            stateFilter: ["zero_hp_not_dead"],
+          },
+        },
+      });
+      expect(phase.effects).toEqual([{ kind: "make_stable" }]);
+    }
+  });
+
   test("decodes Dissonant Whispers as damage plus forced Reaction movement", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 

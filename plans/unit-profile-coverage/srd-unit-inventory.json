@@ -161,9 +161,9 @@
       "rowsByStatus": {
         "accepted": 217,
         "accepted-no-battle-effect": 69,
-        "battle-runtime-required": 33,
+        "battle-runtime-required": 35,
         "partial-battle-runtime": 40,
-        "surface-widening-required": 8
+        "surface-widening-required": 6
       }
     },
     "levelOneClassContainers": 12,
@@ -175,14 +175,14 @@
       "catalog-installed-owner-evidence-present": 264,
       "non-runtime": 12,
       "catalog-only/dead-for-now": 76,
-      "catalog-installed-owner-evidence-required": 7,
-      "needs-surface-widening": 8
+      "catalog-installed-owner-evidence-required": 9,
+      "needs-surface-widening": 6
     },
     "spellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 76,
       "catalog-installed-owner-evidence-present": 120,
-      "catalog-installed-owner-evidence-required": 7,
-      "needs-surface-widening": 8
+      "catalog-installed-owner-evidence-required": 9,
+      "needs-surface-widening": 6
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -530,7 +530,7 @@
       "title": "Classify Installed Cantrip and Level-1 Spell Units",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Classify installed SRD cantrip and level-1 Spell Unit owner evidence separately from missing and catalog-only spell rows.",
-      "rowCount": 147,
+      "rowCount": 149,
       "rowIds": [
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_light",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_minor_illusion",
@@ -557,6 +557,7 @@
         "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_light",
         "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_resistance",
         "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_sacred_flame",
+        "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_spare_the_dying",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bane",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bless",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_command",
@@ -573,6 +574,7 @@
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_poison_spray",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_produce_flame",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_resistance",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_spare_the_dying",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_starry_wisp",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_animal_friendship",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_charm_person",
@@ -775,12 +777,10 @@
       "title": "Review Catalog-Only and Surface-Widening Rows",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Preserve catalog-only/dead-for-now rows and name missing Surface constructs for nonspell and spell Surface-widening blockers.",
-      "rowCount": 8,
+      "rowCount": 6,
       "rowIds": [
-        "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_spare_the_dying",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_sanctuary",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_shillelagh",
-        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_spare_the_dying",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_fire_bolt",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_sorcerous_burst",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hex",
@@ -6433,19 +6433,32 @@
       "detail": "Spare the Dying (Necromancy; —)",
       "candidateUnitId": "spare_the_dying",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "Spell Definition Stable zero-HP lifecycle application plus character-level range scaling"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "spare_the_dying",
+        "sourceRecordPath": "packages/surface/content/spare_the_dying.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "spare_the_dying"
       },
-      "finalDisposition": "needs-surface-widening",
-      "ownerEvidence": [],
-      "nextAction": "Widen Surface: Spell Definition Stable zero-HP lifecycle application plus character-level range scaling."
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit spare_the_dying is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Unit matrix records unsupported-profile: Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Spare the Dying's zero-Hit-Point not-dead target admission, Stable lifecycle application, or character-level range scaling. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Unit matrix records unsupported-profile: Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Spare the Dying's zero-Hit-Point not-dead target admission, Stable lifecycle application, or character-level range scaling. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_thaumaturgy",
@@ -8024,19 +8037,32 @@
       "detail": "Spare the Dying (Necromancy; —)",
       "candidateUnitId": "spare_the_dying",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "Spell Definition Stable zero-HP lifecycle application plus character-level range scaling"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "spare_the_dying",
+        "sourceRecordPath": "packages/surface/content/spare_the_dying.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "spare_the_dying"
       },
-      "finalDisposition": "needs-surface-widening",
-      "ownerEvidence": [],
-      "nextAction": "Widen Surface: Spell Definition Stable zero-HP lifecycle application plus character-level range scaling."
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit spare_the_dying is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Unit matrix records unsupported-profile: Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Spare the Dying's zero-Hit-Point not-dead target admission, Stable lifecycle application, or character-level range scaling. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Unit matrix records unsupported-profile: Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Spare the Dying's zero-Hit-Point not-dead target admission, Stable lifecycle application, or character-level range scaling. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_starry_wisp",

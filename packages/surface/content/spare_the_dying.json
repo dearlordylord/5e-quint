@@ -1,0 +1,75 @@
+{
+  "description": "Choose a creature within range that has 0 Hit Points and isn't dead. The creature becomes Stable. Cantrip Upgrade. The range doubles when you reach levels 5 (30 feet), 11 (60 feet), and 17 (120 feet).",
+  "id": "spare_the_dying",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 0,
+    "phases": [
+      {
+        "attachment": {
+          "holeId": "spare_the_dying_target",
+          "kind": "hole",
+          "label": "target",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "mode": "one",
+              "stateFilter": [
+                "zero_hp_not_dead"
+              ],
+              "targetKinds": [
+                "creature"
+              ]
+            }
+          }
+        },
+        "effects": [
+          {
+            "kind": "make_stable"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "feet": {
+        "axis": "character",
+        "base": 15,
+        "kind": "threshold_tiers",
+        "tiers": [
+          {
+            "atLevel": 5,
+            "value": 30
+          },
+          {
+            "atLevel": 11,
+            "value": 60
+          },
+          {
+            "atLevel": 17,
+            "value": 120
+          }
+        ]
+      },
+      "kind": "point"
+    },
+    "school": "necromancy"
+  },
+  "name": "Spare the Dying",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Spare the Dying"
+  }
+}

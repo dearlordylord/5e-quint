@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 357,
-      "numerator": 109,
-      "percent": "30.5%"
+      "denominator": 358,
+      "numerator": 110,
+      "percent": "30.7%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 424,
-      "numerator": 135,
-      "percent": "31.8%"
+      "denominator": 425,
+      "numerator": 136,
+      "percent": "32%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 136
+      "value": 137
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 73,
@@ -67,8 +67,8 @@
       "percent": "90.4%"
     },
     "profileClassificationCoverage": {
-      "denominator": 136,
-      "numerator": 136,
+      "denominator": 137,
+      "numerator": 137,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -97,9 +97,9 @@
       "percent": "13.7%"
     },
     "supportedProfileCoverage": {
-      "denominator": 110,
+      "denominator": 111,
       "numerator": 73,
-      "percent": "66.4%"
+      "percent": "65.8%"
     }
   },
   "metricSemantics": [
@@ -8619,6 +8619,24 @@
       ],
       "sourceRecordPath": "packages/surface/content/shocking_grasp.json",
       "unitId": "shocking_grasp"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Spare the Dying's zero-Hit-Point not-dead target admission, Stable lifecycle application, or character-level range scaling.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/spare_the_dying.json",
+      "unitId": "spare_the_dying"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

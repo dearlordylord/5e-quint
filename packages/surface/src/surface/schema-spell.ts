@@ -764,6 +764,7 @@ type EffectAtom =
       readonly kind: "negate_instant_death";
       readonly consumesEffect?: true;
     }
+  | { readonly kind: "make_stable" }
   | { readonly kind: "grant_condition_immunity"; readonly condition: Condition }
   | {
       readonly kind: "suppress_condition_benefit";
@@ -1242,7 +1243,7 @@ export const RangeSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("touch") }),
   Schema.Struct({
     kind: Schema.Literal("point"),
-    feet: Schema.Number,
+    feet: Schema.Union(Schema.Number, ThresholdTiersNumberSchema),
   }),
 );
 
@@ -1311,7 +1312,9 @@ export const TargetCountSlotScalingSchema = Schema.Struct({
 
 export const TargetKindSchema = Schema.Literal("creature", "object");
 export const TargetDispositionSchema = Schema.Literal("willing");
-export const TargetStateFilterSchema = nonEmpty(Schema.Literal("falling"));
+export const TargetStateFilterSchema = nonEmpty(
+  Schema.Literal("falling", "zero_hp_not_dead"),
+);
 const CreatureTargetKindsSchema = nonEmpty(Schema.Literal("creature"));
 
 export const TargetSelectionSchema = Schema.Union(
@@ -2200,6 +2203,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         kind: Schema.Literal("negate_instant_death"),
         consumesEffect: optionalExact(Schema.Literal(true)),
       }),
+      Schema.Struct({ kind: Schema.Literal("make_stable") }),
       Schema.Struct({
         kind: Schema.Literal("grant_feat"),
         category: Schema.Literal(

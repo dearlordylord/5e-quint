@@ -1339,7 +1339,9 @@ export function scalarBuffSpellRangeFeet(
   return Match.value(range).pipe(
     Match.when({ kind: "self" }, () => movementFeet(0)),
     Match.when({ kind: "touch" }, () => movementFeet(5)),
-    Match.when({ kind: "point" }, (point) => movementFeet(point.feet)),
+    Match.when({ kind: "point" }, (point) =>
+      typeof point.feet === "number" ? movementFeet(point.feet) : null,
+    ),
     Match.orElse(() => null),
   );
 }

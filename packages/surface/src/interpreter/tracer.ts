@@ -1175,6 +1175,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "make_stable": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "make_stable",
+        label: "make_stable",
+      });
+      return id;
+    }
     case "grant_feat": {
       const id = ids("eff");
       const categories =
@@ -2256,6 +2266,7 @@ function traceEffectAtomScaling(
     case "suppress_condition_benefit":
     case "prevent_drop_to_0_hp":
     case "negate_instant_death":
+    case "make_stable":
     case "grant_damage_immunity":
     case "block_max_hp_reduction":
     case "set_speed_ratio":

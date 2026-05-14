@@ -243,10 +243,12 @@ export function supportedPreparedChainedSpellAttackDamageProfile(
     spell.mechanics.castingTime.kind !== "action" ||
     spell.mechanics.duration.kind !== "instantaneous" ||
     range.kind !== "point" ||
+    typeof range.feet !== "number" ||
     spell.mechanics.phases.length !== 1
   ) {
     return [];
   }
+  const rangeFeet = movementFeet(range.feet);
   const phase = spell.mechanics.phases[0];
   const continuation = phase?.kind === "attack_roll" ? phase.continue : null;
   const leapPhase =
@@ -329,7 +331,7 @@ export function supportedPreparedChainedSpellAttackDamageProfile(
         targeting,
         damage: { expr: damageExpr },
         damageTypeChoices: CHROMATIC_ORB_DAMAGE_TYPES,
-        rangeFeet: movementFeet(range.feet),
+        rangeFeet,
         leapRangeFeet: CHROMATIC_ORB_LEAP_RANGE_FEET,
         attackKind: phase.attackKind,
         attackBonus: attackBonus(
