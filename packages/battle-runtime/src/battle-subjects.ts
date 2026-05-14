@@ -63,6 +63,7 @@ export const CANTRIP_SPELL_PROCEDURES = [
   "objectLight",
   "heldLightHurl",
   "damageReduction",
+  "makeStable",
   "spellAttackBeamSequence",
   "spellHostedWeaponAttack",
   "spellAttackDamage",

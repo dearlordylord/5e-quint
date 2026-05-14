@@ -524,6 +524,14 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     Schema.Struct({
       access: ClassCantripSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
+      procedure: Schema.Literal("makeStable"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      rangeFeet: MovementFeet,
+    }),
+    Schema.Struct({
+      access: ClassCantripSpellAccessSchema,
+      resource: NoSpellInvocationResourceSchema,
       procedure: Schema.Literal("spellHostedWeaponAttack"),
       spell: BattleRuntimeObjectSchema,
       actionCost: Schema.Literal("magicAction"),

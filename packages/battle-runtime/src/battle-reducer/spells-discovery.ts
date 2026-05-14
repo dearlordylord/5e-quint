@@ -561,6 +561,9 @@ export function spellInvocationCastSummary(
   if (invocation.procedure === "damageReduction") {
     return `Cast ${invocation.spell.name} as a cantrip.`;
   }
+  if (invocation.procedure === "makeStable") {
+    return `Cast ${invocation.spell.name} as a cantrip.`;
+  }
   if (invocation.procedure === "spellHostedWeaponAttack") {
     return `Cast ${invocation.spell.name} as a cantrip using ${invocation.componentWeapon.attack.weapon.name}.`;
   }
@@ -717,6 +720,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "heldLightHurl" &&
     invocation.procedure !== "spellHostedWeaponAttack" &&
     invocation.procedure !== "damageReduction" &&
+    invocation.procedure !== "makeStable" &&
     invocation.procedure !== "persistentArmorEffect" &&
     invocation.procedure !== "rollModifier" &&
     invocation.procedure !== "creatureTypeProtection" &&
@@ -747,6 +751,7 @@ export function readiedSpellAct(
     invocation.procedure === "persistentArmorEffect" ||
     invocation.procedure === "directHitPointRestoration" ||
     invocation.procedure === "damageReduction" ||
+    invocation.procedure === "makeStable" ||
     invocation.procedure === "spellHostedWeaponAttack" ||
     invocation.procedure === "scalarBuff" ||
     invocation.procedure === "weaponDamageRider" ||

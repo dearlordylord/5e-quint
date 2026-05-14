@@ -6,6 +6,7 @@ import {
 spendAction,
 spendActivationResource
 } from "@dnd/shared-algebras/action-economy-algebra";
+import { resetDeathSaveRuntimeState } from "@dnd/shared-algebras/death-saves-algebra";
 import { Either } from "effect";
 import {
 maybeOpenReactionWindow,
@@ -179,6 +180,122 @@ export function resolvePreparedHealingSpellAct(input: {
   const nextState = {
     ...slotted,
     currentTurnResources: slotTurnResources.right,
+  };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+export function resolveMakeStableSpellAct(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "makeStable" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  if (
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.targetAllocation !== undefined ||
+    input.fillSet.targetList !== undefined ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.attackBurstDamageRoll !== undefined ||
+    input.fillSet.healingRoll !== undefined ||
+    input.fillSet.skillChoice !== undefined ||
+    input.fillSet.damageTypeChoice !== undefined ||
+    input.fillSet.savingThrowOutcomes !== undefined ||
+    input.fillSet.damageDispositions.length > 0 ||
+    input.fillSet.concentrationSavingThrows.length > 0
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Stable cantrips use one zero-Hit-Point target fill.",
+    );
+  }
+  const targetHole = spellTargetHole(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+  );
+  if (input.fillSet.targetId === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      targetHole,
+    ]);
+  }
+  if (
+    !spellTargetIsLegal(
+      input.input.state,
+      input.actorId,
+      input.fillSet.targetId,
+      input.invocation,
+      input.fillSet.targetSpatialFacts,
+    )
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Spell target must be a zero-Hit-Point non-dead combatant within the selected spell's supported range.",
+    );
+  }
+
+  const spellCastReactionWindow = maybeOpenReactionWindow(
+    input.input.state,
+    {
+      trigger: "spellCast",
+      casterId: input.actorId,
+      spellId: input.invocation.spell.id,
+      targetIds: [input.fillSet.targetId],
+      continuation: {
+        kind: "replay",
+        subject: input.input.subject,
+        fills: input.input.fills,
+      },
+    },
+    input.input.suppressedReactionTrigger,
+  );
+  if (spellCastReactionWindow !== null) {
+    return spellCastReactionWindow;
+  }
+
+  const target = input.input.state.combatants.get(input.fillSet.targetId);
+  if (
+    target === undefined ||
+    target.zeroHpLifecycle.policy !== "usesDeathSavingThrows"
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Spell target must be a zero-Hit-Point non-dead combatant within the selected spell's supported range.",
+    );
+  }
+
+  const spent = spendAction(input.input.state.currentTurnResources, "magic");
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.input.state,
+      "staleSubject",
+      "Magic action is no longer available for the current actor.",
+    );
+  }
+
+  const nextTarget = {
+    ...target,
+    zeroHpLifecycle: {
+      ...target.zeroHpLifecycle,
+      deathSaves: { ...resetDeathSaveRuntimeState(), stable: true },
+    },
+  };
+  const nextState = {
+    ...input.input.state,
+    currentTurnResources: spent.right,
+    combatants: new Map(input.input.state.combatants).set(
+      target.combatantId,
+      nextTarget,
+    ),
   };
   return {
     tag: "resolved",

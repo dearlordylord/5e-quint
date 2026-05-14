@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points
@@ -22,6 +22,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-jump-movement-replacement
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.creature-type-protection-and-charm
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-object-light
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-make-stable
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.reaction-hellish-rebuke spell.invocation-damage-save-or-attack
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave
@@ -269,6 +270,11 @@ module battleRuntime {
   //   spell attack against a creature or object within 120 feet. On a hit it
   //   deals Fire damage with character-level cantrip scaling, and a flammable
   //   object starts burning if it is not worn or carried.
+  // - Spells/Descriptions-S-Z.md lines 401-412, Rules-Glossary.md lines
+  //   369-381, 930-932, and UBIQUITOUS_LANGUAGE.md: Spare the Dying is an
+  //   Action cantrip that targets a creature at 0 HP that is not dead and
+  //   makes it Stable. Its range scales by character level to 30/60/120 feet
+  //   at levels 5/11/17.
   // - Character-Origins.md lines 253-255, Playing-the-Game.md lines 788-806,
   //   Rules-Glossary.md lines 361-365, and UBIQUITOUS_LANGUAGE.md:
   //   Orc Adrenaline Rush spends a limited-use Bonus Action Dash, grants
@@ -303,7 +309,7 @@ module battleRuntime {
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | FireBolt | EldritchBlast | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | Light | TrueStrike | Grease | Command | DissonantWhispers | FeatherFall | HellishRebuke | SorcerousBurst
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | FireBolt | EldritchBlast | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | Light | TrueStrike | Grease | Command | DissonantWhispers | FeatherFall | HellishRebuke | SorcerousBurst | SpareTheDying
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | StarryWispSpellAttack | FireBoltSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack | SorcerousBurstSpellAttack({ damageTypeChoice: BattleRuntimeSorcerousBurstDamageTypeChoice, spellcastingAbilityModifier: int, characterLevel: int })
   type FixedSpellAttackDamageInvocation = RayOfFrostFixedSpellAttack | PoisonSprayFixedSpellAttack | ChillTouchFixedSpellAttack | StarryWispFixedSpellAttack | FireBoltFixedSpellAttack | ShockingGraspFixedSpellAttack | GuidingBoltFixedSpellAttack | RayOfSicknessFixedSpellAttack | ProduceFlameHurlFixedSpellAttack
   type SpellAttackBeamSequenceInvocation =
@@ -3595,6 +3601,28 @@ module battleRuntime {
       combatantWithHitPointRecoveryResult(target, result)
   }
 
+  pure def spareTheDyingRangeFeet(characterLevel: int): int =
+    if (characterLevel >= 17) 120
+    else if (characterLevel >= 11) 60
+    else if (characterLevel >= 5) 30
+    else 15
+
+  pure def spareTheDyingTargetAdmitted(target: Combatant): bool =
+    target.hp == 0 and
+    target.lifecycle == UsesDeathSavingThrows and
+    target.deathFailures < 3
+
+  pure def applySpareTheDying(target: Combatant): Combatant =
+    if (not(spareTheDyingTargetAdmitted(target)))
+      target
+    else
+      {
+        ...target,
+        stable: true,
+        deathSuccesses: 0,
+        deathFailures: 0,
+      }
+
   pure def spendFighterSpellActionCost(state: BattleState, actionCost: SpellActionCost): BattleState =
     stateWithFighterMovementStep(
       state,
@@ -4733,6 +4761,7 @@ module battleRuntime {
       | FeatherFall => true
       | HellishRebuke => true
       | SorcerousBurst => false
+      | SpareTheDying => false
     }
 
   pure def canExpendSpellSlotThisTurn(state: BattleState): bool =
@@ -8854,6 +8883,38 @@ module battleRuntime {
       assert(not(result.fighter.stable)),
       assert(result.fighter.deathSuccesses == 0),
       assert(result.fighter.deathFailures == 0),
+    }
+  }
+
+  run test_spare_the_dying_makes_zero_hp_non_dead_character_stable = {
+    val fighter = { ...withFighterHp(initialState, 0, 0).fighter, unconscious: true, deathSuccesses: 2, deathFailures: 1 }
+    val result = applySpareTheDying(fighter)
+    all {
+      assert(result.hp == 0),
+      assert(result.unconscious),
+      assert(result.stable),
+      assert(result.deathSuccesses == 0),
+      assert(result.deathFailures == 0),
+      assert(spellInvocationSpendsLevelOneSlot(SpareTheDying) == false),
+    }
+  }
+
+  run test_spare_the_dying_rejects_dead_and_nonzero_targets = {
+    val dead = { ...withFighterHp(initialState, 0, 0).fighter, deathFailures: 3 }
+    all {
+      assert(not(spareTheDyingTargetAdmitted(withFighterHp(initialState, 5, 0).fighter))),
+      assert(not(spareTheDyingTargetAdmitted(dead))),
+      assert(not(spareTheDyingTargetAdmitted(withGoblinHp(initialState, 0, 0).goblin))),
+      assert(applySpareTheDying(dead) == dead),
+    }
+  }
+
+  run test_spare_the_dying_range_scales_by_character_level = {
+    all {
+      assert(spareTheDyingRangeFeet(1) == 15),
+      assert(spareTheDyingRangeFeet(5) == 30),
+      assert(spareTheDyingRangeFeet(11) == 60),
+      assert(spareTheDyingRangeFeet(17) == 120),
     }
   }
 

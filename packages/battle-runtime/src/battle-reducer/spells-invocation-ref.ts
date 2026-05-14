@@ -109,6 +109,13 @@ export function supportedSpellInvocationRef(
       procedure: "objectLight",
     };
   }
+  if (invocation.procedure === "makeStable") {
+    return {
+      tag: "cantrip",
+      spellId: spellId(invocation.spell.id),
+      procedure: "makeStable",
+    };
+  }
   return Match.value(invocation).pipe(
     Match.when({ procedure: "heldLight" }, (cantrip) => ({
       tag: "cantrip" as const,

@@ -155,6 +155,7 @@ export {
   resolveCreatureTypeProtectionSpellAct,
   resolveDamageReductionSpellAct,
   resolveJumpMovementReplacementSpellAct,
+  resolveMakeStableSpellAct,
   resolvePreparedHealingSpellAct,
   resolveRollModifierSpellAct,
   resolveScalarBuffSpellAct,
@@ -181,6 +182,7 @@ import {
   resolveCreatureTypeProtectionSpellAct,
   resolveDamageReductionSpellAct,
   resolveJumpMovementReplacementSpellAct,
+  resolveMakeStableSpellAct,
   resolvePreparedHealingSpellAct,
   resolveRollModifierSpellAct,
   resolveScalarBuffSpellAct,
@@ -531,6 +533,14 @@ export function resolveSpellAct(
   }
   if (invocation.procedure === "damageReduction") {
     return resolveDamageReductionSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "makeStable") {
+    return resolveMakeStableSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

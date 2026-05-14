@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bardic-inspiration-failed-d20-test unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.invocation-beam-sequence spell.invocation-condition-save spell.invocation-damage-save-or-attack spell.invocation-grease-ground-hazard spell.invocation-marked-damage-rider spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bardic-inspiration-failed-d20-test unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.invocation-beam-sequence spell.invocation-condition-save spell.invocation-damage-save-or-attack spell.invocation-grease-ground-hazard spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV72B bard_bardic_inspiration
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV75B sorcerer_innate_sorcery
 import { Schema } from "effect";
@@ -148,6 +148,7 @@ import greaseInput from "../../surface/content/grease.json";
 import huntersMarkInput from "../../surface/content/hunters_mark.json";
 import findFamiliarInput from "../../surface/content/find_familiar.json";
 import healingWordInput from "../../surface/content/healing_word.json";
+import spareTheDyingInput from "../../surface/content/spare_the_dying.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type {
   AreaDirectEffectAtom,
@@ -285,6 +286,7 @@ const testSpellRecords = new Map(
     huntersMarkInput,
     findFamiliarInput,
     healingWordInput,
+    spareTheDyingInput,
   ]
     .map((input) => decodeUnitRecordSync(input))
     .flatMap((unit) => (unit.kind === "spell" ? [[unit.id, unit]] : [])),
@@ -7039,6 +7041,201 @@ describe("battle runtime", () => {
         ],
       },
     });
+  });
+
+  test("Spare the Dying makes a zero-HP non-dead character Stable", () => {
+    const targetCharacterId = combatantId("spare-the-dying-target");
+    const state = startBattleRight({
+      battleId: battleId("battle-spare-the-dying-stable"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Cleric",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("spare_the_dying")],
+            preparedSpells: [],
+          }),
+        }),
+        characterSeed({
+          combatantId: targetCharacterId,
+          displayName: "Dying Fighter",
+          initiative: 10,
+          currentHp: 0,
+          attack: null,
+          conditions: ["unconscious"],
+          zeroHpLifecycle: {
+            policy: "usesDeathSavingThrows",
+            deathSaves: {
+              deathSaves: { successes: 2, failures: 1 },
+              stable: false,
+              dead: false,
+              hpRegained: false,
+            },
+          },
+        }),
+      ],
+    });
+
+    const act = findAct(state, magicSubject("spare_the_dying"));
+    const targetHole = findHole(act.initialHoles, "targetChoice");
+    if (targetHole.kind !== "targetChoice") {
+      throw new Error("Expected targetChoice hole.");
+    }
+    const cleric = state.combatants.get(wizardId);
+    const invocation =
+      cleric?.origin.kind === "character"
+        ? supportedSpellActs(cleric).find(
+            (candidate) => candidate.procedure === "makeStable",
+          )
+        : undefined;
+    expect(targetHole.choices).toEqual([targetCharacterId]);
+    expect(invocation?.rangeFeet).toBe(movementFeet(15));
+
+    const result = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          targetFill(targetHole, targetCharacterId, [
+            {
+              kind: "spellTarget",
+              casterId: wizardId,
+              targetId: targetCharacterId,
+              spellId: "spare_the_dying",
+            },
+          ]),
+        ],
+      }),
+    );
+
+    expect(result.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: targetCharacterId,
+          hp: 0,
+          conditions: expect.arrayContaining(["unconscious"]),
+          zeroHpLifecycle: {
+            policy: "usesDeathSavingThrows",
+            deathSaves: { successes: 0, failures: 0 },
+            stable: true,
+            dead: false,
+          },
+        }),
+      ]),
+    );
+    expect(result.state.currentTurnResources.actionResources).toHaveLength(0);
+  });
+
+  test("Spare the Dying rejects positive-HP, dead, and monster-dead targets", () => {
+    const deadCharacterId = combatantId("spare-the-dying-dead-target");
+    const state = startBattleRight({
+      battleId: battleId("battle-spare-the-dying-target-gate"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Cleric",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("spare_the_dying")],
+            preparedSpells: [],
+          }),
+        }),
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Standing Fighter",
+          initiative: 15,
+          attack: null,
+        }),
+        characterSeed({
+          combatantId: deadCharacterId,
+          displayName: "Dead Fighter",
+          initiative: 10,
+          currentHp: 0,
+          attack: null,
+          zeroHpLifecycle: {
+            policy: "usesDeathSavingThrows",
+            deathSaves: {
+              deathSaves: { successes: 0, failures: 3 },
+              stable: false,
+              dead: true,
+              hpRegained: false,
+            },
+          },
+        }),
+        statBlockCreatureInit({ initiative: 5, currentHp: 0 }),
+      ],
+    });
+
+    const subject = magicSubject("spare_the_dying");
+    const targetHole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    if (targetHole.kind !== "targetChoice") {
+      throw new Error("Expected targetChoice hole.");
+    }
+
+    expect(targetHole.choices).toEqual([]);
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(targetHole, deadCharacterId, [
+            {
+              kind: "spellTarget",
+              casterId: wizardId,
+              targetId: deadCharacterId,
+              spellId: "spare_the_dying",
+            },
+          ]),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+  });
+
+  test("Spare the Dying range scales from character level", () => {
+    const levelFiveCleric = characterSeed({
+      combatantId: wizardId,
+      displayName: "Cleric",
+      initiative: 20,
+      attack: null,
+      classLevels: [{ className: "wizard", level: 5 }],
+      spellcasting: wizardSpellcasting({
+        cantrips: [spellRecord("spare_the_dying")],
+        preparedSpells: [],
+      }),
+    });
+    const state = startBattleRight({
+      battleId: battleId("battle-spare-the-dying-range-scaling"),
+      combatants: [
+        levelFiveCleric,
+        characterSeed({
+          combatantId: fighterId,
+          initiative: 10,
+          currentHp: 0,
+          conditions: ["unconscious"],
+          attack: null,
+        }),
+      ],
+    });
+
+    findAct(state, magicSubject("spare_the_dying"));
+    const cleric = state.combatants.get(wizardId);
+    const invocation =
+      cleric?.origin.kind === "character"
+        ? supportedSpellActs(cleric).find(
+            (candidate) => candidate.procedure === "makeStable",
+          )
+        : undefined;
+
+    expect(invocation?.rangeFeet).toBe(movementFeet(30));
   });
 
   test("melee Knock Out leaves a Character target at 1 HP and Unconscious", () => {
@@ -25873,6 +26070,10 @@ function characterSeed(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["positiveHpUnconscious"];
+  readonly zeroHpLifecycle?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["zeroHpLifecycle"];
   readonly armorClass?: ReturnType<typeof defaultArmorClassState>;
   readonly selectedLoadout?: Extract<
     BattleCreatureInit["creatureInit"],
@@ -25956,6 +26157,9 @@ function characterSeed(input: {
       ...(input.positiveHpUnconscious === undefined
         ? {}
         : { positiveHpUnconscious: input.positiveHpUnconscious }),
+      ...(input.zeroHpLifecycle === undefined
+        ? {}
+        : { zeroHpLifecycle: input.zeroHpLifecycle }),
       selectedLoadout,
       ...(input.weaponMasteries === undefined
         ? {}
@@ -27767,6 +27971,7 @@ function spellRecord(
     | "find_familiar"
     | "detect_magic"
     | "detect_poison_and_disease"
+    | "spare_the_dying"
     | "healing_word",
 ) {
   const unit =
@@ -27807,6 +28012,7 @@ function magicSubject(
     | "ice_knife"
     | "entangle"
     | "sleep"
+    | "spare_the_dying"
     | "dex_half_cantrip",
 ): BattleSubject {
   return {
@@ -27823,6 +28029,8 @@ function magicSubject(
               ? spellSlotInvocationRef(spellId, 1, "saveGatedCondition")
               : spellId === "sleep"
                 ? spellSlotInvocationRef(spellId, 1, "sleepTargetAdmission")
+                : spellId === "spare_the_dying"
+                  ? cantripSpellInvocationRef(spellId, "makeStable")
                 : spellId === "ice_knife"
                   ? spellSlotInvocationRef(spellId, 1, "attackBurstSaveDamage")
                   : spellId === "vicious_mockery"

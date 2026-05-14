@@ -19,6 +19,7 @@ import {
   attackBonus,
   movementFeet,
   spellSlotLevel,
+  type MovementFeet,
   type ProficiencyBonus as ProficiencyBonusType,
 } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
@@ -333,6 +334,9 @@ export function supportedSpellActs(
     ...cantrips.flatMap((spell) =>
       supportedCantripDamageReductionSpellProfile(actor.combatantId, spell),
     ),
+    ...cantrips.flatMap((spell) =>
+      supportedCantripMakeStableSpellProfile(spell, characterLevel),
+    ),
   ];
 }
 
@@ -435,6 +439,82 @@ export function supportedCantripObjectLightSpellProfile(
           expiresAt: { kind: "duration", durationTicks: durationTicks.right },
         },
       ];
+}
+
+export function supportedCantripMakeStableSpellProfile(
+  spell: SpellRecord,
+  characterLevel: number,
+): readonly SupportedSpellInvocation[] {
+  if (
+    spell.name !== "Spare the Dying" ||
+    spell.provenance.kind !== "srd-5.2.1" ||
+    spell.provenance.section !== "Spells/Descriptions-S-Z#Spare the Dying" ||
+    spell.mechanics.family !== "activation" ||
+    spell.mechanics.level !== 0 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.duration.kind !== "instantaneous" ||
+    spell.mechanics.phases.length !== 1
+  ) {
+    return [];
+  }
+  const phase = spell.mechanics.phases[0];
+  const targetSelection =
+    phase?.kind === "direct" &&
+    phase.attachment.kind === "hole" &&
+    phase.attachment.value.kind === "target"
+      ? phase.attachment.value.selection
+      : null;
+  const effect = phase?.kind === "direct" ? phase.effects?.[0] : undefined;
+  const rangeFeet = spareTheDyingRangeFeet(spell.mechanics.range, characterLevel);
+  const stateFilter =
+    targetSelection !== null &&
+    "stateFilter" in targetSelection &&
+    Array.isArray(targetSelection.stateFilter)
+      ? targetSelection.stateFilter
+      : [];
+  if (
+    targetSelection === null ||
+    targetSelection.mode !== "one" ||
+    !sameStringSet(targetSelection.targetKinds ?? [], ["creature"]) ||
+    !sameStringSet(stateFilter, ["zero_hp_not_dead"]) ||
+    phase?.kind !== "direct" ||
+    phase.effects?.length !== 1 ||
+    effect?.kind !== "make_stable" ||
+    rangeFeet === null
+  ) {
+    return [];
+  }
+  return [
+    {
+      access: { tag: "classCantrip" },
+      resource: { tag: "none" },
+      procedure: "makeStable",
+      spell,
+      actionCost: "magicAction",
+      rangeFeet,
+    },
+  ];
+}
+
+function spareTheDyingRangeFeet(
+  range: SpellRecord["mechanics"]["range"],
+  characterLevel: number,
+): MovementFeet | null {
+  if (
+    range.kind !== "point" ||
+    typeof range.feet !== "object" ||
+    range.feet.kind !== "threshold_tiers" ||
+    range.feet.axis !== "character"
+  ) {
+    return null;
+  }
+  return movementFeet(
+    range.feet.tiers.reduce(
+      (current, tier) =>
+        characterLevel >= tier.atLevel ? tier.value : current,
+      range.feet.base,
+    ),
+  );
 }
 
 export function supportedCantripHeldLightHurlSpellProfile(

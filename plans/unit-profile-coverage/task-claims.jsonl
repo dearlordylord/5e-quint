@@ -13,6 +13,8 @@
 {"taskId":"QMBT31","claimKind":"completed-runtime-parity","profileIds":["unit-feature.weapon-damage-dice-roll-choice"],"note":"Focused weapon hit damage dice roll choice runtime parity."}
 {"taskId":"QMBT32","claimKind":"completed-runtime-parity","profileIds":["spell.hit-point-restoration"],"note":"Focused direct Hit Point restoration spell runtime parity for Cure Wounds and Mass Healing Word."}
 {"taskId":"QMBT34","claimKind":"completed-runtime-parity","profileIds":["spell.hit-point-restoration"],"note":"Focused area Hit Point restoration spell runtime parity for Mass Cure Wounds."}
+{"taskId":"SRDINV84C","claimKind":"qnt-proof","profileIds":["spell.invocation-make-stable"],"note":"Spare the Dying zero-HP non-dead target admission, Stable lifecycle application, and character-level range scaling."}
+{"taskId":"SRDINV84C","claimKind":"completed-runtime-parity","profileIds":["spell.invocation-make-stable"],"note":"Runtime parity for Spare the Dying Stable cantrip profile."}
 {"taskId":"QMBT37","claimKind":"completed-runtime-parity","profileIds":["unit-feature.attack-action-attack-count-scaling"],"note":"Focused level-5 Extra Attack runtime parity."}
 {"taskId":"QMBT40","claimKind":"completed-runtime-parity","profileIds":["unit-feature.passive-speed-bonus"],"note":"Focused Fast Movement passive Speed bonus runtime parity."}
 {"taskId":"QMBT44","claimKind":"completed-runtime-parity","profileIds":["unit-feature.passive-speed-kind-grants"],"note":"Focused Roving passive Speed-kind grants runtime parity."}

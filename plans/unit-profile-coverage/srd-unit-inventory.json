@@ -6438,7 +6438,7 @@
         "state": "installed",
         "unitId": "spare_the_dying"
       },
-      "unitProfileDisposition": "unsupported-profile",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {
@@ -6448,11 +6448,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Unit matrix records unsupported-profile: Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Spare the Dying's zero-Hit-Point not-dead target admission, Stable lifecycle application, or character-level range scaling. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "evidence": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
           "status": "owner evidence required"
         }
       ],
-      "nextAction": "Unit matrix records unsupported-profile: Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Spare the Dying's zero-Hit-Point not-dead target admission, Stable lifecycle application, or character-level range scaling. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_thaumaturgy",
@@ -8068,7 +8068,7 @@
         "state": "installed",
         "unitId": "spare_the_dying"
       },
-      "unitProfileDisposition": "unsupported-profile",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {
@@ -8078,11 +8078,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Unit matrix records unsupported-profile: Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Spare the Dying's zero-Hit-Point not-dead target admission, Stable lifecycle application, or character-level range scaling. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "evidence": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
           "status": "owner evidence required"
         }
       ],
-      "nextAction": "Unit matrix records unsupported-profile: Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Spare the Dying's zero-Hit-Point not-dead target admission, Stable lifecycle application, or character-level range scaling. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_starry_wisp",

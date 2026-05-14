@@ -19,6 +19,7 @@ import {
   type BattleSpellTargetListSpatialFact,
   type BattleState,
   type BattleObjectTargetChoiceHole,
+  type BattleCreatureState,
   type BattleTargetChoiceHole,
   type BattleTargetSpatialFact,
   type SupportedSpellInvocation,
@@ -434,6 +435,9 @@ export function spellTargetHasNonSpatialPrerequisites(
   ) {
     return false;
   }
+  if (invocation.procedure === "makeStable") {
+    return target !== undefined && combatantCanBeMadeStable(target);
+  }
   const targetCreatureType =
     target === undefined ? null : battleCreatureType(target);
   if (
@@ -445,6 +449,14 @@ export function spellTargetHasNonSpatialPrerequisites(
     return false;
   }
   return target !== undefined;
+}
+
+function combatantCanBeMadeStable(combatant: BattleCreatureState): boolean {
+  return (
+    Number(combatant.hp) === 0 &&
+    combatant.zeroHpLifecycle.policy === "usesDeathSavingThrows" &&
+    !combatant.zeroHpLifecycle.deathSaves.dead
+  );
 }
 
 export function validateSpellTargetAllocation(

@@ -62,9 +62,9 @@
       "value": 142
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 75,
+      "denominator": 76,
       "numerator": 68,
-      "percent": "90.7%"
+      "percent": "89.5%"
     },
     "profileClassificationCoverage": {
       "denominator": 142,
@@ -72,34 +72,34 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 56,
-      "numerator": 56,
+      "denominator": 57,
+      "numerator": 57,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 56,
-      "numerator": 55,
+      "denominator": 57,
+      "numerator": 56,
       "percent": "98.2%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 56,
-      "numerator": 56,
+      "denominator": 57,
+      "numerator": 57,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 56,
-      "numerator": 56,
+      "denominator": 57,
+      "numerator": 57,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 75,
+      "denominator": 76,
       "numerator": 10,
-      "percent": "13.3%"
+      "percent": "13.2%"
     },
     "supportedProfileCoverage": {
       "denominator": 116,
-      "numerator": 75,
-      "percent": "64.7%"
+      "numerator": 76,
+      "percent": "65.5%"
     }
   },
   "metricSemantics": [
@@ -1468,6 +1468,31 @@
       ]
     },
     {
+      "id": "spell.invocation-make-stable",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the authored Spare the Dying cantrip, existing Character Build zero-HP death-save lifecycle state, and caller-supplied spell target spatial facts. Stat Block combatants that die at 0 HP and Character Build combatants whose death-save lifecycle is dead are not legal targets.",
+      "taskRefs": [
+        "SRDINV84C"
+      ],
+      "title": "Spell invocation makes a zero-Hit-Point non-dead creature Stable",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.invocation-weapon-damage-rider",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -2064,6 +2089,22 @@
         "spell.hit-point-restoration"
       ],
       "taskId": "QMBT34"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Spare the Dying zero-HP non-dead target admission, Stable lifecycle application, and character-level range scaling.",
+      "profileIds": [
+        "spell.invocation-make-stable"
+      ],
+      "taskId": "SRDINV84C"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Runtime parity for Spare the Dying Stable cantrip profile.",
+      "profileIds": [
+        "spell.invocation-make-stable"
+      ],
+      "taskId": "SRDINV84C"
     },
     {
       "claimKind": "completed-runtime-parity",
@@ -8883,14 +8924,45 @@
         "status": "installed"
       },
       "claim": {
-        "reason": "Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Spare the Dying's zero-Hit-Point not-dead target admission, Stable lifecycle application, or character-level range scaling.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "spell.invocation-make-stable"
+        ],
+        "rawRequirementIds": [
+          "RAW-SRDINV84C-SPARE-THE-DYING-STABLE-001"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-make-stable",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the authored Spare the Dying cantrip, existing Character Build zero-HP death-save lifecycle state, and caller-supplied spell target spatial facts. Stat Block combatants that die at 0 HP and Character Build combatants whose death-save lifecycle is dead are not legal targets.",
+          "taskRefs": [
+            "SRDINV84C"
+          ],
+          "title": "Spell invocation makes a zero-Hit-Point non-dead creature Stable",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/spare_the_dying.json",
       "unitId": "spare_the_dying"
     },

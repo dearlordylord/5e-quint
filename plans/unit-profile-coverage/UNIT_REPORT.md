@@ -17,13 +17,13 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Authored Surface Unit catalog admission | 141/429 | 32.9% |
 | Authored Surface executable catalog admission | 115/362 | 31.8% |
 | Installed Unit profile classification coverage | 142/142 | 100% |
-| Supported executable Unit coverage | 75/116 | 64.7% |
-| QNT profile modeling coverage | 56/56 | 100% |
-| QNT proof coverage | 55/56 | 98.2% |
-| Runtime mapping coverage | 56/56 | 100% |
-| Runtime parity coverage | 56/56 | 100% |
-| Deterministic admission/projection coverage | 68/75 | 90.7% |
-| Selected identity MBT coverage | 10/75 | 13.3% |
+| Supported executable Unit coverage | 76/116 | 65.5% |
+| QNT profile modeling coverage | 57/57 | 100% |
+| QNT proof coverage | 56/57 | 98.2% |
+| Runtime mapping coverage | 57/57 | 100% |
+| Runtime parity coverage | 57/57 | 100% |
+| Deterministic admission/projection coverage | 68/76 | 89.5% |
+| Selected identity MBT coverage | 10/76 | 13.2% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -109,6 +109,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `searing_smite` | srd-5.2.1 | `spell.invocation-after-hit-timed-damage-save` |
 | `shocking_grasp` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
 | `sorcerous_burst` | srd-5.2.1 | `spell.invocation-damage-save-or-attack` |
+| `spare_the_dying` | srd-5.2.1 | `spell.invocation-make-stable` |
 | `starry_wisp` | srd-5.2.1 | `spell.invocation-damage-save-or-attack` |
 | `vicious_mockery` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
 | `mage_armor` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
@@ -914,7 +915,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `protection_from_evil_and_good` | profile-subset-supported | supported subset: 1-action Spell Slot expenditure; concentration-owned protection active effect; attacker creature-type filter for attack-roll Disadvantage; scoped-creature possession-attempt prevention; scoped-creature Charmed and Frightened condition application prevention; deferred: classified gap: Advantage on new Saving Throws against active already-applied possession, Charmed, or Frightened effects from scoped creatures requires a future owning-effect repeat-save or possession-save boundary; no dedicated SRDINV60C implementation task (SRDINV66); RAW willing touched-creature target boundary beyond the runtime's current known-willing target fact (SRDINV66) |
 | `produce_flame` | profile-subset-supported | supported subset: Bonus Action held-flame state; held-state-gated later Magic action hurl; creature-or-object target boundary with combatant target choice or typed caller-supplied object identity; caller-supplied object range, Armor Class, Hit Points or table-resolved damage disposition facts; ranged spell attack hit/miss adjudication against combatant and object targets; Fire damage; cantrip damage scaling; deferred: shared Bright Light and Dim Light runtime interaction boundary for the held flame (SRDINV70A) |
 | `sanctuary` | unsupported-profile | Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Sanctuary's warded-target Wisdom-save targeting interdiction, choose-new-target-or-lose outcome, area-effect exclusion, or early-end lifecycle. |
-| `spare_the_dying` | unsupported-profile | Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Spare the Dying's zero-Hit-Point not-dead target admission, Stable lifecycle application, or character-level range scaling. |
 | `detect_evil_and_good` | unsupported-profile | Detection/occlusion search semantics and Hallow discovery are not promoted as battle Unit profiles. |
 | `detect_magic` | unsupported-profile | Detection/concentration search semantics are not promoted as a battle Unit profile. |
 | `detect_poison_and_disease` | unsupported-profile | Detection/occlusion search semantics and poison/disease identification are not promoted as battle Unit profiles. |
@@ -939,7 +939,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
-| srd-5.2.1 | unassigned | unsupported-profile | 52 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `rogue_expertise`, `rogue_thieves_cant`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `orc_darkvision`, `find_familiar`, `fog_cloud`, `hex`, `sanctuary`, `spare_the_dying`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `shillelagh`, `minor_illusion`, `hideous_laughter`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff` |
+| srd-5.2.1 | unassigned | unsupported-profile | 51 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `rogue_expertise`, `rogue_thieves_cant`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `orc_darkvision`, `find_familiar`, `fog_cloud`, `hex`, `sanctuary`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `shillelagh`, `minor_illusion`, `hideous_laughter`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff` |
 | srd-5.2.1 | unassigned | profile-subset-supported | 15 | `bard_bardic_inspiration`, `monk_martial_arts`, `ranger_favored_enemy`, `chill_touch`, `faerie_fire`, `feather_fall`, `grease`, `hunters_mark`, `jump`, `light`, `protection_from_evil_and_good`, `produce_flame`, `sleep`, `thunderwave`, `charm_person` |
 
 ## Profile Claims By Task
@@ -961,6 +961,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 | QMBT31 | completed-runtime-parity | `unit-feature.weapon-damage-dice-roll-choice` |
 | QMBT32 | completed-runtime-parity | `spell.hit-point-restoration` |
 | QMBT34 | completed-runtime-parity | `spell.hit-point-restoration` |
+| SRDINV84C | qnt-proof | `spell.invocation-make-stable` |
+| SRDINV84C | completed-runtime-parity | `spell.invocation-make-stable` |
 | QMBT37 | completed-runtime-parity | `unit-feature.attack-action-attack-count-scaling` |
 | QMBT40 | completed-runtime-parity | `unit-feature.passive-speed-bonus` |
 | QMBT44 | completed-runtime-parity | `unit-feature.passive-speed-kind-grants` |
