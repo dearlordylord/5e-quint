@@ -202,7 +202,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 300,
       "id": "SRDINV80D",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Widen Sanctuary Targeting Interdiction Surface"
     },
     {
@@ -302,7 +302,7 @@ Keep it synchronized with the DAG table and task details.
 | 297   | SRDINV80A - Widen Hideous Laughter Spell Definition Surface             | done                                          | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Hideous Laughter](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: authored Hideous Laughter Surface facts for the initial Wisdom save, end-turn repeat save, damage-triggered repeat save with Advantage, Prone and Incapacitated application, Prone self-end suppression, and slot-scaled additional targets; runtime execution remains owner-evidence work tracked by the generated inventory rows. |
 | 298   | SRDINV80B - Widen Fog Cloud Spell Definition Surface                    | done                                          | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Fog Cloud](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Heavily Obscured](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: authored and installed Fog Cloud Surface facts for the point-origin slot-scaled fog Sphere, passive Heavily Obscured projection, Concentration duration, and strong-wind dispersal early end; promoted battle-runtime execution remains owner-evidence work tracked by generated inventory rows. |
 | 299   | SRDINV80C - Widen Spare the Dying Stable Lifecycle Surface              | done                                          | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Spare the Dying](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Stable](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: authored and installed Spare the Dying Surface facts for zero-Hit-Point not-dead creature targeting, Stable lifecycle application, and character-level range scaling; promoted battle-runtime execution remains owner-evidence work tracked by generated inventory rows. |
-| 300   | SRDINV80D - Widen Sanctuary Targeting Interdiction Surface              | ready-for-research                            | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Sanctuary](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Target](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface Spell Definition facts for Sanctuary's attack/spell target interdiction, choose-new-target-or-lose outcome, area exclusion, and early end on the warded creature's attack, spell, or damage. |
+| 300   | SRDINV80D - Widen Sanctuary Targeting Interdiction Surface              | done                                          | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Sanctuary](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Target](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: authored and installed Sanctuary Surface facts for the warded creature attachment, Wisdom-save interdiction when targeted by attack rolls or damaging spells, choose-new-target-or-lose outcome, area-effect exclusion, and warded-creature attack/spell/damage early end; promoted battle-runtime execution remains owner-evidence work tracked by the generated inventory rows. |
 | 301   | SRDINV80E - Widen Shillelagh Weapon Override Surface                    | ready-for-research                            | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Shillelagh](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Weapon Attack](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface Spell Definition facts for Shillelagh's held Club or Quarterstaff weapon override, spellcasting ability attack/damage option, level-scaled damage die, Force-or-normal damage choice, and early end on recast or let-go. |
 | 302   | SRDINV80F - Widen Fire Bolt and Sorcerous Burst Cantrip Surface         | ready-for-research                            | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Fire Bolt](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Sorcerous Burst](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface Spell Definition facts for Fire Bolt object targeting and ignition, plus Sorcerous Burst's chosen damage type, exploding d8 loop cap, object target branch, and cantrip damage scaling. |
 | 303   | SRDINV80G - Widen Hex Curse Spell Definition Surface                    | ready-for-research                            | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Hex](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Ability Check](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface Spell Definition facts for Hex's curse retargeting, chosen-ability Ability Check Disadvantage, attack-hit bonus damage, and slot-scaled Concentration duration. |
@@ -1125,7 +1125,7 @@ execution remains outside this task.
 
 ### Task 300 - SRDINV80D - Widen Sanctuary Targeting Interdiction Surface
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV78
 
@@ -1137,10 +1137,11 @@ Research / plan:
 [Target](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
 [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
 
-Scope: widen Surface Spell Definition facts for Sanctuary's warded target,
-Wisdom-save interdiction for attack rolls and damaging spells, choose-new-target
-or lose outcome, area-effect exclusion, and early end when the warded creature
-makes an attack roll, casts a spell, or deals damage.
+Completed: authored and installed Sanctuary Surface Spell Definition facts for
+the warded creature attachment, Wisdom-save interdiction for attack rolls and
+damaging spells, choose-new-target-or-lose outcome, area-effect exclusion, and
+early end when the warded creature makes an attack roll, casts a spell, or deals
+damage.
 
 Out of scope: implementing the battle runtime procedure before the Surface
 shape exists, generic target-redirection framework work beyond this spell's

@@ -312,14 +312,6 @@ const spellUnitMissingClassifications = new Map([
     },
   ],
   [
-    "sanctuary",
-    {
-      kind: "needs-surface-widening",
-      missingConstruct:
-        "Spell Definition targeting interdiction for attack rolls and damaging spells, choose-new-target-or-lose outcome, area exclusion, and early end on warded attack/spell/damage",
-    },
-  ],
-  [
     "shillelagh",
     {
       kind: "needs-surface-widening",

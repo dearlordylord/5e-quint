@@ -161,9 +161,9 @@
       "rowsByStatus": {
         "accepted": 217,
         "accepted-no-battle-effect": 69,
-        "battle-runtime-required": 35,
+        "battle-runtime-required": 36,
         "partial-battle-runtime": 40,
-        "surface-widening-required": 6
+        "surface-widening-required": 5
       }
     },
     "levelOneClassContainers": 12,
@@ -175,14 +175,14 @@
       "catalog-installed-owner-evidence-present": 264,
       "non-runtime": 12,
       "catalog-only/dead-for-now": 76,
-      "catalog-installed-owner-evidence-required": 9,
-      "needs-surface-widening": 6
+      "catalog-installed-owner-evidence-required": 10,
+      "needs-surface-widening": 5
     },
     "spellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 76,
       "catalog-installed-owner-evidence-present": 120,
-      "catalog-installed-owner-evidence-required": 9,
-      "needs-surface-widening": 6
+      "catalog-installed-owner-evidence-required": 10,
+      "needs-surface-widening": 5
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -530,7 +530,7 @@
       "title": "Classify Installed Cantrip and Level-1 Spell Units",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Classify installed SRD cantrip and level-1 Spell Unit owner evidence separately from missing and catalog-only spell rows.",
-      "rowCount": 149,
+      "rowCount": 150,
       "rowIds": [
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_light",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_minor_illusion",
@@ -569,6 +569,7 @@
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_healing_word",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_inflict_wounds",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_protection_from_evil_and_good",
+        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_sanctuary",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_shield_of_faith",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_guidance",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_poison_spray",
@@ -777,9 +778,8 @@
       "title": "Review Catalog-Only and Surface-Widening Rows",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Preserve catalog-only/dead-for-now rows and name missing Surface constructs for nonspell and spell Surface-widening blockers.",
-      "rowCount": 6,
+      "rowCount": 5,
       "rowIds": [
-        "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_sanctuary",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_shillelagh",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_fire_bolt",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_sorcerous_burst",
@@ -7021,19 +7021,32 @@
       "detail": "Sanctuary (Abjuration; —)",
       "candidateUnitId": "sanctuary",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "Spell Definition targeting interdiction for attack rolls and damaging spells, choose-new-target-or-lose outcome, area exclusion, and early end on warded attack/spell/damage"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "sanctuary",
+        "sourceRecordPath": "packages/surface/content/sanctuary.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "sanctuary"
       },
-      "finalDisposition": "needs-surface-widening",
-      "ownerEvidence": [],
-      "nextAction": "Widen Surface: Spell Definition targeting interdiction for attack rolls and damaging spells, choose-new-target-or-lose outcome, area exclusion, and early end on warded attack/spell/damage."
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit sanctuary is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Unit matrix records unsupported-profile: Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Sanctuary's warded-target Wisdom-save targeting interdiction, choose-new-target-or-lose outcome, area-effect exclusion, or early-end lifecycle. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Unit matrix records unsupported-profile: Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Sanctuary's warded-target Wisdom-save targeting interdiction, choose-new-target-or-lose outcome, area-effect exclusion, or early-end lifecycle. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_shield_of_faith",

@@ -291,6 +291,60 @@ describe("SRD Unit catalog boundary", () => {
     }
   });
 
+  test("decodes Sanctuary as warded-target targeting interdiction", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const sanctuary = result.catalog.requireUnit("sanctuary");
+      expect(sanctuary.kind).toBe("spell");
+      if (sanctuary.kind !== "spell") return;
+      expect(sanctuary.mechanics.family).toBe("ongoing_effect");
+      if (sanctuary.mechanics.family !== "ongoing_effect") return;
+
+      expect(sanctuary.mechanics.duration).toEqual({
+        kind: "timed",
+        value: { unit: "minute", amount: 1 },
+        earlyEnd: [
+          { kind: "target_makes_attack_roll" },
+          { kind: "target_casts_spell" },
+          { kind: "target_deals_damage" },
+        ],
+      });
+      expect(sanctuary.mechanics.attachment).toEqual({
+        kind: "hole",
+        holeId: "sanctuary_warded_creature",
+        label: "warded creature",
+        value: {
+          kind: "target",
+          selection: {
+            mode: "one",
+            targetKinds: ["creature"],
+          },
+        },
+      });
+      expect(sanctuary.mechanics.operations).toEqual([
+        {
+          trigger: {
+            kind: "on_attached_targeted",
+            targeting: ["attack_roll", "damaging_spell"],
+            excludes: "area_of_effect",
+          },
+          effect: {
+            kind: "save_gate",
+            ability: "wis",
+            dc: { kind: "caster_spell_save_dc" },
+            onFail: {
+              kind: "choose_new_target_or_lose",
+              subject: "triggering_attack_or_spell",
+            },
+            onSuccess: { kind: "none" },
+          },
+        },
+      ]);
+    }
+  });
+
   test("decodes Dissonant Whispers as damage plus forced Reaction movement", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 

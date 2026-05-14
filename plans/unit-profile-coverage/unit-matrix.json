@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 358,
-      "numerator": 110,
-      "percent": "30.7%"
+      "denominator": 359,
+      "numerator": 111,
+      "percent": "30.9%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 425,
-      "numerator": 136,
-      "percent": "32%"
+      "denominator": 426,
+      "numerator": 137,
+      "percent": "32.2%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 137
+      "value": 138
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 73,
@@ -67,8 +67,8 @@
       "percent": "90.4%"
     },
     "profileClassificationCoverage": {
-      "denominator": 137,
-      "numerator": 137,
+      "denominator": 138,
+      "numerator": 138,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -97,9 +97,9 @@
       "percent": "13.7%"
     },
     "supportedProfileCoverage": {
-      "denominator": 111,
+      "denominator": 112,
       "numerator": 73,
-      "percent": "65.8%"
+      "percent": "65.2%"
     }
   },
   "metricSemantics": [
@@ -8463,6 +8463,24 @@
       ],
       "sourceRecordPath": "packages/surface/content/sacred_flame.json",
       "unitId": "sacred_flame"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Sanctuary's warded-target Wisdom-save targeting interdiction, choose-new-target-or-lose outcome, area-effect exclusion, or early-end lifecycle.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/sanctuary.json",
+      "unitId": "sanctuary"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

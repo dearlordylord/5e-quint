@@ -114,6 +114,7 @@ import rogueUncannyDodgeInput from "../../content/rogue_uncanny_dodge.json";
 import rogueSneakAttackInput from "../../content/rogue_sneak_attack.json";
 import rogueThievesCantInput from "../../content/rogue_thieves_cant.json";
 import rogueWeaponMasteryInput from "../../content/rogue_weapon_mastery.json";
+import sanctuaryInput from "../../content/sanctuary.json";
 import shieldInput from "../../content/shield.json";
 import shieldOfFaithInput from "../../content/shield_of_faith.json";
 import shockingGraspInput from "../../content/shocking_grasp.json";
@@ -345,6 +346,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     rayOfSicknessInput,
     resistanceInput,
     sacredFlameInput,
+    sanctuaryInput,
     searingSmiteInput,
     shockingGraspInput,
     spareTheDyingInput,

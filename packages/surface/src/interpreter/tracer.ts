@@ -956,6 +956,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "choose_new_target_or_lose": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "choose_new_target_or_lose",
+        label: `choose_new_target_or_lose\n${e.subject}`,
+      });
+      return id;
+    }
     case "block_travel": {
       const id = ids("eff");
       nodes.push({
@@ -2232,6 +2242,7 @@ function traceEffectAtomScaling(
     case "ability_check_to_move_in_area":
     case "fall_to_ground":
     case "block_targeting":
+    case "choose_new_target_or_lose":
     case "block_travel":
     case "end_if_created_in_occupied_space":
     case "allow_designated_creatures_safe_passage":
@@ -3253,6 +3264,17 @@ function traceOngoingTrigger(
         category: "window",
         atomKind: "post_action_window",
         label: "post_action_window\n(attached takes damage)",
+      });
+      edges.push({ from: procId, to: winId, relation: "opens_window" });
+      return { hostId: winId, hostRelation: "grants" };
+    }
+    case "on_attached_targeted": {
+      const winId = ids("win");
+      nodes.push({
+        id: winId,
+        category: "window",
+        atomKind: "targeting_window",
+        label: `targeting_window\nattached targeted by ${trigger.targeting.join(" or ")}\nexcludes: ${trigger.excludes}`,
       });
       edges.push({ from: procId, to: winId, relation: "opens_window" });
       return { hostId: winId, hostRelation: "grants" };

@@ -681,6 +681,10 @@ type EffectAtom =
     }
   | { readonly kind: "fall_to_ground" }
   | { readonly kind: "block_targeting"; readonly scope: string }
+  | {
+      readonly kind: "choose_new_target_or_lose";
+      readonly subject: "triggering_attack_or_spell";
+    }
   | { readonly kind: "block_travel"; readonly scope: string }
   | { readonly kind: "end_if_created_in_occupied_space" }
   | { readonly kind: "allow_designated_creatures_safe_passage" }
@@ -1613,6 +1617,11 @@ export const OngoingTriggerSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("on_caster_turn_end") }),
   Schema.Struct({ kind: Schema.Literal("on_attached_damaged") }),
   Schema.Struct({
+    kind: Schema.Literal("on_attached_targeted"),
+    targeting: nonEmpty(Schema.Literal("attack_roll", "damaging_spell")),
+    excludes: Schema.Literal("area_of_effect"),
+  }),
+  Schema.Struct({
     kind: Schema.Literal("on_creature_moves"),
     perFeet: optionalExact(Schema.Number),
   }),
@@ -2086,6 +2095,10 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       Schema.Struct({
         kind: Schema.Literal("block_targeting"),
         scope: Schema.String,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("choose_new_target_or_lose"),
+        subject: Schema.Literal("triggering_attack_or_spell"),
       }),
       Schema.Struct({
         kind: Schema.Literal("block_travel"),

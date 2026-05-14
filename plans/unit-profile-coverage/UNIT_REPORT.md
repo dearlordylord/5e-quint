@@ -8,16 +8,16 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Metric | Value |
 | --- | ---: |
-| Installed collection inventory count | 137 Units |
+| Installed collection inventory count | 138 Units |
 
 ## Coverage Metrics
 
 | Metric | Covered | Percent |
 | --- | ---: | ---: |
-| Authored Surface Unit catalog admission | 136/425 | 32% |
-| Authored Surface executable catalog admission | 110/358 | 30.7% |
-| Installed Unit profile classification coverage | 137/137 | 100% |
-| Supported executable Unit coverage | 73/111 | 65.8% |
+| Authored Surface Unit catalog admission | 137/426 | 32.2% |
+| Authored Surface executable catalog admission | 111/359 | 30.9% |
+| Installed Unit profile classification coverage | 138/138 | 100% |
+| Supported executable Unit coverage | 73/112 | 65.2% |
 | QNT profile modeling coverage | 56/56 | 100% |
 | QNT proof coverage | 55/56 | 98.2% |
 | Runtime mapping coverage | 56/56 | 100% |
@@ -910,6 +910,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `light` | profile-subset-supported | supported subset: Magic Action cantrip cast with no Spell Slot spend; caller-supplied touched object identity, size, and worn/carried facts; Large-or-smaller object admission; rejection when the object is worn or carried by someone else; source-owned object-attached Bright Light 20-foot radius plus Dim Light for an additional 20 feet; one-hour duration cleanup; same-caster recast replacement of the prior Light emitter; deferred: opaque-cover suppression, map illumination, obscured-area derivation, Darkvision-adjusted sight, and colored-light presentation remain outside the object-emitter runtime boundary (SRDINV78) |
 | `protection_from_evil_and_good` | profile-subset-supported | supported subset: 1-action Spell Slot expenditure; concentration-owned protection active effect; attacker creature-type filter for attack-roll Disadvantage; scoped-creature possession-attempt prevention; scoped-creature Charmed and Frightened condition application prevention; deferred: classified gap: Advantage on new Saving Throws against active already-applied possession, Charmed, or Frightened effects from scoped creatures requires a future owning-effect repeat-save or possession-save boundary; no dedicated SRDINV60C implementation task (SRDINV66); RAW willing touched-creature target boundary beyond the runtime's current known-willing target fact (SRDINV66) |
 | `produce_flame` | profile-subset-supported | supported subset: Bonus Action held-flame state; held-state-gated later Magic action hurl; creature-or-object target boundary with combatant target choice or typed caller-supplied object identity; caller-supplied object range, Armor Class, Hit Points or table-resolved damage disposition facts; ranged spell attack hit/miss adjudication against combatant and object targets; Fire damage; cantrip damage scaling; deferred: shared Bright Light and Dim Light runtime interaction boundary for the held flame (SRDINV70A) |
+| `sanctuary` | unsupported-profile | Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Sanctuary's warded-target Wisdom-save targeting interdiction, choose-new-target-or-lose outcome, area-effect exclusion, or early-end lifecycle. |
 | `spare_the_dying` | unsupported-profile | Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Spare the Dying's zero-Hit-Point not-dead target admission, Stable lifecycle application, or character-level range scaling. |
 | `detect_evil_and_good` | unsupported-profile | Detection/occlusion search semantics and Hallow discovery are not promoted as battle Unit profiles. |
 | `detect_magic` | unsupported-profile | Detection/concentration search semantics are not promoted as a battle Unit profile. |
@@ -934,7 +935,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
-| srd-5.2.1 | unassigned | unsupported-profile | 48 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `rogue_expertise`, `rogue_thieves_cant`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `orc_darkvision`, `fog_cloud`, `spare_the_dying`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `minor_illusion`, `hideous_laughter`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff` |
+| srd-5.2.1 | unassigned | unsupported-profile | 49 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `rogue_expertise`, `rogue_thieves_cant`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `orc_darkvision`, `fog_cloud`, `sanctuary`, `spare_the_dying`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `minor_illusion`, `hideous_laughter`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff` |
 | srd-5.2.1 | unassigned | profile-subset-supported | 15 | `bard_bardic_inspiration`, `monk_martial_arts`, `ranger_favored_enemy`, `chill_touch`, `faerie_fire`, `feather_fall`, `grease`, `hunters_mark`, `jump`, `light`, `protection_from_evil_and_good`, `produce_flame`, `sleep`, `thunderwave`, `charm_person` |
 | srd-5.2.1 | QCORE10 | needs-surface-widening | 1 | `fire_bolt` |
 
