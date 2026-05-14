@@ -1,8 +1,12 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { Effect } from "effect";
+import { fileURLToPath } from "node:url";
 
-const MCP_CWD = "/workspace/typescript/dnd/packages/mcp";
+const MCP_CWD = fileURLToPath(new URL("..", import.meta.url));
+const MCP_TSX_CLI = fileURLToPath(
+  new URL("../node_modules/tsx/dist/cli.mjs", import.meta.url),
+);
 
 export type DevMcpClient = {
   readonly client: Client;
@@ -13,8 +17,8 @@ export const makeDevMcpClient = Effect.acquireRelease(
   Effect.tryPromise({
     try: async () => {
       const transport = new StdioClientTransport({
-        command: "pnpm",
-        args: ["dev"],
+        command: process.execPath,
+        args: [MCP_TSX_CLI, "src/index.ts"],
         cwd: MCP_CWD,
         stderr: "inherit",
       });

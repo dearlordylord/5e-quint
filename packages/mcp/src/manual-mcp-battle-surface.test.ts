@@ -523,8 +523,51 @@ describe("manual MCP battle surface coverage", () => {
     ]);
   });
 
-  test("discovers the older promoted spell procedures through MCP battle tools", () => {
+  test("discovers promoted action-time spell procedures through MCP battle tools", () => {
     const root = createMcpCompositionRoot();
+    const cantrips = [
+      "acid_splash",
+      "chill_touch",
+      "eldritch_blast",
+      "fire_bolt",
+      "guidance",
+      "light",
+      "poison_spray",
+      "produce_flame",
+      "ray_of_frost",
+      "resistance",
+      "sacred_flame",
+      "sorcerous_burst",
+      "starry_wisp",
+    ] as const;
+    const preparedSpells = [
+      "animal_friendship",
+      "bane",
+      "bless",
+      "burning_hands",
+      "chromatic_orb",
+      "color_spray",
+      "command",
+      "cure_wounds",
+      "dissonant_whispers",
+      "entangle",
+      "expeditious_retreat",
+      "faerie_fire",
+      "grease",
+      "healing_word",
+      "hunters_mark",
+      "ice_knife",
+      "inflict_wounds",
+      "jump",
+      "mage_armor",
+      "magic_missile",
+      "mass_cure_wounds",
+      "mass_healing_word",
+      "protection_from_evil_and_good",
+      "shield_of_faith",
+      "sleep",
+      "thunderwave",
+    ] as const;
     root.sessionStore.battleState = startBattleRight(root, [
       character(root, {
         combatantId: fighterId,
@@ -534,16 +577,14 @@ describe("manual MCP battle surface coverage", () => {
         spellcasting: spellcasting(root, {
           sourceClassName: "wizard",
           abilityModifier: 3,
-          cantrips: ["chill_touch", "produce_flame", "light"],
-          preparedSpells: [
-            "animal_friendship",
-            "command",
-            "faerie_fire",
-            "grease",
-            "protection_from_evil_and_good",
-            "sleep",
+          cantrips,
+          preparedSpells,
+          slots: [
+            { spellLevel: 1, count: 12 },
+            { spellLevel: 2, count: 3 },
+            { spellLevel: 3, count: 3 },
+            { spellLevel: 5, count: 2 },
           ],
-          slots: [{ spellLevel: 1, count: 6 }],
         }),
       }),
       statBlock(root, {
@@ -553,17 +594,7 @@ describe("manual MCP battle surface coverage", () => {
       }),
     ]);
 
-    for (const spellId of [
-      "animal_friendship",
-      "command",
-      "faerie_fire",
-      "grease",
-      "protection_from_evil_and_good",
-      "sleep",
-      "chill_touch",
-      "produce_flame",
-      "light",
-    ]) {
+    for (const spellId of [...cantrips, ...preparedSpells]) {
       expect(requireSpellAct(root, spellId).subject.invocation.spellId).toBe(spellId);
     }
   });
