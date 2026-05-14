@@ -238,7 +238,67 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 306,
       "id": "SRDINV83",
+      "status": "done",
+      "title": "Recursive Level-1 Battle Feature Planning Review"
+    },
+    {
+      "number": 307,
+      "id": "SRDINV84A",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote Fire Bolt Object Runtime"
+    },
+    {
+      "number": 308,
+      "id": "SRDINV84B",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote Sorcerous Burst Runtime"
+    },
+    {
+      "number": 309,
+      "id": "SRDINV84C",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote Spare the Dying Stable Runtime"
+    },
+    {
+      "number": 310,
+      "id": "SRDINV84D",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote Hex Curse Runtime"
+    },
+    {
+      "number": 311,
+      "id": "SRDINV84E",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote Fog Cloud Obscurement Runtime"
+    },
+    {
+      "number": 312,
+      "id": "SRDINV84F",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote Hideous Laughter Repeat-Save Runtime"
+    },
+    {
+      "number": 313,
+      "id": "SRDINV84G",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote Sanctuary Targeting Interdiction Runtime"
+    },
+    {
+      "number": 314,
+      "id": "SRDINV84H",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote Shillelagh Weapon Override Runtime"
+    },
+    {
+      "number": 315,
+      "id": "SRDINV84I",
       "status": "ready-for-research",
+      "title": "Research Find Familiar Companion Runtime Split"
+    },
+    {
+      "number": 316,
+      "id": "SRDINV85",
+      "status": "blocked",
       "title": "Recursive Level-1 Battle Feature Planning Review"
     }
   ]
@@ -308,7 +368,17 @@ Keep it synchronized with the DAG table and task details.
 | 303   | SRDINV80G - Widen Hex Curse Spell Definition Surface               | done               | SRDINV78                                                                                                                                                                                 | SRDINV83                                                                                                            | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Hex](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Ability Check](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Completed: authored and installed Hex Surface facts for cursed-target marking, chosen-ability Ability Check Disadvantage, attack-hit Necrotic damage, later-turn Bonus Action retargeting after the target drops to 0 Hit Points, and slot-scaled Concentration duration; promoted battle-runtime execution remains owner-evidence work tracked by generated inventory rows.                 |
 | 304   | SRDINV81 - Promote Pact of the Chain Find Familiar Access          | done               | SRDINV76E, SRDINV78                                                                                                                                                                      | SRDINV83                                                                                                            | [Pact of the Chain research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76E_PACT_OF_THE_CHAIN_FAMILIAR_BOUNDARY_RESEARCH.md), [Pact of the Chain](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Find Familiar](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Magic Action](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                                                                       | Completed: promoted selected Pact of the Chain into Find Familiar Spell Access with Magic-action no-slot invocation mode, named-form plus CR-0-Beast eligibility, Pact special forms, and no companion lifecycle execution.                                                                                                                                                                  |
 | 305   | SRDINV82 - Promote Pact of the Tome Book of Shadows Access         | done               | SRDINV76F, SRDINV78                                                                                                                                                                      | SRDINV83                                                                                                            | [Pact of the Tome research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76F_PACT_OF_THE_TOME_SPELL_ACCESS_BOUNDARY_RESEARCH.md), [Pact of the Tome](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Ritual](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Spellcasting Focus](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                                                                                | Completed: promoted selected Pact of the Tome into one Book of Shadows Spell Access source with exactly three cantrips, two level-1 Ritual spells, book-on-person conditional preparation, Warlock-spell projection, ordinary Ritual invocation where supported, and no duplicate prepared-list state.                                                                                        |
-| 306   | SRDINV83 - Recursive Level-1 Battle Feature Planning Review        | ready-for-research | SRDINV79, SRDINV80A, SRDINV80B, SRDINV80C, SRDINV80D, SRDINV80E, SRDINV80F, SRDINV80G, SRDINV81, SRDINV82                                                                                | none                                                                                                                | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                                                                                                        | Review SRDINV79-SRDINV82, refresh battle-readiness metrics, close evidence-only drift where appropriate, and decide whether the next queue is final closure, cleanup, or another concrete implementation batch.                                                                                                                                                                              |
+| 306   | SRDINV83 - Recursive Level-1 Battle Feature Planning Review        | done               | SRDINV79, SRDINV80A, SRDINV80B, SRDINV80C, SRDINV80D, SRDINV80E, SRDINV80F, SRDINV80G, SRDINV81, SRDINV82                                                                                | SRDINV84A, SRDINV84B, SRDINV84C, SRDINV84D, SRDINV84E, SRDINV84F, SRDINV84G, SRDINV84H, SRDINV84I, SRDINV85         | [SRDINV83 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV83_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                              | Completed: reviewed SRDINV79-SRDINV82, refreshed readiness at 286/367 (77.9%), closed Surface-widening drift, identified 16 installed spell-list rows needing battle-runtime owner evidence, and appended SRDINV84A-I plus SRDINV85.                                                                                                                                                        |
+| 307   | SRDINV84A - Promote Fire Bolt Object Runtime                      | ready-for-implementation-after-light-research | SRDINV83                                                                                                                                                                                 | SRDINV85                                                                                                            | [SRDINV83 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV83_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Fire Bolt](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Attack Roll](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                                                 | Promote Fire Bolt's creature-or-object ranged spell attack through the existing object target boundary, including Fire damage, cantrip scaling, caller-supplied object damage facts, and unattended flammable-object ignition.                                                                                                                                                              |
+| 308   | SRDINV84B - Promote Sorcerous Burst Runtime                       | ready-for-implementation-after-light-research | SRDINV83                                                                                                                                                                                 | SRDINV85                                                                                                            | [SRDINV83 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV83_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Sorcerous Burst](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Attack Roll](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                                      | Promote Sorcerous Burst's ranged spell attack, chosen damage type, exploding d8 loop capped by spellcasting ability modifier, creature-or-object target branch, object damage facts, and cantrip scaling.                                                                                                                                                                                   |
+| 309   | SRDINV84C - Promote Spare the Dying Stable Runtime                 | ready-for-implementation-after-light-research | SRDINV83                                                                                                                                                                                 | SRDINV85                                                                                                            | [SRDINV83 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV83_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Spare the Dying](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Stable](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Promote zero-Hit-Point not-dead target admission, Stable lifecycle application, no-dead-target rejection, and character-level range scaling without implementing a broader death-saving-throw subsystem.                                                                                                                                                                                     |
+| 310   | SRDINV84D - Promote Hex Curse Runtime                             | ready-for-implementation-after-light-research | SRDINV83                                                                                                                                                                                 | SRDINV85                                                                                                            | [SRDINV83 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV83_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Hex](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Ability Check](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Attack Roll](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                                          | Promote Hex's Bonus Action curse, chosen-ability Ability Check Disadvantage, attack-hit Necrotic damage rider, later-turn Bonus Action retarget after the target drops to 0 Hit Points, and slot-scaled Concentration duration.                                                                                                                                                             |
+| 311   | SRDINV84E - Promote Fog Cloud Obscurement Runtime                  | ready-for-implementation-after-light-research | SRDINV83                                                                                                                                                                                 | SRDINV85                                                                                                            | [SRDINV83 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV83_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Fog Cloud](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Heavily Obscured](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Area of Effect](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                              | Promote a caller-supplied fog-area occurrence with Heavily Obscured projection, slot-scaled radius facts, Concentration duration, and table-supplied strong-wind dispersal without adding map illumination or area membership derivation.                                                                                                                                                    |
+| 312   | SRDINV84F - Promote Hideous Laughter Repeat-Save Runtime           | ready-for-implementation-after-light-research | SRDINV83                                                                                                                                                                                 | SRDINV85                                                                                                            | [SRDINV83 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV83_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Hideous Laughter](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Incapacitated](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                                  | Promote Hideous Laughter's initial Wisdom save, Prone and Incapacitated lifecycle, end-turn repeat save, damage-triggered repeat save with Advantage, Prone self-end suppression, and slot-scaled additional targets.                                                                                                                                                                      |
+| 313   | SRDINV84G - Promote Sanctuary Targeting Interdiction Runtime       | ready-for-implementation-after-light-research | SRDINV83                                                                                                                                                                                 | SRDINV85                                                                                                            | [SRDINV83 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV83_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Sanctuary](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Target](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Saving Throw](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                                      | Promote Sanctuary's warded-creature effect, Wisdom-save targeting interdiction for attack rolls and damaging spells, choose-new-target-or-lose outcome, area-effect exclusion, and early end on warded attack, spell, or damage.                                                                                                                                                             |
+| 314   | SRDINV84H - Promote Shillelagh Weapon Override Runtime             | ready-for-implementation-after-light-research | SRDINV83                                                                                                                                                                                 | SRDINV85                                                                                                            | [SRDINV83 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV83_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Shillelagh](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Weapon Attack](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Promote Shillelagh's held Club or Quarterstaff target gate, spellcasting ability attack and damage option, level-scaled damage die, Force-or-normal damage choice, and early end on recast or let-go using caller-supplied held/wielded facts.                                                                                                                                              |
+| 315   | SRDINV84I - Research Find Familiar Companion Runtime Split         | ready-for-research | SRDINV83                                                                                                                                                                                 | SRDINV85                                                                                                            | [SRDINV83 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV83_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Find Familiar](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Pact of the Chain research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76E_PACT_OF_THE_CHAIN_FAMILIAR_BOUNDARY_RESEARCH.md), [Reaction](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                       | Research and split the companion runtime boundary for Find Familiar: form/stat-block resolution, type choice, one-familiar lifecycle, Initiative/turn ownership, telepathy, touch-spell delivery, dismissal, disappearance, and Pact of the Chain attack exception.                                                                                                                            |
+| 316   | SRDINV85 - Recursive Level-1 Battle Feature Planning Review        | blocked            | SRDINV84A, SRDINV84B, SRDINV84C, SRDINV84D, SRDINV84E, SRDINV84F, SRDINV84G, SRDINV84H, SRDINV84I                                                                                       | none                                                                                                                | [SRDINV83 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV83_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                                           | Review SRDINV84A-I, refresh battle-readiness metrics, close evidence-only drift where appropriate, and decide whether the next queue is final closure, cleanup, or another concrete implementation batch.                                                                                                                                                                                    |
 
 ## Task Details
 
@@ -1330,14 +1400,16 @@ Burning Hands and rule-core MBT failures already recorded by the task review.
 
 ### Task 306 - SRDINV83 - Recursive Level-1 Battle Feature Planning Review
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV79, SRDINV80A, SRDINV80B, SRDINV80C, SRDINV80D, SRDINV80E,
 SRDINV80F, SRDINV80G, SRDINV81, SRDINV82
 
-Blocks: none
+Blocks: SRDINV84A, SRDINV84B, SRDINV84C, SRDINV84D, SRDINV84E, SRDINV84F,
+SRDINV84G, SRDINV84H, SRDINV84I, SRDINV85
 
 Research / plan:
+[SRDINV83 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV83_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md),
 [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md),
 [SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
 [UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md),
@@ -1346,6 +1418,318 @@ Research / plan:
 
 Scope: review SRDINV79-SRDINV82, refresh level-1 battle-readiness metrics,
 close evidence-only drift where appropriate, explicitly list remaining
+unsupported/profile-subset-supported battle-related level-1 rows with owner and
+reason, and decide whether the next queue is final closure, cleanup, or another
+concrete implementation batch.
+
+Out of scope: claiming 100% support from catalog/profile admission alone and
+starting another recursive-only continuation without reviewing the implemented
+batch.
+
+Verification: completed RAW/source review for the appended SRDINV84A-I slices
+plus `UBIQUITOUS_LANGUAGE.md`; active-plan consistency updated across Ralph
+index, DAG table, and task details; `pnpm unit-profile-coverage:check --write`
+passed with no generated artifact drift; `/simplify` converged after three
+planning-review rounds.
+
+Completed: reviewed SRDINV79-SRDINV82, refreshed battle readiness at 286/367
+(77.9%), closed Surface-widening drift, confirmed 16 installed spell-list rows
+still require battle-runtime owner evidence, and appended SRDINV84A-I plus
+SRDINV85.
+
+### Task 307 - SRDINV84A - Promote Fire Bolt Object Runtime
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: SRDINV83
+
+Blocks: SRDINV85
+
+Research / plan:
+[SRDINV83 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV83_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md),
+[Fire Bolt](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Attack Roll](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Fire Bolt's creature-or-object ranged spell attack through the
+existing object target boundary, including Fire damage, cantrip scaling,
+caller-supplied object damage facts, and unattended flammable-object ignition.
+
+Out of scope: generic object inventory, automatic flammability derivation, map
+fire simulation, and changes to other object-target spells except shared helper
+work needed to keep the implementation non-duplicative.
+
+Verification: RAW/source review for Fire Bolt, Object, Attack Roll, Damage
+Type, and cantrip scaling plus `UBIQUITOUS_LANGUAGE.md`; package-local Quint
+and runtime parity for object hit/miss, ignition/no-ignition, and cantrip
+scaling; `pnpm unit-profile-coverage:check --write`; `pnpm quality`;
+`/simplify` convergence. Battle MBT only if the spell invocation reducer
+sequencing changes.
+
+### Task 308 - SRDINV84B - Promote Sorcerous Burst Runtime
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: SRDINV83
+
+Blocks: SRDINV85
+
+Research / plan:
+[SRDINV83 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV83_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md),
+[Sorcerous Burst](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md),
+[Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Attack Roll](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Sorcerous Burst's ranged spell attack, cast-time damage type
+choice, exploding d8 damage loop capped by spellcasting ability modifier,
+creature-or-object target branch, caller-supplied object damage facts, and
+cantrip scaling.
+
+Out of scope: unbounded recursive damage loops, random damage rolling beyond
+the existing deterministic test/projection boundary, and generic object
+inventory.
+
+Verification: RAW/source review for Sorcerous Burst, Object, Attack Roll,
+Damage Type, and cantrip scaling plus `UBIQUITOUS_LANGUAGE.md`; package-local
+Quint and runtime parity for chosen damage types, capped exploding d8 behavior,
+object/creature targets, and scaling; `pnpm unit-profile-coverage:check
+--write`; `pnpm quality`; `/simplify` convergence. Battle MBT only if the
+spell invocation reducer sequencing changes.
+
+### Task 309 - SRDINV84C - Promote Spare the Dying Stable Runtime
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: SRDINV83
+
+Blocks: SRDINV85
+
+Research / plan:
+[SRDINV83 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV83_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md),
+[Spare the Dying](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md),
+[Stable](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Spare the Dying's zero-Hit-Point not-dead target admission,
+Stable lifecycle application, dead-target rejection, and character-level range
+scaling.
+
+Out of scope: implementing a complete death-saving-throw subsystem,
+automatically deriving target dying state outside combatant Hit Points, and
+long-duration 1d4-hour Stable recovery timing unless the current runtime
+already owns that clock.
+
+Verification: RAW/source review for Spare the Dying, Stable, Hit Points, Death
+Saving Throw, and cantrip range scaling plus `UBIQUITOUS_LANGUAGE.md`;
+package-local Quint and runtime parity for target admission/rejection, Stable
+application, and scaling; `pnpm unit-profile-coverage:check --write`; `pnpm
+quality`; `/simplify` convergence.
+
+### Task 310 - SRDINV84D - Promote Hex Curse Runtime
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: SRDINV83
+
+Blocks: SRDINV85
+
+Research / plan:
+[SRDINV83 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV83_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md),
+[Hex](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[Ability Check](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Attack Roll](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Hex's Bonus Action curse, chosen-ability Ability Check
+Disadvantage, attack-hit Necrotic damage rider, later-turn Bonus Action
+retarget after the target drops to 0 Hit Points, and slot-scaled Concentration
+duration.
+
+Out of scope: generic curse state for unrelated spells, automatic target-death
+detection beyond the combatant HP boundary, and exploration tracking for
+finding the cursed target beyond the chosen-ability Ability Check roll mode.
+
+Verification: RAW/source review for Hex, Ability Check, Attack Roll, Damage
+Type, Bonus Action, Concentration, and higher-level slot duration scaling plus
+`UBIQUITOUS_LANGUAGE.md`; package-local Quint and runtime parity for damage
+rider, ability-check roll mode, retargeting, cleanup, and duration scaling;
+`pnpm unit-profile-coverage:check --write`; `pnpm quality`; `/simplify`
+convergence. Battle MBT only if the attack or concentration reducer sequencing
+changes.
+
+### Task 311 - SRDINV84E - Promote Fog Cloud Obscurement Runtime
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: SRDINV83
+
+Blocks: SRDINV85
+
+Research / plan:
+[SRDINV83 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV83_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md),
+[Fog Cloud](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[Heavily Obscured](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Area of Effect](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote a caller-supplied fog-area occurrence with Heavily Obscured
+projection, slot-scaled radius facts, Concentration duration, and table-supplied
+strong-wind dispersal.
+
+Out of scope: map illumination, line of sight, automatic area membership,
+pathfinding, and deriving wind from environmental simulation.
+
+Verification: RAW/source review for Fog Cloud, Heavily Obscured, Area of
+Effect, Concentration, and higher-level slot scaling plus
+`UBIQUITOUS_LANGUAGE.md`; package-local Quint and runtime parity for area
+creation, radius scaling, concentration cleanup, and strong-wind dispersal;
+`pnpm unit-profile-coverage:check --write`; `pnpm quality`; `/simplify`
+convergence.
+
+### Task 312 - SRDINV84F - Promote Hideous Laughter Repeat-Save Runtime
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: SRDINV83
+
+Blocks: SRDINV85
+
+Research / plan:
+[SRDINV83 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV83_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md),
+[Hideous Laughter](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Incapacitated](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Hideous Laughter's initial Wisdom save, Prone and Incapacitated
+lifecycle, end-turn repeat save, damage-triggered repeat save with Advantage,
+Prone self-end suppression, and slot-scaled additional targets.
+
+Out of scope: generic multi-trigger save framework work not needed by this
+spell, target-selection geometry, and laughter capability modeling unless an
+existing executable fact already owns that distinction.
+
+Verification: RAW/source review for Hideous Laughter, Prone, Incapacitated,
+Saving Throw, damage-triggered repeat saves, Concentration, and higher-level
+target scaling plus `UBIQUITOUS_LANGUAGE.md`; package-local Quint and runtime
+parity for initial save, repeat-save triggers, damage-triggered Advantage,
+condition cleanup, and scaling; `pnpm unit-profile-coverage:check --write`;
+`pnpm quality`; `/simplify` convergence. Battle MBT only if turn/damage
+trigger sequencing changes.
+
+### Task 313 - SRDINV84G - Promote Sanctuary Targeting Interdiction Runtime
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: SRDINV83
+
+Blocks: SRDINV85
+
+Research / plan:
+[SRDINV83 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV83_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md),
+[Sanctuary](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md),
+[Target](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Saving Throw](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Sanctuary's warded-creature effect, Wisdom-save targeting
+interdiction for attack rolls and damaging spells, choose-new-target-or-lose
+outcome, area-effect exclusion, and early end when the warded creature makes an
+attack roll, casts a spell, or deals damage.
+
+Out of scope: generic target-redirection framework work beyond this spell's
+procedure, map-derived area membership, and protection from non-targeted area
+effects.
+
+Verification: RAW/source review for Sanctuary, Target, Attack Roll, Saving
+Throw, spell target rules, area-effect wording, and Bonus Action plus
+`UBIQUITOUS_LANGUAGE.md`; package-local Quint and runtime parity for
+interdiction success/failure, target replacement/loss outcome, area exclusion,
+and early-end triggers; `pnpm unit-profile-coverage:check --write`; `pnpm
+quality`; `/simplify` convergence. Battle MBT only if targeting-window
+sequencing changes.
+
+### Task 314 - SRDINV84H - Promote Shillelagh Weapon Override Runtime
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: SRDINV83
+
+Blocks: SRDINV85
+
+Research / plan:
+[SRDINV83 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV83_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md),
+[Shillelagh](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md),
+[Weapon Attack](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Shillelagh's held Club or Quarterstaff target gate,
+spellcasting ability attack and damage option, level-scaled damage die,
+Force-or-normal damage choice, and early end on recast or when the caster lets
+go of the weapon.
+
+Out of scope: generic item inventory, automatic hand occupancy, item
+conjuration, and unrelated weapon override mechanics.
+
+Verification: RAW/source review for Shillelagh, Weapon Attack, Damage Type,
+Holding/Wielding vocabulary, and cantrip damage scaling plus
+`UBIQUITOUS_LANGUAGE.md`; package-local Quint and runtime parity for target
+gate, attack/damage projection, damage type choice, scaling, recast replacement,
+and let-go cleanup; `pnpm unit-profile-coverage:check --write`; `pnpm
+quality`; `/simplify` convergence.
+
+### Task 315 - SRDINV84I - Research Find Familiar Companion Runtime Split
+
+Status: `ready-for-research`
+
+Depends on: SRDINV83
+
+Blocks: SRDINV85
+
+Research / plan:
+[SRDINV83 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV83_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md),
+[Find Familiar](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[Pact of the Chain research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76E_PACT_OF_THE_CHAIN_FAMILIAR_BOUNDARY_RESEARCH.md),
+[Reaction](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: research and split the companion runtime boundary for Find Familiar:
+normal named forms plus CR 0 Beast eligibility, caster-chosen Celestial/Fey/Fiend
+type, one-familiar lifecycle and replacement, familiar Initiative and turns,
+telepathy/sensory sharing, touch-spell delivery, dismissal, disappearance, item
+drop, and Pact of the Chain's attack exception.
+
+Out of scope: implementing companion runtime before the ownership boundary is
+split, generic summon/pet architecture for non-Find-Familiar spells, and
+treating Pact of the Chain Spell Access as familiar lifecycle support.
+
+Verification: RAW/source review for Find Familiar, Pact of the Chain, Reaction,
+Magic Action, companion vocabulary, and Spell Access plus
+`UBIQUITOUS_LANGUAGE.md`; create a task-specific research file if the split is
+nontrivial; active-plan consistency updates; `pnpm unit-profile-coverage:check
+--write` only if evidence artifacts change; `/simplify` convergence. No battle
+MBT for research-only work.
+
+### Task 316 - SRDINV85 - Recursive Level-1 Battle Feature Planning Review
+
+Status: `blocked`
+
+Depends on: SRDINV84A, SRDINV84B, SRDINV84C, SRDINV84D, SRDINV84E, SRDINV84F,
+SRDINV84G, SRDINV84H, SRDINV84I
+
+Blocks: none
+
+Research / plan:
+[SRDINV83 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV83_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md),
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md),
+[ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: review SRDINV84A-I, refresh level-1 battle-readiness metrics, close
+evidence-only drift where appropriate, explicitly list remaining
 unsupported/profile-subset-supported battle-related level-1 rows with owner and
 reason, and decide whether the next queue is final closure, cleanup, or another
 concrete implementation batch.
