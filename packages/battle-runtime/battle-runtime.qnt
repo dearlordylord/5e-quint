@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points
@@ -24,7 +24,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-object-light
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.reaction-hellish-rebuke spell.invocation-damage-save-or-attack
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.weapon-mastery-sap
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple
 module battleRuntime {
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
@@ -700,6 +700,7 @@ module battleRuntime {
     fighterExtraAttackSupported: bool,
     fighterExtraAttackSlotsRemaining: int,
     fighterLongswordSapMastery: bool,
+    fighterQuarterstaffToppleMastery: bool,
   }
 
   type ActionSurgeResult = {
@@ -817,6 +818,7 @@ module battleRuntime {
     fighterExtraAttackSupported: false,
     fighterExtraAttackSlotsRemaining: 0,
     fighterLongswordSapMastery: false,
+    fighterQuarterstaffToppleMastery: false,
   }
 
   // The battle runtime receives Initiative counts and the caller-resolved
@@ -1809,6 +1811,17 @@ module battleRuntime {
   ): BattleState =
     resolveAttackAtBarbarianLevel(state, attackTotal, naturalD20, damageRoll, concentrationSaveSucceeded, 1)
 
+  pure def resolveAttackWithToppleChoice(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: FighterWeaponAttackDamageRoll,
+    concentrationSaveSucceeded: bool,
+    forceToppleSave: bool,
+    toppleSaveSucceeded: bool,
+  ): BattleState =
+    resolveAttackAtBarbarianLevelWithToppleChoice(state, attackTotal, naturalD20, damageRoll, concentrationSaveSucceeded, 1, OrdinaryDamage, forceToppleSave, toppleSaveSucceeded)
+
   pure def resolveAttackKnockOut(
     state: BattleState,
     attackTotal: int,
@@ -1847,6 +1860,22 @@ module battleRuntime {
     barbarianLevel: int,
     damageDisposition: DamageDisposition,
   ): BattleState =
+    resolveAttackAtBarbarianLevelWithToppleChoice(state, attackTotal, naturalD20, damageRoll, concentrationSaveSucceeded, barbarianLevel, damageDisposition, false, true)
+
+  pure def weaponMasteryToppleSaveDc(attackAbilityModifier: int, proficiencyBonus: int): int =
+    8 + attackAbilityModifier + proficiencyBonus
+
+  pure def resolveAttackAtBarbarianLevelWithToppleChoice(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: FighterWeaponAttackDamageRoll,
+    concentrationSaveSucceeded: bool,
+    barbarianLevel: int,
+    damageDisposition: DamageDisposition,
+    forceToppleSave: bool,
+    toppleSaveSucceeded: bool,
+  ): BattleState =
     if (not(currentActorCanAttack(state)) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated)
       state
     else {
@@ -1861,7 +1890,8 @@ module battleRuntime {
       else {
         val damaged = applyDamageFromSource(state.goblin, damageRoll.weaponDamageRoll + 3 + rageDamage + divineFavorDamage + divineSmiteDamage + huntersMarkDamage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded, damageDisposition, Fighter)
         val sapEffects = if (state.fighterLongswordSapMastery) Set(WeaponMasterySapNextAttackDisadvantage({ source: Fighter })) else Set()
-        { ...spent, goblin: { ...damaged, activeEffects: damaged.activeEffects.union(sapEffects) }, lightWeaponAttackMade: true }
+        val toppled = state.fighterQuarterstaffToppleMastery and forceToppleSave and not(toppleSaveSucceeded)
+        { ...spent, goblin: { ...damaged, prone: damaged.prone or toppled, activeEffects: damaged.activeEffects.union(sapEffects) }, lightWeaponAttackMade: true }
       }
     }
 
@@ -8396,6 +8426,31 @@ module battleRuntime {
         | WeaponMasterySapNextAttackDisadvantage(_) => true
         | _ => false
       }))),
+    }
+  }
+
+  run test_weapon_mastery_topple_save_dc_uses_attack_ability_modifier_and_proficiency_bonus = {
+    assert(weaponMasteryToppleSaveDc(3, 2) == 13)
+  }
+
+  run test_weapon_mastery_topple_applies_prone_on_selected_topple_weapon_failed_save = {
+    val mastered = { ...initialState, fighterQuarterstaffToppleMastery: true }
+    val failed = resolveAttackWithToppleChoice(mastered, 15, 10, fighterWeaponAttackDamageRoll(1), true, true, false)
+    val succeeded = resolveAttackWithToppleChoice(mastered, 15, 10, fighterWeaponAttackDamageRoll(1), true, true, true)
+    val declined = resolveAttackWithToppleChoice(mastered, 15, 10, fighterWeaponAttackDamageRoll(1), true, false, false)
+    all {
+      assert(failed.goblin.prone),
+      assert(not(succeeded.goblin.prone)),
+      assert(not(declined.goblin.prone)),
+    }
+  }
+
+  run test_weapon_mastery_topple_is_gated_by_hit_and_selected_weapon_mastery = {
+    val notMasteredHit = resolveAttackWithToppleChoice(initialState, 15, 10, fighterWeaponAttackDamageRoll(1), true, true, false)
+    val masteredMiss = resolveAttackWithToppleChoice({ ...initialState, fighterQuarterstaffToppleMastery: true }, 1, 1, fighterWeaponAttackDamageRoll(1), true, true, false)
+    all {
+      assert(not(notMasteredHit.goblin.prone)),
+      assert(not(masteredMiss.goblin.prone)),
     }
   }
 

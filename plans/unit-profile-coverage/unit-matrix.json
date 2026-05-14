@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 355,
-      "numerator": 105,
-      "percent": "29.6%"
+      "numerator": 106,
+      "percent": "29.9%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 422,
-      "numerator": 129,
-      "percent": "30.6%"
+      "numerator": 131,
+      "percent": "31%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,47 +59,47 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 130
+      "value": 132
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 69,
+      "denominator": 70,
       "numerator": 64,
-      "percent": "92.8%"
+      "percent": "91.4%"
     },
     "profileClassificationCoverage": {
-      "denominator": 130,
-      "numerator": 130,
+      "denominator": 132,
+      "numerator": 132,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 54,
-      "numerator": 54,
+      "denominator": 55,
+      "numerator": 55,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 54,
-      "numerator": 53,
-      "percent": "98.1%"
+      "denominator": 55,
+      "numerator": 54,
+      "percent": "98.2%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 54,
-      "numerator": 54,
+      "denominator": 55,
+      "numerator": 55,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 54,
-      "numerator": 54,
+      "denominator": 55,
+      "numerator": 55,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 69,
+      "denominator": 70,
       "numerator": 10,
-      "percent": "14.5%"
+      "percent": "14.3%"
     },
     "supportedProfileCoverage": {
-      "denominator": 106,
-      "numerator": 69,
-      "percent": "65.1%"
+      "denominator": 107,
+      "numerator": 70,
+      "percent": "65.4%"
     }
   },
   "metricSemantics": [
@@ -743,6 +743,36 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.weapon-mastery-topple",
+      "profileKind": "persistent-effect",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "Battle init receives selected weapon mastery weapon-kind choices from character creation; runtime gates Topple on the selected weapon kind, the attacked weapon's authored Topple mastery property, and the mastery_topple support profile. The save DC is derived at the attack boundary from 8 plus the attack ability modifier plus Proficiency Bonus.",
+      "taskRefs": [
+        "SRDINV74C"
+      ],
+      "title": "Weapon Mastery Topple optionally forces a Constitution save and applies Prone on failure",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/index.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
         }
       ]
     },
@@ -2924,6 +2954,22 @@
         "unit-feature.weapon-mastery-sap"
       ],
       "taskId": "SRDINV74A"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Topple's selected weapon mastery gate, optional on-hit save choice, DC formula, failed-save Prone application, and success/decline no-op behavior.",
+      "profileIds": [
+        "unit-feature.weapon-mastery-topple"
+      ],
+      "taskId": "SRDINV74C"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime and character-battle-runtime tests cover CharacterBuild selected Quarterstaff/Topple projection into battle support refs, selected Topple weapon hit save holes, optional rider decline, failed-save Prone application, successful-save no-op, missing selected weapon mastery rejection, missing Topple support rejection, non-Topple weapon rejection, and attack ability modifier plus Proficiency Bonus DC derivation.",
+      "profileIds": [
+        "unit-feature.weapon-mastery-topple"
+      ],
+      "taskId": "SRDINV74C"
     },
     {
       "claimKind": "qnt-proof",
@@ -5304,6 +5350,60 @@
       ],
       "sourceRecordPath": "packages/surface/content/mastery_sap.json",
       "unitId": "mastery_sap"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "unit-feature.weapon-mastery-topple"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "mastery",
+      "profiles": [
+        {
+          "id": "unit-feature.weapon-mastery-topple",
+          "profileKind": "persistent-effect",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "Battle init receives selected weapon mastery weapon-kind choices from character creation; runtime gates Topple on the selected weapon kind, the attacked weapon's authored Topple mastery property, and the mastery_topple support profile. The save DC is derived at the attack boundary from 8 plus the attack ability modifier plus Proficiency Bonus.",
+          "taskRefs": [
+            "SRDINV74C"
+          ],
+          "title": "Weapon Mastery Topple optionally forces a Constitution save and applies Prone on failure",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/mastery_topple.json",
+      "unitId": "mastery_topple"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -9748,6 +9848,24 @@
       "unitId": "weapon_shortsword"
     },
     {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_quarterstaff.json",
+      "unitId": "weapon_quarterstaff"
+    },
+    {
       "catalogAdmission": {
         "collectionId": "classic-2024-non-srd-mechanics",
         "status": "installed"
@@ -13172,24 +13290,6 @@
       "authoredSurfaceDuplicateIdCount": 1,
       "catalogAdmission": {
         "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "mastery",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/mastery_topple.json",
-      "unitId": "mastery_topple"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
           "category": "srd-candidate",
           "planningLane": "QMBT14-QMBT16",
           "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
@@ -14805,24 +14905,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/weapon_pistol.json",
       "unitId": "weapon_pistol"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "non-runtime-authored-data",
-          "planningLane": "no promoted runtime lane",
-          "reason": "Authored SRD data has no mechanics payload, so catalog absence is not promoted runtime execution pressure."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": false,
-      "kind": "weapon",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/weapon_quarterstaff.json",
-      "unitId": "weapon_quarterstaff"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

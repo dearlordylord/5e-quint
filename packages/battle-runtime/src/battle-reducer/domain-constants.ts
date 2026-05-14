@@ -65,6 +65,12 @@ export const ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_DAMAGE_HOLE_ID =
   holeId("battle:attack-damage-reduction-zero-damage-redirect:damage");
 export const ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_DAMAGE_HOLE_INSTANCE =
   holeInstanceKey("battle:attack-damage-reduction-zero-damage-redirect:damage");
+export const WEAPON_MASTERY_TOPPLE_SAVE_HOLE_ID = holeId(
+  "battle:weapon-mastery-topple:save",
+);
+export const WEAPON_MASTERY_TOPPLE_SAVE_HOLE_INSTANCE = holeInstanceKey(
+  "battle:weapon-mastery-topple:save",
+);
 export const PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES = [
   "aberration",
   "celestial",

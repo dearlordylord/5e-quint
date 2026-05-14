@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap spell.invocation-marked-damage-rider
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple spell.invocation-marked-damage-rider
 import type {
   BattleFill,
   BattleCreatureState,
@@ -38,6 +38,7 @@ import {
   Hp,
   abilityModifier,
   DieRollResult,
+  difficultyClass,
   proficiencyBonus,
   resourceCount,
   spellSlotLevel,
@@ -674,6 +675,85 @@ describe("Character Build battle projection", () => {
       sourceCombatantId: fighterId,
       mode: "disadvantage",
       expiresAt: { kind: "startOfTurn", combatantId: fighterId },
+    });
+  });
+
+  test("projects selected Weapon Mastery Topple into battle save holes", () => {
+    const fighterId = combatantId("weapon-mastery-topple-fighter");
+    const targetId = combatantId("weapon-mastery-topple-target");
+    const state = expectRight(
+      startBattleFromCharacterBuildAndStatBlock({
+        battleId: battleId("character-battle-weapon-mastery-topple"),
+        character: {
+          combatantId: fighterId,
+          characterId: characterId("character:weapon-mastery-topple-fighter"),
+          displayName: "Weapon Mastery Topple Fighter",
+          build: weaponMasteryQuarterstaffFighterBuild(),
+          initiative: initiativeScore(20),
+          side: battleCombatantSide("party"),
+        },
+        statBlockBattleInput: {
+          combatantId: targetId,
+          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          initiative: initiativeScore(10),
+          side: battleCombatantSide("monsters"),
+        },
+        unitLibrary,
+      }),
+    );
+    const fighter = state.combatants.get(fighterId);
+    expect(fighter?.origin).toMatchObject({
+      kind: "character",
+      weaponMasteries: [{ weaponUnitId: "weapon_quarterstaff" }],
+      characterUnitRefs: expect.arrayContaining([
+        {
+          unitId: "mastery_topple",
+          supportProfiles: ["weaponMasteryTopple"],
+        },
+      ]),
+    });
+
+    const subject = {
+      tag: "action" as const,
+      actorId: fighterId,
+      action: "attack" as const,
+      attackName: "Quarterstaff",
+    };
+    const meleeReachFact = {
+      kind: "attackTargetInMeleeReach" as const,
+      actorId: fighterId,
+      targetId,
+      attackName: "Quarterstaff",
+    };
+    const target = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const attackRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFill(target, targetId, [meleeReachFact])],
+      }),
+      "attackRoll",
+    );
+    const toppleSave = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(target, targetId, [meleeReachFact]),
+          attackRollFill(attackRoll, { total: 15, naturalD20: 10 }),
+        ],
+      }),
+      "savingThrowOutcome",
+    );
+
+    expect(toppleSave).toMatchObject({
+      unitFeature: { unitId: "mastery_topple", label: "Topple" },
+      ability: "con",
+      dc: { kind: "fixed", dc: difficultyClass(12) },
+      targetIds: [targetId],
     });
   });
 
@@ -1737,6 +1817,33 @@ function weaponMasteryLongswordFighterBuild(): CharacterBuild {
       loadout: {
         weapon: {
           itemId: longswordItemId,
+          grip: "one_handed",
+        },
+      },
+    },
+  };
+}
+
+function weaponMasteryQuarterstaffFighterBuild(): CharacterBuild {
+  const quarterstaffItemId = characterEquipmentItemId({
+    slot: "main",
+    unitId: expectRight(characterEquipmentItemUnitId("weapon_quarterstaff")),
+  });
+
+  return {
+    ...defenseBuild({ wearingArmor: false }),
+    features: [
+      {
+        selectedFromUnitId: "fighter_weapon_mastery",
+        kind: "selectedClassChoice",
+        unitId: "weapon_quarterstaff",
+      },
+    ],
+    equipment: {
+      owned: [{ itemId: quarterstaffItemId, unitId: "weapon_quarterstaff" }],
+      loadout: {
+        weapon: {
+          itemId: quarterstaffItemId,
           grip: "one_handed",
         },
       },

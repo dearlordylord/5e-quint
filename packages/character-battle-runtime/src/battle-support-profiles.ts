@@ -24,6 +24,7 @@ const BATTLE_SUPPORTED_MASTERY_UNIT_IDS: Partial<
   Record<WeaponMasteryName, UnitRecord["id"]>
 > = {
   sap: "mastery_sap",
+  topple: "mastery_topple",
 };
 
 export function characterUnitRefsWithBattleSupportProfiles(

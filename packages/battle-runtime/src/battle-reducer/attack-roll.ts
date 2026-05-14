@@ -2,14 +2,16 @@
 // battle-reducer.ts. Cluster T (attack_roll). Mechanical extraction — no
 // behavior change. Cycle #20 resolved by importing the shared ongoing-feature
 // helpers from ./ongoing-feature-helpers.ts instead of cycling through J.
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.weapon-mastery-sap
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple
 
 import {
+  applyCondition,
   EMPTY_CONDITION_STATE,
   hasCondition,
   isIncapacitated,
 } from "@dnd/shared-algebras/conditions-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
+import { difficultyClass } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import type { BattleObjectId, CombatantId } from "../identity.ts";
 import type {
@@ -23,6 +25,7 @@ import type {
 } from "../unit-feature-support.ts";
 import {
   WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
+  WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
   ongoingFeatureSpellModifierSourceClassName,
 } from "../unit-feature-support.ts";
 import {
@@ -32,6 +35,8 @@ import {
   type BattleAttackRollHole,
   type BattleAttackRollResult,
   type BattleCreatureState,
+  type BattleFill,
+  type BattleUnitFeatureSavingThrowOutcomeHole,
   type BattleObjectOutline,
   type BattleState,
   type BattleTargetSpatialFact,
@@ -39,6 +44,7 @@ import {
 } from "../battle-reducer.ts";
 import {
   activeOngoingFeatureOccurrencesForCombatant,
+  battleCreatureStateWithKnockOutPreservedConditions,
   isCharacterBattleCreatureState,
   ongoingFeatureProfileForSourceKey,
   ongoingFeatureSourceKeyForUnit,
@@ -63,8 +69,16 @@ import {
   ongoingFeatureProfileHasExtensionTrigger,
 } from "./ongoing-feature-helpers.ts";
 import { battleCreatureType } from "./domain-helpers.ts";
+import {
+  WEAPON_MASTERY_TOPPLE_SAVE_HOLE_ID,
+  WEAPON_MASTERY_TOPPLE_SAVE_HOLE_INSTANCE,
+} from "./domain-constants.ts";
+import { combatantProficiencyBonus } from "./movement-speed.ts";
+import { savingThrowRollModeProjections } from "./spells-damage-fills.ts";
 
 const WEAPON_MASTERY_SAP_UNIT_ID = "mastery_sap" satisfies UnitRecord["id"];
+const WEAPON_MASTERY_TOPPLE_UNIT_ID =
+  "mastery_topple" satisfies UnitRecord["id"];
 
 export function attackRollHole(
   attacker: BattleCreatureState | undefined,
@@ -610,6 +624,113 @@ export function applyWeaponMasterySapOnHit(
       activeEffects,
     }),
   };
+}
+
+export function weaponMasteryToppleSavingThrowHole(
+  state: BattleState,
+  attackerId: CombatantId,
+  targetId: CombatantId,
+  attack: SupportedAttackActionOption,
+): BattleUnitFeatureSavingThrowOutcomeHole | null {
+  if (!weaponMasteryToppleApplies(state, attackerId, targetId, attack)) {
+    return null;
+  }
+  const attacker = state.combatants.get(attackerId);
+  if (attacker === undefined) {
+    return null;
+  }
+  return {
+    kind: "savingThrowOutcome",
+    holeId: WEAPON_MASTERY_TOPPLE_SAVE_HOLE_ID,
+    holeInstanceKey: WEAPON_MASTERY_TOPPLE_SAVE_HOLE_INSTANCE,
+    label: "Topple Constitution saving throw",
+    unitFeature: {
+      unitId: WEAPON_MASTERY_TOPPLE_UNIT_ID,
+      label: "Topple",
+    },
+    ability: "con",
+    dc: {
+      kind: "fixed",
+      dc: difficultyClass(
+        8 + Number(attack.abilityModifier) + combatantProficiencyBonus(attacker),
+      ),
+    },
+    targetIds: [targetId],
+    targetRollModes: savingThrowRollModeProjections(state, "con"),
+  };
+}
+
+export function applyWeaponMasteryToppleSavingThrow(
+  state: BattleState,
+  attackerId: CombatantId,
+  targetId: CombatantId,
+  fill: Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>,
+):
+  | { readonly tag: "ok"; readonly state: BattleState }
+  | { readonly tag: "invalid"; readonly message: string } {
+  const outcomes = fill.value.outcomes;
+  if (outcomes.length === 0) {
+    return { tag: "ok", state };
+  }
+  if (outcomes.length !== 1 || outcomes[0]?.targetId !== targetId) {
+    return {
+      tag: "invalid",
+      message: "Weapon Mastery Topple save must target the attacked creature.",
+    };
+  }
+  const savingThrowExtendedState = extendSavingThrowOngoingFeatures(
+    state,
+    attackerId,
+    [targetId],
+  );
+  if (outcomes[0].succeeded) {
+    return { tag: "ok", state: savingThrowExtendedState };
+  }
+  const target = savingThrowExtendedState.combatants.get(targetId);
+  if (target === undefined) {
+    return {
+      tag: "invalid",
+      message: "Weapon Mastery Topple target is no longer in this battle.",
+    };
+  }
+  return {
+    tag: "ok",
+    state: {
+      ...savingThrowExtendedState,
+      combatants: new Map(savingThrowExtendedState.combatants).set(targetId, {
+        ...battleCreatureStateWithKnockOutPreservedConditions(
+          target,
+          applyCondition(target.conditions, "prone"),
+        ),
+      }),
+    },
+  };
+}
+
+function weaponMasteryToppleApplies(
+  state: BattleState,
+  attackerId: CombatantId,
+  targetId: CombatantId,
+  attack: SupportedAttackActionOption,
+): attack is CharacterWeaponAttackActionOption {
+  if (attack.kind !== "weapon" || attack.weapon.mastery !== "topple") {
+    return false;
+  }
+  const attacker = state.combatants.get(attackerId);
+  if (!isCharacterBattleCreatureState(attacker)) {
+    return false;
+  }
+  return (
+    state.combatants.has(targetId) &&
+    attacker.origin.weaponMasteries.some(
+      (mastery) => mastery.weaponUnitId === attack.weapon.id,
+    ) &&
+    unitRefSupportsProfile(
+      attacker.origin.characterUnitRefs,
+      WEAPON_MASTERY_TOPPLE_UNIT_ID,
+      WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
+    )
+  );
 }
 
 export function consumeSelfAttackRollEffects(

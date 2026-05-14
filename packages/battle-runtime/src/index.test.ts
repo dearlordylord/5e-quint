@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bardic-inspiration-failed-d20-test unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap spell.invocation-beam-sequence spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-marked-damage-rider spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bardic-inspiration-failed-d20-test unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple spell.invocation-beam-sequence spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-marked-damage-rider spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV72B bard_bardic_inspiration
 import { Schema } from "effect";
 import * as Either from "effect/Either";
@@ -16,6 +16,7 @@ import {
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
+  WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
   BattleFillSchema,
   BattleHoleSchema,
@@ -71,6 +72,7 @@ import { supportedSpellInvocationMatchesRef } from "./battle-reducer/spells-invo
 import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
 import { spellFillSet } from "./battle-reducer/spells-resolve-fill-set.ts";
 import { resolveMarkedDamageRiderSpellAct } from "./battle-reducer/spells-resolve-release.ts";
+import weaponQuarterstaffInput from "../../surface/content/weapon_quarterstaff.json";
 import {
   abilityModifier,
   armorClass,
@@ -3966,6 +3968,214 @@ describe("battle runtime", () => {
     expect(
       selectedNonSapWeapon.combatants.get(goblinId)?.activeEffects,
     ).toEqual([]);
+  });
+
+  test("Weapon Mastery Topple opens an optional Constitution save on a selected Topple weapon hit", () => {
+    const state = fighterVsGoblinBattle({
+      characterUnitRefs: masteryToppleUnitRefs(),
+      weaponMasteries: quarterstaffWeaponMasterySelections(),
+      attack: testQuarterstaffAttack(),
+    });
+    const subject = fighterAttackSubject("Quarterstaff");
+    const targetHole = attackInitialTargetHole(state, subject);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole, subject);
+
+    const result = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFill(targetHole, goblinId),
+        attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        {
+          kind: "savingThrowOutcome",
+          label: "Topple Constitution saving throw",
+          unitFeature: { unitId: "mastery_topple", label: "Topple" },
+          ability: "con",
+          dc: { kind: "fixed", dc: difficultyClass(13) },
+          targetIds: [goblinId],
+          targetRollModes: [],
+        },
+      ],
+    });
+  });
+
+  test("Weapon Mastery Topple applies Prone on failed save and does nothing on success or decline", () => {
+    const state = fighterVsGoblinBattle({
+      characterUnitRefs: masteryToppleUnitRefs(),
+      weaponMasteries: quarterstaffWeaponMasterySelections(),
+      attack: testQuarterstaffAttack(),
+    });
+    const subject = fighterAttackSubject("Quarterstaff");
+    const targetHole = attackInitialTargetHole(state, subject);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole, subject);
+    const hitFills = [
+      targetFill(targetHole, goblinId),
+      attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+    ];
+    const saveHole = requireHole(
+      resolveBattleSubject({ state, subject, fills: hitFills }),
+      "savingThrowOutcome",
+    );
+
+    const failedSave = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        ...hitFills,
+        savingThrowOutcomeFill(saveHole, [
+          { targetId: goblinId, succeeded: false },
+        ]),
+      ],
+    });
+    const failedDamageHole = requireHole(failedSave, "rolledDice");
+    expect(failedSave).toMatchObject({
+      tag: "needsHoles",
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: goblinId,
+            conditions: expect.arrayContaining(["prone"]),
+          }),
+        ]),
+      },
+    });
+    const resolvedFailure = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          ...hitFills,
+          savingThrowOutcomeFill(saveHole, [
+            { targetId: goblinId, succeeded: false },
+          ]),
+          damageRollFill(failedDamageHole, 1),
+        ],
+      }),
+    );
+    const resolvedFailureTarget =
+      resolvedFailure.state.combatants.get(goblinId);
+    if (resolvedFailureTarget === undefined) {
+      throw new Error("Expected Goblin after Topple resolution.");
+    }
+    expect(
+      hasCondition(resolvedFailureTarget.conditions, "prone"),
+    ).toBe(true);
+
+    for (const toppleFill of [
+      savingThrowOutcomeFill(saveHole, [{ targetId: goblinId, succeeded: true }]),
+      savingThrowOutcomeFill(saveHole, []),
+    ]) {
+      const noOp = resolveBattleSubject({
+        state,
+        subject,
+        fills: [...hitFills, toppleFill],
+      });
+      expect(noOp).toMatchObject({
+        tag: "needsHoles",
+        snapshot: {
+          combatants: expect.arrayContaining([
+            expect.objectContaining({
+              combatantId: goblinId,
+              conditions: expect.not.arrayContaining(["prone"]),
+            }),
+          ]),
+        },
+      });
+    }
+  });
+
+  test("Weapon Mastery Topple is gated by hit, selected mastery ownership, Topple weapon property, and support profile", () => {
+    const subject = fighterAttackSubject("Quarterstaff");
+    const eligibleState = fighterVsGoblinBattle({
+      characterUnitRefs: masteryToppleUnitRefs(),
+      weaponMasteries: quarterstaffWeaponMasterySelections(),
+      attack: testQuarterstaffAttack(),
+    });
+    const targetHole = attackInitialTargetHole(eligibleState, subject);
+    const rollHole = attackRollHoleAfterTarget(
+      eligibleState,
+      targetHole,
+      subject,
+    );
+    const saveHole = requireHole(
+      resolveBattleSubject({
+        state: eligibleState,
+        subject,
+        fills: [
+          targetFill(targetHole, goblinId),
+          attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+        ],
+      }),
+      "savingThrowOutcome",
+    );
+    const toppleSaveFill = savingThrowOutcomeFill(saveHole, [
+      { targetId: goblinId, succeeded: false },
+    ]);
+
+    const missesWithSelection = resolveBattleSubject({
+      state: eligibleState,
+      subject,
+      fills: [
+        targetFill(targetHole, goblinId),
+        attackRollFill(rollHole, { total: 1, naturalD20: 1 }),
+        toppleSaveFill,
+      ],
+    });
+    const noSelection = resolveBattleSubject({
+      state: fighterVsGoblinBattle({
+        characterUnitRefs: masteryToppleUnitRefs(),
+        attack: testQuarterstaffAttack(),
+      }),
+      subject,
+      fills: [
+        targetFill(targetHole, goblinId),
+        attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+        toppleSaveFill,
+      ],
+    });
+    const noSupport = resolveBattleSubject({
+      state: fighterVsGoblinBattle({
+        weaponMasteries: quarterstaffWeaponMasterySelections(),
+        attack: testQuarterstaffAttack(),
+      }),
+      subject,
+      fills: [
+        targetFill(targetHole, goblinId),
+        attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+        toppleSaveFill,
+      ],
+    });
+    const nonToppleWeapon = resolveBattleSubject({
+      state: fighterVsGoblinBattle({
+        characterUnitRefs: masteryToppleUnitRefs(),
+        weaponMasteries: longswordWeaponMasterySelections(),
+      }),
+      subject: fighterAttackSubject(),
+      fills: [
+        targetFill(targetHole, goblinId),
+        attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+        toppleSaveFill,
+      ],
+    });
+
+    for (const result of [
+      missesWithSelection,
+      noSelection,
+      noSupport,
+      nonToppleWeapon,
+    ]) {
+      expect(result).toMatchObject({
+        tag: "invalid",
+        message:
+          "Weapon Mastery Topple Saving Throw is only valid for an eligible Topple weapon hit.",
+      });
+    }
   });
 
   test("attack hit procedures open a typed reaction window and resume after decline", () => {
@@ -22050,6 +22260,10 @@ function fighterVsGoblinBattle(input?: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["weaponMasteries"];
+  readonly attack?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["attack"];
 }): BattleState {
   return startBattleRight({
     battleId: battleId("battle-attack"),
@@ -22062,6 +22276,7 @@ function fighterVsGoblinBattle(input?: {
         ...(input?.weaponMasteries === undefined
           ? {}
           : { weaponMasteries: input.weaponMasteries }),
+        ...(input?.attack === undefined ? {} : { attack: input.attack }),
       }),
       statBlockCreatureInit({ initiative: 10 }),
     ],
@@ -22107,6 +22322,18 @@ function masterySapUnitRefs(): Extract<
   ];
 }
 
+function masteryToppleUnitRefs(): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["characterUnitRefs"] {
+  return [
+    {
+      unitId: "mastery_topple",
+      supportProfiles: [WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE],
+    },
+  ];
+}
+
 function longswordWeaponMasterySelections(): Extract<
   BattleCreatureInit["creatureInit"],
   { readonly kind: "character" }
@@ -22114,6 +22341,17 @@ function longswordWeaponMasterySelections(): Extract<
   return [
     {
       weaponUnitId: "weapon_longsword",
+    },
+  ];
+}
+
+function quarterstaffWeaponMasterySelections(): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["weaponMasteries"] {
+  return [
+    {
+      weaponUnitId: "weapon_quarterstaff",
     },
   ];
 }
@@ -22957,6 +23195,7 @@ function defaultAttackTargetSpatialFacts(
     attackTargetSpatialFact(fighterId, targetId, "Dagger"),
     attackTargetSpatialFact(fighterId, targetId, "Shortsword"),
     attackTargetSpatialFact(fighterId, targetId, "Flail"),
+    attackTargetSpatialFact(fighterId, targetId, "Quarterstaff"),
     attackTargetSpatialFact(fighterId, targetId, "Unarmed Strike"),
     attackTargetSpatialFact(wizardId, targetId, "Longsword"),
     attackTargetSpatialFact(goblinId, targetId, "Scimitar"),
@@ -23393,8 +23632,8 @@ function characterSeed(input: {
       ? {}
       : {
           weapon: {
-            itemId: "main:weapon_longsword",
-            unitId: "weapon_longsword",
+            itemId: `main:${attack.weapon.id}`,
+            unitId: attack.weapon.id,
             grip: "one_handed" as const,
           },
         });
@@ -23550,6 +23789,20 @@ function testShortswordAttack(): TestCharacterWeaponAttack {
   const weapon = unitLibrary.requireUnit("weapon_shortsword");
   if (weapon.kind !== "weapon") {
     throw new Error("Expected Shortsword weapon Unit.");
+  }
+
+  return {
+    kind: "weapon",
+    weapon,
+    ability: "str",
+    abilityModifier: battleAbilityModifier(3),
+  };
+}
+
+function testQuarterstaffAttack(): TestCharacterWeaponAttack {
+  const weapon = decodeUnitRecordSync(weaponQuarterstaffInput);
+  if (weapon.kind !== "weapon") {
+    throw new Error("Expected Quarterstaff weapon Unit.");
   }
 
   return {

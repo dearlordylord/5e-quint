@@ -206,6 +206,9 @@ export type AttackFillSet =
       readonly attackDamageReductionRedirectDamage:
         | BattleRolledDiceFill
         | undefined;
+      readonly weaponMasteryToppleSavingThrow:
+        | Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>
+        | undefined;
     }
   | { readonly tag: "invalid"; readonly message: string };
 export type GrappleFillSet =

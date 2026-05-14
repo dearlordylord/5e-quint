@@ -18,6 +18,7 @@ import {
 ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_DAMAGE_HOLE_ID,
 ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SAVE_HOLE_ID,
 ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_TARGET_HOLE_ID,
+WEAPON_MASTERY_TOPPLE_SAVE_HOLE_ID,
 } from "./domain-constants.ts";
 
 export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
@@ -40,6 +41,9 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     | Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>
     | undefined;
   let attackDamageReductionRedirectDamage: BattleRolledDiceFill | undefined;
+  let weaponMasteryToppleSavingThrow:
+    | Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>
+    | undefined;
   for (const fill of fills) {
     if (fill.kind === "targetChoice" && fill.holeId === ATTACK_TARGET_HOLE_ID) {
       if (targetId !== undefined) {
@@ -89,6 +93,20 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
         };
       }
       attackDamageReductionRedirectSave = fill;
+      continue;
+    }
+
+    if (
+      fill.kind === "savingThrowOutcome" &&
+      fill.holeId === WEAPON_MASTERY_TOPPLE_SAVE_HOLE_ID
+    ) {
+      if (weaponMasteryToppleSavingThrow !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Weapon Mastery Topple Saving Throw was filled twice.",
+        };
+      }
+      weaponMasteryToppleSavingThrow = fill;
       continue;
     }
 
@@ -174,6 +192,7 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     attackDamageReductionRedirectTarget,
     attackDamageReductionRedirectSave,
     attackDamageReductionRedirectDamage,
+    weaponMasteryToppleSavingThrow,
   };
 }
 
