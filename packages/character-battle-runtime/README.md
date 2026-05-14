@@ -13,6 +13,9 @@ Owned boundary functions:
 - `battleCreatureInitFromCharacterBuild` accepts an `armorClassBaseChoice` when
   the build has multiple available class-feature AC formulas; the choice is
   forwarded to Character Sheet AC projection before battle state is created.
+- `characterSpellcasting` projects selected Armor of Shadows invocation
+  ownership into `armorOfShadowsMageArmor` Spell Access for battle-runtime,
+  without adding Mage Armor to ordinary prepared-spell slot access.
 - `applyBattleHandoffToCharacterSheet` settles battle-owned HP, Knock Out,
   zero-HP lifecycle, and Spell Slot expenditure state back onto the same
   Character Sheet identity after confirming the battle combatant's max HP still

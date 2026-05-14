@@ -2780,6 +2780,19 @@ module battleRuntime {
     else
       { ...target, activeEffects: target.activeEffects.union(Set(MageArmor)) }
 
+  pure def resolveArmorOfShadowsMageArmor(state: BattleState): BattleState =
+    if (
+      not(state.actionAvailable) or
+      currentActor(state) != Fighter or
+      state.fighter.unconscious or
+      state.fighter.incapacitated or
+      fighterHasRage(state) or
+      state.fighter.wearingHeavyArmor
+    )
+      state
+    else
+      { ...state, fighter: applyMageArmor(state.fighter), actionAvailable: false }
+
   pure def targetDonsArmor(target: Combatant): Combatant =
     { ...target, activeEffects: target.activeEffects.exclude(Set(MageArmor)) }
 
@@ -8705,6 +8718,35 @@ module battleRuntime {
     all {
       assert(activeEffectArmorClass(10, 2, Set(MageArmor)) == 15),
       assert(activeEffectArmorClass(10, 2, Set(RayOfFrostSpeedDelta)) == 10),
+    }
+  }
+
+  run test_armor_of_shadows_mage_armor_spends_action_not_spell_slot = {
+    val result = resolveArmorOfShadowsMageArmor(initialState)
+    all {
+      assert(result.fighter.activeEffects.contains(MageArmor)),
+      assert(not(result.actionAvailable)),
+      assert(not(result.spellSlotExpendedThisTurn)),
+    }
+  }
+
+  run test_armor_of_shadows_mage_armor_rejects_heavy_armored_self = {
+    val armored = { ...initialState, fighter: { ...initialState.fighter, wearingHeavyArmor: true } }
+    val result = resolveArmorOfShadowsMageArmor(armored)
+    all {
+      assert(not(result.fighter.activeEffects.contains(MageArmor))),
+      assert(result.actionAvailable),
+      assert(not(result.spellSlotExpendedThisTurn)),
+    }
+  }
+
+  run test_armor_of_shadows_mage_armor_reuses_existing_effect = {
+    val protected = { ...initialState, fighter: applyMageArmor(initialState.fighter) }
+    val result = resolveArmorOfShadowsMageArmor(protected)
+    all {
+      assert(result.fighter.activeEffects == Set(MageArmor)),
+      assert(not(result.actionAvailable)),
+      assert(not(result.spellSlotExpendedThisTurn)),
     }
   }
 

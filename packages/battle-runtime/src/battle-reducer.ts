@@ -1441,6 +1441,7 @@ export type BattleResolvedMovement = {
 export type HealingSpellActionCost = "magicAction" | "bonusAction";
 export type PreparedSpellAccess = { readonly tag: "prepared" };
 type ClassCantripSpellAccess = { readonly tag: "classCantrip" };
+type ArmorOfShadowsSpellAccess = { readonly tag: "armorOfShadows" };
 export type SpellSlotInvocationResource = {
   readonly tag: "spellSlot";
   readonly slotLevel: SpellSlotLevel;
@@ -1908,6 +1909,29 @@ export type SpellHostedWeaponAttackInvocation = {
     readonly damageType: DamageType;
   } | null;
 };
+export type PersistentArmorSpellInvocation =
+  | {
+      readonly access: PreparedSpellAccess;
+      readonly resource: SpellSlotInvocationResource;
+      readonly procedure: "persistentArmorEffect";
+      readonly spell: SpellRecord;
+      readonly rangeFeet: MovementFeet;
+      readonly activeEffect: Extract<
+        BattleActiveEffect,
+        { readonly kind: "spellBaseArmorClass" }
+      >;
+    }
+  | {
+      readonly access: ArmorOfShadowsSpellAccess;
+      readonly resource: NoSpellInvocationResource;
+      readonly procedure: "persistentArmorEffect";
+      readonly spell: SpellRecord;
+      readonly rangeFeet: MovementFeet;
+      readonly activeEffect: Extract<
+        BattleActiveEffect,
+        { readonly kind: "spellBaseArmorClass" }
+      >;
+    };
 // SupportedAttackActionOption is a currently executable option for spending an
 // immediate attack made as part of the Attack action. It is narrower than all
 export type SupportedSpellInvocation =
@@ -2127,17 +2151,7 @@ export type SupportedSpellInvocation =
       >;
       readonly rangeFeet: MovementFeet;
     }
-  | {
-      readonly access: PreparedSpellAccess;
-      readonly resource: SpellSlotInvocationResource;
-      readonly procedure: "persistentArmorEffect";
-      readonly spell: SpellRecord;
-      readonly rangeFeet: MovementFeet;
-      readonly activeEffect: Extract<
-        BattleActiveEffect,
-        { readonly kind: "spellBaseArmorClass" }
-      >;
-    }
+  | PersistentArmorSpellInvocation
   | {
       readonly access: PreparedSpellAccess;
       readonly resource: SpellSlotInvocationResource;

@@ -311,6 +311,7 @@ function battleWithFeatherFall(): BattleState {
         cantrips: [],
         preparedSpells: [srdSpellRecord(featherFallUnitId)],
         featurePreparedSpells: [],
+        invocationSpellAccesses: [],
         spellSlots: [{ spellLevel: 1, count: 1 }],
       }),
       characterCreature(fallingAId, "Falling A", 15),

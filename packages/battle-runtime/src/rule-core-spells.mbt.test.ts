@@ -1129,6 +1129,7 @@ function spellcaster(input: {
         spellRecord("mage_armor"),
       ],
       featurePreparedSpells: [],
+      invocationSpellAccesses: [],
       spellSlots: input.spellSlots ?? [{ spellLevel: 1, count: 2 }],
     },
     ...(input.armorClass === undefined ? {} : { armorClass: input.armorClass }),

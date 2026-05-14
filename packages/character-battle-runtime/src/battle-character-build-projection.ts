@@ -4,6 +4,7 @@ import {
   type CharacterBattleSpellSlotState,
   type CharacterBattleClassLevelInit,
   type CharacterBattleFeaturePreparedSpellInit,
+  type CharacterBattleInvocationSpellAccessInit,
   type CharacterUnarmedStrikeActionOption,
   type CharacterWeaponAttackActionOption,
   type CharacterWeaponAttackDamageTypeChoices,
@@ -372,6 +373,8 @@ type MartialArtsAttackProjection = NonNullable<
 
 const PACT_OF_THE_BLADE_INVOCATION_ID =
   eldritchInvocationId("pact_of_the_blade");
+const ARMOR_OF_SHADOWS_INVOCATION_ID = eldritchInvocationId("armor_of_shadows");
+const ARMOR_OF_SHADOWS_SPELL_ID = "mage_armor";
 const PACT_OF_THE_BLADE_ADDITIONAL_DAMAGE_TYPE_CHOICES = [
   "necrotic",
   "psychic",
@@ -441,10 +444,17 @@ function pactBladeWeaponAttack(
 }
 
 function hasPactOfTheBlade(build: CharacterBuild): boolean {
+  return hasSelectedEldritchInvocation(build, PACT_OF_THE_BLADE_INVOCATION_ID);
+}
+
+function hasSelectedEldritchInvocation(
+  build: CharacterBuild,
+  invocationId: ReturnType<typeof eldritchInvocationId>,
+): boolean {
   return build.features.some(
     (feature) =>
       feature.kind === "selectedEldritchInvocation" &&
-      feature.invocationId === PACT_OF_THE_BLADE_INVOCATION_ID,
+      feature.invocationId === invocationId,
   );
 }
 
@@ -667,6 +677,13 @@ export function characterSpellcasting(input: {
   if (Either.isLeft(featurePreparedSpells)) {
     return Either.left(featurePreparedSpells.left);
   }
+  const invocationSpellAccesses = invocationSpellAccess({
+    build,
+    unitLibrary,
+  });
+  if (Either.isLeft(invocationSpellAccesses)) {
+    return Either.left(invocationSpellAccesses.left);
+  }
 
   return Either.right({
     sourceClassName: sources.right.sourceClassName,
@@ -678,6 +695,7 @@ export function characterSpellcasting(input: {
     cantrips: cantrips.right,
     preparedSpells: preparedSpells.right,
     featurePreparedSpells: featurePreparedSpells.right,
+    invocationSpellAccesses: invocationSpellAccesses.right,
     spellSlots: characterBuildSpellcastingSlotCapacity(build).map((slot) => ({
       spellLevel: spellSlotLevel(slot.spellLevel),
       count: resourceCount(slot.count),
@@ -691,6 +709,35 @@ export function characterSpellcasting(input: {
           })),
         }),
   });
+}
+
+function invocationSpellAccess(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+}): Either.Either<
+  readonly CharacterBattleInvocationSpellAccessInit[],
+  BattleCreatureInitIssue
+> {
+  if (
+    !hasSelectedEldritchInvocation(input.build, ARMOR_OF_SHADOWS_INVOCATION_ID)
+  ) {
+    return Either.right([]);
+  }
+  const spell = getRequiredUnit(input.unitLibrary, ARMOR_OF_SHADOWS_SPELL_ID);
+  if (Either.isLeft(spell)) {
+    return battleCreatureInitIssue(spell.left.message);
+  }
+  if (spell.right.kind !== "spell") {
+    return battleCreatureInitIssue(
+      `Expected spell Unit: ${ARMOR_OF_SHADOWS_SPELL_ID}`,
+    );
+  }
+  return Either.right([
+    {
+      tag: "armorOfShadowsMageArmor",
+      spell: spell.right,
+    },
+  ]);
 }
 
 function featurePreparedSpellAccess(input: {

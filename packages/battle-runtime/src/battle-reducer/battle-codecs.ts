@@ -342,6 +342,10 @@ const ClassCantripSpellAccessSchema = Schema.Struct({
   tag: Schema.Literal("classCantrip"),
 });
 
+const ArmorOfShadowsSpellAccessSchema = Schema.Struct({
+  tag: Schema.Literal("armorOfShadows"),
+});
+
 const SpellSlotInvocationResourceSchema = Schema.Struct({
   tag: Schema.Literal("spellSlot"),
   slotLevel: SpellSlotLevel,
@@ -1120,14 +1124,24 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       activeEffect: BattleRuntimeObjectSchema,
       rangeFeet: MovementFeet,
     }),
-    Schema.Struct({
-      access: PreparedSpellAccessSchema,
-      resource: SpellSlotInvocationResourceSchema,
-      procedure: Schema.Literal("persistentArmorEffect"),
-      spell: BattleRuntimeObjectSchema,
-      rangeFeet: MovementFeet,
-      activeEffect: BattleRuntimeObjectSchema,
-    }),
+    Schema.Union(
+      Schema.Struct({
+        access: PreparedSpellAccessSchema,
+        resource: SpellSlotInvocationResourceSchema,
+        procedure: Schema.Literal("persistentArmorEffect"),
+        spell: BattleRuntimeObjectSchema,
+        rangeFeet: MovementFeet,
+        activeEffect: BattleRuntimeObjectSchema,
+      }),
+      Schema.Struct({
+        access: ArmorOfShadowsSpellAccessSchema,
+        resource: NoSpellInvocationResourceSchema,
+        procedure: Schema.Literal("persistentArmorEffect"),
+        spell: BattleRuntimeObjectSchema,
+        rangeFeet: MovementFeet,
+        activeEffect: BattleRuntimeObjectSchema,
+      }),
+    ),
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,

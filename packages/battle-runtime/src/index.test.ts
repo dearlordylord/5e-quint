@@ -30,6 +30,7 @@ import {
   battleUnitSupportProfilesForUnit,
   battleId,
   battleObjectId,
+  armorOfShadowsSpellInvocationRef,
   cantripSpellInvocationRef,
   classFeatureFreeCastSpellInvocationRef,
   breakBattleConcentration,
@@ -15755,6 +15756,50 @@ describe("battle runtime", () => {
     ).toBe(true);
   });
 
+  test("persistent armor invocation holes reject contradictory Armor of Shadows resource pairs", () => {
+    const baseHole = {
+      kind: "spellTargetList",
+      holeId: holeId("battle:test:invalid-persistent-armor"),
+      holeInstanceKey: holeInstanceKey("battle:test:invalid-persistent-armor"),
+      label: "Invalid persistent armor target",
+      minTargets: 1,
+      maxTargets: 1,
+      choices: [fighterId],
+      requiresTableSpatialFact: true,
+      spell: {
+        procedure: "persistentArmorEffect",
+        spell: { id: "mage_armor" },
+        rangeFeet: movementFeet(0),
+        activeEffect: { tag: "mageArmor" },
+      },
+    };
+
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleHoleSchema)({
+          ...baseHole,
+          spell: {
+            ...baseHole.spell,
+            access: { tag: "prepared" },
+            resource: { tag: "none" },
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleHoleSchema)({
+          ...baseHole,
+          spell: {
+            ...baseHole.spell,
+            access: { tag: "armorOfShadows" },
+            resource: { tag: "spellSlot", slotLevel: 1 },
+          },
+        }),
+      ),
+    ).toBe(true);
+  });
+
   test("spell saving throw outcome codec preserves target roll modes", () => {
     const hole = {
       kind: "savingThrowOutcome",
@@ -16269,6 +16314,230 @@ describe("battle runtime", () => {
       reason: "invalidFill",
     });
     expect(state.combatants.get(wizardId)?.origin.kind).toBe("character");
+  });
+
+  test("Armor of Shadows casts self-only Mage Armor without expending a Spell Slot", () => {
+    const unarmoredDex = {
+      ...defaultArmorClassState(),
+      abilityModifiers: {
+        ...defaultArmorClassState().abilityModifiers,
+        dex: abilityModifier(2),
+      },
+    };
+    const state = startBattleRight({
+      battleId: battleId("battle-armor-of-shadows"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Warlock",
+          initiative: 20,
+          attack: null,
+          armorClass: unarmoredDex,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+            invocationSpellAccesses: [
+              {
+                tag: "armorOfShadowsMageArmor",
+                spell: spellRecord("mage_armor"),
+              },
+            ],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject = {
+      tag: "actionSpell" as const,
+      actorId: wizardId,
+      invocation: armorOfShadowsSpellInvocationRef("mage_armor"),
+      mode: { tag: "cast" as const },
+    };
+    const act = findAct(state, subject);
+    const target = findHole(act.initialHoles, "targetChoice");
+    if (target.kind !== "targetChoice") {
+      throw new Error("Expected targetChoice hole.");
+    }
+
+    expect(act.summary).toBe("Cast Mage Armor using Armor of Shadows.");
+    expect(target.choices).toEqual([wizardId]);
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFill(target, skeletonId)],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+
+    const result = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFill(target, wizardId)],
+      }),
+    );
+    const warlock = result.state.combatants.get(wizardId);
+
+    expect(
+      result.snapshot.combatants.find(
+        (combatant) => combatant.combatantId === wizardId,
+      ),
+    ).toMatchObject({ armorClass: 15 });
+    expect(result.snapshot.turn).toMatchObject({
+      actionResources: [],
+      spellSlotExpendedThisTurn: false,
+    });
+    expect(warlock?.origin.kind).toBe("character");
+    if (warlock?.origin.kind !== "character") {
+      throw new Error("Expected Warlock caster.");
+    }
+    expect(warlock.origin.spellcasting?.spellSlots).toEqual([
+      { spellLevel: 1, count: 1, expended: 0 },
+    ]);
+    expect(warlock.activeEffects).toEqual([
+      expect.objectContaining({
+        kind: "spellBaseArmorClass",
+        sourceSpellId: "mage_armor",
+        sourceCombatantId: wizardId,
+        earlyEnds: [{ kind: "targetDonsArmor" }],
+      }),
+    ]);
+
+    const recastState = {
+      ...result.state,
+      currentTurnResources: state.currentTurnResources,
+    };
+    const recast = requireResolved(
+      resolveBattleSubject({
+        state: recastState,
+        subject,
+        fills: [targetFill(target, wizardId)],
+      }),
+    );
+
+    expect(
+      recast.state.combatants
+        .get(wizardId)
+        ?.activeEffects.filter(
+          (effect) =>
+            effect.kind === "spellBaseArmorClass" &&
+            effect.sourceSpellId === "mage_armor",
+        ),
+    ).toHaveLength(1);
+  });
+
+  test("Armor of Shadows Spell Access rejects non-Mage-Armor spell records", () => {
+    const mageArmorWithWrongRuntimeId = {
+      ...spellRecord("mage_armor"),
+      id: "misidentified_mage_armor",
+    };
+
+    expect(
+      startBattle({
+        battleId: battleId("battle-armor-of-shadows-invalid-spell-access"),
+        combatants: [
+          characterSeed({
+            combatantId: wizardId,
+            displayName: "Warlock",
+            initiative: 20,
+            attack: null,
+            spellcasting: wizardSpellcasting({
+              preparedSpells: [],
+              spellSlots: [{ spellLevel: 1, count: 1 }],
+              invocationSpellAccesses: [
+                {
+                  tag: "armorOfShadowsMageArmor",
+                  spell: mageArmorWithWrongRuntimeId,
+                },
+              ],
+            }),
+          }),
+        ],
+      }),
+    ).toEqual(
+      Either.left({
+        tag: "battleStateInitIssue",
+        message: "Armor of Shadows Spell Access must grant Mage Armor.",
+      }),
+    );
+  });
+
+  test("Armor of Shadows rejects armored self before spending resources", () => {
+    const armored = {
+      ...defaultArmorClassState(),
+      base: {
+        kind: "armor" as const,
+        category: "medium" as const,
+        formula: { kind: "medium_dex_max_2" as const, base: 14 },
+      },
+    };
+    const state = startBattleRight({
+      battleId: battleId("battle-armor-of-shadows-armored-self"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Armored Warlock",
+          initiative: 20,
+          attack: null,
+          armorClass: armored,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+            invocationSpellAccesses: [
+              {
+                tag: "armorOfShadowsMageArmor",
+                spell: spellRecord("mage_armor"),
+              },
+            ],
+          }),
+        }),
+      ],
+    });
+    const subject = {
+      tag: "actionSpell" as const,
+      actorId: wizardId,
+      invocation: armorOfShadowsSpellInvocationRef("mage_armor"),
+      mode: { tag: "cast" as const },
+    };
+    expect(
+      discoverBattleActs(state).some((candidate) =>
+        sameBattleSubject(candidate.subject, subject),
+      ),
+    ).toBe(false);
+    const target = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    if (target.kind !== "targetChoice") {
+      throw new Error("Expected targetChoice hole.");
+    }
+
+    expect(target.choices).toEqual([]);
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFill(target, wizardId)],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+    const warlock = state.combatants.get(wizardId);
+    expect(warlock?.origin.kind).toBe("character");
+    if (warlock?.origin.kind !== "character") {
+      throw new Error("Expected Warlock caster.");
+    }
+    expect(warlock.origin.spellcasting?.spellSlots).toEqual([
+      { spellLevel: 1, count: 1, expended: 0 },
+    ]);
   });
 
   test("breaking concentration clears concentration-owned spell effects", () => {
@@ -26516,6 +26785,12 @@ function wizardSpellcasting(input?: {
     readonly spellLevel: 1 | 2 | 3 | 4 | 5;
     readonly count: number;
   }[];
+  readonly invocationSpellAccesses?: NonNullable<
+    Extract<
+      BattleCreatureInit["creatureInit"],
+      { readonly kind: "character" }
+    >["spellcasting"]
+  >["invocationSpellAccesses"];
 }): NonNullable<
   Extract<
     BattleCreatureInit["creatureInit"],
@@ -26533,6 +26808,7 @@ function wizardSpellcasting(input?: {
     ],
     preparedSpells: input?.preparedSpells ?? [spellRecord("magic_missile")],
     featurePreparedSpells: [],
+    invocationSpellAccesses: input?.invocationSpellAccesses ?? [],
     spellSlots: input?.spellSlots ?? [{ spellLevel: 1, count: 2 }],
   };
 }

@@ -8500,6 +8500,7 @@ describe("SRDINV31 deterministic after-hit Spell Unit admission", () => {
         cantrips: [rayOfFrost],
         preparedSpells: [],
         featurePreparedSpells: [],
+        invocationSpellAccesses: [],
         spellSlots: [],
       },
     });
@@ -8724,6 +8725,7 @@ describe("SRDINV31 deterministic after-hit Spell Unit admission", () => {
         cantrips: [rayOfFrost],
         preparedSpells: [],
         featurePreparedSpells: [],
+        invocationSpellAccesses: [],
         spellSlots: [],
       },
     });
@@ -8853,6 +8855,7 @@ describe("SRDINV31 deterministic after-hit Spell Unit admission", () => {
         cantrips: [rayOfFrost],
         preparedSpells: [],
         featurePreparedSpells: [],
+        invocationSpellAccesses: [],
         spellSlots: [],
       },
     });
@@ -8993,6 +8996,7 @@ describe("SRDINV31 deterministic after-hit Spell Unit admission", () => {
         cantrips: [rayOfFrost],
         preparedSpells: [],
         featurePreparedSpells: [],
+        invocationSpellAccesses: [],
         spellSlots: [],
       },
     });
@@ -13982,6 +13986,7 @@ function spellBattle(input: {
           cantrips: input.cantrips ?? [],
           preparedSpells: input.preparedSpells ?? [],
           featurePreparedSpells: [],
+          invocationSpellAccesses: [],
           spellSlots: input.spellSlots ?? [{ spellLevel: 1, count: 2 }],
         },
         ...(input.attack === undefined ? {} : { attack: input.attack }),
@@ -14210,6 +14215,7 @@ function combatProwessBattle(input: {
                 cantrips: input.cantrips,
                 preparedSpells: [],
                 featurePreparedSpells: [],
+                invocationSpellAccesses: [],
                 spellSlots: [],
               },
             }),
@@ -14230,6 +14236,7 @@ function combatProwessBattle(input: {
                 cantrips: [],
                 preparedSpells: input.targetPreparedSpells,
                 featurePreparedSpells: [],
+                invocationSpellAccesses: [],
                 spellSlots: [{ spellLevel: 1, count: 1 }],
               },
             }),

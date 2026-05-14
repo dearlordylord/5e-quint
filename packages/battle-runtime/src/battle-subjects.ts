@@ -124,6 +124,11 @@ export const SpellInvocationRefSchema = Schema.Union(
     procedure: Schema.Literal("markedDamageRider"),
   }),
   Schema.Struct({
+    tag: Schema.Literal("armorOfShadows"),
+    spellId: SpellId,
+    procedure: Schema.Literal("persistentArmorEffect"),
+  }),
+  Schema.Struct({
     tag: Schema.Literal("spellEffect"),
     spellId: SpellId,
     sourceCombatantId: CombatantId,
@@ -180,6 +185,16 @@ export function classFeatureFreeCastSpellInvocationRef(
     spellId: makeSpellId(rawSpellId),
     resourceUnitId,
     procedure,
+  };
+}
+
+export function armorOfShadowsSpellInvocationRef(
+  rawSpellId: string,
+): SpellInvocationRef {
+  return {
+    tag: "armorOfShadows",
+    spellId: makeSpellId(rawSpellId),
+    procedure: "persistentArmorEffect",
   };
 }
 
@@ -536,6 +551,11 @@ function spellInvocationRefKey(ref: SpellInvocationRef): readonly unknown[] {
       freeCast.spellId,
       freeCast.resourceUnitId,
       freeCast.procedure,
+    ]),
+    Match.when({ tag: "armorOfShadows" }, (armorOfShadows) => [
+      armorOfShadows.tag,
+      armorOfShadows.spellId,
+      armorOfShadows.procedure,
     ]),
     Match.when({ tag: "spellEffect" }, (effect) => [
       effect.tag,

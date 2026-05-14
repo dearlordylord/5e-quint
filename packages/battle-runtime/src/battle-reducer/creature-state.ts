@@ -47,14 +47,17 @@ import type {
   CharacterBattleCreatureInit,
 } from "../battle-init.ts";
 import {
+  characterBattleInvocationSpellAccessInitIssue,
   characterBattleResourceInitIssue,
   characterBattleResourceUsage,
   characterResourceState,
   characterSpellcastingState,
+  parseCharacterBattleInvocationSpellAccesses,
   parseCharacterBattleClassLevels,
   type CharacterBattleFeatureInit,
   type CharacterBattleResourceInit,
   type CharacterBattleResourceState,
+  type CharacterBattleSpellcastingStateInit,
 } from "../character-battle-resources.ts";
 import type { CharacterBattleClassLevel } from "../character-class-level.ts";
 import {
@@ -236,7 +239,7 @@ export function battleCreatureStateFromInit(
           ? {}
           : {
               spellcasting: characterSpellcastingState(
-                creatureInit.spellcasting,
+                requireCharacterSpellcastingStateInit(creatureInit.spellcasting),
                 classLevels,
                 [
                   ...(creatureInit.resources ?? []),
@@ -663,6 +666,13 @@ export function characterSpellcastingInitIssue(
     return null;
   }
   const classLevels = parseCharacterBattleClassLevels(creatureInit.classLevels);
+  const invocationSpellAccessIssue =
+    characterBattleInvocationSpellAccessInitIssue(
+      creatureInit.spellcasting.invocationSpellAccesses,
+    );
+  if (invocationSpellAccessIssue !== null) {
+    return battleStateInitIssue(invocationSpellAccessIssue);
+  }
   return classLevels.some(
     (classLevel) =>
       classLevel.className === creatureInit.spellcasting?.sourceClassName,
@@ -671,6 +681,21 @@ export function characterSpellcastingInitIssue(
     : battleStateInitIssue(
         "Battle spellcasting source class must match a character class level.",
       );
+}
+
+function requireCharacterSpellcastingStateInit(
+  spellcasting: NonNullable<CharacterBattleCreatureInit["spellcasting"]>,
+): CharacterBattleSpellcastingStateInit {
+  const invocationSpellAccesses = parseCharacterBattleInvocationSpellAccesses(
+    spellcasting.invocationSpellAccesses,
+  );
+  if (invocationSpellAccesses.tag === "issue") {
+    throw new Error(invocationSpellAccesses.message);
+  }
+  return {
+    ...spellcasting,
+    invocationSpellAccesses: invocationSpellAccesses.invocationSpellAccesses,
+  };
 }
 
 export function knockedOutOneHp(): KnockedOutOneHpT {

@@ -16,10 +16,7 @@
 // `snapshotBattle`, `discoverBattleActs`, etc.) round-trip through
 // `../battle-reducer.ts` until Pass 19 merges the dispatcher.
 
-import {
-  spendAction,
-  spendActivationResource,
-} from "@dnd/shared-algebras/action-economy-algebra";
+import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   attackRollHits,
@@ -582,36 +579,13 @@ export function resolveSpellAct(
       target.combatantId,
       invocation,
     );
-    const spent = spendAction(effected.currentTurnResources, "magic");
-    if (Either.isLeft(spent)) {
-      return invalidResult(
-        input.state,
-        "staleSubject",
-        "Magic action is no longer available for the current actor.",
-      );
-    }
-    const slotTurnResources = markSpellSlotExpendedThisTurn(spent.right);
-    if (Either.isLeft(slotTurnResources)) {
-      return invalidResult(
-        input.state,
-        "staleSubject",
-        "This turn has already expended a Spell Slot.",
-      );
-    }
-    const slotted = expendSpellSlot(
-      effected,
-      subject.actorId,
-      invocation.resource.slotLevel,
-    );
-    const nextState = {
-      ...slotted,
-      currentTurnResources: slotTurnResources.right,
-    };
-    return {
-      tag: "resolved",
-      state: nextState,
-      snapshot: snapshotBattle(nextState),
-    };
+    return spendSpellCastResources({
+      state: effected,
+      actorId: subject.actorId,
+      invocation,
+      errorState: input.state,
+      startConcentration: false,
+    });
   }
 
   const spellCastReactionWindow = maybeOpenReactionWindow(

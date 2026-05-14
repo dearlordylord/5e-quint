@@ -171,6 +171,16 @@ If a new package/file needs allowlisting, update
 `scripts/check-authored-id-dispatch-boundary.cjs` with a narrow path rule and a
 boundary reason. Do not add broad wildcards.
 
+### Invocation Spell Access
+
+Character composition may project selected invocation ownership into concrete
+Spell Access records. `armorOfShadowsMageArmor` is the promoted narrow case:
+the selected Armor of Shadows invocation grants a self-targeted Mage Armor
+Spell Invocation that spends a Magic action and no Spell Slot, then reuses the
+existing `persistentArmorEffect` procedure. The Mage Armor Spell Effect remains
+the same source-owned base-AC effect and still ends early when the target dons
+armor.
+
 ### Support-profile Boundary
 
 `@dnd/battle-runtime` admits authored Surface records through support profiles:

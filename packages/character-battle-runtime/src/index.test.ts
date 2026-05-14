@@ -575,6 +575,35 @@ describe("Character Build battle projection", () => {
     ]);
   });
 
+  test("projects selected Armor of Shadows as invocation Spell Access", () => {
+    const spellcasting = expectRight(
+      characterSpellcasting({
+        build: armorOfShadowsWarlockBuild(),
+        unitLibrary,
+      }),
+    );
+
+    expect(spellcasting.preparedSpells).toEqual([]);
+    expect(spellcasting.featurePreparedSpells).toEqual([]);
+    expect(spellcasting.invocationSpellAccesses).toEqual([
+      {
+        tag: "armorOfShadowsMageArmor",
+        spell: unitLibrary.requireUnit("mage_armor"),
+      },
+    ]);
+  });
+
+  test("does not project Armor of Shadows Spell Access without selected invocation ownership", () => {
+    const spellcasting = expectRight(
+      characterSpellcasting({
+        build: armorOfShadowsWarlockBuild({ armorOfShadows: false }),
+        unitLibrary,
+      }),
+    );
+
+    expect(spellcasting.invocationSpellAccesses).toEqual([]);
+  });
+
   test("does not promote unrelated passive prepared Spell Access during Favored Enemy projection", () => {
     const spellcasting = expectRight(
       characterSpellcasting({
@@ -2092,6 +2121,65 @@ function favoredEnemyRangerResourceBuild(): CharacterBuild {
   };
 }
 
+function armorOfShadowsWarlockBuild(
+  input: { readonly armorOfShadows?: boolean } = {},
+): CharacterBuild {
+  return {
+    progression: {
+      startingClass: classUnitId("class_warlock"),
+      advancements: [],
+    },
+    background: "background_soldier",
+    species: "species_orc",
+    originLanguages: ["Common", "Dwarvish", "Goblin"],
+    alignment: { order: "lawful", morality: "good" },
+    abilityScores: expectRight(
+      abilityScoreAssignment({
+        str: 8,
+        dex: 14,
+        con: 13,
+        int: 10,
+        wis: 10,
+        cha: 16,
+      }),
+    ),
+    proficiencyChoices: [],
+    features:
+      input.armorOfShadows === false
+        ? []
+        : [
+            {
+              kind: "selectedEldritchInvocation",
+              selectedFromUnitId: "warlock_eldritch_invocations",
+              invocationId: eldritchInvocationId("armor_of_shadows"),
+            },
+          ],
+    equipment: {
+      owned: [],
+      loadout: {},
+    },
+    spellcasting: {
+      sources: [
+        {
+          sourceUnitId: "class_warlock",
+          spellcastingAbility: "cha",
+          cantrips: [],
+          spellbook: [],
+          preparedSpells: [],
+          spellcastingFocuses: ["arcane_focus"],
+        },
+      ],
+      slotPools: {
+        pactMagic: {
+          kind: "pactMagic",
+          slotLevel: 1,
+          count: 1,
+        },
+      },
+    },
+  };
+}
+
 function druidDruidicBuild(): CharacterBuild {
   return {
     progression: {
@@ -2154,6 +2242,7 @@ function handoffSpellcastingState(): CharacterBattleSpellcastingState {
     canCastSpells: true,
     cantrips: [],
     preparedSpells: [],
+    invocationSpellAccesses: [],
     spellSlots: [
       {
         spellLevel: spellSlotLevel(1),

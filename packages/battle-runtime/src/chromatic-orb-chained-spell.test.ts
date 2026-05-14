@@ -375,24 +375,30 @@ describe("Chromatic Orb chained spell attack", () => {
     if (releaseAct?.subject.tag !== "runtimeCommand") {
       throw new Error("Expected release readied spell act.");
     }
-    const damageTypeHole = requireHole(releaseAct.initialHoles, "damageTypeChoice");
+    const damageTypeHole = requireHole(
+      releaseAct.initialHoles,
+      "damageTypeChoice",
+    );
     const typeFill = damageTypeFill(damageTypeHole, "fire");
-    const awaitingTarget = resolveNeedsHoles(readied.state, releaseAct.subject, [
-      typeFill,
-    ]);
+    const awaitingTarget = resolveNeedsHoles(
+      readied.state,
+      releaseAct.subject,
+      [typeFill],
+    );
     const targetHole = requireHole(awaitingTarget.holes, "targetChoice");
     const targetFill = spellTargetFill(targetHole, firstTargetId);
-    const awaitingAttack = resolveNeedsHoles(readied.state, releaseAct.subject, [
-      typeFill,
-      targetFill,
-    ]);
+    const awaitingAttack = resolveNeedsHoles(
+      readied.state,
+      releaseAct.subject,
+      [typeFill, targetFill],
+    );
     const attackHole = requireHole(awaitingAttack.holes, "attackRoll");
     const attackFill = attackRollFill(attackHole, 18, 12);
-    const awaitingDamage = resolveNeedsHoles(readied.state, releaseAct.subject, [
-      typeFill,
-      targetFill,
-      attackFill,
-    ]);
+    const awaitingDamage = resolveNeedsHoles(
+      readied.state,
+      releaseAct.subject,
+      [typeFill, targetFill, attackFill],
+    );
     const damageHole = requireHole(awaitingDamage.holes, "rolledDice");
     const released = resolveResolved(readied.state, releaseAct.subject, [
       typeFill,
@@ -402,7 +408,9 @@ describe("Chromatic Orb chained spell attack", () => {
     ]);
 
     expect(released.state.readiedSpells.has(spellCasterId)).toBe(false);
-    expect(released.state.combatants.get(spellCasterId)?.concentration).toBeNull();
+    expect(
+      released.state.combatants.get(spellCasterId)?.concentration,
+    ).toBeNull();
     expect(released.state.combatants.get(firstTargetId)?.hp).toBe(6);
     const caster = released.state.combatants.get(spellCasterId);
     expect(
@@ -435,6 +443,7 @@ function chromaticOrbBattle(input: {
           cantrips: [],
           preparedSpells: [input.spell ?? chromaticOrb],
           featurePreparedSpells: [],
+          invocationSpellAccesses: [],
           spellSlots: [{ spellLevel: input.spellLevel, count: 1 }],
         },
       }),

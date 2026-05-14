@@ -26,9 +26,13 @@ import { Either, Match } from "effect";
 import {
   type BattleCreatureState,
   type BattleTurnResources,
+  type PersistentArmorSpellInvocation,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
-import type { CharacterBattleSpellcastingState } from "../character-battle-resources.ts";
+import type {
+  CharacterBattleInvocationSpellAccessState,
+  CharacterBattleSpellcastingState,
+} from "../character-battle-resources.ts";
 import { resourceHasUsesRemaining } from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
 import { SHIELD_MAGIC_MISSILE_SPELL_ID } from "./domain-constants.ts";
@@ -258,6 +262,9 @@ export function supportedSpellActs(
     ),
     ...spellcasting.preparedSpells.flatMap((spell) =>
       supportedPreparedPersistentSpellProfile(actor.combatantId, spell),
+    ),
+    ...spellcasting.invocationSpellAccesses.flatMap((access) =>
+      supportedInvocationPersistentSpellProfile(actor.combatantId, access),
     ),
     ...spellcasting.preparedSpells.flatMap((spell) =>
       supportedPreparedHealingSpellProfile(
@@ -719,6 +726,48 @@ export function supportedPreparedPersistentSpellProfile(
   actorId: CombatantId,
   spell: SpellRecord,
 ): readonly SupportedSpellInvocation[] {
+  return supportedPersistentArmorSpellProfile(actorId, spell, {
+    access: { tag: "prepared" },
+    resource: { tag: "spellSlot", slotLevel: spellSlotLevel(1) },
+  });
+}
+
+export function supportedInvocationPersistentSpellProfile(
+  actorId: CombatantId,
+  access: CharacterBattleInvocationSpellAccessState,
+): readonly SupportedSpellInvocation[] {
+  return Match.value(access).pipe(
+    Match.when({ tag: "armorOfShadowsMageArmor" }, (armorOfShadows) =>
+      supportedPersistentArmorSpellProfile(actorId, armorOfShadows.spell, {
+        access: { tag: "armorOfShadows" },
+        resource: { tag: "none" },
+      }),
+    ),
+    Match.exhaustive,
+  );
+}
+
+type PersistentArmorSpellSource =
+  | Pick<
+      Extract<
+        PersistentArmorSpellInvocation,
+        { readonly access: { tag: "prepared" } }
+      >,
+      "access" | "resource"
+    >
+  | Pick<
+      Extract<
+        PersistentArmorSpellInvocation,
+        { readonly access: { tag: "armorOfShadows" } }
+      >,
+      "access" | "resource"
+    >;
+
+function supportedPersistentArmorSpellProfile(
+  actorId: CombatantId,
+  spell: SpellRecord,
+  source: PersistentArmorSpellSource,
+): readonly SupportedSpellInvocation[] {
   if (spell.mechanics.family !== "ongoing_effect") {
     return [];
   }
@@ -747,8 +796,7 @@ export function supportedPreparedPersistentSpellProfile(
 
   return [
     {
-      access: { tag: "prepared" },
-      resource: { tag: "spellSlot", slotLevel: spellSlotLevel(1) },
+      ...source,
       procedure: "persistentArmorEffect",
       spell,
       rangeFeet: movementFeet(5),

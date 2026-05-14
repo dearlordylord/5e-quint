@@ -69,6 +69,20 @@ type SpellAccessGrant = Extract<
   EffectAtom,
   { readonly kind: "grant_spell_access" }
 >;
+const MAGE_ARMOR_SPELL_ID = "mage_armor" satisfies SpellRecord["id"];
+const ARMOR_OF_SHADOWS_SPELL_NAME = "Mage Armor" satisfies SpellRecord["name"];
+const ARMOR_OF_SHADOWS_SPELL_PROVENANCE_SECTION =
+  "Spells/Descriptions-M-P#Mage Armor";
+type ArmorOfShadowsMageArmorSpellRecord = SpellRecord & {
+  readonly id: typeof MAGE_ARMOR_SPELL_ID;
+  readonly name: typeof ARMOR_OF_SHADOWS_SPELL_NAME;
+  readonly provenance: Extract<
+    SpellRecord["provenance"],
+    { readonly kind: "srd-5.2.1" }
+  > & {
+    readonly section: typeof ARMOR_OF_SHADOWS_SPELL_PROVENANCE_SECTION;
+  };
+};
 
 type CharacterBattleResourceStateBase = {
   readonly unit: UnitRecord;
@@ -100,6 +114,32 @@ export type CharacterBattleFeaturePreparedSpellInit = {
   readonly spell: SpellRecord;
 };
 
+export type CharacterBattleInvocationSpellAccessInit = {
+  readonly tag: "armorOfShadowsMageArmor";
+  readonly spell: SpellRecord;
+};
+export type CharacterBattleInvocationSpellAccessState = {
+  readonly tag: "armorOfShadowsMageArmor";
+  readonly spell: ArmorOfShadowsMageArmorSpellRecord;
+};
+
+type CharacterBattleInvocationSpellAccessParseResult =
+  | {
+      readonly tag: "parsed";
+      readonly invocationSpellAccesses: readonly CharacterBattleInvocationSpellAccessState[];
+    }
+  | {
+      readonly tag: "issue";
+      readonly message: string;
+    };
+
+export type CharacterBattleSpellcastingStateInit = Omit<
+  CharacterBattleSpellcastingInit,
+  "invocationSpellAccesses"
+> & {
+  readonly invocationSpellAccesses: readonly CharacterBattleInvocationSpellAccessState[];
+};
+
 export type CharacterBattleSpellSlotState = {
   readonly spellLevel: SpellSlotLevel;
   readonly count: ResourceCount;
@@ -114,6 +154,7 @@ export type CharacterBattleSpellcastingInit = {
   readonly cantrips: readonly SpellRecord[];
   readonly preparedSpells: readonly SpellRecord[];
   readonly featurePreparedSpells: readonly CharacterBattleFeaturePreparedSpellInit[];
+  readonly invocationSpellAccesses: readonly CharacterBattleInvocationSpellAccessInit[];
   readonly spellSlots: readonly CharacterBattleSpellSlotInit[];
   readonly spellSlotExpenditures?: readonly CharacterBattleSpellSlotExpenditureInit[];
 };
@@ -122,12 +163,45 @@ export type CharacterBattleSpellcastingState = Omit<
   CharacterBattleSpellcastingInit,
   | "spellcastingAbilityModifier"
   | "featurePreparedSpells"
+  | "invocationSpellAccesses"
   | "spellSlots"
   | "spellSlotExpenditures"
 > & {
   readonly spellcastingAbilityModifier: AbilityModifier;
+  readonly invocationSpellAccesses: readonly CharacterBattleInvocationSpellAccessState[];
   readonly spellSlots: readonly CharacterBattleSpellSlotState[];
 };
+
+export function characterBattleInvocationSpellAccessInitIssue(
+  invocationSpellAccesses: readonly CharacterBattleInvocationSpellAccessInit[],
+): string | null {
+  const parsed = parseCharacterBattleInvocationSpellAccesses(
+    invocationSpellAccesses,
+  );
+  return parsed.tag === "issue" ? parsed.message : null;
+}
+
+export function parseCharacterBattleInvocationSpellAccesses(
+  invocationSpellAccesses: readonly CharacterBattleInvocationSpellAccessInit[],
+): CharacterBattleInvocationSpellAccessParseResult {
+  const parsed: CharacterBattleInvocationSpellAccessState[] = [];
+  for (const access of invocationSpellAccesses) {
+    if (!isArmorOfShadowsMageArmorSpell(access.spell)) {
+      return {
+        tag: "issue",
+        message: "Armor of Shadows Spell Access must grant Mage Armor.",
+      };
+    }
+    parsed.push({
+      tag: access.tag,
+      spell: access.spell,
+    });
+  }
+  return {
+    tag: "parsed",
+    invocationSpellAccesses: parsed,
+  };
+}
 
 export function parseCharacterBattleClassLevels(
   classLevels: readonly CharacterBattleClassLevelInit[],
@@ -409,7 +483,7 @@ export function spendCharacterResourceUse(
 }
 
 export function characterSpellcastingState(
-  input: CharacterBattleSpellcastingInit,
+  input: CharacterBattleSpellcastingStateInit,
   classLevels: readonly CharacterBattleClassLevel[],
   spellAccessUnits: readonly (
     | CharacterBattleResourceInit
@@ -481,7 +555,6 @@ export function characterSpellcastingState(
       );
     }
   }
-
   return {
     sourceClassName: spellcastingSourceClassName(
       input.sourceClassName,
@@ -497,6 +570,7 @@ export function characterSpellcastingState(
       input.preparedSpells,
       input.featurePreparedSpells,
     ),
+    invocationSpellAccesses: input.invocationSpellAccesses,
     spellSlots: input.spellSlots.map((slot) => {
       const expenditure = spellSlotExpenditures.find(
         (candidate) => candidate.spellLevel === slot.spellLevel,
@@ -513,6 +587,17 @@ export function characterSpellcastingState(
       };
     }),
   };
+}
+
+function isArmorOfShadowsMageArmorSpell(
+  spell: SpellRecord,
+): spell is ArmorOfShadowsMageArmorSpellRecord {
+  return (
+    spell.id === MAGE_ARMOR_SPELL_ID &&
+    spell.name === ARMOR_OF_SHADOWS_SPELL_NAME &&
+    spell.provenance.kind === "srd-5.2.1" &&
+    spell.provenance.section === ARMOR_OF_SHADOWS_SPELL_PROVENANCE_SECTION
+  );
 }
 
 function unitGrantsPreparedSpellAccess(
