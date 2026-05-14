@@ -8,16 +8,16 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Metric | Value |
 | --- | ---: |
-| Installed collection inventory count | 135 Units |
+| Installed collection inventory count | 136 Units |
 
 ## Coverage Metrics
 
 | Metric | Covered | Percent |
 | --- | ---: | ---: |
-| Authored Surface Unit catalog admission | 134/423 | 31.7% |
-| Authored Surface executable catalog admission | 108/356 | 30.3% |
-| Installed Unit profile classification coverage | 135/135 | 100% |
-| Supported executable Unit coverage | 73/109 | 67% |
+| Authored Surface Unit catalog admission | 135/424 | 31.8% |
+| Authored Surface executable catalog admission | 109/357 | 30.5% |
+| Installed Unit profile classification coverage | 136/136 | 100% |
+| Supported executable Unit coverage | 73/110 | 66.4% |
 | QNT profile modeling coverage | 56/56 | 100% |
 | QNT proof coverage | 55/56 | 98.2% |
 | Runtime mapping coverage | 56/56 | 100% |
@@ -903,6 +903,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `faerie_fire` | profile-subset-supported | supported subset: 20-foot point-origin Cube affected-creature boundary with table-supplied area membership; Dexterity save-gated affected creatures; Concentration-owned outline effect that grants attack-roll Advantage against failed-save affected creatures when the attacker can see them and denies benefits from the Invisible condition; caller-supplied object ids for objects in the Cube create concentration-owned object outline projections; object-target spell attacks consume caller-supplied object sight facts to grant attack-roll Advantage against outlined objects; deferred: Dim Light emitted by affected creatures and objects (SRDINV70A) |
 | `feather_fall` | profile-subset-supported | supported subset: caller-supplied falling Reaction trigger for the caster or a visible creature within 60 feet; up-to-five falling creature target admission using caller-supplied falling and range facts; Reaction and level-1 Spell Slot spend; one-minute per-target Feather Fall mitigation effect; active 60-foot-per-round descent-rate cap projection; caller-supplied landing cleanup that ends the landed target's mitigation, emits no-fall-damage outcome, and suppresses Falling-Prone when Feather Fall prevents damage; deferred: fall-distance derivation, map elevation, and landing geometry simulation remain outside the runtime boundary (SRDINV55) |
 | `fire_bolt` | needs-surface-widening | QMBT23 keeps SRD Fire Bolt out of supported spell evidence until promoted spell invocation has an explicit object-target branch and object-ignition effect outcome; table-supplied object facts are required but are not a complete runtime boundary. |
+| `fog_cloud` | unsupported-profile | Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Fog Cloud's area-created Heavily Obscured projection, slot-scaled area geometry, or strong-wind dispersal lifecycle. |
 | `grease` | profile-subset-supported | supported subset: one-minute Grease ground hazard lifecycle keyed by caller-supplied ground-area id; on-cast Dexterity Saving Throw for caller-supplied affected creatures; Prone application on failed Grease saves; table-triggered enter-area and end-turn-in-area Dexterity save procedures; caller-supplied Grease Difficult Terrain movement facts that validate active hazard identity and spend total Movement distance plus one extra foot per foot moved through Grease; deferred: automatic area membership, pathfinding, and grid geometry derivation for Grease movement (SRDINV66) |
 | `hunters_mark` | profile-subset-supported | supported subset: Bonus Action cast with Spell Slot spend; Concentration-owned mark identity on one combatant target; extra Force damage when the caster hits the marked target with an Attack Roll; Bonus Action transfer only after the marked target drops to 0 Hit Points; slot-scaled Concentration maximum of 1 hour at slots 1-2, 8 hours at slots 3-4, and 24 hours at slots 5+; Concentration cleanup and maximum-duration expiration remove the marked-target damage rider; deferred: classified gap: caller-supplied Wisdom (Perception or Survival) Advantage roll-mode projection to find the marked target; no dedicated SRDINV63 implementation task (SRDINV66) |
 | `jump` | profile-subset-supported | supported subset: Bonus Action Spell Slot casting; touched willing creature targets; slot-scaled target count; one-minute spell-owned duration; once on each target turn use marker; 10-foot Movement spend for up to 30 feet of jump movement; caller-supplied legal landing facts; Prone outcome for caller-supplied failed Difficult Terrain landing Acrobatics facts; deferred: runtime-owned jump arc, pathfinding, collision, and final-position derivation (SRDINV55); runtime-owned Difficult Terrain landing Acrobatics check derivation (SRDINV55) |
@@ -932,7 +933,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
-| srd-5.2.1 | unassigned | unsupported-profile | 46 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `rogue_expertise`, `rogue_thieves_cant`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `orc_darkvision`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `minor_illusion`, `hideous_laughter`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff` |
+| srd-5.2.1 | unassigned | unsupported-profile | 47 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `rogue_expertise`, `rogue_thieves_cant`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `orc_darkvision`, `fog_cloud`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `minor_illusion`, `hideous_laughter`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff` |
 | srd-5.2.1 | unassigned | profile-subset-supported | 15 | `bard_bardic_inspiration`, `monk_martial_arts`, `ranger_favored_enemy`, `chill_touch`, `faerie_fire`, `feather_fall`, `grease`, `hunters_mark`, `jump`, `light`, `protection_from_evil_and_good`, `produce_flame`, `sleep`, `thunderwave`, `charm_person` |
 | srd-5.2.1 | QCORE10 | needs-surface-widening | 1 | `fire_bolt` |
 

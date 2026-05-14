@@ -248,14 +248,6 @@ const spellUnitMissingClassifications = new Map([
     },
   ],
   [
-    "fog_cloud",
-    {
-      kind: "needs-surface-widening",
-      missingConstruct:
-        "Spell Definition slot-scaled area dimensions and strong-wind dispersal for a Heavily Obscured fog Sphere",
-    },
-  ],
-  [
     "goodberry",
     {
       kind: "catalog-only-closure",

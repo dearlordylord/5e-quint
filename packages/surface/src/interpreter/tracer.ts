@@ -4928,11 +4928,11 @@ function describeAreaOccupantDispositionFilter(
 function describeAreaShape(s: AreaShapeSpec): string {
   switch (s.kind) {
     case "sphere":
-      return `sphere r=${s.radiusFeet} ft`;
+      return `sphere r=${describeAreaDimension(s.radiusFeet)} ft`;
     case "circle":
-      return `circle r=${s.radiusFeet} ft`;
+      return `circle r=${describeAreaDimension(s.radiusFeet)} ft`;
     case "sphere_cluster":
-      return `${s.count} spheres r=${s.radiusFeet} ft (${s.overlapResolution})`;
+      return `${s.count} spheres r=${describeAreaDimension(s.radiusFeet)} ft (${s.overlapResolution})`;
     case "cone":
       return `cone ${s.lengthFeet} ft`;
     case "cube":
@@ -4942,9 +4942,9 @@ function describeAreaShape(s: AreaShapeSpec): string {
       return `up to ${s.maxCubes} cubes (${s.sideFeet} ft side${contig})`;
     }
     case "cylinder":
-      return `cylinder r=${s.radiusFeet} ft h=${s.heightFeet} ft`;
+      return `cylinder r=${describeAreaDimension(s.radiusFeet)} ft h=${s.heightFeet} ft`;
     case "emanation":
-      return `emanation r=${s.radiusFeet} ft`;
+      return `emanation r=${describeAreaDimension(s.radiusFeet)} ft`;
     case "line":
       return `line ${s.lengthFeet} ft × ${s.widthFeet} ft`;
     case "wall_volume":
@@ -4963,11 +4963,11 @@ function describeAreaShape(s: AreaShapeSpec): string {
 function describeAreaShapeFixed(s: AreaShapeDescriptor): string {
   switch (s.kind) {
     case "sphere":
-      return `sphere r=${s.radiusFeet} ft`;
+      return `sphere r=${describeAreaDimension(s.radiusFeet)} ft`;
     case "circle":
-      return `circle r=${s.radiusFeet} ft`;
+      return `circle r=${describeAreaDimension(s.radiusFeet)} ft`;
     case "sphere_cluster":
-      return `${s.count} spheres r=${s.radiusFeet} ft (${s.overlapResolution})`;
+      return `${s.count} spheres r=${describeAreaDimension(s.radiusFeet)} ft (${s.overlapResolution})`;
     case "cone":
       return `cone ${s.lengthFeet} ft`;
     case "cube":
@@ -4977,9 +4977,9 @@ function describeAreaShapeFixed(s: AreaShapeDescriptor): string {
       return `up to ${s.maxCubes} cubes (${s.sideFeet} ft side${contig})`;
     }
     case "cylinder":
-      return `cylinder r=${s.radiusFeet} ft h=${s.heightFeet} ft`;
+      return `cylinder r=${describeAreaDimension(s.radiusFeet)} ft h=${s.heightFeet} ft`;
     case "emanation":
-      return `emanation r=${s.radiusFeet} ft`;
+      return `emanation r=${describeAreaDimension(s.radiusFeet)} ft`;
     case "line":
       return `line ${s.lengthFeet} ft × ${s.widthFeet} ft`;
     case "wall_volume":
@@ -4989,6 +4989,17 @@ function describeAreaShapeFixed(s: AreaShapeDescriptor): string {
       throw new Error(`unhandled area shape: ${String(_)}`);
     }
   }
+}
+
+type AreaDimension = Extract<
+  AreaShapeDescriptor,
+  { readonly radiusFeet: unknown }
+>["radiusFeet"];
+
+function describeAreaDimension(value: AreaDimension): string {
+  if (typeof value === "number") return String(value);
+
+  return `${value.base} + ${value.perLevel}/level above L${value.startingAtLevel}`;
 }
 
 function traceTargetCountScaling(

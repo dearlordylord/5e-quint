@@ -201,6 +201,50 @@ describe("SRD Unit catalog boundary", () => {
     }
   });
 
+  test("decodes Fog Cloud as a slot-scaled Heavily Obscured fog Sphere", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const fogCloud = result.catalog.requireUnit("fog_cloud");
+      expect(fogCloud.kind).toBe("spell");
+      if (fogCloud.kind !== "spell") return;
+      expect(fogCloud.mechanics.family).toBe("ongoing_effect");
+      if (fogCloud.mechanics.family !== "ongoing_effect") return;
+
+      expect(fogCloud.mechanics.duration).toEqual({
+        kind: "concentration",
+        upTo: { unit: "hour", amount: 1 },
+        earlyEnd: [{ kind: "area_dispersed_by_strong_wind" }],
+      });
+      expect(fogCloud.mechanics.attachment).toEqual({
+        kind: "hole",
+        holeId: "fog_cloud_point",
+        label: "fog origin point",
+        value: {
+          kind: "area",
+          shape: {
+            kind: "sphere",
+            radiusFeet: {
+              kind: "linear_per_level",
+              axis: "slot",
+              base: 20,
+              perLevel: 20,
+              startingAtLevel: 1,
+            },
+          },
+          origin: { kind: "point_within_range" },
+        },
+      });
+      expect(fogCloud.mechanics.operations).toEqual([
+        {
+          trigger: { kind: "passive" },
+          effect: { kind: "area_is_heavily_obscured" },
+        },
+      ]);
+    }
+  });
+
   test("decodes Dissonant Whispers as damage plus forced Reaction movement", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 

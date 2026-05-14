@@ -1,0 +1,70 @@
+{
+  "description": "You create a 20-foot-radius Sphere of fog centered on a point within range. The Sphere is Heavily Obscured. It lasts for the duration or until a strong wind disperses it. Using a Higher-Level Spell Slot. The fog's radius increases by 20 feet for each spell slot level above 1.",
+  "id": "fog_cloud",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "fog_cloud_point",
+      "kind": "hole",
+      "label": "fog origin point",
+      "value": {
+        "kind": "area",
+        "origin": {
+          "kind": "point_within_range"
+        },
+        "shape": {
+          "kind": "sphere",
+          "radiusFeet": {
+            "axis": "slot",
+            "base": 20,
+            "kind": "linear_per_level",
+            "perLevel": 20,
+            "startingAtLevel": 1
+          }
+        }
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "earlyEnd": [
+        {
+          "kind": "area_dispersed_by_strong_wind"
+        }
+      ],
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "hour"
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 1,
+    "operations": [
+      {
+        "effect": {
+          "kind": "area_is_heavily_obscured"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      }
+    ],
+    "range": {
+      "feet": 120,
+      "kind": "point"
+    },
+    "school": "conjuration"
+  },
+  "name": "Fog Cloud",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Fog Cloud"
+  }
+}

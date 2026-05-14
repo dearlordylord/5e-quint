@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 356,
-      "numerator": 108,
-      "percent": "30.3%"
+      "denominator": 357,
+      "numerator": 109,
+      "percent": "30.5%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 423,
-      "numerator": 134,
-      "percent": "31.7%"
+      "denominator": 424,
+      "numerator": 135,
+      "percent": "31.8%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 135
+      "value": 136
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 73,
@@ -67,8 +67,8 @@
       "percent": "90.4%"
     },
     "profileClassificationCoverage": {
-      "denominator": 135,
-      "numerator": 135,
+      "denominator": 136,
+      "numerator": 136,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -97,9 +97,9 @@
       "percent": "13.7%"
     },
     "supportedProfileCoverage": {
-      "denominator": 109,
+      "denominator": 110,
       "numerator": 73,
-      "percent": "67%"
+      "percent": "66.4%"
     }
   },
   "metricSemantics": [
@@ -7079,6 +7079,24 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/fire_bolt.json",
       "unitId": "fire_bolt"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Fog Cloud's area-created Heavily Obscured projection, slot-scaled area geometry, or strong-wind dispersal lifecycle.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/fog_cloud.json",
+      "unitId": "fog_cloud"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

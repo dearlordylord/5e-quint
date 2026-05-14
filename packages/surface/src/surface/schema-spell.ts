@@ -1262,6 +1262,7 @@ export const DurationEndTriggerSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("target_damaged_by_caster_or_ally") }),
   Schema.Struct({ kind: Schema.Literal("target_takes_damage") }),
   Schema.Struct({ kind: Schema.Literal("caster_recasts_spell") }),
+  Schema.Struct({ kind: Schema.Literal("area_dispersed_by_strong_wind") }),
 );
 
 export const DurationSchema = Schema.Union(
@@ -1397,16 +1398,16 @@ export const AreaOriginSchema = Schema.Union(
 export const AreaShapeDescriptorSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("sphere"),
-    radiusFeet: Schema.Number,
+    radiusFeet: Schema.Union(Schema.Number, LinearPerLevelNumberSchema),
   }),
   Schema.Struct({
     kind: Schema.Literal("circle"),
-    radiusFeet: Schema.Number,
+    radiusFeet: Schema.Union(Schema.Number, LinearPerLevelNumberSchema),
   }),
   Schema.Struct({
     kind: Schema.Literal("sphere_cluster"),
     count: Schema.Number,
-    radiusFeet: Schema.Number,
+    radiusFeet: Schema.Union(Schema.Number, LinearPerLevelNumberSchema),
     overlapResolution: Schema.Literal("affect_once"),
   }),
   Schema.Struct({
@@ -1425,12 +1426,12 @@ export const AreaShapeDescriptorSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("cylinder"),
-    radiusFeet: Schema.Number,
+    radiusFeet: Schema.Union(Schema.Number, LinearPerLevelNumberSchema),
     heightFeet: Schema.Number,
   }),
   Schema.Struct({
     kind: Schema.Literal("emanation"),
-    radiusFeet: Schema.Number,
+    radiusFeet: Schema.Union(Schema.Number, LinearPerLevelNumberSchema),
   }),
   Schema.Struct({
     kind: Schema.Literal("line"),

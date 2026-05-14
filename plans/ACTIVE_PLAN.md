@@ -190,7 +190,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 298,
       "id": "SRDINV80B",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Widen Fog Cloud Spell Definition Surface"
     },
     {
@@ -300,7 +300,7 @@ Keep it synchronized with the DAG table and task details.
 | 295   | SRDINV76F - Research Pact of the Tome Spell Access Boundary             | done                                          | SRDINV76A | SRDINV78 | [SRDINV76F research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76F_PACT_OF_THE_TOME_SPELL_ACCESS_BOUNDARY_RESEARCH.md), [SRDINV76A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76A_WARLOCK_LEVEL_1_INVOCATION_BOUNDARY_RESEARCH.md), [Pact of the Tome](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Ritual](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Spellcasting Focus](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                | Completed: split Pact of the Tome into conditional Book of Shadows Spell Access plus future component/focus legality; selected spells stay in one Book of Shadows access source and effective prepared Warlock access is derived only while the book is on the Warlock's person. |
 | 296   | SRDINV79 - Promote Starry Wisp Object Invisible-Benefit Projection      | done                                          | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Invisible](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: promoted Starry Wisp object-hit Invisible-benefit denial through a typed object Dim Light reveal emitter, with caster-next-turn expiry and no object inventory, visibility, line-of-sight, cover, or map-light state. |
 | 297   | SRDINV80A - Widen Hideous Laughter Spell Definition Surface             | done                                          | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Hideous Laughter](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: authored Hideous Laughter Surface facts for the initial Wisdom save, end-turn repeat save, damage-triggered repeat save with Advantage, Prone and Incapacitated application, Prone self-end suppression, and slot-scaled additional targets; runtime execution remains owner-evidence work tracked by the generated inventory rows. |
-| 298   | SRDINV80B - Widen Fog Cloud Spell Definition Surface                    | ready-for-research                            | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Fog Cloud](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Heavily Obscured](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface Spell Definition facts for Fog Cloud's slot-scaled fog Sphere, Heavily Obscured projection, Concentration duration, and strong-wind dispersal boundary. |
+| 298   | SRDINV80B - Widen Fog Cloud Spell Definition Surface                    | done                                          | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Fog Cloud](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Heavily Obscured](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: authored and installed Fog Cloud Surface facts for the point-origin slot-scaled fog Sphere, passive Heavily Obscured projection, Concentration duration, and strong-wind dispersal early end; promoted battle-runtime execution remains owner-evidence work tracked by generated inventory rows. |
 | 299   | SRDINV80C - Widen Spare the Dying Stable Lifecycle Surface              | ready-for-research                            | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Spare the Dying](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Stable](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface Spell Definition facts for Spare the Dying's zero-HP creature targeting, Stable application, and character-level range scaling. |
 | 300   | SRDINV80D - Widen Sanctuary Targeting Interdiction Surface              | ready-for-research                            | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Sanctuary](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Target](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface Spell Definition facts for Sanctuary's attack/spell target interdiction, choose-new-target-or-lose outcome, area exclusion, and early end on the warded creature's attack, spell, or damage. |
 | 301   | SRDINV80E - Widen Shillelagh Weapon Override Surface                    | ready-for-research                            | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Shillelagh](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Weapon Attack](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface Spell Definition facts for Shillelagh's held Club or Quarterstaff weapon override, spellcasting ability attack/damage option, level-scaled damage die, Force-or-normal damage choice, and early end on recast or let-go. |
@@ -1063,7 +1063,7 @@ battle-runtime execution remains outside this task.
 
 ### Task 298 - SRDINV80B - Widen Fog Cloud Spell Definition Surface
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV78
 
@@ -1087,7 +1087,13 @@ Verification: RAW/source review for Fog Cloud, Heavily Obscured, Area of
 Effect, Concentration, and higher-level slot scaling; Surface parser/schema
 tests; content regeneration if Dhall changes; `pnpm
 unit-profile-coverage:check --write`; `pnpm quality`; `/simplify`
-convergence.
+convergence. Completed with Fog Cloud catalog admission and
+unsupported-profile inventory evidence; promoted battle-runtime execution
+remains outside this task. Verification ran `pnpm --dir packages/surface exec
+vitest run src/surface/unit-catalog.test.ts`, `pnpm --dir packages/surface exec
+tsc --noEmit`, `pnpm unit-profile-coverage:check --write`, `pnpm
+unit-profile-coverage:check`, and `pnpm quality`. Simplify-style review ran two
+rounds and converged with no follow-up code changes.
 
 ### Task 299 - SRDINV80C - Widen Spare the Dying Stable Lifecycle Surface
 
