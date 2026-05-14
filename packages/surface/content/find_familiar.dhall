@@ -59,42 +59,45 @@ let findFamiliar =
               , materialConsumed = Some True
               }
           , duration = { kind = "instantaneous" }
-          , statBlock =
-              { displayName = "Familiar (CR-0 Beast form)"
-              , size = "tiny"
-              , creatureType =
-                  { kind = "choice"
-                  , label = "creature type"
-                  , options = [ "celestial", "fey", "fiend" ]
+          , creature =
+              { kind = "inline"
+              , statBlock =
+                  { displayName = "Familiar (CR-0 Beast form)"
+                  , size = "tiny"
+                  , creatureType =
+                      { kind = "choice"
+                      , label = "creature type"
+                      , options = [ "celestial", "fey", "fiend" ]
+                      }
+                  -- Placeholder values based on a representative CR-0
+                  -- Beast (Owl). Actual stat block comes from the Monsters
+                  -- catalog per caller's choice; flagged PARTIAL above.
+                  , ac = { kind = "literal", value = 11 }
+                  , hp = { kind = "literal", value = 1 }
+                  , speeds =
+                      [ { kind = "walk"
+                        , feet = { kind = "literal", value = 5 }
+                        , requiresSlotLevel = None Natural
+                        }
+                      , { kind = "fly"
+                        , feet = { kind = "literal", value = 60 }
+                        , requiresSlotLevel = None Natural
+                        }
+                      ]
+                  , abilityScores =
+                      { str = 3, dex = 13, con = 8, int = 2, wis = 12, cha = 7 }
+                  , actions = {=}
+                  , traits =
+                      [ { name = "Telepathic Connection"
+                        , description =
+                            "While your familiar is within 100 feet of you, you can communicate with it telepathically. As a Bonus Action, you can see through the familiar's eyes and hear what it hears until the start of your next turn."
+                        }
+                      , { name = "Touch-Spell Delivery"
+                        , description =
+                            "When you cast a spell with a range of touch, your familiar can deliver the touch. Your familiar must be within 100 feet of you, and it must take a Reaction to deliver the touch when you cast the spell."
+                        }
+                      ]
                   }
-              -- Placeholder values based on a representative CR-0
-              -- Beast (Owl). Actual stat block comes from the Monsters
-              -- catalog per caller's choice; flagged PARTIAL above.
-              , ac = { kind = "literal", value = 11 }
-              , hp = { kind = "literal", value = 1 }
-              , speeds =
-                  [ { kind = "walk"
-                    , feet = { kind = "literal", value = 5 }
-                    , requiresSlotLevel = None Natural
-                    }
-                  , { kind = "fly"
-                    , feet = { kind = "literal", value = 60 }
-                    , requiresSlotLevel = None Natural
-                    }
-                  ]
-              , abilityScores =
-                  { str = 3, dex = 13, con = 8, int = 2, wis = 12, cha = 7 }
-              , actions = {=}
-              , traits =
-                  [ { name = "Telepathic Connection"
-                    , description =
-                        "While your familiar is within 100 feet of you, you can communicate with it telepathically. As a Bonus Action, you can see through the familiar's eyes and hear what it hears until the start of your next turn."
-                    }
-                  , { name = "Touch-Spell Delivery"
-                    , description =
-                        "When you cast a spell with a range of touch, your familiar can deliver the touch. Your familiar must be within 100 feet of you, and it must take a Reaction to deliver the touch when you cast the spell."
-                    }
-                  ]
               }
           , mode =
               { label = "creature type"

@@ -73,6 +73,59 @@ const MAGE_ARMOR_SPELL_ID = "mage_armor" satisfies SpellRecord["id"];
 const ARMOR_OF_SHADOWS_SPELL_NAME = "Mage Armor" satisfies SpellRecord["name"];
 const ARMOR_OF_SHADOWS_SPELL_PROVENANCE_SECTION =
   "Spells/Descriptions-M-P#Mage Armor";
+const FIND_FAMILIAR_SPELL_ID = "find_familiar" satisfies SpellRecord["id"];
+const FIND_FAMILIAR_SPELL_NAME = "Find Familiar" satisfies SpellRecord["name"];
+const FIND_FAMILIAR_SPELL_PROVENANCE_SECTION =
+  "Spells/Descriptions-E-L#Find Familiar";
+export const FIND_FAMILIAR_NAMED_FORM_REFS = [
+  "bat",
+  "cat",
+  "frog",
+  "hawk",
+  "lizard",
+  "octopus",
+  "owl",
+  "rat",
+  "raven",
+  "spider",
+  "weasel",
+] as const;
+export const FIND_FAMILIAR_ADDITIONAL_FORM_ELIGIBILITY = {
+  kind: "challengeRatingZeroBeast",
+} as const;
+export const PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS = [
+  "imp",
+  "pseudodragon",
+  "quasit",
+  "skeleton",
+  "sphinx_of_wonder",
+  "sprite",
+  "venomous_snake",
+] as const;
+export type FindFamiliarNamedFormRef =
+  (typeof FIND_FAMILIAR_NAMED_FORM_REFS)[number];
+export type FindFamiliarAdditionalFormEligibility =
+  typeof FIND_FAMILIAR_ADDITIONAL_FORM_ELIGIBILITY;
+export type PactOfTheChainSpecialFormRef =
+  (typeof PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS)[number];
+export type PactOfTheChainFindFamiliarFormEligibility = {
+  readonly namedNormalForms: typeof FIND_FAMILIAR_NAMED_FORM_REFS;
+  readonly additionalNormalFormEligibility: FindFamiliarAdditionalFormEligibility;
+  readonly specialForms: typeof PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS;
+};
+export type PactOfTheChainFindFamiliarInvocationMode = {
+  readonly action: "magicAction";
+  readonly resource: "noSpellSlot";
+};
+export const PACT_OF_THE_CHAIN_FIND_FAMILIAR_FORM_ELIGIBILITY = {
+  namedNormalForms: FIND_FAMILIAR_NAMED_FORM_REFS,
+  additionalNormalFormEligibility: FIND_FAMILIAR_ADDITIONAL_FORM_ELIGIBILITY,
+  specialForms: PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS,
+} as const satisfies PactOfTheChainFindFamiliarFormEligibility;
+export const PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE = {
+  action: "magicAction",
+  resource: "noSpellSlot",
+} as const satisfies PactOfTheChainFindFamiliarInvocationMode;
 type ArmorOfShadowsMageArmorSpellRecord = SpellRecord & {
   readonly id: typeof MAGE_ARMOR_SPELL_ID;
   readonly name: typeof ARMOR_OF_SHADOWS_SPELL_NAME;
@@ -81,6 +134,16 @@ type ArmorOfShadowsMageArmorSpellRecord = SpellRecord & {
     { readonly kind: "srd-5.2.1" }
   > & {
     readonly section: typeof ARMOR_OF_SHADOWS_SPELL_PROVENANCE_SECTION;
+  };
+};
+type PactOfTheChainFindFamiliarSpellRecord = SpellRecord & {
+  readonly id: typeof FIND_FAMILIAR_SPELL_ID;
+  readonly name: typeof FIND_FAMILIAR_SPELL_NAME;
+  readonly provenance: Extract<
+    SpellRecord["provenance"],
+    { readonly kind: "srd-5.2.1" }
+  > & {
+    readonly section: typeof FIND_FAMILIAR_SPELL_PROVENANCE_SECTION;
   };
 };
 
@@ -115,13 +178,20 @@ export type CharacterBattleFeaturePreparedSpellInit = {
 };
 
 export type CharacterBattleInvocationSpellAccessInit = {
-  readonly tag: "armorOfShadowsMageArmor";
+  readonly tag: "armorOfShadowsMageArmor" | "pactOfTheChainFindFamiliar";
   readonly spell: SpellRecord;
 };
-export type CharacterBattleInvocationSpellAccessState = {
-  readonly tag: "armorOfShadowsMageArmor";
-  readonly spell: ArmorOfShadowsMageArmorSpellRecord;
-};
+export type CharacterBattleInvocationSpellAccessState =
+  | {
+      readonly tag: "armorOfShadowsMageArmor";
+      readonly spell: ArmorOfShadowsMageArmorSpellRecord;
+    }
+  | {
+      readonly tag: "pactOfTheChainFindFamiliar";
+      readonly spell: PactOfTheChainFindFamiliarSpellRecord;
+      readonly invocationMode: typeof PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE;
+      readonly eligibleForms: typeof PACT_OF_THE_CHAIN_FIND_FAMILIAR_FORM_ELIGIBILITY;
+    };
 
 type CharacterBattleInvocationSpellAccessParseResult =
   | {
@@ -186,15 +256,30 @@ export function parseCharacterBattleInvocationSpellAccesses(
 ): CharacterBattleInvocationSpellAccessParseResult {
   const parsed: CharacterBattleInvocationSpellAccessState[] = [];
   for (const access of invocationSpellAccesses) {
-    if (!isArmorOfShadowsMageArmorSpell(access.spell)) {
+    if (access.tag === "armorOfShadowsMageArmor") {
+      if (!isArmorOfShadowsMageArmorSpell(access.spell)) {
+        return {
+          tag: "issue",
+          message: "Armor of Shadows Spell Access must grant Mage Armor.",
+        };
+      }
+      parsed.push({
+        tag: access.tag,
+        spell: access.spell,
+      });
+      continue;
+    }
+    if (!isPactOfTheChainFindFamiliarSpell(access.spell)) {
       return {
         tag: "issue",
-        message: "Armor of Shadows Spell Access must grant Mage Armor.",
+        message: "Pact of the Chain Spell Access must grant Find Familiar.",
       };
     }
     parsed.push({
       tag: access.tag,
       spell: access.spell,
+      invocationMode: PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
+      eligibleForms: PACT_OF_THE_CHAIN_FIND_FAMILIAR_FORM_ELIGIBILITY,
     });
   }
   return {
@@ -597,6 +682,22 @@ function isArmorOfShadowsMageArmorSpell(
     spell.name === ARMOR_OF_SHADOWS_SPELL_NAME &&
     spell.provenance.kind === "srd-5.2.1" &&
     spell.provenance.section === ARMOR_OF_SHADOWS_SPELL_PROVENANCE_SECTION
+  );
+}
+
+function isPactOfTheChainFindFamiliarSpell(
+  spell: SpellRecord,
+): spell is PactOfTheChainFindFamiliarSpellRecord {
+  return (
+    spell.id === FIND_FAMILIAR_SPELL_ID &&
+    spell.name === FIND_FAMILIAR_SPELL_NAME &&
+    spell.provenance.kind === "srd-5.2.1" &&
+    spell.provenance.section === FIND_FAMILIAR_SPELL_PROVENANCE_SECTION &&
+    spell.mechanics.family === "spawned_creature" &&
+    spell.mechanics.level === 1 &&
+    spell.mechanics.castingTime.kind === "action" &&
+    spell.mechanics.components.materialCostGp === 10 &&
+    spell.mechanics.components.materialConsumed === true
   );
 }
 

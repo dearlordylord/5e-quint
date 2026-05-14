@@ -745,6 +745,7 @@ export function supportedInvocationPersistentSpellProfile(
         resource: { tag: "none" },
       }),
     ),
+    Match.when({ tag: "pactOfTheChainFindFamiliar" }, () => []),
     Match.exhaustive,
   );
 }

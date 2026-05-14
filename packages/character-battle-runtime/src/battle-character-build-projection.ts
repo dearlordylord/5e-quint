@@ -375,8 +375,11 @@ type MartialArtsAttackProjection = NonNullable<
 const PACT_OF_THE_BLADE_INVOCATION_ID =
   eldritchInvocationId("pact_of_the_blade");
 const ARMOR_OF_SHADOWS_INVOCATION_ID = eldritchInvocationId("armor_of_shadows");
+const PACT_OF_THE_CHAIN_INVOCATION_ID =
+  eldritchInvocationId("pact_of_the_chain");
 const ELDRITCH_MIND_INVOCATION_ID = eldritchInvocationId("eldritch_mind");
 const ARMOR_OF_SHADOWS_SPELL_ID = "mage_armor";
+const PACT_OF_THE_CHAIN_SPELL_ID = "find_familiar";
 const PACT_OF_THE_BLADE_ADDITIONAL_DAMAGE_TYPE_CHOICES = [
   "necrotic",
   "psychic",
@@ -728,26 +731,52 @@ function invocationSpellAccess(input: {
   readonly CharacterBattleInvocationSpellAccessInit[],
   BattleCreatureInitIssue
 > {
+  const accesses: CharacterBattleInvocationSpellAccessInit[] = [];
   if (
-    !hasSelectedEldritchInvocation(input.build, ARMOR_OF_SHADOWS_INVOCATION_ID)
+    hasSelectedEldritchInvocation(input.build, ARMOR_OF_SHADOWS_INVOCATION_ID)
   ) {
-    return Either.right([]);
+    const access = invocationSpellAccessForSpell({
+      unitLibrary: input.unitLibrary,
+      spellId: ARMOR_OF_SHADOWS_SPELL_ID,
+      tag: "armorOfShadowsMageArmor",
+    });
+    if (Either.isLeft(access)) {
+      return Either.left(access.left);
+    }
+    accesses.push(access.right);
   }
-  const spell = getRequiredUnit(input.unitLibrary, ARMOR_OF_SHADOWS_SPELL_ID);
+  if (
+    hasSelectedEldritchInvocation(input.build, PACT_OF_THE_CHAIN_INVOCATION_ID)
+  ) {
+    const access = invocationSpellAccessForSpell({
+      unitLibrary: input.unitLibrary,
+      spellId: PACT_OF_THE_CHAIN_SPELL_ID,
+      tag: "pactOfTheChainFindFamiliar",
+    });
+    if (Either.isLeft(access)) {
+      return Either.left(access.left);
+    }
+    accesses.push(access.right);
+  }
+  return Either.right(accesses);
+}
+
+function invocationSpellAccessForSpell(input: {
+  readonly unitLibrary: UnitCatalog;
+  readonly spellId: UnitRecord["id"];
+  readonly tag: CharacterBattleInvocationSpellAccessInit["tag"];
+}): Either.Either<
+  CharacterBattleInvocationSpellAccessInit,
+  BattleCreatureInitIssue
+> {
+  const spell = getRequiredUnit(input.unitLibrary, input.spellId);
   if (Either.isLeft(spell)) {
     return battleCreatureInitIssue(spell.left.message);
   }
   if (spell.right.kind !== "spell") {
-    return battleCreatureInitIssue(
-      `Expected spell Unit: ${ARMOR_OF_SHADOWS_SPELL_ID}`,
-    );
+    return battleCreatureInitIssue(`Expected spell Unit: ${input.spellId}`);
   }
-  return Either.right([
-    {
-      tag: "armorOfShadowsMageArmor",
-      spell: spell.right,
-    },
-  ]);
+  return Either.right({ tag: input.tag, spell: spell.right });
 }
 
 function featurePreparedSpellAccess(input: {

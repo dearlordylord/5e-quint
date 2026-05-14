@@ -173,13 +173,13 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 264,
       "non-runtime": 12,
-      "catalog-only/dead-for-now": 76,
-      "catalog-installed-owner-evidence-required": 15
+      "catalog-only/dead-for-now": 75,
+      "catalog-installed-owner-evidence-required": 16
     },
     "spellPressureRowsByDisposition": {
-      "catalog-only/dead-for-now": 76,
+      "catalog-only/dead-for-now": 75,
       "catalog-installed-owner-evidence-present": 120,
-      "catalog-installed-owner-evidence-required": 15
+      "catalog-installed-owner-evidence-required": 16
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -527,7 +527,7 @@
       "title": "Classify Installed Cantrip and Level-1 Spell Units",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Classify installed SRD cantrip and level-1 Spell Unit owner evidence separately from missing and catalog-only spell rows.",
-      "rowCount": 153,
+      "rowCount": 154,
       "rowIds": [
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_light",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_minor_illusion",
@@ -669,6 +669,7 @@
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_expeditious_retreat",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_false_life",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_feather_fall",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_find_familiar",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_fog_cloud",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_grease",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_hideous_laughter",
@@ -691,7 +692,7 @@
       "title": "Review Catalog-Only Cantrip and Level-1 Spell Units",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Keep catalog-only spell pressure explicit and counted without forcing unrelated class or nonspell rows into the same task.",
-      "rowCount": 76,
+      "rowCount": 75,
       "rowIds": [
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_dancing_lights",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mage_hand",
@@ -763,7 +764,6 @@
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_comprehend_languages",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_detect_magic",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_disguise_self",
-        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_find_familiar",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_floating_disk",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_identify",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_illusory_script",
@@ -17731,12 +17731,24 @@
         "sourceRecordPath": "packages/surface/content/find_familiar.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "find_familiar"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Familiar selection, summoned companion lifecycle, independent Initiative, telepathy, touch-spell delivery, dismissal, and carried-item cleanup need a summoned-companion/character-sheet owner before battle-runtime promotion."
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit find_familiar is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Unit matrix records unsupported-profile: Find Familiar's Spell Definition is catalog-installed, but promoted battle runtime does not yet execute familiar creation, chosen named form or CR 0 Beast stat-block resolution, caster-chosen Celestial/Fey/Fiend type, one-familiar lifecycle and replacement, independent Initiative, familiar turns, telepathy, touch-spell delivery, dismissal, or disappearance/reappearance. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Unit matrix records unsupported-profile: Find Familiar's Spell Definition is catalog-installed, but promoted battle runtime does not yet execute familiar creation, chosen named form or CR 0 Beast stat-block resolution, caster-chosen Celestial/Fey/Fiend type, one-familiar lifecycle and replacement, independent Initiative, familiar turns, telepathy, touch-spell delivery, dismissal, or disappearance/reappearance. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_floating_disk",

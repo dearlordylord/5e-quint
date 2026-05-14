@@ -12,6 +12,8 @@ import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
   BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE,
+  PACT_OF_THE_CHAIN_FIND_FAMILIAR_FORM_ELIGIBILITY,
+  PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
   battleBonusActionStandardActionSupportForUnit,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
@@ -143,6 +145,7 @@ import colorSprayInput from "../../surface/content/color_spray.json";
 import iceKnifeInput from "../../surface/content/ice_knife.json";
 import greaseInput from "../../surface/content/grease.json";
 import huntersMarkInput from "../../surface/content/hunters_mark.json";
+import findFamiliarInput from "../../surface/content/find_familiar.json";
 import healingWordInput from "../../surface/content/healing_word.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type {
@@ -278,6 +281,7 @@ const testSpellRecords = new Map(
     iceKnifeInput,
     greaseInput,
     huntersMarkInput,
+    findFamiliarInput,
     healingWordInput,
   ]
     .map((input) => decodeUnitRecordSync(input))
@@ -16467,6 +16471,87 @@ describe("battle runtime", () => {
     );
   });
 
+  test("Pact of the Chain Spell Access retains no-slot Find Familiar forms", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-pact-chain-find-familiar-access"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Pact of the Chain Warlock",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+            invocationSpellAccesses: [
+              {
+                tag: "pactOfTheChainFindFamiliar",
+                spell: spellRecord("find_familiar"),
+              },
+            ],
+          }),
+        }),
+      ],
+    });
+    const warlock = state.combatants.get(wizardId);
+
+    expect(warlock?.origin.kind).toBe("character");
+    if (warlock?.origin.kind !== "character") {
+      throw new Error("Expected Warlock caster.");
+    }
+    expect(warlock.origin.spellcasting?.invocationSpellAccesses).toEqual([
+      {
+        tag: "pactOfTheChainFindFamiliar",
+        spell: spellRecord("find_familiar"),
+        invocationMode: PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
+        eligibleForms: PACT_OF_THE_CHAIN_FIND_FAMILIAR_FORM_ELIGIBILITY,
+      },
+    ]);
+    expect(discoverBattleActs(state)).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          summary: expect.stringContaining("Find Familiar"),
+        }),
+      ]),
+    );
+  });
+
+  test("Pact of the Chain Spell Access rejects non-Find-Familiar spell records", () => {
+    const findFamiliarWithWrongRuntimeId = {
+      ...spellRecord("find_familiar"),
+      id: "misidentified_find_familiar",
+    };
+
+    expect(
+      startBattle({
+        battleId: battleId("battle-pact-chain-invalid-spell-access"),
+        combatants: [
+          characterSeed({
+            combatantId: wizardId,
+            displayName: "Warlock",
+            initiative: 20,
+            attack: null,
+            spellcasting: wizardSpellcasting({
+              preparedSpells: [],
+              spellSlots: [{ spellLevel: 1, count: 1 }],
+              invocationSpellAccesses: [
+                {
+                  tag: "pactOfTheChainFindFamiliar",
+                  spell: findFamiliarWithWrongRuntimeId,
+                },
+              ],
+            }),
+          }),
+        ],
+      }),
+    ).toEqual(
+      Either.left({
+        tag: "battleStateInitIssue",
+        message: "Pact of the Chain Spell Access must grant Find Familiar.",
+      }),
+    );
+  });
+
   test("Armor of Shadows rejects armored self before spending resources", () => {
     const armored = {
       ...defaultArmorClassState(),
@@ -27214,6 +27299,7 @@ function spellRecord(
     | "entangle"
     | "sleep"
     | "hunters_mark"
+    | "find_familiar"
     | "healing_word",
 ) {
   const unit =

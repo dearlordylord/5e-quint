@@ -36,6 +36,11 @@ export type {
   CharacterBattleClassLevelInit,
 } from "./character-class-level.ts";
 export {
+  FIND_FAMILIAR_ADDITIONAL_FORM_ELIGIBILITY,
+  FIND_FAMILIAR_NAMED_FORM_REFS,
+  PACT_OF_THE_CHAIN_FIND_FAMILIAR_FORM_ELIGIBILITY,
+  PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
+  PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS,
   characterBattleResourceSupportedForUnit,
   characterBattleResourceUsage,
   characterBattleResourceForUnit,
@@ -52,6 +57,11 @@ export {
   type CharacterBattleSpellSlotState,
   type CharacterBattleSpellcastingInit,
   type CharacterBattleSpellcastingState,
+  type FindFamiliarAdditionalFormEligibility,
+  type FindFamiliarNamedFormRef,
+  type PactOfTheChainFindFamiliarFormEligibility,
+  type PactOfTheChainFindFamiliarInvocationMode,
+  type PactOfTheChainSpecialFormRef,
 } from "./character-battle-resources.ts";
 export {
   BATTLE_REACTION_TRIGGERS,

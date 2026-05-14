@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 362,
-      "numerator": 114,
-      "percent": "31.5%"
+      "numerator": 115,
+      "percent": "31.8%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 429,
-      "numerator": 140,
-      "percent": "32.6%"
+      "numerator": 141,
+      "percent": "32.9%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 141
+      "value": 142
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 73,
@@ -67,8 +67,8 @@
       "percent": "90.4%"
     },
     "profileClassificationCoverage": {
-      "denominator": 141,
-      "numerator": 141,
+      "denominator": 142,
+      "numerator": 142,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -97,9 +97,9 @@
       "percent": "13.7%"
     },
     "supportedProfileCoverage": {
-      "denominator": 115,
+      "denominator": 116,
       "numerator": 73,
-      "percent": "63.5%"
+      "percent": "62.9%"
     }
   },
   "metricSemantics": [
@@ -7086,6 +7086,24 @@
         "status": "installed"
       },
       "claim": {
+        "reason": "Find Familiar's Spell Definition is catalog-installed, but promoted battle runtime does not yet execute familiar creation, chosen named form or CR 0 Beast stat-block resolution, caster-chosen Celestial/Fey/Fiend type, one-familiar lifecycle and replacement, independent Initiative, familiar turns, telepathy, touch-spell delivery, dismissal, or disappearance/reappearance.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/find_familiar.json",
+      "unitId": "find_familiar"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "reason": "Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Fog Cloud's area-created Heavily Obscured projection, slot-scaled area geometry, or strong-wind dispersal lifecycle.",
         "tag": "unsupported-profile"
       },
@@ -11552,24 +11570,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/fighter_epic_boon.json",
       "unitId": "fighter_epic_boon"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/find_familiar.json",
-      "unitId": "find_familiar"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

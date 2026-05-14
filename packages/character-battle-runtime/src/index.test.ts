@@ -604,6 +604,39 @@ describe("Character Build battle projection", () => {
     expect(spellcasting.invocationSpellAccesses).toEqual([]);
   });
 
+  test("projects selected Pact of the Chain as no-slot Find Familiar Spell Access", () => {
+    const spellcasting = expectRight(
+      characterSpellcasting({
+        build: warlockInvocationBuild({ pactOfTheChain: true }),
+        unitLibrary,
+      }),
+    );
+
+    expect(spellcasting.preparedSpells).toEqual([]);
+    expect(spellcasting.featurePreparedSpells).toEqual([]);
+    expect(spellcasting.invocationSpellAccesses).toEqual([
+      {
+        tag: "pactOfTheChainFindFamiliar",
+        spell: unitLibrary.requireUnit("find_familiar"),
+      },
+    ]);
+  });
+
+  test("does not project Pact of the Chain Spell Access without selected invocation ownership", () => {
+    const spellcasting = expectRight(
+      characterSpellcasting({
+        build: warlockInvocationBuild({ pactOfTheChain: false }),
+        unitLibrary,
+      }),
+    );
+
+    expect(
+      spellcasting.invocationSpellAccesses.some(
+        (access) => access.tag === "pactOfTheChainFindFamiliar",
+      ),
+    ).toBe(false);
+  });
+
   test("projects selected Eldritch Mind as a battle invocation feature", () => {
     const warlockId = combatantId("character-battle-eldritch-mind-warlock");
     const targetId = combatantId("character-battle-eldritch-mind-target");
@@ -2209,6 +2242,26 @@ function armorOfShadowsWarlockBuild(
         },
       },
     },
+  };
+}
+
+function warlockInvocationBuild(input: {
+  readonly pactOfTheChain?: boolean;
+}): CharacterBuild {
+  const features: CharacterBuild["features"] = [
+    ...(input.pactOfTheChain === false
+      ? []
+      : [
+          {
+            kind: "selectedEldritchInvocation" as const,
+            selectedFromUnitId: "warlock_eldritch_invocations",
+            invocationId: eldritchInvocationId("pact_of_the_chain"),
+          },
+        ]),
+  ];
+  return {
+    ...armorOfShadowsWarlockBuild({ armorOfShadows: false }),
+    features,
   };
 }
 

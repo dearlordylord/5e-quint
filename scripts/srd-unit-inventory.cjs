@@ -146,10 +146,6 @@ const authoredSpellUnitCatalogOnlyClosures = new Map([
     "Multiple movable Dim Light sources, linked spacing, humanoid light forms, and range-based expiry are illumination/exploration state outside promoted runtime owners.",
   ],
   [
-    "find_familiar",
-    "Familiar selection, summoned companion lifecycle, independent Initiative, telepathy, touch-spell delivery, dismissal, and carried-item cleanup need a summoned-companion/character-sheet owner before battle-runtime promotion.",
-  ],
-  [
     "identify",
     "Magic item property discovery, Attunement and charge knowledge, ongoing-spell identification, and object/creature investigation are exploration/item-inspection effects outside promoted runtime owners.",
   ],
@@ -196,7 +192,6 @@ const battleRuntimeRelevantCatalogOnlySpellUnitIds = new Set([
   "detect_evil_and_good",
   "detect_magic",
   "detect_poison_and_disease",
-  "find_familiar",
   "minor_illusion",
 ]);
 
