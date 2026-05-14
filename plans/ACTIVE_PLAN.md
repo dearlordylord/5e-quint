@@ -166,7 +166,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 294,
       "id": "SRDINV76E",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Research Pact of the Chain Familiar Boundary"
     },
     {
@@ -230,7 +230,7 @@ Keep it synchronized with the DAG table and task details.
 | 291   | SRDINV74D - Promote Weapon Mastery Cleave Runtime                       | done | SRDINV74B | SRDINV78 | [Cleave and Topple research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV74B_CLEAVE_TOPPLE_SPLIT_RESEARCH.md), [Cleave](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md), [Weapon Mastery](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                       | Completed: promoted Cleave as an optional once-per-turn selected-weapon mastery rider using caller/table-supplied second-target adjacency/reach facts, same-weapon extra attack damage without a positive ability modifier, negative ability modifier preservation, and selected-weapon/support-profile gates.                                             |
 | 292   | SRDINV76C - Promote Armor of Shadows Spell Access                       | done | SRDINV76A | SRDINV78 | [SRDINV76A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76A_WARLOCK_LEVEL_1_INVOCATION_BOUNDARY_RESEARCH.md), [Armor of Shadows](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Mage Armor](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-M-P.md), [Pact Magic](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                    | Promote selected Armor of Shadows as self-only Mage Armor Spell Access that spends no Spell Slot and reuses the existing Mage Armor persistent armor spell procedure.                                                                                                             |
 | 293   | SRDINV76D - Promote Eldritch Mind Concentration Save Advantage          | done | SRDINV76A | SRDINV78 | [SRDINV76A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76A_WARLOCK_LEVEL_1_INVOCATION_BOUNDARY_RESEARCH.md), [Eldritch Mind](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Concentration](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Saving Throw](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                | Completed: promoted selected Eldritch Mind invocation ownership into battle state and projects Advantage only on damage-triggered Concentration maintenance Saving Throw holes, leaving ordinary Constitution Saving Throws and other Saving Throws unaffected.                                                                  |
-| 294   | SRDINV76E - Research Pact of the Chain Familiar Boundary                | ready-for-research                            | SRDINV76A | SRDINV78 | [SRDINV76A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76A_WARLOCK_LEVEL_1_INVOCATION_BOUNDARY_RESEARCH.md), [Pact of the Chain](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Find Familiar](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Magic Action](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                        | Research how Pact of the Chain grants Find Familiar access, special forms, no-slot Magic action casting, and the familiar Reaction attack boundary without duplicating companion runtime state.                                                              |
+| 294   | SRDINV76E - Research Pact of the Chain Familiar Boundary                | done                                          | SRDINV76A | SRDINV78 | [SRDINV76E research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76E_PACT_OF_THE_CHAIN_FAMILIAR_BOUNDARY_RESEARCH.md), [SRDINV76A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76A_WARLOCK_LEVEL_1_INVOCATION_BOUNDARY_RESEARCH.md), [Pact of the Chain](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Find Familiar](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Magic Action](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                | Completed: split Pact of the Chain into Find Familiar Spell Access plus companion runtime ownership; recommended no-slot Magic-action access, form references, and a later atomic Warlock attack-forgo plus familiar Reaction attack procedure without duplicating familiar state. |
 | 295   | SRDINV76F - Research Pact of the Tome Spell Access Boundary             | ready-for-research                            | SRDINV76A | SRDINV78 | [SRDINV76A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76A_WARLOCK_LEVEL_1_INVOCATION_BOUNDARY_RESEARCH.md), [Pact of the Tome](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Ritual](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Spellcasting Focus](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                  | Research how Book of Shadows grants selected cantrips and level-1 Ritual spell access while the book is on the Warlock's person, without duplicating selected spell lists.                                                                                  |
 
 ## Task Details
@@ -851,29 +851,27 @@ changes; MBT only if Concentration save sequencing changes require it.
 
 ### Task 294 - SRDINV76E - Research Pact of the Chain Familiar Boundary
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV76A
 
 Blocks: SRDINV78
 
 Research / plan:
+[SRDINV76E research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76E_PACT_OF_THE_CHAIN_FAMILIAR_BOUNDARY_RESEARCH.md),
 [SRDINV76A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76A_WARLOCK_LEVEL_1_INVOCATION_BOUNDARY_RESEARCH.md),
 [Pact of the Chain](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md),
 [Find Familiar](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
 [Magic Action](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
 [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
 
-Scope: decide how selected `pact_of_the_chain` grants Find Familiar Spell
-Access, no-slot Magic action casting, special familiar form choices, and the
-Warlock-forgoes-one-Attack-action-attack-to-grant-familiar-Reaction-attack
-boundary. Keep familiar initiative, action ownership, disappearance, and
-one-familiar replacement in the companion runtime owner rather than duplicating
-companion state in Warlock feature state.
-
-Out of scope: implementing familiar runtime behavior in the research task,
-promoting generic companion state, and treating Find Familiar authored content
-alone as Pact of the Chain runtime support.
+Completed: decided that selected `pact_of_the_chain` projects Find Familiar
+Spell Access with a Magic-action, no-Spell-Slot invocation mode and form
+eligibility override, while familiar identity, chosen form stats, Initiative,
+actions, Reaction, disappearance, dismissal, and one-familiar replacement
+belong to a companion runtime owner. The familiar attack exception should be a
+later atomic companion-command procedure that spends one Warlock Attack-action
+attack opportunity and the familiar's Reaction together.
 
 Verification: RAW/source review for Pact of the Chain, Find Familiar, Magic
 Action, Attack action, Reaction, and companion vocabulary; produce a short
