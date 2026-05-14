@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple spell.invocation-marked-damage-rider
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.invocation-marked-damage-rider
 import type {
   BattleFill,
   BattleCreatureState,
@@ -754,6 +754,95 @@ describe("Character Build battle projection", () => {
       ability: "con",
       dc: { kind: "fixed", dc: difficultyClass(12) },
       targetIds: [targetId],
+    });
+  });
+
+  test("projects selected Weapon Mastery Cleave into battle decision holes", () => {
+    const fighterId = combatantId("weapon-mastery-cleave-fighter");
+    const targetId = combatantId("weapon-mastery-cleave-target");
+    const state = expectRight(
+      startBattleFromCharacterBuildAndStatBlock({
+        battleId: battleId("character-battle-weapon-mastery-cleave"),
+        character: {
+          combatantId: fighterId,
+          characterId: characterId("character:weapon-mastery-cleave-fighter"),
+          displayName: "Weapon Mastery Cleave Fighter",
+          build: weaponMasteryGreataxeFighterBuild(),
+          initiative: initiativeScore(20),
+          side: battleCombatantSide("party"),
+        },
+        statBlockBattleInput: {
+          combatantId: targetId,
+          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          initiative: initiativeScore(10),
+          side: battleCombatantSide("monsters"),
+        },
+        unitLibrary,
+      }),
+    );
+    const fighter = state.combatants.get(fighterId);
+    expect(fighter?.origin).toMatchObject({
+      kind: "character",
+      weaponMasteries: [{ weaponUnitId: "weapon_greataxe" }],
+      characterUnitRefs: expect.arrayContaining([
+        {
+          unitId: "mastery_cleave",
+          supportProfiles: ["weaponMasteryCleave"],
+        },
+      ]),
+    });
+
+    const subject = {
+      tag: "action" as const,
+      actorId: fighterId,
+      action: "attack" as const,
+      attackName: "Greataxe",
+    };
+    const meleeReachFact = {
+      kind: "attackTargetInMeleeReach" as const,
+      actorId: fighterId,
+      targetId,
+      attackName: "Greataxe",
+    };
+    const target = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const attackRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFill(target, targetId, [meleeReachFact])],
+      }),
+      "attackRoll",
+    );
+    const damageRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(target, targetId, [meleeReachFact]),
+          attackRollFill(attackRoll, { total: 15, naturalD20: 10 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    const cleaveDecision = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(target, targetId, [meleeReachFact]),
+          attackRollFill(attackRoll, { total: 15, naturalD20: 10 }),
+          rolledDiceFill(damageRoll, 1),
+        ],
+      }),
+      "unitFeatureDecision",
+    );
+
+    expect(cleaveDecision).toMatchObject({
+      unitFeature: { unitId: "mastery_cleave", label: "Cleave" },
+      choices: ["use", "decline"],
     });
   });
 
@@ -1844,6 +1933,33 @@ function weaponMasteryQuarterstaffFighterBuild(): CharacterBuild {
       loadout: {
         weapon: {
           itemId: quarterstaffItemId,
+          grip: "one_handed",
+        },
+      },
+    },
+  };
+}
+
+function weaponMasteryGreataxeFighterBuild(): CharacterBuild {
+  const greataxeItemId = characterEquipmentItemId({
+    slot: "main",
+    unitId: expectRight(characterEquipmentItemUnitId("weapon_greataxe")),
+  });
+
+  return {
+    ...defenseBuild({ wearingArmor: false }),
+    features: [
+      {
+        selectedFromUnitId: "fighter_weapon_mastery",
+        kind: "selectedClassChoice",
+        unitId: "weapon_greataxe",
+      },
+    ],
+    equipment: {
+      owned: [{ itemId: greataxeItemId, unitId: "weapon_greataxe" }],
+      loadout: {
+        weapon: {
+          itemId: greataxeItemId,
           grip: "one_handed",
         },
       },

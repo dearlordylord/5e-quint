@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-object-light spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-object-light spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 import type {
   ActionEconomyState,
   RuntimeActionResource,
@@ -345,7 +345,10 @@ export {
   attackFillSet,
   validateUniqueAttackTargetRangeFacts,
 } from "./battle-reducer/attack-fill-set.ts";
-export { resolveAttack } from "./battle-reducer/attack-main.ts";
+export {
+  resolveAttack,
+  resolveWeaponMasteryCleaveContinuation,
+} from "./battle-reducer/attack-main.ts";
 export {
   resolveMartialArtsBonusUnarmedStrike,
   resolveOffHandAttack,
@@ -776,6 +779,13 @@ export type BattleInterruptedProcedure =
       readonly kind: "afterDamageSequence";
       readonly subject: BattleSubject;
       readonly events: readonly BattleAfterDamageEvent[];
+    }
+  | {
+      readonly kind: "weaponMasteryCleave";
+      readonly subject: BattleAttackHostSubject;
+      readonly firstTargetId: CombatantId;
+      readonly attack: SupportedAttackActionOption;
+      readonly fills: readonly BattleFill[];
     }
   | {
       readonly kind: "movement";
@@ -1221,6 +1231,12 @@ export type BattleTargetSpatialFact =
       readonly actorId: CombatantId;
       readonly targetId: CombatantId;
       readonly attackName: string;
+    }
+  | {
+      readonly kind: "cleaveSecondTargetWithin5FeetOfFirstTarget";
+      readonly attackerId: CombatantId;
+      readonly firstTargetId: CombatantId;
+      readonly secondTargetId: CombatantId;
     }
   | {
       readonly kind: "attackTargetInRangedRange";
@@ -2235,6 +2251,7 @@ export type BattleTurnResources = ActionEconomyState & {
   readonly attackRollMadeThisTurn: boolean;
   readonly attackDamageRidersUsedThisTurn: readonly AttackDamageRiderUsage[];
   readonly weaponDamageDiceRollChoicesUsedThisTurn: readonly WeaponDamageDiceRollChoiceUsage[];
+  readonly weaponMasteryCleaveAttackersUsedThisTurn: readonly CombatantId[];
   readonly pendingAttackRollMissToHitReplacementSelection?: PendingAttackRollMissToHitReplacementSelection;
   readonly lightWeaponAttackMade?: {
     readonly weaponItemId: string;
@@ -3016,6 +3033,17 @@ export type BattleUnitFeatureRollHole = Extract<
         readonly modifierKind: BattleReactionModifierChoice["kind"];
       };
 };
+export type BattleUnitFeatureDecisionHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "unitFeatureDecision";
+  readonly label: string;
+  readonly unitFeature: {
+    readonly unitId: UnitRecord["id"];
+    readonly label: string;
+  };
+  readonly choices: readonly ["use", "decline"];
+};
 export type BattleDeathSavingThrowHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -3137,6 +3165,7 @@ export type BattleHole =
   | BattleGreaseGroundHazardSavingThrowOutcomeHole
   | BattleUnitFeatureSavingThrowOutcomeHole
   | BattleUnitFeatureRollHole
+  | BattleUnitFeatureDecisionHole
   | BattleDeathSavingThrowHole
   | BattleStatBlockRechargeRollHole
   | BattleConcentrationSavingThrowHole
@@ -3200,6 +3229,11 @@ export type BattleFill =
       readonly kind: "commandOptionChoice";
       readonly holeId: BattleHoleId;
       readonly value: BattleCommandOption;
+    }
+  | {
+      readonly kind: "unitFeatureDecision";
+      readonly holeId: BattleHoleId;
+      readonly value: "use" | "decline";
     }
   | {
       readonly kind: "heldObjectFacts";
@@ -3541,6 +3575,7 @@ export type BattleTurnSnapshot = {
   readonly attackRollMadeThisTurn: boolean;
   readonly attackDamageRidersUsedThisTurn: readonly AttackDamageRiderUsage[];
   readonly weaponDamageDiceRollChoicesUsedThisTurn: readonly WeaponDamageDiceRollChoiceUsage[];
+  readonly weaponMasteryCleaveAttackersUsedThisTurn: readonly CombatantId[];
   readonly lightWeaponAttackMade?: {
     readonly weaponItemId: string;
   };

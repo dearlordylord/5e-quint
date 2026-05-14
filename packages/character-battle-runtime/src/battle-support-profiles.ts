@@ -23,6 +23,7 @@ type CharacterBattleWeaponMasterySelection = NonNullable<
 const BATTLE_SUPPORTED_MASTERY_UNIT_IDS: Partial<
   Record<WeaponMasteryName, UnitRecord["id"]>
 > = {
+  cleave: "mastery_cleave",
   sap: "mastery_sap",
   topple: "mastery_topple",
 };

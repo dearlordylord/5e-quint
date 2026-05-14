@@ -23,6 +23,7 @@ export const BATTLE_TRACE_HOLE_KINDS = [
   "statBlockRechargeRoll",
   "concentrationSavingThrow",
   "reactionDecision",
+  "unitFeatureDecision",
   "movement",
   "abilityCheck",
   "grappleOutcome",

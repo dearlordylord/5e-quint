@@ -79,6 +79,7 @@ import mageArmorInput from "../../content/mage_armor.json";
 import magicMissileInput from "../../content/magic_missile.json";
 import massCureWoundsInput from "../../content/mass_cure_wounds.json";
 import massHealingWordInput from "../../content/mass_healing_word.json";
+import masteryCleaveInput from "../../content/mastery_cleave.json";
 import masterySapInput from "../../content/mastery_sap.json";
 import masteryToppleInput from "../../content/mastery_topple.json";
 import minorIllusionInput from "../../content/minor_illusion.json";
@@ -125,6 +126,7 @@ import warlockEldritchInvocationsInput from "../../content/warlock_eldritch_invo
 import viciousMockeryInput from "../../content/vicious_mockery.json";
 import weaponDaggerInput from "../../content/weapon_dagger.json";
 import weaponFlailInput from "../../content/weapon_flail.json";
+import weaponGreataxeInput from "../../content/weapon_greataxe.json";
 import weaponLongswordInput from "../../content/weapon_longsword.json";
 import weaponQuarterstaffInput from "../../content/weapon_quarterstaff.json";
 import weaponShortbowInput from "../../content/weapon_shortbow.json";
@@ -296,6 +298,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     rangerRovingInput,
     rangerWeaponMasteryInput,
     rogueWeaponMasteryInput,
+    masteryCleaveInput,
     masterySapInput,
     masteryToppleInput,
     orcAdrenalineRushInput,
@@ -362,6 +365,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     armorChainMailInput,
     equipmentShieldInput,
     weaponDaggerInput,
+    weaponGreataxeInput,
     weaponLongswordInput,
     weaponSpearInput,
     weaponFlailInput,

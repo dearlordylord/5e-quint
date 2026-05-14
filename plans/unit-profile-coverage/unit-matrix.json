@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 355,
-      "numerator": 106,
-      "percent": "29.9%"
+      "numerator": 107,
+      "percent": "30.1%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 422,
-      "numerator": 131,
-      "percent": "31%"
+      "numerator": 133,
+      "percent": "31.5%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,47 +59,47 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 132
+      "value": 134
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 70,
+      "denominator": 71,
       "numerator": 64,
-      "percent": "91.4%"
+      "percent": "90.1%"
     },
     "profileClassificationCoverage": {
-      "denominator": 132,
-      "numerator": 132,
+      "denominator": 134,
+      "numerator": 134,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 55,
-      "numerator": 55,
+      "denominator": 56,
+      "numerator": 56,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 55,
-      "numerator": 54,
+      "denominator": 56,
+      "numerator": 55,
       "percent": "98.2%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 55,
-      "numerator": 55,
+      "denominator": 56,
+      "numerator": 56,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 55,
-      "numerator": 55,
+      "denominator": 56,
+      "numerator": 56,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 70,
+      "denominator": 71,
       "numerator": 10,
-      "percent": "14.3%"
+      "percent": "14.1%"
     },
     "supportedProfileCoverage": {
-      "denominator": 107,
-      "numerator": 70,
-      "percent": "65.4%"
+      "denominator": 108,
+      "numerator": 71,
+      "percent": "65.7%"
     }
   },
   "metricSemantics": [
@@ -761,6 +761,36 @@
         "SRDINV74C"
       ],
       "title": "Weapon Mastery Topple optionally forces a Constitution save and applies Prone on failure",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/index.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.weapon-mastery-cleave",
+      "profileKind": "persistent-effect",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "Battle init receives selected weapon mastery weapon-kind choices from character creation; runtime gates Cleave on the selected weapon kind, the attacked weapon's authored Cleave mastery property, the mastery_cleave support profile, table-supplied second-target adjacency/reach facts, and the once-per-turn attacker resource. Cleave damage reuses the same weapon damage projection while suppressing positive ability modifiers and preserving negative modifiers.",
+      "taskRefs": [
+        "SRDINV74D"
+      ],
+      "title": "Weapon Mastery Cleave optionally grants one extra melee weapon attack against an adjacent second creature once per turn",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -2970,6 +3000,22 @@
         "unit-feature.weapon-mastery-topple"
       ],
       "taskId": "SRDINV74C"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Cleave's selected weapon mastery gate, optional on-hit second-target choice, adjacency/reach fact gate, same-weapon extra attack, negative-only ability modifier damage rule, and once-per-turn limit.",
+      "profileIds": [
+        "unit-feature.weapon-mastery-cleave"
+      ],
+      "taskId": "SRDINV74D"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime and character-battle-runtime tests cover CharacterBuild selected Greataxe/Cleave projection into battle support refs, selected Cleave weapon hit decision and target holes, table-supplied second-target adjacency/reach facts, same-weapon attack and damage rolls, positive ability modifier suppression, negative ability modifier preservation, missing selected weapon mastery rejection, missing Cleave support rejection, ineligible second-target rejection, and once-per-turn rejection.",
+      "profileIds": [
+        "unit-feature.weapon-mastery-cleave"
+      ],
+      "taskId": "SRDINV74D"
     },
     {
       "claimKind": "qnt-proof",
@@ -5300,6 +5346,60 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/rogue_weapon_mastery.json",
       "unitId": "rogue_weapon_mastery"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "unit-feature.weapon-mastery-cleave"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "mastery",
+      "profiles": [
+        {
+          "id": "unit-feature.weapon-mastery-cleave",
+          "profileKind": "persistent-effect",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "Battle init receives selected weapon mastery weapon-kind choices from character creation; runtime gates Cleave on the selected weapon kind, the attacked weapon's authored Cleave mastery property, the mastery_cleave support profile, table-supplied second-target adjacency/reach facts, and the once-per-turn attacker resource. Cleave damage reuses the same weapon damage projection while suppressing positive ability modifiers and preserving negative modifiers.",
+          "taskRefs": [
+            "SRDINV74D"
+          ],
+          "title": "Weapon Mastery Cleave optionally grants one extra melee weapon attack against an adjacent second creature once per turn",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/mastery_cleave.json",
+      "unitId": "mastery_cleave"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -9772,6 +9872,24 @@
       "executableMechanics": false,
       "kind": "weapon",
       "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_greataxe.json",
+      "unitId": "weapon_greataxe"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
       "sourceRecordPath": "packages/surface/content/weapon_longsword.json",
       "unitId": "weapon_longsword"
     },
@@ -13272,24 +13390,6 @@
       "authoredSurfaceDuplicateIdCount": 1,
       "catalogAdmission": {
         "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "mastery",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/mastery_cleave.json",
-      "unitId": "mastery_cleave"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
           "category": "srd-candidate",
           "planningLane": "QMBT14-QMBT16",
           "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
@@ -14581,24 +14681,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/weapon_glaive.json",
       "unitId": "weapon_glaive"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "non-runtime-authored-data",
-          "planningLane": "no promoted runtime lane",
-          "reason": "Authored SRD data has no mechanics payload, so catalog absence is not promoted runtime execution pressure."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": false,
-      "kind": "weapon",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/weapon_greataxe.json",
-      "unitId": "weapon_greataxe"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

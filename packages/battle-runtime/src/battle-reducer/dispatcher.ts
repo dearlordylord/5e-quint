@@ -199,6 +199,7 @@ import {
   readiedMovementInitialHoles,
   readiedSpellInitialHoles,
   resolveAttack,
+  resolveWeaponMasteryCleaveContinuation,
   resolveBonusActionStandardAction,
   resolveDash,
   resolveDisengage,
@@ -2522,6 +2523,19 @@ export function resumeInterruptedProcedure(
           : suppressedReactionTrigger,
     });
   }
+  if (continuation.kind === "weaponMasteryCleave") {
+    return resolveWeaponMasteryCleaveContinuation({
+      state,
+      subject: continuation.subject,
+      firstTargetId: continuation.firstTargetId,
+      attack: continuation.attack,
+      fills: continuation.fills,
+      suppressedReactionTrigger:
+        suppressedReactionTrigger === "afterDamage"
+          ? undefined
+          : suppressedReactionTrigger,
+    });
+  }
   if (continuation.kind === "movement") {
     const nextState = applyBattleMovement(state, continuation.movement);
     return {
@@ -2604,32 +2618,23 @@ export function resumeInterruptedProcedure(
       continuation.weaponDamageDiceRollChoice,
       continuation.concentrationSavingThrow,
     );
-    const reactionWindow = maybeOpenReactionWindow(
-      damagedState,
-      {
-        trigger: "afterDamage",
-        damageSourceId: continuation.attackerId,
-        damagedId: continuation.targetId,
-        damageAmount,
-        reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
-          facts: attackDamageContinuationTargetSpatialFacts(continuation),
-          damagedId: continuation.targetId,
+    return openAfterDamageSequenceReactionWindow({
+      state: damagedState,
+      subject: continuation.subject,
+      events: [
+        {
           damageSourceId: continuation.attackerId,
-        }),
-        continuation: {
-          kind: "resolved",
-          subject: continuation.subject,
+          damagedId: continuation.targetId,
+          damageAmount,
+          reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
+            facts: attackDamageContinuationTargetSpatialFacts(continuation),
+            damagedId: continuation.targetId,
+            damageSourceId: continuation.attackerId,
+          }),
         },
-      },
+      ],
       suppressedReactionTrigger,
-    );
-    return (
-      reactionWindow ?? {
-        tag: "resolved",
-        state: damagedState,
-        snapshot: snapshotBattle(damagedState),
-      }
-    );
+    });
   }
 
   return resolveReplayContinuationFromState(
@@ -3080,6 +3085,8 @@ export function battleTurnSnapshot(
     attackDamageRidersUsedThisTurn: resources.attackDamageRidersUsedThisTurn,
     weaponDamageDiceRollChoicesUsedThisTurn:
       resources.weaponDamageDiceRollChoicesUsedThisTurn,
+    weaponMasteryCleaveAttackersUsedThisTurn:
+      resources.weaponMasteryCleaveAttackersUsedThisTurn,
     ...(resources.lightWeaponAttackMade === undefined
       ? {}
       : { lightWeaponAttackMade: resources.lightWeaponAttackMade }),

@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points
@@ -24,7 +24,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-object-light
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.reaction-hellish-rebuke spell.invocation-damage-save-or-attack
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave
 module battleRuntime {
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
@@ -701,6 +701,8 @@ module battleRuntime {
     fighterExtraAttackSlotsRemaining: int,
     fighterLongswordSapMastery: bool,
     fighterQuarterstaffToppleMastery: bool,
+    fighterGreataxeCleaveMastery: bool,
+    fighterCleaveExtraAttackUsedThisTurn: bool,
   }
 
   type ActionSurgeResult = {
@@ -819,6 +821,8 @@ module battleRuntime {
     fighterExtraAttackSlotsRemaining: 0,
     fighterLongswordSapMastery: false,
     fighterQuarterstaffToppleMastery: false,
+    fighterGreataxeCleaveMastery: false,
+    fighterCleaveExtraAttackUsedThisTurn: false,
   }
 
   // The battle runtime receives Initiative counts and the caller-resolved
@@ -1401,6 +1405,7 @@ module battleRuntime {
       legendaryActionWindowConsumed: false,
       fighterSneakAttackUsedThisTurn: false,
       fighterExtraAttackSlotsRemaining: battleRuntimeExtraAttackSlotsAfterEndTurn(spellDurationAdvanced.fighterExtraAttackSlotsRemaining),
+      fighterCleaveExtraAttackUsedThisTurn: false,
     }
   }
 
@@ -1821,6 +1826,40 @@ module battleRuntime {
     toppleSaveSucceeded: bool,
   ): BattleState =
     resolveAttackAtBarbarianLevelWithToppleChoice(state, attackTotal, naturalD20, damageRoll, concentrationSaveSucceeded, 1, OrdinaryDamage, forceToppleSave, toppleSaveSucceeded)
+
+  pure def cleaveSecondHitDamage(weaponDamageRoll: int, attackAbilityModifier: int): int =
+    weaponDamageRoll + (if (attackAbilityModifier < 0) attackAbilityModifier else 0)
+
+  pure def resolveAttackWithCleaveChoice(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: FighterWeaponAttackDamageRoll,
+    concentrationSaveSucceeded: bool,
+    useCleave: bool,
+    cleaveSecondTargetEligible: bool,
+    cleaveAttackTotal: int,
+    cleaveNaturalD20: int,
+    cleaveDamageRoll: int,
+    attackAbilityModifier: int,
+  ): BattleState = {
+    val primary = resolveAttack(state, attackTotal, naturalD20, damageRoll, concentrationSaveSucceeded)
+    val cleaveAvailable =
+      state.fighterGreataxeCleaveMastery and
+      not(state.fighterCleaveExtraAttackUsedThisTurn) and
+      attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), fighterCriticalThreshold(state))
+    if (
+      cleaveAvailable and
+      useCleave and
+      cleaveSecondTargetEligible and
+      attackHits(cleaveAttackTotal, cleaveNaturalD20, combatantArmorClass(state.goblin), fighterCriticalThreshold(state))
+    )
+      { ...primary, goblin: applyDamageFromSource(primary.goblin, cleaveSecondHitDamage(cleaveDamageRoll, attackAbilityModifier), if (attackIsCritical(cleaveNaturalD20, fighterCriticalThreshold(state))) 2 else 1, true, OrdinaryDamage, Fighter), fighterCleaveExtraAttackUsedThisTurn: true }
+    else if (cleaveAvailable and useCleave and cleaveSecondTargetEligible)
+      { ...primary, fighterCleaveExtraAttackUsedThisTurn: true }
+    else
+      primary
+  }
 
   pure def resolveAttackKnockOut(
     state: BattleState,
@@ -8451,6 +8490,35 @@ module battleRuntime {
     all {
       assert(not(notMasteredHit.goblin.prone)),
       assert(not(masteredMiss.goblin.prone)),
+    }
+  }
+
+  run test_weapon_mastery_cleave_applies_second_hit_weapon_damage_without_positive_ability_modifier = {
+    val mastered = { ...initialState, fighterGreataxeCleaveMastery: true }
+    val result = resolveAttackWithCleaveChoice(mastered, 15, 10, fighterWeaponAttackDamageRoll(1), true, true, true, 15, 10, 4, 3)
+    all {
+      assert(result.goblin.hp == 2),
+      assert(result.fighterCleaveExtraAttackUsedThisTurn),
+    }
+  }
+
+  run test_weapon_mastery_cleave_preserves_negative_ability_modifier = {
+    val mastered = { ...initialState, fighterGreataxeCleaveMastery: true }
+    val result = resolveAttackWithCleaveChoice(mastered, 15, 10, fighterWeaponAttackDamageRoll(4), true, true, true, 15, 10, 4, -1)
+    assert(result.goblin.hp == 0)
+  }
+
+  run test_weapon_mastery_cleave_is_gated_by_hit_eligibility_and_once_per_turn = {
+    val mastered = { ...initialState, fighterGreataxeCleaveMastery: true }
+    val notMastered = resolveAttackWithCleaveChoice(initialState, 15, 10, fighterWeaponAttackDamageRoll(1), true, true, true, 15, 10, 4, 3)
+    val primaryMiss = resolveAttackWithCleaveChoice(mastered, 1, 1, fighterWeaponAttackDamageRoll(1), true, true, true, 15, 10, 4, 3)
+    val ineligibleSecondTarget = resolveAttackWithCleaveChoice(mastered, 15, 10, fighterWeaponAttackDamageRoll(1), true, true, false, 15, 10, 4, 3)
+    val alreadyUsed = resolveAttackWithCleaveChoice({ ...mastered, fighterCleaveExtraAttackUsedThisTurn: true }, 15, 10, fighterWeaponAttackDamageRoll(1), true, true, true, 15, 10, 4, 3)
+    all {
+      assert(notMastered.goblin.hp == 6),
+      assert(primaryMiss.goblin.hp == 10),
+      assert(ineligibleSecondTarget.goblin.hp == 6),
+      assert(alreadyUsed.goblin.hp == 6),
     }
   }
 

@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement
 import { Match } from "effect";
 import * as Either from "effect/Either";
 import {
@@ -69,6 +69,7 @@ export const BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE =
   "bardicInspirationGrant";
 export const WEAPON_MASTERY_SAP_SUPPORT_PROFILE = "weaponMasterySap";
 export const WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE = "weaponMasteryTopple";
+export const WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE = "weaponMasteryCleave";
 const BARDIC_INSPIRATION_RANGE_FEET = 60;
 export const ALTERNATE_ACTION_COST_ACTIONS = [
   "dash",
@@ -97,6 +98,7 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE,
   WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
   WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
+  WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
 ] as const;
 export type BattlePassiveSpeedBonusSupportProfile = {
@@ -481,6 +483,18 @@ export function battleUnitSupportProfilesForUnit(input: {
   }
   if (weaponMasteryToppleSupport !== null) {
     supportProfiles.push(weaponMasteryToppleSupport);
+  }
+
+  const weaponMasteryCleaveSupport = battleWeaponMasteryCleaveSupportForUnit(
+    input.unit,
+  );
+  if (weaponMasteryCleaveSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Weapon Mastery Cleave Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (weaponMasteryCleaveSupport !== null) {
+    supportProfiles.push(weaponMasteryCleaveSupport);
   }
 
   return Either.right(supportProfiles);
@@ -1245,6 +1259,11 @@ export type BattleWeaponMasterySapSupport =
 
 export type BattleWeaponMasteryToppleSupport =
   | typeof WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE
+  | "unsupported"
+  | null;
+
+export type BattleWeaponMasteryCleaveSupport =
+  | typeof WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE
   | "unsupported"
   | null;
 
@@ -2248,6 +2267,35 @@ export function battleWeaponMasteryToppleSupportForUnit(
     unit.mechanics.effect.kind === "save_gate"
     ? "unsupported"
     : null;
+}
+
+export function battleWeaponMasteryCleaveSupportForUnit(
+  unit: UnitRecord,
+): BattleWeaponMasteryCleaveSupport {
+  if (unit.kind !== "mastery") {
+    return null;
+  }
+  if (
+    unit.mechanics.family !== "on_hit_trigger" ||
+    unit.mechanics.effect.kind !== "grant_weapon_attack" ||
+    !("usageLimit" in unit.mechanics)
+  ) {
+    return null;
+  }
+  const supported =
+    unit.mechanics.trigger.kind === "weapon_hit_melee_only" &&
+    unit.mechanics.optional === true &&
+    unit.mechanics.effect.attackKind === "melee_weapon_attack" &&
+    unit.mechanics.effect.secondaryTarget.kind === "adjacent_to_primary" &&
+    unit.mechanics.effect.secondaryTarget.constraint ===
+      "within_5ft_and_reach" &&
+    unit.mechanics.effect.onHit.kind === "weapon_damage" &&
+    unit.mechanics.effect.onHit.abilityModifier === "negative_only" &&
+    unit.mechanics.usageLimit.kind === "once_per_turn";
+  if (supported) {
+    return WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE;
+  }
+  return "unsupported";
 }
 
 function parseBardicInspirationGrantUnitFeatureProfile(

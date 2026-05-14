@@ -71,6 +71,35 @@ export const WEAPON_MASTERY_TOPPLE_SAVE_HOLE_ID = holeId(
 export const WEAPON_MASTERY_TOPPLE_SAVE_HOLE_INSTANCE = holeInstanceKey(
   "battle:weapon-mastery-topple:save",
 );
+export const WEAPON_MASTERY_CLEAVE_DECISION_HOLE_ID = holeId(
+  "battle:weapon-mastery-cleave:decision",
+);
+export const WEAPON_MASTERY_CLEAVE_DECISION_HOLE_INSTANCE = holeInstanceKey(
+  "battle:weapon-mastery-cleave:decision",
+);
+export const WEAPON_MASTERY_CLEAVE_TARGET_HOLE_ID = holeId(
+  "battle:weapon-mastery-cleave:target",
+);
+export const WEAPON_MASTERY_CLEAVE_TARGET_HOLE_INSTANCE = holeInstanceKey(
+  "battle:weapon-mastery-cleave:target",
+);
+export const WEAPON_MASTERY_CLEAVE_ATTACK_ROLL_HOLE_ID = holeId(
+  "battle:weapon-mastery-cleave:attack-roll",
+);
+export const WEAPON_MASTERY_CLEAVE_ATTACK_ROLL_HOLE_INSTANCE = holeInstanceKey(
+  "battle:weapon-mastery-cleave:attack-roll",
+);
+export const WEAPON_MASTERY_CLEAVE_DAMAGE_HOLE_ID = holeId(
+  "battle:weapon-mastery-cleave:damage",
+);
+export const WEAPON_MASTERY_CLEAVE_DAMAGE_HOLE_INSTANCE = holeInstanceKey(
+  "battle:weapon-mastery-cleave:damage",
+);
+export const WEAPON_MASTERY_CLEAVE_DAMAGE_DISPOSITION_HOLE_ID = holeId(
+  "battle:weapon-mastery-cleave:damage-disposition",
+);
+export const WEAPON_MASTERY_CLEAVE_DAMAGE_DISPOSITION_HOLE_INSTANCE =
+  holeInstanceKey("battle:weapon-mastery-cleave:damage-disposition");
 export const PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES = [
   "aberration",
   "celestial",

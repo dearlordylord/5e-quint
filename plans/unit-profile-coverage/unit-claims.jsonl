@@ -56,6 +56,7 @@
 {"unitId":"ranger_roving","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["unit-feature.passive-speed-kind-grants"],"rawRequirementIds":["RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}}
 {"unitId":"mastery_sap","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["unit-feature.weapon-mastery-sap"],"rawRequirementIds":["RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}}
 {"unitId":"mastery_topple","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["unit-feature.weapon-mastery-topple"],"rawRequirementIds":["RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}}
+{"unitId":"mastery_cleave","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["unit-feature.weapon-mastery-cleave"],"rawRequirementIds":["RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}}
 {"unitId":"orc_adrenaline_rush","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["unit-feature.bonus-action-dash-temporary-hit-points"],"rawRequirementIds":["RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}}
 {"unitId":"orc_darkvision","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Sense grant is authored data with no promoted execution profile."}}
 {"unitId":"orc_relentless_endurance","collectionId":"srd-5.2.1","claim":{"tag":"supported-profile","profileIds":["unit-feature.zero-hit-point-replacement"],"rawRequirementIds":["RAW-QCORE9-UNIT-FEATURE-PROFILES-001"]}}
@@ -121,6 +122,7 @@
 {"unitId":"equipment_shield","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Shield equipment AC data is authored but not represented as an executable Unit profile row."}}
 {"unitId":"weapon_dagger","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix."}}
 {"unitId":"weapon_longsword","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix."}}
+{"unitId":"weapon_greataxe","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix."}}
 {"unitId":"weapon_spear","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix."}}
 {"unitId":"weapon_flail","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix."}}
 {"unitId":"weapon_quarterstaff","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix."}}

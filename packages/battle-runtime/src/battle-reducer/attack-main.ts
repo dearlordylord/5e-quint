@@ -1,7 +1,7 @@
 // Main Attack action resolution extracted from attack-resolution.ts.
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 
@@ -22,9 +22,16 @@ import {
   attackRollModeWithOptionalOngoingFeature,
   attackRollOngoingFeatureActivationProfile,
   attackRollOngoingFeatureActivations,
+  weaponMasteryCleaveAttackRollHole,
+  weaponMasteryCleaveDamageHole,
+  weaponMasteryCleaveDecisionHole,
+  weaponMasteryCleaveExtraAttack,
+  weaponMasteryCleaveTargetHole,
+  weaponMasteryCleaveTargetIsLegal,
   applyWeaponMasteryToppleSavingThrow,
   applyWeaponMasterySapOnHit,
   consumeHelpAttackForAttackRoll,
+  recordWeaponMasteryCleaveUsed,
   recordAttackRollOngoingFeatures,
   requiredAttackRollMode,
   weaponMasteryToppleSavingThrowHole,
@@ -60,6 +67,7 @@ import {
   attackFillsThroughAttackRoll,
   maybeOpenReactionWindow,
   resolveAttackDamageReductionZeroDamageRedirectAfterReduction,
+  resumeInterruptedProcedure,
   snapshotBattle,
 } from "./dispatcher.ts";
 
@@ -77,7 +85,12 @@ import {
 } from "./movement-speed.ts";
 
 import { attackFillSet } from "./attack-fill-set.ts";
+import {
+  WEAPON_MASTERY_CLEAVE_DAMAGE_DISPOSITION_HOLE_ID,
+  WEAPON_MASTERY_CLEAVE_DAMAGE_DISPOSITION_HOLE_INSTANCE,
+} from "./domain-constants.ts";
 import { invalidResult } from "./result-helpers.ts";
+import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 
 import {
   attackCanCarryKnockOutChoice,
@@ -94,7 +107,14 @@ import type {
   AttackBattleResolutionInput,
   BattleAttackHostSubject,
   BattleAttackDamageEvent,
+  BattleAfterDamageEvent,
+  BattleAttackDamagePrefixFill,
+  BattleCreatureState,
+  BattleFill,
+  BattleInterruptedProcedure,
   BattleResolutionResult,
+  BattleState,
+  AttackFillSet,
 } from "../battle-reducer.ts";
 import type { SupportedAttackActionOption } from "../battle-action-options.ts";
 import {
@@ -103,6 +123,7 @@ import {
   criticalThresholdForAttack,
   needsAttackDamageConcentrationResult,
   spendAttackAction,
+  validateRolledDiceForWeaponAttack,
   validateAttackDamageFill,
 } from "./attack-resolution.ts";
 
@@ -537,7 +558,7 @@ export function resolveSelectedAttackProcedure(
     });
     const damageDispositionValidation = damageDispositionFillValidation({
       hole: damageDispositionHole,
-      filled: fillSet.damageDispositionFilled,
+      filled: primaryDamageDispositionFilled(fillSet),
       value: fillSet.damageDisposition,
     });
     if (damageDispositionValidation !== null) {
@@ -548,7 +569,7 @@ export function resolveSelectedAttackProcedure(
       );
     }
     if (damageDispositionHole !== null) {
-      if (!fillSet.damageDispositionFilled) {
+      if (!primaryDamageDispositionFilled(fillSet)) {
         return needsHolesResult(hitAppliedState, input.subject, [
           damageDispositionHole,
         ]);
@@ -566,7 +587,7 @@ export function resolveSelectedAttackProcedure(
           damageEvent: reducedDamageEventAfterSpellReduction,
           fills: attackDamagePrefixFills(input.fills),
           deathFailuresAtZeroHp: critical ? 2 : 1,
-          damageDisposition: fillSet.damageDisposition,
+          damageDisposition: primaryAttackDamageDisposition(fillSet),
           attackDamageRiders: [],
         },
       },
@@ -590,8 +611,15 @@ export function resolveSelectedAttackProcedure(
       spellReduction.target,
       reducedFixedDamageAmount,
     );
+    const primaryConcentrationSavingThrow =
+      concentrationSave === null
+        ? undefined
+        : concentrationSavingThrowFillFor(
+            fillSet.concentrationSavingThrows,
+            concentrationSave,
+          );
     if (concentrationSave !== null) {
-      if (fillSet.concentrationSavingThrow === undefined) {
+      if (primaryConcentrationSavingThrow === undefined) {
         return needsAttackDamageConcentrationResult({
           state: sapRedirectState,
           subject: input.subject,
@@ -604,22 +632,16 @@ export function resolveSelectedAttackProcedure(
             damageEvent: reducedDamageEventAfterSpellReduction,
             fills: attackDamagePrefixFills(input.fills),
             deathFailuresAtZeroHp: critical ? 2 : 1,
-            damageDisposition: fillSet.damageDisposition,
+            damageDisposition: primaryAttackDamageDisposition(fillSet),
             attackDamageRiders: [],
           },
           concentrationSave,
         });
       }
-      if (
-        fillSet.concentrationSavingThrow.holeId !== concentrationSave.holeId
-      ) {
-        return invalidResult(
-          input.state,
-          "invalidFill",
-          "Concentration Saving Throw fill does not match the damaged target.",
-        );
-      }
-    } else if (fillSet.concentrationSavingThrow !== undefined) {
+    } else if (
+      fillSet.concentrationSavingThrow !== undefined &&
+      fillSet.weaponMasteryCleaveDamageRoll === undefined
+    ) {
       return invalidResult(
         input.state,
         "invalidFill",
@@ -636,7 +658,7 @@ export function resolveSelectedAttackProcedure(
         fillSet.damageDisposition,
         [],
         undefined,
-        fillSet.concentrationSavingThrow,
+        primaryConcentrationSavingThrow,
       ),
       input.subject.actorId,
       attack,
@@ -644,29 +666,47 @@ export function resolveSelectedAttackProcedure(
     if (spent.tag === "invalid") {
       return spent;
     }
-    const reactionWindow = maybeOpenReactionWindow(
+    const primaryAfterDamageEvent = {
+      damageSourceId: input.subject.actorId,
+      damagedId: target.combatantId,
+      damageAmount: toDamageAmount(reducedFixedDamageAmount),
+      reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
+        facts: fillSet.targetSpatialFacts,
+        damagedId: target.combatantId,
+        damageSourceId: input.subject.actorId,
+      }),
+    } satisfies BattleAfterDamageEvent;
+    const primaryAfterDamageReactionWindow = maybeOpenReactionWindow(
       spent.state,
       {
         trigger: "afterDamage",
-        damageSourceId: input.subject.actorId,
-        damagedId: target.combatantId,
-        damageAmount: toDamageAmount(reducedFixedDamageAmount),
-        reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
-          facts: fillSet.targetSpatialFacts,
-          damagedId: target.combatantId,
-          damageSourceId: input.subject.actorId,
-        }),
-        continuation: {
-          kind: "resolved",
+        ...primaryAfterDamageEvent,
+        continuation: weaponMasteryCleaveAfterPrimaryDamageContinuation({
+          state: spent.state,
           subject: input.subject,
-        },
+          firstTargetId: target.combatantId,
+          attack,
+          fills: input.fills,
+          fillSet,
+          primaryConcentrationSavingThrow,
+        }),
       },
       input.suppressedReactionTrigger,
     );
-    if (reactionWindow !== null) {
-      return reactionWindow;
+    if (primaryAfterDamageReactionWindow !== null) {
+      return primaryAfterDamageReactionWindow;
     }
-    return spent;
+    return resolveWeaponMasteryCleaveContinuation({
+      state: spent.state,
+      subject: input.subject,
+      firstTargetId: target.combatantId,
+      attack,
+      fills: cleaveFillsAfterPrimaryDamage(
+        input.fills,
+        primaryConcentrationSavingThrow,
+      ),
+      suppressedReactionTrigger: input.suppressedReactionTrigger,
+    });
   }
   if (hit && fillSet.damageRoll == null) {
     return needsHolesResult(hitAppliedState, input.subject, [
@@ -796,7 +836,7 @@ export function resolveSelectedAttackProcedure(
     });
     const damageDispositionValidation = damageDispositionFillValidation({
       hole: damageDispositionHole,
-      filled: fillSet.damageDispositionFilled,
+      filled: primaryDamageDispositionFilled(fillSet),
       value: fillSet.damageDisposition,
     });
     if (damageDispositionValidation !== null) {
@@ -807,7 +847,7 @@ export function resolveSelectedAttackProcedure(
       );
     }
     if (damageDispositionHole !== null) {
-      if (!fillSet.damageDispositionFilled) {
+      if (!primaryDamageDispositionFilled(fillSet)) {
         return needsHolesResult(hitAppliedState, input.subject, [
           damageDispositionHole,
         ]);
@@ -825,7 +865,7 @@ export function resolveSelectedAttackProcedure(
           damageEvent: reducedDamageEventAfterSpellReduction,
           fills: attackDamagePrefixFills(input.fills),
           deathFailuresAtZeroHp: critical ? 2 : 1,
-          damageDisposition: fillSet.damageDisposition,
+          damageDisposition: primaryAttackDamageDisposition(fillSet),
           attackDamageRiders: selectedDamageRiders,
           ...(selectedDamageDiceChoice === null
             ? {}
@@ -852,8 +892,15 @@ export function resolveSelectedAttackProcedure(
       spellReduction.target,
       reducedDamageAmount,
     );
+    const primaryConcentrationSavingThrow =
+      concentrationSave === null
+        ? undefined
+        : concentrationSavingThrowFillFor(
+            fillSet.concentrationSavingThrows,
+            concentrationSave,
+          );
     if (concentrationSave !== null) {
-      if (fillSet.concentrationSavingThrow === undefined) {
+      if (primaryConcentrationSavingThrow === undefined) {
         return needsAttackDamageConcentrationResult({
           state: sapRedirectState,
           subject: input.subject,
@@ -866,7 +913,7 @@ export function resolveSelectedAttackProcedure(
             damageEvent: reducedDamageEventAfterSpellReduction,
             fills: attackDamagePrefixFills(input.fills),
             deathFailuresAtZeroHp: critical ? 2 : 1,
-            damageDisposition: fillSet.damageDisposition,
+            damageDisposition: primaryAttackDamageDisposition(fillSet),
             attackDamageRiders: selectedDamageRiders,
             ...(selectedDamageDiceChoice === null
               ? {}
@@ -875,16 +922,10 @@ export function resolveSelectedAttackProcedure(
           concentrationSave,
         });
       }
-      if (
-        fillSet.concentrationSavingThrow.holeId !== concentrationSave.holeId
-      ) {
-        return invalidResult(
-          input.state,
-          "invalidFill",
-          "Concentration Saving Throw fill does not match the damaged target.",
-        );
-      }
-    } else if (fillSet.concentrationSavingThrow !== undefined) {
+    } else if (
+      fillSet.concentrationSavingThrow !== undefined &&
+      fillSet.weaponMasteryCleaveDamageRoll === undefined
+    ) {
       return invalidResult(
         input.state,
         "invalidFill",
@@ -901,7 +942,7 @@ export function resolveSelectedAttackProcedure(
         fillSet.damageDisposition,
         selectedDamageRiders,
         selectedDamageDiceChoice ?? undefined,
-        fillSet.concentrationSavingThrow,
+        primaryConcentrationSavingThrow,
       ),
       input.subject.actorId,
       attack,
@@ -909,29 +950,47 @@ export function resolveSelectedAttackProcedure(
     if (spent.tag === "invalid") {
       return spent;
     }
-    const reactionWindow = maybeOpenReactionWindow(
+    const primaryAfterDamageEvent = {
+      damageSourceId: input.subject.actorId,
+      damagedId: target.combatantId,
+      damageAmount: toDamageAmount(reducedDamageAmount),
+      reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
+        facts: fillSet.targetSpatialFacts,
+        damagedId: target.combatantId,
+        damageSourceId: input.subject.actorId,
+      }),
+    } satisfies BattleAfterDamageEvent;
+    const primaryAfterDamageReactionWindow = maybeOpenReactionWindow(
       spent.state,
       {
         trigger: "afterDamage",
-        damageSourceId: input.subject.actorId,
-        damagedId: target.combatantId,
-        damageAmount: toDamageAmount(reducedDamageAmount),
-        reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
-          facts: fillSet.targetSpatialFacts,
-          damagedId: target.combatantId,
-          damageSourceId: input.subject.actorId,
-        }),
-        continuation: {
-          kind: "resolved",
+        ...primaryAfterDamageEvent,
+        continuation: weaponMasteryCleaveAfterPrimaryDamageContinuation({
+          state: spent.state,
           subject: input.subject,
-        },
+          firstTargetId: target.combatantId,
+          attack,
+          fills: input.fills,
+          fillSet,
+          primaryConcentrationSavingThrow,
+        }),
       },
       input.suppressedReactionTrigger,
     );
-    if (reactionWindow !== null) {
-      return reactionWindow;
+    if (primaryAfterDamageReactionWindow !== null) {
+      return primaryAfterDamageReactionWindow;
     }
-    return spent;
+    return resolveWeaponMasteryCleaveContinuation({
+      state: spent.state,
+      subject: input.subject,
+      firstTargetId: target.combatantId,
+      attack,
+      fills: cleaveFillsAfterPrimaryDamage(
+        input.fills,
+        primaryConcentrationSavingThrow,
+      ),
+      suppressedReactionTrigger: input.suppressedReactionTrigger,
+    });
   }
 
   return spendAttackProcedure(
@@ -950,5 +1009,578 @@ export function resolveSelectedAttackProcedure(
       : attackRolledState,
     input.subject.actorId,
     attack,
+  );
+}
+
+export function resolveWeaponMasteryCleaveContinuation(input: {
+  readonly state: BattleState;
+  readonly subject: BattleAttackHostSubject;
+  readonly firstTargetId: BattleCreatureState["combatantId"];
+  readonly attack: SupportedAttackActionOption;
+  readonly fills: readonly BattleFill[];
+  readonly suppressedReactionTrigger: AttackProcedureResolutionInput["suppressedReactionTrigger"];
+}): BattleResolutionResult {
+  const fillSet = attackFillSet(input.fills);
+  if (fillSet.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", fillSet.message);
+  }
+  const cleaveResolved = resolveWeaponMasteryCleaveAfterPrimaryDamage({
+    state: input.state,
+    subject: input.subject,
+    firstTargetId: input.firstTargetId,
+    attack: input.attack,
+    fills: input.fills,
+    fillSet,
+    suppressedReactionTrigger: input.suppressedReactionTrigger,
+  });
+  return cleaveResolved.tag === "ok"
+    ? {
+        tag: "resolved",
+        state: cleaveResolved.state,
+        snapshot: snapshotBattle(cleaveResolved.state),
+      }
+    : cleaveResolved.result;
+}
+
+function weaponMasteryCleaveAfterPrimaryDamageContinuation(input: {
+  readonly state: BattleState;
+  readonly subject: BattleAttackHostSubject;
+  readonly firstTargetId: BattleCreatureState["combatantId"];
+  readonly attack: SupportedAttackActionOption;
+  readonly fills: readonly BattleFill[];
+  readonly fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>;
+  readonly primaryConcentrationSavingThrow:
+    | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
+    | undefined;
+}): BattleInterruptedProcedure {
+  const decisionHole = weaponMasteryCleaveDecisionHole(
+    input.state,
+    input.subject.actorId,
+    input.firstTargetId,
+    input.attack,
+  );
+  return decisionHole === null && cleaveFillIsAbsent(input.fillSet)
+    ? { kind: "resolved", subject: input.subject }
+    : {
+        kind: "weaponMasteryCleave",
+        subject: input.subject,
+        firstTargetId: input.firstTargetId,
+        attack: input.attack,
+        fills: cleaveFillsAfterPrimaryDamage(
+          input.fills,
+          input.primaryConcentrationSavingThrow,
+        ),
+      };
+}
+
+function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
+  readonly state: BattleState;
+  readonly subject: BattleAttackHostSubject;
+  readonly firstTargetId: BattleCreatureState["combatantId"];
+  readonly attack: SupportedAttackActionOption;
+  readonly fills: readonly BattleFill[];
+  readonly fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>;
+  readonly suppressedReactionTrigger: AttackProcedureResolutionInput["suppressedReactionTrigger"];
+}):
+  | { readonly tag: "ok"; readonly state: BattleState }
+  | { readonly tag: "result"; readonly result: BattleResolutionResult } {
+  const decisionHole = weaponMasteryCleaveDecisionHole(
+    input.state,
+    input.subject.actorId,
+    input.firstTargetId,
+    input.attack,
+  );
+  if (decisionHole === null) {
+    return cleaveFillIsAbsent(input.fillSet)
+      ? { tag: "ok", state: input.state }
+      : {
+          tag: "result",
+          result: invalidResult(
+            input.state,
+            "invalidFill",
+            "Weapon Mastery Cleave is only valid for an eligible Cleave weapon hit.",
+          ),
+        };
+  }
+  if (input.fillSet.weaponMasteryCleaveDecision === undefined) {
+    return {
+      tag: "result",
+      result: needsHolesResult(input.state, input.subject, [decisionHole]),
+    };
+  }
+  if (
+    input.fillSet.weaponMasteryCleaveDecision.holeId !== decisionHole.holeId
+  ) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Weapon Mastery Cleave decision uses the wrong hole.",
+      ),
+    };
+  }
+  if (input.fillSet.weaponMasteryCleaveDecision.value === "decline") {
+    return cleaveAttackFillIsAbsent(input.fillSet)
+      ? { tag: "ok", state: input.state }
+      : {
+          tag: "result",
+          result: invalidResult(
+            input.state,
+            "invalidFill",
+            "Weapon Mastery Cleave attack fills require using Cleave.",
+          ),
+        };
+  }
+  if (input.attack.kind !== "weapon") {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Weapon Mastery Cleave requires a weapon attack.",
+      ),
+    };
+  }
+  const cleaveAttack = weaponMasteryCleaveExtraAttack(input.attack);
+  if (input.fillSet.weaponMasteryCleaveTarget === undefined) {
+    return {
+      tag: "result",
+      result: needsHolesResult(input.state, input.subject, [
+        weaponMasteryCleaveTargetHole(
+          input.state,
+          input.subject.actorId,
+          input.firstTargetId,
+        ),
+      ]),
+    };
+  }
+  const secondTargetId = input.fillSet.weaponMasteryCleaveTarget.value;
+  const cleaveTargetFacts =
+    input.fillSet.weaponMasteryCleaveTarget.spatialFacts ?? [];
+  if (
+    !weaponMasteryCleaveTargetIsLegal({
+      state: input.state,
+      attackerId: input.subject.actorId,
+      firstTargetId: input.firstTargetId,
+      secondTargetId,
+      attack: cleaveAttack,
+      targetSpatialFacts: cleaveTargetFacts,
+    })
+  ) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Weapon Mastery Cleave second target must be within 5 feet of the first target and within the attacker's reach.",
+      ),
+    };
+  }
+  if (input.fillSet.weaponMasteryCleaveAttackRoll === undefined) {
+    return {
+      tag: "result",
+      result: needsHolesResult(input.state, input.subject, [
+        weaponMasteryCleaveAttackRollHole(
+          input.state,
+          input.subject.actorId,
+          secondTargetId,
+          cleaveAttack,
+          cleaveTargetFacts,
+        ),
+      ]),
+    };
+  }
+  const requiredRollMode = requiredAttackRollMode(
+    input.state,
+    input.subject.actorId,
+    secondTargetId,
+    cleaveAttack,
+    cleaveTargetFacts,
+  );
+  if (
+    !attackRollResultIsValid(input.fillSet.weaponMasteryCleaveAttackRoll.value)
+  ) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Weapon Mastery Cleave attack roll must be a valid attack roll.",
+      ),
+    };
+  }
+  if (
+    !attackRollModeMatches(
+      input.fillSet.weaponMasteryCleaveAttackRoll.value,
+      requiredRollMode,
+    )
+  ) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Weapon Mastery Cleave attack roll mode does not match current Advantage and Disadvantage sources.",
+      ),
+    };
+  }
+  const secondTarget = input.state.combatants.get(secondTargetId);
+  if (secondTarget === undefined) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Weapon Mastery Cleave second target is no longer in this battle.",
+      ),
+    };
+  }
+  const cleaveCriticalThreshold = criticalThresholdForAttack(
+    input.state.combatants.get(input.subject.actorId),
+    cleaveAttack,
+  );
+  const ordinaryCleaveHit = attackRollHitsWithCriticalThreshold(
+    input.fillSet.weaponMasteryCleaveAttackRoll.value,
+    currentArmorClass(activeEffectArmorClass(secondTarget)),
+    cleaveCriticalThreshold,
+  );
+  const cleaveMissToHitReplacement = selectedAttackRollMissToHitReplacement({
+    state: input.state,
+    subject: input.subject,
+    attackerId: input.subject.actorId,
+    targetId: secondTargetId,
+    attackRoll: input.fillSet.weaponMasteryCleaveAttackRoll.value,
+    ordinaryHit: ordinaryCleaveHit,
+  });
+  if (
+    input.fillSet.weaponMasteryCleaveAttackRoll.value
+      .missToHitReplacementUnitId !== undefined &&
+    cleaveMissToHitReplacement === null
+  ) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        ordinaryCleaveHit
+          ? "Attack-roll miss-to-hit replacement can only be selected after a miss."
+          : "Attack-roll miss-to-hit replacement is not available for this attack roll.",
+      ),
+    };
+  }
+  const cleaveHit = ordinaryCleaveHit || cleaveMissToHitReplacement !== null;
+  const cleaveAttackRolledState = recordAttackRollMissToHitReplacementUsed(
+    consumeHelpAttackForAttackRoll(
+      recordAttackRollOngoingFeatures(
+        revealHidden(input.state, input.subject.actorId),
+        input.subject.actorId,
+        secondTargetId,
+        null,
+      ),
+      input.subject.actorId,
+      secondTargetId,
+    ),
+    input.subject.actorId,
+    cleaveMissToHitReplacement,
+    {
+      subject: input.subject,
+      targetId: secondTargetId,
+      attackRoll: input.fillSet.weaponMasteryCleaveAttackRoll.value,
+    },
+  );
+  const cleaveCritical = attackRollIsCriticalHit(
+    input.fillSet.weaponMasteryCleaveAttackRoll.value,
+    cleaveCriticalThreshold,
+  );
+  if (cleaveHit && input.suppressedReactionTrigger !== "attackHit") {
+    const attackHitReactionWindow = maybeOpenReactionWindow(
+      cleaveAttackRolledState,
+      {
+        trigger: "attackHit",
+        attackerId: input.subject.actorId,
+        targetId: secondTargetId,
+        attackRoll: input.fillSet.weaponMasteryCleaveAttackRoll.value,
+        attackKind: attackKindForDeflectRedirect(cleaveAttack),
+        attackHitTriggerKind: attackHitTriggerKind(cleaveAttack),
+        damageTypes: attackPotentialDamageTypes(
+          cleaveAttack,
+          cleaveCritical,
+          input.fillSet.weaponMasteryCleaveAttackRoll.value,
+          [],
+          [],
+          [],
+        ),
+        continuation: {
+          kind: "weaponMasteryCleave",
+          subject: input.subject,
+          firstTargetId: input.firstTargetId,
+          attack: input.attack,
+          fills: cleaveFillsThroughAttackRoll(input.fills, input.fillSet),
+        },
+      },
+      input.suppressedReactionTrigger,
+    );
+    if (attackHitReactionWindow !== null) {
+      return { tag: "result", result: attackHitReactionWindow };
+    }
+  }
+  if (!cleaveHit) {
+    return input.fillSet.weaponMasteryCleaveDamageRoll === undefined
+      ? {
+          tag: "ok",
+          state: recordWeaponMasteryCleaveUsed(
+            cleaveAttackRolledState,
+            input.subject.actorId,
+          ),
+        }
+      : {
+          tag: "result",
+          result: invalidResult(
+            input.state,
+            "invalidFill",
+            "Weapon Mastery Cleave damage can only be filled after a hit.",
+          ),
+        };
+  }
+  if (input.fillSet.weaponMasteryCleaveDamageRoll === undefined) {
+    return {
+      tag: "result",
+      result: needsHolesResult(cleaveAttackRolledState, input.subject, [
+        weaponMasteryCleaveDamageHole(
+          cleaveAttack,
+          cleaveCritical,
+          input.fillSet.weaponMasteryCleaveAttackRoll.value,
+        ),
+      ]),
+    };
+  }
+  const damageValidation = validateRolledDiceForWeaponAttack(
+    input.fillSet.weaponMasteryCleaveDamageRoll.value,
+    cleaveAttack,
+    cleaveCritical,
+    input.fillSet.weaponMasteryCleaveAttackRoll.value,
+    [],
+    [],
+    [],
+  );
+  if (damageValidation !== null) {
+    return {
+      tag: "result",
+      result: invalidResult(input.state, "invalidFill", damageValidation),
+    };
+  }
+  const damageByType = attackDamageByTypeEntries(
+    cleaveAttackRolledState.combatants.get(input.subject.actorId),
+    cleaveAttack,
+    input.fillSet.weaponMasteryCleaveDamageRoll,
+    cleaveCritical,
+    input.fillSet.weaponMasteryCleaveAttackRoll.value,
+  );
+  const damageEvent = {
+    kind: "rolledDamage" as const,
+    damageRollByType: damageByType,
+  } satisfies BattleAttackDamageEvent;
+  const cleaveDamageAmount = attackDamageEventAmountForTarget(
+    secondTarget,
+    damageEvent,
+  );
+  const cleaveConcentrationSave = concentrationSavingThrowHole(
+    secondTarget,
+    cleaveDamageAmount,
+  );
+  const cleaveConcentrationSavingThrow =
+    cleaveConcentrationSave === null
+      ? undefined
+      : concentrationSavingThrowFillFor(
+          input.fillSet.concentrationSavingThrows,
+          cleaveConcentrationSave,
+        );
+  const cleaveConcentrationValidation = cleaveConcentrationFillValidation({
+    concentrationSave: cleaveConcentrationSave,
+    concentrationSavingThrow: cleaveConcentrationSavingThrow,
+    concentrationSavingThrows: input.fillSet.concentrationSavingThrows,
+  });
+  if (cleaveConcentrationValidation !== null) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        cleaveConcentrationValidation,
+      ),
+    };
+  }
+  const cleaveDamageDispositionHole = weaponMasteryCleaveDamageDispositionHole({
+    attack: cleaveAttack,
+    attackerId: input.subject.actorId,
+    target: secondTarget,
+    damageAmount: cleaveDamageAmount,
+  });
+  const cleaveDamageDispositionValidation = damageDispositionFillValidation({
+    hole: cleaveDamageDispositionHole,
+    filled: input.fillSet.weaponMasteryCleaveDamageDispositionFilled,
+    value: input.fillSet.weaponMasteryCleaveDamageDisposition,
+  });
+  if (cleaveDamageDispositionValidation !== null) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        cleaveDamageDispositionValidation,
+      ),
+    };
+  }
+  if (
+    cleaveDamageDispositionHole !== null &&
+    !input.fillSet.weaponMasteryCleaveDamageDispositionFilled
+  ) {
+    return {
+      tag: "result",
+      result: needsHolesResult(cleaveAttackRolledState, input.subject, [
+        cleaveDamageDispositionHole,
+      ]),
+    };
+  }
+  const cleaveUsedState = recordWeaponMasteryCleaveUsed(
+    cleaveAttackRolledState,
+    input.subject.actorId,
+  );
+  const cleaveDamagePrefixFills = [
+    input.fillSet.weaponMasteryCleaveTarget,
+    input.fillSet.weaponMasteryCleaveAttackRoll,
+    input.fillSet.weaponMasteryCleaveDamageRoll,
+  ] as const satisfies readonly BattleAttackDamagePrefixFill[];
+  const continuation = {
+    kind: "attackDamage" as const,
+    subject: input.subject,
+    attackerId: input.subject.actorId,
+    targetId: secondTargetId,
+    damageEvent,
+    fills: cleaveDamagePrefixFills,
+    deathFailuresAtZeroHp: cleaveCritical ? (2 as const) : (1 as const),
+    damageDisposition: input.fillSet.weaponMasteryCleaveDamageDisposition,
+    attackDamageRiders: [],
+  };
+  const attackDamageReactionWindow = maybeOpenReactionWindow(
+    cleaveUsedState,
+    {
+      trigger: "attackDamage",
+      continuation,
+    },
+    input.suppressedReactionTrigger,
+  );
+  if (attackDamageReactionWindow !== null) {
+    return { tag: "result", result: attackDamageReactionWindow };
+  }
+  return {
+    tag: "result",
+    result: resumeInterruptedProcedure(
+      cleaveUsedState,
+      {
+        ...continuation,
+        ...(cleaveConcentrationSavingThrow === undefined
+          ? {}
+          : { concentrationSavingThrow: cleaveConcentrationSavingThrow }),
+      },
+      input.suppressedReactionTrigger ?? "attackDamage",
+    ),
+  };
+}
+
+function cleaveFillIsAbsent(
+  fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>,
+): boolean {
+  return (
+    fillSet.weaponMasteryCleaveDecision === undefined &&
+    cleaveAttackFillIsAbsent(fillSet)
+  );
+}
+
+function weaponMasteryCleaveDamageDispositionHole(
+  input: Parameters<typeof attackDamageDispositionHole>[0],
+): ReturnType<typeof attackDamageDispositionHole> {
+  const hole = attackDamageDispositionHole(input);
+  return hole === null
+    ? null
+    : {
+        ...hole,
+        holeId: WEAPON_MASTERY_CLEAVE_DAMAGE_DISPOSITION_HOLE_ID,
+        holeInstanceKey: WEAPON_MASTERY_CLEAVE_DAMAGE_DISPOSITION_HOLE_INSTANCE,
+      };
+}
+
+function primaryDamageDispositionFilled(
+  fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>,
+): boolean {
+  return fillSet.damageDispositionFilled;
+}
+
+function primaryAttackDamageDisposition(
+  fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>,
+) {
+  return primaryDamageDispositionFilled(fillSet)
+    ? fillSet.damageDisposition
+    : ({ kind: "ordinaryDamage" } as const);
+}
+
+function cleaveFillsThroughAttackRoll(
+  fills: readonly BattleFill[],
+  fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>,
+): readonly BattleFill[] {
+  return fills.filter(
+    (fill) =>
+      fill !== fillSet.weaponMasteryCleaveDamageRoll &&
+      fill.kind !== "attackDamageDisposition",
+  );
+}
+
+function cleaveFillsAfterPrimaryDamage(
+  fills: readonly BattleFill[],
+  primaryConcentrationSavingThrow:
+    | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
+    | undefined,
+): readonly BattleFill[] {
+  return primaryConcentrationSavingThrow === undefined
+    ? fills
+    : fills.filter((fill) => fill !== primaryConcentrationSavingThrow);
+}
+
+function cleaveConcentrationFillValidation(input: {
+  readonly concentrationSave: ReturnType<typeof concentrationSavingThrowHole>;
+  readonly concentrationSavingThrow:
+    | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
+    | undefined;
+  readonly concentrationSavingThrows: readonly Extract<
+    BattleFill,
+    { readonly kind: "concentrationSavingThrow" }
+  >[];
+}): string | null {
+  if (input.concentrationSave === null) {
+    return input.concentrationSavingThrows.length === 0
+      ? null
+      : "Concentration Saving Throw fill is only valid for a concentrating damaged target.";
+  }
+  if (input.concentrationSavingThrow === undefined) {
+    return input.concentrationSavingThrows.length === 0
+      ? null
+      : "Concentration Saving Throw fill does not match the damaged target.";
+  }
+  return input.concentrationSavingThrows.every(
+    (fill) => fill === input.concentrationSavingThrow,
+  )
+    ? null
+    : "Concentration Saving Throw fill does not match the damaged target.";
+}
+
+function cleaveAttackFillIsAbsent(
+  fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>,
+): boolean {
+  return (
+    fillSet.weaponMasteryCleaveTarget === undefined &&
+    fillSet.weaponMasteryCleaveAttackRoll === undefined &&
+    fillSet.weaponMasteryCleaveDamageRoll === undefined &&
+    !fillSet.weaponMasteryCleaveDamageDispositionFilled
   );
 }

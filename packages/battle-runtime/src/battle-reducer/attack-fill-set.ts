@@ -2,23 +2,28 @@
 // Owns classification of attack fills and the uniqueness invariant for attack target range facts.
 
 import {
-ATTACK_DAMAGE_DISPOSITION_HOLE_ID,
-ATTACK_ROLL_HOLE_ID,
-ATTACK_TARGET_HOLE_ID,
-type AttackFillSet,
-type BattleAttackDamageDisposition,
-type BattleAttackRollResult,
-type BattleFill,
-type BattleRolledDiceFill,
-type BattleTargetSpatialFact,
+  ATTACK_DAMAGE_DISPOSITION_HOLE_ID,
+  ATTACK_ROLL_HOLE_ID,
+  ATTACK_TARGET_HOLE_ID,
+  type AttackFillSet,
+  type BattleAttackDamageDisposition,
+  type BattleAttackRollResult,
+  type BattleFill,
+  type BattleRolledDiceFill,
+  type BattleTargetSpatialFact,
 } from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
 import { isSpellDamageReductionRollFill } from "./damage-helpers.ts";
 import {
-ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_DAMAGE_HOLE_ID,
-ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SAVE_HOLE_ID,
-ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_TARGET_HOLE_ID,
-WEAPON_MASTERY_TOPPLE_SAVE_HOLE_ID,
+  ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_DAMAGE_HOLE_ID,
+  ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SAVE_HOLE_ID,
+  ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_TARGET_HOLE_ID,
+  WEAPON_MASTERY_TOPPLE_SAVE_HOLE_ID,
+  WEAPON_MASTERY_CLEAVE_ATTACK_ROLL_HOLE_ID,
+  WEAPON_MASTERY_CLEAVE_DAMAGE_DISPOSITION_HOLE_ID,
+  WEAPON_MASTERY_CLEAVE_DAMAGE_HOLE_ID,
+  WEAPON_MASTERY_CLEAVE_DECISION_HOLE_ID,
+  WEAPON_MASTERY_CLEAVE_TARGET_HOLE_ID,
 } from "./domain-constants.ts";
 
 export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
@@ -28,10 +33,18 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
   let concentrationSavingThrow:
     | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
     | undefined;
+  const concentrationSavingThrows: Extract<
+    BattleFill,
+    { readonly kind: "concentrationSavingThrow" }
+  >[] = [];
   let damageDisposition: BattleAttackDamageDisposition = {
     kind: "ordinaryDamage",
   };
   let damageDispositionFilled = false;
+  let weaponMasteryCleaveDamageDisposition: BattleAttackDamageDisposition = {
+    kind: "ordinaryDamage",
+  };
+  let weaponMasteryCleaveDamageDispositionFilled = false;
   let damageRoll: BattleRolledDiceFill | undefined;
   let spellDamageReductionRoll: BattleRolledDiceFill | undefined;
   let attackDamageReductionRedirectTarget:
@@ -44,7 +57,45 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
   let weaponMasteryToppleSavingThrow:
     | Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>
     | undefined;
+  let weaponMasteryCleaveDecision:
+    | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
+    | undefined;
+  let weaponMasteryCleaveTarget:
+    | Extract<BattleFill, { readonly kind: "targetChoice" }>
+    | undefined;
+  let weaponMasteryCleaveAttackRoll:
+    | Extract<BattleFill, { readonly kind: "attackRoll" }>
+    | undefined;
+  let weaponMasteryCleaveDamageRoll: BattleRolledDiceFill | undefined;
   for (const fill of fills) {
+    if (
+      fill.kind === "unitFeatureDecision" &&
+      fill.holeId === WEAPON_MASTERY_CLEAVE_DECISION_HOLE_ID
+    ) {
+      if (weaponMasteryCleaveDecision !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Weapon Mastery Cleave decision was filled twice.",
+        };
+      }
+      weaponMasteryCleaveDecision = fill;
+      continue;
+    }
+
+    if (
+      fill.kind === "targetChoice" &&
+      fill.holeId === WEAPON_MASTERY_CLEAVE_TARGET_HOLE_ID
+    ) {
+      if (weaponMasteryCleaveTarget !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Weapon Mastery Cleave target was filled twice.",
+        };
+      }
+      weaponMasteryCleaveTarget = fill;
+      continue;
+    }
+
     if (fill.kind === "targetChoice" && fill.holeId === ATTACK_TARGET_HOLE_ID) {
       if (targetId !== undefined) {
         return { tag: "invalid", message: "Attack target was filled twice." };
@@ -79,6 +130,20 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
         return { tag: "invalid", message: "Attack roll was filled twice." };
       }
       attackRoll = fill.value;
+      continue;
+    }
+
+    if (
+      fill.kind === "attackRoll" &&
+      fill.holeId === WEAPON_MASTERY_CLEAVE_ATTACK_ROLL_HOLE_ID
+    ) {
+      if (weaponMasteryCleaveAttackRoll !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Weapon Mastery Cleave attack roll was filled twice.",
+        };
+      }
+      weaponMasteryCleaveAttackRoll = fill;
       continue;
     }
 
@@ -136,6 +201,20 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
       continue;
     }
 
+    if (
+      fill.kind === "rolledDice" &&
+      fill.holeId === WEAPON_MASTERY_CLEAVE_DAMAGE_HOLE_ID
+    ) {
+      if (weaponMasteryCleaveDamageRoll !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Weapon Mastery Cleave damage was filled twice.",
+        };
+      }
+      weaponMasteryCleaveDamageRoll = fill;
+      continue;
+    }
+
     if (fill.kind === "rolledDice") {
       if (damageRoll !== undefined) {
         return { tag: "invalid", message: "Attack damage was filled twice." };
@@ -145,32 +224,54 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     }
 
     if (fill.kind === "concentrationSavingThrow") {
-      if (concentrationSavingThrow !== undefined) {
+      if (
+        concentrationSavingThrows.some(
+          (concentrationFill) => concentrationFill.holeId === fill.holeId,
+        )
+      ) {
         return {
           tag: "invalid",
-          message: "Concentration Saving Throw was filled twice.",
+          message: "Concentration Saving Throw hole was filled twice.",
         };
       }
-      concentrationSavingThrow = fill;
+      concentrationSavingThrows.push(fill);
+      concentrationSavingThrow ??= fill;
       continue;
     }
 
     if (fill.kind === "attackDamageDisposition") {
-      if (fill.holeId !== ATTACK_DAMAGE_DISPOSITION_HOLE_ID) {
+      if (fill.holeId === ATTACK_DAMAGE_DISPOSITION_HOLE_ID) {
+        if (damageDispositionFilled) {
+          return {
+            tag: "invalid",
+            message: "Attack damage disposition was filled twice.",
+          };
+        }
+        damageDispositionFilled = true;
+        damageDisposition = fill.value;
+        continue;
+      }
+      if (fill.holeId === WEAPON_MASTERY_CLEAVE_DAMAGE_DISPOSITION_HOLE_ID) {
+        if (weaponMasteryCleaveDamageDispositionFilled) {
+          return {
+            tag: "invalid",
+            message:
+              "Weapon Mastery Cleave damage disposition was filled twice.",
+          };
+        }
+        weaponMasteryCleaveDamageDispositionFilled = true;
+        weaponMasteryCleaveDamageDisposition = fill.value;
+        continue;
+      }
+      if (
+        fill.holeId !== ATTACK_DAMAGE_DISPOSITION_HOLE_ID &&
+        fill.holeId !== WEAPON_MASTERY_CLEAVE_DAMAGE_DISPOSITION_HOLE_ID
+      ) {
         return {
           tag: "invalid",
           message: "Attack damage disposition fill uses the wrong hole.",
         };
       }
-      if (damageDispositionFilled) {
-        return {
-          tag: "invalid",
-          message: "Attack damage disposition was filled twice.",
-        };
-      }
-      damageDispositionFilled = true;
-      damageDisposition = fill.value;
-      continue;
     }
 
     return {
@@ -185,6 +286,7 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     targetSpatialFacts,
     attackRoll,
     concentrationSavingThrow,
+    concentrationSavingThrows,
     damageDisposition,
     damageDispositionFilled,
     damageRoll,
@@ -193,6 +295,12 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     attackDamageReductionRedirectSave,
     attackDamageReductionRedirectDamage,
     weaponMasteryToppleSavingThrow,
+    weaponMasteryCleaveDecision,
+    weaponMasteryCleaveTarget,
+    weaponMasteryCleaveAttackRoll,
+    weaponMasteryCleaveDamageRoll,
+    weaponMasteryCleaveDamageDisposition,
+    weaponMasteryCleaveDamageDispositionFilled,
   };
 }
 

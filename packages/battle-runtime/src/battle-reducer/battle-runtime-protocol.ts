@@ -43,6 +43,7 @@ export const INITIAL_TURN_RESOURCES = resetTurnActionEconomy({
   attackRollMadeThisTurn: false,
   attackDamageRidersUsedThisTurn: [],
   weaponDamageDiceRollChoicesUsedThisTurn: [],
+  weaponMasteryCleaveAttackersUsedThisTurn: [],
   dashMovementBonusFeet: movementFeet(0),
   disengaged: false,
 });
@@ -193,6 +194,10 @@ export type AttackFillSet =
       readonly concentrationSavingThrow:
         | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
         | undefined;
+      readonly concentrationSavingThrows: readonly Extract<
+        BattleFill,
+        { readonly kind: "concentrationSavingThrow" }
+      >[];
       readonly damageDisposition: BattleAttackDamageDisposition;
       readonly damageDispositionFilled: boolean;
       readonly damageRoll: BattleRolledDiceFill | undefined;
@@ -209,6 +214,18 @@ export type AttackFillSet =
       readonly weaponMasteryToppleSavingThrow:
         | Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>
         | undefined;
+      readonly weaponMasteryCleaveDecision:
+        | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
+        | undefined;
+      readonly weaponMasteryCleaveTarget:
+        | Extract<BattleFill, { readonly kind: "targetChoice" }>
+        | undefined;
+      readonly weaponMasteryCleaveAttackRoll:
+        | Extract<BattleFill, { readonly kind: "attackRoll" }>
+        | undefined;
+      readonly weaponMasteryCleaveDamageRoll: BattleRolledDiceFill | undefined;
+      readonly weaponMasteryCleaveDamageDisposition: BattleAttackDamageDisposition;
+      readonly weaponMasteryCleaveDamageDispositionFilled: boolean;
     }
   | { readonly tag: "invalid"; readonly message: string };
 export type GrappleFillSet =

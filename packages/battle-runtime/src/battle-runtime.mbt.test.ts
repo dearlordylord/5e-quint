@@ -3071,6 +3071,11 @@ function projectHole(hole: BattleHole): MbtHole {
   if (hole.kind === "shoveOutcome") {
     throw new Error("Battle runtime MBT does not model Shove holes.");
   }
+  if (hole.kind === "unitFeatureDecision") {
+    throw new Error(
+      "Battle runtime MBT does not model Unit Feature decision holes.",
+    );
+  }
   return Match.value(hole).pipe(
     Match.when({ kind: "targetChoice" }, () => "TargetChoice" as const),
     Match.when(

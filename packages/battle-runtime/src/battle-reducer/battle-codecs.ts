@@ -1390,6 +1390,13 @@ export const BattleHoleSchema = Schema.Union(
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
+    kind: Schema.Literal("unitFeatureDecision"),
+    label: Schema.String,
+    unitFeature: BattleRuntimeObjectSchema,
+    choices: Schema.Tuple(Schema.Literal("use"), Schema.Literal("decline")),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
     kind: Schema.Literal("deathSavingThrow"),
     label: Schema.String,
     combatantId: CombatantId,
@@ -1587,6 +1594,12 @@ type BattleFillEncoded =
             readonly actorId: string;
             readonly targetId: string;
             readonly attackName: string;
+          }
+        | {
+            readonly kind: "cleaveSecondTargetWithin5FeetOfFirstTarget";
+            readonly attackerId: string;
+            readonly firstTargetId: string;
+            readonly secondTargetId: string;
           }
         | {
             readonly kind: "attackTargetInRangedRange";
@@ -1905,6 +1918,11 @@ type BattleFillEncoded =
       readonly value: (typeof COMMAND_OPTIONS)[number];
     }
   | {
+      readonly kind: "unitFeatureDecision";
+      readonly holeId: string;
+      readonly value: "use" | "decline";
+    }
+  | {
       readonly kind: "heldObjectFacts";
       readonly holeId: string;
       readonly value: {
@@ -2117,6 +2135,14 @@ export const BattleFillSchema: Schema.Schema<
               actorId: CombatantId,
               targetId: CombatantId,
               attackName: Schema.String,
+            }),
+            Schema.Struct({
+              kind: Schema.Literal(
+                "cleaveSecondTargetWithin5FeetOfFirstTarget",
+              ),
+              attackerId: CombatantId,
+              firstTargetId: CombatantId,
+              secondTargetId: CombatantId,
             }),
             Schema.Struct({
               kind: Schema.Literal("attackTargetInRangedRange"),
@@ -2444,6 +2470,11 @@ export const BattleFillSchema: Schema.Schema<
       value: Schema.Literal(...COMMAND_OPTIONS),
     }),
     Schema.Struct({
+      kind: Schema.Literal("unitFeatureDecision"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Literal("use", "decline"),
+    }),
+    Schema.Struct({
       kind: Schema.Literal("heldObjectFacts"),
       holeId: BattleHoleIdSchema,
       value: Schema.Struct({
@@ -2747,6 +2778,7 @@ const BattleTurnSnapshotSchema = Schema.Struct({
       unitId: Schema.String,
     }),
   ),
+  weaponMasteryCleaveAttackersUsedThisTurn: Schema.Array(CombatantId),
   lightWeaponAttackMade: Schema.optionalWith(
     Schema.Struct({ weaponItemId: Schema.String }),
     { exact: true },

@@ -2,7 +2,7 @@
 // battle-reducer.ts. Cluster T (attack_roll). Mechanical extraction — no
 // behavior change. Cycle #20 resolved by importing the shared ongoing-feature
 // helpers from ./ongoing-feature-helpers.ts instead of cycling through J.
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave
 
 import {
   applyCondition,
@@ -11,11 +11,16 @@ import {
   isIncapacitated,
 } from "@dnd/shared-algebras/conditions-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { difficultyClass } from "@dnd/shared/types";
+import {
+  abilityModifier,
+  difficultyClass,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import type { BattleObjectId, CombatantId } from "../identity.ts";
 import type {
   CharacterWeaponAttackActionOption,
+  CharacterWeaponAttackAbilityChoice,
   SupportedAttackActionOption,
 } from "../battle-action-options.ts";
 import type {
@@ -26,6 +31,7 @@ import type {
 import {
   WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
   WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
+  WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
   ongoingFeatureSpellModifierSourceClassName,
 } from "../unit-feature-support.ts";
 import {
@@ -33,10 +39,13 @@ import {
   ATTACK_ROLL_HOLE_INSTANCE,
   type AttackRollFeatureActivation,
   type BattleAttackRollHole,
+  type BattleDamageRollHole,
   type BattleAttackRollResult,
   type BattleCreatureState,
   type BattleFill,
+  type BattleTargetChoiceHole,
   type BattleUnitFeatureSavingThrowOutcomeHole,
+  type BattleUnitFeatureDecisionHole,
   type BattleObjectOutline,
   type BattleState,
   type BattleTargetSpatialFact,
@@ -53,9 +62,14 @@ import {
 import {
   attackActionBonusWithPassiveFeatureBonus,
   attackActionOptionName,
+  attackTargetConstraint,
   attackRollMissToHitReplacementHolePayloadForAttacker,
 } from "./statblock-attacks.ts";
-import { attackTargetRangeBand, effectiveWalkSpeed } from "./movement-speed.ts";
+import {
+  attackTargetIsLegal,
+  attackTargetRangeBand,
+  effectiveWalkSpeed,
+} from "./movement-speed.ts";
 import {
   combatantCanSee,
   combatantInvisibleBenefitDenied,
@@ -72,13 +86,24 @@ import { battleCreatureType } from "./domain-helpers.ts";
 import {
   WEAPON_MASTERY_TOPPLE_SAVE_HOLE_ID,
   WEAPON_MASTERY_TOPPLE_SAVE_HOLE_INSTANCE,
+  WEAPON_MASTERY_CLEAVE_ATTACK_ROLL_HOLE_ID,
+  WEAPON_MASTERY_CLEAVE_ATTACK_ROLL_HOLE_INSTANCE,
+  WEAPON_MASTERY_CLEAVE_DAMAGE_HOLE_ID,
+  WEAPON_MASTERY_CLEAVE_DAMAGE_HOLE_INSTANCE,
+  WEAPON_MASTERY_CLEAVE_DECISION_HOLE_ID,
+  WEAPON_MASTERY_CLEAVE_DECISION_HOLE_INSTANCE,
+  WEAPON_MASTERY_CLEAVE_TARGET_HOLE_ID,
+  WEAPON_MASTERY_CLEAVE_TARGET_HOLE_INSTANCE,
 } from "./domain-constants.ts";
 import { combatantProficiencyBonus } from "./movement-speed.ts";
 import { savingThrowRollModeProjections } from "./spells-damage-fills.ts";
+import { weaponAttackDamageExpression } from "./statblock-attacks.ts";
 
 const WEAPON_MASTERY_SAP_UNIT_ID = "mastery_sap" satisfies UnitRecord["id"];
 const WEAPON_MASTERY_TOPPLE_UNIT_ID =
   "mastery_topple" satisfies UnitRecord["id"];
+const WEAPON_MASTERY_CLEAVE_UNIT_ID =
+  "mastery_cleave" satisfies UnitRecord["id"];
 
 export function attackRollHole(
   attacker: BattleCreatureState | undefined,
@@ -729,6 +754,206 @@ function weaponMasteryToppleApplies(
       attacker.origin.characterUnitRefs,
       WEAPON_MASTERY_TOPPLE_UNIT_ID,
       WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
+    )
+  );
+}
+
+export function weaponMasteryCleaveDecisionHole(
+  state: BattleState,
+  attackerId: CombatantId,
+  targetId: CombatantId,
+  attack: SupportedAttackActionOption,
+): BattleUnitFeatureDecisionHole | null {
+  return weaponMasteryCleaveApplies(state, attackerId, targetId, attack)
+    ? {
+        kind: "unitFeatureDecision",
+        holeId: WEAPON_MASTERY_CLEAVE_DECISION_HOLE_ID,
+        holeInstanceKey: WEAPON_MASTERY_CLEAVE_DECISION_HOLE_INSTANCE,
+        label: "Use Cleave",
+        unitFeature: {
+          unitId: WEAPON_MASTERY_CLEAVE_UNIT_ID,
+          label: "Cleave",
+        },
+        choices: ["use", "decline"],
+      }
+    : null;
+}
+
+export function weaponMasteryCleaveTargetHole(
+  state: BattleState,
+  attackerId: CombatantId,
+  firstTargetId: CombatantId,
+): BattleTargetChoiceHole {
+  return {
+    kind: "targetChoice",
+    holeId: WEAPON_MASTERY_CLEAVE_TARGET_HOLE_ID,
+    holeInstanceKey: WEAPON_MASTERY_CLEAVE_TARGET_HOLE_INSTANCE,
+    label: "Cleave second target",
+    requiresTableSpatialFact: true,
+    choices: [...state.combatants.keys()].filter(
+      (combatantId) =>
+        combatantId !== attackerId &&
+        combatantId !== firstTargetId &&
+        combatantsAreEnemies(state, attackerId, combatantId),
+    ),
+  };
+}
+
+export function weaponMasteryCleaveAttackRollHole(
+  state: BattleState,
+  attackerId: CombatantId,
+  targetId: CombatantId,
+  attack: CharacterWeaponAttackActionOption,
+  targetSpatialFacts: readonly BattleTargetSpatialFact[],
+): BattleAttackRollHole {
+  return {
+    ...attackRollHole(
+      state.combatants.get(attackerId),
+      attack,
+      requiredAttackRollMode(
+        state,
+        attackerId,
+        targetId,
+        attack,
+        targetSpatialFacts,
+      ),
+    ),
+    holeId: WEAPON_MASTERY_CLEAVE_ATTACK_ROLL_HOLE_ID,
+    holeInstanceKey: WEAPON_MASTERY_CLEAVE_ATTACK_ROLL_HOLE_INSTANCE,
+    label: "Cleave attack roll",
+  };
+}
+
+export function weaponMasteryCleaveDamageHole(
+  attack: CharacterWeaponAttackActionOption,
+  critical: boolean,
+  attackRoll: BattleAttackRollResult,
+): BattleDamageRollHole {
+  const expression = weaponAttackDamageExpression(attack, critical, attackRoll);
+  return {
+    kind: "rolledDice",
+    holeId: WEAPON_MASTERY_CLEAVE_DAMAGE_HOLE_ID,
+    holeInstanceKey: WEAPON_MASTERY_CLEAVE_DAMAGE_HOLE_INSTANCE,
+    label: `Cleave damage (${expression})`,
+    attack,
+    critical,
+  };
+}
+
+export function weaponMasteryCleaveExtraAttack(
+  attack: CharacterWeaponAttackActionOption,
+): CharacterWeaponAttackActionOption {
+  return {
+    ...attack,
+    damageAbilityModifier:
+      attack.abilityModifier < 0 ? attack.abilityModifier : abilityModifier(0),
+    ...(attack.alternateAbilityChoices === undefined
+      ? {}
+      : {
+          alternateAbilityChoices: cleaveAbilityChoices(
+            attack.alternateAbilityChoices,
+          ),
+        }),
+  };
+}
+
+function cleaveAbilityChoices(
+  choices: ReadonlyNonEmptyArray<CharacterWeaponAttackAbilityChoice>,
+): ReadonlyNonEmptyArray<CharacterWeaponAttackAbilityChoice> {
+  const [firstChoice, ...remainingChoices] = choices;
+  return [
+    cleaveAbilityChoice(firstChoice),
+    ...remainingChoices.map(cleaveAbilityChoice),
+  ];
+}
+
+function cleaveAbilityChoice(
+  choice: CharacterWeaponAttackAbilityChoice,
+): CharacterWeaponAttackAbilityChoice {
+  return {
+    ...choice,
+    damageAbilityModifier:
+      choice.abilityModifier < 0 ? choice.abilityModifier : abilityModifier(0),
+  };
+}
+
+export function weaponMasteryCleaveTargetIsLegal(input: {
+  readonly state: BattleState;
+  readonly attackerId: CombatantId;
+  readonly firstTargetId: CombatantId;
+  readonly secondTargetId: CombatantId;
+  readonly attack: CharacterWeaponAttackActionOption;
+  readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
+}): boolean {
+  return (
+    input.secondTargetId !== input.firstTargetId &&
+    attackTargetIsLegal(
+      input.state,
+      input.attackerId,
+      input.secondTargetId,
+      input.attack,
+      input.targetSpatialFacts,
+    ) &&
+    input.targetSpatialFacts.some(
+      (fact) =>
+        fact.kind === "cleaveSecondTargetWithin5FeetOfFirstTarget" &&
+        fact.attackerId === input.attackerId &&
+        fact.firstTargetId === input.firstTargetId &&
+        fact.secondTargetId === input.secondTargetId,
+    )
+  );
+}
+
+export function recordWeaponMasteryCleaveUsed(
+  state: BattleState,
+  attackerId: CombatantId,
+): BattleState {
+  return state.currentTurnResources.weaponMasteryCleaveAttackersUsedThisTurn.includes(
+    attackerId,
+  )
+    ? state
+    : {
+        ...state,
+        currentTurnResources: {
+          ...state.currentTurnResources,
+          weaponMasteryCleaveAttackersUsedThisTurn: [
+            ...state.currentTurnResources
+              .weaponMasteryCleaveAttackersUsedThisTurn,
+            attackerId,
+          ],
+        },
+      };
+}
+
+function weaponMasteryCleaveApplies(
+  state: BattleState,
+  attackerId: CombatantId,
+  targetId: CombatantId,
+  attack: SupportedAttackActionOption,
+): attack is CharacterWeaponAttackActionOption {
+  if (
+    attack.kind !== "weapon" ||
+    attack.weapon.mastery !== "cleave" ||
+    attackTargetConstraint(attack).kind !== "meleeReach"
+  ) {
+    return false;
+  }
+  const attacker = state.combatants.get(attackerId);
+  if (!isCharacterBattleCreatureState(attacker)) {
+    return false;
+  }
+  return (
+    state.combatants.has(targetId) &&
+    !state.currentTurnResources.weaponMasteryCleaveAttackersUsedThisTurn.includes(
+      attackerId,
+    ) &&
+    attacker.origin.weaponMasteries.some(
+      (mastery) => mastery.weaponUnitId === attack.weapon.id,
+    ) &&
+    unitRefSupportsProfile(
+      attacker.origin.characterUnitRefs,
+      WEAPON_MASTERY_CLEAVE_UNIT_ID,
+      WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
     )
   );
 }
