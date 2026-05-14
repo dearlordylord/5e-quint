@@ -1,6 +1,9 @@
 // Held-light, rider, ready, and release spell resolution extracted from spells-resolve.ts.
 
-import { spendAction, spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
+import {
+  spendAction,
+  spendActivationResource,
+} from "@dnd/shared-algebras/action-economy-algebra";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   attackRollHits,
@@ -13,11 +16,16 @@ import {
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleResolutionResult,
+  type BattleState,
   type BonusActionSpellBattleResolutionInput,
   type ReadiedSpellInvocation,
   type SpellMarkedDamageRider,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
+import {
+  resourceHasUsesRemaining,
+  spendCharacterResourceUse,
+} from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   damageDispositionFillFor,
@@ -59,9 +67,7 @@ import {
   spellTargetIsLegal,
   validateSpellDamageFill,
 } from "./spells-holes-fills.ts";
-import {
-  markSpellSlotExpendedThisTurn,
-} from "./spells-profiles.ts";
+import { markSpellSlotExpendedThisTurn } from "./spells-profiles.ts";
 import {
   clearPendingAttackRollMissToHitReplacementSelection,
   recordAttackRollMissToHitReplacementUsed,
@@ -72,6 +78,10 @@ import {
   startSpellEffectConcentration,
 } from "./spells-resolve-resources.ts";
 import { resolveChainedSpellAttackDamageAct } from "./spells-resolve-chained.ts";
+
+type SpellCastResourceSpendResult =
+  | { readonly tag: "resolved"; readonly state: BattleState }
+  | Extract<BattleResolutionResult, { readonly tag: "invalid" }>;
 import { resolvePreparedSlotSpellRelease } from "./spells-resolve-prepared-slot.ts";
 import { resolveSaveGateDamageSpellRelease } from "./spells-resolve-save-gates.ts";
 import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
@@ -439,31 +449,39 @@ export function resolveMarkedDamageRiderSpellAct(input: {
       snapshot: snapshotBattle(nextState),
     };
   }
-  const slotTurnResources = markSpellSlotExpendedThisTurn(spent.right);
-  if (Either.isLeft(slotTurnResources)) {
-    return invalidResult(
-      input.input.state,
-      "staleSubject",
-      "This turn has already expended a Spell Slot.",
-    );
-  }
   const concentrationBase = breakBattleConcentration(
     input.input.state,
     input.actorId,
   );
-  const slotted = expendSpellSlot(
-    {
-      ...concentrationBase,
-      currentTurnResources: clearPendingAttackRollMissToHitReplacementSelection(
-        slotTurnResources.right,
-        input.actorId,
-      ),
-    },
+  const turnResources = clearPendingAttackRollMissToHitReplacementSelection(
+    spent.right,
     input.actorId,
-    input.invocation.resource.slotLevel,
   );
+  const resourced =
+    input.invocation.resource.tag === "classFeatureFreeCast"
+      ? spendClassFeatureFreeCastResource(
+          {
+            ...concentrationBase,
+            currentTurnResources: turnResources,
+          },
+          input.actorId,
+          input.invocation.resource.resourceUnitId,
+          input.input.state,
+        )
+      : spendMarkedDamageRiderSpellSlot(
+          {
+            ...concentrationBase,
+            currentTurnResources: turnResources,
+          },
+          input.actorId,
+          input.invocation.resource.slotLevel,
+          input.input.state,
+        );
+  if (resourced.tag === "invalid") {
+    return resourced;
+  }
   const effected = applyMarkedDamageRiderSpellEffect(
-    slotted,
+    resourced.state,
     input.actorId,
     input.fillSet.targetId,
     input.invocation,
@@ -477,6 +495,86 @@ export function resolveMarkedDamageRiderSpellAct(input: {
     tag: "resolved",
     state: nextState,
     snapshot: snapshotBattle(nextState),
+  };
+}
+
+function spendMarkedDamageRiderSpellSlot(
+  state: BattleState,
+  actorId: CombatantId,
+  slotLevel: Extract<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "markedDamageRider"; readonly action: "cast" }
+    >["resource"],
+    { readonly tag: "spellSlot" }
+  >["slotLevel"],
+  errorState: BattleState,
+): SpellCastResourceSpendResult {
+  const slotTurnResources = markSpellSlotExpendedThisTurn(
+    state.currentTurnResources,
+  );
+  if (Either.isLeft(slotTurnResources)) {
+    return invalidResult(
+      errorState,
+      "staleSubject",
+      "This turn has already expended a Spell Slot.",
+    );
+  }
+  return {
+    tag: "resolved",
+    state: expendSpellSlot(
+      {
+        ...state,
+        currentTurnResources: slotTurnResources.right,
+      },
+      actorId,
+      slotLevel,
+    ),
+  };
+}
+
+function spendClassFeatureFreeCastResource(
+  state: BattleState,
+  actorId: CombatantId,
+  resourceUnitId: string,
+  errorState: BattleState,
+): SpellCastResourceSpendResult {
+  const actor = state.combatants.get(actorId);
+  if (actor?.origin.kind !== "character") {
+    return invalidResult(
+      errorState,
+      "staleSubject",
+      "Class feature free spell cast is no longer available for the current actor.",
+    );
+  }
+  const resource = actor.origin.resources.find(
+    (candidate) =>
+      candidate.unit.id === resourceUnitId &&
+      resourceHasUsesRemaining(candidate),
+  );
+  if (resource === undefined) {
+    return invalidResult(
+      errorState,
+      "staleSubject",
+      "Class feature free spell cast is no longer available for the current actor.",
+    );
+  }
+  return {
+    tag: "resolved",
+    state: {
+      ...state,
+      combatants: new Map(state.combatants).set(actorId, {
+        ...actor,
+        origin: {
+          ...actor.origin,
+          resources: actor.origin.resources.map((candidate) =>
+            candidate.unit.id === resourceUnitId
+              ? spendCharacterResourceUse(candidate)
+              : candidate,
+          ),
+        },
+      }),
+    },
   };
 }
 

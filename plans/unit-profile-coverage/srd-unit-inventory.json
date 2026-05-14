@@ -161,8 +161,8 @@
       "rowsByStatus": {
         "accepted": 214,
         "accepted-no-battle-effect": 69,
-        "battle-runtime-required": 27,
-        "partial-battle-runtime": 42,
+        "battle-runtime-required": 26,
+        "partial-battle-runtime": 43,
         "surface-widening-required": 15
       }
     },
@@ -11124,7 +11124,7 @@
         "state": "installed",
         "unitId": "ranger_favored_enemy"
       },
-      "unitProfileDisposition": "unsupported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {

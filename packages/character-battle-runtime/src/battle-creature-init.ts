@@ -1,8 +1,10 @@
 import {
   battleCreatureInitFromStatBlock,
+  characterBattleResourceForUnit,
   characterBattleResourceSupportedForUnit,
   scoreModifier,
   startBattle,
+  unitIsFavoredEnemyHuntersMarkFreeCastResource,
   type CharacterBattleFeatureInit,
   type CharacterBattleResourceInit,
   type CharacterBattleSpellSlotState,
@@ -22,11 +24,13 @@ import {
   characterBuildFeatureUnitIds,
   characterBuildHitPoints,
   characterBuildProficiencies,
-  characterBuildResources,
   progressionClassLevels,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
-import type { CharacterSheetArmorClassBaseChoice } from "@dnd/character-sheet-runtime";
+import type {
+  CharacterSheetArmorClassBaseChoice,
+  CharacterSheetResourceExpenditure,
+} from "@dnd/character-sheet-runtime";
 import {
   Hp,
   abilityModifier,
@@ -35,7 +39,7 @@ import {
 } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
-import { Either } from "effect";
+import { Either, Option } from "effect";
 import {
   battleCreatureInitIssue,
   characterArmorClassState,
@@ -71,6 +75,7 @@ export type CharacterBuildCreatureInput = {
   readonly positiveHpUnconscious?: CharacterBattleCreatureInit["positiveHpUnconscious"];
   readonly zeroHpLifecycle?: CharacterZeroHpLifecycleInit;
   readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
+  readonly resourceExpenditures?: readonly CharacterSheetResourceExpenditure[];
   readonly armorClassBaseChoice?: CharacterSheetArmorClassBaseChoice;
   readonly pactBladeBondedWeaponItemId?:
     | NonNullable<CharacterBuild["equipment"]["loadout"]["weapon"]>["itemId"]
@@ -197,7 +202,11 @@ export function battleCreatureInitFromCharacterBuild(
   if (Either.isLeft(unitFeatures)) {
     return battleCreatureInitIssue(unitFeatures.left.message);
   }
-  const resources = characterBattleResources(input.build, input.unitLibrary);
+  const resources = characterBattleResourceInitsFromBuild(
+    input.build,
+    input.unitLibrary,
+    input.resourceExpenditures ?? [],
+  );
   if (Either.isLeft(resources)) {
     return battleCreatureInitIssue(resources.left.message);
   }
@@ -317,32 +326,40 @@ function characterBattleClassLevels(
   return Either.right(classLevels satisfies CharacterBattleClassLevels);
 }
 
-function characterBattleResources(
+export function characterBattleResourceInitsFromBuild(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
+  resourceExpenditures: readonly CharacterSheetResourceExpenditure[],
 ): Either.Either<
   readonly CharacterBattleResourceInit[],
   BattleCreatureInitIssue
 > {
   const resources: CharacterBattleResourceInit[] = [];
-  for (const resource of characterBuildResources(build, unitLibrary)) {
-    const unit = getRequiredUnit(unitLibrary, resource.unitId);
-    if (Either.isLeft(unit)) {
-      return battleCreatureInitIssue(unit.left.message);
+  for (const featureUnitId of characterBuildFeatureUnitIds(
+    build,
+    unitLibrary,
+  )) {
+    const unit = unitLibrary.getUnit(featureUnitId);
+    if (Option.isNone(unit)) {
+      continue;
     }
     if (
-      unit.right.kind !== "class_feature" &&
-      unit.right.kind !== "species_trait"
+      unit.value.kind !== "class_feature" &&
+      unit.value.kind !== "species_trait"
     ) {
-      return battleCreatureInitIssue(
-        `Expected feature Unit for resource: ${unit.right.id}`,
-      );
+      continue;
     }
-    if (!characterBattleResourceSupportedForUnit(unit.right)) {
+    if (!characterBattleResourceSupportedForUnit(unit.value)) {
       continue;
     }
 
-    resources.push(characterBattleResourceInit(build, unit.right));
+    const init = characterBattleResourceInit(
+      build,
+      unit.value,
+      resourceExpenditures,
+    );
+    if (Either.isLeft(init)) return Either.left(init.left);
+    resources.push(init.right);
   }
   return Either.right(resources);
 }
@@ -353,18 +370,57 @@ function characterBattleResourceInit(
     UnitRecord,
     { readonly kind: "class_feature" | "species_trait" }
   >,
-): CharacterBattleResourceInit {
+  resourceExpenditures: readonly CharacterSheetResourceExpenditure[],
+): Either.Either<CharacterBattleResourceInit, BattleCreatureInitIssue> {
+  const persistedUsesRemaining = characterBattlePersistedUsesRemaining(
+    unit,
+    resourceExpenditures,
+  );
+  if (Either.isLeft(persistedUsesRemaining)) {
+    return Either.left(persistedUsesRemaining.left);
+  }
   const resource =
     "resource" in unit.mechanics ? unit.mechanics.resource : undefined;
-  return resource?.kind === "use_count" &&
-    resource.cap.kind === "ability_modifier"
-    ? {
-        unit,
-        capAbilityModifier: abilityModifier(
-          scoreModifier(build.abilityScores[resource.cap.ability]),
-        ),
-      }
-    : { unit };
+  const init =
+    resource?.kind === "use_count" && resource.cap.kind === "ability_modifier"
+      ? {
+          unit,
+          capAbilityModifier: abilityModifier(
+            scoreModifier(build.abilityScores[resource.cap.ability]),
+          ),
+        }
+      : { unit };
+  return Either.right({
+    ...init,
+    ...(persistedUsesRemaining.right === undefined
+      ? {}
+      : { usesRemaining: persistedUsesRemaining.right }),
+  });
+}
+
+function characterBattlePersistedUsesRemaining(
+  unit: UnitRecord,
+  resourceExpenditures: readonly CharacterSheetResourceExpenditure[],
+): Either.Either<number | undefined, BattleCreatureInitIssue> {
+  if (!unitIsFavoredEnemyHuntersMarkFreeCastResource(unit)) {
+    return Either.right(undefined);
+  }
+  const resource = characterBattleResourceForUnit(unit);
+  if (resource.cap.kind !== "fixed") {
+    return battleCreatureInitIssue(
+      "Favored Enemy Hunter's Mark free casts must use a fixed battle resource cap.",
+    );
+  }
+  const expended =
+    resourceExpenditures.find(
+      (expenditure) => expenditure.tag === "favoredEnemyHuntersMarkFreeCasts",
+    )?.expended ?? 0;
+  if (expended > resource.cap.uses) {
+    return battleCreatureInitIssue(
+      "Favored Enemy Hunter's Mark free-cast expenditure exceeds its battle resource cap.",
+    );
+  }
+  return Either.right(resource.cap.uses - expended);
 }
 
 function characterBattleFeatures(

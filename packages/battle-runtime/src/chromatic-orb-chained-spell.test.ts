@@ -434,6 +434,7 @@ function chromaticOrbBattle(input: {
           canCastSpells: true,
           cantrips: [],
           preparedSpells: [input.spell ?? chromaticOrb],
+          featurePreparedSpells: [],
           spellSlots: [{ spellLevel: input.spellLevel, count: 1 }],
         },
       }),

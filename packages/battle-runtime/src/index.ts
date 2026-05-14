@@ -37,6 +37,10 @@ export type {
 export {
   characterBattleResourceSupportedForUnit,
   characterBattleResourceUsage,
+  characterBattleResourceForUnit,
+  characterResourceIsFavoredEnemyFreeCast,
+  unitIsFavoredEnemyHuntersMarkFreeCastResource,
+  type CharacterBattleFeaturePreparedSpellInit,
   type CharacterBattleFeatureInit,
   type CharacterBattleResourceInit,
   type CharacterBattleResourceState,
@@ -63,6 +67,7 @@ export {
   SpellInvocationRefSchema,
   SpellSubjectModeSchema,
   cantripSpellInvocationRef,
+  classFeatureFreeCastSpellInvocationRef,
   sameBattleSubject,
   spellSlotInvocationRef,
   type BattleRuntimeCommand,

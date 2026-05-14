@@ -87,7 +87,9 @@ module battleRuntime {
   //   and UBIQUITOUS_LANGUAGE.md: Hunter's Mark is a Bonus Action
   //   Concentration spell that marks one target, adds Force damage when the
   //   caster hits that target with an Attack Roll, and can be moved with a
-  //   Bonus Action after the marked target drops to 0 HP.
+  //   Bonus Action after the marked target drops to 0 HP. Classes/Ranger.md
+  //   lines 76-80 grants Favored Enemy slotless Long Rest casts as a class
+  //   resource, not as Spell Slot state.
   // - Spells/Descriptions-E-L.md lines 168-177, Playing-the-Game.md lines
   //   318-324 and 533-551, Spells/Gaining-and-Casting.md lines 92-96,
   //   Rules-Glossary.md lines 239-247, 361-365, and 904-910, and
@@ -3928,6 +3930,40 @@ module battleRuntime {
     else
       state
 
+  pure def resolveFavoredEnemyHuntersMark(
+    state: BattleState,
+    target: Actor,
+    favoredEnemyUsesRemaining: int,
+  ): { state: BattleState, favoredEnemyUsesRemaining: int } =
+    if (
+      currentActor(state) == Fighter and
+      target == Goblin and
+      favoredEnemyUsesRemaining > 0 and
+      state.bonusActionAvailable and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state))
+    )
+      {
+        state: {
+          ...state,
+          fighter: {
+            ...state.fighter,
+            concentrating: true,
+            activeEffects: activeEffectsWithoutHuntersMark(state.fighter.activeEffects)
+              .union(Set(HuntersMarkDamageRider({
+                target: target,
+                transferAvailable: false,
+                durationTicks: huntersMarkDurationTicks(1),
+              }))),
+          },
+          bonusActionAvailable: false,
+        },
+        favoredEnemyUsesRemaining: favoredEnemyUsesRemaining - 1,
+      }
+    else
+      { state: state, favoredEnemyUsesRemaining: favoredEnemyUsesRemaining }
+
   pure def transferHuntersMark(state: BattleState, target: Actor): BattleState =
     if (
       currentActor(state) == Fighter and
@@ -7437,6 +7473,10 @@ module battleRuntime {
       assert(huntersMarkDurationTicks(3) == 4800),
       assert(huntersMarkDurationTicks(4) == 4800),
       assert(huntersMarkDurationTicks(5) == 14400),
+      assert(resolveFavoredEnemyHuntersMark(initialState, Goblin, 2).favoredEnemyUsesRemaining == 1),
+      assert(not(resolveFavoredEnemyHuntersMark(initialState, Goblin, 2).state.spellSlotExpendedThisTurn)),
+      assert(activeEffectsContainHuntersMark(resolveFavoredEnemyHuntersMark(initialState, Goblin, 2).state.fighter.activeEffects)),
+      assert(resolveFavoredEnemyHuntersMark(initialState, Goblin, 0).state == initialState),
       assert(fighterHuntersMarkDamage(4, Set(HuntersMarkDamageRider({ target: Goblin, transferAvailable: false, durationTicks: 600 })), Goblin) == 4),
       assert(fighterHuntersMarkDamage(4, Set(HuntersMarkDamageRider({ target: Fighter, transferAvailable: false, durationTicks: 600 })), Goblin) == 0),
       assert(resolveRayOfFrostWithDamageRoll({ ...initialState, fighter: { ...initialState.fighter, activeEffects: Set(HuntersMarkDamageRider({ target: Goblin, transferAvailable: false, durationTicks: 600 })) }, goblin: { ...initialState.goblin, reactionAvailable: false } }, 15, 10, fighterSpellAttackDamageRollWithHuntersMark(4, 6), true).goblin.hp == 0),

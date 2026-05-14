@@ -635,6 +635,50 @@ describe("Character Sheet runtime", () => {
     });
   });
 
+  test("Long Rest restores the Favored Enemy Hunter's Mark free-cast pool", () => {
+    const spent = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:ranger-rest"),
+        build: armorClassBuild({ startingClass: "class_ranger" }),
+        maximumHp: Hp(12),
+        currentHp: Hp(12),
+        tempHp: Hp(0),
+        unitLibrary,
+        resourceExpenditures: [
+          {
+            tag: "favoredEnemyHuntersMarkFreeCasts",
+            expended: resourceCount(1),
+          },
+        ],
+      }),
+    );
+
+    expect(characterSheetResources(spent, unitLibrary)).toMatchObject({
+      _tag: "Right",
+      right: [
+        {
+          unitId: "ranger_favored_enemy",
+          count: 2,
+          expended: 1,
+        },
+      ],
+    });
+
+    const rested = requireRight(completeLongRest({ sheet: spent }));
+
+    expect(rested.resourceExpenditures).toEqual([]);
+    expect(characterSheetResources(rested, unitLibrary)).toMatchObject({
+      _tag: "Right",
+      right: [
+        {
+          unitId: "ranger_favored_enemy",
+          count: 2,
+          expended: 0,
+        },
+      ],
+    });
+  });
+
   test("Short Rest restores Pact Slots without touching ordinary Spell Slots", () => {
     const sheet = requireRight(
       createFreshCharacterSheet({

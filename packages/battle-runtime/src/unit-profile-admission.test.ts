@@ -8357,6 +8357,7 @@ describe("SRDINV31 deterministic after-hit Spell Unit admission", () => {
         canCastSpells: true,
         cantrips: [rayOfFrost],
         preparedSpells: [],
+        featurePreparedSpells: [],
         spellSlots: [],
       },
     });
@@ -8580,6 +8581,7 @@ describe("SRDINV31 deterministic after-hit Spell Unit admission", () => {
         canCastSpells: true,
         cantrips: [rayOfFrost],
         preparedSpells: [],
+        featurePreparedSpells: [],
         spellSlots: [],
       },
     });
@@ -8708,6 +8710,7 @@ describe("SRDINV31 deterministic after-hit Spell Unit admission", () => {
         canCastSpells: true,
         cantrips: [rayOfFrost],
         preparedSpells: [],
+        featurePreparedSpells: [],
         spellSlots: [],
       },
     });
@@ -8847,6 +8850,7 @@ describe("SRDINV31 deterministic after-hit Spell Unit admission", () => {
         canCastSpells: true,
         cantrips: [rayOfFrost],
         preparedSpells: [],
+        featurePreparedSpells: [],
         spellSlots: [],
       },
     });
@@ -13835,6 +13839,7 @@ function spellBattle(input: {
           canCastSpells: true,
           cantrips: input.cantrips ?? [],
           preparedSpells: input.preparedSpells ?? [],
+          featurePreparedSpells: [],
           spellSlots: input.spellSlots ?? [{ spellLevel: 1, count: 2 }],
         },
         ...(input.attack === undefined ? {} : { attack: input.attack }),
@@ -14054,14 +14059,15 @@ function combatProwessBattle(input: {
         characterUnitRefs: [combatProwessBattleUnitRef()],
         ...(input.cantrips === undefined
           ? {}
-            : {
-                spellcasting: {
-                  sourceClassName: "wizard",
-                  spellcastingAbilityModifier: abilityModifier(3),
+          : {
+              spellcasting: {
+                sourceClassName: "wizard",
+                spellcastingAbilityModifier: abilityModifier(3),
                 proficiencyBonus: proficiencyBonus(2),
                 canCastSpells: true,
                 cantrips: input.cantrips,
                 preparedSpells: [],
+                featurePreparedSpells: [],
                 spellSlots: [],
               },
             }),
@@ -14073,14 +14079,15 @@ function combatProwessBattle(input: {
         side: oppositionSide,
         ...(input.targetPreparedSpells === undefined
           ? {}
-            : {
-                spellcasting: {
-                  sourceClassName: "wizard",
-                  spellcastingAbilityModifier: abilityModifier(3),
+          : {
+              spellcasting: {
+                sourceClassName: "wizard",
+                spellcastingAbilityModifier: abilityModifier(3),
                 proficiencyBonus: proficiencyBonus(2),
                 canCastSpells: true,
                 cantrips: [],
                 preparedSpells: input.targetPreparedSpells,
+                featurePreparedSpells: [],
                 spellSlots: [{ spellLevel: 1, count: 1 }],
               },
             }),

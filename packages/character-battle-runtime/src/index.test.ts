@@ -1,13 +1,15 @@
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap spell.invocation-marked-damage-rider
 import type {
   BattleFill,
   BattleCreatureState,
   BattleHole,
+  CharacterBattleResourceState,
   CharacterBattleSpellcastingState,
 } from "@dnd/battle-runtime";
 import {
   battleCombatantSide,
   battleId,
+  characterBattleResourceForUnit,
   characterId,
   combatantId,
   discoverBattleActs,
@@ -55,6 +57,8 @@ import {
   applyBattleHandoffToCharacterSheet,
   battleCreatureInitFromCharacterBuild,
   characterArmorClassState,
+  characterBattleResourceInitsFromBuild,
+  characterSpellcasting,
   startBattleFromCharacterBuildAndStatBlock,
 } from "./index.ts";
 
@@ -311,6 +315,124 @@ describe("Character Sheet battle handoff", () => {
       { tag: "layOnHandsHealingPool", expended: 3 },
     ]);
   });
+
+  test("persists Favored Enemy free-cast spends for the next battle before Long Rest", () => {
+    const sheet = createFreshCharacterSheet({
+      characterId: characterSheetId("character:ranger-handoff"),
+      build: favoredEnemyRangerResourceBuild(),
+      maximumHp: Hp(12),
+      currentHp: Hp(12),
+      tempHp: Hp(0),
+      unitLibrary,
+    });
+    expect(Either.isRight(sheet)).toBe(true);
+    if (Either.isLeft(sheet)) return;
+
+    const favoredEnemy = unitLibrary.requireUnit("ranger_favored_enemy");
+    const favoredEnemyResource = characterBattleResourceForUnit(favoredEnemy);
+    expect(favoredEnemyResource.cap.kind).toBe("fixed");
+    if (favoredEnemyResource.cap.kind !== "fixed") return;
+    const limitedFavoredEnemyResource =
+      favoredEnemyResource as CharacterBattleResourceState["resource"] & {
+        readonly cap: { readonly kind: "fixed" };
+      };
+    const handoff = applyBattleHandoffToCharacterSheet({
+      sheet: sheet.right,
+      unitLibrary,
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:ranger-handoff"),
+          resources: [
+            {
+              unit: favoredEnemy,
+              resource: limitedFavoredEnemyResource,
+              usedThisTurn: false,
+              usesRemaining: resourceCount(1),
+            },
+          ],
+        },
+        hp: Hp(12),
+        maxHp: Hp(12),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    const settled = expectRight(handoff);
+    expect(settled.resourceExpenditures).toEqual([
+      { tag: "favoredEnemyHuntersMarkFreeCasts", expended: 1 },
+    ]);
+
+    const nextBattleResources = expectRight(
+      characterBattleResourceInitsFromBuild(
+        settled.build,
+        unitLibrary,
+        settled.resourceExpenditures,
+      ),
+    );
+
+    expect(nextBattleResources).toContainEqual(
+      expect.objectContaining({
+        unit: favoredEnemy,
+        usesRemaining: 1,
+      }),
+    );
+  });
+
+  test("rejects Favored Enemy battle handoff when free-cast cap shape is unsupported", () => {
+    const sheet = createFreshCharacterSheet({
+      characterId: characterSheetId("character:ranger-handoff-scaling"),
+      build: favoredEnemyRangerResourceBuild(),
+      maximumHp: Hp(12),
+      currentHp: Hp(12),
+      tempHp: Hp(0),
+      unitLibrary,
+    });
+    expect(Either.isRight(sheet)).toBe(true);
+    if (Either.isLeft(sheet)) return;
+
+    const favoredEnemy = unitLibrary.requireUnit("ranger_favored_enemy");
+    const favoredEnemyResource = characterBattleResourceForUnit(favoredEnemy);
+    const handoff = applyBattleHandoffToCharacterSheet({
+      sheet: sheet.right,
+      unitLibrary,
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:ranger-handoff-scaling"),
+          resources: [
+            {
+              unit: favoredEnemy,
+              resource: {
+                ...favoredEnemyResource,
+                cap: {
+                  kind: "threshold_tiers",
+                  axis: "class",
+                  base: 2,
+                  tiers: [{ atLevel: 5, value: 3 }],
+                },
+              },
+              usedThisTurn: false,
+              usesRemaining: resourceCount(1),
+            },
+          ],
+        },
+        hp: Hp(12),
+        maxHp: Hp(12),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    expect(handoff).toEqual(
+      Either.left({
+        tag: "characterSheetBattleHandoffIssue",
+        message:
+          "Favored Enemy Hunter's Mark free casts must use a fixed battle resource cap during battle handoff.",
+      }),
+    );
+  });
 });
 
 describe("Character Build battle projection", () => {
@@ -433,6 +555,35 @@ describe("Character Build battle projection", () => {
     expect(
       trueStrike?.initialHoles.find((hole) => hole.kind === "targetChoice"),
     ).toMatchObject({ choices: [targetId] });
+  });
+
+  test("projects Favored Enemy Hunter's Mark as feature-prepared Spell Access", () => {
+    const spellcasting = expectRight(
+      characterSpellcasting({
+        build: favoredEnemyRangerBuild(),
+        unitLibrary,
+      }),
+    );
+
+    expect(spellcasting.preparedSpells).toEqual([]);
+    expect(spellcasting.featurePreparedSpells).toEqual([
+      {
+        sourceUnitId: "ranger_favored_enemy",
+        spell: unitLibrary.requireUnit("hunters_mark"),
+      },
+    ]);
+  });
+
+  test("does not promote unrelated passive prepared Spell Access during Favored Enemy projection", () => {
+    const spellcasting = expectRight(
+      characterSpellcasting({
+        build: druidDruidicBuild(),
+        unitLibrary,
+      }),
+    );
+
+    expect(spellcasting.preparedSpells).toEqual([]);
+    expect(spellcasting.featurePreparedSpells).toEqual([]);
   });
 
   test("projects selected Weapon Mastery Sap into battle attack behavior", () => {
@@ -1638,6 +1789,129 @@ function trueStrikeWizardBuild(): CharacterBuild {
         },
       ],
       slotPools: {},
+    },
+  };
+}
+
+function favoredEnemyRangerBuild(): CharacterBuild {
+  return {
+    progression: {
+      startingClass: classUnitId("class_ranger"),
+      advancements: [],
+    },
+    background: "background_soldier",
+    species: "species_orc",
+    originLanguages: ["Common", "Dwarvish", "Goblin"],
+    alignment: { order: "lawful", morality: "good" },
+    abilityScores: expectRight(
+      abilityScoreAssignment({
+        str: 10,
+        dex: 16,
+        con: 13,
+        int: 8,
+        wis: 14,
+        cha: 12,
+      }),
+    ),
+    proficiencyChoices: [],
+    features: [],
+    equipment: {
+      owned: [],
+      loadout: {},
+    },
+    spellcasting: {
+      sources: [
+        {
+          sourceUnitId: "class_ranger",
+          spellcastingAbility: "wis",
+          cantrips: [],
+          spellbook: [],
+          preparedSpells: [],
+          spellcastingFocuses: ["druidic_focus"],
+        },
+      ],
+      slotPools: {
+        spellcasting: {
+          kind: "spellcasting",
+          slots: [{ spellLevel: 1, count: 2 }],
+        },
+      },
+    },
+  };
+}
+
+function favoredEnemyRangerResourceBuild(): CharacterBuild {
+  return {
+    progression: {
+      startingClass: classUnitId("class_ranger"),
+      advancements: [],
+    },
+    background: "background_soldier",
+    species: "species_orc",
+    originLanguages: ["Common", "Dwarvish", "Goblin"],
+    alignment: { order: "lawful", morality: "good" },
+    abilityScores: expectRight(
+      abilityScoreAssignment({
+        str: 10,
+        dex: 16,
+        con: 13,
+        int: 8,
+        wis: 14,
+        cha: 12,
+      }),
+    ),
+    proficiencyChoices: [],
+    features: [],
+    equipment: {
+      owned: [],
+      loadout: {},
+    },
+  };
+}
+
+function druidDruidicBuild(): CharacterBuild {
+  return {
+    progression: {
+      startingClass: classUnitId("class_druid"),
+      advancements: [],
+    },
+    background: "background_soldier",
+    species: "species_orc",
+    originLanguages: ["Common", "Dwarvish", "Goblin"],
+    alignment: { order: "lawful", morality: "good" },
+    abilityScores: expectRight(
+      abilityScoreAssignment({
+        str: 10,
+        dex: 14,
+        con: 13,
+        int: 8,
+        wis: 16,
+        cha: 12,
+      }),
+    ),
+    proficiencyChoices: [],
+    features: [],
+    equipment: {
+      owned: [],
+      loadout: {},
+    },
+    spellcasting: {
+      sources: [
+        {
+          sourceUnitId: "class_druid",
+          spellcastingAbility: "wis",
+          cantrips: [],
+          spellbook: [],
+          preparedSpells: [],
+          spellcastingFocuses: ["druidic_focus"],
+        },
+      ],
+      slotPools: {
+        spellcasting: {
+          kind: "spellcasting",
+          slots: [{ spellLevel: 1, count: 2 }],
+        },
+      },
     },
   };
 }

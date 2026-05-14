@@ -4,6 +4,7 @@ import { Match } from "effect";
 import { spellId } from "../identity.ts";
 import {
   type SpellInvocationRef,
+  classFeatureFreeCastSpellInvocationRef,
   spellEffectInvocationRef,
 } from "../battle-subjects.ts";
 import {
@@ -202,12 +203,18 @@ export function supportedSpellInvocationRef(
             riderSpell.activeEffect.sourceCombatantId,
             "markedDamageRiderTransfer",
           )
-        : {
-            tag: "spellSlot" as const,
-            spellId: spellId(riderSpell.spell.id),
-            slotLevel: riderSpell.resource.slotLevel,
-            procedure: "markedDamageRider" as const,
-          },
+        : riderSpell.resource.tag === "classFeatureFreeCast"
+          ? classFeatureFreeCastSpellInvocationRef(
+              riderSpell.spell.id,
+              riderSpell.resource.resourceUnitId,
+              "markedDamageRider",
+            )
+          : {
+              tag: "spellSlot" as const,
+              spellId: spellId(riderSpell.spell.id),
+              slotLevel: riderSpell.resource.slotLevel,
+              procedure: "markedDamageRider" as const,
+            },
     ),
     Match.when({ procedure: "persistentArmorEffect" }, (persistent) => ({
       tag: "spellSlot" as const,
@@ -277,6 +284,12 @@ export function sameSpellInvocationRef(
   }
   if (left.tag === "spellEffect" && right.tag === "spellEffect") {
     return left.sourceCombatantId === right.sourceCombatantId;
+  }
+  if (
+    left.tag === "classFeatureFreeCast" &&
+    right.tag === "classFeatureFreeCast"
+  ) {
+    return left.resourceUnitId === right.resourceUnitId;
   }
   return left.tag === "spellSlot" && right.tag === "spellSlot"
     ? left.slotLevel === right.slotLevel

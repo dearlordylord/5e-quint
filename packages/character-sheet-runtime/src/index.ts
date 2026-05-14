@@ -88,6 +88,7 @@ import type {
   SpellRecord,
   UnitRecord,
 } from "@dnd/surface/surface/types";
+import { favoredEnemyHuntersMarkFreeCastGrantsForUnit } from "@dnd/surface/surface/types";
 import { Brand, Either, Option } from "effect";
 
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.armor-class-base-formula
@@ -197,7 +198,7 @@ export type CharacterSheetRestFeatureUse = {
 };
 
 export type CharacterSheetResourceExpenditure = {
-  readonly tag: "layOnHandsHealingPool";
+  readonly tag: "layOnHandsHealingPool" | "favoredEnemyHuntersMarkFreeCasts";
   readonly expended: ResourceCount;
 };
 
@@ -206,10 +207,21 @@ type CharacterSheetLayOnHandsResource = CharacterBuildResource & {
   readonly resource: ChargePoolResource;
 };
 
-export type CharacterSheetResourceState = CharacterSheetLayOnHandsResource & {
+type CharacterSheetFavoredEnemyHuntersMarkResource = {
+  readonly unitId: UnitRecord["id"];
   readonly count: ResourceCount;
-  readonly expended: ResourceCount;
 };
+
+export type CharacterSheetResourceState =
+  | (CharacterSheetLayOnHandsResource & {
+      readonly tag: "layOnHandsHealingPool";
+      readonly count: ResourceCount;
+      readonly expended: ResourceCount;
+    })
+  | (CharacterSheetFavoredEnemyHuntersMarkResource & {
+      readonly tag: "favoredEnemyHuntersMarkFreeCasts";
+      readonly expended: ResourceCount;
+    });
 
 export type CharacterSheetArcaneRecoverySlotRefund = {
   readonly spellLevel: SpellSlotLevel;
@@ -641,27 +653,51 @@ export function characterSheetResources(
   sheet: CharacterSheet,
   unitLibrary: UnitCatalog,
 ): Either.Either<readonly CharacterSheetResourceState[], CharacterSheetIssue> {
-  const resource = layOnHandsResourceForBuild(sheet.build, unitLibrary);
-  if (Either.isLeft(resource)) return Either.left(resource.left);
-  if (resource.right === null) {
-    return Either.right([]);
-  }
-  const count = characterSheetResourceCapacity({
-    build: sheet.build,
+  const resources: CharacterSheetResourceState[] = [];
+  const layOnHandsResource = layOnHandsResourceForBuild(
+    sheet.build,
     unitLibrary,
-    resource: resource.right,
-  });
-  if (Either.isLeft(count)) return Either.left(count.left);
-  return Either.right([
-    {
-      ...resource.right,
+  );
+  if (Either.isLeft(layOnHandsResource))
+    return Either.left(layOnHandsResource.left);
+  if (layOnHandsResource.right !== null) {
+    const count = characterSheetResourceCapacity({
+      build: sheet.build,
+      unitLibrary,
+      resource: layOnHandsResource.right,
+    });
+    if (Either.isLeft(count)) return Either.left(count.left);
+    resources.push({
+      ...layOnHandsResource.right,
+      tag: "layOnHandsHealingPool",
       count: count.right,
       expended:
         sheet.resourceExpenditures.find(
           (expenditure) => expenditure.tag === "layOnHandsHealingPool",
         )?.expended ?? resourceCount(0),
-    },
-  ]);
+    });
+  }
+
+  const favoredEnemyResource = favoredEnemyHuntersMarkResourceForBuild(
+    sheet.build,
+    unitLibrary,
+  );
+  if (Either.isLeft(favoredEnemyResource)) {
+    return Either.left(favoredEnemyResource.left);
+  }
+  if (favoredEnemyResource.right !== null) {
+    resources.push({
+      ...favoredEnemyResource.right,
+      tag: "favoredEnemyHuntersMarkFreeCasts",
+      expended:
+        sheet.resourceExpenditures.find(
+          (expenditure) =>
+            expenditure.tag === "favoredEnemyHuntersMarkFreeCasts",
+        )?.expended ?? resourceCount(0),
+    });
+  }
+
+  return Either.right(resources);
 }
 
 export function characterSheetSpellInvocation(
@@ -1255,7 +1291,7 @@ function spellSlotExpendituresFromInput(
     }
     runtimeLevels.add(runtimeSlot.spellLevel);
   }
-  const expenditures = [];
+  const expenditures: CharacterSpellSlotExpenditure[] = [];
   for (const buildSlot of buildSlots) {
     const runtimeSlot = runtimeSlots.find(
       (candidate) =>
@@ -1430,6 +1466,13 @@ function resourceExpendituresFromInput(
   if (Either.isLeft(layOnHandsResource)) {
     return Either.left(layOnHandsResource.left);
   }
+  const favoredEnemyResource = favoredEnemyHuntersMarkResourceForBuild(
+    input.build,
+    input.unitLibrary,
+  );
+  if (Either.isLeft(favoredEnemyResource)) {
+    return Either.left(favoredEnemyResource.left);
+  }
   const seen = new Set<CharacterSheetResourceExpenditure["tag"]>();
   const result: CharacterSheetResourceExpenditure[] = [];
   for (const expenditure of expenditures) {
@@ -1439,15 +1482,12 @@ function resourceExpendituresFromInput(
       );
     }
     seen.add(expenditure.tag);
-    if (layOnHandsResource.right === null) {
-      return characterSheetIssue(
-        "Lay On Hands healing pool expenditure requires the Paladin Lay On Hands feature.",
-      );
-    }
-    const count = characterSheetResourceCapacity({
+    const count = characterSheetResourceExpenditureCapacity({
       build: input.build,
       unitLibrary: input.unitLibrary,
-      resource: layOnHandsResource.right,
+      layOnHandsResource: layOnHandsResource.right,
+      favoredEnemyResource: favoredEnemyResource.right,
+      expenditureTag: expenditure.tag,
     });
     if (Either.isLeft(count)) return Either.left(count.left);
     if (
@@ -1461,12 +1501,39 @@ function resourceExpendituresFromInput(
     }
     if (expenditure.expended > 0) {
       result.push({
-        tag: "layOnHandsHealingPool",
+        tag: expenditure.tag,
         expended: resourceCount(expenditure.expended),
       });
     }
   }
   return Either.right(result);
+}
+
+function characterSheetResourceExpenditureCapacity(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly layOnHandsResource: CharacterSheetLayOnHandsResource | null;
+  readonly favoredEnemyResource: CharacterSheetFavoredEnemyHuntersMarkResource | null;
+  readonly expenditureTag: CharacterSheetResourceExpenditure["tag"];
+}): Either.Either<ResourceCount, CharacterSheetIssue> {
+  if (input.expenditureTag === "layOnHandsHealingPool") {
+    if (input.layOnHandsResource === null) {
+      return characterSheetIssue(
+        "Lay On Hands healing pool expenditure requires the Paladin Lay On Hands feature.",
+      );
+    }
+    return characterSheetResourceCapacity({
+      build: input.build,
+      unitLibrary: input.unitLibrary,
+      resource: input.layOnHandsResource,
+    });
+  }
+  if (input.favoredEnemyResource === null) {
+    return characterSheetIssue(
+      "Favored Enemy Hunter's Mark free-cast expenditure requires the Ranger Favored Enemy feature.",
+    );
+  }
+  return Either.right(input.favoredEnemyResource.count);
 }
 
 function layOnHandsResourceForBuild(
@@ -1519,6 +1586,37 @@ function layOnHandsHealingPoolResourceForUnit(
         false),
   );
   return healsFromSpentPool ? mechanics.resource : null;
+}
+
+function favoredEnemyHuntersMarkResourceForBuild(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): Either.Either<
+  CharacterSheetFavoredEnemyHuntersMarkResource | null,
+  CharacterSheetIssue
+> {
+  for (const featureUnitId of characterBuildFeatureUnitIds(
+    build,
+    unitLibrary,
+  )) {
+    const unit = unitLibrary.getUnit(featureUnitId);
+    if (Option.isNone(unit)) continue;
+    const count = favoredEnemyHuntersMarkFreeCastCountForUnit(unit.value);
+    if (count !== null) {
+      return Either.right({ unitId: featureUnitId, count });
+    }
+  }
+  return Either.right(null);
+}
+
+function favoredEnemyHuntersMarkFreeCastCountForUnit(
+  unit: UnitRecord,
+): ResourceCount | null {
+  const grant =
+    favoredEnemyHuntersMarkFreeCastGrantsForUnit(unit)?.freeCastGrant;
+  return grant?.count === 2 && grant.resetCadence === "long_rest"
+    ? resourceCount(grant.count)
+    : null;
 }
 
 type CharacterSheetResourceCapacityInput = {
@@ -1730,7 +1828,9 @@ function spendCharacterSheetResource(input: {
 }): Either.Either<CharacterSheet, CharacterSheetIssue> {
   const resources = characterSheetResources(input.sheet, input.unitLibrary);
   if (Either.isLeft(resources)) return Either.left(resources.left);
-  const resource = resources.right[0];
+  const resource = resources.right.find(
+    (candidate) => candidate.tag === "layOnHandsHealingPool",
+  );
   if (resource === undefined) {
     return characterSheetIssue(
       "Lay On Hands requires the Paladin Lay On Hands feature.",
@@ -2277,11 +2377,12 @@ function parseStoredResourceExpenditures(
       "Character Sheet requires resource expenditure state.",
     );
   }
-  const expenditures = [];
+  const expenditures: CharacterSheetResourceExpenditure[] = [];
   for (const expenditure of value) {
     if (
       !isRecord(expenditure) ||
-      expenditure.tag !== "layOnHandsHealingPool"
+      (expenditure.tag !== "layOnHandsHealingPool" &&
+        expenditure.tag !== "favoredEnemyHuntersMarkFreeCasts")
     ) {
       return characterSheetIssue(
         "Expected Character Sheet resource expenditure.",
@@ -2290,7 +2391,7 @@ function parseStoredResourceExpenditures(
     const expended = parseResourceCount(expenditure.expended);
     if (Either.isLeft(expended)) return Either.left(expended.left);
     expenditures.push({
-      tag: "layOnHandsHealingPool" as const,
+      tag: expenditure.tag,
       expended: expended.right,
     });
   }

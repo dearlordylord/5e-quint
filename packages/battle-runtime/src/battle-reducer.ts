@@ -1415,6 +1415,10 @@ export type SpellSlotInvocationResource = {
   readonly slotLevel: SpellSlotLevel;
 };
 type NoSpellInvocationResource = { readonly tag: "none" };
+export type ClassFeatureFreeCastInvocationResource = {
+  readonly tag: "classFeatureFreeCast";
+  readonly resourceUnitId: UnitRecord["id"];
+};
 type ClassCantripDamageSpellSource = {
   readonly access: ClassCantripSpellAccess;
   readonly resource: NoSpellInvocationResource;
@@ -1772,7 +1776,9 @@ export type AfterHitTimedDamageAndSaveSpellInvocation = {
 export type MarkedDamageRiderSpellInvocation =
   | {
       readonly access: PreparedSpellAccess;
-      readonly resource: SpellSlotInvocationResource;
+      readonly resource:
+        | SpellSlotInvocationResource
+        | ClassFeatureFreeCastInvocationResource;
       readonly procedure: "markedDamageRider";
       readonly action: "cast";
       readonly spell: SpellRecord;

@@ -851,3 +851,47 @@ export type UnitRecord = Schema.Schema.Type<
 export type StatBlockRecord = Schema.Schema.Type<
   typeof SurfaceSchema.StatBlockRecordSchema
 >;
+
+export const FAVORED_ENEMY_HUNTERS_MARK_SPELL_ID = "hunters_mark";
+
+export type SpellFreeCastGrant = Extract<
+  EffectAtom,
+  { readonly kind: "grant_spell_free_casts" }
+>;
+export type PreparedSpellAccessGrant = Extract<
+  EffectAtom,
+  { readonly kind: "grant_spell_access"; readonly mode: "prepared" }
+>;
+
+export function favoredEnemyHuntersMarkFreeCastGrantsForUnit(
+  unit: UnitRecord,
+): {
+  readonly preparedSpellGrant: PreparedSpellAccessGrant;
+  readonly freeCastGrant: SpellFreeCastGrant;
+} | null {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.name !== "Favored Enemy" ||
+    unit.className !== "ranger" ||
+    unit.acquiredAtLevel !== 1 ||
+    unit.provenance.kind !== "srd-5.2.1" ||
+    unit.provenance.section !== "Classes/Ranger#Favored Enemy" ||
+    unit.mechanics.family !== "passive"
+  ) {
+    return null;
+  }
+  const preparedSpellGrant = unit.mechanics.grants.find(
+    (grant): grant is PreparedSpellAccessGrant =>
+      grant.kind === "grant_spell_access" &&
+      grant.mode === "prepared" &&
+      grant.spellId === FAVORED_ENEMY_HUNTERS_MARK_SPELL_ID,
+  );
+  const freeCastGrant = unit.mechanics.grants.find(
+    (grant): grant is SpellFreeCastGrant =>
+      grant.kind === "grant_spell_free_casts" &&
+      grant.spellId === FAVORED_ENEMY_HUNTERS_MARK_SPELL_ID,
+  );
+  return preparedSpellGrant === undefined || freeCastGrant === undefined
+    ? null
+    : { preparedSpellGrant, freeCastGrant };
+}

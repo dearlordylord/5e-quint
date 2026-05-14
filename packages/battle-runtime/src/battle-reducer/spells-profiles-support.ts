@@ -43,7 +43,11 @@ import {
   type ScalarBuffSpellTargeting,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
-import type { CharacterBattleSpellcastingState } from "../character-battle-resources.ts";
+import {
+  characterResourceIsFavoredEnemyFreeCast,
+  resourceHasUsesRemaining,
+  type CharacterBattleSpellcastingState,
+} from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
 import { activeMarkedDamageRiderEffect } from "./damage-helpers.ts";
 import {
@@ -1160,18 +1164,29 @@ export function supportedPreparedMarkedDamageRiderSpellProfile(
         ]
       : [];
   }
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
-    const expiresAt = huntersMarkConcentrationExpirationForSlot(
-      actor.combatantId,
-      spell,
-      slot.spellLevel,
-    );
-    return Number(slot.spellLevel) < spell.mechanics.level || expiresAt === null
+  const favoredEnemyResource =
+    actor.origin.kind === "character"
+      ? actor.origin.resources.find(
+          (resource) =>
+            characterResourceIsFavoredEnemyFreeCast(resource) &&
+            resourceHasUsesRemaining(resource),
+        )
+      : undefined;
+  const favoredEnemyExpiresAt = huntersMarkConcentrationExpirationForSlot(
+    actor.combatantId,
+    spell,
+    spellSlotLevel(1),
+  );
+  const freeCastInvocations: readonly SupportedSpellInvocation[] =
+    favoredEnemyResource === undefined || favoredEnemyExpiresAt === null
       ? []
       : [
           {
             access: { tag: "prepared" },
-            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+            resource: {
+              tag: "classFeatureFreeCast",
+              resourceUnitId: favoredEnemyResource.unit.id,
+            },
             procedure: "markedDamageRider",
             action: "cast",
             spell,
@@ -1179,10 +1194,36 @@ export function supportedPreparedMarkedDamageRiderSpellProfile(
             targeting: { kind: "singleCombatant" },
             damage: { expr, damageType: "force" },
             rangeFeet,
-            expiresAt,
+            expiresAt: favoredEnemyExpiresAt,
           },
         ];
-  });
+  const slotInvocations = spellSlots.flatMap(
+    (slot): readonly SupportedSpellInvocation[] => {
+      const expiresAt = huntersMarkConcentrationExpirationForSlot(
+        actor.combatantId,
+        spell,
+        slot.spellLevel,
+      );
+      return Number(slot.spellLevel) < spell.mechanics.level ||
+        expiresAt === null
+        ? []
+        : [
+            {
+              access: { tag: "prepared" },
+              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+              procedure: "markedDamageRider",
+              action: "cast",
+              spell,
+              actionCost: "bonusAction",
+              targeting: { kind: "singleCombatant" },
+              damage: { expr, damageType: "force" },
+              rangeFeet,
+              expiresAt,
+            },
+          ];
+    },
+  );
+  return [...freeCastInvocations, ...slotInvocations];
 }
 
 function huntersMarkConcentrationExpirationForSlot(

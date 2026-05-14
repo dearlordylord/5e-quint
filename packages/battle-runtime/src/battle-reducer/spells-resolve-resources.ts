@@ -72,6 +72,13 @@ export function spendSpellCastResources(input: {
       snapshot: snapshotBattle(nextState),
     };
   }
+  if (input.invocation.resource.tag === "classFeatureFreeCast") {
+    return invalidResult(
+      input.errorState,
+      "unsupportedSubject",
+      "Class feature free spell casts require procedure-specific resource spending.",
+    );
+  }
   const slotTurnResources = markSpellSlotExpendedThisTurn(spent.right);
   if (Either.isLeft(slotTurnResources)) {
     return invalidResult(

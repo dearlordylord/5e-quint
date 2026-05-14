@@ -344,6 +344,11 @@ const NoSpellInvocationResourceSchema = Schema.Struct({
   tag: Schema.Literal("none"),
 });
 
+const ClassFeatureFreeCastInvocationResourceSchema = Schema.Struct({
+  tag: Schema.Literal("classFeatureFreeCast"),
+  resourceUnitId: Schema.String,
+});
+
 const SingleCreatureOrObjectSpellTargetingSchema = Schema.Struct({
   kind: Schema.Literal("singleCreatureOrObject"),
 });
@@ -1048,7 +1053,10 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     }),
     Schema.Struct({
       access: PreparedSpellAccessSchema,
-      resource: SpellSlotInvocationResourceSchema,
+      resource: Schema.Union(
+        SpellSlotInvocationResourceSchema,
+        ClassFeatureFreeCastInvocationResourceSchema,
+      ),
       procedure: Schema.Literal("markedDamageRider"),
       action: Schema.Literal("cast"),
       spell: BattleRuntimeObjectSchema,

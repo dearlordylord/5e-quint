@@ -578,8 +578,11 @@ export function spellInvocationCastSummary(
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot after a qualifying hit.`;
   }
   if (invocation.procedure === "markedDamageRider") {
-    return invocation.action === "transfer"
-      ? `Move ${invocation.spell.name} to a new target.`
+    if (invocation.action === "transfer") {
+      return `Move ${invocation.spell.name} to a new target.`;
+    }
+    return invocation.resource.tag === "classFeatureFreeCast"
+      ? `Cast ${invocation.spell.name} using Favored Enemy.`
       : `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
   if (invocation.procedure === "expeditiousRetreatDash") {

@@ -12,9 +12,11 @@ import { zeroHitPointReplacementUnitProfile } from "@dnd/shared-algebras/zero-hi
 import type {
   ActivationResource,
   ClassName,
+  EffectAtom,
   SpellRecord,
   UnitRecord,
 } from "@dnd/surface/surface/types";
+import { favoredEnemyHuntersMarkFreeCastGrantsForUnit } from "@dnd/surface/surface/types";
 import {
   type CharacterBattleClassLevel,
   type CharacterBattleClassLevelInit,
@@ -63,6 +65,10 @@ type UnlimitedActivationResource = SupportedUseCountActivationResource & {
 type CharacterBattleActivationResource =
   | LimitedUseCountActivationResource
   | UnlimitedActivationResource;
+type SpellAccessGrant = Extract<
+  EffectAtom,
+  { readonly kind: "grant_spell_access" }
+>;
 
 type CharacterBattleResourceStateBase = {
   readonly unit: UnitRecord;
@@ -89,6 +95,11 @@ export type CharacterBattleSpellSlotExpenditureInit = {
   readonly expended: number;
 };
 
+export type CharacterBattleFeaturePreparedSpellInit = {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly spell: SpellRecord;
+};
+
 export type CharacterBattleSpellSlotState = {
   readonly spellLevel: SpellSlotLevel;
   readonly count: ResourceCount;
@@ -102,13 +113,17 @@ export type CharacterBattleSpellcastingInit = {
   readonly canCastSpells: boolean;
   readonly cantrips: readonly SpellRecord[];
   readonly preparedSpells: readonly SpellRecord[];
+  readonly featurePreparedSpells: readonly CharacterBattleFeaturePreparedSpellInit[];
   readonly spellSlots: readonly CharacterBattleSpellSlotInit[];
   readonly spellSlotExpenditures?: readonly CharacterBattleSpellSlotExpenditureInit[];
 };
 
 export type CharacterBattleSpellcastingState = Omit<
   CharacterBattleSpellcastingInit,
-  "spellcastingAbilityModifier" | "spellSlots" | "spellSlotExpenditures"
+  | "spellcastingAbilityModifier"
+  | "featurePreparedSpells"
+  | "spellSlots"
+  | "spellSlotExpenditures"
 > & {
   readonly spellcastingAbilityModifier: AbilityModifier;
   readonly spellSlots: readonly CharacterBattleSpellSlotState[];
@@ -207,9 +222,19 @@ export function characterBattleResourceSupportedForUnit(
   return characterBattleActivationResourceForUnit(unit) !== null;
 }
 
+export function unitIsFavoredEnemyHuntersMarkFreeCastResource(
+  unit: UnitRecord,
+): boolean {
+  return favoredEnemyHuntersMarkFreeCastResource(unit) !== null;
+}
+
 function characterBattleActivationResourceForUnit(
   unit: UnitRecord,
 ): CharacterBattleActivationResource | null {
+  const freeCastResource = favoredEnemyHuntersMarkFreeCastResource(unit);
+  if (freeCastResource !== null) {
+    return freeCastResource;
+  }
   const zeroHitPointReplacement = zeroHitPointReplacementUnitProfile(unit);
   if (zeroHitPointReplacement !== null) {
     return activationResourceIsSupportedByBattleForUnit(
@@ -262,6 +287,30 @@ function characterBattleActivationResourceForUnit(
   )
     ? unit.mechanics.resource
     : null;
+}
+
+function favoredEnemyHuntersMarkFreeCastResource(
+  unit: UnitRecord,
+): LimitedUseCountActivationResource | null {
+  const grants = favoredEnemyHuntersMarkFreeCastGrantsForUnit(unit);
+  const freeCastGrant = grants?.freeCastGrant;
+  if (
+    freeCastGrant === undefined ||
+    freeCastGrant.count !== 2 ||
+    freeCastGrant.resetCadence !== "long_rest"
+  ) {
+    return null;
+  }
+  return {
+    kind: "use_count",
+    cap: { kind: "fixed", uses: freeCastGrant.count },
+  };
+}
+
+export function characterResourceIsFavoredEnemyFreeCast(
+  resource: CharacterBattleResourceState,
+): boolean {
+  return favoredEnemyHuntersMarkFreeCastResource(resource.unit) !== null;
 }
 
 export function characterBattleResourceUsage(
@@ -327,13 +376,13 @@ function unitHasSupportedAbilityModifierBattleResourceProfile(
   if (unit.kind !== "class_feature") {
     return false;
   }
-  const reactionSupport = battleReactionRollOrDamageReductionSupportForUnit(unit);
+  const reactionSupport =
+    battleReactionRollOrDamageReductionSupportForUnit(unit);
   if (reactionSupport !== null && reactionSupport !== "unsupported") {
     return true;
   }
-  const bardicInspirationSupport = battleBardicInspirationGrantSupportForUnit(
-    unit,
-  );
+  const bardicInspirationSupport =
+    battleBardicInspirationGrantSupportForUnit(unit);
   return (
     bardicInspirationSupport !== null &&
     bardicInspirationSupport !== "unsupported"
@@ -362,6 +411,10 @@ export function spendCharacterResourceUse(
 export function characterSpellcastingState(
   input: CharacterBattleSpellcastingInit,
   classLevels: readonly CharacterBattleClassLevel[],
+  spellAccessUnits: readonly (
+    | CharacterBattleResourceInit
+    | CharacterBattleFeatureInit
+  )[],
 ): CharacterBattleSpellcastingState {
   const spellSlotLevels = new Set<number>();
   for (const slot of input.spellSlots) {
@@ -413,6 +466,21 @@ export function characterSpellcastingState(
       );
     }
   }
+  for (const featureSpell of input.featurePreparedSpells) {
+    if (
+      !spellAccessUnits.some((source) =>
+        unitGrantsPreparedSpellAccess(
+          source.unit,
+          featureSpell.sourceUnitId,
+          featureSpell.spell.id,
+        ),
+      )
+    ) {
+      throw new Error(
+        "Feature-prepared spells must trace to a character Unit grant.",
+      );
+    }
+  }
 
   return {
     sourceClassName: spellcastingSourceClassName(
@@ -425,7 +493,10 @@ export function characterSpellcastingState(
     proficiencyBonus: input.proficiencyBonus,
     canCastSpells: input.canCastSpells,
     cantrips: input.cantrips,
-    preparedSpells: input.preparedSpells,
+    preparedSpells: preparedSpellsWithFeatureAccess(
+      input.preparedSpells,
+      input.featurePreparedSpells,
+    ),
     spellSlots: input.spellSlots.map((slot) => {
       const expenditure = spellSlotExpenditures.find(
         (candidate) => candidate.spellLevel === slot.spellLevel,
@@ -442,6 +513,42 @@ export function characterSpellcastingState(
       };
     }),
   };
+}
+
+function unitGrantsPreparedSpellAccess(
+  unit: UnitRecord,
+  sourceUnitId: UnitRecord["id"],
+  spellId: SpellRecord["id"],
+): boolean {
+  return (
+    unit.id === sourceUnitId &&
+    unit.kind === "class_feature" &&
+    unit.mechanics.family === "passive" &&
+    unit.mechanics.grants.some(
+      (grant): grant is SpellAccessGrant =>
+        grant.kind === "grant_spell_access" &&
+        grant.mode === "prepared" &&
+        grant.spellId === spellId,
+    )
+  );
+}
+
+function preparedSpellsWithFeatureAccess(
+  preparedSpells: readonly SpellRecord[],
+  featurePreparedSpells: readonly CharacterBattleFeaturePreparedSpellInit[],
+): readonly SpellRecord[] {
+  const seenSpellIds = new Set<SpellRecord["id"]>();
+  const allPrepared: SpellRecord[] = [];
+  for (const spell of [
+    ...preparedSpells,
+    ...featurePreparedSpells.map((featureSpell) => featureSpell.spell),
+  ]) {
+    if (!seenSpellIds.has(spell.id)) {
+      seenSpellIds.add(spell.id);
+      allPrepared.push(spell);
+    }
+  }
+  return allPrepared;
 }
 
 function spellcastingSourceClassName(

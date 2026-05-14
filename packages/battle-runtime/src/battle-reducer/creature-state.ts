@@ -10,11 +10,7 @@
 // creature-state-leaves.ts to break the cluster_state ↔ movement_speed cycle.
 
 import { Either, Match } from "effect";
-import {
-  Hp,
-  movementFeet,
-  type Condition,
-} from "@dnd/shared/types";
+import { Hp, movementFeet, type Condition } from "@dnd/shared/types";
 import type { HandUse } from "@dnd/shared/types";
 import {
   applyCondition,
@@ -36,7 +32,12 @@ import {
 } from "@dnd/shared-algebras/death-saves-algebra";
 import { initiativeEntries } from "@dnd/shared-algebras/initiative-algebra";
 import { CONDITIONS as ALL_CONDITIONS } from "@dnd/shared/types";
-import type { StatBlockRecord, StatBlockValue, Size, UnitRecord } from "@dnd/surface/surface/types";
+import type {
+  StatBlockRecord,
+  StatBlockValue,
+  Size,
+  UnitRecord,
+} from "@dnd/surface/surface/types";
 import type { ZeroHpLifecycle } from "../zero-hp-lifecycle.ts";
 import type { CombatantId, InitiativeScore } from "../identity.ts";
 import type {
@@ -98,7 +99,10 @@ import {
   currentActorId,
   grappledBy,
 } from "./creature-state-leaves.ts";
-import { statBlockResourceSnapshot, statBlockResourceState } from "./statblock.ts";
+import {
+  statBlockResourceSnapshot,
+  statBlockResourceState,
+} from "./statblock.ts";
 
 export function ongoingFeatureSourceKey(
   source: OngoingFeatureSource,
@@ -234,6 +238,10 @@ export function battleCreatureStateFromInit(
               spellcasting: characterSpellcastingState(
                 creatureInit.spellcasting,
                 classLevels,
+                [
+                  ...(creatureInit.resources ?? []),
+                  ...(creatureInit.unitFeatures ?? []),
+                ],
               ),
             }),
       },
@@ -419,7 +427,9 @@ export function ongoingFeatureProfileForSourceKey(
   return combatant.origin.ongoingFeatureProfiles.get(key) ?? null;
 }
 
-export function normalizeEarlyEndedOngoingFeatures(state: BattleState): BattleState {
+export function normalizeEarlyEndedOngoingFeatures(
+  state: BattleState,
+): BattleState {
   const combatants = new Map<CombatantId, BattleCreatureState>();
   let changed = false;
   for (const [id, combatant] of state.combatants) {

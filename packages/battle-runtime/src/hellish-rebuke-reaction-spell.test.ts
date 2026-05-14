@@ -322,6 +322,7 @@ describe("Hellish Rebuke Reaction spell", () => {
         canCastSpells: true,
         cantrips: [],
         preparedSpells: [hellishRebuke],
+        featurePreparedSpells: [],
         spellSlots: [],
       },
     });
@@ -395,6 +396,7 @@ describe("Hellish Rebuke Reaction spell", () => {
         canCastSpells: true,
         cantrips: [],
         preparedSpells: [hellishRebuke],
+        featurePreparedSpells: [],
         spellSlots: [{ spellLevel: 1, count: 1 }],
       },
     });
@@ -514,6 +516,7 @@ describe("Hellish Rebuke Reaction spell", () => {
         canCastSpells: true,
         cantrips: [],
         preparedSpells: [srdSpellRecord(magicMissileUnitId)],
+        featurePreparedSpells: [],
         spellSlots: [{ spellLevel: 1, count: 1 }],
       },
     });
@@ -611,6 +614,7 @@ function battleWithHellishRebuke(
           canCastSpells: true,
           cantrips: [],
           preparedSpells: [spell],
+          featurePreparedSpells: [],
           spellSlots: [
             { spellLevel: 1, count: 1 },
             { spellLevel: 2, count: 1 },
@@ -642,6 +646,7 @@ function battleWithHellishRebukeOnCasterTurn(spell: SpellRecord): BattleState {
           canCastSpells: true,
           cantrips: [],
           preparedSpells: [spell],
+          featurePreparedSpells: [],
           spellSlots: [{ spellLevel: 1, count: 1 }],
         },
       }),

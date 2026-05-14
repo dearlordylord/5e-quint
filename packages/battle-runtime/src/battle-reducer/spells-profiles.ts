@@ -29,6 +29,7 @@ import {
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import type { CharacterBattleSpellcastingState } from "../character-battle-resources.ts";
+import { resourceHasUsesRemaining } from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
 import { SHIELD_MAGIC_MISSILE_SPELL_ID } from "./domain-constants.ts";
 
@@ -483,9 +484,7 @@ export function supportedCantripHeldLightHurlSpellProfile(
   ];
 }
 
-export function isLightObjectSpell(
-  spell: SpellRecord,
-): spell is SpellRecord & {
+export function isLightObjectSpell(spell: SpellRecord): spell is SpellRecord & {
   readonly mechanics: Extract<
     SpellRecord["mechanics"],
     { family: "activation" }
@@ -777,6 +776,13 @@ export function spellHasAvailableSpend(
   if (resource.tag === "none") {
     return true;
   }
+  if (resource.tag === "classFeatureFreeCast") {
+    return actor.origin.resources.some(
+      (candidate) =>
+        candidate.unit.id === resource.resourceUnitId &&
+        resourceHasUsesRemaining(candidate),
+    );
+  }
   return (
     actor.origin.spellcasting?.spellSlots.some(
       (slot) =>
@@ -790,7 +796,7 @@ export function spellActTurnResourceAvailable(
   invocation: SupportedSpellInvocation,
 ): boolean {
   if (
-    invocation.resource.tag !== "none" &&
+    invocation.resource.tag === "spellSlot" &&
     resources.spellSlotExpendedThisTurn
   ) {
     return false;

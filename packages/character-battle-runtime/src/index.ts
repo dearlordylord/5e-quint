@@ -1,5 +1,6 @@
 import {
   combatantKnockedOutUnconscious,
+  characterResourceIsFavoredEnemyFreeCast,
   KNOCKED_OUT_UNCONSCIOUS,
   type BattleCreatureState,
   type CharacterZeroHpLifecycleInit,
@@ -14,11 +15,12 @@ import {
   type CharacterSheet,
   type CharacterSheetIssue,
   type CharacterSheetPositiveHpUnconscious,
+  type CharacterSheetResourceExpenditure,
   type CharacterSheetStableRecovery,
   type CharacterSheetZeroHpLifecycleInput,
 } from "@dnd/character-sheet-runtime";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
-import { CONDITIONS, type Condition } from "@dnd/shared/types";
+import { CONDITIONS, resourceCount, type Condition } from "@dnd/shared/types";
 import {
   EMPTY_CONDITION_STATE,
   hasCondition,
@@ -34,6 +36,7 @@ import { battleCreatureInitIssue } from "./battle-character-build-projection.ts"
 
 export {
   battleCreatureInitFromCharacterBuild,
+  characterBattleResourceInitsFromBuild,
   startBattleFromCharacterBuildAndStatBlock,
   type CharacterBuildCreatureInput,
 } from "./battle-creature-init.ts";
@@ -131,6 +134,10 @@ export function applyBattleHandoffToCharacterSheet(input: {
     return characterSheetBattleHandoffIssue(knockedOut.left.message);
   }
   const pactSlots = characterSheetPactSlots(input.sheet);
+  const resourceExpenditures = characterResourceExpendituresFromBattle(input);
+  if (Either.isLeft(resourceExpenditures)) {
+    return Either.left(resourceExpenditures.left);
+  }
 
   return createFreshCharacterSheet({
     characterId: input.sheet.characterId,
@@ -155,8 +162,57 @@ export function applyBattleHandoffToCharacterSheet(input: {
     ...(pactSlots === undefined ? {} : { pactSlots }),
     spentHitDice: input.sheet.spentHitDice,
     restFeatureUses: input.sheet.restFeatureUses,
-    resourceExpenditures: input.sheet.resourceExpenditures,
+    resourceExpenditures: resourceExpenditures.right,
   });
+}
+
+function characterResourceExpendituresFromBattle(input: {
+  readonly sheet: CharacterSheet;
+  readonly combatant: BattleCreatureState;
+}): Either.Either<
+  readonly CharacterSheetResourceExpenditure[],
+  CharacterSheetBattleHandoffIssue
+> {
+  const nextExpenditures = input.sheet.resourceExpenditures.filter(
+    (expenditure) => expenditure.tag !== "favoredEnemyHuntersMarkFreeCasts",
+  );
+  if (input.combatant.origin.kind !== "character") {
+    return Either.right(nextExpenditures);
+  }
+  const favoredEnemyResource = input.combatant.origin.resources?.find(
+    characterResourceIsFavoredEnemyFreeCast,
+  );
+  if (favoredEnemyResource === undefined) {
+    return Either.right(nextExpenditures);
+  }
+  if (favoredEnemyResource.resource.cap.kind !== "fixed") {
+    return characterSheetBattleHandoffIssue(
+      "Favored Enemy Hunter's Mark free casts must use a fixed battle resource cap during battle handoff.",
+    );
+  }
+  if (favoredEnemyResource.usesRemaining === undefined) {
+    return characterSheetBattleHandoffIssue(
+      "Favored Enemy Hunter's Mark free casts must carry remaining uses during battle handoff.",
+    );
+  }
+  const expended =
+    favoredEnemyResource.resource.cap.uses - favoredEnemyResource.usesRemaining;
+  if (expended < 0) {
+    return characterSheetBattleHandoffIssue(
+      "Favored Enemy Hunter's Mark free-cast remaining uses exceed the battle resource cap during battle handoff.",
+    );
+  }
+  return Either.right(
+    expended > 0
+      ? [
+          ...nextExpenditures,
+          {
+            tag: "favoredEnemyHuntersMarkFreeCasts",
+            expended: resourceCount(expended),
+          },
+        ]
+      : nextExpenditures,
+  );
 }
 
 function characterSheetInitialConditions(
@@ -183,7 +239,11 @@ function withDefinedCharacterBattleSheetState(
 ): Partial<
   Pick<
     CharacterBuildCreatureInput,
-    "conditions" | "positiveHpUnconscious" | "zeroHpLifecycle" | "spellSlots"
+    | "conditions"
+    | "positiveHpUnconscious"
+    | "zeroHpLifecycle"
+    | "spellSlots"
+    | "resourceExpenditures"
   >
 > {
   const conditions = characterSheetInitialConditions(sheet);
@@ -195,6 +255,7 @@ function withDefinedCharacterBattleSheetState(
     ...(positiveHpUnconscious === undefined ? {} : { positiveHpUnconscious }),
     ...(zeroHpLifecycle === undefined ? {} : { zeroHpLifecycle }),
     ...(spellSlots === undefined ? {} : { spellSlots }),
+    resourceExpenditures: sheet.resourceExpenditures,
   };
 }
 

@@ -1,8 +1,9 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.martial-arts-attack-projection
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.martial-arts-attack-projection spell.invocation-marked-damage-rider
 import {
   scoreModifier,
   type CharacterBattleSpellSlotState,
   type CharacterBattleClassLevelInit,
+  type CharacterBattleFeaturePreparedSpellInit,
   type CharacterUnarmedStrikeActionOption,
   type CharacterWeaponAttackActionOption,
   type CharacterWeaponAttackDamageTypeChoices,
@@ -10,9 +11,11 @@ import {
   type CharacterBattleLoadoutRef,
   martialArtsAttackProjectionProfileForUnit,
   passiveArmorClassBonusProfileForUnit,
+  unitIsFavoredEnemyHuntersMarkFreeCastResource,
 } from "@dnd/battle-runtime";
 import {
   characterBuildArmorTraining,
+  characterBuildFeatureUnitIds,
   characterBuildSpellcastingSlotCapacity,
   characterBuildUnitRefs,
   classUnitIdToClassName,
@@ -657,6 +660,13 @@ export function characterSpellcasting(input: {
   if (Either.isLeft(preparedSpells)) {
     return battleCreatureInitIssue(preparedSpells.left.message);
   }
+  const featurePreparedSpells = featurePreparedSpellAccess({
+    build,
+    unitLibrary,
+  });
+  if (Either.isLeft(featurePreparedSpells)) {
+    return Either.left(featurePreparedSpells.left);
+  }
 
   return Either.right({
     sourceClassName: sources.right.sourceClassName,
@@ -667,6 +677,7 @@ export function characterSpellcasting(input: {
     canCastSpells: canCastSpells.right,
     cantrips: cantrips.right,
     preparedSpells: preparedSpells.right,
+    featurePreparedSpells: featurePreparedSpells.right,
     spellSlots: characterBuildSpellcastingSlotCapacity(build).map((slot) => ({
       spellLevel: spellSlotLevel(slot.spellLevel),
       count: resourceCount(slot.count),
@@ -680,6 +691,49 @@ export function characterSpellcasting(input: {
           })),
         }),
   });
+}
+
+function featurePreparedSpellAccess(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+}): Either.Either<
+  readonly CharacterBattleFeaturePreparedSpellInit[],
+  BattleCreatureInitIssue
+> {
+  const featurePreparedSpells: CharacterBattleFeaturePreparedSpellInit[] = [];
+  for (const featureUnitId of characterBuildFeatureUnitIds(
+    input.build,
+    input.unitLibrary,
+  )) {
+    const unit = input.unitLibrary.getUnit(featureUnitId);
+    if (Option.isNone(unit)) {
+      continue;
+    }
+    if (
+      unit.value.kind !== "class_feature" ||
+      unit.value.mechanics.family !== "passive" ||
+      !unitIsFavoredEnemyHuntersMarkFreeCastResource(unit.value)
+    ) {
+      continue;
+    }
+    for (const grant of unit.value.mechanics.grants) {
+      if (grant.kind !== "grant_spell_access" || grant.mode !== "prepared") {
+        continue;
+      }
+      const spell = getRequiredUnit(input.unitLibrary, grant.spellId);
+      if (Either.isLeft(spell)) {
+        return battleCreatureInitIssue(spell.left.message);
+      }
+      if (spell.right.kind !== "spell") {
+        return battleCreatureInitIssue(`Expected spell Unit: ${grant.spellId}`);
+      }
+      featurePreparedSpells.push({
+        sourceUnitId: unit.value.id,
+        spell: spell.right,
+      });
+    }
+  }
+  return Either.right(featurePreparedSpells);
 }
 
 function spellcastingSourcesWithOneAbilityAndClass(input: {

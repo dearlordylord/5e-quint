@@ -26,7 +26,7 @@ const ALLOWLIST_PATH_RULES = [
   {
     reason: "catalog-boundary",
     pattern:
-      /^packages\/surface\/src\/surface\/(?:unit-catalog|stat-block-catalog|schema-nonspell)\.ts$/,
+      /^packages\/surface\/src\/surface\/(?:unit-catalog|stat-block-catalog|schema-nonspell|types)\.ts$/,
   },
   {
     reason: "composition-selection-boundary",

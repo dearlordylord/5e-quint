@@ -118,6 +118,12 @@ export const SpellInvocationRefSchema = Schema.Union(
     procedure: Schema.Literal(...SPELL_SLOT_PROCEDURES),
   }),
   Schema.Struct({
+    tag: Schema.Literal("classFeatureFreeCast"),
+    spellId: SpellId,
+    resourceUnitId: Schema.String,
+    procedure: Schema.Literal("markedDamageRider"),
+  }),
+  Schema.Struct({
     tag: Schema.Literal("spellEffect"),
     spellId: SpellId,
     sourceCombatantId: CombatantId,
@@ -160,6 +166,19 @@ export function spellEffectInvocationRef(
     tag: "spellEffect",
     spellId: makeSpellId(rawSpellId),
     sourceCombatantId,
+    procedure,
+  };
+}
+
+export function classFeatureFreeCastSpellInvocationRef(
+  rawSpellId: string,
+  resourceUnitId: string,
+  procedure: "markedDamageRider",
+): SpellInvocationRef {
+  return {
+    tag: "classFeatureFreeCast",
+    spellId: makeSpellId(rawSpellId),
+    resourceUnitId,
     procedure,
   };
 }
@@ -511,6 +530,12 @@ function spellInvocationRefKey(ref: SpellInvocationRef): readonly unknown[] {
       slot.spellId,
       slot.slotLevel,
       slot.procedure,
+    ]),
+    Match.when({ tag: "classFeatureFreeCast" }, (freeCast) => [
+      freeCast.tag,
+      freeCast.spellId,
+      freeCast.resourceUnitId,
+      freeCast.procedure,
     ]),
     Match.when({ tag: "spellEffect" }, (effect) => [
       effect.tag,

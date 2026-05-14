@@ -1566,11 +1566,13 @@
         "packages/battle-runtime/battle-runtime.qnt"
       ],
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer.ts"
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/character-battle-runtime/src/battle-character-build-projection.ts"
       ],
       "taskRefs": [
         "SRDINV31B",
-        "SRDINV62"
+        "SRDINV62",
+        "SRDINV77"
       ],
       "title": "Spell invocation creates a combat mark with attack-roll damage, Concentration duration, and 0-HP transfer",
       "verificationOwners": [
@@ -1585,6 +1587,10 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
         }
       ]
     },
@@ -2917,6 +2923,22 @@
         "unit-feature.innate-sorcery-activation"
       ],
       "taskId": "SRDINV75A"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Favored Enemy's two-use Hunter's Mark free-cast resource at Ranger level 1, including no Spell Slot spend, Bonus Action use, one-hour Concentration ownership, and exhausted-use rejection.",
+      "profileIds": [
+        "spell.invocation-marked-damage-rider"
+      ],
+      "taskId": "SRDINV77"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused character-battle and battle-runtime tests cover Favored Enemy always-prepared Hunter's Mark projection, free-cast discovery, two-use Long Rest cap initialization, resource spend without Spell Slot accounting, existing Hunter's Mark Concentration/effect reuse, exhausted free-cast rejection, and fallback to normal Spell Slot casting.",
+      "profileIds": [
+        "spell.invocation-marked-damage-rider"
+      ],
+      "taskId": "SRDINV77"
     }
   ],
   "units": [
@@ -4193,14 +4215,71 @@
         "status": "installed"
       },
       "claim": {
-        "reason": "Prepared spell and free-cast source facts are authored; Hunter's Mark spell execution is outside this class-feature Unit profile.",
-        "tag": "unsupported-profile"
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "SRDINV78",
+            "mechanic": "later-level Favored Enemy free-cast count scaling beyond two uses"
+          },
+          {
+            "followUpTaskId": "SRDINV66",
+            "mechanic": "Hunter's Mark Perception/Survival finding Advantage remains deferred to ability-check roll-mode work"
+          }
+        ],
+        "profileIds": [
+          "spell.invocation-marked-damage-rider"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "always-prepared Hunter's Mark access through retained prepared Spell Access",
+          "two-use Favored Enemy Long Rest free-cast resource at Ranger level 1",
+          "free-cast Hunter's Mark uses the existing marked damage rider, target gate, Concentration ownership, and Bonus Action cost",
+          "normal Spell Slot Hunter's Mark casting remains available when the free-cast resource is exhausted"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-marked-damage-rider",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/character-battle-runtime/src/battle-character-build-projection.ts"
+          ],
+          "taskRefs": [
+            "SRDINV31B",
+            "SRDINV62",
+            "SRDINV77"
+          ],
+          "title": "Spell invocation creates a combat mark with attack-roll damage, Concentration duration, and 0-HP transfer",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/ranger_favored_enemy.json",
       "unitId": "ranger_favored_enemy"
     },
@@ -7095,11 +7174,13 @@
             "packages/battle-runtime/battle-runtime.qnt"
           ],
           "runtimeOwners": [
-            "packages/battle-runtime/src/battle-reducer.ts"
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/character-battle-runtime/src/battle-character-build-projection.ts"
           ],
           "taskRefs": [
             "SRDINV31B",
-            "SRDINV62"
+            "SRDINV62",
+            "SRDINV77"
           ],
           "title": "Spell invocation creates a combat mark with attack-roll damage, Concentration duration, and 0-HP transfer",
           "verificationOwners": [
@@ -7114,6 +7195,10 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
             }
           ]
         }
