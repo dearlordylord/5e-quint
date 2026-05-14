@@ -64,10 +64,11 @@ let holdMonster =
                     , condition = "paralyzed"
                     }
                 , onSuccess = { kind = "none" }
-                , repeatSave =
-                    { cadence = "end_of_target_turn"
-                    , onSuccess = "ends_on_target"
-                    }
+                , repeatSaves =
+                    [ { cadence = "end_of_target_turn"
+                      , onSuccess = "ends_on_target"
+                      }
+                    ]
                 }
               ]
           }

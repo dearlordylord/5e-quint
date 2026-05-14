@@ -53,14 +53,15 @@ let sleep =
                     , condition = "incapacitated"
                     }
                 , onSuccess = { kind = "none" }
-                , repeatSave =
-                    { cadence = "end_of_target_turn"
-                    , onSuccess = "ends_on_target"
-                    , onFailAgain =
-                        { kind = "apply_condition"
-                        , condition = "unconscious"
-                        }
-                    }
+                , repeatSaves =
+                    [ { cadence = "end_of_target_turn"
+                      , onSuccess = "ends_on_target"
+                      , onFailAgain =
+                          { kind = "apply_condition"
+                          , condition = "unconscious"
+                          }
+                      }
+                    ]
                 }
               ]
           }

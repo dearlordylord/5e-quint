@@ -38,6 +38,7 @@ import type { CombatantId } from "../identity.ts";
 import { SHIELD_MAGIC_MISSILE_SPELL_ID } from "./domain-constants.ts";
 
 import {
+  hasSaveGateRepeatSaves,
   supportedCantripSaveGateDamageProfile,
   supportedDamageAmountExpr,
   supportedPreparedSaveGateAttackRollAdvantageProfile,
@@ -83,6 +84,7 @@ export {
   diceExprWithDelta,
   entangleSaveGateConditionSpell,
   faerieFireSaveGateAttackRollAdvantageSpell,
+  hasSaveGateRepeatSaves,
   isGuidingBoltNextAttackRiderShape,
   isRayOfSicknessPoisonedRiderShape,
   isShockingGraspOpportunityAttackRiderShape,
@@ -627,7 +629,7 @@ export function supportedPreparedHellishRebukeReactionSpellProfile(
   const phase = spell.mechanics.phases[0];
   if (
     phase?.kind !== "save_gate" ||
-    "repeatSave" in phase ||
+    hasSaveGateRepeatSaves(phase) ||
     phase.ability !== "dex" ||
     phase.dc.kind !== "caster_spell_save_dc" ||
     phase.onSuccess.kind !== "half_damage" ||

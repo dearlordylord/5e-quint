@@ -18,7 +18,7 @@
 --   • ActivationPhase.save_gate: Con DC 15
 --       onFail  = apply_condition "paralyzed"
 --       onSuccess = none
---       repeatSave = { cadence = "end_of_target_turn", onSuccess = "ends_on_target" }
+--       repeatSaves = [{ cadence = "end_of_target_turn", onSuccess = "ends_on_target" }]
 --   • ItemDestructionPolicy.last_charge_roll (d20, destroyOn=1)
 --
 -- Known surface gap (surface_widening):
@@ -77,10 +77,11 @@ let wand =
                 , onFail =
                     { kind = "apply_condition", condition = "paralyzed" }
                 , onSuccess = { kind = "none" }
-                , repeatSave =
-                    { cadence = "end_of_target_turn"
-                    , onSuccess = "ends_on_target"
-                    }
+                , repeatSaves =
+                    [ { cadence = "end_of_target_turn"
+                      , onSuccess = "ends_on_target"
+                      }
+                    ]
                 }
               ]
           }

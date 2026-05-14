@@ -489,6 +489,10 @@ type EffectAtom =
         | "spell_duration";
     }
   | {
+      readonly kind: "suppress_condition_self_end";
+      readonly condition: "prone";
+    }
+  | {
       readonly kind: "restrict_action_usage";
       readonly actions: ReadonlyNonEmptyArray<ActionEconomyKind>;
       readonly whileCondition?: Condition;
@@ -1105,7 +1109,7 @@ type ActivationPhase =
       readonly dc: DcSource;
       readonly onFail: EffectAtom;
       readonly onSuccess: SaveSuccessOutcome;
-      readonly repeatSave?: RepeatSaveSpec;
+      readonly repeatSaves?: ReadonlyNonEmptyArray<RepeatSaveSpec>;
       readonly autoSuccessIfCasterSlotGte?: "triggering_spell_level";
       readonly saveAppliesIf?: "unwilling_target";
     }
@@ -1844,6 +1848,10 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         duration: optionalExact(
           Schema.Literal("current_turn", "end_of_next_turn", "spell_duration"),
         ),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("suppress_condition_self_end"),
+        condition: Schema.Literal("prone"),
       }),
       Schema.Struct({
         kind: Schema.Literal("restrict_action_usage"),
@@ -2600,6 +2608,7 @@ export const SaveSuccessOutcomeSchema: Schema.suspend<
 
 export const RepeatSaveSpecSchema = Schema.Struct({
   cadence: Schema.Literal("end_of_target_turn", "on_target_takes_damage"),
+  rollMode: optionalExact(Schema.Literal("advantage")),
   onSuccess: Schema.Literal("ends_on_target"),
   onFailAgain: optionalExact(EffectAtomSchema),
 });
@@ -2656,7 +2665,7 @@ export const ActivationPhaseSchema: Schema.suspend<
       dc: DcSourceSchema,
       onFail: EffectAtomSchema,
       onSuccess: SaveSuccessOutcomeSchema,
-      repeatSave: optionalExact(RepeatSaveSpecSchema),
+      repeatSaves: optionalExact(nonEmpty(RepeatSaveSpecSchema)),
       autoSuccessIfCasterSlotGte: optionalExact(
         Schema.Literal("triggering_spell_level"),
       ),

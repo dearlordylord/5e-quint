@@ -313,6 +313,45 @@ describe("SRD Unit catalog boundary", () => {
     }
   });
 
+  test("decodes Hideous Laughter as multi-trigger repeat saves plus Prone self-end suppression", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const hideousLaughter = result.catalog.requireUnit("hideous_laughter");
+      expect(hideousLaughter.kind).toBe("spell");
+      if (hideousLaughter.kind !== "spell") return;
+      expect(hideousLaughter.mechanics.family).toBe("activation");
+      if (hideousLaughter.mechanics.family !== "activation") return;
+
+      const phase = hideousLaughter.mechanics.phases[0];
+      expect(phase?.kind).toBe("save_gate");
+      if (phase?.kind !== "save_gate") return;
+
+      expect(phase.ability).toBe("wis");
+      expect(phase.attachment.kind).toBe("hole");
+      expect(phase.onFail).toEqual({
+        kind: "composite",
+        effects: [
+          { kind: "apply_condition", condition: "prone" },
+          { kind: "apply_condition", condition: "incapacitated" },
+          { kind: "suppress_condition_self_end", condition: "prone" },
+        ],
+      });
+      expect(phase.repeatSaves).toEqual([
+        {
+          cadence: "end_of_target_turn",
+          onSuccess: "ends_on_target",
+        },
+        {
+          cadence: "on_target_takes_damage",
+          rollMode: "advantage",
+          onSuccess: "ends_on_target",
+        },
+      ]);
+    }
+  });
+
   test("rejects Thunderwave area-only push facts outside area attachments", () => {
     const decode = Schema.decodeUnknownEither(ActivationPhaseSchema);
 

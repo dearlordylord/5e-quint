@@ -83,6 +83,8 @@ import {
   movementDeltaFeet,
   movementFeet,
   proficiencyBonus,
+  resourceCount,
+  spellSlotLevel,
   type ProficiencyBonus,
 } from "@dnd/shared/types";
 import {
@@ -163,6 +165,12 @@ import {
   applyPreparedSlotSpellDamage,
   spellSavingThrowOutcomeHole,
 } from "./battle-reducer/spells-damage-fills.ts";
+import { supportedPreparedHellishRebukeReactionSpellProfile } from "./battle-reducer/spells-profiles.ts";
+import {
+  supportedPreparedSaveGateAttackRollAdvantageProfile,
+  supportedPreparedSaveGateConditionProfile,
+  supportedPreparedSleepTargetAdmissionProfile,
+} from "./battle-reducer/spells-profiles-save-gates.ts";
 import { validateSavingThrowOutcomes } from "./battle-reducer/spells-resolve-save-gates.ts";
 import {
   ALTERNATE_ACTION_COST_ACTIONS,
@@ -245,6 +253,7 @@ const guidingBoltUnitId = "guiding_bolt";
 const guidanceUnitId = "guidance";
 const greaseUnitId = "grease";
 const heroismUnitId = "heroism";
+const hellishRebukeUnitId = "hellish_rebuke";
 const inflictWoundsUnitId = "inflict_wounds";
 const lightUnitId = "light";
 const longstriderUnitId = "longstrider";
@@ -3243,19 +3252,68 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
 
   test("sleep is not admitted through the generic save-gated condition projection", () => {
     const spell = spellRecord(sleepUnitId);
-    const state = spellBattle({
-      preparedSpells: [spell],
-      spellSlots: [{ spellLevel: 1, count: 1 }],
-    });
+    const spellSlots = [
+      {
+        spellLevel: spellSlotLevel(1),
+        count: resourceCount(1),
+        expended: resourceCount(0),
+      },
+    ];
 
-    const invocation = spellAct({
-      state,
-      spellId: sleepUnitId,
-      slotLevel: 1,
-    }).subject.invocation;
-    expect(invocation).toEqual(
-      spellSlotInvocationRef("sleep", 1, "sleepTargetAdmission"),
+    expect(supportedPreparedSaveGateConditionProfile(spell, spellSlots)).toEqual(
+      [],
     );
+    expect(
+      supportedPreparedSleepTargetAdmissionProfile(spell, spellSlots),
+    ).toEqual([
+      expect.objectContaining({
+        procedure: "sleepTargetAdmission",
+        spell,
+        targeting: { kind: "pointOriginSphere", radiusFeet: 5 },
+      }),
+    ]);
+  });
+
+  test("repeat-save phases are rejected by non-repeat save-gate profiles", () => {
+    const spellSlots = [
+      {
+        spellLevel: spellSlotLevel(1),
+        count: resourceCount(1),
+        expended: resourceCount(0),
+      },
+    ];
+    const colorSprayWithRepeatSave = spellWithSaveGateRepeatSaves(
+      spellRecord(colorSprayUnitId),
+      "color_spray_with_repeat_save",
+    );
+    const faerieFireWithRepeatSave = spellWithSaveGateRepeatSaves(
+      spellRecord(faerieFireUnitId),
+      "faerie_fire_with_repeat_save",
+    );
+    const hellishRebukeWithRepeatSave = spellWithSaveGateRepeatSaves(
+      spellRecord(hellishRebukeUnitId),
+      "hellish_rebuke_with_repeat_save",
+    );
+
+    expect(
+      supportedPreparedSaveGateConditionProfile(
+        colorSprayWithRepeatSave,
+        spellSlots,
+      ),
+    ).toEqual([]);
+    expect(
+      supportedPreparedSaveGateAttackRollAdvantageProfile(
+        spellCasterId,
+        faerieFireWithRepeatSave,
+        spellSlots,
+      ),
+    ).toEqual([]);
+    expect(
+      supportedPreparedHellishRebukeReactionSpellProfile(
+        hellishRebukeWithRepeatSave,
+        spellSlots,
+      ),
+    ).toEqual([]);
   });
 
   test("command is admitted as a target-list save spell with promoted option choices and slot-scaled targets", () => {
@@ -13853,6 +13911,37 @@ function spellRecord(unitId: string): SpellRecord {
   const unit = unitLibrary.requireUnit(unitId);
   expect(unit.kind).toBe("spell");
   return unit as SpellRecord;
+}
+
+function spellWithSaveGateRepeatSaves(
+  base: SpellRecord,
+  id: string,
+): SpellRecord {
+  if (
+    base.mechanics.family !== "activation" &&
+    base.mechanics.family !== "triggered_reaction"
+  ) {
+    throw new Error("Expected phased spell mechanics.");
+  }
+  const phase = base.mechanics.phases[0];
+  if (phase?.kind !== "save_gate") {
+    throw new Error("Expected first phase to be a save gate.");
+  }
+  const repeatPhase = {
+    ...phase,
+    repeatSaves: [
+      { cadence: "end_of_target_turn", onSuccess: "ends_on_target" },
+    ],
+  } as const satisfies ActivationPhase;
+
+  return {
+    ...base,
+    id,
+    mechanics: {
+      ...base.mechanics,
+      phases: [repeatPhase],
+    },
+  } as SpellRecord;
 }
 
 function thunderwaveWithoutDirectPhase(

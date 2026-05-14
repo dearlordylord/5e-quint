@@ -144,10 +144,11 @@ let rayOfEnfeeblement =
                 , dc = { kind = "caster_spell_save_dc" }
                 , onFail = failedSave
                 , onSuccess = nextAttackDisadvantage
-                , repeatSave =
-                    { cadence = "end_of_target_turn"
-                    , onSuccess = "ends_on_target"
-                    }
+                , repeatSaves =
+                    [ { cadence = "end_of_target_turn"
+                      , onSuccess = "ends_on_target"
+                      }
+                    ]
                 }
               ]
           }

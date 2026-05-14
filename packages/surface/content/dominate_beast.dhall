@@ -49,10 +49,11 @@ let dominateBeast =
                     , condition = "charmed"
                     }
                 , onSuccess = { kind = "none" }
-                , repeatSave =
-                    { cadence = "on_target_takes_damage"
-                    , onSuccess = "ends_on_target"
-                    }
+                , repeatSaves =
+                    [ { cadence = "on_target_takes_damage"
+                      , onSuccess = "ends_on_target"
+                      }
+                    ]
                 }
               ]
           }

@@ -90,10 +90,11 @@ let sunburst =
                 , dc = { kind = "caster_spell_save_dc" }
                 , onFail = failedSave
                 , onSuccess = { kind = "half_damage" }
-                , repeatSave =
-                    { cadence = "end_of_target_turn"
-                    , onSuccess = "ends_on_target"
-                    }
+                , repeatSaves =
+                    [ { cadence = "end_of_target_turn"
+                      , onSuccess = "ends_on_target"
+                      }
+                    ]
                 }
               ]
           }

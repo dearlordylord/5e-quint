@@ -272,14 +272,6 @@ const spellUnitMissingClassifications = new Map([
     },
   ],
   [
-    "hideous_laughter",
-    {
-      kind: "needs-surface-widening",
-      missingConstruct:
-        "Spell Definition multi-trigger repeat saves with damage-triggered Advantage, Prone self-end suppression, and slot-scaled additional targets",
-    },
-  ],
-  [
     "illusory_script",
     {
       kind: "catalog-only-closure",

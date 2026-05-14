@@ -14,7 +14,7 @@
 --     caster picks one of the listed conditions at cast time. First
 --     unit with this shape; future Suggestion / Command / Compulsion
 --     candidates may reuse it.
---   • save_gate.repeatSave (already in place from Hold Person).
+--   • save_gate.repeatSaves (already in place from Hold Person).
 --   • TargetSelection.choose_up_to with SlotScaling.
 --
 -- Sub-agent originally proposed 4 widenings for this unit; 3 were
@@ -72,10 +72,11 @@ let blindnessDeafness =
                         }
                     }
                 , onSuccess = { kind = "none" }
-                , repeatSave =
-                    { cadence = "end_of_target_turn"
-                    , onSuccess = "ends_on_target"
-                    }
+                , repeatSaves =
+                    [ { cadence = "end_of_target_turn"
+                      , onSuccess = "ends_on_target"
+                      }
+                    ]
                 }
               ]
           }

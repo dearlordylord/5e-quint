@@ -25,7 +25,7 @@
 --   3. "If it ends its turn in a space without line of sight to you,
 --      repeat the save; on success, spell ends on that creature" —
 --      line-of-sight is §B perception agenda. The end-of-turn repeat
---      save cadence itself is already expressible via repeatSave, but
+--      save cadence itself is already expressible via repeatSaves, but
 --      the LoS predicate gates it — omit until perception is modeled.
 
 let fear =

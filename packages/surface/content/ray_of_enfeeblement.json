@@ -75,10 +75,12 @@
             "attack_roll"
           ]
         },
-        "repeatSave": {
-          "cadence": "end_of_target_turn",
-          "onSuccess": "ends_on_target"
-        }
+        "repeatSaves": [
+          {
+            "cadence": "end_of_target_turn",
+            "onSuccess": "ends_on_target"
+          }
+        ]
       }
     ],
     "range": {

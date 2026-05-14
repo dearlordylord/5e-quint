@@ -9,7 +9,7 @@
 --    Humanoid for each spell slot level above 2."
 --
 -- Consolidated validation reference for:
---   • save_gate.repeatSave { cadence = end_of_target_turn,
+--   • save_gate.repeatSaves { cadence = end_of_target_turn,
 --                            onSuccess = ends_on_target }
 --     (recurring save-to-end attached to the initial save_gate phase;
 --      reuses ability + DC from the parent)
@@ -71,10 +71,11 @@ let hold_person =
                     , condition = "paralyzed"
                     }
                 , onSuccess = { kind = "none" }
-                , repeatSave =
-                    { cadence = "end_of_target_turn"
-                    , onSuccess = "ends_on_target"
-                    }
+                , repeatSaves =
+                    [ { cadence = "end_of_target_turn"
+                      , onSuccess = "ends_on_target"
+                      }
+                    ]
                 }
               ]
           }

@@ -497,6 +497,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "suppress_condition_self_end": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "suppress_condition_self_end",
+        label: `suppress_condition_self_end\n${e.condition}`,
+      });
+      return id;
+    }
     case "restrict_action_usage": {
       const id = ids("eff");
       const condition =
@@ -2174,6 +2184,7 @@ function traceEffectAtomScaling(
     case "modify_ac_set_base":
     case "modify_save_dc":
     case "apply_condition":
+    case "suppress_condition_self_end":
     case "restrict_action_usage":
     case "command_target_next_turn":
     case "forced_reaction_movement":
@@ -4309,19 +4320,23 @@ function tracePhase(
           ids,
         );
       }
-      if (phase.repeatSave !== undefined) {
+      for (const repeatSave of phase.repeatSaves ?? []) {
         const repId = ids("rep");
+        const rollMode =
+          repeatSave.rollMode === undefined
+            ? ""
+            : `\nroll mode: ${repeatSave.rollMode}`;
         nodes.push({
           id: repId,
           category: "resolution",
           atomKind: "repeat_save",
-          label: `repeat_save\ncadence: ${phase.repeatSave.cadence}\non success: ${phase.repeatSave.onSuccess}`,
+          label: `repeat_save\ncadence: ${repeatSave.cadence}${rollMode}\non success: ${repeatSave.onSuccess}`,
         });
         edges.push({ from: resId, to: repId, relation: "repeats_as" });
         edges.push({ from: repId, to: attId, relation: "attaches_to" });
-        if (phase.repeatSave.onFailAgain !== undefined) {
+        if (repeatSave.onFailAgain !== undefined) {
           const escId = traceEffectAtom(
-            phase.repeatSave.onFailAgain,
+            repeatSave.onFailAgain,
             nodes,
             ids,
             edges,

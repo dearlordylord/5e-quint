@@ -139,6 +139,12 @@ type ModifyRollAdvantageEffect = Extract<
   { readonly kind: "modify_roll_advantage" }
 >;
 
+export function hasSaveGateRepeatSaves(
+  phase: ActivationPhase | undefined,
+): boolean {
+  return phase?.kind === "save_gate" && phase.repeatSaves !== undefined;
+}
+
 export function supportedCantripSaveGateDamageProfile(
   spell: SpellRecord,
   characterLevel: number,
@@ -386,7 +392,7 @@ function isCommandPhase(
   const failedEffect = phase?.kind === "save_gate" ? phase.onFail : undefined;
   return (
     phase?.kind === "save_gate" &&
-    !("repeatSave" in phase) &&
+    !hasSaveGateRepeatSaves(phase) &&
     phase.ability === "wis" &&
     phase.dc.kind === "caster_spell_save_dc" &&
     phase.onSuccess.kind === "none" &&
@@ -476,7 +482,7 @@ function isGreaseGroundHazardPhase(
   const failedEffect = phase?.kind === "save_gate" ? phase.onFail : undefined;
   return (
     phase?.kind === "save_gate" &&
-    !("repeatSave" in phase) &&
+    !hasSaveGateRepeatSaves(phase) &&
     phase.ability === "dex" &&
     phase.dc.kind === "caster_spell_save_dc" &&
     phase.onSuccess.kind === "none" &&
@@ -538,10 +544,8 @@ function sleepTargetAdmissionSpell(spell: SpellRecord): {
 function isSleepTargetAdmissionPhase(
   phase: ActivationPhase | undefined,
 ): phase is SleepTargetAdmissionPhase {
-  const repeatSave =
-    phase?.kind === "save_gate" && "repeatSave" in phase
-      ? phase.repeatSave
-      : undefined;
+  const repeatSaves = phase?.kind === "save_gate" ? phase.repeatSaves : [];
+  const repeatSave = repeatSaves?.length === 1 ? repeatSaves[0] : undefined;
   const repeatFailure =
     repeatSave !== undefined ? repeatSave.onFailAgain : undefined;
   return (
@@ -559,6 +563,7 @@ function isSleepTargetAdmissionPhase(
     phase.onFail.condition === "incapacitated" &&
     repeatSave !== undefined &&
     repeatSave.cadence === "end_of_target_turn" &&
+    repeatSave.rollMode === undefined &&
     repeatSave.onSuccess === "ends_on_target" &&
     repeatFailure?.kind === "apply_condition" &&
     repeatFailure.condition === "unconscious"
@@ -589,7 +594,7 @@ export function faerieFireSaveGateAttackRollAdvantageSpell(
     spell.mechanics.duration.upTo.amount !== 1 ||
     spell.mechanics.phases.length !== 1 ||
     phase?.kind !== "save_gate" ||
-    "repeatSave" in phase ||
+    hasSaveGateRepeatSaves(phase) ||
     phase.ability !== "dex" ||
     phase.dc.kind !== "caster_spell_save_dc" ||
     phase.onSuccess.kind !== "none" ||
@@ -707,7 +712,7 @@ function creatureTypeCharmedSaveGateConditionSpell(input: {
     earlyEnd[0]?.kind !== "target_damaged_by_caster_or_ally" ||
     spell.mechanics.phases.length !== 1 ||
     phase?.kind !== "save_gate" ||
-    "repeatSave" in phase ||
+    hasSaveGateRepeatSaves(phase) ||
     phase.ability !== "wis" ||
     phase.dc.kind !== "caster_spell_save_dc" ||
     phase.onSuccess.kind !== "none" ||
@@ -771,7 +776,7 @@ export function colorSpraySaveGateConditionSpell(
     spell.mechanics.duration.value.amount !== 1 ||
     spell.mechanics.phases.length !== 1 ||
     phase?.kind !== "save_gate" ||
-    "repeatSave" in phase ||
+    hasSaveGateRepeatSaves(phase) ||
     phase.ability !== "con" ||
     phase.dc.kind !== "caster_spell_save_dc" ||
     phase.onSuccess.kind !== "none" ||
@@ -823,7 +828,7 @@ export function entangleSaveGateConditionSpell(
     spell.mechanics.duration.upTo.amount !== 1 ||
     spell.mechanics.phases.length !== 1 ||
     phase?.kind !== "save_gate" ||
-    "repeatSave" in phase ||
+    hasSaveGateRepeatSaves(phase) ||
     phase.ability !== "str" ||
     phase.dc.kind !== "caster_spell_save_dc" ||
     phase.onSuccess.kind !== "none" ||

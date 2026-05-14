@@ -54,14 +54,16 @@
         "onSuccess": {
           "kind": "none"
         },
-        "repeatSave": {
-          "cadence": "end_of_target_turn",
-          "onFailAgain": {
-            "condition": "unconscious",
-            "kind": "apply_condition"
-          },
-          "onSuccess": "ends_on_target"
-        }
+        "repeatSaves": [
+          {
+            "cadence": "end_of_target_turn",
+            "onFailAgain": {
+              "condition": "unconscious",
+              "kind": "apply_condition"
+            },
+            "onSuccess": "ends_on_target"
+          }
+        ]
       }
     ],
     "range": {

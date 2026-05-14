@@ -161,9 +161,9 @@
       "rowsByStatus": {
         "accepted": 217,
         "accepted-no-battle-effect": 69,
-        "battle-runtime-required": 26,
+        "battle-runtime-required": 29,
         "partial-battle-runtime": 40,
-        "surface-widening-required": 15
+        "surface-widening-required": 12
       }
     },
     "levelOneClassContainers": 12,
@@ -175,12 +175,14 @@
       "catalog-installed-owner-evidence-present": 264,
       "non-runtime": 12,
       "catalog-only/dead-for-now": 76,
-      "needs-surface-widening": 15
+      "catalog-installed-owner-evidence-required": 3,
+      "needs-surface-widening": 12
     },
     "spellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 76,
       "catalog-installed-owner-evidence-present": 120,
-      "needs-surface-widening": 15
+      "catalog-installed-owner-evidence-required": 3,
+      "needs-surface-widening": 12
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -528,7 +530,7 @@
       "title": "Classify Installed Cantrip and Level-1 Spell Units",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Classify installed SRD cantrip and level-1 Spell Unit owner evidence separately from missing and catalog-only spell rows.",
-      "rowCount": 140,
+      "rowCount": 143,
       "rowIds": [
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_light",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_minor_illusion",
@@ -547,6 +549,7 @@
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_feather_fall",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_healing_word",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_heroism",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_hideous_laughter",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_longstrider",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_sleep",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_thunderwave",
@@ -641,6 +644,7 @@
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_detect_magic",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_expeditious_retreat",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hellish_rebuke",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hideous_laughter",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_protection_from_evil_and_good",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_acid_splash",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_chill_touch",
@@ -660,6 +664,7 @@
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_false_life",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_feather_fall",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_grease",
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_hideous_laughter",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_ice_knife",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_jump",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_longstrider",
@@ -766,9 +771,8 @@
       "title": "Review Catalog-Only and Surface-Widening Rows",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Preserve catalog-only/dead-for-now rows and name missing Surface constructs for nonspell and spell Surface-widening blockers.",
-      "rowCount": 15,
+      "rowCount": 12,
       "rowIds": [
-        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_hideous_laughter",
         "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_spare_the_dying",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_sanctuary",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_shillelagh",
@@ -779,10 +783,8 @@
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_sorcerous_burst",
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_fog_cloud",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hex",
-        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hideous_laughter",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_fire_bolt",
-        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_fog_cloud",
-        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_hideous_laughter"
+        "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_fog_cloud"
       ],
       "nextAction": "Either keep catalog-only rows explicitly catalog-only/dead-for-now or promote a named Surface-widening task for each blocker, including spell Surface pressure.",
       "acceptance": "Catalog-only rows are counted deliberately, and every nonspell or spell Surface-widening row names the missing construct."
@@ -5375,19 +5377,32 @@
       "detail": "Hideous Laughter (Enchantment; C)",
       "candidateUnitId": "hideous_laughter",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "Spell Definition multi-trigger repeat saves with damage-triggered Advantage, Prone self-end suppression, and slot-scaled additional targets"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "hideous_laughter",
+        "sourceRecordPath": "packages/surface/content/hideous_laughter.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "hideous_laughter"
       },
-      "finalDisposition": "needs-surface-widening",
-      "ownerEvidence": [],
-      "nextAction": "Widen Surface: Spell Definition multi-trigger repeat saves with damage-triggered Advantage, Prone self-end suppression, and slot-scaled additional targets."
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit hideous_laughter is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Unit matrix records unsupported-profile: Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Hideous Laughter's multi-trigger repeat saves, damage-triggered repeat-save Advantage, or Prone self-end suppression. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Unit matrix records unsupported-profile: Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Hideous Laughter's multi-trigger repeat saves, damage-triggered repeat-save Advantage, or Prone self-end suppression. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_identify",
@@ -15868,19 +15883,32 @@
       "detail": "Hideous Laughter (Enchantment; C)",
       "candidateUnitId": "hideous_laughter",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "Spell Definition multi-trigger repeat saves with damage-triggered Advantage, Prone self-end suppression, and slot-scaled additional targets"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "hideous_laughter",
+        "sourceRecordPath": "packages/surface/content/hideous_laughter.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "hideous_laughter"
       },
-      "finalDisposition": "needs-surface-widening",
-      "ownerEvidence": [],
-      "nextAction": "Widen Surface: Spell Definition multi-trigger repeat saves with damage-triggered Advantage, Prone self-end suppression, and slot-scaled additional targets."
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit hideous_laughter is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Unit matrix records unsupported-profile: Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Hideous Laughter's multi-trigger repeat saves, damage-triggered repeat-save Advantage, or Prone self-end suppression. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Unit matrix records unsupported-profile: Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Hideous Laughter's multi-trigger repeat saves, damage-triggered repeat-save Advantage, or Prone self-end suppression. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_illusory_script",
@@ -17715,19 +17743,32 @@
       "detail": "Hideous Laughter (Enchantment; C)",
       "candidateUnitId": "hideous_laughter",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "Spell Definition multi-trigger repeat saves with damage-triggered Advantage, Prone self-end suppression, and slot-scaled additional targets"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "hideous_laughter",
+        "sourceRecordPath": "packages/surface/content/hideous_laughter.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "hideous_laughter"
       },
-      "finalDisposition": "needs-surface-widening",
-      "ownerEvidence": [],
-      "nextAction": "Widen Surface: Spell Definition multi-trigger repeat saves with damage-triggered Advantage, Prone self-end suppression, and slot-scaled additional targets."
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit hideous_laughter is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "Unit matrix records unsupported-profile: Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Hideous Laughter's multi-trigger repeat saves, damage-triggered repeat-save Advantage, or Prone self-end suppression. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Unit matrix records unsupported-profile: Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Hideous Laughter's multi-trigger repeat saves, damage-triggered repeat-save Advantage, or Prone self-end suppression. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_ice_knife",

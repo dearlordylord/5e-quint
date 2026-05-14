@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 355,
-      "numerator": 107,
-      "percent": "30.1%"
+      "denominator": 356,
+      "numerator": 108,
+      "percent": "30.3%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 422,
-      "numerator": 133,
-      "percent": "31.5%"
+      "denominator": 423,
+      "numerator": 134,
+      "percent": "31.7%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 134
+      "value": 135
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 73,
@@ -67,8 +67,8 @@
       "percent": "90.4%"
     },
     "profileClassificationCoverage": {
-      "denominator": 134,
-      "numerator": 134,
+      "denominator": 135,
+      "numerator": 135,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -97,9 +97,9 @@
       "percent": "13.7%"
     },
     "supportedProfileCoverage": {
-      "denominator": 108,
+      "denominator": 109,
       "numerator": 73,
-      "percent": "67.6%"
+      "percent": "67%"
     }
   },
   "metricSemantics": [
@@ -9824,6 +9824,24 @@
       ],
       "sourceRecordPath": "packages/surface/content/hellish_rebuke.json",
       "unitId": "hellish_rebuke"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Hideous Laughter's multi-trigger repeat saves, damage-triggered repeat-save Advantage, or Prone self-end suppression.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/hideous_laughter.json",
+      "unitId": "hideous_laughter"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
