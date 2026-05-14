@@ -62,9 +62,9 @@
       "value": 134
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 71,
-      "numerator": 64,
-      "percent": "90.1%"
+      "denominator": 72,
+      "numerator": 65,
+      "percent": "90.3%"
     },
     "profileClassificationCoverage": {
       "denominator": 134,
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 71,
+      "denominator": 72,
       "numerator": 10,
-      "percent": "14.1%"
+      "percent": "13.9%"
     },
     "supportedProfileCoverage": {
       "denominator": 108,
-      "numerator": 71,
-      "percent": "65.7%"
+      "numerator": 72,
+      "percent": "66.7%"
     }
   },
   "metricSemantics": [
@@ -495,9 +495,10 @@
         "packages/battle-runtime/src/unit-feature-support.ts",
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
-      "sourceBoundary": "Sorcerer class feature Unit authored with activation timing, fixed two-use Long Rest resource, and one-minute ongoing lifecycle. Spell save DC and Sorcerer spell attack Advantage projection are represented by the same authored Unit but deferred to unit-feature.innate-sorcery-spell-projection.",
+      "sourceBoundary": "Sorcerer class feature Unit authored with activation timing, fixed two-use Long Rest resource, one-minute ongoing lifecycle, active +1 Sorcerer spell save DC projection, and active Sorcerer spell attack Advantage projection.",
       "taskRefs": [
-        "SRDINV75A"
+        "SRDINV75A",
+        "SRDINV75B"
       ],
       "title": "Unit feature spends a Bonus Action and Long Rest use to start a one-minute Innate Sorcery occurrence",
       "verificationOwners": [
@@ -3034,6 +3035,14 @@
       "taskId": "SRDINV75A"
     },
     {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover active Innate Sorcery's +1 Sorcerer spell save DC projection, Sorcerer spell attack Advantage, non-Sorcerer spell source exclusion, and expiration cleanup.",
+      "profileIds": [
+        "unit-feature.innate-sorcery-activation"
+      ],
+      "taskId": "SRDINV75B"
+    },
+    {
       "claimKind": "qnt-proof",
       "note": "Promoted battle-runtime Quint facts for Favored Enemy's two-use Hunter's Mark free-cast resource at Ranger level 1, including no Spell Slot spend, Bonus Action use, one-hour Concentration ownership, and exhausted-use rejection.",
       "profileIds": [
@@ -4693,28 +4702,13 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "followUpTaskId": "SRDINV75B",
-            "mechanic": "while-active +1 Sorcerer spell save DC projection"
-          },
-          {
-            "followUpTaskId": "SRDINV75B",
-            "mechanic": "while-active Advantage on Sorcerer spell attack rolls"
-          }
-        ],
         "profileIds": [
           "unit-feature.innate-sorcery-activation"
         ],
         "rawRequirementIds": [
           "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
         ],
-        "supportedMechanics": [
-          "Bonus Action activation",
-          "two-use Long Rest resource spending",
-          "one-minute active occurrence lifecycle"
-        ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -4722,6 +4716,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV75A"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV75B"
         }
       ],
       "executableMechanics": true,
@@ -4737,9 +4736,10 @@
             "packages/battle-runtime/src/unit-feature-support.ts",
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
-          "sourceBoundary": "Sorcerer class feature Unit authored with activation timing, fixed two-use Long Rest resource, and one-minute ongoing lifecycle. Spell save DC and Sorcerer spell attack Advantage projection are represented by the same authored Unit but deferred to unit-feature.innate-sorcery-spell-projection.",
+          "sourceBoundary": "Sorcerer class feature Unit authored with activation timing, fixed two-use Long Rest resource, one-minute ongoing lifecycle, active +1 Sorcerer spell save DC projection, and active Sorcerer spell attack Advantage projection.",
           "taskRefs": [
-            "SRDINV75A"
+            "SRDINV75A",
+            "SRDINV75B"
           ],
           "title": "Unit feature spends a Bonus Action and Long Rest use to start a one-minute Innate Sorcery occurrence",
           "verificationOwners": [
@@ -8581,7 +8581,7 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "SRDINV78",
+            "followUpTaskId": "SRDINV79",
             "mechanic": "object-target Invisible-condition benefit denial requires a promoted object condition-benefit projection boundary"
           }
         ],

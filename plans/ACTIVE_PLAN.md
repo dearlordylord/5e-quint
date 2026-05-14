@@ -130,7 +130,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 288,
       "id": "SRDINV78",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Recursive Level-1 Battle Feature Planning Review"
     },
     {
@@ -174,6 +174,72 @@ Keep it synchronized with the DAG table and task details.
       "id": "SRDINV76F",
       "status": "done",
       "title": "Research Pact of the Tome Spell Access Boundary"
+    },
+    {
+      "number": 296,
+      "id": "SRDINV79",
+      "status": "ready-for-research",
+      "title": "Promote Starry Wisp Object Invisible-Benefit Projection"
+    },
+    {
+      "number": 297,
+      "id": "SRDINV80A",
+      "status": "ready-for-research",
+      "title": "Widen Hideous Laughter Spell Definition Surface"
+    },
+    {
+      "number": 298,
+      "id": "SRDINV80B",
+      "status": "ready-for-research",
+      "title": "Widen Fog Cloud Spell Definition Surface"
+    },
+    {
+      "number": 299,
+      "id": "SRDINV80C",
+      "status": "ready-for-research",
+      "title": "Widen Spare the Dying Stable Lifecycle Surface"
+    },
+    {
+      "number": 300,
+      "id": "SRDINV80D",
+      "status": "ready-for-research",
+      "title": "Widen Sanctuary Targeting Interdiction Surface"
+    },
+    {
+      "number": 301,
+      "id": "SRDINV80E",
+      "status": "ready-for-research",
+      "title": "Widen Shillelagh Weapon Override Surface"
+    },
+    {
+      "number": 302,
+      "id": "SRDINV80F",
+      "status": "ready-for-research",
+      "title": "Widen Fire Bolt and Sorcerous Burst Cantrip Surface"
+    },
+    {
+      "number": 303,
+      "id": "SRDINV80G",
+      "status": "ready-for-research",
+      "title": "Widen Hex Curse Spell Definition Surface"
+    },
+    {
+      "number": 304,
+      "id": "SRDINV81",
+      "status": "ready-for-research",
+      "title": "Promote Pact of the Chain Find Familiar Access"
+    },
+    {
+      "number": 305,
+      "id": "SRDINV82",
+      "status": "ready-for-research",
+      "title": "Promote Pact of the Tome Book of Shadows Access"
+    },
+    {
+      "number": 306,
+      "id": "SRDINV83",
+      "status": "ready-for-research",
+      "title": "Recursive Level-1 Battle Feature Planning Review"
     }
   ]
 }
@@ -224,7 +290,7 @@ Keep it synchronized with the DAG table and task details.
 | 285   | SRDINV76A - Research Warlock Level-1 Invocation Runtime Boundary        | done                                          | completed baseline | SRDINV76B, SRDINV76C, SRDINV76D, SRDINV76E, SRDINV76F, SRDINV78 | [SRDINV76A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76A_WARLOCK_LEVEL_1_INVOCATION_BOUNDARY_RESEARCH.md), [Eldritch Invocations](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Pact Magic](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                  | Completed: level-1-legal invocations split into Pact of the Blade, Armor of Shadows, Eldritch Mind, Pact of the Chain, and Pact of the Tome follow-up surfaces; level-2+ prerequisite invocations are not level-1 coverage.                                                                                                |
 | 286   | SRDINV76B - Promote Pact of the Blade Battle Projection                 | done | SRDINV76A | SRDINV78 | [SRDINV76A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76A_WARLOCK_LEVEL_1_INVOCATION_BOUNDARY_RESEARCH.md), [Pact of the Blade](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Weapon Attack](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Damage Types](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                          | Promote Pact of the Blade's bonded weapon battle projection only: Charisma attack/damage option, selectable Necrotic/Psychic/Radiant/normal damage type, proficiency, and focus facts without generic item conjuration simulation.                                                                                         |
 | 287   | SRDINV77 - Promote Ranger Favored Enemy Hunter's Mark Free Casts        | done | completed baseline | SRDINV78 | [Favored Enemy](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Ranger.md), [Hunter's Mark](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Long Rest](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                                                                                                         | Completed: promoted Favored Enemy as always-prepared Hunter's Mark, two level-1 no-slot casts per Long Rest, class-resource spending/rest persistence, and reuse of Hunter's Mark concentration/effect ownership without duplicate Spell Slot accounting.                                                                    |
-| 288   | SRDINV78 - Recursive Level-1 Battle Feature Planning Review             | ready-for-research                            | SRDINV58C, SRDINV72A, SRDINV72B, SRDINV73A, SRDINV73B, SRDINV74A, SRDINV74C, SRDINV74D, SRDINV75A, SRDINV75B, SRDINV76A, SRDINV76B, SRDINV76C, SRDINV76D, SRDINV76E, SRDINV76F, SRDINV77 | none | [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [SRDINV76A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76A_WARLOCK_LEVEL_1_INVOCATION_BOUNDARY_RESEARCH.md), [Pact of the Chain research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76E_PACT_OF_THE_CHAIN_FAMILIAR_BOUNDARY_RESEARCH.md), [Pact of the Tome research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76F_PACT_OF_THE_TOME_SPELL_ACCESS_BOUNDARY_RESEARCH.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                              | Review the remaining spell/class-feature/weapon-mastery batch after Topple, Cleave, Pact of the Blade, Armor of Shadows, Eldritch Mind, Pact of the Chain boundary research, and Pact of the Tome boundary research complete; refresh level-1 battle-related metrics and decide whether the next queue is closure, cleanup, or final acceptance evidence. |
+| 288   | SRDINV78 - Recursive Level-1 Battle Feature Planning Review             | done                                          | SRDINV58C, SRDINV72A, SRDINV72B, SRDINV73A, SRDINV73B, SRDINV74A, SRDINV74C, SRDINV74D, SRDINV75A, SRDINV75B, SRDINV76A, SRDINV76B, SRDINV76C, SRDINV76D, SRDINV76E, SRDINV76F, SRDINV77 | SRDINV79, SRDINV80A, SRDINV80B, SRDINV80C, SRDINV80D, SRDINV80E, SRDINV80F, SRDINV80G, SRDINV81, SRDINV82, SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [SRDINV76A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76A_WARLOCK_LEVEL_1_INVOCATION_BOUNDARY_RESEARCH.md), [Pact of the Chain research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76E_PACT_OF_THE_CHAIN_FAMILIAR_BOUNDARY_RESEARCH.md), [Pact of the Tome research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76F_PACT_OF_THE_TOME_SPELL_ACCESS_BOUNDARY_RESEARCH.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: refreshed metrics, recorded the 83-row battle-readiness gap, accounted for Starry Wisp's object-target Invisible-benefit blocker, and appended SRDINV79-SRDINV83 as the next concrete batch. |
 | 289   | SRDINV58C - Promote Faerie Fire Object Outline Runtime                  | done | completed baseline | SRDINV78 | [SRDINV58B research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV58B_FAERIE_FIRE_OBJECT_LIGHT_BOUNDARY_RESEARCH.md), [Faerie Fire](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Target](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                | Completed: promoted caller-supplied Faerie Fire object ids, concentration-owned object outline cleanup, object-target attack Advantage from supplied sight facts, and object Invisible-benefit denial without adding object inventory, geometry, or visibility state.                                                                                                                               |
 | 290   | SRDINV74C - Promote Weapon Mastery Topple Runtime                       | done | SRDINV74B | SRDINV78 | [Cleave and Topple research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV74B_CLEAVE_TOPPLE_SPLIT_RESEARCH.md), [Topple](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md), [Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Weapon Mastery](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                         | Completed: promoted Topple as an optional selected-weapon mastery rider gated on weapon hit, selected mastery ownership, authored Topple weapon property, and `weaponMasteryTopple` support; failed Constitution saves apply Prone and success or decline is a no-op. |
 | 291   | SRDINV74D - Promote Weapon Mastery Cleave Runtime                       | done | SRDINV74B | SRDINV78 | [Cleave and Topple research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV74B_CLEAVE_TOPPLE_SPLIT_RESEARCH.md), [Cleave](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md), [Weapon Mastery](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                                                                                                                       | Completed: promoted Cleave as an optional once-per-turn selected-weapon mastery rider using caller/table-supplied second-target adjacency/reach facts, same-weapon extra attack damage without a positive ability modifier, negative ability modifier preservation, and selected-weapon/support-profile gates.                                             |
@@ -232,6 +298,17 @@ Keep it synchronized with the DAG table and task details.
 | 293   | SRDINV76D - Promote Eldritch Mind Concentration Save Advantage          | done | SRDINV76A | SRDINV78 | [SRDINV76A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76A_WARLOCK_LEVEL_1_INVOCATION_BOUNDARY_RESEARCH.md), [Eldritch Mind](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Concentration](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Saving Throw](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                                                                | Completed: promoted selected Eldritch Mind invocation ownership into battle state and projects Advantage only on damage-triggered Concentration maintenance Saving Throw holes, leaving ordinary Constitution Saving Throws and other Saving Throws unaffected.                                                                  |
 | 294   | SRDINV76E - Research Pact of the Chain Familiar Boundary                | done                                          | SRDINV76A | SRDINV78 | [SRDINV76E research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76E_PACT_OF_THE_CHAIN_FAMILIAR_BOUNDARY_RESEARCH.md), [SRDINV76A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76A_WARLOCK_LEVEL_1_INVOCATION_BOUNDARY_RESEARCH.md), [Pact of the Chain](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Find Familiar](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Magic Action](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                | Completed: split Pact of the Chain into Find Familiar Spell Access plus companion runtime ownership; recommended no-slot Magic-action access, form references, and a later atomic Warlock attack-forgo plus familiar Reaction attack procedure without duplicating familiar state. |
 | 295   | SRDINV76F - Research Pact of the Tome Spell Access Boundary             | done                                          | SRDINV76A | SRDINV78 | [SRDINV76F research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76F_PACT_OF_THE_TOME_SPELL_ACCESS_BOUNDARY_RESEARCH.md), [SRDINV76A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76A_WARLOCK_LEVEL_1_INVOCATION_BOUNDARY_RESEARCH.md), [Pact of the Tome](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Ritual](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Spellcasting Focus](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                | Completed: split Pact of the Tome into conditional Book of Shadows Spell Access plus future component/focus legality; selected spells stay in one Book of Shadows access source and effective prepared Warlock access is derived only while the book is on the Warlock's person. |
+| 296   | SRDINV79 - Promote Starry Wisp Object Invisible-Benefit Projection      | ready-for-research                            | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Invisible](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Starry Wisp's hit-applied object-target Invisible-condition benefit denial through the existing caller-supplied object target boundary, without adding object inventory, visibility, or map state. |
+| 297   | SRDINV80A - Widen Hideous Laughter Spell Definition Surface             | ready-for-research                            | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Hideous Laughter](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface Spell Definition facts for Hideous Laughter's initial save, end-turn repeat save, damage-triggered repeat save with Advantage, Prone self-end suppression, and slot-scaled additional targets. |
+| 298   | SRDINV80B - Widen Fog Cloud Spell Definition Surface                    | ready-for-research                            | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Fog Cloud](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Heavily Obscured](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface Spell Definition facts for Fog Cloud's slot-scaled fog Sphere, Heavily Obscured projection, Concentration duration, and strong-wind dispersal boundary. |
+| 299   | SRDINV80C - Widen Spare the Dying Stable Lifecycle Surface              | ready-for-research                            | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Spare the Dying](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Stable](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface Spell Definition facts for Spare the Dying's zero-HP creature targeting, Stable application, and character-level range scaling. |
+| 300   | SRDINV80D - Widen Sanctuary Targeting Interdiction Surface              | ready-for-research                            | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Sanctuary](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Target](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface Spell Definition facts for Sanctuary's attack/spell target interdiction, choose-new-target-or-lose outcome, area exclusion, and early end on the warded creature's attack, spell, or damage. |
+| 301   | SRDINV80E - Widen Shillelagh Weapon Override Surface                    | ready-for-research                            | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Shillelagh](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Weapon Attack](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface Spell Definition facts for Shillelagh's held Club or Quarterstaff weapon override, spellcasting ability attack/damage option, level-scaled damage die, Force-or-normal damage choice, and early end on recast or let-go. |
+| 302   | SRDINV80F - Widen Fire Bolt and Sorcerous Burst Cantrip Surface         | ready-for-research                            | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Fire Bolt](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Sorcerous Burst](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface Spell Definition facts for Fire Bolt object targeting and ignition, plus Sorcerous Burst's chosen damage type, exploding d8 loop cap, object target branch, and cantrip damage scaling. |
+| 303   | SRDINV80G - Widen Hex Curse Spell Definition Surface                    | ready-for-research                            | SRDINV78 | SRDINV83 | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Hex](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Ability Check](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Widen Surface Spell Definition facts for Hex's curse retargeting, chosen-ability Ability Check Disadvantage, attack-hit bonus damage, and slot-scaled Concentration duration. |
+| 304   | SRDINV81 - Promote Pact of the Chain Find Familiar Access               | ready-for-research                            | SRDINV76E, SRDINV78 | SRDINV83 | [Pact of the Chain research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76E_PACT_OF_THE_CHAIN_FAMILIAR_BOUNDARY_RESEARCH.md), [Pact of the Chain](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Find Familiar](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Magic Action](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote selected Pact of the Chain into Find Familiar Spell Access with Magic-action no-slot invocation and form eligibility references; leave companion lifecycle and familiar Reaction attack for later companion-owner work. |
+| 305   | SRDINV82 - Promote Pact of the Tome Book of Shadows Access              | ready-for-research                            | SRDINV76F, SRDINV78 | SRDINV83 | [Pact of the Tome research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76F_PACT_OF_THE_TOME_SPELL_ACCESS_BOUNDARY_RESEARCH.md), [Pact of the Tome](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Ritual](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Spellcasting Focus](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote selected Pact of the Tome into one Book of Shadows Spell Access source with exactly three cantrips, two level-1 Ritual spells, book-on-person conditional preparation, Warlock-spell projection, and no duplicate prepared-list state. |
+| 306   | SRDINV83 - Recursive Level-1 Battle Feature Planning Review             | ready-for-research                            | SRDINV79, SRDINV80A, SRDINV80B, SRDINV80C, SRDINV80D, SRDINV80E, SRDINV80F, SRDINV80G, SRDINV81, SRDINV82 | none | [SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Review SRDINV79-SRDINV82, refresh battle-readiness metrics, close evidence-only drift where appropriate, and decide whether the next queue is final closure, cleanup, or another concrete implementation batch. |
 
 ## Task Details
 
@@ -621,13 +698,15 @@ resource sequencing changes require it.
 
 ### Task 288 - SRDINV78 - Recursive Level-1 Battle Feature Planning Review
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV58C, SRDINV72A, SRDINV72B, SRDINV73A, SRDINV73B, SRDINV74A, SRDINV74C, SRDINV74D, SRDINV75A, SRDINV75B, SRDINV76A, SRDINV76B, SRDINV76C, SRDINV76D, SRDINV76E, SRDINV76F, SRDINV77
 
-Blocks: none
+Blocks: SRDINV79, SRDINV80A, SRDINV80B, SRDINV80C, SRDINV80D, SRDINV80E,
+SRDINV80F, SRDINV80G, SRDINV81, SRDINV82, SRDINV83
 
 Research / plan:
+[SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md),
 [SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
 [UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md),
 [ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md),
@@ -657,6 +736,13 @@ unit-profile-coverage:check --write` when evidence or inventory artifacts
 change; explicitly list remaining unsupported/profile-subset-supported
 battle-related level-1 rows with reason and owner; `/simplify` convergence,
 minimum two rounds unless the final changeset is trivial.
+
+Completed: produced
+`plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md`,
+refreshed generated inventory metrics, recorded the remaining 83-row
+battle-readiness gap, explicitly kept Starry Wisp object-target
+Invisible-benefit denial as a blocker, and appended SRDINV79-SRDINV83 as the
+next concrete batch.
 
 ### Task 289 - SRDINV58C - Promote Faerie Fire Object Outline Runtime
 
@@ -912,3 +998,329 @@ Verification: completed RAW/source review for Pact of the Tome, Ritual, Spell
 Access, prepared spells, and Spellcasting Focus terms; produced
 `plans/unit-profile-coverage/SRDINV76F_PACT_OF_THE_TOME_SPELL_ACCESS_BOUNDARY_RESEARCH.md`;
 active-plan consistency updated; `pnpm quality`.
+
+### Task 296 - SRDINV79 - Promote Starry Wisp Object Invisible-Benefit Projection
+
+Status: `ready-for-research`
+
+Depends on: SRDINV78
+
+Blocks: SRDINV83
+
+Research / plan:
+[SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md),
+[Starry Wisp](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md),
+[Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Invisible](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Starry Wisp's hit-applied object-target Invisible-condition
+benefit denial through the existing caller-supplied object target boundary.
+Reuse the Starry Wisp object target, object damage disposition, and object
+Dim Light emitter facts already promoted by earlier tasks.
+
+Out of scope: adding object inventory, object visibility, map illumination,
+line of sight, cover derivation, or generic object condition state beyond the
+projection needed to deny Invisible benefits for the hit object until the end
+of the caster's next turn.
+
+Verification: RAW/source review for Starry Wisp, Object, Target, and Invisible;
+package-local Quint update before runtime divergence; focused tests for
+object-hit Invisible-benefit denial, miss non-application, expiration at end of
+caster's next turn, coexistence with object Dim Light emitters, and no object
+inventory/visibility state; `pnpm unit-profile-coverage:check --write` if
+evidence changes; `pnpm quality`; `/simplify` convergence.
+
+### Task 297 - SRDINV80A - Widen Hideous Laughter Spell Definition Surface
+
+Status: `ready-for-research`
+
+Depends on: SRDINV78
+
+Blocks: SRDINV83
+
+Research / plan:
+[SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md),
+[Hideous Laughter](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[Prone](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: widen Surface Spell Definition facts for Hideous Laughter's initial
+Wisdom save, end-turn repeat save, damage-triggered repeat save with Advantage,
+Prone and Incapacitated application, target inability to end Prone on itself,
+and slot-scaled additional targets.
+
+Out of scope: implementing the battle runtime procedure before the Surface
+shape exists, generic multi-trigger save loops unrelated to this spell, and
+deriving target selection geometry from maps.
+
+Verification: RAW/source review for Hideous Laughter, Prone, Incapacitated,
+Saving Throw, and damage-triggered repeat saves; Surface parser/schema tests;
+content regeneration if Dhall changes; `pnpm unit-profile-coverage:check
+--write`; `pnpm quality`; `/simplify` convergence.
+
+### Task 298 - SRDINV80B - Widen Fog Cloud Spell Definition Surface
+
+Status: `ready-for-research`
+
+Depends on: SRDINV78
+
+Blocks: SRDINV83
+
+Research / plan:
+[SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md),
+[Fog Cloud](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[Heavily Obscured](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: widen Surface Spell Definition facts for Fog Cloud's point-origin fog
+Sphere, Heavily Obscured projection, Concentration duration, slot-scaled area
+radius, and strong-wind dispersal.
+
+Out of scope: map illumination, line of sight, pathfinding, automatic area
+membership, and implementing the battle runtime procedure before the Surface
+shape exists.
+
+Verification: RAW/source review for Fog Cloud, Heavily Obscured, Area of
+Effect, Concentration, and higher-level slot scaling; Surface parser/schema
+tests; content regeneration if Dhall changes; `pnpm
+unit-profile-coverage:check --write`; `pnpm quality`; `/simplify`
+convergence.
+
+### Task 299 - SRDINV80C - Widen Spare the Dying Stable Lifecycle Surface
+
+Status: `ready-for-research`
+
+Depends on: SRDINV78
+
+Blocks: SRDINV83
+
+Research / plan:
+[SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md),
+[Spare the Dying](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md),
+[Stable](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: widen Surface Spell Definition facts for Spare the Dying's zero-Hit
+Point creature target, Stable application, and character-level range scaling.
+
+Out of scope: implementing a complete death saving throw subsystem, automatic
+0-HP detection outside caller-supplied target facts, and battle runtime
+promotion before the Surface shape exists.
+
+Verification: RAW/source review for Spare the Dying, Stable, Hit Points, Death
+Saving Throw, and cantrip range scaling; Surface parser/schema tests; content
+regeneration if Dhall changes; `pnpm unit-profile-coverage:check --write`;
+`pnpm quality`; `/simplify` convergence.
+
+### Task 300 - SRDINV80D - Widen Sanctuary Targeting Interdiction Surface
+
+Status: `ready-for-research`
+
+Depends on: SRDINV78
+
+Blocks: SRDINV83
+
+Research / plan:
+[SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md),
+[Sanctuary](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md),
+[Target](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: widen Surface Spell Definition facts for Sanctuary's warded target,
+Wisdom-save interdiction for attack rolls and damaging spells, choose-new-target
+or lose outcome, area-effect exclusion, and early end when the warded creature
+makes an attack roll, casts a spell, or deals damage.
+
+Out of scope: implementing the battle runtime procedure before the Surface
+shape exists, generic target-redirection framework work beyond this spell's
+shape, and deriving area membership or target legality from maps.
+
+Verification: RAW/source review for Sanctuary, Target, Attack Roll, Saving
+Throw, spell target rules, and area-effect wording; Surface parser/schema
+tests; content regeneration if Dhall changes; `pnpm
+unit-profile-coverage:check --write`; `pnpm quality`; `/simplify`
+convergence.
+
+### Task 301 - SRDINV80E - Widen Shillelagh Weapon Override Surface
+
+Status: `ready-for-research`
+
+Depends on: SRDINV78
+
+Blocks: SRDINV83
+
+Research / plan:
+[SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md),
+[Shillelagh](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md),
+[Weapon Attack](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: widen Surface Spell Definition facts for Shillelagh's held Club or
+Quarterstaff target, spellcasting ability attack and damage option,
+level-scaled damage die, Force-or-normal damage choice, and early end on recast
+or when the caster lets go of the weapon.
+
+Out of scope: generic item lifecycle simulation, weapon inventory ownership
+beyond caller-supplied held/wielded facts, and battle runtime promotion before
+the Surface shape exists.
+
+Verification: RAW/source review for Shillelagh, Weapon Attack, Damage Type,
+Holding/Wielding vocabulary, and cantrip damage scaling; Surface parser/schema
+tests; content regeneration if Dhall changes; `pnpm
+unit-profile-coverage:check --write`; `pnpm quality`; `/simplify`
+convergence.
+
+### Task 302 - SRDINV80F - Widen Fire Bolt and Sorcerous Burst Cantrip Surface
+
+Status: `ready-for-research`
+
+Depends on: SRDINV78
+
+Blocks: SRDINV83
+
+Research / plan:
+[SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md),
+[Fire Bolt](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[Sorcerous Burst](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md),
+[Object](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: widen Surface Spell Definition facts for Fire Bolt's creature-or-object
+ranged spell attack and unattended flammable-object ignition, plus Sorcerous
+Burst's cast-time damage type choice, exploding d8 loop capped by spellcasting
+ability modifier, creature-or-object target branch, and cantrip damage scaling.
+
+Out of scope: implementing battle runtime procedures before the Surface shapes
+exist, generic object inventory, automatic flammability derivation, and
+unbounded recursive damage loops.
+
+Verification: RAW/source review for Fire Bolt, Sorcerous Burst, Object,
+Breaking Objects, Damage Types, Spell Attack, and cantrip scaling; Surface
+parser/schema tests; content regeneration if Dhall changes; `pnpm
+unit-profile-coverage:check --write`; `pnpm quality`; `/simplify`
+convergence.
+
+### Task 303 - SRDINV80G - Widen Hex Curse Spell Definition Surface
+
+Status: `ready-for-research`
+
+Depends on: SRDINV78
+
+Blocks: SRDINV83
+
+Research / plan:
+[SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md),
+[Hex](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[Ability Check](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: widen Surface Spell Definition facts for Hex's cursed target,
+spellcasting-ability selected Ability Check Disadvantage, attack-hit bonus
+Necrotic damage, Bonus Action retargeting after the target drops to 0 Hit
+Points, and slot-scaled Concentration duration.
+
+Out of scope: implementing the battle runtime procedure before the Surface
+shape exists, generic curse state for unrelated spells, and automatic target
+death detection outside the existing combatant HP boundary.
+
+Verification: RAW/source review for Hex, Ability Check, Attack Roll, Damage
+Type, Bonus Action, Concentration, and higher-level slot duration scaling;
+Surface parser/schema tests; content regeneration if Dhall changes; `pnpm
+unit-profile-coverage:check --write`; `pnpm quality`; `/simplify`
+convergence.
+
+### Task 304 - SRDINV81 - Promote Pact of the Chain Find Familiar Access
+
+Status: `ready-for-research`
+
+Depends on: SRDINV76E, SRDINV78
+
+Blocks: SRDINV83
+
+Research / plan:
+[Pact of the Chain research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76E_PACT_OF_THE_CHAIN_FAMILIAR_BOUNDARY_RESEARCH.md),
+[Pact of the Chain](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md),
+[Find Familiar](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[Magic Action](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote selected Pact of the Chain into Find Familiar Spell Access with
+a Magic-action, no-Spell-Slot invocation mode and typed form eligibility
+references for normal Find Familiar forms plus Pact of the Chain special forms.
+Keep familiar creation behind the future companion runtime boundary.
+
+Out of scope: generic companion lifecycle, familiar Initiative, turns, HP,
+actions, Reaction, disappearance, dismissal, touch-spell delivery, one-familiar
+replacement, and the Pact of the Chain familiar Reaction attack exception.
+
+Verification: RAW/source review for Pact of the Chain, Find Familiar, Magic
+Action, Spell Access, and companion vocabulary; focused access/projection tests;
+package-local Quint updates if the invocation resource model changes;
+`pnpm unit-profile-coverage:check --write` if evidence changes; `pnpm quality`;
+`/simplify` convergence; MBT only if spell-cast sequencing changes require it.
+
+### Task 305 - SRDINV82 - Promote Pact of the Tome Book of Shadows Access
+
+Status: `ready-for-research`
+
+Depends on: SRDINV76F, SRDINV78
+
+Blocks: SRDINV83
+
+Research / plan:
+[Pact of the Tome research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV76F_PACT_OF_THE_TOME_SPELL_ACCESS_BOUNDARY_RESEARCH.md),
+[Pact of the Tome](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md),
+[Ritual](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Spellcasting Focus](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote selected Pact of the Tome into one Book of Shadows Spell Access
+source with exactly three cantrips and two level-1 Ritual Spell Definition
+selections from class spell lists, already-prepared rejection, book-on-person
+conditional prepared access, Warlock-spell projection, ordinary Ritual casting
+where supported, and a Spellcasting Focus permission attached to the same
+source.
+
+Out of scope: implementing unsupported selected Spell Definitions, copying
+selected spells into ordinary prepared-spell lists, generic inventory or
+hand-occupancy state, and broad component-legality runtime support.
+
+Verification: RAW/source review for Pact of the Tome, Ritual, prepared spells,
+Spell Access, and Spellcasting Focus; focused access/projection tests;
+character-creation projection tests if the selection source changes; package
+docs if architecture changes; `pnpm unit-profile-coverage:check --write` if
+evidence changes; `pnpm quality`; `/simplify` convergence; MBT only if
+spell-cast sequencing changes require it.
+
+### Task 306 - SRDINV83 - Recursive Level-1 Battle Feature Planning Review
+
+Status: `ready-for-research`
+
+Depends on: SRDINV79, SRDINV80A, SRDINV80B, SRDINV80C, SRDINV80D, SRDINV80E,
+SRDINV80F, SRDINV80G, SRDINV81, SRDINV82
+
+Blocks: none
+
+Research / plan:
+[SRDINV78 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV78_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md),
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md),
+[ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: review SRDINV79-SRDINV82, refresh level-1 battle-readiness metrics,
+close evidence-only drift where appropriate, explicitly list remaining
+unsupported/profile-subset-supported battle-related level-1 rows with owner and
+reason, and decide whether the next queue is final closure, cleanup, or another
+concrete implementation batch.
+
+Out of scope: claiming 100% support from catalog/profile admission alone and
+starting another recursive-only continuation without reviewing the implemented
+batch.
+
+Verification: RAW/source review for any newly appended slices plus
+`UBIQUITOUS_LANGUAGE.md`; active-plan consistency across Ralph index, DAG
+table, and task details; `pnpm unit-profile-coverage:check --write` when
+evidence or inventory artifacts change; `/simplify` convergence, minimum two
+rounds unless the final changeset is trivial.
