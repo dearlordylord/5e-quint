@@ -486,6 +486,121 @@ describe("manual MCP battle surface coverage", () => {
     });
   });
 
+  test("uses Hellish Rebuke after-damage reaction through MCP battle tools", () => {
+    const root = createMcpCompositionRoot();
+    root.sessionStore.battleState = startBattleRight(root, [
+      statBlock(root, { combatantId: goblinId, initiative: 20 }),
+      character(root, {
+        combatantId: fighterId,
+        displayName: "Hellish Rebuke Caster",
+        initiative: 10,
+        attack: null,
+        spellcasting: spellcasting(root, {
+          sourceClassName: "warlock",
+          abilityModifier: 3,
+          preparedSpells: ["hellish_rebuke"],
+          slots: [
+            { spellLevel: 1, count: 1 },
+            { spellLevel: 2, count: 1 },
+          ],
+        }),
+      }),
+    ]);
+
+    const goblinAttack = requireAct(root, "Attack", "Scimitar");
+    const afterTarget = call(root, "fill_battle_hole", {
+      subject: goblinAttack.subject,
+      fill: {
+        kind: "targetChoice",
+        holeId: "battle:attack:target",
+        value: "fighter",
+        spatialFacts: [
+          {
+            kind: "attackTargetInMeleeReach",
+            actorId: "goblin",
+            targetId: "fighter",
+            attackName: "Scimitar",
+          },
+          {
+            kind: "reactionSpellDamagerVisibleWithinRange",
+            reactorId: "fighter",
+            damageSourceId: "goblin",
+            spellId: "hellish_rebuke",
+            rangeFeet: 60,
+          },
+        ],
+      },
+    });
+    const attackRoll = requireHole(afterTarget.result.holes, "attackRoll");
+    const afterAttackRoll = call(root, "fill_battle_hole", {
+      subject: goblinAttack.subject,
+      fill: attackRollFill(attackRoll.holeId, 18, 12, attackRoll.rollMode),
+    });
+    const attackDamage = requireHole(afterAttackRoll.result.holes, "rolledDice");
+    const afterDamage = call(root, "fill_battle_hole", {
+      subject: goblinAttack.subject,
+      fill: rolledDiceFill(attackDamage.holeId, [[1]]),
+    });
+
+    expect(afterDamage.result).toMatchObject({
+      tag: "needsHoles",
+      holes: [expect.objectContaining({ kind: "reactionDecision" })],
+      snapshot: { pendingReaction: { trigger: "afterDamage" } },
+    });
+    const hellishChoice = afterDamage.result.snapshot.pendingReaction.choices.find(
+      (choice: Json) =>
+        choice.kind === "castTriggeredReactionSpell" &&
+        choice.invocation.spellId === "hellish_rebuke" &&
+        choice.invocation.slotLevel === 2,
+    );
+    if (hellishChoice === undefined) {
+      throw new Error("Expected Hellish Rebuke reaction choice.");
+    }
+    const save = requireHole(hellishChoice.initialHoles, "savingThrowOutcome");
+    const damage = requireHole(hellishChoice.initialHoles, "rolledDice");
+    const reactionHole = requireHole(afterDamage.result.holes, "reactionDecision");
+    const afterHellishRebuke = call(root, "fill_battle_hole", {
+      subject: afterDamage.result.subject ?? goblinAttack.subject,
+      fill: {
+        kind: "reactionDecision",
+        holeId: reactionHole.holeId,
+        value: {
+          kind: "resolve",
+          reactorId: "fighter",
+          choice: {
+            kind: "castTriggeredReactionSpell",
+            invocation: hellishChoice.invocation,
+            fills: [
+              {
+                kind: "savingThrowOutcome",
+                holeId: save.holeId,
+                value: { outcomes: [{ targetId: "goblin", succeeded: false }] },
+              },
+              rolledDiceFill(damage.holeId, [[1, 1, 1]]),
+            ],
+          },
+        },
+      },
+    });
+    if (afterHellishRebuke.result.tag === "invalid") {
+      throw new Error(JSON.stringify(afterHellishRebuke.result));
+    }
+
+    expect(afterHellishRebuke.result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.objectContaining({ combatantId: "goblin", hp: 7 }),
+          expect.objectContaining({
+            combatantId: "fighter",
+            hp: 9,
+            reactionAvailable: false,
+          }),
+        ],
+      },
+    });
+  });
+
   test("retains Pact of the Chain and uses Pact of the Tome cantrips through MCP battle tools", () => {
     const chainRoot = createMcpCompositionRoot();
     chainRoot.sessionStore.battleState = startBattleRight(chainRoot, [
