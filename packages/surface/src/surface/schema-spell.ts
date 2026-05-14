@@ -130,6 +130,17 @@ function makeHoleSchema<A, I, R>(value: Schema.Schema<A, I, R>) {
   });
 }
 
+export const CastTimeChoiceAbilitySchema = Schema.Struct({
+  kind: Schema.Literal("choice"),
+  label: Schema.String,
+  options: nonEmpty(AbilitySchema),
+});
+
+export const AbilityFilterSchema = Schema.Union(
+  nonEmpty(AbilitySchema),
+  makeHoleSchema(CastTimeChoiceAbilitySchema),
+);
+
 export const DamageTypeRefBaseSchema = Schema.Union(
   DamageTypeSchema,
   CastTimeChoiceDamageTypeSchema,
@@ -261,6 +272,7 @@ type Skill = Schema.Schema.Type<typeof SkillSchema>;
 type Condition = Schema.Schema.Type<typeof ConditionSchema>;
 type CreatureType = Schema.Schema.Type<typeof CreatureTypeSchema>;
 type Ability = Schema.Schema.Type<typeof AbilitySchema>;
+type AbilityFilter = Schema.Schema.Type<typeof AbilityFilterSchema>;
 type SavingThrowSourceFilter = Schema.Schema.Type<
   typeof SavingThrowSourceFilterSchema
 >;
@@ -612,7 +624,7 @@ type EffectAtom =
             readonly options: ReadonlyNonEmptyArray<Skill>;
           };
       readonly conditionFilter?: ReadonlyNonEmptyArray<Condition>;
-      readonly abilityFilter?: ReadonlyNonEmptyArray<Ability>;
+      readonly abilityFilter?: AbilityFilter;
       readonly saveAbilityFilter?: ReadonlyNonEmptyArray<Ability>;
       readonly saveSourceFilter?: SavingThrowSourceFilter;
       readonly contextRangeFeet?: number;
@@ -1480,8 +1492,18 @@ export const MarkTransferCostSchema = Schema.Struct({
   kind: Schema.Literal("bonus_action"),
 });
 
+export const MarkTransferAvailabilitySchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("after_trigger"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("later_turn_after_trigger"),
+  }),
+);
+
 export const MarkTransferSchema = Schema.Struct({
   onEvent: MarkTransferEventSchema,
+  availability: MarkTransferAvailabilitySchema,
   cost: MarkTransferCostSchema,
 });
 
@@ -2014,7 +2036,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
           ),
         ),
         conditionFilter: optionalExact(nonEmpty(ConditionSchema)),
-        abilityFilter: optionalExact(nonEmpty(AbilitySchema)),
+        abilityFilter: optionalExact(AbilityFilterSchema),
         saveAbilityFilter: optionalExact(nonEmpty(AbilitySchema)),
         saveSourceFilter: optionalExact(SavingThrowSourceFilterSchema),
         contextRangeFeet: optionalExact(Schema.Number),

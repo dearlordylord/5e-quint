@@ -3002,6 +3002,9 @@ function parseOngoingFeatureEffects(
           effect.attackerTypeFilter !== undefined) ||
         ("skillFilter" in effect && effect.skillFilter !== undefined) ||
         ("conditionFilter" in effect && effect.conditionFilter !== undefined) ||
+        ("abilityFilter" in effect &&
+          effect.abilityFilter !== undefined &&
+          !Array.isArray(effect.abilityFilter)) ||
         ("saveAbilityFilter" in effect &&
           effect.saveAbilityFilter !== undefined) ||
         ("saveSourceFilter" in effect &&

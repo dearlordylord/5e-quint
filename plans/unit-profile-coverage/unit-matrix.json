@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 361,
-      "numerator": 113,
-      "percent": "31.3%"
+      "denominator": 362,
+      "numerator": 114,
+      "percent": "31.5%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 428,
-      "numerator": 139,
-      "percent": "32.5%"
+      "denominator": 429,
+      "numerator": 140,
+      "percent": "32.6%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 140
+      "value": 141
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 73,
@@ -67,8 +67,8 @@
       "percent": "90.4%"
     },
     "profileClassificationCoverage": {
-      "denominator": 140,
-      "numerator": 140,
+      "denominator": 141,
+      "numerator": 141,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -97,9 +97,9 @@
       "percent": "13.7%"
     },
     "supportedProfileCoverage": {
-      "denominator": 114,
+      "denominator": 115,
       "numerator": 73,
-      "percent": "64%"
+      "percent": "63.5%"
     }
   },
   "metricSemantics": [
@@ -7381,6 +7381,24 @@
       ],
       "sourceRecordPath": "packages/surface/content/heroism.json",
       "unitId": "heroism"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Hex's curse retargeting, chosen-ability Ability Check Disadvantage, attack-hit Necrotic damage, or slot-scaled Concentration duration.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/hex.json",
+      "unitId": "hex"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

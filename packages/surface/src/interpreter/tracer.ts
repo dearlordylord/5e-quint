@@ -709,9 +709,13 @@ function traceEffectAtom(
           ? `\ncondition: ${e.conditionFilter.join("/")}`
           : "";
       const ability =
-        e.abilityFilter !== undefined && e.abilityFilter.length > 0
-          ? `\nability: ${e.abilityFilter.join("/")}`
-          : "";
+        e.abilityFilter === undefined
+          ? ""
+          : Array.isArray(e.abilityFilter)
+            ? `\nability: ${e.abilityFilter.join("/")}`
+            : "holeId" in e.abilityFilter
+              ? `\nability: ${e.abilityFilter.label ?? e.abilityFilter.holeId}`
+              : "";
       const contextRange =
         e.contextRangeFeet !== undefined
           ? `\ncontext: within ${e.contextRangeFeet} ft`
@@ -4861,10 +4865,12 @@ function describeAttachmentHole(
 }
 
 function describeHeldWeaponAttachment(
-  attachment: Extract<Attachment, { readonly kind: "held_weapon" }> | Extract<
-    Extract<Attachment, { readonly kind: "hole" }>["value"],
-    { readonly kind: "held_weapon" }
-  >,
+  attachment:
+    | Extract<Attachment, { readonly kind: "held_weapon" }>
+    | Extract<
+        Extract<Attachment, { readonly kind: "hole" }>["value"],
+        { readonly kind: "held_weapon" }
+      >,
 ): string {
   return `held_weapon\nheld by ${attachment.heldBy}\n${attachment.weaponIds.join(" or ")}`;
 }

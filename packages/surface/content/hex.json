@@ -1,0 +1,121 @@
+{
+  "description": "You place a curse on a creature that you can see within range. Until the spell ends, you deal an extra 1d6 Necrotic damage to the target whenever you hit it with an attack roll. Choose one ability when you cast the spell. The target has Disadvantage on ability checks made with the chosen ability. If the target drops to 0 Hit Points before this spell ends, you can take a Bonus Action on a later turn to curse a new creature. Using a Higher-Level Spell Slot. Your Concentration can last longer with a spell slot of level 2 (up to 4 hours), 3-4 (up to 8 hours), or 5+ (24 hours).",
+  "id": "hex",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "hex_cursed_target",
+      "kind": "hole",
+      "label": "cursed target",
+      "value": {
+        "kind": "mark",
+        "selection": {
+          "mode": "one",
+          "targetKinds": [
+            "creature"
+          ]
+        },
+        "transfer": {
+          "availability": {
+            "kind": "later_turn_after_trigger"
+          },
+          "cost": {
+            "kind": "bonus_action"
+          },
+          "onEvent": {
+            "kind": "target_drops_to_0_hp"
+          }
+        }
+      }
+    },
+    "castingTime": {
+      "kind": "bonus_action"
+    },
+    "components": {
+      "m": "the petrified eye of a newt",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "hour",
+        "upcastTiers": [
+          {
+            "amount": 4,
+            "atSlot": 2
+          },
+          {
+            "amount": 8,
+            "atSlot": 3
+          },
+          {
+            "amount": 24,
+            "atSlot": 5
+          }
+        ]
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 1,
+    "operations": [
+      {
+        "effect": {
+          "amount": {
+            "expr": {
+              "dice": 1,
+              "dieSize": 6
+            },
+            "kind": "fixed"
+          },
+          "damageType": "necrotic",
+          "kind": "damage"
+        },
+        "trigger": {
+          "kind": "on_caster_attack_hit"
+        }
+      },
+      {
+        "effect": {
+          "abilityFilter": {
+            "holeId": "hex_cursed_ability",
+            "kind": "hole",
+            "label": "cursed ability",
+            "value": {
+              "kind": "choice",
+              "label": "cursed ability",
+              "options": [
+                "str",
+                "dex",
+                "con",
+                "int",
+                "wis",
+                "cha"
+              ]
+            }
+          },
+          "affects": "self_roll",
+          "kind": "modify_roll_advantage",
+          "mode": "disadvantage",
+          "on": [
+            "ability_check"
+          ]
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      }
+    ],
+    "range": {
+      "feet": 90,
+      "kind": "point"
+    },
+    "school": "enchantment"
+  },
+  "name": "Hex",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Hex"
+  }
+}

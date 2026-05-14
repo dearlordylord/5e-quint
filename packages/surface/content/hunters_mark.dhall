@@ -54,6 +54,7 @@ let huntersMark =
                   , transfer =
                       Some
                         { onEvent = { kind = "target_drops_to_0_hp" }
+                        , availability = { kind = "after_trigger" }
                         , cost = { kind = "bonus_action" }
                         }
                   }

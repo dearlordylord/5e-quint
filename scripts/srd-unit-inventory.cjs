@@ -256,14 +256,6 @@ const spellUnitMissingClassifications = new Map([
     },
   ],
   [
-    "hex",
-    {
-      kind: "needs-surface-widening",
-      missingConstruct:
-        "Spell Definition curse retargeting after the target drops to 0 Hit Points, ability-choice Ability Check Disadvantage, attack-hit bonus damage, and slot-scaled Concentration duration",
-    },
-  ],
-  [
     "illusory_script",
     {
       kind: "catalog-only-closure",

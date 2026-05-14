@@ -508,6 +508,113 @@ describe("SRD Unit catalog boundary", () => {
     }
   });
 
+  test("decodes Hex as a curse with retargeting, attack-hit damage, and chosen-ability check Disadvantage", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const hex = result.catalog.requireUnit("hex");
+      expect(hex.kind).toBe("spell");
+      if (hex.kind !== "spell") return;
+      expect(hex.mechanics.family).toBe("ongoing_effect");
+      if (hex.mechanics.family !== "ongoing_effect") return;
+
+      expect(hex.mechanics.duration).toEqual({
+        kind: "concentration",
+        upTo: {
+          unit: "hour",
+          amount: 1,
+          upcastTiers: [
+            { atSlot: 2, amount: 4 },
+            { atSlot: 3, amount: 8 },
+            { atSlot: 5, amount: 24 },
+          ],
+        },
+      });
+      expect(hex.mechanics.attachment).toEqual({
+        kind: "hole",
+        holeId: "hex_cursed_target",
+        label: "cursed target",
+        value: {
+          kind: "mark",
+          selection: {
+            mode: "one",
+            targetKinds: ["creature"],
+          },
+          transfer: {
+            onEvent: { kind: "target_drops_to_0_hp" },
+            availability: { kind: "later_turn_after_trigger" },
+            cost: { kind: "bonus_action" },
+          },
+        },
+      });
+      expect(hex.mechanics.operations).toEqual([
+        {
+          trigger: { kind: "on_caster_attack_hit" },
+          effect: {
+            kind: "damage",
+            damageType: "necrotic",
+            amount: {
+              kind: "fixed",
+              expr: { dice: 1, dieSize: 6 },
+            },
+          },
+        },
+        {
+          trigger: { kind: "passive" },
+          effect: {
+            kind: "modify_roll_advantage",
+            mode: "disadvantage",
+            affects: "self_roll",
+            on: ["ability_check"],
+            abilityFilter: {
+              kind: "hole",
+              holeId: "hex_cursed_ability",
+              label: "cursed ability",
+              value: {
+                kind: "choice",
+                label: "cursed ability",
+                options: ["str", "dex", "con", "int", "wis", "cha"],
+              },
+            },
+          },
+        },
+      ]);
+    }
+  });
+
+  test("distinguishes Hex's later-turn retargeting from Hunter's Mark transfer timing", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const huntersMark = result.catalog.requireUnit("hunters_mark");
+      const hex = result.catalog.requireUnit("hex");
+      expect(huntersMark.kind).toBe("spell");
+      expect(hex.kind).toBe("spell");
+      if (huntersMark.kind !== "spell" || hex.kind !== "spell") return;
+      expect(huntersMark.mechanics.family).toBe("ongoing_effect");
+      expect(hex.mechanics.family).toBe("ongoing_effect");
+      if (
+        huntersMark.mechanics.family !== "ongoing_effect" ||
+        hex.mechanics.family !== "ongoing_effect" ||
+        huntersMark.mechanics.attachment.kind !== "hole" ||
+        hex.mechanics.attachment.kind !== "hole" ||
+        huntersMark.mechanics.attachment.value.kind !== "mark" ||
+        hex.mechanics.attachment.value.kind !== "mark"
+      ) {
+        return;
+      }
+
+      expect(
+        huntersMark.mechanics.attachment.value.transfer?.availability,
+      ).toEqual({ kind: "after_trigger" });
+      expect(hex.mechanics.attachment.value.transfer?.availability).toEqual({
+        kind: "later_turn_after_trigger",
+      });
+    }
+  });
+
   test("decodes Dissonant Whispers as damage plus forced Reaction movement", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 
