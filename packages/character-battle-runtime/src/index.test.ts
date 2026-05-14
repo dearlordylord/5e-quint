@@ -622,6 +622,145 @@ describe("Character Build battle projection", () => {
     ]);
   });
 
+  test("projects selected Pact of the Tome as Book of Shadows Spell Access", () => {
+    const spellcasting = expectRight(
+      characterSpellcasting({
+        build: pactOfTheTomeWarlockBuild(),
+        unitLibrary,
+        bookOfShadowsPresence: { tag: "onPerson" },
+      }),
+    );
+
+    expect(spellcasting.preparedSpells).toEqual([]);
+    expect(spellcasting.featurePreparedSpells).toEqual([]);
+    expect(spellcasting.bookOfShadowsSpellAccesses).toEqual([
+      {
+        tag: "bookOfShadows",
+        bookPresence: { tag: "onPerson" },
+        cantrips: [
+          unitLibrary.requireUnit("fire_bolt"),
+          unitLibrary.requireUnit("spare_the_dying"),
+          unitLibrary.requireUnit("minor_illusion"),
+        ],
+        ritualSpells: [
+          unitLibrary.requireUnit("detect_magic"),
+          unitLibrary.requireUnit("detect_poison_and_disease"),
+        ],
+        spellcastingFocus: "book_of_shadows",
+      },
+    ]);
+  });
+
+  test("rejects Book of Shadows spells already prepared from the Warlock source", () => {
+    expect(
+      characterSpellcasting({
+        build: pactOfTheTomeWarlockBuild({ alreadyPrepared: "detect_magic" }),
+        unitLibrary,
+        bookOfShadowsPresence: { tag: "onPerson" },
+      }),
+    ).toEqual(
+      Either.left({
+        tag: "battleCreatureInitIssue",
+        message:
+          "Book of Shadows Spell Access cannot select spells the character already has prepared or known.",
+      }),
+    );
+  });
+
+  test("rejects Book of Shadows without selected Pact of the Tome invocation", () => {
+    expect(
+      characterSpellcasting({
+        build: pactOfTheTomeWarlockBuild({ pactOfTheTome: false }),
+        unitLibrary,
+        bookOfShadowsPresence: { tag: "onPerson" },
+      }),
+    ).toEqual(
+      Either.left({
+        tag: "battleCreatureInitIssue",
+        message: "Book of Shadows Spell Access requires Pact of the Tome.",
+      }),
+    );
+  });
+
+  test("rejects Book of Shadows battle projection without sheet presence state", () => {
+    expect(
+      characterSpellcasting({
+        build: pactOfTheTomeWarlockBuild(),
+        unitLibrary,
+      }),
+    ).toEqual(
+      Either.left({
+        tag: "battleCreatureInitIssue",
+        message:
+          "Book of Shadows Spell Access requires Book of Shadows presence state.",
+      }),
+    );
+  });
+
+  test("rejects Book of Shadows attached to a non-Warlock spellcasting source", () => {
+    expect(
+      characterSpellcasting({
+        build: pactOfTheTomeWarlockBuild({
+          spellcastingSourceUnitId: "class_wizard",
+        }),
+        unitLibrary,
+        bookOfShadowsPresence: { tag: "onPerson" },
+      }),
+    ).toEqual(
+      Either.left({
+        tag: "battleCreatureInitIssue",
+        message:
+          "Book of Shadows Spell Access must be attached to the Warlock spellcasting source.",
+      }),
+    );
+  });
+
+  test("rejects Book of Shadows when Pact of the Tome is not selected from Warlock invocations", () => {
+    expect(
+      characterSpellcasting({
+        build: pactOfTheTomeWarlockBuild({
+          pactOfTheTomeSelectedFromUnitId: "class_wizard",
+        }),
+        unitLibrary,
+        bookOfShadowsPresence: { tag: "onPerson" },
+      }),
+    ).toEqual(
+      Either.left({
+        tag: "battleCreatureInitIssue",
+        message: "Book of Shadows Spell Access requires Pact of the Tome.",
+      }),
+    );
+  });
+
+  test("rejects Book of Shadows spells already prepared from feature Spell Access", () => {
+    expect(
+      characterSpellcasting({
+        build: pactOfTheTomeWarlockBuild({
+          extraFeatures: [
+            {
+              kind: "selectedClassChoice",
+              selectedFromUnitId: "class_ranger",
+              unitId: "ranger_favored_enemy",
+            },
+          ],
+          bookOfShadowsCantrips: [
+            "hunters_mark",
+            "spare_the_dying",
+            "minor_illusion",
+          ],
+        }),
+        unitLibrary,
+        bookOfShadowsPresence: { tag: "onPerson" },
+      }),
+    ).toEqual(
+      Either.left({
+        tag: "battleCreatureInitIssue",
+        message:
+          "Book of Shadows Spell Access cannot select spells the character already has prepared or known.",
+      }),
+    );
+  });
+
   test("does not project Pact of the Chain Spell Access without selected invocation ownership", () => {
     const spellcasting = expectRight(
       characterSpellcasting({
@@ -2265,6 +2404,67 @@ function warlockInvocationBuild(input: {
   };
 }
 
+function pactOfTheTomeWarlockBuild(input?: {
+  readonly pactOfTheTome?: boolean;
+  readonly pactOfTheTomeSelectedFromUnitId?: string;
+  readonly spellcastingSourceUnitId?: string;
+  readonly alreadyPrepared?: "detect_magic";
+  readonly extraFeatures?: CharacterBuild["features"];
+  readonly bookOfShadowsCantrips?: readonly [string, string, string];
+  readonly bookOfShadowsRitualSpells?: readonly [string, string];
+}): CharacterBuild {
+  return {
+    ...armorOfShadowsWarlockBuild({ armorOfShadows: false }),
+    features: [
+      ...(input?.pactOfTheTome === false
+        ? []
+        : [
+            {
+              kind: "selectedEldritchInvocation" as const,
+              selectedFromUnitId:
+                input?.pactOfTheTomeSelectedFromUnitId ??
+                "warlock_eldritch_invocations",
+              invocationId: eldritchInvocationId("pact_of_the_tome"),
+            },
+          ]),
+      ...(input?.extraFeatures ?? []),
+    ],
+    spellcasting: {
+      sources: [
+        {
+          sourceUnitId: input?.spellcastingSourceUnitId ?? "class_warlock",
+          spellcastingAbility: "cha",
+          cantrips: [],
+          spellbook: [],
+          preparedSpells:
+            input?.alreadyPrepared === undefined ? [] : [input.alreadyPrepared],
+          spellcastingFocuses: ["arcane_focus"],
+          bookOfShadows: {
+            tag: "bookOfShadows",
+            cantrips: input?.bookOfShadowsCantrips ?? [
+              "fire_bolt",
+              "spare_the_dying",
+              "minor_illusion",
+            ],
+            ritualSpells: input?.bookOfShadowsRitualSpells ?? [
+              "detect_magic",
+              "detect_poison_and_disease",
+            ],
+            spellcastingFocus: "book_of_shadows",
+          },
+        },
+      ],
+      slotPools: {
+        pactMagic: {
+          kind: "pactMagic",
+          slotLevel: 1,
+          count: 1,
+        },
+      },
+    },
+  };
+}
+
 function eldritchMindInvocationBuild(): CharacterBuild {
   return {
     ...pactBladeInvocationBuild("weapon_longsword", {
@@ -2342,6 +2542,7 @@ function handoffSpellcastingState(): CharacterBattleSpellcastingState {
     canCastSpells: true,
     cantrips: [],
     preparedSpells: [],
+    bookOfShadowsSpellAccesses: [],
     invocationSpellAccesses: [],
     spellSlots: [
       {

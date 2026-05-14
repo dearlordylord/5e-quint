@@ -5,6 +5,8 @@ import {
   type CharacterBattleInvocationFeature,
   type CharacterBattleClassLevelInit,
   type CharacterBattleFeaturePreparedSpellInit,
+  type CharacterBattleBookOfShadowsSpellAccessInit,
+  type CharacterBattleBookOfShadowsPresence,
   type CharacterBattleInvocationSpellAccessInit,
   type CharacterUnarmedStrikeActionOption,
   type CharacterWeaponAttackActionOption,
@@ -55,6 +57,10 @@ import type {
   UnitRecord,
   WeaponRecord,
 } from "@dnd/surface/surface/types";
+import {
+  allCantripsFromAnyClassSpellList,
+  allLeveledSpellsFromAnyClassSpellList,
+} from "@dnd/surface/surface/schema";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either, Option } from "effect";
 
@@ -377,6 +383,7 @@ const PACT_OF_THE_BLADE_INVOCATION_ID =
 const ARMOR_OF_SHADOWS_INVOCATION_ID = eldritchInvocationId("armor_of_shadows");
 const PACT_OF_THE_CHAIN_INVOCATION_ID =
   eldritchInvocationId("pact_of_the_chain");
+const PACT_OF_THE_TOME_INVOCATION_ID = eldritchInvocationId("pact_of_the_tome");
 const ELDRITCH_MIND_INVOCATION_ID = eldritchInvocationId("eldritch_mind");
 const ARMOR_OF_SHADOWS_SPELL_ID = "mage_armor";
 const PACT_OF_THE_CHAIN_SPELL_ID = "find_familiar";
@@ -469,6 +476,34 @@ function hasSelectedEldritchInvocation(
       feature.kind === "selectedEldritchInvocation" &&
       feature.invocationId === invocationId,
   );
+}
+
+function hasSelectedWarlockEldritchInvocation(
+  build: CharacterBuild,
+  input: {
+    readonly unitLibrary: UnitCatalog;
+    readonly invocationId: ReturnType<typeof eldritchInvocationId>;
+  },
+): boolean {
+  return build.features.some((feature) => {
+    if (
+      feature.kind !== "selectedEldritchInvocation" ||
+      feature.invocationId !== input.invocationId
+    ) {
+      return false;
+    }
+    const source = input.unitLibrary.getUnit(feature.selectedFromUnitId);
+    if (Option.isNone(source) || source.value.kind !== "class_feature") {
+      return false;
+    }
+    const mechanics = source.value.mechanics;
+    return (
+      mechanics.family === "feature_choice" &&
+      mechanics.optionSource.kind === "class_feature_options" &&
+      mechanics.optionSource.className === "warlock" &&
+      mechanics.optionSource.optionKind === "eldritch_invocation"
+    );
+  });
 }
 
 function martialArtsAttackProjectionForBuild(input: {
@@ -641,6 +676,7 @@ function spellcastingAllowedByArmorTraining(
 export function characterSpellcasting(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
+  readonly bookOfShadowsPresence?: CharacterBattleBookOfShadowsPresence;
   readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
 }): Either.Either<
   NonNullable<
@@ -698,6 +734,18 @@ export function characterSpellcasting(input: {
     return Either.left(invocationSpellAccesses.left);
   }
 
+  const bookOfShadowsSpellAccesses = bookOfShadowsSpellAccess({
+    build,
+    unitLibrary,
+    featurePreparedSpells: featurePreparedSpells.right,
+    ...(input.bookOfShadowsPresence === undefined
+      ? {}
+      : { bookOfShadowsPresence: input.bookOfShadowsPresence }),
+  });
+  if (Either.isLeft(bookOfShadowsSpellAccesses)) {
+    return Either.left(bookOfShadowsSpellAccesses.left);
+  }
+
   return Either.right({
     sourceClassName: sources.right.sourceClassName,
     spellcastingAbilityModifier: battleAbilityModifier(
@@ -708,6 +756,7 @@ export function characterSpellcasting(input: {
     cantrips: cantrips.right,
     preparedSpells: preparedSpells.right,
     featurePreparedSpells: featurePreparedSpells.right,
+    bookOfShadowsSpellAccesses: bookOfShadowsSpellAccesses.right,
     invocationSpellAccesses: invocationSpellAccesses.right,
     spellSlots: characterBuildSpellcastingSlotCapacity(build).map((slot) => ({
       spellLevel: spellSlotLevel(slot.spellLevel),
@@ -722,6 +771,205 @@ export function characterSpellcasting(input: {
           })),
         }),
   });
+}
+
+function bookOfShadowsSpellAccess(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly featurePreparedSpells: readonly CharacterBattleFeaturePreparedSpellInit[];
+  readonly bookOfShadowsPresence?: CharacterBattleBookOfShadowsPresence;
+}): Either.Either<
+  readonly CharacterBattleBookOfShadowsSpellAccessInit[],
+  BattleCreatureInitIssue
+> {
+  const accesses =
+    input.build.spellcasting?.sources.flatMap((source) =>
+      source.bookOfShadows === undefined ? [] : [source],
+    ) ?? [];
+  if (accesses.length === 0) {
+    return Either.right([]);
+  }
+  if (input.bookOfShadowsPresence === undefined) {
+    return battleCreatureInitIssue(
+      "Book of Shadows Spell Access requires Book of Shadows presence state.",
+    );
+  }
+  if (
+    !hasSelectedWarlockEldritchInvocation(input.build, {
+      unitLibrary: input.unitLibrary,
+      invocationId: PACT_OF_THE_TOME_INVOCATION_ID,
+    })
+  ) {
+    return battleCreatureInitIssue(
+      "Book of Shadows Spell Access requires Pact of the Tome.",
+    );
+  }
+  if (accesses.length !== 1) {
+    return battleCreatureInitIssue(
+      "Character Battle supports one Book of Shadows Spell Access source.",
+    );
+  }
+  const source = accesses[0];
+  const sourceClassName = classUnitIdToClassName({
+    unitLibrary: input.unitLibrary,
+    classUnitId: source.sourceUnitId,
+  });
+  if (Either.isLeft(sourceClassName) || sourceClassName.right !== "warlock") {
+    return battleCreatureInitIssue(
+      "Book of Shadows Spell Access must be attached to the Warlock spellcasting source.",
+    );
+  }
+  const access = source.bookOfShadows;
+  if (access === undefined) {
+    return battleCreatureInitIssue(
+      "Book of Shadows Spell Access source is missing its selection.",
+    );
+  }
+  if (access.tag !== "bookOfShadows") {
+    return battleCreatureInitIssue(
+      "Book of Shadows Spell Access selection is invalid.",
+    );
+  }
+  if (access.cantrips.length !== 3 || access.ritualSpells.length !== 2) {
+    return battleCreatureInitIssue(
+      "Book of Shadows Spell Access requires exactly three cantrips and two Ritual spells.",
+    );
+  }
+  const selectedSpellIds = [...access.cantrips, ...access.ritualSpells];
+  if (new Set(selectedSpellIds).size !== selectedSpellIds.length) {
+    return battleCreatureInitIssue(
+      "Book of Shadows Spell Access selections must be distinct.",
+    );
+  }
+  const alreadyPrepared = new Set([
+    ...source.cantrips,
+    ...source.preparedSpells,
+    ...input.featurePreparedSpells.map((featureSpell) => featureSpell.spell.id),
+  ]);
+  if (selectedSpellIds.some((spellId) => alreadyPrepared.has(spellId))) {
+    return battleCreatureInitIssue(
+      "Book of Shadows Spell Access cannot select spells the character already has prepared or known.",
+    );
+  }
+  if (!allCantripsFromAnyClassSpellList(access.cantrips)) {
+    return battleCreatureInitIssue(
+      "Book of Shadows cantrips must come from class spell lists.",
+    );
+  }
+  if (
+    !allLeveledSpellsFromAnyClassSpellList(
+      access.ritualSpells.map((spellId) => ({ spellId, spellLevel: 1 })),
+    )
+  ) {
+    return battleCreatureInitIssue(
+      "Book of Shadows Ritual spells must be level-1 spells from class spell lists.",
+    );
+  }
+  const cantrips = spellRecordsForIds(input.unitLibrary, access.cantrips);
+  if (Either.isLeft(cantrips)) {
+    return battleCreatureInitIssue(cantrips.left.message);
+  }
+  const ritualSpells = spellRecordsForIds(
+    input.unitLibrary,
+    access.ritualSpells,
+  );
+  if (Either.isLeft(ritualSpells)) {
+    return battleCreatureInitIssue(ritualSpells.left.message);
+  }
+  const bookOfShadowsSpells = bookOfShadowsSpellRecordTuples({
+    cantrips: cantrips.right,
+    ritualSpells: ritualSpells.right,
+  });
+  if (Either.isLeft(bookOfShadowsSpells)) {
+    return Either.left(bookOfShadowsSpells.left);
+  }
+  if (cantrips.right.some((spell) => spell.mechanics.level !== 0)) {
+    return battleCreatureInitIssue(
+      "Book of Shadows cantrip selections must be cantrip Spell Definitions.",
+    );
+  }
+  if (
+    ritualSpells.right.some(
+      (spell) =>
+        spell.mechanics.level !== 1 ||
+        !("ritual" in spell.mechanics.castingTime) ||
+        spell.mechanics.castingTime.ritual !== true,
+    )
+  ) {
+    return battleCreatureInitIssue(
+      "Book of Shadows Ritual selections must be level-1 ritual-tagged Spell Definitions.",
+    );
+  }
+  return Either.right([
+    {
+      tag: access.tag,
+      bookPresence: input.bookOfShadowsPresence,
+      cantrips: bookOfShadowsSpells.right.cantrips,
+      ritualSpells: bookOfShadowsSpells.right.ritualSpells,
+      spellcastingFocus: access.spellcastingFocus,
+    },
+  ]);
+}
+
+type BookOfShadowsSpellRecordTuples = Pick<
+  CharacterBattleBookOfShadowsSpellAccessInit,
+  "cantrips" | "ritualSpells"
+>;
+
+function bookOfShadowsSpellRecordTuples(input: {
+  readonly cantrips: readonly SpellRecord[];
+  readonly ritualSpells: readonly SpellRecord[];
+}): Either.Either<BookOfShadowsSpellRecordTuples, BattleCreatureInitIssue> {
+  const cantrips = bookOfShadowsCantripRecords(input.cantrips);
+  if (Either.isLeft(cantrips)) {
+    return Either.left(cantrips.left);
+  }
+  const ritualSpells = bookOfShadowsRitualSpellRecords(input.ritualSpells);
+  if (Either.isLeft(ritualSpells)) {
+    return Either.left(ritualSpells.left);
+  }
+  return Either.right({
+    cantrips: cantrips.right,
+    ritualSpells: ritualSpells.right,
+  });
+}
+
+function bookOfShadowsCantripRecords(
+  spells: readonly SpellRecord[],
+): Either.Either<
+  readonly [SpellRecord, SpellRecord, SpellRecord],
+  BattleCreatureInitIssue
+> {
+  const [first, second, third, ...extra] = spells;
+  if (
+    first === undefined ||
+    second === undefined ||
+    third === undefined ||
+    extra.length !== 0
+  ) {
+    return battleCreatureInitIssue(
+      "Book of Shadows Spell Access requires exactly three cantrips.",
+    );
+  }
+  const tuple: readonly [SpellRecord, SpellRecord, SpellRecord] = [
+    first,
+    second,
+    third,
+  ];
+  return Either.right(tuple);
+}
+
+function bookOfShadowsRitualSpellRecords(
+  spells: readonly SpellRecord[],
+): Either.Either<readonly [SpellRecord, SpellRecord], BattleCreatureInitIssue> {
+  const [first, second, ...extra] = spells;
+  if (first === undefined || second === undefined || extra.length !== 0) {
+    return battleCreatureInitIssue(
+      "Book of Shadows Spell Access requires exactly two Ritual spells.",
+    );
+  }
+  const tuple: readonly [SpellRecord, SpellRecord] = [first, second];
+  return Either.right(tuple);
 }
 
 function invocationSpellAccess(input: {

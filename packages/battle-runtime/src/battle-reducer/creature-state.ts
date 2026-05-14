@@ -240,7 +240,9 @@ export function battleCreatureStateFromInit(
           ? {}
           : {
               spellcasting: characterSpellcastingState(
-                requireCharacterSpellcastingStateInit(creatureInit.spellcasting),
+                requireCharacterSpellcastingStateInit(
+                  creatureInit.spellcasting,
+                ),
                 classLevels,
                 [
                   ...(creatureInit.resources ?? []),
@@ -695,6 +697,7 @@ function requireCharacterSpellcastingStateInit(
   }
   return {
     ...spellcasting,
+    bookOfShadowsSpellAccesses: spellcasting.bookOfShadowsSpellAccesses ?? [],
     invocationSpellAccesses: invocationSpellAccesses.invocationSpellAccesses,
   };
 }

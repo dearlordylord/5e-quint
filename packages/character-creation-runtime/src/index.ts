@@ -51,6 +51,7 @@ export {
   type CharacterAlignment,
   type CharacterBuild,
   type CharacterBuildAbilityScores,
+  type CharacterBuildBookOfShadowsSpellAccess,
   type CharacterBuildEquipment,
   type CharacterBuildFeature,
   type CharacterBuildHitDiePool,

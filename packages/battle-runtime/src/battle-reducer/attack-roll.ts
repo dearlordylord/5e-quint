@@ -18,6 +18,10 @@ import {
 } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import type { BattleObjectId, CombatantId } from "../identity.ts";
+import {
+  effectiveCharacterBattleCantrips,
+  effectiveCharacterBattlePreparedSpells,
+} from "../character-battle-resources.ts";
 import type {
   CharacterWeaponAttackActionOption,
   CharacterWeaponAttackAbilityChoice,
@@ -509,9 +513,10 @@ function spellInvocationIsFromSpellcastingSource(
   const spellcasting = combatant.origin.spellcasting;
   return (
     spellcasting !== undefined &&
-    [...spellcasting.cantrips, ...spellcasting.preparedSpells].some(
-      (spell) => spell.id === invocation.spell.id,
-    )
+    [
+      ...effectiveCharacterBattleCantrips(spellcasting),
+      ...effectiveCharacterBattlePreparedSpells(spellcasting),
+    ].some((spell) => spell.id === invocation.spell.id)
   );
 }
 

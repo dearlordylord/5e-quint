@@ -181,6 +181,19 @@ export type CharacterBattleInvocationSpellAccessInit = {
   readonly tag: "armorOfShadowsMageArmor" | "pactOfTheChainFindFamiliar";
   readonly spell: SpellRecord;
 };
+
+export type CharacterBattleBookOfShadowsSpellAccessInit = {
+  readonly tag: "bookOfShadows";
+  readonly bookPresence: CharacterBattleBookOfShadowsPresence;
+  readonly cantrips: readonly [SpellRecord, SpellRecord, SpellRecord];
+  readonly ritualSpells: readonly [SpellRecord, SpellRecord];
+  readonly spellcastingFocus: "book_of_shadows";
+};
+
+export type CharacterBattleBookOfShadowsPresence =
+  | { readonly tag: "onPerson" }
+  | { readonly tag: "notOnPerson" };
+
 export type CharacterBattleInvocationSpellAccessState =
   | {
       readonly tag: "armorOfShadowsMageArmor";
@@ -205,8 +218,9 @@ type CharacterBattleInvocationSpellAccessParseResult =
 
 export type CharacterBattleSpellcastingStateInit = Omit<
   CharacterBattleSpellcastingInit,
-  "invocationSpellAccesses"
+  "bookOfShadowsSpellAccesses" | "invocationSpellAccesses"
 > & {
+  readonly bookOfShadowsSpellAccesses: readonly CharacterBattleBookOfShadowsSpellAccessInit[];
   readonly invocationSpellAccesses: readonly CharacterBattleInvocationSpellAccessState[];
 };
 
@@ -224,6 +238,7 @@ export type CharacterBattleSpellcastingInit = {
   readonly cantrips: readonly SpellRecord[];
   readonly preparedSpells: readonly SpellRecord[];
   readonly featurePreparedSpells: readonly CharacterBattleFeaturePreparedSpellInit[];
+  readonly bookOfShadowsSpellAccesses?: readonly CharacterBattleBookOfShadowsSpellAccessInit[];
   readonly invocationSpellAccesses: readonly CharacterBattleInvocationSpellAccessInit[];
   readonly spellSlots: readonly CharacterBattleSpellSlotInit[];
   readonly spellSlotExpenditures?: readonly CharacterBattleSpellSlotExpenditureInit[];
@@ -233,14 +248,55 @@ export type CharacterBattleSpellcastingState = Omit<
   CharacterBattleSpellcastingInit,
   | "spellcastingAbilityModifier"
   | "featurePreparedSpells"
+  | "bookOfShadowsSpellAccesses"
   | "invocationSpellAccesses"
   | "spellSlots"
   | "spellSlotExpenditures"
 > & {
   readonly spellcastingAbilityModifier: AbilityModifier;
+  readonly bookOfShadowsSpellAccesses: readonly CharacterBattleBookOfShadowsSpellAccessInit[];
   readonly invocationSpellAccesses: readonly CharacterBattleInvocationSpellAccessState[];
   readonly spellSlots: readonly CharacterBattleSpellSlotState[];
 };
+
+export function effectiveCharacterBattleCantrips(
+  spellcasting: Pick<
+    CharacterBattleSpellcastingState,
+    "bookOfShadowsSpellAccesses" | "cantrips"
+  >,
+): readonly SpellRecord[] {
+  return distinctSpellsById([
+    ...spellcasting.cantrips,
+    ...bookOfShadowsOnPersonAccesses(spellcasting).flatMap(
+      (access) => access.cantrips,
+    ),
+  ]);
+}
+
+export function effectiveCharacterBattlePreparedSpells(
+  spellcasting: Pick<
+    CharacterBattleSpellcastingState,
+    "bookOfShadowsSpellAccesses" | "preparedSpells"
+  >,
+): readonly SpellRecord[] {
+  return distinctSpellsById([
+    ...spellcasting.preparedSpells,
+    ...bookOfShadowsOnPersonAccesses(spellcasting).flatMap(
+      (access) => access.ritualSpells,
+    ),
+  ]);
+}
+
+function bookOfShadowsOnPersonAccesses(
+  spellcasting: Pick<
+    CharacterBattleSpellcastingState,
+    "bookOfShadowsSpellAccesses"
+  >,
+): readonly CharacterBattleBookOfShadowsSpellAccessInit[] {
+  return spellcasting.bookOfShadowsSpellAccesses.filter(
+    (access) => access.bookPresence.tag === "onPerson",
+  );
+}
 
 export function characterBattleInvocationSpellAccessInitIssue(
   invocationSpellAccesses: readonly CharacterBattleInvocationSpellAccessInit[],
@@ -655,6 +711,7 @@ export function characterSpellcastingState(
       input.preparedSpells,
       input.featurePreparedSpells,
     ),
+    bookOfShadowsSpellAccesses: input.bookOfShadowsSpellAccesses ?? [],
     invocationSpellAccesses: input.invocationSpellAccesses,
     spellSlots: input.spellSlots.map((slot) => {
       const expenditure = spellSlotExpenditures.find(
@@ -723,18 +780,24 @@ function preparedSpellsWithFeatureAccess(
   preparedSpells: readonly SpellRecord[],
   featurePreparedSpells: readonly CharacterBattleFeaturePreparedSpellInit[],
 ): readonly SpellRecord[] {
-  const seenSpellIds = new Set<SpellRecord["id"]>();
-  const allPrepared: SpellRecord[] = [];
-  for (const spell of [
+  return distinctSpellsById([
     ...preparedSpells,
     ...featurePreparedSpells.map((featureSpell) => featureSpell.spell),
-  ]) {
+  ]);
+}
+
+function distinctSpellsById(
+  spells: readonly SpellRecord[],
+): readonly SpellRecord[] {
+  const seenSpellIds = new Set<SpellRecord["id"]>();
+  const distinct: SpellRecord[] = [];
+  for (const spell of spells) {
     if (!seenSpellIds.has(spell.id)) {
       seenSpellIds.add(spell.id);
-      allPrepared.push(spell);
+      distinct.push(spell);
     }
   }
-  return allPrepared;
+  return distinct;
 }
 
 function spellcastingSourceClassName(

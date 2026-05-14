@@ -11,10 +11,12 @@ import {
   classUnitId,
   CHARACTER_CLASS_LEVELS,
   characterEquipmentItemSourceFromId,
+  eldritchInvocationId,
   parseCharacterEquipmentItemId,
   progressionClassUnitIds,
   STANDARD_LANGUAGES,
   type CharacterBuild,
+  type CharacterBuildBookOfShadowsSpellAccess,
   type CharacterBuildEquipment,
   type CharacterBuildFeature,
   type CharacterBuildHitDiePool,
@@ -88,6 +90,10 @@ import type {
   SpellRecord,
   UnitRecord,
 } from "@dnd/surface/surface/types";
+import {
+  allCantripsFromAnyClassSpellList,
+  allLeveledSpellsFromAnyClassSpellList,
+} from "@dnd/surface/surface/schema";
 import { favoredEnemyHuntersMarkFreeCastGrantsForUnit } from "@dnd/surface/surface/types";
 import { Brand, Either, Option } from "effect";
 
@@ -140,6 +146,9 @@ export type CharacterSheet =
       readonly spentHitDice: readonly CharacterSheetSpentHitDiePool[];
       readonly restFeatureUses: readonly CharacterSheetRestFeatureUse[];
       readonly resourceExpenditures: readonly CharacterSheetResourceExpenditure[];
+      readonly bookOfShadowsPresence:
+        | CharacterSheetBookOfShadowsPresence
+        | undefined;
       readonly spellSlotExpenditures: readonly CharacterSpellSlotExpenditure[];
       readonly pactSlotExpenditure: CharacterPactSlotExpenditure | undefined;
     }
@@ -153,6 +162,7 @@ export type CharacterSheet =
       readonly spentHitDice: readonly CharacterSheetSpentHitDiePool[];
       readonly restFeatureUses: readonly CharacterSheetRestFeatureUse[];
       readonly resourceExpenditures: readonly CharacterSheetResourceExpenditure[];
+      readonly bookOfShadowsPresence?: never;
       readonly spellSlotExpenditures?: never;
       readonly pactSlotExpenditure?: never;
     };
@@ -169,6 +179,10 @@ export type CharacterPactSlotExpenditure = {
   readonly count: ResourceCount;
   readonly expended: ResourceCount;
 };
+
+export type CharacterSheetBookOfShadowsPresence =
+  | { readonly tag: "onPerson" }
+  | { readonly tag: "notOnPerson" };
 
 export type CharacterSheetSpellSlotState = {
   readonly spellLevel: SpellSlotLevel;
@@ -267,6 +281,7 @@ export type CharacterSheetInput = {
   readonly spentHitDice?: readonly CharacterSheetSpentHitDiePool[];
   readonly spellSlots?: readonly CharacterSheetSpellSlotState[];
   readonly pactSlots?: CharacterSheetPactSlotState;
+  readonly bookOfShadowsPresence?: CharacterSheetBookOfShadowsPresence;
   readonly restFeatureUses?: readonly CharacterSheetRestFeatureUse[];
   readonly resourceExpenditures?: readonly CharacterSheetResourceExpenditure[];
 };
@@ -399,8 +414,21 @@ export type CharacterSheetSpellbookRitualInvocation = {
   readonly requiresReadingSpellbook: true;
 };
 
+export type CharacterSheetBookOfShadowsRitualInvocation = {
+  readonly tag: "bookOfShadowsRitual";
+  readonly spellId: UnitRecord["id"];
+  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly spellcastingSourceUnitId: UnitRecord["id"];
+  readonly spellSlotCost: { readonly kind: "none" };
+  readonly preparationRequirement: "prepared";
+  readonly requiredSpellAccess: "bookOfShadows";
+  readonly additionalCastingTimeMinutes: typeof RITUAL_ADDITIONAL_CASTING_TIME_MINUTES;
+  readonly requiresBookOfShadowsOnPerson: true;
+};
+
 export type CharacterSheetSpellInvocation =
-  CharacterSheetSpellbookRitualInvocation;
+  | CharacterSheetSpellbookRitualInvocation
+  | CharacterSheetBookOfShadowsRitualInvocation;
 
 export function characterSheetIssue(
   message: string,
@@ -423,6 +451,10 @@ export function createFreshCharacterSheet(
   const resourceExpenditures = resourceExpendituresFromInput(input);
   if (Either.isLeft(resourceExpenditures)) {
     return Either.left(resourceExpenditures.left);
+  }
+  const bookOfShadowsPresence = bookOfShadowsPresenceFromInput(input);
+  if (Either.isLeft(bookOfShadowsPresence)) {
+    return Either.left(bookOfShadowsPresence.left);
   }
 
   if (isNonSpellcastingBuild(input.build)) {
@@ -484,9 +516,34 @@ export function createFreshCharacterSheet(
     spentHitDice: spentHitDice.right,
     restFeatureUses: restFeatureUses.right,
     resourceExpenditures: resourceExpenditures.right,
+    bookOfShadowsPresence: bookOfShadowsPresence.right,
     spellSlotExpenditures: spellSlotExpenditures.right,
     pactSlotExpenditure: pactSlotExpenditure.right,
   });
+}
+
+function bookOfShadowsPresenceFromInput(
+  input: CharacterSheetInput,
+): Either.Either<
+  CharacterSheetBookOfShadowsPresence | undefined,
+  CharacterSheetIssue
+> {
+  if (!characterBuildHasBookOfShadows(input.build)) {
+    return input.bookOfShadowsPresence === undefined
+      ? Either.right(undefined)
+      : characterSheetIssue(
+          "Character Sheet Book of Shadows presence requires Book of Shadows selection.",
+        );
+  }
+  return Either.right(input.bookOfShadowsPresence ?? { tag: "onPerson" });
+}
+
+function characterBuildHasBookOfShadows(build: CharacterBuild): boolean {
+  return (
+    build.spellcasting?.sources.some(
+      (source) => source.bookOfShadows !== undefined,
+    ) ?? false
+  );
 }
 
 export function parseCharacterSheet(
@@ -500,8 +557,15 @@ export function parseCharacterSheet(
   if (typeof value.characterId !== "string") {
     return characterSheetIssue("Character Sheet requires character id.");
   }
-  const build = parseCharacterBuild(value.build);
+  const build = parseCharacterBuild(value.build, unitLibrary);
   if (Either.isLeft(build)) return Either.left(build.left);
+  const bookOfShadowsPresence = parseStoredCharacterSheetBookOfShadowsPresence(
+    build.right,
+    value.bookOfShadowsPresence,
+  );
+  if (Either.isLeft(bookOfShadowsPresence)) {
+    return Either.left(bookOfShadowsPresence.left);
+  }
   const maximumHp = parseHp(value.maximumHp);
   if (Either.isLeft(maximumHp)) return Either.left(maximumHp.left);
   const hitPoints = parseStoredHitPoints(value.hitPoints);
@@ -543,6 +607,9 @@ export function parseCharacterSheet(
       : { zeroHpLifecycle: hitPoints.right.zeroHpLifecycle }),
     ...(spellSlots.right === undefined ? {} : { spellSlots: spellSlots.right }),
     ...(pactSlots.right === undefined ? {} : { pactSlots: pactSlots.right }),
+    ...(bookOfShadowsPresence.right === undefined
+      ? {}
+      : { bookOfShadowsPresence: bookOfShadowsPresence.right }),
     spentHitDice: spentHitDice.right,
     restFeatureUses: restFeatureUses.right,
     resourceExpenditures: resourceExpenditures.right,
@@ -703,6 +770,10 @@ export function characterSheetResources(
 export function characterSheetSpellInvocation(
   input: CharacterSheetSpellInvocationInput,
 ): Either.Either<CharacterSheetSpellInvocation, CharacterSheetIssue> {
+  const bookOfShadowsRitual = characterSheetBookOfShadowsRitualInvocation(input);
+  if (bookOfShadowsRitual !== null) {
+    return bookOfShadowsRitual;
+  }
   return characterSheetSpellbookRitualInvocation(input);
 }
 
@@ -1160,6 +1231,51 @@ function getRequiredUnit(
   return Option.isSome(unit)
     ? Either.right(unit.value)
     : characterSheetIssue(`Unknown Unit id: ${unitId}`);
+}
+
+function characterSheetBookOfShadowsRitualInvocation(
+  input: CharacterSheetSpellInvocationInput,
+): Either.Either<
+  CharacterSheetBookOfShadowsRitualInvocation,
+  CharacterSheetIssue
+> | null {
+  if (!isSpellcastingBuild(input.sheet.build)) {
+    return null;
+  }
+  const source = input.sheet.build.spellcasting.sources.find((candidate) =>
+    candidate.bookOfShadows?.ritualSpells.some(
+      (spellId) => spellId === input.spellId,
+    ),
+  );
+  if (source === undefined) {
+    return null;
+  }
+  if (input.sheet.bookOfShadowsPresence?.tag !== "onPerson") {
+    return characterSheetIssue(
+      "Book of Shadows Ritual requires the book on your person.",
+    );
+  }
+  const spell = getRequiredUnit(input.unitLibrary, input.spellId);
+  if (Either.isLeft(spell)) return Either.left(spell.left);
+  if (!isSpellRecord(spell.right)) {
+    return characterSheetIssue("Ritual spell invocation requires a Spell.");
+  }
+  if (!spellHasRitualTag(spell.right)) {
+    return characterSheetIssue(
+      "Ritual spell invocation requires a ritual-tagged Spell Definition.",
+    );
+  }
+  return Either.right({
+    tag: "bookOfShadowsRitual",
+    spellId: input.spellId,
+    spellLevel: spell.right.mechanics.level,
+    spellcastingSourceUnitId: source.sourceUnitId,
+    spellSlotCost: { kind: "none" },
+    preparationRequirement: "prepared",
+    requiredSpellAccess: "bookOfShadows",
+    additionalCastingTimeMinutes: RITUAL_ADDITIONAL_CASTING_TIME_MINUTES,
+    requiresBookOfShadowsOnPerson: true,
+  });
 }
 
 function characterSheetSpellbookRitualInvocation(
@@ -2713,6 +2829,7 @@ function canonicalZeroHpLifecycle(
 
 function parseCharacterBuild(
   value: unknown,
+  unitLibrary: UnitCatalog,
 ): Either.Either<CharacterBuild, CharacterSheetIssue> {
   if (!isRecord(value)) return characterSheetIssue("Expected Character Build.");
   const progression = parseStoredProgression(value.progression);
@@ -2747,7 +2864,7 @@ function parseCharacterBuild(
   const equipment = parseStoredEquipment(value.equipment);
   if (Either.isLeft(equipment)) return Either.left(equipment.left);
 
-  return Either.right({
+  const build: CharacterBuild = {
     progression: progression.right,
     background: value.background,
     species: value.species,
@@ -2758,7 +2875,14 @@ function parseCharacterBuild(
     features: features.right,
     ...(spellcasting === undefined ? {} : { spellcasting: spellcasting.right }),
     equipment: equipment.right,
-  });
+  };
+  const bookOfShadowsIssue = storedBookOfShadowsSelectionIssue(
+    build,
+    unitLibrary,
+  );
+  return Either.isLeft(bookOfShadowsIssue)
+    ? Either.left(bookOfShadowsIssue.left)
+    : Either.right(build);
 }
 
 function parseStoredProgression(
@@ -2797,6 +2921,169 @@ function parseStoredProgression(
     startingClass: classUnitId(value.startingClass),
     advancements,
   });
+}
+
+function storedBookOfShadowsSelectionIssue(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): Either.Either<void, CharacterSheetIssue> {
+  const sources =
+    build.spellcasting?.sources.filter(
+      (source) => source.bookOfShadows !== undefined,
+    ) ?? [];
+  if (sources.length === 0) {
+    return Either.right(undefined);
+  }
+  if (sources.length !== 1) {
+    return characterSheetIssue(
+      "Character Build supports one Book of Shadows Spell Access source.",
+    );
+  }
+  if (!hasSelectedWarlockEldritchInvocation(build, unitLibrary)) {
+    return characterSheetIssue(
+      "Character Build Book of Shadows Spell Access requires Pact of the Tome.",
+    );
+  }
+  const source = sources[0];
+  const access = source.bookOfShadows;
+  if (access === undefined) {
+    return characterSheetIssue(
+      "Character Build Book of Shadows Spell Access source is missing its selection.",
+    );
+  }
+  const sourceUnit = getRequiredUnit(unitLibrary, source.sourceUnitId);
+  if (Either.isLeft(sourceUnit)) {
+    return Either.left(sourceUnit.left);
+  }
+  if (sourceUnit.right.kind !== "class" || sourceUnit.right.className !== "warlock") {
+    return characterSheetIssue(
+      "Character Build Book of Shadows Spell Access requires the Warlock spellcasting source.",
+    );
+  }
+  const selectedSpellIds = [...access.cantrips, ...access.ritualSpells];
+  if (new Set(selectedSpellIds).size !== selectedSpellIds.length) {
+    return characterSheetIssue(
+      "Character Build Book of Shadows Spell Access selections must be distinct.",
+    );
+  }
+  const preparedOrKnown = new Set([
+    ...source.cantrips,
+    ...source.preparedSpells,
+    ...featurePreparedSpellIdsForBuild(build, unitLibrary),
+  ]);
+  if (selectedSpellIds.some((spellId) => preparedOrKnown.has(spellId))) {
+    return characterSheetIssue(
+      "Character Build Book of Shadows Spell Access cannot select spells the character already has prepared or known.",
+    );
+  }
+  if (!allCantripsFromAnyClassSpellList(access.cantrips)) {
+    return characterSheetIssue(
+      "Character Build Book of Shadows cantrips must come from class spell lists.",
+    );
+  }
+  if (
+    !allLeveledSpellsFromAnyClassSpellList(
+      access.ritualSpells.map((spellId) => ({ spellId, spellLevel: 1 })),
+    )
+  ) {
+    return characterSheetIssue(
+      "Character Build Book of Shadows Ritual spells must be level-1 spells from class spell lists.",
+    );
+  }
+  const cantrips = spellRecordsForIds(unitLibrary, access.cantrips);
+  if (Either.isLeft(cantrips)) {
+    return Either.left(cantrips.left);
+  }
+  const ritualSpells = spellRecordsForIds(unitLibrary, access.ritualSpells);
+  if (Either.isLeft(ritualSpells)) {
+    return Either.left(ritualSpells.left);
+  }
+  if (cantrips.right.some((spell) => spell.mechanics.level !== 0)) {
+    return characterSheetIssue(
+      "Character Build Book of Shadows cantrip selections must be cantrip Spell Definitions.",
+    );
+  }
+  if (
+    ritualSpells.right.some(
+      (spell) =>
+        spell.mechanics.level !== 1 ||
+        !("ritual" in spell.mechanics.castingTime) ||
+        spell.mechanics.castingTime.ritual !== true,
+    )
+  ) {
+    return characterSheetIssue(
+      "Character Build Book of Shadows Ritual selections must be level-1 ritual-tagged Spell Definitions.",
+    );
+  }
+  return Either.right(undefined);
+}
+
+function hasSelectedWarlockEldritchInvocation(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): boolean {
+  return build.features.some((feature) => {
+    if (
+      feature.kind !== "selectedEldritchInvocation" ||
+      feature.invocationId !== eldritchInvocationId("pact_of_the_tome")
+    ) {
+      return false;
+    }
+    const source = unitLibrary.getUnit(feature.selectedFromUnitId);
+    if (Option.isNone(source) || source.value.kind !== "class_feature") {
+      return false;
+    }
+    const mechanics = source.value.mechanics;
+    return (
+      mechanics.family === "feature_choice" &&
+      mechanics.optionSource.kind === "class_feature_options" &&
+      mechanics.optionSource.className === "warlock" &&
+      mechanics.optionSource.optionKind === "eldritch_invocation"
+    );
+  });
+}
+
+function featurePreparedSpellIdsForBuild(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): readonly UnitRecord["id"][] {
+  const spellIds: UnitRecord["id"][] = [];
+  for (const unitId of characterBuildFeatureUnitIds(build, unitLibrary)) {
+    const unit = unitLibrary.getUnit(unitId);
+    if (
+      Option.isNone(unit) ||
+      unit.value.kind !== "class_feature" ||
+      unit.value.mechanics.family !== "passive"
+    ) {
+      continue;
+    }
+    for (const grant of unit.value.mechanics.grants) {
+      if (grant.kind === "grant_spell_access" && grant.mode === "prepared") {
+        spellIds.push(grant.spellId);
+      }
+    }
+  }
+  return spellIds;
+}
+
+function spellRecordsForIds(
+  unitLibrary: UnitCatalog,
+  spellIds: readonly UnitRecord["id"][],
+): Either.Either<readonly SpellRecord[], CharacterSheetIssue> {
+  const spells: SpellRecord[] = [];
+  for (const spellId of spellIds) {
+    const spell = getRequiredUnit(unitLibrary, spellId);
+    if (Either.isLeft(spell)) {
+      return Either.left(spell.left);
+    }
+    if (!isSpellRecord(spell.right)) {
+      return characterSheetIssue(
+        `Character Build Book of Shadows selection must reference Spell Definitions: ${spellId}`,
+      );
+    }
+    spells.push(spell.right);
+  }
+  return Either.right(spells);
 }
 
 function parseStoredOriginLanguages(
@@ -2898,19 +3185,30 @@ function parseStoredFeatures(
   }
   const features = [];
   for (const feature of value) {
-    if (
-      !isRecord(feature) ||
-      feature.kind !== "selectedClassChoice" ||
-      typeof feature.unitId !== "string" ||
-      typeof feature.selectedFromUnitId !== "string"
-    ) {
+    if (!isRecord(feature) || typeof feature.selectedFromUnitId !== "string") {
       return characterSheetIssue("Character Build feature is invalid.");
     }
-    features.push({
-      kind: "selectedClassChoice" as const,
-      unitId: feature.unitId,
-      selectedFromUnitId: feature.selectedFromUnitId,
-    });
+    if (
+      feature.kind === "selectedClassChoice" &&
+      typeof feature.unitId === "string"
+    ) {
+      features.push({
+        kind: "selectedClassChoice" as const,
+        unitId: feature.unitId,
+        selectedFromUnitId: feature.selectedFromUnitId,
+      });
+    } else if (
+      feature.kind === "selectedEldritchInvocation" &&
+      typeof feature.invocationId === "string"
+    ) {
+      features.push({
+        kind: "selectedEldritchInvocation" as const,
+        invocationId: eldritchInvocationId(feature.invocationId),
+        selectedFromUnitId: feature.selectedFromUnitId,
+      });
+    } else {
+      return characterSheetIssue("Character Build feature is invalid.");
+    }
   }
   return Either.right(features);
 }
@@ -2957,6 +3255,13 @@ function parseStoredSpellcastingSource(
       "Character Build spellcasting source is invalid.",
     );
   }
+  const bookOfShadows =
+    value.bookOfShadows === undefined
+      ? undefined
+      : parseStoredBookOfShadowsSpellAccess(value.bookOfShadows);
+  if (bookOfShadows !== undefined && Either.isLeft(bookOfShadows)) {
+    return Either.left(bookOfShadows.left);
+  }
   return Either.right({
     sourceUnitId: value.sourceUnitId,
     spellcastingAbility: value.spellcastingAbility,
@@ -2965,7 +3270,110 @@ function parseStoredSpellcastingSource(
     preparedSpells: value.preparedSpells,
     spellcastingFocuses:
       value.spellcastingFocuses as readonly CharacterBuildSpellcastingFocus[],
+    ...(bookOfShadows === undefined
+      ? {}
+      : { bookOfShadows: bookOfShadows.right }),
   });
+}
+
+function parseStoredBookOfShadowsSpellAccess(
+  value: unknown,
+): Either.Either<CharacterBuildBookOfShadowsSpellAccess, CharacterSheetIssue> {
+  if (
+    !isRecord(value) ||
+    value.tag !== "bookOfShadows" ||
+    value.spellcastingFocus !== "book_of_shadows"
+  ) {
+    return characterSheetIssue(
+      "Character Build Book of Shadows Spell Access is invalid.",
+    );
+  }
+  const cantrips = parseStoredBookOfShadowsCantripIds(value.cantrips);
+  if (Either.isLeft(cantrips)) {
+    return Either.left(cantrips.left);
+  }
+  const ritualSpells = parseStoredBookOfShadowsRitualSpellIds(
+    value.ritualSpells,
+  );
+  if (Either.isLeft(ritualSpells)) {
+    return Either.left(ritualSpells.left);
+  }
+  return Either.right({
+    tag: value.tag,
+    cantrips: cantrips.right,
+    ritualSpells: ritualSpells.right,
+    spellcastingFocus: value.spellcastingFocus,
+  });
+}
+
+function parseStoredCharacterSheetBookOfShadowsPresence(
+  build: CharacterBuild,
+  value: unknown,
+): Either.Either<
+  CharacterSheetBookOfShadowsPresence | undefined,
+  CharacterSheetIssue
+> {
+  if (!characterBuildHasBookOfShadows(build)) {
+    return value === undefined
+      ? Either.right(undefined)
+      : characterSheetIssue(
+          "Character Sheet Book of Shadows presence requires Book of Shadows selection.",
+        );
+  }
+  if (
+    !isRecord(value) ||
+    (value.tag !== "onPerson" && value.tag !== "notOnPerson")
+  ) {
+    return characterSheetIssue(
+      "Character Sheet Book of Shadows presence is invalid.",
+    );
+  }
+  return Either.right({ tag: value.tag });
+}
+
+function parseStoredBookOfShadowsCantripIds(
+  value: unknown,
+): Either.Either<
+  CharacterBuildBookOfShadowsSpellAccess["cantrips"],
+  CharacterSheetIssue
+> {
+  if (!isStringArray(value)) {
+    return characterSheetIssue(
+      "Character Build Book of Shadows cantrips are invalid.",
+    );
+  }
+  const [first, second, third, ...extra] = value;
+  if (
+    first === undefined ||
+    second === undefined ||
+    third === undefined ||
+    extra.length !== 0
+  ) {
+    return characterSheetIssue(
+      "Character Build Book of Shadows requires exactly three cantrips.",
+    );
+  }
+  return Either.right([first, second, third]);
+}
+
+function parseStoredBookOfShadowsRitualSpellIds(
+  value: unknown,
+): Either.Either<
+  CharacterBuildBookOfShadowsSpellAccess["ritualSpells"],
+  CharacterSheetIssue
+> {
+  if (!isStringArray(value)) {
+    return characterSheetIssue(
+      "Character Build Book of Shadows Ritual spells are invalid.",
+    );
+  }
+  const [first, second, ...extra] = value;
+  if (first === undefined || second === undefined || extra.length !== 0) {
+    return characterSheetIssue(
+      "Character Build Book of Shadows requires exactly two Ritual spells.",
+    );
+  }
+  return Either.right([first, second]);
 }
 
 function parseStoredSpellSlotPools(

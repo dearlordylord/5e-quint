@@ -13,6 +13,7 @@ import {
   characterSheetTempHp,
   createFreshCharacterSheet,
   type CharacterSheet,
+  type CharacterSheetBookOfShadowsPresence,
   type CharacterSheetIssue,
   type CharacterSheetPositiveHpUnconscious,
   type CharacterSheetResourceExpenditure,
@@ -67,6 +68,7 @@ export type CharacterSheetBattleInitInput = Omit<
   | "positiveHpUnconscious"
   | "zeroHpLifecycle"
   | "spellSlots"
+  | "bookOfShadowsPresence"
 > & {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
@@ -138,6 +140,7 @@ export function applyBattleHandoffToCharacterSheet(input: {
   if (Either.isLeft(resourceExpenditures)) {
     return Either.left(resourceExpenditures.left);
   }
+  const bookOfShadowsPresence = bookOfShadowsPresenceFromBattle(input);
 
   return createFreshCharacterSheet({
     characterId: input.sheet.characterId,
@@ -160,6 +163,7 @@ export function applyBattleHandoffToCharacterSheet(input: {
       ? {}
       : { spellSlots: input.combatant.origin.spellcasting.spellSlots }),
     ...(pactSlots === undefined ? {} : { pactSlots }),
+    ...(bookOfShadowsPresence === undefined ? {} : { bookOfShadowsPresence }),
     spentHitDice: input.sheet.spentHitDice,
     restFeatureUses: input.sheet.restFeatureUses,
     resourceExpenditures: resourceExpenditures.right,
@@ -243,6 +247,7 @@ function withDefinedCharacterBattleSheetState(
     | "positiveHpUnconscious"
     | "zeroHpLifecycle"
     | "spellSlots"
+    | "bookOfShadowsPresence"
     | "resourceExpenditures"
   >
 > {
@@ -255,8 +260,24 @@ function withDefinedCharacterBattleSheetState(
     ...(positiveHpUnconscious === undefined ? {} : { positiveHpUnconscious }),
     ...(zeroHpLifecycle === undefined ? {} : { zeroHpLifecycle }),
     ...(spellSlots === undefined ? {} : { spellSlots }),
+    ...(sheet.bookOfShadowsPresence === undefined
+      ? {}
+      : { bookOfShadowsPresence: sheet.bookOfShadowsPresence }),
     resourceExpenditures: sheet.resourceExpenditures,
   };
+}
+
+function bookOfShadowsPresenceFromBattle(input: {
+  readonly sheet: CharacterSheet;
+  readonly combatant: BattleCreatureState;
+}): CharacterSheetBookOfShadowsPresence | undefined {
+  if (input.combatant.origin.kind !== "character") {
+    return input.sheet.bookOfShadowsPresence;
+  }
+  return (
+    input.combatant.origin.spellcasting?.bookOfShadowsSpellAccesses[0]
+      ?.bookPresence ?? input.sheet.bookOfShadowsPresence
+  );
 }
 
 function characterSheetPositiveHpUnconscious(

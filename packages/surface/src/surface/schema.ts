@@ -183,6 +183,10 @@ export {
 export {
   ActivationResourceSchema,
   ActivatedAbilityMechanicsSchema,
+  allCantripsFromAnyClassSpellList,
+  allCantripsFromClassSpellList,
+  allLeveledSpellsFromAnyClassSpellList,
+  allPreparedSpellsFromClassSpellList,
   AlternateActionCostMechanicsSchema,
   AttackRollMissReplacementEffectSchema,
   AttackRollMissReplacementTriggerSchema,

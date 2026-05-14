@@ -33,7 +33,11 @@ import type {
   CharacterBattleInvocationSpellAccessState,
   CharacterBattleSpellcastingState,
 } from "../character-battle-resources.ts";
-import { resourceHasUsesRemaining } from "../character-battle-resources.ts";
+import {
+  effectiveCharacterBattleCantrips,
+  effectiveCharacterBattlePreparedSpells,
+  resourceHasUsesRemaining,
+} from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
 import { SHIELD_MAGIC_MISSILE_SPELL_ID } from "./domain-constants.ts";
 
@@ -122,12 +126,14 @@ export function supportedSpellActs(
     (total, classLevel) => total + Number(classLevel.level),
     0,
   );
+  const preparedSpells = effectiveCharacterBattlePreparedSpells(spellcasting);
+  const cantrips = effectiveCharacterBattleCantrips(spellcasting);
 
   return [
-    ...spellcasting.preparedSpells.flatMap((spell) =>
+    ...preparedSpells.flatMap((spell) =>
       supportedPreparedSlotSpellProfile(spell, spellcasting.spellSlots),
     ),
-    ...spellcasting.preparedSpells.flatMap((spell) =>
+    ...preparedSpells.flatMap((spell) =>
       supportedPreparedSpellAttackProfile(
         spell,
         spellcasting.spellSlots,
@@ -135,7 +141,7 @@ export function supportedSpellActs(
         spellcasting.proficiencyBonus,
       ),
     ),
-    ...spellcasting.preparedSpells.flatMap((spell) =>
+    ...preparedSpells.flatMap((spell) =>
       supportedPreparedChainedSpellAttackDamageProfile(
         spell,
         spellcasting.spellSlots,
@@ -143,7 +149,7 @@ export function supportedSpellActs(
         spellcasting.proficiencyBonus,
       ),
     ),
-    ...spellcasting.preparedSpells.flatMap((spell) =>
+    ...preparedSpells.flatMap((spell) =>
       supportedPreparedAttackBurstSaveDamageProfile(
         spell,
         spellcasting.spellSlots,
@@ -151,56 +157,56 @@ export function supportedSpellActs(
         spellcasting.proficiencyBonus,
       ),
     ),
-    ...spellcasting.preparedSpells.flatMap((spell) =>
+    ...preparedSpells.flatMap((spell) =>
       supportedPreparedSaveGateDamageProfile(spell, spellcasting.spellSlots),
     ),
-    ...spellcasting.preparedSpells.flatMap((spell) =>
+    ...preparedSpells.flatMap((spell) =>
       supportedPreparedSaveGateConditionProfile(spell, spellcasting.spellSlots),
     ),
-    ...spellcasting.preparedSpells.flatMap((spell) =>
+    ...preparedSpells.flatMap((spell) =>
       supportedPreparedSaveGateAttackRollAdvantageProfile(
         actor.combatantId,
         spell,
         spellcasting.spellSlots,
       ),
     ),
-    ...spellcasting.preparedSpells.flatMap((spell) =>
+    ...preparedSpells.flatMap((spell) =>
       supportedPreparedSleepTargetAdmissionProfile(
         spell,
         spellcasting.spellSlots,
       ),
     ),
-    ...spellcasting.preparedSpells.flatMap((spell) =>
+    ...preparedSpells.flatMap((spell) =>
       supportedPreparedGreaseGroundHazardProfile(
         spell,
         spellcasting.spellSlots,
       ),
     ),
-    ...spellcasting.preparedSpells.flatMap((spell) =>
+    ...preparedSpells.flatMap((spell) =>
       supportedPreparedCommandProfile(spell, spellcasting.spellSlots),
     ),
-    ...spellcasting.preparedSpells.flatMap((spell) =>
+    ...preparedSpells.flatMap((spell) =>
       supportedPreparedScalarBuffSpellProfile(
         actor.combatantId,
         spell,
         spellcasting.spellSlots,
       ),
     ),
-    ...spellcasting.preparedSpells.flatMap((spell) =>
+    ...preparedSpells.flatMap((spell) =>
       supportedPreparedRollModifierSpellProfile(
         actor.combatantId,
         spell,
         spellcasting.spellSlots,
       ),
     ),
-    ...spellcasting.preparedSpells.flatMap((spell) =>
+    ...preparedSpells.flatMap((spell) =>
       supportedPreparedCreatureTypeProtectionSpellProfile(
         actor.combatantId,
         spell,
         spellcasting.spellSlots,
       ),
     ),
-    ...spellcasting.preparedSpells.flatMap((spell) =>
+    ...preparedSpells.flatMap((spell) =>
       supportedPreparedConditionImmunityAndTurnStartTemporaryHitPointsSpellProfile(
         actor.combatantId,
         spell,
@@ -208,92 +214,92 @@ export function supportedSpellActs(
         spellcasting.spellcastingAbilityModifier,
       ),
     ),
-    ...spellcasting.preparedSpells.flatMap((spell) =>
+    ...preparedSpells.flatMap((spell) =>
       supportedPreparedWeaponDamageRiderSpellProfile(
         actor.combatantId,
         spell,
         spellcasting.spellSlots,
       ),
     ),
-    ...spellcasting.preparedSpells.flatMap((spell) =>
+    ...preparedSpells.flatMap((spell) =>
       supportedPreparedAfterHitDamageSpellProfile(
         spell,
         spellcasting.spellSlots,
       ),
     ),
-    ...spellcasting.preparedSpells.flatMap((spell) =>
+    ...preparedSpells.flatMap((spell) =>
       supportedPreparedAfterHitSaveGatedConditionSpellProfile(
         spell,
         spellcasting.spellSlots,
       ),
     ),
-    ...spellcasting.preparedSpells.flatMap((spell) =>
+    ...preparedSpells.flatMap((spell) =>
       supportedPreparedAfterHitTimedDamageAndSaveSpellProfile(
         actor.combatantId,
         spell,
         spellcasting.spellSlots,
       ),
     ),
-    ...spellcasting.preparedSpells.flatMap((spell) =>
+    ...preparedSpells.flatMap((spell) =>
       supportedPreparedMarkedDamageRiderSpellProfile(
         actor,
         spell,
         spellcasting.spellSlots,
       ),
     ),
-    ...spellcasting.preparedSpells.flatMap((spell) =>
+    ...preparedSpells.flatMap((spell) =>
       supportedPreparedExpeditiousRetreatDashSpellProfile(
         actor.combatantId,
         spell,
         spellcasting.spellSlots,
       ),
     ),
-    ...spellcasting.preparedSpells.flatMap((spell) =>
+    ...preparedSpells.flatMap((spell) =>
       supportedPreparedJumpMovementReplacementSpellProfile(
         actor.combatantId,
         spell,
         spellcasting.spellSlots,
       ),
     ),
-    ...spellcasting.preparedSpells.flatMap((spell) =>
+    ...preparedSpells.flatMap((spell) =>
       supportedPreparedFeatherFallMitigationSpellProfile(
         actor.combatantId,
         spell,
         spellcasting.spellSlots,
       ),
     ),
-    ...spellcasting.preparedSpells.flatMap((spell) =>
+    ...preparedSpells.flatMap((spell) =>
       supportedPreparedPersistentSpellProfile(actor.combatantId, spell),
     ),
     ...spellcasting.invocationSpellAccesses.flatMap((access) =>
       supportedInvocationPersistentSpellProfile(actor.combatantId, access),
     ),
-    ...spellcasting.preparedSpells.flatMap((spell) =>
+    ...preparedSpells.flatMap((spell) =>
       supportedPreparedHealingSpellProfile(
         spell,
         spellcasting.spellSlots,
         spellcasting.spellcastingAbilityModifier,
       ),
     ),
-    ...spellcasting.preparedSpells.flatMap((spell) =>
+    ...preparedSpells.flatMap((spell) =>
       supportedPreparedShieldReactionSpellProfile(
         spell,
         spellcasting.spellSlots,
       ),
     ),
-    ...spellcasting.preparedSpells.flatMap((spell) =>
+    ...preparedSpells.flatMap((spell) =>
       supportedPreparedHellishRebukeReactionSpellProfile(
         spell,
         spellcasting.spellSlots,
       ),
     ),
-    ...spellcasting.cantrips.flatMap((spell) =>
+    ...cantrips.flatMap((spell) =>
       supportedCantripHeldLightSpellProfile(spell),
     ),
-    ...spellcasting.cantrips.flatMap((spell) =>
+    ...cantrips.flatMap((spell) =>
       supportedCantripObjectLightSpellProfile(spell),
     ),
-    ...spellcasting.cantrips.flatMap((spell) =>
+    ...cantrips.flatMap((spell) =>
       supportedCantripHeldLightHurlSpellProfile(
         spell,
         spellcasting.spellcastingAbilityModifier,
@@ -301,7 +307,7 @@ export function supportedSpellActs(
         characterLevel,
       ),
     ),
-    ...spellcasting.cantrips.flatMap((spell) =>
+    ...cantrips.flatMap((spell) =>
       supportedCantripSpellHostedWeaponAttackProfile(
         actor,
         spell,
@@ -310,7 +316,7 @@ export function supportedSpellActs(
         characterLevel,
       ),
     ),
-    ...spellcasting.cantrips.flatMap((spell) =>
+    ...cantrips.flatMap((spell) =>
       supportedCantripSpellAttackProfile(
         spell,
         spellcasting.spellcastingAbilityModifier,
@@ -318,13 +324,13 @@ export function supportedSpellActs(
         characterLevel,
       ),
     ),
-    ...spellcasting.cantrips.flatMap((spell) =>
+    ...cantrips.flatMap((spell) =>
       supportedCantripSaveGateDamageProfile(spell, characterLevel),
     ),
-    ...spellcasting.cantrips.flatMap((spell) =>
+    ...cantrips.flatMap((spell) =>
       supportedCantripRollModifierSpellProfile(actor.combatantId, spell),
     ),
-    ...spellcasting.cantrips.flatMap((spell) =>
+    ...cantrips.flatMap((spell) =>
       supportedCantripDamageReductionSpellProfile(actor.combatantId, spell),
     ),
   ];

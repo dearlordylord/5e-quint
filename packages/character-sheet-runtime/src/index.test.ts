@@ -169,6 +169,70 @@ describe("Character Sheet runtime", () => {
     expect(Either.isLeft(sheet)).toBe(true);
   });
 
+  test("round-trips stored Book of Shadows Spell Access through sheet parsing", () => {
+    const bookOfShadows = {
+      tag: "bookOfShadows",
+      cantrips: ["fire_bolt", "spare_the_dying", "minor_illusion"],
+      ritualSpells: ["detect_magic", "detect_poison_and_disease"],
+      spellcastingFocus: "book_of_shadows",
+    };
+    const sheet = parseCharacterSheet(
+      {
+        tag: "available",
+        characterId: "character:test",
+        build: {
+          ...armorClassBuild({ startingClass: "class_warlock" }),
+          features: [
+            {
+              kind: "selectedEldritchInvocation",
+              selectedFromUnitId: "warlock_eldritch_invocations",
+              invocationId: "pact_of_the_tome",
+            },
+          ],
+          spellcasting: {
+            sources: [
+              {
+                sourceUnitId: "class_warlock",
+                spellcastingAbility: "cha",
+                cantrips: [],
+                spellbook: [],
+                preparedSpells: [],
+                spellcastingFocuses: ["arcane_focus"],
+                bookOfShadows,
+              },
+            ],
+            slotPools: {
+              pactMagic: {
+                kind: "pactMagic",
+                slotLevel: 1,
+                count: 1,
+              },
+            },
+          },
+        },
+        maximumHp: 12,
+        hitPoints: { tag: "positive", currentHp: 12, tempHp: 0 },
+        bookOfShadowsPresence: { tag: "notOnPerson" },
+        conditions: [],
+        spentHitDice: [],
+        resourceExpenditures: [],
+        spellSlotExpenditures: [],
+        pactSlotExpenditure: { slotLevel: 1, count: 1, expended: 0 },
+      },
+      unitLibrary,
+    );
+
+    if (Either.isLeft(sheet)) {
+      throw new Error(
+        `Expected parsed sheet, got ${JSON.stringify(sheet.left)}`,
+      );
+    }
+    expect(sheet.right.build.spellcasting?.sources[0]?.bookOfShadows).toEqual(
+      bookOfShadows,
+    );
+    expect(sheet.right.bookOfShadowsPresence).toEqual({ tag: "notOnPerson" });
+  });
+
   test("timePassed accumulates Stable recovery time before one hour can pass", () => {
     const result = timePassed({
       sheet: stableSheet("character:stable-round"),

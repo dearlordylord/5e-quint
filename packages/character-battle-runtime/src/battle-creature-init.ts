@@ -8,6 +8,7 @@ import {
   type CharacterBattleFeatureInit,
   type CharacterBattleResourceInit,
   type CharacterBattleSpellSlotState,
+  type CharacterBattleBookOfShadowsPresence,
   type CharacterBattleCreatureInit,
   type CharacterZeroHpLifecycleInit,
   type BattleId,
@@ -76,6 +77,7 @@ export type CharacterBuildCreatureInput = {
   readonly positiveHpUnconscious?: CharacterBattleCreatureInit["positiveHpUnconscious"];
   readonly zeroHpLifecycle?: CharacterZeroHpLifecycleInit;
   readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
+  readonly bookOfShadowsPresence?: CharacterBattleBookOfShadowsPresence;
   readonly resourceExpenditures?: readonly CharacterSheetResourceExpenditure[];
   readonly armorClassBaseChoice?: CharacterSheetArmorClassBaseChoice;
   readonly pactBladeBondedWeaponItemId?:
@@ -226,6 +228,9 @@ export function battleCreatureInitFromCharacterBuild(
       : characterSpellcasting({
           build: input.build,
           unitLibrary: input.unitLibrary,
+          ...(input.bookOfShadowsPresence === undefined
+            ? {}
+            : { bookOfShadowsPresence: input.bookOfShadowsPresence }),
           ...(input.spellSlots === undefined
             ? {}
             : { spellSlots: input.spellSlots }),

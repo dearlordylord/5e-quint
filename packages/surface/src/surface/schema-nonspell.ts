@@ -1124,12 +1124,12 @@ type ClassSpellcastingClassName = Extract<
   (typeof LIST_PREPARED_SPELLCASTING_CLASS_NAMES)[number] | "warlock"
 >;
 
-type ClassSpellList = {
+export type ClassSpellList = {
   readonly cantrips: readonly string[];
   readonly leveled: Readonly<Partial<Record<number, readonly string[]>>>;
 };
 
-const CLASS_SPELL_LISTS = {
+export const CLASS_SPELL_LISTS = {
   bard: {
     cantrips: [
       "dancing_lights",
@@ -1352,11 +1352,11 @@ const CLASS_SPELL_LISTS = {
   },
 } as const satisfies Record<ClassSpellcastingClassName, ClassSpellList>;
 
-const classSpellList = (
+export const classSpellList = (
   className: ClassSpellcastingClassName,
 ): ClassSpellList => CLASS_SPELL_LISTS[className];
 
-const allCantripsFromClassSpellList = (
+export const allCantripsFromClassSpellList = (
   className: ClassSpellcastingClassName,
   spellIds: readonly string[],
 ): boolean => {
@@ -1365,13 +1365,33 @@ const allCantripsFromClassSpellList = (
   return spellIds.every((spellId) => cantrips.has(spellId));
 };
 
-const allPreparedSpellsFromClassSpellList = (
+export const allPreparedSpellsFromClassSpellList = (
   className: ClassSpellcastingClassName,
   spells: readonly { readonly spellId: string; readonly spellLevel: number }[],
 ): boolean =>
   spells.every((spell) =>
     (classSpellList(className).leveled[spell.spellLevel] ?? []).includes(
       spell.spellId,
+    ),
+  );
+
+export const allCantripsFromAnyClassSpellList = (
+  spellIds: readonly string[],
+): boolean =>
+  spellIds.every((spellId) =>
+    (
+      Object.keys(CLASS_SPELL_LISTS) as readonly ClassSpellcastingClassName[]
+    ).some((className) => allCantripsFromClassSpellList(className, [spellId])),
+  );
+
+export const allLeveledSpellsFromAnyClassSpellList = (
+  spells: readonly { readonly spellId: string; readonly spellLevel: number }[],
+): boolean =>
+  spells.every((spell) =>
+    (
+      Object.keys(CLASS_SPELL_LISTS) as readonly ClassSpellcastingClassName[]
+    ).some((className) =>
+      allPreparedSpellsFromClassSpellList(className, [spell]),
     ),
   );
 

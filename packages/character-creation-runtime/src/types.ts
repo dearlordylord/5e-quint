@@ -1021,6 +1021,18 @@ export type CharacterBuildSpellcastingSource = {
   readonly spellbook: readonly UnitRecord["id"][];
   readonly preparedSpells: readonly UnitRecord["id"][];
   readonly spellcastingFocuses: readonly CharacterBuildSpellcastingFocus[];
+  readonly bookOfShadows?: CharacterBuildBookOfShadowsSpellAccess;
+};
+
+export type CharacterBuildBookOfShadowsSpellAccess = {
+  readonly tag: "bookOfShadows";
+  readonly cantrips: readonly [
+    UnitRecord["id"],
+    UnitRecord["id"],
+    UnitRecord["id"],
+  ];
+  readonly ritualSpells: readonly [UnitRecord["id"], UnitRecord["id"]];
+  readonly spellcastingFocus: "book_of_shadows";
 };
 
 export type CharacterBuildSpellSlotPools = {
@@ -1041,6 +1053,7 @@ export type CharacterBuildPactMagicSlotPool = {
 
 export type CharacterBuildSpellcastingFocus =
   | WizardSpellcastingCreation["spellcastingFocuses"][number]
+  | CharacterBuildBookOfShadowsSpellAccess["spellcastingFocus"]
   | Extract<
       ClassSpellcastingCreation,
       { readonly kind: "list_prepared_spellcasting_creation" }

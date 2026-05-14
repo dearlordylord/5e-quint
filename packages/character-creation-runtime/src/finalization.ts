@@ -1507,6 +1507,12 @@ export function characterBuildUnitRefs(
       ...source.cantrips,
       ...source.spellbook,
       ...source.preparedSpells,
+      ...(source.bookOfShadows === undefined
+        ? []
+        : [
+            ...source.bookOfShadows.cantrips,
+            ...source.bookOfShadows.ritualSpells,
+          ]),
     ]) ?? []),
   );
 }
