@@ -297,6 +297,22 @@ export function discoverSupportedSpellInvocations(
           },
         ];
       }
+      if (invocation.procedure === "weaponAttackOverride") {
+        return [
+          {
+            subject: {
+              tag: "bonusActionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+              componentWeaponItemId: invocation.attachedWeapon.itemId,
+            },
+            label: `${invocation.spell.name} (${invocation.attachedWeapon.attack.weapon.name})`,
+            summary: spellInvocationCastSummary(invocation),
+            initialHoles: [],
+          },
+        ];
+      }
       if (
         invocation.procedure === "afterHitDamage" ||
         invocation.procedure === "afterHitSaveGatedCondition" ||
@@ -593,6 +609,9 @@ export function spellInvocationCastSummary(
   if (invocation.procedure === "spellHostedWeaponAttack") {
     return `Cast ${invocation.spell.name} as a cantrip using ${invocation.componentWeapon.attack.weapon.name}.`;
   }
+  if (invocation.procedure === "weaponAttackOverride") {
+    return `Cast ${invocation.spell.name} as a cantrip on ${invocation.attachedWeapon.attack.weapon.name}.`;
+  }
   if (
     invocation.procedure === "conditionImmunityAndTurnStartTemporaryHitPoints"
   ) {
@@ -699,6 +718,9 @@ export function spellSubjectTagForInvocation(
   if (invocation.procedure === "weaponDamageRider") {
     return "bonusActionSpell";
   }
+  if (invocation.procedure === "weaponAttackOverride") {
+    return "bonusActionSpell";
+  }
   if (invocation.procedure === "jumpMovementReplacement") {
     return "bonusActionSpell";
   }
@@ -754,6 +776,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "objectLight" &&
     invocation.procedure !== "heldLightHurl" &&
     invocation.procedure !== "spellHostedWeaponAttack" &&
+    invocation.procedure !== "weaponAttackOverride" &&
     invocation.procedure !== "damageReduction" &&
     invocation.procedure !== "makeStable" &&
     invocation.procedure !== "persistentArmorEffect" &&
@@ -793,6 +816,7 @@ export function readiedSpellAct(
     invocation.procedure === "spellHostedWeaponAttack" ||
     invocation.procedure === "scalarBuff" ||
     invocation.procedure === "weaponDamageRider" ||
+    invocation.procedure === "weaponAttackOverride" ||
     invocation.procedure === "markedDamageRider" ||
     invocation.procedure === "expeditiousRetreatDash" ||
     invocation.procedure === "jumpMovementReplacement" ||

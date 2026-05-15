@@ -47,6 +47,13 @@ export function supportedSpellInvocationRef(
       procedure: "spellHostedWeaponAttack",
     };
   }
+  if (invocation.procedure === "weaponAttackOverride") {
+    return {
+      tag: "cantrip",
+      spellId: spellId(invocation.spell.id),
+      procedure: "weaponAttackOverride",
+    };
+  }
   if (invocation.procedure === "sleepTargetAdmission") {
     return {
       tag: "spellSlot",

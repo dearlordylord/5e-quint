@@ -57,6 +57,7 @@ import {
   applyHeldLightSpellEffect,
   applyMarkedDamageRiderSpellEffect,
   applyObjectLightSpellEffect,
+  applyWeaponAttackOverrideSpellEffect,
   applySpellActiveEffects,
   applySpellLightEmitterEffects,
   applySpellDamage,
@@ -140,6 +141,85 @@ export function resolveHeldLightSpellAct(input: {
   }
 
   const effected = applyHeldLightSpellEffect(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+  );
+  const resourced = spendSpellCastResources({
+    state: effected,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
+  return resourced.tag === "invalid"
+    ? resourced
+    : {
+        tag: "resolved",
+        state: resourced.state,
+        snapshot: snapshotBattle(resourced.state),
+      };
+}
+
+export function resolveWeaponAttackOverrideSpellAct(input: {
+  readonly input: BonusActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "weaponAttackOverride" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  if (
+    input.fillSet.targetId !== undefined ||
+    input.fillSet.targetList !== undefined ||
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.targetAllocation !== undefined ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.attackBurstDamageRoll !== undefined ||
+    input.fillSet.healingRoll !== undefined ||
+    input.fillSet.damageDispositions.length > 0 ||
+    input.fillSet.skillChoice !== undefined ||
+    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.savingThrowOutcomes !== undefined ||
+    input.fillSet.concentrationSavingThrows.length > 0
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Weapon attack override spells do not use target, roll, damage, or save fills.",
+    );
+  }
+  if (
+    input.input.subject.componentWeaponItemId !==
+    input.invocation.attachedWeapon.itemId
+  ) {
+    return invalidResult(
+      input.input.state,
+      "staleSubject",
+      "Weapon attack override spell no longer matches the selected held weapon.",
+    );
+  }
+
+  const spellCastReactionWindow = maybeOpenReactionWindow(
+    input.input.state,
+    {
+      trigger: "spellCast",
+      casterId: input.actorId,
+      spellId: input.invocation.spell.id,
+      targetIds: [input.actorId],
+      continuation: {
+        kind: "replay",
+        subject: input.input.subject,
+        fills: input.input.fills,
+      },
+    },
+    input.input.suppressedReactionTrigger,
+  );
+  if (spellCastReactionWindow !== null) {
+    return spellCastReactionWindow;
+  }
+
+  const effected = applyWeaponAttackOverrideSpellEffect(
     input.input.state,
     input.actorId,
     input.invocation,

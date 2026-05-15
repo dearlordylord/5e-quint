@@ -2,11 +2,14 @@
 
 import {
   attackBonus,
+  DAMAGE_DIE_SIZES,
   movementFeet,
   type AbilityModifier,
+  type DamageDieSize,
   type ProficiencyBonus as ProficiencyBonusType,
   type SpellSlotLevel,
 } from "@dnd/shared/types";
+import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type {
   Attachment,
   DamageType,
@@ -15,7 +18,7 @@ import type {
   WeaponProficiency,
   WeaponRecord,
 } from "@dnd/surface/surface/types";
-import { Match } from "effect";
+import { Either, Match } from "effect";
 import {
   SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET,
   type BattleCreatureState,
@@ -30,6 +33,7 @@ import {
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import type { CharacterBattleSpellcastingState } from "../character-battle-resources.ts";
+import type { CharacterWeaponAttackActionOption } from "../battle-action-options.ts";
 import {
   CHROMATIC_ORB_CONTINUATION_LIMIT_KINDS,
   CHROMATIC_ORB_DAMAGE_TYPES,
@@ -82,6 +86,10 @@ const SORCEROUS_BURST_DAMAGE_TYPES = [
   "psychic",
   "thunder",
 ] as const satisfies readonly DamageType[];
+const SHILLELAGH_WEAPON_UNIT_IDS = [
+  "weapon_club",
+  "weapon_quarterstaff",
+] as const satisfies readonly WeaponRecord["id"][];
 
 export function supportedCantripSpellHostedWeaponAttackProfile(
   actor: BattleCreatureState,
@@ -182,6 +190,184 @@ export function supportedCantripSpellHostedWeaponAttackProfile(
         damageType: bonusDamageType,
       },
     }));
+}
+
+export function supportedCantripWeaponAttackOverrideProfile(
+  actor: BattleCreatureState,
+  spell: SpellRecord,
+  spellcastingAbilityModifier: AbilityModifier,
+  proficiencyBonus: ProficiencyBonusType,
+  characterLevel: number,
+): readonly SupportedSpellInvocation[] {
+  if (
+    actor.origin.kind !== "character" ||
+    !isCanonicalSrdShillelaghSpellDefinition(spell) ||
+    spell.mechanics.family !== "ongoing_effect" ||
+    spell.mechanics.level !== 0 ||
+    spell.mechanics.castingTime.kind !== "bonus_action" ||
+    spell.mechanics.range.kind !== "self" ||
+    spell.mechanics.duration.kind !== "timed" ||
+    spell.mechanics.duration.value.unit !== "minute" ||
+    spell.mechanics.duration.value.amount !== 1 ||
+    spell.mechanics.operations.length !== 1
+  ) {
+    return [];
+  }
+  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
+    spell.mechanics.duration.value,
+  );
+  const operation = spell.mechanics.operations[0];
+  const effect =
+    operation?.trigger.kind === "passive" &&
+    operation.effect.kind === "override_attached_weapon_attack"
+      ? operation.effect
+      : null;
+  const damageExpr =
+    effect === null
+      ? null
+      : effect.damageDie.kind === "threshold_tiers"
+        ? shillelaghDamageExpr(effect.damageDie, characterLevel)
+        : null;
+  if (
+    effect === null ||
+    effect.replacesAbility !== "str" ||
+    effect.attackRollAbility !== "spellcasting" ||
+    effect.damageRollAbility !== "spellcasting" ||
+    effect.attackScope !== "melee_attacks_using_attached_weapon" ||
+    !sameStringSet(effect.damageTypeChoice, ["force", "weapon_normal"]) ||
+    damageExpr === null ||
+    Either.isLeft(durationTicks)
+  ) {
+    return [];
+  }
+  return shillelaghAttachedWeaponAttacks(actor).map(({ itemId, attack }) => ({
+    access: { tag: "classCantrip" as const },
+    resource: { tag: "none" as const },
+    procedure: "weaponAttackOverride" as const,
+    spell,
+    actionCost: "bonusAction" as const,
+    attachedWeapon: { itemId, attack },
+    activeEffect: {
+      kind: "spellWeaponAttackOverride" as const,
+      sourceSpellId: spell.id,
+      sourceCombatantId: actor.combatantId,
+      weaponItemId: itemId,
+      spellcastingAbilityModifier,
+      attackBonus: attackBonus(
+        Number(spellcastingAbilityModifier) + Number(proficiencyBonus),
+      ),
+      damage: { expr: damageExpr },
+      damageTypeChoices: ["force", attack.weapon.damage.damageType],
+      expiresAt: {
+        kind: "duration" as const,
+        durationTicks: durationTicks.right,
+      },
+    },
+  }));
+}
+
+function shillelaghAttachedWeaponAttacks(
+  actor: BattleCreatureState,
+): readonly {
+  readonly itemId: string;
+  readonly attack: CharacterWeaponAttackActionOption;
+}[] {
+  if (actor.origin.kind !== "character") {
+    return [];
+  }
+  const origin = actor.origin;
+  return [
+    ...(origin.attack === null || origin.selectedLoadout.weapon === undefined
+      ? []
+      : [
+          {
+            itemId: origin.selectedLoadout.weapon.itemId,
+            attack: origin.attack,
+            unitId: origin.selectedLoadout.weapon.unitId,
+          },
+        ]),
+    ...(origin.offHandAttack === undefined ||
+    origin.selectedLoadout.offHandWeapon === undefined
+      ? []
+      : [
+          {
+            itemId: origin.selectedLoadout.offHandWeapon.itemId,
+            attack: origin.offHandAttack,
+            unitId: origin.selectedLoadout.offHandWeapon.unitId,
+          },
+        ]),
+  ].filter(
+    (held): held is {
+      readonly itemId: string;
+      readonly attack: CharacterWeaponAttackActionOption;
+      readonly unitId: WeaponRecord["id"];
+    } =>
+      held.attack.weapon.usage === "melee" &&
+      held.unitId === held.attack.weapon.id &&
+      SHILLELAGH_WEAPON_UNIT_IDS.some((unitId) => unitId === held.unitId),
+  );
+}
+
+function shillelaghDamageExpr(
+  damageDie: {
+    readonly kind: string;
+    readonly axis: string;
+    readonly base: { readonly dice: number; readonly dieSize: number };
+    readonly tiers: readonly {
+      readonly atLevel: number;
+      readonly override: {
+        readonly dice?: number | undefined;
+        readonly dieSize?: number | undefined;
+      };
+    }[];
+  },
+  characterLevel: number,
+): {
+  readonly dice: number;
+  readonly dieSize: DamageDieSize;
+} | null {
+  if (
+    damageDie.kind !== "threshold_tiers" ||
+    damageDie.axis !== "character" ||
+    damageDie.base.dice !== 1 ||
+    damageDie.base.dieSize !== 8
+  ) {
+    return null;
+  }
+  const override = damageDie.tiers.reduce<{
+    readonly dice: number;
+    readonly dieSize: number;
+  }>(
+    (current, tier) =>
+      characterLevel >= tier.atLevel
+        ? {
+            dice: tier.override.dice ?? current.dice,
+            dieSize: tier.override.dieSize ?? current.dieSize,
+          }
+        : current,
+    damageDie.base,
+  );
+  if (!isDamageDieSize(override.dieSize)) {
+    return null;
+  }
+  return {
+    dice: override.dice,
+    dieSize: override.dieSize,
+  };
+}
+
+function isDamageDieSize(value: number): value is DamageDieSize {
+  return DAMAGE_DIE_SIZES.some((dieSize) => dieSize === value);
+}
+
+export function isCanonicalSrdShillelaghSpellDefinition(
+  spell: SpellRecord,
+): boolean {
+  return (
+    spell.name === "Shillelagh" &&
+    spell.provenance.kind === "srd-5.2.1" &&
+    spell.provenance.section === "Spells/Descriptions-S-Z#Shillelagh"
+  );
 }
 
 export function isCanonicalSrdTrueStrike(spell: SpellRecord): boolean {

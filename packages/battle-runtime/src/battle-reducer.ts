@@ -702,6 +702,20 @@ export type BattleActiveEffect =
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {
+      readonly kind: "spellWeaponAttackOverride";
+      readonly weaponItemId: string;
+      readonly spellcastingAbilityModifier: AbilityModifier;
+      readonly attackBonus: AttackBonus;
+      readonly damage: {
+        readonly expr: DiceExpr;
+      };
+      readonly damageTypeChoices: readonly [DamageType, DamageType];
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "duration" }
+      >;
+    })
+  | (BattleSpellEffectBase & {
       readonly kind: "spellMarkedDamageRider";
       readonly targetCombatantId: CombatantId;
       readonly transfer: MarkedDamageRiderTransferState;
@@ -2014,6 +2028,21 @@ export type SpellHostedWeaponAttackInvocation = {
     readonly damageType: DamageType;
   } | null;
 };
+export type WeaponAttackOverrideSpellInvocation = {
+  readonly access: ClassCantripSpellAccess;
+  readonly resource: NoSpellInvocationResource;
+  readonly procedure: "weaponAttackOverride";
+  readonly spell: SpellRecord;
+  readonly actionCost: "bonusAction";
+  readonly attachedWeapon: {
+    readonly itemId: string;
+    readonly attack: CharacterWeaponAttackActionOption;
+  };
+  readonly activeEffect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "spellWeaponAttackOverride" }
+  >;
+};
 export type PersistentArmorSpellInvocation =
   | {
       readonly access: PreparedSpellAccess;
@@ -2079,6 +2108,7 @@ export type SupportedSpellInvocation =
   | ObjectLightSpellInvocation
   | HeldLightHurlSpellInvocation
   | SpellHostedWeaponAttackInvocation
+  | WeaponAttackOverrideSpellInvocation
   | DamageReductionSpellInvocation
   | {
       readonly access: ClassCantripSpellAccess;
@@ -2371,6 +2401,7 @@ type AnySupportedDamageSpellInvocation = Exclude<
       | "makeStable"
       | "damageReduction"
       | "spellHostedWeaponAttack"
+      | "weaponAttackOverride"
       | "rollModifier"
       | "creatureTypeProtection"
       | "conditionImmunityAndTurnStartTemporaryHitPoints"

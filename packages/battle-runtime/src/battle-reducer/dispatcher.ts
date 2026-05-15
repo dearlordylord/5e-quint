@@ -252,6 +252,13 @@ export function resolveBattleSubjectInternal(
     readonly pendingAttackDamageAdditions?: readonly AttackSpellDamageAddition[];
   },
 ): BattleResolutionResult {
+  const normalizedInputState = normalizeEarlyEndedOngoingFeatures(input.state);
+  if (normalizedInputState !== input.state) {
+    return resolveBattleSubjectInternal(
+      { ...input, state: normalizedInputState },
+      options,
+    );
+  }
   if (
     input.state.interruptStack.length > 0 &&
     options.replayingInterruptedProcedure !== true
@@ -3114,6 +3121,10 @@ export function endTurn(input: {
 }
 
 export function snapshotBattle(state: BattleState): BattleSnapshot {
+  const normalizedState = normalizeEarlyEndedOngoingFeatures(state);
+  if (normalizedState !== state) {
+    return snapshotBattle(normalizedState);
+  }
   const turnOrder = [...initiativeOrder(state.initiative)];
 
   return {

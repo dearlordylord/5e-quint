@@ -17,7 +17,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30D heroism
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV58C faerie_fire
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30F resistance
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-spell-hosted-weapon-attack
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31A divine_favor
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31C divine_smite
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31D ensnaring_strike
@@ -25,6 +25,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31F true_strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31B hunters_mark
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV32B produce_flame
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84H shillelagh
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84A fire_bolt
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84B sorcerous_burst
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV59B starry_wisp
@@ -66,6 +67,7 @@ import myceliumStepInput from "../../../plans/unit-profile-coverage/fixtures/cla
 import eldritchBlastInput from "../../surface/content/eldritch_blast.json";
 import starryWispInput from "../../surface/content/starry_wisp.json";
 import trueStrikeInput from "../../surface/content/true_strike.json";
+import weaponClubInput from "../../surface/content/weapon_club.json";
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import {
   abilityModifier,
@@ -284,6 +286,7 @@ const protectionFromEvilAndGoodUnitId = "protection_from_evil_and_good";
 const produceFlameUnitId = "produce_flame";
 const resistanceUnitId = "resistance";
 const sacredFlameUnitId = "sacred_flame";
+const shillelaghUnitId = "shillelagh";
 const sorcerousBurstUnitId = "sorcerous_burst";
 const cureWoundsUnitId = "cure_wounds";
 const healingWordUnitId = "healing_word";
@@ -8873,6 +8876,307 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
   });
 });
 
+describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
+  test("shillelagh is admitted only for a held Club or Quarterstaff", () => {
+    const shillelagh = spellRecord(shillelaghUnitId);
+    const quarterstaffState = spellBattle({
+      cantrips: [shillelagh],
+      attack: zeroAbilityWeaponAttack("weapon_quarterstaff"),
+      casterClassLevels: [{ className: "druid", level: 1 }],
+    });
+    const act = bonusSpellAct({
+      state: quarterstaffState,
+      spellId: shillelaghUnitId,
+    });
+
+    expect(act).toEqual(
+      expect.objectContaining({
+        subject: {
+          tag: "bonusActionSpell",
+          actorId: spellCasterId,
+          invocation: cantripSpellInvocationRef(
+            shillelaghUnitId,
+            "weaponAttackOverride",
+          ),
+          mode: { tag: "cast" },
+          componentWeaponItemId: "main:weapon_quarterstaff",
+        },
+        initialHoles: [],
+      }),
+    );
+
+    const clubState = spellBattle({
+      cantrips: [shillelagh],
+      attack: zeroAbilityWeaponAttack("weapon_club"),
+      casterClassLevels: [{ className: "druid", level: 1 }],
+    });
+    const clubAct = bonusSpellAct({
+      state: clubState,
+      spellId: shillelaghUnitId,
+    });
+    expect(clubAct).toMatchObject({
+      subject: {
+        tag: "bonusActionSpell",
+        componentWeaponItemId: "main:weapon_club",
+      },
+      initialHoles: [],
+    });
+
+    const longswordState = spellBattle({
+      cantrips: [shillelagh],
+      attack: zeroAbilityWeaponAttack("weapon_longsword"),
+      casterClassLevels: [{ className: "druid", level: 1 }],
+    });
+    expect(
+      discoverBattleActs(longswordState).some(
+        (candidate) =>
+          candidate.subject.tag === "bonusActionSpell" &&
+          candidate.subject.invocation.spellId === shillelaghUnitId,
+      ),
+    ).toBe(false);
+  });
+
+  test("shillelagh projects spellcasting ability, damage die scaling, and Force-or-normal damage", () => {
+    const state = spellBattle({
+      cantrips: [spellRecord(shillelaghUnitId)],
+      attack: zeroAbilityWeaponAttack("weapon_quarterstaff"),
+      casterClassLevels: [{ className: "druid", level: 17 }],
+    });
+    const act = bonusSpellAct({ state, spellId: shillelaghUnitId });
+    const cast = resolveBattleSubject({ state, subject: act.subject, fills: [] });
+    expect(cast).toMatchObject({ tag: "resolved" });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Shillelagh to resolve.");
+    }
+
+    expect(cast.state.combatants.get(spellCasterId)?.activeEffects).toContainEqual(
+      expect.objectContaining({
+        kind: "spellWeaponAttackOverride",
+        sourceSpellId: shillelaghUnitId,
+        weaponItemId: "main:weapon_quarterstaff",
+        spellcastingAbilityModifier: abilityModifier(3),
+        attackBonus: attackBonus(5),
+        damage: { expr: { dice: 2, dieSize: 6 } },
+        damageTypeChoices: ["force", "bludgeoning"],
+      }),
+    );
+
+    const forceAttack = statBlockAttackAct(
+      cast.state,
+      spellCasterId,
+      "Quarterstaff (force)",
+    );
+    const target = requireHole(forceAttack.initialHoles, "targetChoice");
+    const needsAttackRoll = resolveBattleSubject({
+      state: cast.state,
+      subject: forceAttack.subject,
+      fills: [
+        attackTargetFill(
+          target,
+          spellCasterId,
+          spellTargetId,
+          "Quarterstaff (force)",
+        ),
+      ],
+    });
+    const attackRoll = requireResultHole(needsAttackRoll, "attackRoll");
+    expect(attackRoll.attackBonus).toBe(attackBonus(5));
+
+    const needsDamage = resolveBattleSubject({
+      state: cast.state,
+      subject: forceAttack.subject,
+      fills: [
+        attackTargetFill(
+          target,
+          spellCasterId,
+          spellTargetId,
+          "Quarterstaff (force)",
+        ),
+        attackRollFill(attackRoll, { total: 15, naturalD20: 10 }),
+      ],
+    });
+    const damage = requireResultHole(needsDamage, "rolledDice");
+    expect(damage.label).toContain("2d6+3-force");
+
+    expect(
+      discoverBattleActs(cast.state).some(
+        (candidate) =>
+          candidate.subject.tag === "action" &&
+          candidate.subject.action === "attack" &&
+          candidate.subject.attackName === "Quarterstaff (bludgeoning)",
+      ),
+    ).toBe(true);
+  });
+
+  test("shillelagh projects Club attacks", () => {
+    const state = spellBattle({
+      cantrips: [spellRecord(shillelaghUnitId)],
+      attack: zeroAbilityWeaponAttack("weapon_club"),
+      casterClassLevels: [{ className: "druid", level: 5 }],
+    });
+    const act = bonusSpellAct({ state, spellId: shillelaghUnitId });
+    const cast = resolveBattleSubject({ state, subject: act.subject, fills: [] });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Club Shillelagh to resolve.");
+    }
+
+    expect(cast.state.combatants.get(spellCasterId)?.activeEffects).toContainEqual(
+      expect.objectContaining({
+        kind: "spellWeaponAttackOverride",
+        sourceSpellId: shillelaghUnitId,
+        weaponItemId: "main:weapon_club",
+        damage: { expr: { dice: 1, dieSize: 10 } },
+        damageTypeChoices: ["force", "bludgeoning"],
+      }),
+    );
+    expect(
+      discoverBattleActs(cast.state).some(
+        (candidate) =>
+          candidate.subject.tag === "action" &&
+          candidate.subject.action === "attack" &&
+          candidate.subject.attackName === "Club (force)",
+      ),
+    ).toBe(true);
+  });
+
+  test("shillelagh preserves attached item identity when both held weapons have the same unit", () => {
+    const clubAttack = zeroAbilityWeaponAttack("weapon_club");
+    const state = withSameClubMainAndOffHand(
+      spellBattle({
+        cantrips: [spellRecord(shillelaghUnitId)],
+        attack: clubAttack,
+        casterClassLevels: [{ className: "druid", level: 1 }],
+      }),
+      clubAttack,
+    );
+    const offHandCastAct = bonusSpellActForItem({
+      state,
+      spellId: shillelaghUnitId,
+      componentWeaponItemId: "off:weapon_club",
+    });
+    const cast = resolveBattleSubject({
+      state,
+      subject: offHandCastAct.subject,
+      fills: [],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected off-hand Club Shillelagh to resolve.");
+    }
+
+    expect(
+      discoverBattleActs(cast.state).some(
+        (candidate) =>
+          candidate.subject.tag === "action" &&
+          candidate.subject.action === "attack" &&
+          candidate.subject.attackName === "Club (force)",
+      ),
+    ).toBe(false);
+
+    const offHandReadyState: BattleState = {
+      ...cast.state,
+      currentTurnResources: {
+        ...cast.state.currentTurnResources,
+        currentHasBonusAction: true,
+        lightWeaponAttackMade: { weaponItemId: "main:weapon_club" },
+      },
+    };
+    expect(
+      discoverBattleActs(offHandReadyState).some(
+        (candidate) =>
+          candidate.subject.tag === "bonusAction" &&
+          candidate.subject.action === "offHandAttack" &&
+          candidate.subject.attackName === "Club (force)",
+      ),
+    ).toBe(true);
+  });
+
+  test("shillelagh recast replaces the prior weapon override and let-go removes the active effect", () => {
+    const state = spellBattle({
+      cantrips: [spellRecord(shillelaghUnitId)],
+      attack: zeroAbilityWeaponAttack("weapon_quarterstaff"),
+      casterClassLevels: [{ className: "druid", level: 5 }],
+    });
+    const initialCaster = state.combatants.get(spellCasterId);
+    if (initialCaster === undefined) {
+      throw new Error("Expected Shillelagh caster.");
+    }
+    const stateWithPriorCasting: BattleState = {
+      ...state,
+      combatants: new Map(state.combatants).set(spellCasterId, {
+        ...initialCaster,
+        activeEffects: [
+          ...initialCaster.activeEffects,
+          {
+            kind: "spellWeaponAttackOverride",
+            sourceSpellId: shillelaghUnitId,
+            sourceCombatantId: spellCasterId,
+            weaponItemId: "main:weapon_quarterstaff",
+            spellcastingAbilityModifier: abilityModifier(1),
+            attackBonus: attackBonus(3),
+            damage: { expr: { dice: 1, dieSize: 8 } },
+            damageTypeChoices: ["force", "bludgeoning"],
+            expiresAt: {
+              kind: "duration",
+              durationTicks: elapsedTimeTicks(1),
+            },
+          },
+        ],
+      }),
+    };
+    const second = resolveBattleSubject({
+      state: stateWithPriorCasting,
+      subject: bonusSpellAct({
+        state: stateWithPriorCasting,
+        spellId: shillelaghUnitId,
+      }).subject,
+      fills: [],
+    });
+    if (second.tag !== "resolved") {
+      throw new Error("Expected second Shillelagh cast to resolve.");
+    }
+    const caster = second.state.combatants.get(spellCasterId);
+    if (caster?.origin.kind !== "character") {
+      throw new Error("Expected Shillelagh caster.");
+    }
+    expect(
+      caster.activeEffects.filter(
+        (effect) => effect.kind === "spellWeaponAttackOverride",
+      ),
+    ).toHaveLength(1);
+
+    const letGoState: BattleState = {
+      ...second.state,
+      combatants: new Map(second.state.combatants).set(spellCasterId, {
+        ...caster,
+        origin: {
+          ...caster.origin,
+          selectedLoadout: {},
+        },
+      }),
+    };
+    const letGoCleaned = endTurn({
+      state: letGoState,
+      actorId: spellCasterId,
+    });
+    if (letGoCleaned.tag !== "resolved") {
+      throw new Error("Expected let-go cleanup end turn to resolve.");
+    }
+    expect(
+      requireCombatant(letGoCleaned.state, spellCasterId).activeEffects.some(
+        (effect) => effect.kind === "spellWeaponAttackOverride",
+      ),
+    ).toBe(false);
+    expect(
+      discoverBattleActs(letGoState).some(
+        (candidate) =>
+          candidate.subject.tag === "action" &&
+          candidate.subject.action === "attack" &&
+          candidate.subject.attackName.startsWith("Quarterstaff ("),
+      ),
+    ).toBe(false);
+  });
+});
+
 describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
   test("light is admitted as a Magic action cantrip object emitter", () => {
     const spell = spellRecord(lightUnitId);
@@ -17034,14 +17338,22 @@ function statBlockAttackAct(
 }
 
 function zeroAbilityWeaponAttack(
-  unitId: "weapon_longsword" | "weapon_shortbow" | "weapon_dagger",
+  unitId:
+    | "weapon_longsword"
+    | "weapon_shortbow"
+    | "weapon_dagger"
+    | "weapon_club"
+    | "weapon_quarterstaff",
 ): NonNullable<
   Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["attack"]
 > {
-  const weapon = unitLibrary.requireUnit(unitId);
+  const weapon =
+    unitId === "weapon_club"
+      ? decodeUnitRecordSync(weaponClubInput)
+      : unitLibrary.requireUnit(unitId);
   if (weapon.kind !== "weapon") {
     throw new Error(`Expected ${unitId} weapon Unit.`);
   }
@@ -17050,6 +17362,37 @@ function zeroAbilityWeaponAttack(
     weapon,
     ability: "str",
     abilityModifier: abilityModifier(0),
+  };
+}
+
+function withSameClubMainAndOffHand(
+  state: BattleState,
+  offHandAttack: ReturnType<typeof zeroAbilityWeaponAttack>,
+): BattleState {
+  const caster = requireCombatant(state, spellCasterId);
+  if (caster.origin.kind !== "character") {
+    throw new Error("Expected character caster.");
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(spellCasterId, {
+      ...caster,
+      origin: {
+        ...caster.origin,
+        selectedLoadout: {
+          weapon: {
+            itemId: "main:weapon_club",
+            unitId: "weapon_club",
+            grip: "one_handed",
+          },
+          offHandWeapon: {
+            itemId: "off:weapon_club",
+            unitId: "weapon_club",
+          },
+        },
+        offHandAttack,
+      },
+    }),
   };
 }
 
@@ -17171,6 +17514,26 @@ function bonusSpellAct(input: {
   expect(act).toBeDefined();
   if (act === undefined) {
     throw new Error(`Expected ${input.spellId} Bonus Action spell act.`);
+  }
+  return act;
+}
+
+function bonusSpellActForItem(input: {
+  readonly state: BattleState;
+  readonly spellId: string;
+  readonly componentWeaponItemId: string;
+}): BonusActionSpellAct {
+  const act = discoverBattleActs(input.state).find(
+    (candidate): candidate is BonusActionSpellAct =>
+      candidate.subject.tag === "bonusActionSpell" &&
+      candidate.subject.invocation.spellId === input.spellId &&
+      candidate.subject.componentWeaponItemId === input.componentWeaponItemId,
+  );
+  expect(act).toBeDefined();
+  if (act === undefined) {
+    throw new Error(
+      `Expected ${input.spellId} Bonus Action spell act for ${input.componentWeaponItemId}.`,
+    );
   }
   return act;
 }

@@ -156,12 +156,12 @@
     "spellPressureRows": 211,
     "levelOneBattleReadiness": {
       "denominator": 367,
-      "numerator": 294,
-      "percent": "80.1%",
+      "numerator": 295,
+      "percent": "80.4%",
       "rowsByStatus": {
-        "accepted": 225,
+        "accepted": 226,
         "accepted-no-battle-effect": 69,
-        "battle-runtime-required": 29,
+        "battle-runtime-required": 28,
         "partial-battle-runtime": 44
       }
     },
@@ -171,15 +171,15 @@
       "non-runtime": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 276,
+      "catalog-installed-owner-evidence-present": 277,
       "non-runtime": 12,
       "catalog-only/dead-for-now": 75,
-      "catalog-installed-owner-evidence-required": 4
+      "catalog-installed-owner-evidence-required": 3
     },
     "spellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 75,
-      "catalog-installed-owner-evidence-present": 132,
-      "catalog-installed-owner-evidence-required": 4
+      "catalog-installed-owner-evidence-present": 133,
+      "catalog-installed-owner-evidence-required": 3
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -8026,8 +8026,8 @@
         "state": "installed",
         "unitId": "shillelagh"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -8036,11 +8036,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Unit matrix records unsupported-profile: Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Shillelagh's held Club or Quarterstaff weapon override, spellcasting ability attack and damage option, character-level damage die scaling, Force-or-normal damage choice, or recast/let-go early-end lifecycle. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84H at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Unit matrix records unsupported-profile: Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Shillelagh's held Club or Quarterstaff weapon override, spellcasting ability attack and damage option, character-level damage die scaling, Force-or-normal damage choice, or recast/let-go early-end lifecycle. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_spare_the_dying",

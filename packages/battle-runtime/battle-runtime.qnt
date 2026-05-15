@@ -1,11 +1,11 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-chained-attack-damage
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-damage spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-damage spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-marked-damage-rider
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-attack-roll-advantage-save
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-beam-sequence
@@ -150,6 +150,13 @@ module battleRuntime {
   //   roll, or targeted by Magic Missile; it grants +5 AC against the
   //   triggering attack until the start of the caster's next turn and negates
   //   Magic Missile damage to that target.
+  // - Spells/Descriptions-S-Z.md lines 281-291, Playing-the-Game.md lines
+  //   582-589 and 694-703, Rules-Glossary.md lines 297-325 and 1028-1032,
+  //   and UBIQUITOUS_LANGUAGE.md: Shillelagh is a Bonus Action cantrip cast on
+  //   a held Club or Quarterstaff; attacks with that weapon can use the
+  //   caster's spellcasting ability for attack and damage, use a level-scaled
+  //   damage die, and choose Force or the weapon's normal damage type. The
+  //   effect ends on recast or when the caster lets go of the weapon.
   // - Spells/Descriptions-E-L.md lines 1153-1169, Playing-the-Game.md lines
   //   326-332, Rules-Glossary.md lines 319-325 and 814-816, and
   //   UBIQUITOUS_LANGUAGE.md: Hellish Rebuke is a Reaction spell taken in
@@ -353,7 +360,9 @@ module battleRuntime {
   type SanctuaryInterdictionOutcome = SanctuarySaveSucceeded | SanctuaryLoseAttackOrSpell | SanctuaryChooseNewTarget({ target: Actor })
 
   type MarkedDamageRiderTransfer = AwaitingTargetDrop | TransferAvailable | TransferAvailableAfterTurn({ actor: Actor, round: int })
-  type ActiveEffect = BardicInspirationDie({ source: Actor, dieSize: int, durationTicks: int }) | MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | HexDamageRider({ target: Actor, ability: Ability, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | RayOfSicknessPoisoned | ChillTouchHitPointRegainPrevented({ source: Actor, expiresAtRound: int }) | StarryWispInvisibleBenefitDenied({ source: Actor, expiresAtRound: int }) | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | WeaponMasterySapNextAttackDisadvantage({ source: Actor }) | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodCreatureTypeProtection | ProduceFlameHeldLight({ durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SanctuaryWard({ source: Actor, durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | HideousLaughterEffect({ source: Actor, target: Actor, hadProne: bool, hadIncapacitated: bool, durationTicks: int }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | FogCloudObscurement({ areaId: int, radiusFeet: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
+  type ShillelaghWeapon = ShillelaghClub | ShillelaghQuarterstaff
+  type HeldWeaponForShillelagh = HeldClub | HeldQuarterstaff | HeldOtherWeapon | HeldNoWeapon
+  type ActiveEffect = BardicInspirationDie({ source: Actor, dieSize: int, durationTicks: int }) | MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | HexDamageRider({ target: Actor, ability: Ability, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | RayOfSicknessPoisoned | ChillTouchHitPointRegainPrevented({ source: Actor, expiresAtRound: int }) | StarryWispInvisibleBenefitDenied({ source: Actor, expiresAtRound: int }) | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | WeaponMasterySapNextAttackDisadvantage({ source: Actor }) | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodCreatureTypeProtection | ProduceFlameHeldLight({ durationTicks: int }) | ShillelaghWeaponAttackOverride({ weapon: ShillelaghWeapon, damageDice: int, damageDieSize: int, spellcastingAbilityModifier: int, durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SanctuaryWard({ source: Actor, durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | HideousLaughterEffect({ source: Actor, target: Actor, hadProne: bool, hadIncapacitated: bool, durationTicks: int }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | FogCloudObscurement({ areaId: int, radiusFeet: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
   type PreventedProtectionCondition = PreventedCharmed | PreventedFrightened
   type PossessionAttemptDisposition = PossessionPreventedByCreatureTypeProtection | PossessionUnprevented
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
@@ -1164,6 +1173,13 @@ module battleRuntime {
         | ProduceFlameHeldLight(data) => ProduceFlameHeldLight({
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
+        | ShillelaghWeaponAttackOverride(data) => ShillelaghWeaponAttackOverride({
+            weapon: data.weapon,
+            damageDice: data.damageDice,
+            damageDieSize: data.damageDieSize,
+            spellcastingAbilityModifier: data.spellcastingAbilityModifier,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | JumpMovementReplacement(data) => JumpMovementReplacement({
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
             usedThisTurn: data.usedThisTurn,
@@ -1206,6 +1222,7 @@ module battleRuntime {
         | AnimalFriendshipCharmed(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | CharmPersonCharmed(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | ProduceFlameHeldLight(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | ShillelaghWeaponAttackOverride(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | JumpMovementReplacement(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | FeatherFallMitigation(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | SanctuaryWard(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
@@ -1369,6 +1386,7 @@ module battleRuntime {
         | CharmPersonCharmed(_) => false
         | ProtectionFromEvilAndGoodCreatureTypeProtection => false
         | ProduceFlameHeldLight(_) => false
+        | ShillelaghWeaponAttackOverride(_) => false
         | ExpeditiousRetreatDashBonusAction => false
         | JumpMovementReplacement(_) => false
         | FeatherFallMitigation(_) => false
@@ -4697,6 +4715,96 @@ module battleRuntime {
     } else {
       state
     }
+
+  pure def shillelaghDurationTicks: int = 10
+
+  pure def shillelaghDamageDice(characterLevel: int): int =
+    if (characterLevel >= 17) 2 else 1
+
+  pure def shillelaghDamageDieSize(characterLevel: int): int =
+    if (characterLevel >= 17) 6
+    else if (characterLevel >= 11) 12
+    else if (characterLevel >= 5) 10
+    else 8
+
+  pure def heldWeaponForShillelaghEffect(heldWeapon: HeldWeaponForShillelagh): Set[ShillelaghWeapon] =
+    match heldWeapon {
+      | HeldClub => Set(ShillelaghClub)
+      | HeldQuarterstaff => Set(ShillelaghQuarterstaff)
+      | HeldOtherWeapon => Set()
+      | HeldNoWeapon => Set()
+    }
+
+  pure def shillelaghHeldWeaponIsEligible(heldWeapon: HeldWeaponForShillelagh): bool =
+    heldWeaponForShillelaghEffect(heldWeapon).size() == 1
+
+  pure def shillelaghDamageTypeChoiceIsLegal(selected: DamageType, weaponNormal: DamageType): bool =
+    selected == Force or selected == weaponNormal
+
+  pure def shillelaghAttackModifier(
+    spellcastingAbilityModifier: int,
+    proficiencyBonus: int,
+  ): int =
+    spellcastingAbilityModifier + proficiencyBonus
+
+  pure def activeEffectsWithoutShillelagh(effects: Set[ActiveEffect]): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | ShillelaghWeaponAttackOverride(_) => false
+      | _ => true
+    })
+
+  pure def shillelaghEffect(
+    weapon: ShillelaghWeapon,
+    spellcastingAbilityModifier: int,
+    characterLevel: int,
+  ): ActiveEffect =
+    ShillelaghWeaponAttackOverride({
+      weapon: weapon,
+      damageDice: shillelaghDamageDice(characterLevel),
+      damageDieSize: shillelaghDamageDieSize(characterLevel),
+      spellcastingAbilityModifier: spellcastingAbilityModifier,
+      durationTicks: shillelaghDurationTicks,
+    })
+
+  pure def resolveShillelagh(
+    state: BattleState,
+    heldWeapon: HeldWeaponForShillelagh,
+    spellcastingAbilityModifier: int,
+    characterLevel: int,
+  ): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      state.bonusActionAvailable and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state)) and
+      shillelaghHeldWeaponIsEligible(heldWeapon)
+    ) {
+      val weapons = heldWeaponForShillelaghEffect(heldWeapon)
+      val effect = weapons.map(weapon => shillelaghEffect(weapon, spellcastingAbilityModifier, characterLevel))
+      {
+        ...state,
+        fighter: {
+          ...state.fighter,
+          activeEffects: activeEffectsWithoutShillelagh(state.fighter.activeEffects)
+            .union(effect),
+        },
+        bonusActionAvailable: false,
+      }
+    } else {
+      state
+    }
+
+  pure def shillelaghEffectsMatchingHeldWeapon(
+    effects: Set[ActiveEffect],
+    heldWeapon: HeldWeaponForShillelagh,
+  ): Set[ActiveEffect] = {
+    val heldWeapons = heldWeaponForShillelaghEffect(heldWeapon)
+    effects.filter(effect => match effect {
+      | ShillelaghWeaponAttackOverride(data) => heldWeapons.contains(data.weapon)
+      | _ => true
+    })
+  }
 
   pure def produceFlameHurlDamageDice(characterLevel: int): int =
     if (characterLevel >= 17) 4
@@ -9958,6 +10066,53 @@ module battleRuntime {
       assert(trueStrikeBonusDamageDice(5) == 1),
       assert(trueStrikeBonusDamageDice(11) == 2),
       assert(trueStrikeBonusDamageDice(17) == 3),
+    }
+  }
+
+  run test_shillelagh_requires_held_club_or_quarterstaff_and_spends_bonus_action = {
+    val club = resolveShillelagh(initialState, HeldClub, 3, 1)
+    val quarterstaff = resolveShillelagh(initialState, HeldQuarterstaff, 3, 1)
+    all {
+      assert(club.fighter.activeEffects.contains(shillelaghEffect(ShillelaghClub, 3, 1))),
+      assert(not(club.bonusActionAvailable)),
+      assert(not(club.spellSlotExpendedThisTurn)),
+      assert(quarterstaff.fighter.activeEffects.contains(shillelaghEffect(ShillelaghQuarterstaff, 3, 1))),
+      assert(resolveShillelagh(initialState, HeldOtherWeapon, 3, 1) == initialState),
+      assert(resolveShillelagh(initialState, HeldNoWeapon, 3, 1) == initialState),
+    }
+  }
+
+  run test_shillelagh_projects_spellcasting_attack_damage_type_choice_and_scaling = {
+    all {
+      assert(shillelaghAttackModifier(3, 2) == 5),
+      assert(shillelaghDamageTypeChoiceIsLegal(Force, Bludgeoning)),
+      assert(shillelaghDamageTypeChoiceIsLegal(Bludgeoning, Bludgeoning)),
+      assert(not(shillelaghDamageTypeChoiceIsLegal(Fire, Bludgeoning))),
+      assert(shillelaghDamageDice(1) == 1),
+      assert(shillelaghDamageDieSize(1) == 8),
+      assert(shillelaghDamageDice(5) == 1),
+      assert(shillelaghDamageDieSize(5) == 10),
+      assert(shillelaghDamageDice(11) == 1),
+      assert(shillelaghDamageDieSize(11) == 12),
+      assert(shillelaghDamageDice(17) == 2),
+      assert(shillelaghDamageDieSize(17) == 6),
+    }
+  }
+
+  run test_shillelagh_recast_replaces_prior_effect_and_lets_go_ends_projection = {
+    val once = resolveShillelagh(initialState, HeldClub, 1, 1)
+    val nextTurn = { ...once, bonusActionAvailable: true }
+    val recast = resolveShillelagh(nextTurn, HeldQuarterstaff, 3, 17)
+    val letGo = {
+      ...recast,
+      fighter: {
+        ...recast.fighter,
+        activeEffects: shillelaghEffectsMatchingHeldWeapon(recast.fighter.activeEffects, HeldNoWeapon),
+      },
+    }
+    all {
+      assert(recast.fighter.activeEffects == Set(shillelaghEffect(ShillelaghQuarterstaff, 3, 17))),
+      assert(letGo.fighter.activeEffects == Set()),
     }
   }
 

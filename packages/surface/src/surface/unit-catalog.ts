@@ -132,6 +132,7 @@ import thunderwaveInput from "../../content/thunderwave.json";
 import trueStrikeInput from "../../content/true_strike.json";
 import warlockEldritchInvocationsInput from "../../content/warlock_eldritch_invocations.json";
 import viciousMockeryInput from "../../content/vicious_mockery.json";
+import weaponClubInput from "../../content/weapon_club.json";
 import weaponDaggerInput from "../../content/weapon_dagger.json";
 import weaponFlailInput from "../../content/weapon_flail.json";
 import weaponGreataxeInput from "../../content/weapon_greataxe.json";
@@ -380,6 +381,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     hideousLaughterInput,
     armorChainMailInput,
     equipmentShieldInput,
+    weaponClubInput,
     weaponDaggerInput,
     weaponGreataxeInput,
     weaponLongswordInput,

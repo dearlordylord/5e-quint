@@ -1,8 +1,12 @@
 // Attack damage hole/disposition helpers extracted from battle-reducer.ts.
 // Cluster U (attack_damage_apply). Mechanical extraction — no behavior change.
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.martial-arts-attack-projection
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.martial-arts-attack-projection spell.invocation-weapon-attack-override
 
-import { abilityModifier, type ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import {
+  abilityModifier,
+  attackBonus,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 import {
   holeId,
   holeInstanceKey,
@@ -26,6 +30,7 @@ import {
   isStatBlockMultiattackActionResource,
   type AttackDamageRider,
   type BattleAttackDamageDisposition,
+  type BattleActiveEffect,
   type BattleAttackDamageDispositionHole,
   type BattleCreatureState,
   type BattleDamageRollHole,
@@ -334,7 +339,13 @@ export function attackActionOptionsForActor(
     return actor.origin.attack == null
       ? [actor.origin.unarmedStrike]
       : [
-          ...attackActionVariantOptions(actor.origin.attack),
+          ...attackActionVariantOptions(
+            weaponAttackWithActiveSpellOverride(
+              actor,
+              actor.origin.attack,
+              mainHandWeaponItemIdForAttack(actor, actor.origin.attack),
+            ),
+          ),
           actor.origin.unarmedStrike,
         ];
   }
@@ -387,17 +398,22 @@ export function offHandAttackActionOptionsForActor(
   ) {
     return [];
   }
+  const projectedOffHand = weaponAttackWithActiveSpellOverride(
+    actor,
+    offHand,
+    offHandWeaponItemIdForAttack(actor, offHand),
+  );
   const lightPropertyOffHand = {
-    ...offHand,
+    ...projectedOffHand,
     damageAbilityModifier:
-      offHand.abilityModifier < 0
-        ? offHand.abilityModifier
+      projectedOffHand.abilityModifier < 0
+        ? projectedOffHand.abilityModifier
         : abilityModifier(0),
-    ...(offHand.alternateAbilityChoices === undefined
+    ...(projectedOffHand.alternateAbilityChoices === undefined
       ? {}
       : {
           alternateAbilityChoices: lightPropertyAlternateAbilityChoices(
-            offHand.alternateAbilityChoices,
+            projectedOffHand.alternateAbilityChoices,
           ),
         }),
   };
@@ -405,6 +421,88 @@ export function offHandAttackActionOptionsForActor(
     (attack): attack is CharacterWeaponAttackActionOption =>
       attack.kind === "weapon",
   );
+}
+
+function weaponAttackWithActiveSpellOverride(
+  actor: BattleCreatureState,
+  attack: CharacterWeaponAttackActionOption,
+  attachedWeaponItemId: string | undefined,
+): CharacterWeaponAttackActionOption {
+  const effect = actor.activeEffects.find(
+    (candidate): candidate is Extract<
+      BattleActiveEffect,
+      { readonly kind: "spellWeaponAttackOverride" }
+    > =>
+      isSpellWeaponAttackOverrideEffect(candidate) &&
+      candidate.sourceCombatantId === actor.combatantId &&
+      candidate.weaponItemId === attachedWeaponItemId,
+  );
+  if (
+    attachedWeaponItemId === undefined ||
+    effect === undefined ||
+    attack.weapon.damage.kind !== "dice" ||
+    attack.weapon.usage !== "melee"
+  ) {
+    return attack;
+  }
+  return {
+    ...attack,
+    abilityModifier: effect.spellcastingAbilityModifier,
+    attackBonus: effect.attackBonus,
+    damageAbilityModifier: effect.spellcastingAbilityModifier,
+    damageTypeChoices: effect.damageTypeChoices,
+    alternateAbilityChoices: [
+      {
+        ability: attack.ability,
+        abilityModifier: attack.abilityModifier,
+        attackBonus:
+          attack.attackBonus ?? attackBonus(Number(attack.abilityModifier)),
+        damageAbilityModifier:
+          attack.damageAbilityModifier ?? attack.abilityModifier,
+      },
+      ...(attack.alternateAbilityChoices ?? []),
+    ],
+    weapon: {
+      ...attack.weapon,
+      damage: {
+        ...attack.weapon.damage,
+        dice: effect.damage.expr.dice,
+        dieSize: effect.damage.expr.dieSize,
+      },
+    },
+  };
+}
+
+function isSpellWeaponAttackOverrideEffect(
+  effect: BattleActiveEffect,
+): effect is Extract<
+  BattleActiveEffect,
+  { readonly kind: "spellWeaponAttackOverride" }
+> {
+  return effect.kind === "spellWeaponAttackOverride";
+}
+
+function mainHandWeaponItemIdForAttack(
+  actor: BattleCreatureState,
+  attack: CharacterWeaponAttackActionOption,
+): string | undefined {
+  return actor.origin.kind === "character" &&
+    actor.origin.attack?.kind === "weapon" &&
+    actor.origin.attack === attack &&
+    actor.origin.selectedLoadout.weapon?.unitId === attack.weapon.id
+    ? actor.origin.selectedLoadout.weapon.itemId
+    : undefined;
+}
+
+function offHandWeaponItemIdForAttack(
+  actor: BattleCreatureState,
+  attack: CharacterWeaponAttackActionOption,
+): string | undefined {
+  return actor.origin.kind === "character" &&
+    actor.origin.offHandAttack === attack &&
+    actor.origin.selectedLoadout.offHandWeapon?.unitId === attack.weapon.id
+    ? actor.origin.selectedLoadout.offHandWeapon.itemId
+    : undefined;
 }
 
 function lightPropertyAlternateAbilityChoices(

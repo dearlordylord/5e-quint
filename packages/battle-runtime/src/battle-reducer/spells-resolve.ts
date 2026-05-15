@@ -223,6 +223,7 @@ import {
   resolveMarkedDamageRiderSpellAct,
   resolveObjectLightSpellAct,
   resolveReadySpellAct,
+  resolveWeaponAttackOverrideSpellAct,
   resolveWeaponDamageRiderSpellAct,
 } from "./spells-resolve-release.ts";
 import { resolveSpellHostedWeaponAttackSpellAct } from "./spells-resolve-weapon-attack.ts";
@@ -340,6 +341,7 @@ export function resolveSpellAct(
       invocation.procedure === "heldLightHurl" ||
       invocation.procedure === "objectLight" ||
       invocation.procedure === "spellHostedWeaponAttack" ||
+      invocation.procedure === "weaponAttackOverride" ||
       invocation.procedure === "damageReduction" ||
       invocation.procedure === "scalarBuff" ||
       invocation.procedure === "rollModifier" ||
@@ -1463,8 +1465,13 @@ export function resolveBonusActionSpellAct(
   const actor = input.state.combatants.get(subject.actorId);
   const invocation =
     actor?.origin.kind === "character"
-      ? supportedSpellActs(actor, input.state).find((candidate) =>
-          supportedSpellInvocationMatchesRef(candidate, subject.invocation),
+      ? supportedSpellActs(actor, input.state).find(
+          (candidate) =>
+            supportedSpellInvocationMatchesRef(candidate, subject.invocation) &&
+            (candidate.procedure !== "weaponAttackOverride" ||
+              (subject.componentWeaponItemId !== undefined &&
+                candidate.attachedWeapon.itemId ===
+                  subject.componentWeaponItemId)),
         )
       : undefined;
   if (actor?.origin.kind !== "character" || invocation == null) {
@@ -1490,7 +1497,10 @@ export function resolveBonusActionSpellAct(
         "Bonus Action spell subject requires a supported Bonus Action spell act.",
       );
     }
-  } else if (invocation.procedure === "weaponDamageRider") {
+  } else if (
+    invocation.procedure === "weaponDamageRider" ||
+    invocation.procedure === "weaponAttackOverride"
+  ) {
     if (invocation.actionCost !== "bonusAction") {
       return invalidResult(
         input.state,
@@ -1586,6 +1596,14 @@ export function resolveBonusActionSpellAct(
   }
   if (invocation.procedure === "weaponDamageRider") {
     return resolveWeaponDamageRiderSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "weaponAttackOverride") {
+    return resolveWeaponAttackOverrideSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

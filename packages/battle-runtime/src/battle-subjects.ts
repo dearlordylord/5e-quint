@@ -67,6 +67,7 @@ export const CANTRIP_SPELL_PROCEDURES = [
   "makeStable",
   "spellAttackBeamSequence",
   "spellHostedWeaponAttack",
+  "weaponAttackOverride",
   "spellAttackDamage",
   "saveGatedDamage",
   "rollModifier",
@@ -383,6 +384,9 @@ export const BattleSubjectSchema = Schema.Union(
     invocation: SpellInvocationRefSchema,
     mode: Schema.Struct({
       tag: Schema.Literal("cast"),
+    }),
+    componentWeaponItemId: Schema.optionalWith(BattleSubjectTextSchema, {
+      exact: true,
     }),
   }),
   Schema.Struct({
@@ -730,6 +734,7 @@ function battleSubjectKey(subject: BattleSubject): string {
         spell.actorId,
         spellInvocationRefKey(spell.invocation),
         spellSubjectModeKey(spell.mode),
+        spell.componentWeaponItemId ?? null,
       ]),
     ),
     Match.when({ tag: "unitFeature" }, (feature) =>

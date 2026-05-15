@@ -441,17 +441,41 @@ export function normalizeEarlyEndedOngoingFeatures(
   for (const [id, combatant] of state.combatants) {
     const activeOngoingFeatureOccurrences =
       activeOngoingFeatureOccurrencesForCombatant(combatant);
+    const activeEffects =
+      activeEffectsWithoutDetachedWeaponAttackOverrides(combatant);
     if (
       activeOngoingFeatureOccurrences.size !==
-      combatant.activeOngoingFeatureOccurrences.size
+        combatant.activeOngoingFeatureOccurrences.size ||
+      activeEffects.length !== combatant.activeEffects.length
     ) {
       changed = true;
-      combatants.set(id, { ...combatant, activeOngoingFeatureOccurrences });
+      combatants.set(id, {
+        ...combatant,
+        activeEffects,
+        activeOngoingFeatureOccurrences,
+      });
     } else {
       combatants.set(id, combatant);
     }
   }
   return changed ? { ...state, combatants } : state;
+}
+
+function activeEffectsWithoutDetachedWeaponAttackOverrides(
+  combatant: BattleCreatureState,
+): BattleCreatureState["activeEffects"] {
+  if (combatant.origin.kind !== "character") {
+    return combatant.activeEffects;
+  }
+  const heldWeaponItemIds = new Set([
+    combatant.origin.selectedLoadout.weapon?.itemId,
+    combatant.origin.selectedLoadout.offHandWeapon?.itemId,
+  ]);
+  return combatant.activeEffects.filter(
+    (effect) =>
+      effect.kind !== "spellWeaponAttackOverride" ||
+      heldWeaponItemIds.has(effect.weaponItemId),
+  );
 }
 
 export function combatantSnapshot(

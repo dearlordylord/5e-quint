@@ -806,6 +806,18 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     Schema.Struct({
       access: ClassCantripSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
+      procedure: Schema.Literal("weaponAttackOverride"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      attachedWeapon: Schema.Struct({
+        itemId: Schema.String,
+        attack: CharacterWeaponAttackActionOptionSchema,
+      }),
+      activeEffect: BattleRuntimeObjectSchema,
+    }),
+    Schema.Struct({
+      access: ClassCantripSpellAccessSchema,
+      resource: NoSpellInvocationResourceSchema,
       procedure: Schema.Literal("spellAttackBeamSequence"),
       spell: BattleRuntimeObjectSchema,
       targeting: Schema.Struct({

@@ -59,6 +59,7 @@ import { sameStringSet } from "./spells-profile-shared.ts";
 import {
   supportedCantripSpellAttackProfile,
   supportedCantripSpellHostedWeaponAttackProfile,
+  supportedCantripWeaponAttackOverrideProfile,
   supportedPreparedAttackBurstSaveDamageProfile,
   supportedPreparedChainedSpellAttackDamageProfile,
   supportedPreparedSpellAttackProfile,
@@ -332,6 +333,15 @@ export function supportedSpellActs(
     ),
     ...cantrips.flatMap((spell) =>
       supportedCantripSpellHostedWeaponAttackProfile(
+        actor,
+        spell,
+        spellcasting.spellcastingAbilityModifier,
+        spellcasting.proficiencyBonus,
+        characterLevel,
+      ),
+    ),
+    ...cantrips.flatMap((spell) =>
+      supportedCantripWeaponAttackOverrideProfile(
         actor,
         spell,
         spellcasting.spellcastingAbilityModifier,

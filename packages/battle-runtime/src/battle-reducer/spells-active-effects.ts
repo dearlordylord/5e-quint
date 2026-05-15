@@ -1104,6 +1104,37 @@ export function applyHeldLightSpellEffect(
   };
 }
 
+export function applyWeaponAttackOverrideSpellEffect(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "weaponAttackOverride" }
+  >,
+): BattleState {
+  const caster = state.combatants.get(actorId);
+  if (caster === undefined) {
+    return state;
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(actorId, {
+      ...caster,
+      activeEffects: [
+        ...caster.activeEffects.filter(
+          (effect) =>
+            !(
+              effect.kind === "spellWeaponAttackOverride" &&
+              effect.sourceSpellId === invocation.spell.id &&
+              effect.sourceCombatantId === actorId
+            ),
+        ),
+        invocation.activeEffect,
+      ],
+    }),
+  };
+}
+
 export function applyObjectLightSpellEffect(
   state: BattleState,
   actorId: CombatantId,
