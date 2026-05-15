@@ -409,6 +409,9 @@ module battleRuntime {
     spellCast: bool,
     familiarReactionSpent: bool,
   }
+  type PactOfTheChainFamiliarReactionAttack =
+    | PactFamiliarReactionAttackResolved
+    | PactFamiliarReactionAttackRejected
   type FindFamiliarLifecycleResult = {
     lifecycle: FindFamiliarLifecycle,
     itemDropBoundaryEvents: Set[FindFamiliarItemDropBoundaryEvent],
@@ -950,6 +953,29 @@ module battleRuntime {
         else
           { spellCast: false, familiarReactionSpent: false }
       | _ => { spellCast: false, familiarReactionSpent: false }
+    }
+
+  pure def pactOfTheChainFamiliarReactionAttack(
+    lifecycle: FindFamiliarLifecycle,
+    owner: Actor,
+    pactOfTheChainSelected: bool,
+    ownerAttackActionAttackAvailable: bool,
+    familiarReactionAvailable: bool,
+    supportedFamiliarActionAttack: bool,
+  ): PactOfTheChainFamiliarReactionAttack =
+    match lifecycle {
+      | PresentFindFamiliar(present) =>
+        if (
+          present.owner == owner and
+          pactOfTheChainSelected and
+          ownerAttackActionAttackAvailable and
+          familiarReactionAvailable and
+          supportedFamiliarActionAttack
+        )
+          PactFamiliarReactionAttackResolved
+        else
+          PactFamiliarReactionAttackRejected
+      | _ => PactFamiliarReactionAttackRejected
     }
 
   type Combatant = {
@@ -7856,6 +7882,33 @@ module battleRuntime {
       assert(delivered == { spellCast: true, familiarReactionSpent: true }),
       assert(nonTouch == { spellCast: false, familiarReactionSpent: false }),
       assert(noReaction == { spellCast: false, familiarReactionSpent: false }),
+    }
+  }
+
+  run test_pact_of_the_chain_familiar_reaction_attack_requires_pact_owner_attack_and_reaction = {
+    val present = castFindFamiliarLifecycle(
+      NoFindFamiliar,
+      Set(Fighter),
+      Fighter,
+      Goblin,
+      FindFamiliarCat,
+      FindFamiliarFey,
+      11
+    )
+    val resolved = pactOfTheChainFamiliarReactionAttack(present, Fighter, true, true, true, true)
+    val nonPact = pactOfTheChainFamiliarReactionAttack(present, Fighter, false, true, true, true)
+    val noOwnerAttack = pactOfTheChainFamiliarReactionAttack(present, Fighter, true, false, true, true)
+    val noReaction = pactOfTheChainFamiliarReactionAttack(present, Fighter, true, true, false, true)
+    val unsupportedAttack = pactOfTheChainFamiliarReactionAttack(present, Fighter, true, true, true, false)
+    val wrongOwner = pactOfTheChainFamiliarReactionAttack(present, Goblin, true, true, true, true)
+
+    all {
+      assert(resolved == PactFamiliarReactionAttackResolved),
+      assert(nonPact == PactFamiliarReactionAttackRejected),
+      assert(noOwnerAttack == PactFamiliarReactionAttackRejected),
+      assert(noReaction == PactFamiliarReactionAttackRejected),
+      assert(unsupportedAttack == PactFamiliarReactionAttackRejected),
+      assert(wrongOwner == PactFamiliarReactionAttackRejected),
     }
   }
 

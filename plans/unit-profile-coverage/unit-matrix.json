@@ -2050,15 +2050,17 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/find-familiar-lifecycle.ts",
         "packages/battle-runtime/src/find-familiar-state.ts",
-        "packages/battle-runtime/src/find-familiar-telepathy.ts"
+        "packages/battle-runtime/src/find-familiar-telepathy.ts",
+        "packages/battle-runtime/src/find-familiar-pact-chain.ts"
       ],
-      "sourceBoundary": "The runtime consumes the authored Find Familiar spell form catalog, caller-selected form and Celestial/Fey/Fiend type choice, caller-supplied unoccupied placement facts, caller-supplied familiar identity and Initiative facts, caller-supplied 100-foot connection facts, ordinary spell fills for Touch delivery, and caller-supplied held-item drop boundary facts. It records companion lifecycle and replacement state, inserts a present familiar as an allied combatant with its own Initiative turn and ordinary action/Reaction resources, allows supported non-attack actions, rejects ordinary Find Familiar attacks, projects telepathic communication without shared language, applies the caster Bonus Action shared-senses effect until the caster's next turn, and resolves Touch spell delivery atomically with the familiar Reaction spend.",
+      "sourceBoundary": "The runtime consumes the authored Find Familiar spell form catalog, caller-selected form and Celestial/Fey/Fiend type choice, caller-supplied unoccupied placement facts, caller-supplied familiar identity and Initiative facts, caller-supplied 100-foot connection facts, ordinary spell fills for Touch delivery, selected Pact of the Chain Spell Access, owner Attack-action attack availability, familiar Reaction availability, supported familiar Stat Block action attacks, and caller-supplied held-item drop boundary facts. It records companion lifecycle and replacement state, inserts a present familiar as an allied combatant with its own Initiative turn and ordinary action/Reaction resources, allows supported non-attack actions, rejects ordinary Find Familiar attacks, projects telepathic communication without shared language, applies the caster Bonus Action shared-senses effect until the caster's next turn, resolves Touch spell delivery atomically with the familiar Reaction spend, and resolves the Pact of the Chain familiar attack exception atomically with one owner Attack-action attack forgone and the familiar Reaction spent.",
       "taskRefs": [
         "SRDINV84I2",
         "SRDINV84I3",
-        "SRDINV84I4"
+        "SRDINV84I4",
+        "SRDINV84I5"
       ],
-      "title": "Find Familiar owns companion lifecycle, replacement, form, type, telepathy, and touch-delivery state",
+      "title": "Find Familiar owns companion lifecycle, replacement, form, type, telepathy, touch-delivery, and Pact reaction-attack state",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -3384,6 +3386,22 @@
         "spell.find-familiar-lifecycle"
       ],
       "taskId": "SRDINV84I4"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint ownership covers Pact of the Chain's familiar attack exception requiring selected Pact of the Chain, a present familiar, one owner Attack-action attack to forgo, the familiar's Reaction, and a supported familiar attack.",
+      "profileIds": [
+        "spell.find-familiar-lifecycle"
+      ],
+      "taskId": "SRDINV84I5"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Pact of the Chain gating, non-Pact rejection, present familiar ownership, owner Attack-action attack accounting, familiar Reaction spend, and supported familiar Stat Block action attack resolution.",
+      "profileIds": [
+        "spell.find-familiar-lifecycle"
+      ],
+      "taskId": "SRDINV84I5"
     }
   ],
   "units": [
@@ -7474,7 +7492,7 @@
         "deferredMechanics": [
           {
             "followUpTaskId": "SRDINV86",
-            "mechanic": "Pact of the Chain special familiar forms and familiar Reaction attack exception"
+            "mechanic": "unsupported familiar form attacks and generic command AI"
           }
         ],
         "profileIds": [
@@ -7490,7 +7508,8 @@
           "Magic-action temporary dismissal and reappearance, permanent dismissal, 0-HP disappearance, and held-item drop boundary events for 0-HP disappearance and pocket-dimension entry",
           "100-foot telepathic connection projection without shared-language requirement",
           "Bonus Action shared sight, hearing, and special-sense benefits until the start of the caster's next turn",
-          "Touch-range spell delivery through a present familiar within 100 feet, atomically spending the familiar's Reaction with the spell invocation"
+          "Touch-range spell delivery through a present familiar within 100 feet, atomically spending the familiar's Reaction with the spell invocation",
+          "Pact of the Chain selected-invocation exception that atomically forgoes one owner Attack-action attack, spends the present owned familiar's Reaction, and resolves a supported familiar Stat Block action attack"
         ],
         "tag": "profile-subset-supported"
       },
@@ -7508,15 +7527,17 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/find-familiar-lifecycle.ts",
             "packages/battle-runtime/src/find-familiar-state.ts",
-            "packages/battle-runtime/src/find-familiar-telepathy.ts"
+            "packages/battle-runtime/src/find-familiar-telepathy.ts",
+            "packages/battle-runtime/src/find-familiar-pact-chain.ts"
           ],
-          "sourceBoundary": "The runtime consumes the authored Find Familiar spell form catalog, caller-selected form and Celestial/Fey/Fiend type choice, caller-supplied unoccupied placement facts, caller-supplied familiar identity and Initiative facts, caller-supplied 100-foot connection facts, ordinary spell fills for Touch delivery, and caller-supplied held-item drop boundary facts. It records companion lifecycle and replacement state, inserts a present familiar as an allied combatant with its own Initiative turn and ordinary action/Reaction resources, allows supported non-attack actions, rejects ordinary Find Familiar attacks, projects telepathic communication without shared language, applies the caster Bonus Action shared-senses effect until the caster's next turn, and resolves Touch spell delivery atomically with the familiar Reaction spend.",
+          "sourceBoundary": "The runtime consumes the authored Find Familiar spell form catalog, caller-selected form and Celestial/Fey/Fiend type choice, caller-supplied unoccupied placement facts, caller-supplied familiar identity and Initiative facts, caller-supplied 100-foot connection facts, ordinary spell fills for Touch delivery, selected Pact of the Chain Spell Access, owner Attack-action attack availability, familiar Reaction availability, supported familiar Stat Block action attacks, and caller-supplied held-item drop boundary facts. It records companion lifecycle and replacement state, inserts a present familiar as an allied combatant with its own Initiative turn and ordinary action/Reaction resources, allows supported non-attack actions, rejects ordinary Find Familiar attacks, projects telepathic communication without shared language, applies the caster Bonus Action shared-senses effect until the caster's next turn, resolves Touch spell delivery atomically with the familiar Reaction spend, and resolves the Pact of the Chain familiar attack exception atomically with one owner Attack-action attack forgone and the familiar Reaction spent.",
           "taskRefs": [
             "SRDINV84I2",
             "SRDINV84I3",
-            "SRDINV84I4"
+            "SRDINV84I4",
+            "SRDINV84I5"
           ],
-          "title": "Find Familiar owns companion lifecycle, replacement, form, type, telepathy, and touch-delivery state",
+          "title": "Find Familiar owns companion lifecycle, replacement, form, type, telepathy, touch-delivery, and Pact reaction-attack state",
           "verificationOwners": [
             {
               "kind": "qnt-proof",

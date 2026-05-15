@@ -668,6 +668,12 @@ Available acts:
   positive ability modifier from damage per the Light property. Light Property
   Bonus Action Attack uses the same attack-hit, attack-damage, and after-damage
   Reaction replay windows as the Attack action.
+- discover Pact of the Chain familiar attack replacement for Warlocks with a
+  present owned familiar that can take Reactions and has a supported Stat Block
+  action attack. The subject uses the Warlock as the turn actor and the
+  familiar as the attack host: resolving it forgoes one Warlock Attack-action
+  attack, spends the familiar's Reaction, and reuses the Stat Block attack
+  replay path. Ordinary Find Familiar attacks remain rejected.
 - discover supported Stat Block Legendary Action attacks after another
   creature's turn ends for monsters that can act, have remaining Legendary
   Action uses, and have a legal target. These spend only monster Legendary
@@ -731,6 +737,12 @@ Feature and spell resources:
   Reaction windows, spends the reactor's Reaction and one runtime Spell Slot,
   applies its +5 AC bonus until the start of the reactor's next turn, and
   negates Magic Missile damage to that target;
+- `find_familiar` inserts the chosen familiar as an owner-linked combatant with
+  its own turn resources. Pact of the Chain additionally admits the Warlock's
+  Attack-action replacement only when the familiar is present, owned by the
+  Warlock, has an Actions-section Stat Block attack, and can take Reactions;
+  Incapacitated or otherwise action-gated familiars are not offered and cannot
+  spend that Reaction.
 - cantrip `ray_of_frost` uses a Spell Attack modifier of spellcasting ability
   modifier plus Proficiency Bonus, applies Cold damage on a hit, and records the
   `-10` Speed effect until the start of the caster's next turn without spending

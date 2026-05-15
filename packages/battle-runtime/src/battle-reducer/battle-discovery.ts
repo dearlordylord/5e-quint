@@ -34,6 +34,7 @@ import {
 
 import { CombatantId, spellId } from "../identity.ts";
 import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
+import { combatantHasPactOfTheChainFindFamiliar } from "../find-familiar-pact-chain.ts";
 
 import {
   attackActionOptionsForActor,
@@ -49,7 +50,10 @@ import {
 
 import { currentActorId, grappledBy } from "./creature-state-leaves.ts";
 
-import { combatantCanTakeActions } from "./creature-state.ts";
+import {
+  combatantCanTakeActions,
+  combatantCanTakeReactions,
+} from "./creature-state.ts";
 
 import { reactionTriggerLabel } from "./dispatcher.ts";
 
@@ -265,6 +269,7 @@ export function discoverBattleActs(
       }),
     );
   }
+  acts.push(...pactOfTheChainFamiliarAttackActs(state, actorId));
   if (hasOpenStatBlockMultiattackDispatch) {
     acts.push(...movementActs(state, actorId));
     acts.push(...greaseGroundHazardEndTurnActs(state, actorId));
@@ -516,6 +521,51 @@ export function discoverBattleActs(
   acts.push(...discoverLegendaryActionActs(state));
 
   return acts;
+}
+
+function pactOfTheChainFamiliarAttackActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  if (
+    !combatantCanTakeActions(state.combatants.get(actorId)) ||
+    !canSpendAction(state.currentTurnResources, "attack") ||
+    !combatantHasPactOfTheChainFindFamiliar(state, actorId)
+  ) {
+    return [];
+  }
+  const familiar = state.findFamiliars.get(actorId);
+  if (familiar?.status !== "present") {
+    return [];
+  }
+  const familiarCombatant = state.combatants.get(familiar.familiarId);
+  if (
+    familiarCombatant?.origin.kind !== "statBlock" ||
+    !combatantCanTakeReactions(familiarCombatant)
+  ) {
+    return [];
+  }
+  return statBlockActionSectionAttackOptions(
+    "actions",
+    familiarCombatant.origin.statBlock.statBlock.actions,
+  ).flatMap((attack) => {
+    const targetHole = attackTargetHole(state, familiar.familiarId, attack);
+    return targetHole.choices.length === 0
+      ? []
+      : [
+          {
+            subject: {
+              tag: "pactOfTheChainFamiliarAttack" as const,
+              actorId,
+              familiarId: familiar.familiarId,
+              attackName: attackActionOptionName(attack),
+            },
+            label: "Pact Familiar Attack",
+            summary: `Forgo one Attack-action attack for the familiar to attack with ${attackActionOptionName(attack)}.`,
+            initialHoles: [targetHole],
+          },
+        ];
+  });
 }
 
 function endTurnAct(actorId: CombatantId): AvailableBattleAct {

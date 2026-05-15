@@ -57,7 +57,7 @@ flowchart TD
   AttackRoll["attack-roll-algebra<br/>input: AttackRollResult + Armor Class<br/>success: SRD natural 1/20 and AC hit fact<br/>why: one d20 attack-roll adjudication path"]
   RuntimeDice["runtime-dice-algebra<br/>input: rolled dice groups + weapon damage dice expression<br/>success: validated dice count/range facts<br/>why: one dice-roll validation path"]
   Discover["discoverBattleActs(state)<br/>success: AvailableBattleAct[] = subject + label + summary + initial holes<br/>why: public act discovery API<br/>without: callers duplicate legality checks"]
-  Subject["BattleSubject<br/>action.attack, action.multiattack, generic combat actions, actionSpell, unitFeature, or runtimeCommand movement/turn/reaction/Command follow-up commands<br/>why: stable caller-selected replay key, including turn-start Death Saving Throw and Command Drop fills"]
+  Subject["BattleSubject<br/>action.attack, pactOfTheChainFamiliarAttack, action.multiattack, generic combat actions, actionSpell, unitFeature, or runtimeCommand movement/turn/reaction/Command follow-up commands<br/>why: stable caller-selected replay key, including turn-start Death Saving Throw and Command Drop fills"]
   FillSession["caller-owned BattleFill[]<br/>data: accumulated answers for a selected subject<br/>why: replay-from-root input<br/>without: partially answered forms become durable battle state"]
   Resolve["resolveBattleSubject(state, subject, fills)<br/>success: resolved next BattleState<br/>continuation: needsHoles<br/>invalid: stale subject, wrong actor, bad fill, unsupported subject/shape<br/>why: top-level replay/refill dispatcher"]
   EndTurn["End Turn resolution<br/>success: next initiative actor + reset turn action economy<br/>why: runtime command for turn advancement"]
@@ -311,6 +311,13 @@ flowchart TD
   uses the shared attack host Reaction windows before the Bonus Action resource
   is committed for damage replay. Broader generic Bonus Action subjects remain
   future width.
+- Pact of the Chain familiar attack is a dedicated subject whose actor is the
+  Warlock and whose attack host is the present owned familiar. Discovery and
+  resolution require selected Pact access, an available Warlock Attack-action
+  attack, a supported familiar Stat Block Actions attack, and a familiar that
+  can take Reactions; resolution forgoes one Warlock attack and spends the
+  familiar's Reaction while replaying the familiar attack through the shared
+  Attack path.
 - The package-local `battle-runtime.qnt` spec constrains this implemented
   subset. Old root `battle.qnt` remains broad legacy/Core proof and restore
   source material, not the target for new runtime behavior.

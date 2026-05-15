@@ -123,6 +123,7 @@ import type {
   AttackFillSet,
 } from "../battle-reducer.ts";
 import type { SupportedAttackActionOption } from "../battle-action-options.ts";
+import type { CombatantId } from "../identity.ts";
 import {
   attackRollHitsWithCriticalThreshold,
   attackRollIsCriticalHit,
@@ -160,6 +161,14 @@ type SpendAttackProcedure = (
   attack: SupportedAttackActionOption,
 ) => ReturnType<typeof spendAttackAction>;
 
+function attackProcedureAttackerId(
+  subject: BattleAttackHostSubject,
+): CombatantId {
+  return subject.tag === "pactOfTheChainFamiliarAttack"
+    ? subject.familiarId
+    : subject.actorId;
+}
+
 export function resolveSelectedAttackProcedure(
   input: AttackProcedureResolutionInput,
   attack: SupportedAttackActionOption,
@@ -173,6 +182,7 @@ export function resolveSelectedAttackProcedure(
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
+  const attackerId = attackProcedureAttackerId(input.subject);
 
   if (fillSet.targetId == null) {
     if (fillSet.attackRoll != null || fillSet.damageRoll != null) {
@@ -183,12 +193,12 @@ export function resolveSelectedAttackProcedure(
       );
     }
     return needsHolesResult(input.state, input.subject, [
-      attackTargetHole(input.state, input.subject.actorId, attack),
+      attackTargetHole(input.state, attackerId, attack),
     ]);
   }
 
   const target = input.state.combatants.get(fillSet.targetId);
-  if (target == null || target.combatantId === input.subject.actorId) {
+  if (target == null || target.combatantId === attackerId) {
     return invalidResult(
       input.state,
       "invalidFill",
@@ -198,7 +208,7 @@ export function resolveSelectedAttackProcedure(
   if (
     !attackTargetIsLegal(
       input.state,
-      input.subject.actorId,
+      attackerId,
       target.combatantId,
       attack,
       fillSet.targetSpatialFacts,
@@ -223,7 +233,7 @@ export function resolveSelectedAttackProcedure(
 
   const sanctuaryCheck = sanctuaryTargetingInterdictionCheck({
     state: input.state,
-    triggeringCombatantId: input.subject.actorId,
+    triggeringCombatantId: attackerId,
     wardedCombatantId: target.combatantId,
     triggeringTargetEventId: ATTACK_TARGET_HOLE_ID,
     fills: input.fills,
@@ -235,7 +245,7 @@ export function resolveSelectedAttackProcedure(
     return invalidResult(input.state, "invalidFill", sanctuaryCheck.message);
   }
   if (sanctuaryCheck.tag === "lost") {
-    return spendAttackProcedure(input.state, input.subject.actorId, attack);
+    return spendAttackProcedure(input.state, attackerId, attack);
   }
   if (sanctuaryCheck.tag === "newTarget") {
     const replacementTarget = input.state.combatants.get(
@@ -243,10 +253,10 @@ export function resolveSelectedAttackProcedure(
     );
     if (
       replacementTarget === undefined ||
-      replacementTarget.combatantId === input.subject.actorId ||
+      replacementTarget.combatantId === attackerId ||
       !attackTargetIsLegal(
         input.state,
-        input.subject.actorId,
+        attackerId,
         replacementTarget.combatantId,
         attack,
         sanctuaryCheck.spatialFacts,
@@ -301,18 +311,18 @@ export function resolveSelectedAttackProcedure(
     }
     return needsHolesResult(input.state, input.subject, [
       attackRollHole(
-        input.state.combatants.get(input.subject.actorId),
+        input.state.combatants.get(attackerId),
         attack,
         requiredAttackRollMode(
           input.state,
-          input.subject.actorId,
+          attackerId,
           target.combatantId,
           attack,
           fillSet.targetSpatialFacts,
         ),
         attackRollOngoingFeatureActivations(
           input.state,
-          input.subject.actorId,
+          attackerId,
           attack,
         ),
       ),
@@ -329,7 +339,7 @@ export function resolveSelectedAttackProcedure(
   const activatedOngoingFeatureProfile =
     attackRollOngoingFeatureActivationProfile(
       input.state,
-      input.subject.actorId,
+      attackerId,
       attack,
       fillSet.attackRoll.activatedOngoingFeatureUnitId,
       input.replayingInterruptedProcedure === true ||
@@ -347,7 +357,7 @@ export function resolveSelectedAttackProcedure(
   }
   const requiredRollMode = attackRollModeWithOptionalOngoingFeature(
     input.state,
-    input.subject.actorId,
+    attackerId,
     target.combatantId,
     attack,
     fillSet.targetSpatialFacts,
@@ -371,7 +381,7 @@ export function resolveSelectedAttackProcedure(
     );
   }
 
-  const attacker = input.state.combatants.get(input.subject.actorId);
+  const attacker = input.state.combatants.get(attackerId);
   const criticalThreshold = criticalThresholdForAttack(attacker, attack);
   const ordinaryHit = attackRollHitsWithCriticalThreshold(
     fillSet.attackRoll,
@@ -381,7 +391,7 @@ export function resolveSelectedAttackProcedure(
   const missToHitReplacement = selectedAttackRollMissToHitReplacement({
     state: input.state,
     subject: input.subject,
-    attackerId: input.subject.actorId,
+    attackerId: attackerId,
     targetId: target.combatantId,
     attackRoll: fillSet.attackRoll,
     ordinaryHit,
@@ -401,20 +411,20 @@ export function resolveSelectedAttackProcedure(
   const hit = ordinaryHit || missToHitReplacement !== null;
   const sanctuaryAttackRollState = battleStateAfterSanctuaryEarlyEndForActor(
     input.state,
-    input.subject.actorId,
+    attackerId,
   );
   const attackRolledState = recordAttackRollMissToHitReplacementUsed(
     consumeHelpAttackForAttackRoll(
       recordAttackRollOngoingFeatures(
-        revealHidden(sanctuaryAttackRollState, input.subject.actorId),
-        input.subject.actorId,
+        revealHidden(sanctuaryAttackRollState, attackerId),
+        attackerId,
         target.combatantId,
         activatedOngoingFeatureProfile,
       ),
-      input.subject.actorId,
+      attackerId,
       target.combatantId,
     ),
-    input.subject.actorId,
+    attackerId,
     missToHitReplacement,
     {
       subject: input.subject,
@@ -429,7 +439,7 @@ export function resolveSelectedAttackProcedure(
   const eligibleDamageRiders = hit
     ? eligibleAttackDamageRiders(
         attackRolledState,
-        input.subject.actorId,
+        attackerId,
         target.combatantId,
         attack,
         fillSet.attackRoll,
@@ -439,14 +449,14 @@ export function resolveSelectedAttackProcedure(
   const eligibleDamageDiceChoiceUnitIds = hit
     ? eligibleWeaponDamageDiceRollChoiceUnitIds(
         attackRolledState,
-        input.subject.actorId,
+        attackerId,
         attack,
       )
     : [];
   const spellWeaponDamageRiders = hit
     ? [
         ...activeSpellWeaponDamageRiders(
-          attackRolledState.combatants.get(input.subject.actorId),
+          attackRolledState.combatants.get(attackerId),
           attack,
         ),
         ...pendingAttackDamageAdditions,
@@ -454,7 +464,7 @@ export function resolveSelectedAttackProcedure(
     : [];
   const spellMarkedDamageRiders = hit
     ? activeMarkedDamageRiders(
-        attackRolledState.combatants.get(input.subject.actorId),
+        attackRolledState.combatants.get(attackerId),
         target.combatantId,
       )
     : [];
@@ -469,7 +479,7 @@ export function resolveSelectedAttackProcedure(
     ? spellMarkedDamageRiders.length > 0 || spellWeaponDamageRiders.length > 0
       ? null
       : fixedAttackDamageByTypeEntries(
-          attackRolledState.combatants.get(input.subject.actorId),
+          attackRolledState.combatants.get(attackerId),
           attack,
         )
     : null;
@@ -487,7 +497,7 @@ export function resolveSelectedAttackProcedure(
       attackRolledState,
       {
         trigger: "attackHit",
-        attackerId: input.subject.actorId,
+        attackerId: attackerId,
         targetId: target.combatantId,
         attackRoll: fillSet.attackRoll,
         attackKind: attackKindForDeflectRedirect(attack),
@@ -515,7 +525,7 @@ export function resolveSelectedAttackProcedure(
   const toppleSaveHole = hit
     ? weaponMasteryToppleSavingThrowHole(
         attackRolledState,
-        input.subject.actorId,
+        attackerId,
         target.combatantId,
         attack,
       )
@@ -534,7 +544,7 @@ export function resolveSelectedAttackProcedure(
   const toppleApplied = fillSet.weaponMasteryToppleSavingThrow
     ? applyWeaponMasteryToppleSavingThrow(
         attackRolledState,
-        input.subject.actorId,
+        attackerId,
         target.combatantId,
         fillSet.weaponMasteryToppleSavingThrow,
       )
@@ -545,7 +555,7 @@ export function resolveSelectedAttackProcedure(
   const hitAppliedState = hit
     ? applyWeaponMasterySapOnHit(
         toppleApplied.state,
-        input.subject.actorId,
+        attackerId,
         target.combatantId,
         attack,
       )
@@ -632,7 +642,7 @@ export function resolveSelectedAttackProcedure(
     const sapRedirectState = redirectState.state;
     const damageDispositionHole = attackDamageDispositionHole({
       attack,
-      attackerId: input.subject.actorId,
+      attackerId: attackerId,
       target: spellReduction.target,
       damageAmount: reducedFixedDamageAmount,
     });
@@ -662,7 +672,7 @@ export function resolveSelectedAttackProcedure(
         continuation: {
           kind: "attackDamage",
           subject: input.subject,
-          attackerId: input.subject.actorId,
+          attackerId: attackerId,
           targetId: target.combatantId,
           damageEvent: reducedDamageEventAfterSpellReduction,
           fills: attackDamagePrefixFills(input.fills),
@@ -676,7 +686,7 @@ export function resolveSelectedAttackProcedure(
     if (attackDamageReactionWindow !== null) {
       const spent = spendAttackProcedure(
         attackDamageReactionWindow.state,
-        input.subject.actorId,
+        attackerId,
         attack,
       );
       return spent.tag === "invalid"
@@ -707,7 +717,7 @@ export function resolveSelectedAttackProcedure(
           continuation: {
             kind: "attackDamage",
             subject: input.subject,
-            attackerId: input.subject.actorId,
+            attackerId: attackerId,
             targetId: target.combatantId,
             damageEvent: reducedDamageEventAfterSpellReduction,
             fills: attackDamagePrefixFills(input.fills),
@@ -748,7 +758,7 @@ export function resolveSelectedAttackProcedure(
     const spent = spendAttackProcedure(
       applyAttackDamageAmount(
         sapRedirectState,
-        input.subject.actorId,
+        attackerId,
         target.combatantId,
         toDamageAmount(reducedFixedDamageAmount),
         critical ? 2 : 1,
@@ -758,20 +768,20 @@ export function resolveSelectedAttackProcedure(
         primaryConcentrationSavingThrow,
         fillSet.hideousLaughterDamageRepeatSaves,
       ),
-      input.subject.actorId,
+      attackerId,
       attack,
     );
     if (spent.tag === "invalid") {
       return spent;
     }
     const primaryAfterDamageEvent = {
-      damageSourceId: input.subject.actorId,
+      damageSourceId: attackerId,
       damagedId: target.combatantId,
       damageAmount: toDamageAmount(reducedFixedDamageAmount),
       reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
         facts: fillSet.targetSpatialFacts,
         damagedId: target.combatantId,
-        damageSourceId: input.subject.actorId,
+        damageSourceId: attackerId,
       }),
     } satisfies BattleAfterDamageEvent;
     const primaryAfterDamageReactionWindow = maybeOpenReactionWindow(
@@ -816,7 +826,7 @@ export function resolveSelectedAttackProcedure(
         spellWeaponDamageRiders,
         spellMarkedDamageRiders,
         ongoingFeatureDamageModifier(
-          attackRolledState.combatants.get(input.subject.actorId),
+          attackRolledState.combatants.get(attackerId),
           attack,
         ),
         eligibleDamageDiceChoiceUnitIds,
@@ -844,7 +854,7 @@ export function resolveSelectedAttackProcedure(
       spellWeaponDamageRiders,
       spellMarkedDamageRiders,
       ongoingFeatureDamageModifier(
-        attackRolledState.combatants.get(input.subject.actorId),
+        attackRolledState.combatants.get(attackerId),
         attack,
       ),
       eligibleDamageDiceChoiceUnitIds,
@@ -853,7 +863,7 @@ export function resolveSelectedAttackProcedure(
       return invalidResult(input.state, "invalidFill", damageValidation);
     }
     const damageRollByType = attackDamageByTypeEntries(
-      attackRolledState.combatants.get(input.subject.actorId),
+      attackRolledState.combatants.get(attackerId),
       attack,
       fillSet.damageRoll,
       critical,
@@ -928,7 +938,7 @@ export function resolveSelectedAttackProcedure(
     const sapRedirectState = redirectState.state;
     const damageDispositionHole = attackDamageDispositionHole({
       attack,
-      attackerId: input.subject.actorId,
+      attackerId: attackerId,
       target: spellReduction.target,
       damageAmount: reducedDamageAmount,
     });
@@ -958,7 +968,7 @@ export function resolveSelectedAttackProcedure(
         continuation: {
           kind: "attackDamage",
           subject: input.subject,
-          attackerId: input.subject.actorId,
+          attackerId: attackerId,
           targetId: target.combatantId,
           damageEvent: reducedDamageEventAfterSpellReduction,
           fills: attackDamagePrefixFills(input.fills),
@@ -975,7 +985,7 @@ export function resolveSelectedAttackProcedure(
     if (attackDamageReactionWindow !== null) {
       const spent = spendAttackProcedure(
         attackDamageReactionWindow.state,
-        input.subject.actorId,
+        attackerId,
         attack,
       );
       return spent.tag === "invalid"
@@ -1006,7 +1016,7 @@ export function resolveSelectedAttackProcedure(
           continuation: {
             kind: "attackDamage",
             subject: input.subject,
-            attackerId: input.subject.actorId,
+            attackerId: attackerId,
             targetId: target.combatantId,
             damageEvent: reducedDamageEventAfterSpellReduction,
             fills: attackDamagePrefixFills(input.fills),
@@ -1050,7 +1060,7 @@ export function resolveSelectedAttackProcedure(
     const spent = spendAttackProcedure(
       applyAttackDamageAmount(
         sapRedirectState,
-        input.subject.actorId,
+        attackerId,
         target.combatantId,
         toDamageAmount(reducedDamageAmount),
         critical ? 2 : 1,
@@ -1060,20 +1070,20 @@ export function resolveSelectedAttackProcedure(
         primaryConcentrationSavingThrow,
         fillSet.hideousLaughterDamageRepeatSaves,
       ),
-      input.subject.actorId,
+      attackerId,
       attack,
     );
     if (spent.tag === "invalid") {
       return spent;
     }
     const primaryAfterDamageEvent = {
-      damageSourceId: input.subject.actorId,
+      damageSourceId: attackerId,
       damagedId: target.combatantId,
       damageAmount: toDamageAmount(reducedDamageAmount),
       reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
         facts: fillSet.targetSpatialFacts,
         damagedId: target.combatantId,
-        damageSourceId: input.subject.actorId,
+        damageSourceId: attackerId,
       }),
     } satisfies BattleAfterDamageEvent;
     const primaryAfterDamageReactionWindow = maybeOpenReactionWindow(
@@ -1113,7 +1123,7 @@ export function resolveSelectedAttackProcedure(
     hit
       ? applyAttackDamage(
           hitAppliedState,
-          input.subject.actorId,
+          attackerId,
           target.combatantId,
           attack,
           fillSet,
@@ -1123,7 +1133,7 @@ export function resolveSelectedAttackProcedure(
           spellMarkedDamageRiders,
         )
       : attackRolledState,
-    input.subject.actorId,
+    attackerId,
     attack,
   );
 }

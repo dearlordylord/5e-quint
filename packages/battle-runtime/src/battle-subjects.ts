@@ -235,6 +235,12 @@ export const BattleSubjectSchema = Schema.Union(
     ),
   }),
   Schema.Struct({
+    tag: Schema.Literal("pactOfTheChainFamiliarAttack"),
+    actorId: CombatantId,
+    familiarId: CombatantId,
+    attackName: BattleSubjectTextSchema,
+  }),
+  Schema.Struct({
     tag: Schema.Literal("action"),
     actorId: CombatantId,
     action: Schema.Literal("dash"),
@@ -630,6 +636,14 @@ function battleSubjectKey(subject: BattleSubject): string {
         attack.action,
         attack.attackName,
         attack.statBlockSection ?? null,
+      ]),
+    ),
+    Match.when({ tag: "pactOfTheChainFamiliarAttack" }, (attack) =>
+      JSON.stringify([
+        attack.tag,
+        attack.actorId,
+        attack.familiarId,
+        attack.attackName,
       ]),
     ),
     Match.when({ tag: "action", action: "dash" }, (action) =>

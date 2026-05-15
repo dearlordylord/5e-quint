@@ -935,6 +935,7 @@ export type BattleAttackHostSubject =
       BattleSubject,
       { readonly tag: "action"; readonly action: "attack" }
     >
+  | Extract<BattleSubject, { readonly tag: "pactOfTheChainFamiliarAttack" }>
   | Extract<
       BattleSubject,
       { readonly tag: "bonusAction"; readonly action: "offHandAttack" }

@@ -32,6 +32,7 @@ import type {
   FindFamiliarPresentState,
   FindFamiliarSnapshot,
 } from "../find-familiar-lifecycle.ts";
+import { resolvePactOfTheChainFamiliarReactionAttack } from "../find-familiar-pact-chain.ts";
 import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
 
 import {
@@ -451,20 +452,7 @@ export function resolveBattleSubjectInternal(
   }
 
   if (
-    input.subject.tag === "action" &&
-    (input.subject.action === "attack" ||
-      input.subject.action === "dash" ||
-      input.subject.action === "disengage" ||
-      input.subject.action === "dodge" ||
-      input.subject.action === "helpAttack" ||
-      input.subject.action === "hide" ||
-      input.subject.action === "multiattack" ||
-      input.subject.action === "ready" ||
-      input.subject.action === "search" ||
-      input.subject.action === "grapple" ||
-      input.subject.action === "escapeGrapple" ||
-      input.subject.action === "escapeSpellRestraint" ||
-      input.subject.action === "shakeAwakeFromSleep") &&
+    subjectRequiresActionEligibility(input.subject) &&
     !combatantCanTakeActions(input.state.combatants.get(actorId))
   ) {
     return invalidResult(
@@ -556,6 +544,33 @@ export function resolveBattleSubjectInternal(
     const subject = input.subject;
     if (subject.tag === "action" && subject.action === "attack") {
       return resolveAttack({
+        ...input,
+        subject,
+        ...(options.replayingInterruptedProcedure === undefined
+          ? {}
+          : {
+              replayingInterruptedProcedure:
+                options.replayingInterruptedProcedure,
+            }),
+        ...(options.suppressedReactionTrigger === undefined
+          ? {}
+          : { suppressedReactionTrigger: options.suppressedReactionTrigger }),
+        ...(options.pendingAttackDamageReductions === undefined
+          ? {}
+          : {
+              pendingAttackDamageReductions:
+                options.pendingAttackDamageReductions,
+            }),
+        ...(options.pendingAttackDamageAdditions === undefined
+          ? {}
+          : {
+              pendingAttackDamageAdditions:
+                options.pendingAttackDamageAdditions,
+            }),
+      });
+    }
+    if (subject.tag === "pactOfTheChainFamiliarAttack") {
+      return resolvePactOfTheChainFamiliarReactionAttack({
         ...input,
         subject,
         ...(options.replayingInterruptedProcedure === undefined
@@ -875,6 +890,7 @@ function resolveDisperseFogCloudCommand(
 function subjectSuppressedByCommandHalt(subject: BattleSubject): boolean {
   if (
     subject.tag === "action" ||
+    subject.tag === "pactOfTheChainFamiliarAttack" ||
     subject.tag === "actionSpell" ||
     subject.tag === "bonusAction" ||
     subject.tag === "bonusActionStandardAction" ||
@@ -889,6 +905,26 @@ function subjectSuppressedByCommandHalt(subject: BattleSubject): boolean {
     (subject.command === "move" ||
       subject.command === "standFromProne" ||
       subject.command === "jumpMovementReplacement")
+  );
+}
+
+function subjectRequiresActionEligibility(subject: BattleSubject): boolean {
+  return (
+    subject.tag === "pactOfTheChainFamiliarAttack" ||
+    (subject.tag === "action" &&
+      (subject.action === "attack" ||
+        subject.action === "dash" ||
+        subject.action === "disengage" ||
+        subject.action === "dodge" ||
+        subject.action === "helpAttack" ||
+        subject.action === "hide" ||
+        subject.action === "multiattack" ||
+        subject.action === "ready" ||
+        subject.action === "search" ||
+        subject.action === "grapple" ||
+        subject.action === "escapeGrapple" ||
+        subject.action === "escapeSpellRestraint" ||
+        subject.action === "shakeAwakeFromSleep"))
   );
 }
 
@@ -940,6 +976,9 @@ function subjectIsOrdinaryAttack(subject: BattleSubject): boolean {
 export function standardActionKindForSubject(
   subject: BattleSubject,
 ): StandardActionKind | null {
+  if (subject.tag === "pactOfTheChainFamiliarAttack") {
+    return "attack";
+  }
   if (subject.tag !== "action" || isLegendaryAttackSubject(subject)) {
     return null;
   }

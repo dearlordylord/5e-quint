@@ -4,6 +4,10 @@ import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
+import {
+  applyCondition,
+  type ConditionState,
+} from "@dnd/shared-algebras/conditions-algebra";
 import { Hp } from "@dnd/shared/types";
 import {
   abilityModifier,
@@ -41,14 +45,18 @@ import {
   permanentlyDismissFindFamiliar,
   reappearTemporarilyDismissedFindFamiliar,
   removeBattleCombatants,
+  resolveBattleReaction,
   resolveBattleSubject,
   shareFindFamiliarSenses,
   snapshotBattle,
   startBattle,
   temporarilyDismissFindFamiliar,
+  type BattleFill,
+  type BattleHole,
   type BattleCreatureInit,
   type BattleState,
   type FindFamiliarFormEligibility,
+  type PactOfTheChainFamiliarAttackSubject,
 } from "./index.ts";
 import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer.ts";
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
@@ -77,12 +85,10 @@ if (unitCatalogResult.tag !== "ok") {
   throw new Error("Expected SRD Unit catalog for tests.");
 }
 const unitCatalog = unitCatalogResult.catalog;
-const findFamiliarSpell = unitCatalog.requireUnit("find_familiar");
-if (findFamiliarSpell.kind !== "spell") {
-  throw new Error("Expected Find Familiar spell record.");
-}
+const findFamiliarSpell = requireSpellRecord("find_familiar");
 const cureWoundsSpell = requireSpellRecord("cure_wounds");
 const healingWordSpell = requireSpellRecord("healing_word");
+const shieldSpell = requireSpellRecord("shield");
 const familiarEligibility: FindFamiliarFormEligibility =
   requireFindFamiliarEligibility(
     findFamiliarFormEligibilityForSpell(findFamiliarSpell),
@@ -212,6 +218,115 @@ function startSpellcasterFixtureBattle(): BattleState {
   return result.right;
 }
 
+function startPactWarlockFixtureBattle(
+  input: { readonly targetHasShield?: boolean } = {},
+): BattleState {
+  const result = startBattle({
+    battleId: battleId("find-familiar-pact-chain-test"),
+    combatants: [
+      characterCreature({
+        combatantId: casterId,
+        displayName: "Pact Warlock",
+        initiative: 12,
+        side: partySide,
+        className: "warlock",
+        spellcasting: {
+          sourceClassName: "warlock",
+          spellcastingAbilityModifier: abilityModifier(3),
+          proficiencyBonus: proficiencyBonus(2),
+          canCastSpells: true,
+          cantrips: [],
+          preparedSpells: [],
+          featurePreparedSpells: [],
+          invocationSpellAccesses: [
+            {
+              tag: "pactOfTheChainFindFamiliar",
+              spell: findFamiliarSpell,
+            },
+          ],
+          spellSlots: [],
+        },
+      }),
+      characterCreature({
+        combatantId: enemyId,
+        displayName: "Target",
+        initiative: 10,
+        side: enemySide,
+        currentHp: 12,
+        maxHp: 12,
+        ...(input.targetHasShield === true
+          ? {
+              spellcasting: {
+                sourceClassName: "wizard",
+                spellcastingAbilityModifier: abilityModifier(3),
+                proficiencyBonus: proficiencyBonus(2),
+                canCastSpells: true,
+                cantrips: [],
+                preparedSpells: [shieldSpell],
+                featurePreparedSpells: [],
+                invocationSpellAccesses: [],
+                spellSlots: [{ spellLevel: 1, count: 1 }],
+              },
+            }
+          : {}),
+      }),
+    ],
+  });
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
+function startWrongOwnerPactFixtureBattle(): BattleState {
+  const result = startBattle({
+    battleId: battleId("find-familiar-pact-chain-wrong-owner-test"),
+    combatants: [
+      characterCreature({
+        combatantId: otherCombatantId,
+        displayName: "Other Pact Warlock",
+        initiative: 14,
+        side: partySide,
+        className: "warlock",
+        spellcasting: {
+          sourceClassName: "warlock",
+          spellcastingAbilityModifier: abilityModifier(3),
+          proficiencyBonus: proficiencyBonus(2),
+          canCastSpells: true,
+          cantrips: [],
+          preparedSpells: [],
+          featurePreparedSpells: [],
+          invocationSpellAccesses: [
+            {
+              tag: "pactOfTheChainFindFamiliar",
+              spell: findFamiliarSpell,
+            },
+          ],
+          spellSlots: [],
+        },
+      }),
+      characterCreature({
+        combatantId: casterId,
+        displayName: "Caster",
+        initiative: 12,
+        side: partySide,
+      }),
+      characterCreature({
+        combatantId: enemyId,
+        displayName: "Target",
+        initiative: 10,
+        side: enemySide,
+        currentHp: 12,
+        maxHp: 12,
+      }),
+    ],
+  });
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
 function castCatFamiliar(state: BattleState, id = familiarId) {
   return castFindFamiliar({
     state,
@@ -282,10 +397,14 @@ function withFreshMagicAction(state: BattleState): BattleState {
 }
 
 function characterCreature(input: {
-  readonly combatantId: typeof casterId | typeof enemyId;
+  readonly combatantId:
+    | typeof casterId
+    | typeof enemyId
+    | typeof otherCombatantId;
   readonly displayName: string;
   readonly initiative: number;
   readonly side: typeof partySide | typeof enemySide;
+  readonly className?: "wizard" | "warlock";
   readonly spellcasting?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -302,7 +421,7 @@ function characterCreature(input: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),
       characterUnitRefs: [],
-      classLevels: [{ className: "wizard", level: 1 }],
+      classLevels: [{ className: input.className ?? "wizard", level: 1 }],
       armorClass: defaultArmorClassState(),
       size: "medium",
       speed: { walkFeet: movementFeet(30) },
@@ -326,6 +445,156 @@ function characterCreature(input: {
         ? {}
         : { spellcasting: input.spellcasting }),
     },
+  };
+}
+
+function requireHole<K extends BattleHole["kind"]>(
+  holes: readonly BattleHole[],
+  kind: K,
+): Extract<BattleHole, { readonly kind: K }> {
+  const hole = holes.find(
+    (candidate): candidate is Extract<BattleHole, { readonly kind: K }> =>
+      candidate.kind === kind,
+  );
+  if (hole === undefined) {
+    throw new Error(`Expected ${kind} hole.`);
+  }
+  return hole;
+}
+
+function testBattleCreatureStateWithConditions(
+  combatant: BattleState["combatants"] extends ReadonlyMap<
+    typeof familiarId,
+    infer Creature
+  >
+    ? Creature
+    : never,
+  conditions: ConditionState,
+) {
+  if (combatant.positiveHpUnconscious !== null) {
+    throw new Error("Test fixture must not rewrite Knocked Out conditions.");
+  }
+  return { ...combatant, conditions, positiveHpUnconscious: null };
+}
+
+function familiarAttackTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value: enemyId,
+    spatialFacts: [
+      {
+        kind: "attackTargetInMeleeReach",
+        actorId: familiarId,
+        targetId: enemyId,
+        attackName: "Scratch",
+      },
+    ],
+  };
+}
+
+function attackRollFill(
+  hole: Extract<BattleHole, { readonly kind: "attackRoll" }>,
+  value: { readonly total: number; readonly naturalD20: number },
+): Extract<BattleFill, { readonly kind: "attackRoll" }> {
+  return {
+    kind: "attackRoll",
+    holeId: hole.holeId,
+    value: {
+      total: value.total,
+      naturalD20: DieRollResult(value.naturalD20),
+    },
+  };
+}
+
+function reactionDecisionFill(
+  hole: Extract<BattleHole, { readonly kind: "reactionDecision" }>,
+  value: Extract<BattleFill, { readonly kind: "reactionDecision" }>["value"],
+): Extract<BattleFill, { readonly kind: "reactionDecision" }> {
+  return { kind: "reactionDecision", holeId: hole.holeId, value };
+}
+
+function damageRollFill(
+  hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
+  faces: readonly number[],
+): Extract<BattleFill, { readonly kind: "rolledDice" }> {
+  const results = faces.map(DieRollResult);
+  return {
+    kind: "rolledDice",
+    holeId: hole.holeId,
+    value: [
+      {
+        // SRD familiar-form attacks such as Cat Scratch are authored as
+        // fixed 0d1+1 damage. The runtime still asks for the rolledDice hole
+        // for the fixed expression, but the shared fill type currently brands
+        // rolled dice groups as non-empty. There is no parser/generic helper
+        // for this zero-dice authored shape, so the test narrows exactly this
+        // empty dice group at the call boundary.
+        results: results as unknown as Extract<
+          BattleFill,
+          { readonly kind: "rolledDice" }
+        >["value"][number]["results"],
+      },
+    ],
+  };
+}
+
+function pactScratchFilledAttackFills(
+  state: BattleState,
+): readonly BattleFill[] {
+  const subject = pactScratchSubject();
+  const awaitingTarget = resolveBattleSubject({
+    state,
+    subject,
+    fills: [],
+  });
+  if (awaitingTarget.tag !== "needsHoles") {
+    throw new Error("Expected Pact familiar attack target hole.");
+  }
+  const target = familiarAttackTargetFill(
+    requireHole(awaitingTarget.holes, "targetChoice"),
+  );
+  const awaitingAttackRoll = resolveBattleSubject({
+    state,
+    subject,
+    fills: [target],
+  });
+  if (awaitingAttackRoll.tag !== "needsHoles") {
+    throw new Error("Expected Pact familiar attack roll hole.");
+  }
+  const attackRoll = attackRollFill(
+    requireHole(awaitingAttackRoll.holes, "attackRoll"),
+    {
+      naturalD20: 19,
+      total: 23,
+    },
+  );
+  const awaitingDamage = resolveBattleSubject({
+    state,
+    subject,
+    fills: [target, attackRoll],
+  });
+  if (awaitingDamage.tag !== "needsHoles") {
+    throw new Error("Expected Pact familiar damage roll hole.");
+  }
+  return [
+    target,
+    attackRoll,
+    damageRollFill(requireHole(awaitingDamage.holes, "rolledDice"), []),
+  ];
+}
+
+function pactScratchSubject(
+  actorId = casterId,
+  subjectFamiliarId = familiarId,
+): PactOfTheChainFamiliarAttackSubject {
+  return {
+    tag: "pactOfTheChainFamiliarAttack",
+    actorId,
+    familiarId: subjectFamiliarId,
+    attackName: "Scratch",
   };
 }
 
@@ -1030,6 +1299,339 @@ describe("Find Familiar lifecycle", () => {
     expect(withoutReaction.currentTurnResources.spellSlotExpendedThisTurn).toBe(
       false,
     );
+  });
+
+  test("Pact of the Chain forgoes one owner Attack-action attack for a familiar Reaction attack", () => {
+    const cast = castCatFamiliarAfterCasterTurn(
+      startPactWarlockFixtureBattle(),
+    );
+    expect(cast.tag).toBe("resolved");
+    if (cast.tag !== "resolved") return;
+
+    expect(cast.state.currentTurnResources.actionResources).toEqual([
+      { kind: "action", source: "turn" },
+    ]);
+    expect(cast.state.combatants.get(familiarId)?.reactionAvailable).toBe(true);
+    expect(discoverBattleActs(cast.state)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: pactScratchSubject(),
+          initialHoles: [expect.objectContaining({ kind: "targetChoice" })],
+        }),
+      ]),
+    );
+
+    const resolved = resolveBattleSubject({
+      state: cast.state,
+      subject: pactScratchSubject(),
+      fills: pactScratchFilledAttackFills(cast.state),
+    });
+    expect(resolved.tag).toBe("resolved");
+    if (resolved.tag !== "resolved") return;
+    expect(resolved.state.currentTurnResources.actionResources).toEqual([]);
+    expect(resolved.state.combatants.get(familiarId)?.reactionAvailable).toBe(
+      false,
+    );
+    expect(Number(resolved.state.combatants.get(enemyId)?.hp)).toBe(11);
+  });
+
+  test("Pact of the Chain familiar attack resumes through attack-hit reactions with Pact spending", () => {
+    const cast = castCatFamiliarAfterCasterTurn(
+      startPactWarlockFixtureBattle({ targetHasShield: true }),
+    );
+    expect(cast.tag).toBe("resolved");
+    if (cast.tag !== "resolved") return;
+
+    const subject = pactScratchSubject();
+    const awaitingTarget = resolveBattleSubject({
+      state: cast.state,
+      subject,
+      fills: [],
+    });
+    expect(awaitingTarget.tag).toBe("needsHoles");
+    if (awaitingTarget.tag !== "needsHoles") return;
+    const target = familiarAttackTargetFill(
+      requireHole(awaitingTarget.holes, "targetChoice"),
+    );
+    const awaitingAttackRoll = resolveBattleSubject({
+      state: cast.state,
+      subject,
+      fills: [target],
+    });
+    expect(awaitingAttackRoll.tag).toBe("needsHoles");
+    if (awaitingAttackRoll.tag !== "needsHoles") return;
+    const attackRoll = attackRollFill(
+      requireHole(awaitingAttackRoll.holes, "attackRoll"),
+      { naturalD20: 10, total: 14 },
+    );
+
+    const awaitingReaction = resolveBattleSubject({
+      state: cast.state,
+      subject,
+      fills: [target, attackRoll],
+    });
+    expect(awaitingReaction).toMatchObject({
+      tag: "needsHoles",
+      snapshot: { pendingReaction: { trigger: "attackHit" } },
+    });
+    if (awaitingReaction.tag !== "needsHoles") return;
+    const shieldChoice =
+      awaitingReaction.snapshot.pendingReaction?.choices.find(
+        (choice) => choice.kind === "castTriggeredReactionSpell",
+      );
+    expect(shieldChoice).toMatchObject({
+      kind: "castTriggeredReactionSpell",
+      reactorId: enemyId,
+    });
+    if (
+      shieldChoice === undefined ||
+      shieldChoice.kind !== "castTriggeredReactionSpell"
+    ) {
+      throw new Error("Expected Shield Reaction choice.");
+    }
+
+    const resolved = resolveBattleReaction({
+      state: awaitingReaction.state,
+      fill: reactionDecisionFill(
+        requireHole(awaitingReaction.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId: enemyId,
+          choice: {
+            kind: "castTriggeredReactionSpell",
+            invocation: shieldChoice.invocation,
+            fills: [],
+          },
+        },
+      ),
+    });
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: { pendingReaction: null },
+    });
+    if (resolved.tag !== "resolved") return;
+    expect(resolved.state.currentTurnResources.actionResources).toEqual([]);
+    expect(resolved.state.combatants.get(familiarId)?.reactionAvailable).toBe(
+      false,
+    );
+    expect(resolved.state.combatants.get(enemyId)?.reactionAvailable).toBe(
+      false,
+    );
+    expect(Number(resolved.state.combatants.get(enemyId)?.hp)).toBe(12);
+  });
+
+  test("Pact of the Chain familiar attack rejects missing owner Attack-action attacks without spending the familiar Reaction", () => {
+    const cast = castCatFamiliarAfterCasterTurn(
+      startPactWarlockFixtureBattle(),
+    );
+    expect(cast.tag).toBe("resolved");
+    if (cast.tag !== "resolved") return;
+    const withoutOwnerAttack = {
+      ...cast.state,
+      currentTurnResources: {
+        ...cast.state.currentTurnResources,
+        actionResources: [],
+      },
+    };
+
+    const blocked = resolveBattleSubject({
+      state: withoutOwnerAttack,
+      subject: pactScratchSubject(),
+      fills: pactScratchFilledAttackFills(cast.state),
+    });
+
+    expect(blocked.tag).toBe("invalid");
+    if (blocked.tag !== "invalid") return;
+    expect(blocked.reason).toBe("staleSubject");
+    expect(
+      withoutOwnerAttack.combatants.get(familiarId)?.reactionAvailable,
+    ).toBe(true);
+  });
+
+  test("Pact of the Chain familiar attack uses dispatcher action eligibility and interrupt gates", () => {
+    const cast = castCatFamiliarAfterCasterTurn(
+      startPactWarlockFixtureBattle(),
+    );
+    expect(cast.tag).toBe("resolved");
+    if (cast.tag !== "resolved") return;
+    const owner = cast.state.combatants.get(casterId);
+    if (owner === undefined) {
+      throw new Error("Expected Pact owner combatant.");
+    }
+    const unableToAct = applyBattleHitPointDamage({
+      state: cast.state,
+      target: owner,
+      damageAmount: Number(owner.hp),
+      deathFailuresAtZeroHp: 1,
+    });
+
+    const blockedByActionEligibility = resolveBattleSubject({
+      state: unableToAct,
+      subject: pactScratchSubject(),
+      fills: [],
+    });
+    expect(blockedByActionEligibility).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+    });
+
+    const shieldCast = castCatFamiliarAfterCasterTurn(
+      startPactWarlockFixtureBattle({ targetHasShield: true }),
+    );
+    expect(shieldCast.tag).toBe("resolved");
+    if (shieldCast.tag !== "resolved") return;
+    const subject = pactScratchSubject();
+    const awaitingTarget = resolveBattleSubject({
+      state: shieldCast.state,
+      subject,
+      fills: [],
+    });
+    if (awaitingTarget.tag !== "needsHoles") {
+      throw new Error("Expected Pact attack target hole.");
+    }
+    const target = familiarAttackTargetFill(
+      requireHole(awaitingTarget.holes, "targetChoice"),
+    );
+    const awaitingAttackRoll = resolveBattleSubject({
+      state: shieldCast.state,
+      subject,
+      fills: [target],
+    });
+    if (awaitingAttackRoll.tag !== "needsHoles") {
+      throw new Error("Expected Pact attack roll hole.");
+    }
+    const pendingInterrupt = resolveBattleSubject({
+      state: shieldCast.state,
+      subject,
+      fills: [
+        target,
+        attackRollFill(requireHole(awaitingAttackRoll.holes, "attackRoll"), {
+          naturalD20: 10,
+          total: 14,
+        }),
+      ],
+    });
+    expect(pendingInterrupt).toMatchObject({
+      tag: "needsHoles",
+      snapshot: { pendingReaction: { trigger: "attackHit" } },
+    });
+    if (pendingInterrupt.tag !== "needsHoles") return;
+    const blockedByInterrupt = resolveBattleSubject({
+      state: pendingInterrupt.state,
+      subject: pactScratchSubject(),
+      fills: [],
+    });
+    expect(blockedByInterrupt).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+    });
+    expect(
+      pendingInterrupt.state.combatants.get(familiarId)?.reactionAvailable,
+    ).toBe(true);
+  });
+
+  test("Pact of the Chain familiar attack rejects non-Pact owners and unavailable familiar Reactions", () => {
+    const nonPactCast = castCatFamiliarAfterCasterTurn(
+      startFixtureBattle({ includeEnemy: true }),
+    );
+    expect(nonPactCast.tag).toBe("resolved");
+    if (nonPactCast.tag !== "resolved") return;
+
+    const nonPactAttack = resolveBattleSubject({
+      state: nonPactCast.state,
+      subject: pactScratchSubject(),
+      fills: [],
+    });
+    expect(nonPactAttack.tag).toBe("invalid");
+    if (nonPactAttack.tag !== "invalid") return;
+    expect(nonPactAttack.reason).toBe("unsupportedActOption");
+    expect(
+      nonPactCast.state.combatants.get(familiarId)?.reactionAvailable,
+    ).toBe(true);
+
+    const pactCast = castCatFamiliarAfterCasterTurn(
+      startPactWarlockFixtureBattle(),
+    );
+    expect(pactCast.tag).toBe("resolved");
+    if (pactCast.tag !== "resolved") return;
+    const withoutReaction = {
+      ...pactCast.state,
+      combatants: new Map(pactCast.state.combatants).set(familiarId, {
+        ...pactCast.state.combatants.get(familiarId)!,
+        reactionAvailable: false,
+      }),
+    };
+    const blocked = resolveBattleSubject({
+      state: withoutReaction,
+      subject: pactScratchSubject(),
+      fills: [],
+    });
+    expect(blocked.tag).toBe("invalid");
+    if (blocked.tag !== "invalid") return;
+    expect(blocked.reason).toBe("staleSubject");
+    expect(withoutReaction.currentTurnResources.actionResources).toEqual([
+      { kind: "action", source: "turn" },
+    ]);
+  });
+
+  test("Pact of the Chain familiar attack rejects and hides familiars that cannot take Reactions", () => {
+    const pactCast = castCatFamiliarAfterCasterTurn(
+      startPactWarlockFixtureBattle(),
+    );
+    expect(pactCast.tag).toBe("resolved");
+    if (pactCast.tag !== "resolved") return;
+    const familiar = pactCast.state.combatants.get(familiarId);
+    if (familiar === undefined) {
+      throw new Error("Expected present familiar combatant.");
+    }
+    const unableToReact = {
+      ...pactCast.state,
+      combatants: new Map(pactCast.state.combatants).set(familiarId, {
+        ...testBattleCreatureStateWithConditions(
+          familiar,
+          applyCondition(familiar.conditions, "incapacitated"),
+        ),
+        reactionAvailable: true,
+      }),
+    };
+
+    expect(
+      discoverBattleActs(unableToReact).some(
+        (act) => act.subject.tag === "pactOfTheChainFamiliarAttack",
+      ),
+    ).toBe(false);
+
+    const blocked = resolveBattleSubject({
+      state: unableToReact,
+      subject: pactScratchSubject(),
+      fills: [],
+    });
+    expect(blocked).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+    expect(unableToReact.currentTurnResources.actionResources).toEqual([
+      { kind: "action", source: "turn" },
+    ]);
+    expect(unableToReact.combatants.get(familiarId)?.reactionAvailable).toBe(
+      true,
+    );
+  });
+
+  test("Pact of the Chain familiar attack rejects familiars owned by another present caster", () => {
+    const cast = castCatFamiliarAfterCasterTurn(
+      startWrongOwnerPactFixtureBattle(),
+    );
+    expect(cast.tag).toBe("resolved");
+    if (cast.tag !== "resolved") return;
+
+    const wrongOwner = resolveBattleSubject({
+      state: cast.state,
+      subject: pactScratchSubject(otherCombatantId),
+      fills: [],
+    });
+
+    expect(wrongOwner.tag).toBe("invalid");
+    if (wrongOwner.tag !== "invalid") return;
+    expect(wrongOwner.reason).toBe("unsupportedActOption");
+    expect(cast.state.combatants.get(familiarId)?.reactionAvailable).toBe(true);
   });
 
   test("snapshot schema encodes and rejects invalid familiar snapshots", () => {

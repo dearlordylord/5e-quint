@@ -25399,6 +25399,7 @@ function subjectName(
   | "actionSpell"
   | "bonusActionSpell"
   | "bonusActionDashSpell"
+  | "pactOfTheChainFamiliarAttack"
   | "unitFeature"
   | "endTurn"
   | "move"
@@ -25419,6 +25420,9 @@ function subjectName(
   | "creatureFalls" {
   if (subject.tag === "action") {
     return subject.action;
+  }
+  if (subject.tag === "pactOfTheChainFamiliarAttack") {
+    return subject.tag;
   }
   if (subject.tag === "bonusAction") {
     return subject.action;
