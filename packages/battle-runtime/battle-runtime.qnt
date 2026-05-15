@@ -858,6 +858,27 @@ module battleRuntime {
         }
     }
 
+  pure def findFamiliarCombatants(lifecycle: FindFamiliarLifecycle): Set[Actor] =
+    match lifecycle {
+      | PresentFindFamiliar(present) => Set(present.familiar)
+      | _ => Set()
+    }
+
+  pure def battleCombatantsWithFindFamiliar(baseCombatants: Set[Actor], lifecycle: FindFamiliarLifecycle): Set[Actor] =
+    baseCombatants.union(findFamiliarCombatants(lifecycle))
+
+  pure def actorIsPresentFindFamiliar(lifecycle: FindFamiliarLifecycle, actor: Actor): bool =
+    findFamiliarCombatants(lifecycle).contains(actor)
+
+  pure def findFamiliarNonAttackActionAvailable(lifecycle: FindFamiliarLifecycle, actor: Actor, actionAvailable: bool): bool =
+    actorIsPresentFindFamiliar(lifecycle, actor) and actionAvailable
+
+  pure def ordinaryAttackActionAvailableForActor(lifecycle: FindFamiliarLifecycle, actor: Actor, actionAvailable: bool): bool =
+    if (actorIsPresentFindFamiliar(lifecycle, actor)) false else actionAvailable
+
+  pure def opportunityAttackAvailableForActor(lifecycle: FindFamiliarLifecycle, actor: Actor, reactionAvailable: bool): bool =
+    if (actorIsPresentFindFamiliar(lifecycle, actor)) false else reactionAvailable
+
   type Combatant = {
     hp: int,
     maxHp: int,
@@ -7553,6 +7574,8 @@ module battleRuntime {
         initiative: 18,
         placement: FindFamiliarUnoccupiedSpaceWithinSpellRange,
       })),
+      assert(findFamiliarCombatants(cat) == Set(Goblin)),
+      assert(battleCombatantsWithFindFamiliar(Set(Fighter), cat) == Set(Fighter, Goblin)),
       assert(rat == PresentFindFamiliar({
         owner: Fighter,
         familiar: Goblin,
@@ -7561,6 +7584,29 @@ module battleRuntime {
         initiative: 12,
         placement: FindFamiliarUnoccupiedSpaceWithinSpellRange,
       })),
+    }
+  }
+
+  run test_find_familiar_turn_resources_and_no_attack_gate = {
+    val present = castFindFamiliarLifecycle(
+      NoFindFamiliar,
+      Set(Fighter),
+      Fighter,
+      Goblin,
+      FindFamiliarCat,
+      FindFamiliarFey,
+      11
+    )
+
+    all {
+      assert(actorIsPresentFindFamiliar(present, Goblin)),
+      assert(not(actorIsPresentFindFamiliar(present, Fighter))),
+      assert(findFamiliarNonAttackActionAvailable(present, Goblin, true)),
+      assert(not(findFamiliarNonAttackActionAvailable(present, Goblin, false))),
+      assert(not(ordinaryAttackActionAvailableForActor(present, Goblin, true))),
+      assert(ordinaryAttackActionAvailableForActor(present, Fighter, true)),
+      assert(not(opportunityAttackAvailableForActor(present, Goblin, true))),
+      assert(opportunityAttackAvailableForActor(present, Fighter, true)),
     }
   }
 

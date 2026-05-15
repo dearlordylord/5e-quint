@@ -17,6 +17,7 @@ import type { HoleInstanceKey } from "@dnd/shared-algebras/runtime-hole-algebra"
 import type { UnitRecord, WeaponRecord } from "@dnd/surface/surface/types";
 import type { CombatantId } from "../identity.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
+import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
 import type {
   CharacterWeaponAttackAbilityChoice,
   CharacterUnarmedStrikeActionOption,
@@ -334,6 +335,9 @@ export function attackActionOptionsForActor(
   state: BattleState,
   actorId: CombatantId,
 ): readonly SupportedAttackActionOption[] {
+  if (isPresentFindFamiliarCombatant(state, actorId)) {
+    return [];
+  }
   const actor = state.combatants.get(actorId);
   if (actor?.origin.kind === "character") {
     return actor.origin.attack == null
@@ -429,7 +433,9 @@ function weaponAttackWithActiveSpellOverride(
   attachedWeaponItemId: string | undefined,
 ): CharacterWeaponAttackActionOption {
   const effect = actor.activeEffects.find(
-    (candidate): candidate is Extract<
+    (
+      candidate,
+    ): candidate is Extract<
       BattleActiveEffect,
       { readonly kind: "spellWeaponAttackOverride" }
     > =>

@@ -61,6 +61,7 @@ import {
   currentActorId,
   grappledBy,
 } from "./creature-state-leaves.ts";
+import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
 
 export function battleMovementBudget(
   combatant: BattleCreatureState | undefined,
@@ -384,6 +385,9 @@ export function opportunityAttackOptionForReactor(
   targetId: CombatantId,
   attackName: string,
 ): SupportedAttackActionOption | undefined {
+  if (isPresentFindFamiliarCombatant(state, reactorId)) {
+    return undefined;
+  }
   if (
     state.combatants
       .get(reactorId)

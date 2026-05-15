@@ -25,3 +25,10 @@ export function findPresentFamiliarById(
   }
   return null;
 }
+
+export function isPresentFindFamiliarCombatant(
+  state: BattleState,
+  familiarId: CombatantId,
+): boolean {
+  return findPresentFamiliarById(state, familiarId) !== null;
+}

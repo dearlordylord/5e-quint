@@ -22,22 +22,28 @@ import {
   BattleSnapshotSchema,
   castFindFamiliar,
   combatantId,
+  discoverBattleActs,
   findFamiliarFormEligibilityForSpell,
   findFamiliarCreatureTypeOverrideForOwner,
   initiativeScore,
   permanentlyDismissFindFamiliar,
   reappearTemporarilyDismissedFindFamiliar,
+  removeBattleCombatants,
+  resolveBattleSubject,
   snapshotBattle,
   startBattle,
   temporarilyDismissFindFamiliar,
   type BattleState,
   type FindFamiliarFormEligibility,
 } from "./index.ts";
+import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
 
 const partySide = battleCombatantSide("party");
+const enemySide = battleCombatantSide("enemy");
 const casterId = combatantId("caster");
 const familiarId = combatantId("caster-familiar");
 const otherCombatantId = combatantId("other-combatant");
+const enemyId = combatantId("enemy");
 const replacementFamiliarId = combatantId("replacement-familiar");
 const droppedObjectId = battleObjectId("familiar-pack");
 
@@ -81,6 +87,7 @@ if (firstTypeOverride === undefined) {
 function startFixtureBattle(
   input: {
     readonly extraCombatantId?: typeof otherCombatantId;
+    readonly includeEnemy?: boolean;
   } = {},
 ): BattleState {
   const skeleton = statBlockCatalog.requireStatBlock("stat_block_skeleton");
@@ -101,6 +108,23 @@ function startFixtureBattle(
           tempHp: Hp(0),
         },
       },
+      ...(input.includeEnemy === true
+        ? [
+            {
+              combatantId: enemyId,
+              displayName: "Enemy",
+              initiative: initiativeScore(10),
+              side: enemySide,
+              creatureInit: {
+                kind: "statBlock" as const,
+                statBlock: skeleton,
+                currentHp: maxHp,
+                maxHp,
+                tempHp: Hp(0),
+              },
+            },
+          ]
+        : []),
       ...(input.extraCombatantId === undefined
         ? []
         : [
@@ -143,6 +167,23 @@ function castCatFamiliar(state: BattleState, id = familiarId) {
   });
 }
 
+function castCatFamiliarAfterCasterTurn(state: BattleState) {
+  return castFindFamiliar({
+    state,
+    casterId,
+    catalog: statBlockCatalog,
+    eligibility: familiarEligibility,
+    selection: {
+      tag: "normalNamedForm",
+      formId: "cat",
+    },
+    creatureTypeOverrideChoiceId: firstTypeOverride.optionId,
+    familiarId,
+    initiative: initiativeScore(11),
+    placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+  });
+}
+
 function castRatFamiliar(state: BattleState) {
   return castFindFamiliar({
     state,
@@ -179,7 +220,7 @@ function withFreshMagicAction(state: BattleState): BattleState {
 }
 
 describe("Find Familiar lifecycle", () => {
-  test("casts a familiar as owner-linked companion state without ordinary combatant insertion", () => {
+  test("casts a familiar as owner-linked companion combatant state", () => {
     const initial = startFixtureBattle();
     const result = castCatFamiliar(initial);
 
@@ -191,14 +232,26 @@ describe("Find Familiar lifecycle", () => {
       familiarId,
       creatureTypeOverride: firstTypeOverride.creatureType,
       formSelection: { tag: "normalNamedForm", formId: "cat" },
-      initiative: initiativeScore(18),
       placement: { kind: "unoccupiedSpaceWithinSpellRange" },
     });
     expect(familiar).not.toHaveProperty("ownerId");
     expect(familiar).not.toHaveProperty("resolvedForm");
-    expect(result.state.combatants.has(familiarId)).toBe(false);
-    expect(result.state.combatants).toStrictEqual(initial.combatants);
-    expect(result.state.initiative).toStrictEqual(initial.initiative);
+    expect(result.state.combatants.get(familiarId)).toMatchObject({
+      combatantId: familiarId,
+      displayName: "Cat",
+      initiative: initiativeScore(18),
+      side: partySide,
+      reactionAvailable: true,
+      origin: {
+        kind: "statBlock",
+        statBlock: expect.objectContaining({
+          statBlock: expect.objectContaining({
+            creatureType: firstTypeOverride.creatureType,
+          }),
+        }),
+      },
+    });
+    expect(result.snapshot.turnOrder).toEqual([familiarId, casterId]);
     expect(
       findFamiliarCreatureTypeOverrideForOwner(result.state, casterId),
     ).toBe(firstTypeOverride.creatureType);
@@ -220,13 +273,14 @@ describe("Find Familiar lifecycle", () => {
     expect(second.tag).toBe("resolved");
     if (second.tag !== "resolved") return;
     expect(second.state.findFamiliars).toHaveLength(1);
-    expect(second.state.combatants.has(familiarId)).toBe(false);
+    expect(second.state.combatants.has(familiarId)).toBe(true);
     expect(second.state.combatants.has(replacementFamiliarId)).toBe(false);
     expect(second.state.findFamiliars.get(casterId)).toMatchObject({
       status: "present",
       familiarId,
       formSelection: { tag: "normalNamedForm", formId: "rat" },
     });
+    expect(second.state.combatants.get(familiarId)?.displayName).toBe("Rat");
   });
 
   test("rejects familiar identities that collide with ordinary combatants", () => {
@@ -262,6 +316,7 @@ describe("Find Familiar lifecycle", () => {
     expect(dismissed.tag).toBe("resolved");
     if (dismissed.tag !== "resolved") return;
     expect(dismissed.state.combatants.has(familiarId)).toBe(false);
+    expect(dismissed.snapshot.turnOrder).toEqual([casterId]);
     expect(dismissed.state.findFamiliars.get(casterId)).toMatchObject({
       status: "temporarilyDismissed",
     });
@@ -279,6 +334,8 @@ describe("Find Familiar lifecycle", () => {
     const blockedReappearance = reappearTemporarilyDismissedFindFamiliar({
       state: dismissed.state,
       casterId,
+      catalog: statBlockCatalog,
+      eligibility: familiarEligibility,
       familiarId,
       initiative: initiativeScore(14),
       placement: { kind: "unoccupiedSpaceWithin30Feet" },
@@ -290,6 +347,8 @@ describe("Find Familiar lifecycle", () => {
     const reappeared = reappearTemporarilyDismissedFindFamiliar({
       state: withFreshMagicAction(dismissed.state),
       casterId,
+      catalog: statBlockCatalog,
+      eligibility: familiarEligibility,
       familiarId,
       initiative: initiativeScore(14),
       placement: { kind: "unoccupiedSpaceWithin30Feet" },
@@ -297,10 +356,11 @@ describe("Find Familiar lifecycle", () => {
     expect(reappeared.tag).toBe("resolved");
     if (reappeared.tag !== "resolved") return;
     expect(reappeared.state.currentTurnResources.actionResources).toEqual([]);
-    expect(reappeared.state.combatants.has(familiarId)).toBe(false);
+    expect(reappeared.state.combatants.get(familiarId)?.initiative).toBe(
+      initiativeScore(14),
+    );
     expect(reappeared.state.findFamiliars.get(casterId)).toMatchObject({
       status: "present",
-      initiative: initiativeScore(14),
       placement: { kind: "unoccupiedSpaceWithin30Feet" },
     });
   });
@@ -321,6 +381,8 @@ describe("Find Familiar lifecycle", () => {
     const reappeared = reappearTemporarilyDismissedFindFamiliar({
       state: withFreshMagicAction(dismissed.state),
       casterId,
+      catalog: statBlockCatalog,
+      eligibility: familiarEligibility,
       familiarId: otherCombatantId,
       initiative: initiativeScore(14),
       placement: { kind: "unoccupiedSpaceWithin30Feet" },
@@ -353,6 +415,7 @@ describe("Find Familiar lifecycle", () => {
     if (dismissed.tag !== "resolved") return;
     expect(dismissed.state.findFamiliars.has(casterId)).toBe(false);
     expect(dismissed.state.combatants.has(familiarId)).toBe(false);
+    expect(dismissed.snapshot.turnOrder).toEqual([casterId]);
     expect(dismissed.droppedObjects).toBeUndefined();
   });
 
@@ -370,6 +433,7 @@ describe("Find Familiar lifecycle", () => {
     expect(disappeared.tag).toBe("resolved");
     if (disappeared.tag !== "resolved") return;
     expect(disappeared.state.combatants.has(familiarId)).toBe(false);
+    expect(disappeared.snapshot.turnOrder).toEqual([casterId]);
     expect(disappeared.state.findFamiliars.get(casterId)).toMatchObject({
       status: "disappearedAtZeroHitPoints",
     });
@@ -382,6 +446,238 @@ describe("Find Familiar lifecycle", () => {
       status: "present",
       familiarId: replacementFamiliarId,
     });
+    expect(recast.state.combatants.has(replacementFamiliarId)).toBe(true);
+  });
+
+  test("owns its turn and resources while rejecting ordinary attacks", () => {
+    const initial = startFixtureBattle({ includeEnemy: true });
+    const cast = castFindFamiliar({
+      state: initial,
+      casterId,
+      catalog: statBlockCatalog,
+      eligibility: familiarEligibility,
+      selection: {
+        tag: "normalNamedForm",
+        formId: "cat",
+      },
+      creatureTypeOverrideChoiceId: firstTypeOverride.optionId,
+      familiarId,
+      initiative: initiativeScore(11),
+      placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+    });
+    expect(cast.tag).toBe("resolved");
+    if (cast.tag !== "resolved") return;
+    expect(cast.snapshot.currentActorId).toBe(casterId);
+
+    const familiarTurn = resolveBattleSubject({
+      state: cast.state,
+      subject: { tag: "runtimeCommand", actorId: casterId, command: "endTurn" },
+      fills: [],
+    });
+    expect(familiarTurn.tag).toBe("resolved");
+    if (familiarTurn.tag !== "resolved") return;
+    expect(familiarTurn.snapshot.currentActorId).toBe(familiarId);
+    expect(familiarTurn.snapshot.turn.actionResources).toEqual([
+      { kind: "action", source: "turn" },
+    ]);
+    expect(cast.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: familiarId,
+          reactionAvailable: true,
+        }),
+        expect.objectContaining({
+          combatantId: casterId,
+          reactionAvailable: true,
+        }),
+      ]),
+    );
+    const acts = discoverBattleActs(familiarTurn.state);
+    expect(acts.map((act) => act.subject)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ tag: "action", action: "dash" }),
+        expect.objectContaining({ tag: "action", action: "dodge" }),
+        expect.objectContaining({ tag: "runtimeCommand", command: "endTurn" }),
+      ]),
+    );
+    expect(
+      acts.some(
+        (act) =>
+          act.subject.tag === "action" && act.subject.action === "attack",
+      ),
+    ).toBe(false);
+
+    const attack = resolveBattleSubject({
+      state: familiarTurn.state,
+      subject: {
+        tag: "action",
+        actorId: familiarId,
+        action: "attack",
+        attackName: "Claws",
+        statBlockSection: "actions",
+      },
+      fills: [],
+    });
+    expect(attack.tag).toBe("invalid");
+    if (attack.tag !== "invalid") return;
+    expect(attack.message).toBe("Find Familiar familiars can't attack.");
+    expect(attack.snapshot.turn.actionResources).toEqual([
+      { kind: "action", source: "turn" },
+    ]);
+
+    const dashSubject = acts.find(
+      (act) => act.subject.tag === "action" && act.subject.action === "dash",
+    )?.subject;
+    expect(dashSubject).toBeDefined();
+    if (dashSubject === undefined) return;
+
+    const dash = resolveBattleSubject({
+      state: familiarTurn.state,
+      subject: dashSubject,
+      fills: [],
+    });
+    expect(dash.tag).toBe("resolved");
+    if (dash.tag !== "resolved") return;
+    expect(dash.snapshot.currentActorId).toBe(familiarId);
+    expect(dash.snapshot.turn.actionResources).toEqual([]);
+    expect(
+      dash.snapshot.combatants.find(
+        (combatant) => combatant.combatantId === casterId,
+      )?.reactionAvailable,
+    ).toBe(true);
+  });
+
+  test("cleans familiar-owned readied state when the familiar leaves battle", () => {
+    const cast = castCatFamiliarAfterCasterTurn(startFixtureBattle());
+    expect(cast.tag).toBe("resolved");
+    if (cast.tag !== "resolved") return;
+    const familiarTurn = resolveBattleSubject({
+      state: cast.state,
+      subject: { tag: "runtimeCommand", actorId: casterId, command: "endTurn" },
+      fills: [],
+    });
+    expect(familiarTurn.tag).toBe("resolved");
+    if (familiarTurn.tag !== "resolved") return;
+
+    const readied = resolveBattleSubject({
+      state: familiarTurn.state,
+      subject: {
+        tag: "action",
+        actorId: familiarId,
+        action: "ready",
+        readyTrigger: "attackHit",
+      },
+      fills: [],
+    });
+    expect(readied.tag).toBe("resolved");
+    if (readied.tag !== "resolved") return;
+    expect(readied.state.readiedMovements.has(familiarId)).toBe(true);
+
+    const disappeared = applyFindFamiliarZeroHitPointDisappearance({
+      state: readied.state,
+      familiarId,
+    });
+    expect(disappeared.tag).toBe("resolved");
+    if (disappeared.tag !== "resolved") return;
+    expect(disappeared.state.combatants.has(familiarId)).toBe(false);
+    expect(disappeared.state.readiedMovements.has(familiarId)).toBe(false);
+    expect(disappeared.snapshot.readiedResponses.movements).toEqual([]);
+
+    const recast = castCatFamiliarAfterCasterTurn(disappeared.state);
+    expect(recast.tag).toBe("resolved");
+    if (recast.tag !== "resolved") return;
+    const secondFamiliarTurn = resolveBattleSubject({
+      state: recast.state,
+      subject: { tag: "runtimeCommand", actorId: casterId, command: "endTurn" },
+      fills: [],
+    });
+    expect(secondFamiliarTurn.tag).toBe("resolved");
+    if (secondFamiliarTurn.tag !== "resolved") return;
+    const readiedAgain = resolveBattleSubject({
+      state: secondFamiliarTurn.state,
+      subject: {
+        tag: "action",
+        actorId: familiarId,
+        action: "ready",
+        readyTrigger: "attackHit",
+      },
+      fills: [],
+    });
+    expect(readiedAgain.tag).toBe("resolved");
+    if (readiedAgain.tag !== "resolved") return;
+    expect(readiedAgain.state.readiedMovements.has(familiarId)).toBe(true);
+
+    const dismissed = permanentlyDismissFindFamiliar({
+      state: readiedAgain.state,
+      casterId,
+    });
+    expect(dismissed.tag).toBe("resolved");
+    if (dismissed.tag !== "resolved") return;
+    expect(dismissed.state.combatants.has(familiarId)).toBe(false);
+    expect(dismissed.state.readiedMovements.has(familiarId)).toBe(false);
+    expect(dismissed.snapshot.readiedResponses.movements).toEqual([]);
+  });
+
+  test("generic combatant removal keeps owner and familiar state together", () => {
+    const cast = castCatFamiliar(startFixtureBattle({ includeEnemy: true }));
+    expect(cast.tag).toBe("resolved");
+    if (cast.tag !== "resolved") return;
+
+    const ownerRemoved = removeBattleCombatants({
+      state: cast.state,
+      combatantIds: [casterId],
+    });
+    expect(Either.isRight(ownerRemoved)).toBe(true);
+    if (Either.isLeft(ownerRemoved)) return;
+    expect(ownerRemoved.right.combatants.has(casterId)).toBe(false);
+    expect(ownerRemoved.right.combatants.has(familiarId)).toBe(false);
+    expect(ownerRemoved.right.findFamiliars.has(casterId)).toBe(false);
+    expect(snapshotBattle(ownerRemoved.right).findFamiliars).toEqual([]);
+
+    const recast = castCatFamiliar(startFixtureBattle({ includeEnemy: true }));
+    expect(recast.tag).toBe("resolved");
+    if (recast.tag !== "resolved") return;
+    const familiarRemoved = removeBattleCombatants({
+      state: recast.state,
+      combatantIds: [familiarId],
+    });
+    expect(Either.isRight(familiarRemoved)).toBe(true);
+    if (Either.isLeft(familiarRemoved)) return;
+    expect(familiarRemoved.right.combatants.has(casterId)).toBe(true);
+    expect(familiarRemoved.right.combatants.has(familiarId)).toBe(false);
+    expect(familiarRemoved.right.findFamiliars.has(casterId)).toBe(false);
+    expect(snapshotBattle(familiarRemoved.right).findFamiliars).toEqual([]);
+  });
+
+  test("ordinary damage to 0 HP makes a present familiar disappear", () => {
+    const cast = castCatFamiliar(startFixtureBattle({ includeEnemy: true }));
+    expect(cast.tag).toBe("resolved");
+    if (cast.tag !== "resolved") return;
+    const familiar = cast.state.combatants.get(familiarId);
+    expect(familiar).toBeDefined();
+    if (familiar === undefined) return;
+
+    const damaged = applyBattleHitPointDamage({
+      state: cast.state,
+      target: familiar,
+      damageAmount: Number(familiar.hp),
+      deathFailuresAtZeroHp: 1,
+    });
+
+    expect(damaged.combatants.has(familiarId)).toBe(false);
+    expect(damaged.findFamiliars.get(casterId)).toMatchObject({
+      status: "disappearedAtZeroHitPoints",
+      formSelection: { tag: "normalNamedForm", formId: "cat" },
+      creatureTypeOverride: firstTypeOverride.creatureType,
+    });
+    const damagedSnapshot = snapshotBattle(damaged);
+    expect(damagedSnapshot.findFamiliars).toEqual([
+      expect.objectContaining({
+        ownerId: casterId,
+        status: "disappearedAtZeroHitPoints",
+      }),
+    ]);
+    expect(damagedSnapshot.turnOrder).not.toContain(familiarId);
   });
 
   test("snapshot schema encodes and rejects invalid familiar snapshots", () => {

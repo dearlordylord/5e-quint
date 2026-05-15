@@ -184,6 +184,20 @@ export function resolveFindFamiliarForm(input: {
     return creatureTypeOverride;
   }
 
+  return resolveFindFamiliarSelectedForm({
+    catalog: input.catalog,
+    eligibility: input.eligibility,
+    selection: input.selection,
+    creatureTypeOverride: creatureTypeOverride.creatureTypeOverride,
+  });
+}
+
+export function resolveFindFamiliarSelectedForm(input: {
+  readonly catalog: StatBlockCatalog;
+  readonly eligibility: FindFamiliarFormEligibility;
+  readonly selection: FindFamiliarFormSelection;
+  readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
+}): FindFamiliarFormResolution {
   if (input.selection.tag === "normalNamedForm") {
     const formId = input.selection.formId;
     const formRef = input.eligibility.normalForms.find(
@@ -198,14 +212,14 @@ export function resolveFindFamiliarForm(input: {
       : resolveChallengeRatingZeroBeastStatBlock({
           catalog: input.catalog,
           statBlockId: formRef.statBlockId,
-          creatureTypeOverride: creatureTypeOverride.creatureTypeOverride,
+          creatureTypeOverride: input.creatureTypeOverride,
         });
   }
 
   return resolveChallengeRatingZeroBeastStatBlock({
     catalog: input.catalog,
     statBlockId: input.selection.statBlockId,
-    creatureTypeOverride: creatureTypeOverride.creatureTypeOverride,
+    creatureTypeOverride: input.creatureTypeOverride,
   });
 }
 

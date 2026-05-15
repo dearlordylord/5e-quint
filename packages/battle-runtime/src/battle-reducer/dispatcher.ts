@@ -28,6 +28,11 @@ import { Match } from "effect";
 import * as Either from "effect/Either";
 
 import { type BattleReactionTrigger } from "../battle-reaction-triggers.ts";
+import type {
+  FindFamiliarPresentState,
+  FindFamiliarSnapshot,
+} from "../find-familiar-lifecycle.ts";
+import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
 
 import {
   sameBattleSubject,
@@ -471,6 +476,16 @@ export function resolveBattleSubjectInternal(
 
   const standardActionKind = standardActionKindForSubject(input.subject);
   if (
+    isPresentFindFamiliarCombatant(input.state, actorId) &&
+    subjectIsOrdinaryAttack(input.subject)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Find Familiar familiars can't attack.",
+    );
+  }
+  if (
     standardActionKind !== null &&
     !canSpendAction(input.state.currentTurnResources, standardActionKind)
   ) {
@@ -909,6 +924,16 @@ export function isReleaseGrappleSubject(
 > {
   return (
     subject.tag === "runtimeCommand" && subject.command === "releaseGrapple"
+  );
+}
+
+function subjectIsOrdinaryAttack(subject: BattleSubject): boolean {
+  return (
+    subject.tag === "action" &&
+    (subject.action === "attack" ||
+      subject.action === "multiattack" ||
+      subject.action === "grapple" ||
+      subject.action === "shove")
   );
 }
 
@@ -3136,10 +3161,16 @@ export function snapshotBattle(state: BattleState): BattleSnapshot {
       const combatant = state.combatants.get(id);
       return combatant == null ? [] : [combatantSnapshot(state, combatant)];
     }),
-    findFamiliars: [...state.findFamiliars].map(([ownerId, familiar]) => ({
-      ...familiar,
-      ownerId,
-    })),
+    findFamiliars: [...state.findFamiliars].map(([ownerId, familiar]) => {
+      if (familiar.status !== "present") {
+        return { ...familiar, ownerId };
+      }
+      return {
+        ...familiar,
+        ownerId,
+        initiative: requirePresentFamiliarCombatantInitiative(state, familiar),
+      };
+    }),
     lightEmitters: battleLightEmitters(state),
     acts: discoverBattleActs(state),
     turn: battleTurnSnapshot(state.currentTurnResources),
@@ -3179,6 +3210,17 @@ export function battleTurnSnapshot(
     dashMovementBonusFeet: resources.dashMovementBonusFeet,
     disengaged: resources.disengaged,
   };
+}
+
+function requirePresentFamiliarCombatantInitiative(
+  state: BattleState,
+  familiar: FindFamiliarPresentState,
+): Extract<FindFamiliarSnapshot, { readonly status: "present" }>["initiative"] {
+  const combatant = state.combatants.get(familiar.familiarId);
+  if (combatant === undefined) {
+    throw new Error("Present Find Familiar snapshot requires a combatant.");
+  }
+  return combatant.initiative;
 }
 
 export function pendingReactionSnapshot(

@@ -2051,9 +2051,10 @@
         "packages/battle-runtime/src/find-familiar-lifecycle.ts",
         "packages/battle-runtime/src/find-familiar-state.ts"
       ],
-      "sourceBoundary": "The runtime consumes the authored Find Familiar spell form catalog, caller-selected form and Celestial/Fey/Fiend type choice, caller-supplied unoccupied placement facts, caller-supplied familiar identity and Initiative facts, and caller-supplied held-item drop boundary facts. It records companion lifecycle and replacement state without admitting the familiar to ordinary combatant action discovery or Initiative turns.",
+      "sourceBoundary": "The runtime consumes the authored Find Familiar spell form catalog, caller-selected form and Celestial/Fey/Fiend type choice, caller-supplied unoccupied placement facts, caller-supplied familiar identity and Initiative facts, and caller-supplied held-item drop boundary facts. It records companion lifecycle and replacement state, inserts a present familiar as an allied combatant with its own Initiative turn and ordinary action/Reaction resources, allows supported non-attack actions, and rejects ordinary Find Familiar attacks.",
       "taskRefs": [
-        "SRDINV84I2"
+        "SRDINV84I2",
+        "SRDINV84I3"
       ],
       "title": "Find Familiar owns companion lifecycle, replacement, selected form, and type override state",
       "verificationOwners": [
@@ -3344,11 +3345,27 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests cover Find Familiar lifecycle state creation without ordinary combatant insertion, chosen creature-type override projection, one-familiar replacement, temporary dismissal, permanent dismissal, 0-HP disappearance, Magic-action reappearance, and held-item drop boundary events.",
+      "note": "Focused battle-runtime tests cover Find Familiar lifecycle state creation, chosen creature-type override projection, one-familiar replacement, temporary dismissal, permanent dismissal, 0-HP disappearance, Magic-action reappearance, and held-item drop boundary events.",
       "profileIds": [
         "spell.find-familiar-lifecycle"
       ],
       "taskId": "SRDINV84I2"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint ownership covers Find Familiar present familiar combatant admission, its own Initiative turn and turn resources, supported non-attack action availability, ordinary attack rejection, and Opportunity Attack rejection.",
+      "profileIds": [
+        "spell.find-familiar-lifecycle"
+      ],
+      "taskId": "SRDINV84I3"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover present familiar combatant insertion, turn/action/Reaction resource ownership, supported non-attack action allowance, ordinary attack rejection, and combatant-removal cleanup for familiar-owned readied state on disappearance or dismissal.",
+      "profileIds": [
+        "spell.find-familiar-lifecycle"
+      ],
+      "taskId": "SRDINV84I3"
     }
   ],
   "units": [
@@ -7438,10 +7455,6 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "SRDINV84I3",
-            "mechanic": "familiar's own Initiative turn, action ownership, and rejection of ordinary familiar attacks"
-          },
-          {
             "followUpTaskId": "SRDINV84I4",
             "mechanic": "telepathy, shared senses, and touch-spell delivery through the present familiar identity"
           },
@@ -7454,11 +7467,12 @@
           "spell.find-familiar-lifecycle"
         ],
         "supportedMechanics": [
-          "companion lifecycle state creation without ordinary combatant insertion",
+          "present familiar combatant insertion with its own Initiative turn, action, Reaction, and Movement resources",
           "chosen named form and CR 0 Beast Stat Block resolution from the SRD form catalog",
           "caster-chosen Celestial, Fey, or Fiend creature type override projection",
           "one-familiar-per-caster lifecycle and atomic recast replacement",
           "caller-supplied Initiative and unoccupied-space placement facts",
+          "ordinary Find Familiar attack and Opportunity Attack rejection while allowing supported non-attack actions",
           "Magic-action temporary dismissal and reappearance, permanent dismissal, 0-HP disappearance, and held-item drop boundary events for 0-HP disappearance and pocket-dimension entry"
         ],
         "tag": "profile-subset-supported"
@@ -7478,9 +7492,10 @@
             "packages/battle-runtime/src/find-familiar-lifecycle.ts",
             "packages/battle-runtime/src/find-familiar-state.ts"
           ],
-          "sourceBoundary": "The runtime consumes the authored Find Familiar spell form catalog, caller-selected form and Celestial/Fey/Fiend type choice, caller-supplied unoccupied placement facts, caller-supplied familiar identity and Initiative facts, and caller-supplied held-item drop boundary facts. It records companion lifecycle and replacement state without admitting the familiar to ordinary combatant action discovery or Initiative turns.",
+          "sourceBoundary": "The runtime consumes the authored Find Familiar spell form catalog, caller-selected form and Celestial/Fey/Fiend type choice, caller-supplied unoccupied placement facts, caller-supplied familiar identity and Initiative facts, and caller-supplied held-item drop boundary facts. It records companion lifecycle and replacement state, inserts a present familiar as an allied combatant with its own Initiative turn and ordinary action/Reaction resources, allows supported non-attack actions, and rejects ordinary Find Familiar attacks.",
           "taskRefs": [
-            "SRDINV84I2"
+            "SRDINV84I2",
+            "SRDINV84I3"
           ],
           "title": "Find Familiar owns companion lifecycle, replacement, selected form, and type override state",
           "verificationOwners": [

@@ -28,6 +28,7 @@ import {
 } from "@dnd/shared/types";
 import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
 import { Match } from "effect";
+import * as Either from "effect/Either";
 import type {
   StatBlockMutableResourceState,
   StatBlockPartKey,
@@ -64,8 +65,10 @@ import {
   type CharacterBattleResourceState,
 } from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
+import { findPresentFamiliarById } from "../find-familiar-state.ts";
 import { parseSupportedUnitFeatureProfile } from "../unit-feature-support.ts";
 import type { ZeroHpLifecycle } from "../zero-hp-lifecycle.ts";
+import { removeBattleCombatants } from "./api-lifecycle.ts";
 import {
   combatantsAreAllies,
   currentActorId,
@@ -244,14 +247,49 @@ export function applyBattleHitPointDamage(input: {
     input.damageAmount > 0
       ? removeSleepEffectsFromTarget(afterSanctuaryEarlyEnd, targetId)
       : afterSanctuaryEarlyEnd;
-  return input.damageAmount > 0
-    ? applyHideousLaughterDamageRepeatSaves(
-        afterSleep,
-        targetId,
-        input.hideousLaughterDamageRepeatSaves ?? [],
-        input.hideousLaughterDamageRepeatSaveEventKey,
-      )
-    : afterSleep;
+  const afterHideousLaughter =
+    input.damageAmount > 0
+      ? applyHideousLaughterDamageRepeatSaves(
+          afterSleep,
+          targetId,
+          input.hideousLaughterDamageRepeatSaves ?? [],
+          input.hideousLaughterDamageRepeatSaveEventKey,
+        )
+      : afterSleep;
+  return applyFindFamiliarZeroHitPointDisappearanceAfterDamage({
+    state: afterHideousLaughter,
+    targetId,
+    priorHp: input.target.hp,
+    nextHp: damaged.hp,
+  });
+}
+
+function applyFindFamiliarZeroHitPointDisappearanceAfterDamage(input: {
+  readonly state: BattleState;
+  readonly targetId: CombatantId;
+  readonly priorHp: Hp;
+  readonly nextHp: Hp;
+}): BattleState {
+  if (input.priorHp <= 0 || input.nextHp !== 0) {
+    return input.state;
+  }
+  const entry = findPresentFamiliarById(input.state, input.targetId);
+  if (entry === null) {
+    return input.state;
+  }
+  const stateWithDisappearedFamiliar = {
+    ...input.state,
+    findFamiliars: new Map(input.state.findFamiliars).set(entry.ownerId, {
+      status: "disappearedAtZeroHitPoints",
+      formSelection: entry.familiar.formSelection,
+      creatureTypeOverride: entry.familiar.creatureTypeOverride,
+    }),
+  };
+  const removed = removeBattleCombatants({
+    state: stateWithDisappearedFamiliar,
+    combatantIds: [input.targetId],
+  });
+  return Either.isLeft(removed) ? stateWithDisappearedFamiliar : removed.right;
 }
 
 export function applyAttackDamage(

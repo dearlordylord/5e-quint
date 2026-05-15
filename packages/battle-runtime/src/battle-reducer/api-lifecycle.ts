@@ -181,7 +181,10 @@ export function removeBattleCombatants(input: {
   readonly state: BattleState;
   readonly combatantIds: readonly CombatantId[];
 }): Either.Either<BattleState, BattleStateInitIssue> {
-  const removeIds = new Set(input.combatantIds);
+  const removeIds = combatantIdsWithPresentFindFamiliarDependents(
+    input.state,
+    input.combatantIds,
+  );
   if (removeIds.size === 0) return Either.right(input.state);
   for (const id of removeIds) {
     if (!input.state.combatants.has(id)) {
@@ -215,10 +218,9 @@ export function removeBattleCombatants(input: {
         },
       ]),
   );
-  const findFamiliars = new Map(
-    [...input.state.findFamiliars].filter(
-      ([ownerId]) => !removeIds.has(ownerId),
-    ),
+  const findFamiliars = findFamiliarsAfterCombatantRemoval(
+    input.state,
+    removeIds,
   );
   return Either.right(
     normalizeBattleGrapples({
@@ -270,5 +272,33 @@ export function removeBattleCombatants(input: {
           ? null
           : input.state.legendaryActionWindow,
     }),
+  );
+}
+
+function combatantIdsWithPresentFindFamiliarDependents(
+  state: BattleState,
+  combatantIds: readonly CombatantId[],
+): ReadonlySet<CombatantId> {
+  const removeIds = new Set(combatantIds);
+  for (const [ownerId, familiar] of state.findFamiliars) {
+    if (familiar.status === "present" && removeIds.has(ownerId)) {
+      removeIds.add(familiar.familiarId);
+    }
+  }
+  return removeIds;
+}
+
+function findFamiliarsAfterCombatantRemoval(
+  state: BattleState,
+  removeIds: ReadonlySet<CombatantId>,
+): BattleState["findFamiliars"] {
+  return new Map(
+    [...state.findFamiliars].filter(
+      ([ownerId, familiar]) =>
+        !removeIds.has(ownerId) &&
+        !(
+          familiar.status === "present" && removeIds.has(familiar.familiarId)
+        ),
+    ),
   );
 }

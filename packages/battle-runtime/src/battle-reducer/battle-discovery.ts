@@ -33,6 +33,7 @@ import {
 } from "../battle-subjects.ts";
 
 import { CombatantId, spellId } from "../identity.ts";
+import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
 
 import {
   attackActionOptionsForActor,
@@ -376,6 +377,7 @@ export function discoverBattleActs(
   }
   if (
     combatantCanTakeActions(state.combatants.get(actorId)) &&
+    !isPresentFindFamiliarCombatant(state, actorId) &&
     !actorHasStatBlockMultiattackActionResource(state, actorId) &&
     canSpendAction(state.currentTurnResources, "attack") &&
     grappleTargetChoices(state, actorId).length > 0
@@ -389,6 +391,7 @@ export function discoverBattleActs(
   }
   if (
     combatantCanTakeActions(state.combatants.get(actorId)) &&
+    !isPresentFindFamiliarCombatant(state, actorId) &&
     !actorHasStatBlockMultiattackActionResource(state, actorId) &&
     canSpendAction(state.currentTurnResources, "attack") &&
     shoveTargetChoices(state, actorId).length > 0
@@ -616,11 +619,10 @@ function fogCloudStrongWindDispersalActs(
   actorId: CombatantId,
 ): readonly AvailableBattleAct[] {
   return [...state.combatants.values()].flatMap((combatant) =>
-    combatant.activeEffects.flatMap(
-      (effect): readonly AvailableBattleAct[] =>
-        effect.kind === "fogCloudObscurement"
-          ? [fogCloudStrongWindDispersalAct(actorId, effect)]
-          : [],
+    combatant.activeEffects.flatMap((effect): readonly AvailableBattleAct[] =>
+      effect.kind === "fogCloudObscurement"
+        ? [fogCloudStrongWindDispersalAct(actorId, effect)]
+        : [],
     ),
   );
 }
