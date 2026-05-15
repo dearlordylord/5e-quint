@@ -364,8 +364,20 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 327,
       "id": "SRDINV87E",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Recursive Level-1 Battle Coverage Planning Review"
+    },
+    {
+      "number": 328,
+      "id": "SRDINV88A",
+      "status": "ready-for-research",
+      "title": "Promote Dancing Lights Movable Dim Light Runtime"
+    },
+    {
+      "number": 329,
+      "id": "SRDINV88B",
+      "status": "ready-for-research",
+      "title": "Recursive Level-1 Battle Feature Planning Review"
     }
   ]
 }
@@ -455,7 +467,9 @@ Keep it synchronized with the DAG table and task details.
 | 324   | SRDINV87B - Promote Faerie Fire Dim Light Emission Runtime         | done | SRDINV86                                                                                                                                                                                  | SRDINV87E                                                                                                           | [SRDINV58B research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV58B_FAERIE_FIRE_OBJECT_LIGHT_BOUNDARY_RESEARCH.md), [SRDINV70A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV70A_LIGHT_ILLUMINATION_RUNTIME_BOUNDARY_RESEARCH.md), [Faerie Fire](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Faerie Fire's affected creatures and affected objects now project concentration-owned 10-foot Dim Light emitter facts from the existing outline effects, with cleanup through the outline lifecycle and no visibility, color rendering, or map illumination derivation. |
 | 325   | SRDINV87C - Promote Hunter's Mark Finding Advantage Runtime        | done | SRDINV86                                                                                                                                                                                  | SRDINV87E                                                                                                           | [Hunter's Mark](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Favored Enemy](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Ranger.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote the caller-supplied Wisdom (Perception or Survival) Advantage roll mode to find the marked target for Hunter's Mark and Ranger Favored Enemy, reusing existing mark ownership and avoiding generic exploration search state. |
 | 326   | SRDINV87D - Promote Sleep Non-Sleeper Auto-Success Runtime         | done | SRDINV86                                                                                                                                                                                  | SRDINV87E                                                                                                           | [Sleep](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [SRDINV38 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV38_SLEEP_SAVE_LOOP_RESEARCH.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: Sleep accepts caller-supplied non-sleeper facts as automatic save successes alongside Exhaustion Immunity, rejects rolled outcomes for automatic-success targets, and preserves the existing repeat-save lifecycle. |
-| 327   | SRDINV87E - Recursive Level-1 Battle Coverage Planning Review      | ready-for-research | SRDINV87A, SRDINV87B, SRDINV87C, SRDINV87D                                                                                                                                               | next concrete batch unless accepted battle coverage is 100%                                                        | [SRDINV86 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV86_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Recompute the user's default acceptance metric: level-1 character creation content loads, battle-relevant units are available, and supported units are usable through promoted battle-runtime paths; append the next runnable batch unless that metric is genuinely complete or every remainder is owner-accepted non-battle/non-runtime. |
+| 327   | SRDINV87E - Recursive Level-1 Battle Coverage Planning Review      | done | SRDINV87A, SRDINV87B, SRDINV87C, SRDINV87D                                                                                                                                               | SRDINV88A                                                        | [SRDINV87E review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV87E_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [SRDINV86 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV86_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Completed: reviewed SRDINV87A-D, kept product readiness separate from supported executable Unit coverage, fixed Dancing Lights' stale inventory classification, and appended SRDINV88A as the next runnable battle-runtime gap. |
+| 328   | SRDINV88A - Promote Dancing Lights Movable Dim Light Runtime       | ready-for-research | SRDINV87E                                                                                                                                                                                | SRDINV88B                                                                                                           | [SRDINV87E review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV87E_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Dancing Lights](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md), [Dim Light](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Lightly Obscured](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Dancing Lights' concentration-owned movable Dim Light sources, Bonus Action repositioning, spacing/range expiry, and combined Medium-form choice without implementing map illumination, Darkvision, line of sight, color rendering, or generic illusion adjudication. |
+| 329   | SRDINV88B - Recursive Level-1 Battle Feature Planning Review       | ready-for-research | SRDINV88A                                                                                                                                                                                | next concrete batch unless accepted battle coverage is 100%                                                        | [SRDINV87E review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV87E_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Recompute product readiness after SRDINV88A, compare it to generated Unit runtime metrics, and append the next concrete runnable batch unless level-1 battle readiness is genuinely complete or every remainder is owner-accepted as non-battle/non-runtime. |
 
 ## Task Details
 
@@ -2217,11 +2231,11 @@ trivial. MBT only if Sleep sequencing changes require it.
 
 ### Task 327 - SRDINV87E - Recursive Level-1 Battle Coverage Planning Review
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV87A, SRDINV87B, SRDINV87C, SRDINV87D
 
-Blocks: next concrete batch unless accepted battle coverage is 100%
+Blocks: SRDINV88A
 
 Research / plan:
 [SRDINV86 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV86_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md),
@@ -2245,9 +2259,84 @@ profile coverage as product completion. If the acceptance metric is not 100%,
 this task must either append runnable implementation tasks or leave itself
 blocked with a precise reason.
 
+Completed: reviewed SRDINV87A-D against the default product readiness metric,
+recorded SRDINV87E review notes, fixed Dancing Lights' stale inventory
+classification, and appended SRDINV88A as the next concrete runnable
+battle-runtime slice. Product readiness remains 298/367 (81.2%); generated
+supported executable Unit coverage remains a distinct 82/117 (70.1%) metric.
+
+Verification: RAW/source review for Dancing Lights, Dim Light, Lightly Obscured,
+and `UBIQUITOUS_LANGUAGE.md`; active-plan consistency across Ralph index, DAG
+table, and task details; `pnpm unit-profile-coverage:check --write`; `pnpm
+quality`; `/simplify` convergence recorded in the review note.
+
+### Task 328 - SRDINV88A - Promote Dancing Lights Movable Dim Light Runtime
+
+Status: `ready-for-research`
+
+Depends on: SRDINV87E
+
+Blocks: SRDINV88B
+
+Research / plan:
+[SRDINV87E review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV87E_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md),
+[Dancing Lights](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md),
+[Dim Light](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[Lightly Obscured](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Dancing Lights through the battle-runtime path as a Magic Action
+cantrip with Concentration up to 1 minute, up to four source-owned torch-size
+light identities or one combined Medium-form identity, 10-foot Dim Light emitter
+projection, Bonus Action repositioning up to 60 feet, 20-foot spacing, 120-foot
+range expiry, recast/replacement behavior, Concentration cleanup, and duration
+cleanup. Add supported-profile and deterministic admission/projection evidence
+only when the runtime surface actually owns those executable facts.
+
+Out of scope: map illumination derivation, Darkvision adjustment, line of sight,
+color/rendering, generic illusion physical-interaction or Study adjudication,
+automatic pathfinding, and generalized movable object state beyond the
+Dancing Lights spell source.
+
+Verification: RAW/source review for Dancing Lights, Dim Light, Lightly Obscured,
+Concentration, Bonus Action, Magic Action, Spell Definition, Spell Invocation,
+and `UBIQUITOUS_LANGUAGE.md`; package-local Quint updates before runtime
+divergence; focused runtime tests for cantrip admission, concentration lifecycle,
+Dim Light emitter projection, Bonus Action movement, spacing/range rejection or
+expiry, combined Medium-form choice, recast cleanup, duration cleanup, and no
+map-illumination/Darkvision derivation; `pnpm unit-profile-coverage:check
+--write`; `pnpm quality`; `/simplify` convergence, minimum two rounds unless the
+final changeset is trivial. MBT only if spell invocation sequencing changes
+require it.
+
+### Task 329 - SRDINV88B - Recursive Level-1 Battle Feature Planning Review
+
+Status: `ready-for-research`
+
+Depends on: SRDINV88A
+
+Blocks: next concrete batch unless accepted battle coverage is 100%
+
+Research / plan:
+[SRDINV87E review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV87E_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md),
+[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md),
+[ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: recompute product readiness after SRDINV88A, compare it to generated Unit
+runtime metrics, SRD inventory rows, the supported executable Unit set, and the
+battle-runtime acceptance surface. Append the next concrete runnable batch
+unless level-1 battle readiness is genuinely 100% or every remaining row is
+explicitly owner-accepted as non-battle/non-runtime.
+
+Out of scope: treating ACTIVE_PLAN exhaustion, a closed lane, supported-profile
+coverage, or catalog admission as product completion.
+
 Verification: RAW/source review for any newly selected rule slices and
 `UBIQUITOUS_LANGUAGE.md`; active-plan consistency across Ralph index, DAG
 table, and task details; `pnpm unit-profile-coverage:check --write` if matrix
-artifacts change; a short review note that reports the product acceptance
-percentage separately from supported-profile runtime percentage; `/simplify`
+artifacts change; a short review note that reports product acceptance
+percentage separately from supported executable Unit coverage; `/simplify`
 convergence, minimum two rounds unless the final changeset is trivial.

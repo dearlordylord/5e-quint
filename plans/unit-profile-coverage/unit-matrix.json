@@ -68,8 +68,8 @@
     },
     "profileClassificationCoverage": {
       "denominator": 144,
-      "numerator": 143,
-      "percent": "99.3%"
+      "numerator": 144,
+      "percent": "100%"
     },
     "qntProfileModelingCoverage": {
       "denominator": 62,
@@ -6906,6 +6906,10 @@
       "catalogAdmission": {
         "collectionId": "srd-5.2.1",
         "status": "installed"
+      },
+      "claim": {
+        "reason": "Movable linked Dim Light sources, concentration lifecycle, Bonus Action repositioning, range expiry, and combined Medium-form choice are not promoted yet; SRDINV88A owns the next battle-runtime slice.",
+        "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [],
