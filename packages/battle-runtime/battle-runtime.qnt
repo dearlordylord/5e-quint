@@ -423,7 +423,8 @@ module battleRuntime {
   type PossessionAttemptDisposition = PossessionPreventedByCreatureTypeProtection | PossessionUnprevented
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
   type SavingThrowRollMode = NormalSavingThrow | AdvantageSavingThrow | DisadvantageSavingThrow
-  type AbilityCheckRollMode = NormalAbilityCheck | DisadvantageAbilityCheck
+  type AbilityCheckSkill = PerceptionSkill | SurvivalSkill | StealthSkill | AthleticsSkill
+  type AbilityCheckRollMode = NormalAbilityCheck | AdvantageAbilityCheck | DisadvantageAbilityCheck
   type SpellSourceClass = SorcererSpellSource | NonSorcererSpellSource
   type RuntimeCreatureType = HumanoidCreature | BeastCreature | AberrationCreature | CelestialCreature | ElementalCreature | FeyCreature | FiendCreature | UndeadCreature
   type ObjectTarget =
@@ -4856,6 +4857,16 @@ module battleRuntime {
       | _ => false
     })) DisadvantageAbilityCheck else NormalAbilityCheck
 
+  pure def huntersMarkFindingAbilityCheckRollMode(effects: Set[ActiveEffect], target: Actor, ability: Ability, skill: AbilityCheckSkill): AbilityCheckRollMode =
+    if (
+      ability == WisAbility and
+      (skill == PerceptionSkill or skill == SurvivalSkill) and
+      effects.exists(effect => match effect {
+        | HuntersMarkDamageRider(data) => data.target == target
+        | _ => false
+      })
+    ) AdvantageAbilityCheck else NormalAbilityCheck
+
   pure def rollModifierMaximumTargets(invocation: RollModifierSpell, slotLevel: int): int =
     match invocation {
       | BaneRollModifier => 3 + (if (slotLevel > 1) slotLevel - 1 else 0)
@@ -9118,6 +9129,11 @@ module battleRuntime {
       assert(resolveFavoredEnemyHuntersMark(initialState, Goblin, 0).state == initialState),
       assert(fighterHuntersMarkDamage(4, Set(HuntersMarkDamageRider({ target: Goblin, transfer: AwaitingTargetDrop, durationTicks: 600 })), Goblin) == 4),
       assert(fighterHuntersMarkDamage(4, Set(HuntersMarkDamageRider({ target: Fighter, transfer: AwaitingTargetDrop, durationTicks: 600 })), Goblin) == 0),
+      assert(huntersMarkFindingAbilityCheckRollMode(Set(HuntersMarkDamageRider({ target: Goblin, transfer: AwaitingTargetDrop, durationTicks: 600 })), Goblin, WisAbility, PerceptionSkill) == AdvantageAbilityCheck),
+      assert(huntersMarkFindingAbilityCheckRollMode(Set(HuntersMarkDamageRider({ target: Goblin, transfer: AwaitingTargetDrop, durationTicks: 600 })), Goblin, WisAbility, SurvivalSkill) == AdvantageAbilityCheck),
+      assert(huntersMarkFindingAbilityCheckRollMode(Set(HuntersMarkDamageRider({ target: Goblin, transfer: AwaitingTargetDrop, durationTicks: 600 })), Goblin, WisAbility, AthleticsSkill) == NormalAbilityCheck),
+      assert(huntersMarkFindingAbilityCheckRollMode(Set(HuntersMarkDamageRider({ target: Goblin, transfer: AwaitingTargetDrop, durationTicks: 600 })), Fighter, WisAbility, PerceptionSkill) == NormalAbilityCheck),
+      assert(huntersMarkFindingAbilityCheckRollMode(Set(HuntersMarkDamageRider({ target: Goblin, transfer: AwaitingTargetDrop, durationTicks: 600 })), Goblin, StrAbility, PerceptionSkill) == NormalAbilityCheck),
       assert(fighterHexDamage(4, Set(HexDamageRider({ target: Goblin, ability: WisAbility, transfer: AwaitingTargetDrop, durationTicks: 600 })), Goblin) == 4),
       assert(fighterHexDamage(4, Set(HexDamageRider({ target: Fighter, ability: WisAbility, transfer: AwaitingTargetDrop, durationTicks: 600 })), Goblin) == 0),
       assert(hexAbilityCheckRollMode(Set(HexDamageRider({ target: Goblin, ability: WisAbility, transfer: AwaitingTargetDrop, durationTicks: 600 })), Goblin, WisAbility) == DisadvantageAbilityCheck),

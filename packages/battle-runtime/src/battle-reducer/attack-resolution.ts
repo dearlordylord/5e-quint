@@ -969,6 +969,7 @@ export function resolveSearch(
         target.hidden.discoveryDc,
         input.state,
         input.subject.actorId,
+        target.combatantId,
       ),
     ]);
   }

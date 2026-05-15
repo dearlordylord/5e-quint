@@ -1400,7 +1400,21 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       actionCost: Schema.Literal("bonusAction"),
       targeting: Schema.Struct({ kind: Schema.Literal("singleCombatant") }),
       damage: BattleRuntimeObjectSchema,
-      abilityChoices: Schema.Union(Schema.Array(AbilitySchema), Schema.Null),
+      abilityCheckBehavior: Schema.Union(
+        Schema.Struct({ kind: Schema.Literal("none") }),
+        Schema.Struct({
+          kind: Schema.Literal("chosenAbilityDisadvantage"),
+          choices: Schema.Array(AbilitySchema),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("findingAdvantage"),
+          ability: Schema.Literal("wis"),
+          skills: Schema.Tuple(
+            Schema.Literal("perception"),
+            Schema.Literal("survival"),
+          ),
+        }),
+      ),
       rangeFeet: MovementFeet,
       expiresAt: BattleRuntimeObjectSchema,
     }),
@@ -1831,7 +1845,7 @@ export const BattleHoleSchema = Schema.Union(
     kind: Schema.Literal("abilityCheck"),
     label: Schema.String,
     ability: AbilitySchema,
-    skill: Schema.Literal("stealth", "perception", "athletics"),
+    skill: Schema.Literal("stealth", "perception", "survival", "athletics"),
     dc: DifficultyClass,
     rollMode: Schema.optionalWith(Schema.Literal(...ATTACK_ROLL_MODES), {
       exact: true,

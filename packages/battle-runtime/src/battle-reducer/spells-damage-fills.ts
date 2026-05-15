@@ -615,7 +615,10 @@ export function spellAbilityChoiceHole(
     ),
     label: `${invocation.spell.name} ability`,
     spell: invocation,
-    choices: invocation.abilityChoices ?? [],
+    choices:
+      invocation.abilityCheckBehavior.kind === "chosenAbilityDisadvantage"
+        ? invocation.abilityCheckBehavior.choices
+        : [],
   };
 }
 

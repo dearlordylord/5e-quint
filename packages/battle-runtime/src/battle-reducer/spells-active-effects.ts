@@ -1281,12 +1281,13 @@ export function applyMarkedDamageRiderSpellEffect(
       sourceCombatantId: actorId,
       targetCombatantId: targetId,
       transfer,
-      abilityCheckDisadvantage:
+      abilityCheckBehavior:
         invocation.action === "transfer"
-          ? invocation.activeEffect.abilityCheckDisadvantage
-          : selectedAbility === undefined
-            ? null
-            : { ability: selectedAbility },
+          ? invocation.activeEffect.abilityCheckBehavior
+          : markedDamageRiderActiveAbilityCheckBehavior(
+              invocation.abilityCheckBehavior,
+              selectedAbility,
+            ),
       damage: invocation.damage,
       expiresAt: existingExpiresAt,
     },
@@ -1298,6 +1299,32 @@ export function applyMarkedDamageRiderSpellEffect(
       activeEffects,
     }),
   };
+}
+
+function markedDamageRiderActiveAbilityCheckBehavior(
+  behavior: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "markedDamageRider"; readonly action: "cast" }
+  >["abilityCheckBehavior"],
+  selectedAbility: Ability | undefined,
+): Extract<
+  BattleActiveEffect,
+  { readonly kind: "spellMarkedDamageRider" }
+>["abilityCheckBehavior"] {
+  return Match.value(behavior).pipe(
+    Match.when({ kind: "none" }, () => ({ kind: "none" as const })),
+    Match.when({ kind: "findingAdvantage" }, (findingAdvantage) => ({
+      kind: "findingAdvantage" as const,
+      ability: findingAdvantage.ability,
+      skills: findingAdvantage.skills,
+    })),
+    Match.when({ kind: "chosenAbilityDisadvantage" }, () =>
+      selectedAbility === undefined
+        ? { kind: "none" as const }
+        : { kind: "abilityDisadvantage" as const, ability: selectedAbility },
+    ),
+    Match.exhaustive,
+  );
 }
 
 export function applyScalarBuffSpellEffect(

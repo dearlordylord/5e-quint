@@ -104,6 +104,7 @@ import {
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
 import { combatantCanSee } from "./battle-reducer/creature-state-leaves.ts";
+import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
 import { applyWeaponMasterySapOnHit } from "./battle-reducer/attack-roll.ts";
 import {
   holeId,
@@ -24302,6 +24303,178 @@ describe("battle runtime", () => {
     ]);
   });
 
+  test("Hunter's Mark projects Advantage on owner checks to find the marked target", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-hunters-mark-finding-advantage"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("hunters_mark")],
+          }),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+        skeletonCreatureInit({ initiative: 5 }),
+      ],
+    });
+    const markAct = discoverBattleActs(state).find(
+      (candidate) =>
+        candidate.subject.tag === "bonusActionSpell" &&
+        candidate.subject.invocation.spellId === "hunters_mark",
+    );
+    if (markAct === undefined) {
+      throw new Error("Expected Hunter's Mark Bonus Action spell act.");
+    }
+    const marked = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: markAct.subject,
+        fills: [
+          targetFill(findHole(markAct.initialHoles, "targetChoice"), goblinId, [
+            {
+              kind: "spellTarget",
+              casterId: fighterId,
+              targetId: goblinId,
+              spellId: "hunters_mark",
+            },
+          ]),
+        ],
+      }),
+    ).state;
+
+    expect(
+      requiredAbilityCheckRollMode(marked, fighterId, "wis", {
+        skill: "perception",
+        targetId: goblinId,
+      }),
+    ).toBe("advantage");
+    expect(
+      requiredAbilityCheckRollMode(marked, fighterId, "wis", {
+        skill: "survival",
+        targetId: goblinId,
+      }),
+    ).toBe("advantage");
+    expect(
+      requiredAbilityCheckRollMode(marked, fighterId, "wis", {
+        skill: "athletics",
+        targetId: goblinId,
+      }),
+    ).toBeUndefined();
+    expect(
+      requiredAbilityCheckRollMode(marked, goblinId, "wis", {
+        skill: "perception",
+        targetId: fighterId,
+      }),
+    ).toBeUndefined();
+    expect(
+      requiredAbilityCheckRollMode(marked, fighterId, "wis", {
+        skill: "perception",
+        targetId: skeletonId,
+      }),
+    ).toBeUndefined();
+
+    const hiddenGoblinState: BattleState = {
+      ...marked,
+      combatants: new Map(marked.combatants).set(goblinId, {
+        ...marked.combatants.get(goblinId)!,
+        hidden: { discoveryDc: difficultyClass(15) },
+      }),
+    };
+    const searchSubject = {
+      tag: "action" as const,
+      actorId: fighterId,
+      action: "search" as const,
+    };
+    const searchAct = findAct(hiddenGoblinState, searchSubject);
+    const searchCheck = requireHole(
+      resolveBattleSubject({
+        state: hiddenGoblinState,
+        subject: searchSubject,
+        fills: [
+          targetFill(
+            findHole(searchAct.initialHoles, "targetChoice"),
+            goblinId,
+          ),
+        ],
+      }),
+      "abilityCheck",
+    );
+    expect(searchCheck).toMatchObject({
+      ability: "wis",
+      skill: "perception",
+      rollMode: "advantage",
+    });
+
+    const dropped = applyBattleHitPointDamage({
+      state: marked,
+      target: marked.combatants.get(goblinId)!,
+      damageAmount: 99,
+      deathFailuresAtZeroHp: 1,
+      damageSourceId: fighterId,
+    });
+    const nextFighterTurn = requireResolved(
+      endTurn({
+        state: requireResolved(
+          endTurn({
+            state: requireResolved(
+              endTurn({ state: dropped, actorId: fighterId }),
+            ).state,
+            actorId: goblinId,
+          }),
+        ).state,
+        actorId: skeletonId,
+      }),
+    ).state;
+    const transferAct = discoverBattleActs(nextFighterTurn).find(
+      (candidate) =>
+        candidate.subject.tag === "bonusActionSpell" &&
+        candidate.subject.invocation.spellId === "hunters_mark",
+    );
+    if (transferAct === undefined) {
+      throw new Error("Expected Hunter's Mark transfer act.");
+    }
+    const transferred = requireResolved(
+      resolveBattleSubject({
+        state: nextFighterTurn,
+        subject: transferAct.subject,
+        fills: [
+          targetFill(
+            findHole(transferAct.initialHoles, "targetChoice"),
+            skeletonId,
+            [
+              {
+                kind: "spellTarget",
+                casterId: fighterId,
+                targetId: skeletonId,
+                spellId: "hunters_mark",
+              },
+            ],
+          ),
+        ],
+      }),
+    ).state;
+    expect(
+      requiredAbilityCheckRollMode(transferred, fighterId, "wis", {
+        skill: "perception",
+        targetId: goblinId,
+      }),
+    ).toBeUndefined();
+    expect(
+      requiredAbilityCheckRollMode(transferred, fighterId, "wis", {
+        skill: "perception",
+        targetId: skeletonId,
+      }),
+    ).toBe("advantage");
+
+    const broken = breakBattleConcentration(transferred, fighterId);
+    expect(
+      requiredAbilityCheckRollMode(broken, fighterId, "wis", {
+        skill: "perception",
+        targetId: skeletonId,
+      }),
+    ).toBeUndefined();
+  });
+
   test("breaking Hunter's Mark concentration clears the marked target rider", () => {
     const state = startBattleRight({
       battleId: battleId("battle-hunters-mark-concentration"),
@@ -24471,7 +24644,7 @@ describe("battle runtime", () => {
       expect.objectContaining({
         kind: "spellMarkedDamageRider",
         targetCombatantId: goblinId,
-        abilityCheckDisadvantage: { ability: "wis" },
+        abilityCheckBehavior: { kind: "abilityDisadvantage", ability: "wis" },
         damage: expect.objectContaining({ damageType: "necrotic" }),
       }),
     ]);
@@ -24790,7 +24963,7 @@ describe("battle runtime", () => {
       expect.objectContaining({
         kind: "spellMarkedDamageRider",
         targetCombatantId: skeletonId,
-        abilityCheckDisadvantage: { ability: "wis" },
+        abilityCheckBehavior: { kind: "abilityDisadvantage", ability: "wis" },
         transfer: {
           kind: "awaitingTargetDrop",
           retargetTiming: "laterTurn",
@@ -24881,6 +25054,12 @@ describe("battle runtime", () => {
         },
       }),
     ]);
+    expect(
+      requiredAbilityCheckRollMode(marked.state, fighterId, "wis", {
+        skill: "survival",
+        targetId: goblinId,
+      }),
+    ).toBe("advantage");
   });
 
   test("stale Favored Enemy Hunter's Mark free-cast resolution preserves turn resources and Concentration", () => {

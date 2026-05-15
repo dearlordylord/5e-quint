@@ -6,7 +6,7 @@
 import { Match } from "effect";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { difficultyClass, type DifficultyClass } from "@dnd/shared/types";
-import type { Ability, UnitRecord } from "@dnd/surface/surface/types";
+import type { Ability, Skill, UnitRecord } from "@dnd/surface/surface/types";
 import type { CombatantId } from "../identity.ts";
 import type {
   BattleMovementSpeedKind,
@@ -106,11 +106,15 @@ export function searchAbilityCheckHole(
   dc: DifficultyClass,
   state?: BattleState,
   actorId?: CombatantId,
+  targetId?: CombatantId,
 ): BattleAbilityCheckHole {
   const rollMode =
     state === undefined || actorId === undefined
       ? undefined
-      : requiredAbilityCheckRollMode(state, actorId, "wis");
+      : requiredAbilityCheckRollMode(state, actorId, "wis", {
+          skill: "perception",
+          ...(targetId === undefined ? {} : { targetId }),
+        });
   return {
     holeInstanceKey: SEARCH_ABILITY_CHECK_HOLE_INSTANCE,
     holeId: SEARCH_ABILITY_CHECK_HOLE_ID,
@@ -149,16 +153,56 @@ export function requiredAbilityCheckRollMode(
   state: BattleState,
   actorId: CombatantId,
   ability: Ability,
+  findingMarkedTarget?: {
+    readonly skill: Skill;
+    readonly targetId?: CombatantId;
+  },
 ): AttackRollMode | undefined {
   const hasDisadvantage = [...state.combatants.values()].some((combatant) =>
     combatant.activeEffects.some(
       (effect) =>
         effect.kind === "spellMarkedDamageRider" &&
         effect.targetCombatantId === actorId &&
-        effect.abilityCheckDisadvantage?.ability === ability,
+        effect.abilityCheckBehavior.kind === "abilityDisadvantage" &&
+        effect.abilityCheckBehavior.ability === ability,
     ),
   );
-  return hasDisadvantage ? "disadvantage" : undefined;
+  const hasAdvantage =
+    findingMarkedTarget?.targetId !== undefined &&
+    activeMarkedDamageRiderFindingAdvantageMatches(
+      state,
+      actorId,
+      ability,
+      findingMarkedTarget.skill,
+      findingMarkedTarget.targetId,
+    );
+  if (hasAdvantage === hasDisadvantage) {
+    return undefined;
+  }
+  return hasAdvantage ? "advantage" : "disadvantage";
+}
+
+function activeMarkedDamageRiderFindingAdvantageMatches(
+  state: BattleState,
+  actorId: CombatantId,
+  ability: Ability,
+  skill: Skill,
+  targetId: CombatantId,
+): boolean {
+  const actor = state.combatants.get(actorId);
+  return (
+    actor?.activeEffects.some(
+      (effect) =>
+        effect.kind === "spellMarkedDamageRider" &&
+        effect.sourceCombatantId === actorId &&
+        effect.targetCombatantId === targetId &&
+        effect.abilityCheckBehavior.kind === "findingAdvantage" &&
+        effect.abilityCheckBehavior.ability === ability &&
+        effect.abilityCheckBehavior.skills.some(
+          (candidate) => candidate === skill,
+        ),
+    ) ?? false
+  );
 }
 
 export function needsHolesResult(

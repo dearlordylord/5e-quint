@@ -485,7 +485,7 @@ export function resolveMarkedDamageRiderSpellAct(input: {
   }
   if (
     input.invocation.action === "cast" &&
-    input.invocation.abilityChoices !== null
+    input.invocation.abilityCheckBehavior.kind === "chosenAbilityDisadvantage"
   ) {
     if (input.fillSet.abilityChoice === undefined) {
       return needsHolesResult(input.input.state, input.input.subject, [

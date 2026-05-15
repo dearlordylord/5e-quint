@@ -633,7 +633,7 @@ export function spellFillSet(
       if (
         invocation.procedure !== "markedDamageRider" ||
         invocation.action !== "cast" ||
-        invocation.abilityChoices === null
+        invocation.abilityCheckBehavior.kind !== "chosenAbilityDisadvantage"
       ) {
         return {
           tag: "invalid",
@@ -647,7 +647,7 @@ export function spellFillSet(
             "Spell ability choice must use the selected spell act ability-choice hole.",
         };
       }
-      if (!invocation.abilityChoices.includes(fill.value)) {
+      if (!invocation.abilityCheckBehavior.choices.includes(fill.value)) {
         return {
           tag: "invalid",
           message: "Spell ability choice is not available for this spell.",

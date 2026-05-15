@@ -323,7 +323,8 @@ export function discoverSupportedSpellInvocations(
       if (invocation.procedure === "markedDamageRider") {
         const targetHole = spellTargetHole(state, actorId, invocation);
         const initialHoles =
-          invocation.action === "cast" && invocation.abilityChoices !== null
+          invocation.action === "cast" &&
+          invocation.abilityCheckBehavior.kind === "chosenAbilityDisadvantage"
             ? [targetHole, spellAbilityChoiceHole(invocation)]
             : [targetHole];
         return targetHole.choices.length === 0

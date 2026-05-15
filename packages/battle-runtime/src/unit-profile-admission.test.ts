@@ -6975,7 +6975,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
         kind: "awaitingTargetDrop",
         retargetTiming: "sameTurn",
       },
-      abilityCheckDisadvantage: null,
+      abilityCheckBehavior: { kind: "none" },
       damage: { expr: { dice: 1, dieSize: 6 }, damageType: "force" as const },
       expiresAt: { kind: "concentration" as const, combatantId: spellCasterId },
     } satisfies SpellMarkedDamageRider;

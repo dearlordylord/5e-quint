@@ -122,6 +122,7 @@ import {
   COMMAND_OPTIONS,
   CRITICAL_HIT_THRESHOLDS,
   type EldritchBlastBeamCount,
+  HUNTERS_MARK_FINDING_SKILLS,
   PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS,
   SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS,
 } from "./battle-reducer/domain-constants.ts";
@@ -724,7 +725,7 @@ export type BattleActiveEffect =
       readonly kind: "spellMarkedDamageRider";
       readonly targetCombatantId: CombatantId;
       readonly transfer: MarkedDamageRiderTransferState;
-      readonly abilityCheckDisadvantage: { readonly ability: Ability } | null;
+      readonly abilityCheckBehavior: MarkedDamageRiderAbilityCheckBehavior;
       readonly damage: {
         readonly expr: DiceExpr;
         readonly damageType: DamageType;
@@ -1954,7 +1955,7 @@ export type MarkedDamageRiderSpellInvocation =
         readonly expr: DiceExpr;
         readonly damageType: DamageType;
       };
-      readonly abilityChoices: readonly Ability[] | null;
+      readonly abilityCheckBehavior: MarkedDamageRiderCastAbilityCheckBehavior;
       readonly retargetTiming: MarkedDamageRiderRetargetTiming;
       readonly rangeFeet: MovementFeet;
       readonly expiresAt: BattleActiveEffectExpiration;
@@ -2545,6 +2546,22 @@ export type SpellAttackDamageComponent = Omit<
 export type AttackSpellDamageAddition = SpellAttackDamageComponent & {
   readonly kind: "attackSpellDamageAddition";
 };
+export type MarkedDamageRiderFindingAdvantage = {
+  readonly kind: "findingAdvantage";
+  readonly ability: Extract<Ability, "wis">;
+  readonly skills: typeof HUNTERS_MARK_FINDING_SKILLS;
+};
+export type MarkedDamageRiderCastAbilityCheckBehavior =
+  | { readonly kind: "none" }
+  | {
+      readonly kind: "chosenAbilityDisadvantage";
+      readonly choices: readonly Ability[];
+    }
+  | MarkedDamageRiderFindingAdvantage;
+export type MarkedDamageRiderAbilityCheckBehavior =
+  | { readonly kind: "none" }
+  | { readonly kind: "abilityDisadvantage"; readonly ability: Ability }
+  | MarkedDamageRiderFindingAdvantage;
 export type SpellMarkedDamageRider = Extract<
   BattleActiveEffect,
   { readonly kind: "spellMarkedDamageRider" }
@@ -3411,7 +3428,7 @@ export type BattleAbilityCheckHole = {
   readonly kind: "abilityCheck";
   readonly label: string;
   readonly ability: Ability;
-  readonly skill: "stealth" | "perception" | "athletics";
+  readonly skill: "stealth" | "perception" | "survival" | "athletics";
   readonly dc: DifficultyClass;
   readonly rollMode?: AttackRollMode;
   readonly requiresTableSpatialFact?: boolean;

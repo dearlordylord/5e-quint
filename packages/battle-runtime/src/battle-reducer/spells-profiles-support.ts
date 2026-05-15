@@ -38,6 +38,7 @@ import {
   type DamageReductionSpellInvocation,
   type JumpMovementReplacementSpellInvocation,
   type HealingSpellActionCost,
+  type MarkedDamageRiderCastAbilityCheckBehavior,
   type MarkedDamageRiderRetargetTiming,
   type RollModifierSpellEffect,
   type RollModifierSpellInvocation,
@@ -55,6 +56,7 @@ import type { CombatantId } from "../identity.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import { activeMarkedDamageRiderEffect } from "./damage-helpers.ts";
 import {
+  HUNTERS_MARK_FINDING_SKILLS,
   PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES,
   PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS,
 } from "./domain-constants.ts";
@@ -1119,7 +1121,7 @@ export function supportedPreparedMarkedDamageRiderSpellProfile(
   if (projection === null) {
     return [];
   }
-  const { abilityChoices, damageType, expr, rangeFeet, retargetTiming } =
+  const { abilityCheckBehavior, damageType, expr, rangeFeet, retargetTiming } =
     projection;
   const activeMark = activeMarkedDamageRiderEffect(actor, spell.id);
   if (activeMark !== null) {
@@ -1173,7 +1175,7 @@ export function supportedPreparedMarkedDamageRiderSpellProfile(
             actionCost: "bonusAction",
             targeting: { kind: "singleCombatant" },
             damage: { expr, damageType },
-            abilityChoices,
+            abilityCheckBehavior,
             retargetTiming,
             rangeFeet,
             expiresAt: favoredEnemyExpiresAt,
@@ -1199,7 +1201,7 @@ export function supportedPreparedMarkedDamageRiderSpellProfile(
               actionCost: "bonusAction",
               targeting: { kind: "singleCombatant" },
               damage: { expr, damageType },
-              abilityChoices,
+              abilityCheckBehavior,
               retargetTiming,
               rangeFeet,
               expiresAt,
@@ -1231,7 +1233,7 @@ function markedDamageRiderTransferIsDiscoverable(
 }
 
 function markedDamageRiderSpellProjection(spell: SpellRecord): {
-  readonly abilityChoices: readonly Ability[] | null;
+  readonly abilityCheckBehavior: MarkedDamageRiderCastAbilityCheckBehavior;
   readonly damageType: DamageType;
   readonly expr: DiceExpr;
   readonly rangeFeet: MovementFeet;
@@ -1257,7 +1259,16 @@ function markedDamageRiderSpellProjection(spell: SpellRecord): {
     spell.provenance.section === "Spells/Descriptions-G-P#Hunter's Mark" &&
     spell.mechanics.operations.length === 1
   ) {
-    return markedDamageRiderDamageProjection(spell, "force", null, "sameTurn");
+    return markedDamageRiderDamageProjection(
+      spell,
+      "force",
+      {
+        kind: "findingAdvantage",
+        ability: "wis",
+        skills: HUNTERS_MARK_FINDING_SKILLS,
+      },
+      "sameTurn",
+    );
   }
 
   if (
@@ -1273,7 +1284,7 @@ function markedDamageRiderSpellProjection(spell: SpellRecord): {
       : markedDamageRiderDamageProjection(
           spell,
           "necrotic",
-          abilityChoices,
+          { kind: "chosenAbilityDisadvantage", choices: abilityChoices },
           "laterTurn",
         );
   }
@@ -1284,10 +1295,10 @@ function markedDamageRiderSpellProjection(spell: SpellRecord): {
 function markedDamageRiderDamageProjection(
   spell: SpellRecord,
   damageType: DamageType,
-  abilityChoices: readonly Ability[] | null,
+  abilityCheckBehavior: MarkedDamageRiderCastAbilityCheckBehavior,
   retargetTiming: MarkedDamageRiderRetargetTiming,
 ): {
-  readonly abilityChoices: readonly Ability[] | null;
+  readonly abilityCheckBehavior: MarkedDamageRiderCastAbilityCheckBehavior;
   readonly damageType: DamageType;
   readonly expr: DiceExpr;
   readonly rangeFeet: MovementFeet;
@@ -1314,7 +1325,7 @@ function markedDamageRiderDamageProjection(
   return expr === null
     ? null
     : {
-        abilityChoices,
+        abilityCheckBehavior,
         damageType,
         expr,
         rangeFeet: movementFeet(mechanics.range.feet),
