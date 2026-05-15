@@ -126,6 +126,37 @@ Avoid contrast names such as `normalized`, `legacy`, `current`, `new`, or `promo
 
 Prefer names for the rule, source shape, or domain object being modeled, not names that describe migration mechanics or implementation history.
 
+### Counterexample And Absurdity Checks
+
+For every proposed API, type, variant, field, hole, fill, or witness name,
+reviewers must actively look for counterexamples and push the design to absurd
+cases before accepting it.
+
+Required reviewer questions:
+
+1. What is the meaningful domain opposite of each adjective or modifier in the
+   name?
+2. Can both the named state and its opposite exist in this model?
+3. Does the type system, parser, reducer, or caller protocol treat those states
+   differently?
+4. If the API is used in the most literal or absurd way its shape permits, does
+   it still make common sense?
+
+Flag:
+
+- adjectives with no modeled opposite, such as `measuredDistanceFeet` when
+  there is no `unmeasuredDistanceFeet` concept;
+- names that sound precise but only describe implementation flavor, provenance,
+  UI workflow, or how a caller obtained a value;
+- witness/fill shapes that let callers restate rule constants instead of
+  supplying only table facts;
+- abstractions that remain type-safe but become silly, contradictory, or
+  misleading when applied to adjacent RAW cases.
+
+Prefer plain domain nouns when the modifier has no executable consequence. For
+example, use `distanceFeet` for a caller-provided distance fact; let the hole
+carry the rule's maximum distance and let the reducer compare the two.
+
 ## Temporal State And Lifecycle
 
 For every field on a durable type, verify the field's lifetime matches the type's lifetime.
