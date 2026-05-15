@@ -7514,7 +7514,13 @@
         "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/find-familiar-lifecycle.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV84I5"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [

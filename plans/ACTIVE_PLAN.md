@@ -334,7 +334,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 322,
       "id": "SRDINV86",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Recursive Level-1 Battle Feature Planning Review"
     }
   ]
@@ -420,7 +420,7 @@ Keep it synchronized with the DAG table and task details.
 | 319   | SRDINV84I3 - Promote Familiar Turn and No-Attack Action Gate       | done | SRDINV84I2                                                                                                                                                                               | SRDINV84I4, SRDINV84I5, SRDINV86                                                                                   | [SRDINV84I research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV84I_FIND_FAMILIAR_COMPANION_RUNTIME_SPLIT_RESEARCH.md), [SRDINV85 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV85_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Find Familiar](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Action](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Initiative](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                           | Completed: present familiars are allied combatants with their own Initiative turn, action, Reaction, and Movement resources; supported non-attack actions remain available, while ordinary Find Familiar attacks and Opportunity Attacks are rejected.                                                                                                                                                                                                       |
 | 320   | SRDINV84I4 - Promote Telepathic Connection and Touch-Spell Delivery | done            | SRDINV84I2, SRDINV84I3                                                                                                                                                                   | SRDINV86                                                                                                           | [SRDINV84I research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV84I_FIND_FAMILIAR_COMPANION_RUNTIME_SPLIT_RESEARCH.md), [SRDINV85 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV85_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Find Familiar](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Telepathy](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Reaction](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                             | Completed: promoted the 100-foot telepathic communication projection without shared-language requirement, caster Bonus Action shared senses until the start of the caster's next turn, and Touch-range spell delivery through a present familiar with atomic familiar Reaction spend. |
 | 321   | SRDINV84I5 - Promote Pact of the Chain Familiar Reaction Attack    | done            | SRDINV84I2, SRDINV84I3                                                                                                                                                                   | SRDINV86                                                                                                           | [SRDINV84I research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV84I_FIND_FAMILIAR_COMPANION_RUNTIME_SPLIT_RESEARCH.md), [SRDINV85 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV85_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Pact of the Chain](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Find Familiar](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Reaction](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                         | Completed: Pact of the Chain now requires selected Pact access, a present owned familiar, one owner Attack-action attack to forgo, familiar Reaction availability, and a supported familiar Stat Block action attack; resolution spends the owner attack and familiar Reaction atomically through the shared Stat Block attack path.                                                                                                                                                                             |
-| 322   | SRDINV86 - Recursive Level-1 Battle Feature Planning Review        | ready-for-research | SRDINV84I1, SRDINV84I2, SRDINV84I3, SRDINV84I4, SRDINV84I5                                                                                                                               | none                                                                                                                | [SRDINV85 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV85_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [SRDINV84I research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV84I_FIND_FAMILIAR_COMPANION_RUNTIME_SPLIT_RESEARCH.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                      | Review the Find Familiar companion-runtime batch, refresh battle-readiness metrics, close evidence-only drift where appropriate, explicitly list remaining unsupported/profile-subset-supported battle-related level-1 rows with owner and reason, and decide whether the lane can close or needs another concrete batch.                                                                      |
+| 322   | SRDINV86 - Recursive Level-1 Battle Feature Planning Review        | done | SRDINV84I1, SRDINV84I2, SRDINV84I3, SRDINV84I4, SRDINV84I5                                                                                                                               | none                                                                                                                | [SRDINV86 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV86_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [SRDINV85 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV85_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [SRDINV84I research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV84I_FIND_FAMILIAR_COMPANION_RUNTIME_SPLIT_RESEARCH.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                      | Completed: reviewed SRDINV84I1-I5, added missing Find Familiar deterministic evidence, refreshed inventory artifacts, recorded remaining subset/unsupported battle-adjacent rows with owners, and closed the lane without appending another batch.                                                                      |
 
 ## Task Details
 
@@ -2004,7 +2004,7 @@ sequencing changes require it.
 
 ### Task 322 - SRDINV86 - Recursive Level-1 Battle Feature Planning Review
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV84I1, SRDINV84I2, SRDINV84I3, SRDINV84I4, SRDINV84I5
 
@@ -2012,6 +2012,7 @@ Blocks: none
 
 Research / plan:
 [SRDINV85 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV85_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md),
+[SRDINV86 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV86_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md),
 [SRDINV84I research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV84I_FIND_FAMILIAR_COMPANION_RUNTIME_SPLIT_RESEARCH.md),
 [SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
 [UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md),
@@ -2027,8 +2028,14 @@ Out of scope: claiming 100% support from catalog/profile admission alone and
 starting another recursive-only continuation without reviewing the implemented
 batch.
 
-Verification: RAW/source review for any newly appended slices plus
-`UBIQUITOUS_LANGUAGE.md`; active-plan consistency across Ralph index, DAG
-table, and task details; `pnpm unit-profile-coverage:check --write` when
-evidence or inventory artifacts change; `/simplify` convergence, minimum two
-rounds unless the final changeset is trivial.
+Completed: reviewed SRDINV84I1-I5, closed the remaining Find Familiar
+owner-evidence drift by adding deterministic admission/projection evidence,
+refreshed `SRD_UNIT_INVENTORY.md`, `srd-unit-inventory.json`,
+`UNIT_REPORT.md`, and `unit-matrix.json`, and documented why no further
+Find Familiar batch is needed.
+
+Verification: RAW/source review for Find Familiar, Pact of the Chain, Action,
+Attack action, Bonus Action, Initiative, Magic Action, Reaction, and Telepathy
+plus `UBIQUITOUS_LANGUAGE.md`; active-plan consistency across Ralph index, DAG
+table, and task details; `pnpm unit-profile-coverage:check --write`;
+`/simplify` convergence recorded in the SRDINV86 review.

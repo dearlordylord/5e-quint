@@ -45,8 +45,7 @@ This is the default `%` for level-1 readiness questions. A row counts only when 
 
 ### Spell Unit Pressure by Disposition
 
-- catalog-installed-owner-evidence-present: 135
-- catalog-installed-owner-evidence-required: 1
+- catalog-installed-owner-evidence-present: 136
 - catalog-only/dead-for-now: 75
 
 ## Recommended Ralph Batches
