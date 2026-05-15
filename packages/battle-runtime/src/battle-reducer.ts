@@ -47,6 +47,7 @@ import type {
   DcSource,
   DiceExpr,
   EffectAtom,
+  CreatureSense,
   Size,
   Skill,
   SpellRecord,
@@ -770,6 +771,17 @@ export type BattleActiveEffect =
       readonly brightRadiusFeet: MovementFeet;
       readonly dimAdditionalFeet: MovementFeet;
       readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "findFamiliarSharedSenses";
+      readonly familiarId: CombatantId;
+      readonly canSeeThroughFamiliar: true;
+      readonly canHearThroughFamiliar: true;
+      readonly familiarSenses: readonly CreatureSense[];
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "startOfTurn" }
+      >;
     });
 export type BattleConcentration = {
   readonly sourceSpellId: SpellRecord["id"];

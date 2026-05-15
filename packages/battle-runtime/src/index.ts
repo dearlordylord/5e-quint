@@ -94,6 +94,15 @@ export {
 } from "./find-familiar-lifecycle.ts";
 export { findFamiliarCreatureTypeOverrideForOwner } from "./find-familiar-state.ts";
 export {
+  FIND_FAMILIAR_TELEPATHY_RANGE_FEET,
+  deliverTouchSpellThroughFindFamiliar,
+  findFamiliarTelepathicConnection,
+  shareFindFamiliarSenses,
+  type FindFamiliarSharedSensesEffect,
+  type FindFamiliarTelepathicConnection,
+  type FindFamiliarWithin100FeetFact,
+} from "./find-familiar-telepathy.ts";
+export {
   BATTLE_REACTION_TRIGGERS,
   BATTLE_READIED_SPELL_TRIGGERS,
   type BattleReactionTrigger,

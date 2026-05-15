@@ -391,6 +391,24 @@ module battleRuntime {
     familiar: Actor,
     objectId: int,
   }
+  type FindFamiliarTelepathicConnection = {
+    owner: Actor,
+    familiar: Actor,
+    rangeFeet: int,
+    sharedLanguageRequired: bool,
+  }
+  type FindFamiliarSharedSenses = {
+    owner: Actor,
+    familiar: Actor,
+    expiresAtStartOfOwnerNextTurn: bool,
+    gainsSight: bool,
+    gainsHearing: bool,
+    gainsSpecialSenses: bool,
+  }
+  type FindFamiliarTouchSpellDelivery = {
+    spellCast: bool,
+    familiarReactionSpent: bool,
+  }
   type FindFamiliarLifecycleResult = {
     lifecycle: FindFamiliarLifecycle,
     itemDropBoundaryEvents: Set[FindFamiliarItemDropBoundaryEvent],
@@ -878,6 +896,61 @@ module battleRuntime {
 
   pure def opportunityAttackAvailableForActor(lifecycle: FindFamiliarLifecycle, actor: Actor, reactionAvailable: bool): bool =
     if (actorIsPresentFindFamiliar(lifecycle, actor)) false else reactionAvailable
+
+  pure def findFamiliarTelepathicConnection(
+    lifecycle: FindFamiliarLifecycle,
+    owner: Actor,
+    familiarWithin100Feet: bool,
+  ): Set[FindFamiliarTelepathicConnection] =
+    match lifecycle {
+      | PresentFindFamiliar(present) =>
+        if (present.owner == owner and familiarWithin100Feet)
+          Set({
+            owner: present.owner,
+            familiar: present.familiar,
+            rangeFeet: 100,
+            sharedLanguageRequired: false,
+          })
+        else Set()
+      | _ => Set()
+    }
+
+  pure def shareFindFamiliarSenses(
+    lifecycle: FindFamiliarLifecycle,
+    owner: Actor,
+    familiarWithin100Feet: bool,
+    bonusActionAvailable: bool,
+  ): Set[FindFamiliarSharedSenses] =
+    match lifecycle {
+      | PresentFindFamiliar(present) =>
+        if (present.owner == owner and familiarWithin100Feet and bonusActionAvailable)
+          Set({
+            owner: present.owner,
+            familiar: present.familiar,
+            expiresAtStartOfOwnerNextTurn: true,
+            gainsSight: true,
+            gainsHearing: true,
+            gainsSpecialSenses: true,
+          })
+        else Set()
+      | _ => Set()
+    }
+
+  pure def findFamiliarTouchSpellDelivery(
+    lifecycle: FindFamiliarLifecycle,
+    owner: Actor,
+    spellHasTouchRange: bool,
+    familiarWithin100Feet: bool,
+    familiarReactionAvailable: bool,
+  ): FindFamiliarTouchSpellDelivery =
+    match lifecycle {
+      | PresentFindFamiliar(present) =>
+        if (present.owner == owner and spellHasTouchRange and familiarWithin100Feet and familiarReactionAvailable)
+          { spellCast: true, familiarReactionSpent: true }
+        else
+          { spellCast: false, familiarReactionSpent: false }
+      | _ => { spellCast: false, familiarReactionSpent: false }
+    }
 
   type Combatant = {
     hp: int,
@@ -7742,6 +7815,47 @@ module battleRuntime {
         initiative: 17,
         placement: FindFamiliarUnoccupiedSpaceWithinSpellRange,
       })),
+    }
+  }
+
+  run test_find_familiar_telepathy_shared_senses_and_touch_delivery = {
+    val present = castFindFamiliarLifecycle(
+      NoFindFamiliar,
+      Set(Fighter),
+      Fighter,
+      Goblin,
+      FindFamiliarBat,
+      FindFamiliarFey,
+      18
+    )
+    val connection = findFamiliarTelepathicConnection(present, Fighter, true)
+    val outOfRangeConnection = findFamiliarTelepathicConnection(present, Fighter, false)
+    val sharedSenses = shareFindFamiliarSenses(present, Fighter, true, true)
+    val noBonusActionSharedSenses = shareFindFamiliarSenses(present, Fighter, true, false)
+    val delivered = findFamiliarTouchSpellDelivery(present, Fighter, true, true, true)
+    val nonTouch = findFamiliarTouchSpellDelivery(present, Fighter, false, true, true)
+    val noReaction = findFamiliarTouchSpellDelivery(present, Fighter, true, true, false)
+
+    all {
+      assert(connection == Set({
+        owner: Fighter,
+        familiar: Goblin,
+        rangeFeet: 100,
+        sharedLanguageRequired: false,
+      })),
+      assert(outOfRangeConnection == Set()),
+      assert(sharedSenses == Set({
+        owner: Fighter,
+        familiar: Goblin,
+        expiresAtStartOfOwnerNextTurn: true,
+        gainsSight: true,
+        gainsHearing: true,
+        gainsSpecialSenses: true,
+      })),
+      assert(noBonusActionSharedSenses == Set()),
+      assert(delivered == { spellCast: true, familiarReactionSpent: true }),
+      assert(nonTouch == { spellCast: false, familiarReactionSpent: false }),
+      assert(noReaction == { spellCast: false, familiarReactionSpent: false }),
     }
   }
 

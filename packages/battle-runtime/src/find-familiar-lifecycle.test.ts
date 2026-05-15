@@ -3,7 +3,15 @@ import * as Either from "effect/Either";
 import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
+import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { Hp } from "@dnd/shared/types";
+import {
+  abilityModifier,
+  attackBonus,
+  DieRollResult,
+  movementFeet,
+  proficiencyBonus,
+} from "@dnd/shared/types";
 import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
@@ -13,6 +21,7 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
   applyFindFamiliarZeroHitPointDisappearance,
@@ -21,21 +30,27 @@ import {
   battleObjectId,
   BattleSnapshotSchema,
   castFindFamiliar,
+  characterId,
   combatantId,
+  deliverTouchSpellThroughFindFamiliar,
   discoverBattleActs,
   findFamiliarFormEligibilityForSpell,
   findFamiliarCreatureTypeOverrideForOwner,
+  findFamiliarTelepathicConnection,
   initiativeScore,
   permanentlyDismissFindFamiliar,
   reappearTemporarilyDismissedFindFamiliar,
   removeBattleCombatants,
   resolveBattleSubject,
+  shareFindFamiliarSenses,
   snapshotBattle,
   startBattle,
   temporarilyDismissFindFamiliar,
+  type BattleCreatureInit,
   type BattleState,
   type FindFamiliarFormEligibility,
 } from "./index.ts";
+import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer.ts";
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
 
 const partySide = battleCombatantSide("party");
@@ -61,11 +76,13 @@ const unitCatalogResult = buildUnitCatalog({
 if (unitCatalogResult.tag !== "ok") {
   throw new Error("Expected SRD Unit catalog for tests.");
 }
-const findFamiliarSpell =
-  unitCatalogResult.catalog.requireUnit("find_familiar");
+const unitCatalog = unitCatalogResult.catalog;
+const findFamiliarSpell = unitCatalog.requireUnit("find_familiar");
 if (findFamiliarSpell.kind !== "spell") {
   throw new Error("Expected Find Familiar spell record.");
 }
+const cureWoundsSpell = requireSpellRecord("cure_wounds");
+const healingWordSpell = requireSpellRecord("healing_word");
 const familiarEligibility: FindFamiliarFormEligibility =
   requireFindFamiliarEligibility(
     findFamiliarFormEligibilityForSpell(findFamiliarSpell),
@@ -78,6 +95,14 @@ function requireFindFamiliarEligibility(
     throw new Error("Expected Find Familiar form eligibility.");
   }
   return eligibility;
+}
+
+function requireSpellRecord(unitId: string): SpellRecord {
+  const unit = unitCatalog.requireUnit(unitId);
+  if (unit.kind !== "spell") {
+    throw new Error(`Expected ${unitId} spell record.`);
+  }
+  return unit;
 }
 const firstTypeOverride = familiarEligibility.creatureTypeOverrideChoices[0];
 if (firstTypeOverride === undefined) {
@@ -142,6 +167,43 @@ function startFixtureBattle(
               },
             },
           ]),
+    ],
+  });
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
+function startSpellcasterFixtureBattle(): BattleState {
+  const result = startBattle({
+    battleId: battleId("find-familiar-telepathy-test"),
+    combatants: [
+      characterCreature({
+        combatantId: casterId,
+        displayName: "Caster",
+        initiative: 12,
+        side: partySide,
+        spellcasting: {
+          sourceClassName: "wizard",
+          spellcastingAbilityModifier: abilityModifier(3),
+          proficiencyBonus: proficiencyBonus(2),
+          canCastSpells: true,
+          cantrips: [],
+          preparedSpells: [cureWoundsSpell, healingWordSpell],
+          featurePreparedSpells: [],
+          invocationSpellAccesses: [],
+          spellSlots: [{ spellLevel: 1, count: 2 }],
+        },
+      }),
+      characterCreature({
+        combatantId: enemyId,
+        displayName: "Target",
+        initiative: 10,
+        side: enemySide,
+        currentHp: 1,
+        maxHp: 12,
+      }),
     ],
   });
   if (Either.isLeft(result)) {
@@ -215,6 +277,54 @@ function withFreshMagicAction(state: BattleState): BattleState {
     currentTurnResources: {
       ...state.currentTurnResources,
       actionResources: [{ kind: "action", source: "turn" }],
+    },
+  };
+}
+
+function characterCreature(input: {
+  readonly combatantId: typeof casterId | typeof enemyId;
+  readonly displayName: string;
+  readonly initiative: number;
+  readonly side: typeof partySide | typeof enemySide;
+  readonly spellcasting?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["spellcasting"];
+  readonly currentHp?: number;
+  readonly maxHp?: number;
+}): BattleCreatureInit {
+  return {
+    combatantId: input.combatantId,
+    displayName: input.displayName,
+    initiative: initiativeScore(input.initiative),
+    side: input.side,
+    creatureInit: {
+      kind: "character",
+      characterId: characterId(`${input.combatantId}-character`),
+      characterUnitRefs: [],
+      classLevels: [{ className: "wizard", level: 1 }],
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(input.currentHp ?? 12),
+      maxHp: Hp(input.maxHp ?? 12),
+      tempHp: Hp(0),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: {
+        kind: "unarmedStrike",
+        effect: {
+          kind: "damage",
+          damage: { kind: "base", damageType: "bludgeoning", flat: 1 },
+        },
+        attackAbility: "str",
+        attackAbilityModifier: abilityModifier(0),
+        attackBonus: attackBonus(2),
+        damageAbilityModifier: abilityModifier(0),
+      },
+      ...(input.spellcasting === undefined
+        ? {}
+        : { spellcasting: input.spellcasting }),
     },
   };
 }
@@ -678,6 +788,248 @@ describe("Find Familiar lifecycle", () => {
       }),
     ]);
     expect(damagedSnapshot.turnOrder).not.toContain(familiarId);
+  });
+
+  test("projects 100-foot telepathy without a shared-language requirement", () => {
+    const cast = castCatFamiliar(startFixtureBattle());
+    expect(cast.tag).toBe("resolved");
+    if (cast.tag !== "resolved") return;
+
+    expect(
+      findFamiliarTelepathicConnection(cast.state, {
+        kind: "findFamiliarWithin100FeetOfOwner",
+        ownerId: casterId,
+        familiarId,
+      }),
+    ).toEqual({
+      ownerId: casterId,
+      familiarId,
+      rangeFeet: 100,
+      sharedLanguageRequired: false,
+    });
+    expect(
+      findFamiliarTelepathicConnection(cast.state, {
+        kind: "findFamiliarWithin100FeetOfOwner",
+        ownerId: casterId,
+        familiarId: otherCombatantId,
+      }),
+    ).toBeNull();
+  });
+
+  test("shares familiar senses as a Bonus Action until caster's next turn", () => {
+    const cast = castCatFamiliar(startFixtureBattle());
+    expect(cast.tag).toBe("resolved");
+    if (cast.tag !== "resolved") return;
+
+    const shared = shareFindFamiliarSenses({
+      state: cast.state,
+      casterId,
+      fact: {
+        kind: "findFamiliarWithin100FeetOfOwner",
+        ownerId: casterId,
+        familiarId,
+      },
+    });
+
+    expect(shared.tag).toBe("resolved");
+    if (shared.tag !== "resolved") return;
+    expect(shared.state.currentTurnResources.currentHasBonusAction).toBe(false);
+    const caster = shared.state.combatants.get(casterId);
+    const effect = caster?.activeEffects.find(
+      (candidate) => candidate.kind === "findFamiliarSharedSenses",
+    );
+    expect(effect).toMatchObject({
+      sourceSpellId: "find_familiar",
+      sourceCombatantId: casterId,
+      familiarId,
+      canSeeThroughFamiliar: true,
+      canHearThroughFamiliar: true,
+      expiresAt: { kind: "startOfTurn", combatantId: casterId },
+    });
+    const familiar = cast.state.combatants.get(familiarId);
+    expect(effect?.familiarSenses).toEqual(
+      familiar?.origin.kind === "statBlock"
+        ? familiar.origin.statBlock.statBlock.senses
+        : [],
+    );
+
+    const blocked = shareFindFamiliarSenses({
+      state: shared.state,
+      casterId,
+      fact: {
+        kind: "findFamiliarWithin100FeetOfOwner",
+        ownerId: casterId,
+        familiarId,
+      },
+    });
+    expect(blocked.tag).toBe("invalid");
+    if (blocked.tag !== "invalid") return;
+    expect(blocked.reason).toBe("staleSubject");
+  });
+
+  test("delivers Touch spells through a present familiar and atomically spends its Reaction", () => {
+    const cast = castCatFamiliar(startSpellcasterFixtureBattle());
+    expect(cast.tag).toBe("resolved");
+    if (cast.tag !== "resolved") return;
+    const cureWoundsAct = discoverBattleActs(cast.state).find(
+      (act) =>
+        act.subject.tag === "actionSpell" &&
+        act.subject.invocation.spellId === "cure_wounds",
+    );
+    expect(cureWoundsAct?.subject.tag).toBe("actionSpell");
+    if (cureWoundsAct?.subject.tag !== "actionSpell") return;
+    const targetFill = {
+      kind: "targetChoice" as const,
+      holeId: ATTACK_TARGET_HOLE_ID,
+      value: enemyId,
+      spatialFacts: [
+        {
+          kind: "spellTarget" as const,
+          casterId,
+          targetId: enemyId,
+          spellId: "cure_wounds",
+        },
+      ],
+    };
+    const awaitingHealingRoll = deliverTouchSpellThroughFindFamiliar({
+      state: cast.state,
+      subject: cureWoundsAct.subject,
+      fills: [targetFill],
+      fact: {
+        kind: "findFamiliarWithin100FeetOfOwner",
+        ownerId: casterId,
+        familiarId,
+      },
+    });
+    expect(awaitingHealingRoll.tag).toBe("needsHoles");
+    expect(cast.state.combatants.get(familiarId)?.reactionAvailable).toBe(true);
+    if (awaitingHealingRoll.tag !== "needsHoles") return;
+
+    const delivered = deliverTouchSpellThroughFindFamiliar({
+      state: cast.state,
+      subject: cureWoundsAct.subject,
+      fills: [
+        targetFill,
+        {
+          kind: "rolledDice",
+          holeId: awaitingHealingRoll.holes[0]?.holeId ?? ATTACK_TARGET_HOLE_ID,
+          value: [{ results: [DieRollResult(4), DieRollResult(4)] }],
+        },
+      ],
+      fact: {
+        kind: "findFamiliarWithin100FeetOfOwner",
+        ownerId: casterId,
+        familiarId,
+      },
+    });
+
+    expect(delivered.tag).toBe("resolved");
+    if (delivered.tag !== "resolved") return;
+    expect(delivered.state.combatants.get(familiarId)?.reactionAvailable).toBe(
+      false,
+    );
+    expect(Number(delivered.state.combatants.get(enemyId)?.hp)).toBe(12);
+    expect(delivered.state.currentTurnResources.spellSlotExpendedThisTurn).toBe(
+      true,
+    );
+  });
+
+  test("ordinary spell resolution rejects forged familiar-delivery spatial facts", () => {
+    const cast = castCatFamiliar(startSpellcasterFixtureBattle());
+    expect(cast.tag).toBe("resolved");
+    if (cast.tag !== "resolved") return;
+    const cureWoundsAct = discoverBattleActs(cast.state).find(
+      (act) =>
+        act.subject.tag === "actionSpell" &&
+        act.subject.invocation.spellId === "cure_wounds",
+    );
+    expect(cureWoundsAct?.subject.tag).toBe("actionSpell");
+    if (cureWoundsAct?.subject.tag !== "actionSpell") return;
+
+    const forgedFamiliarDeliveryFill = {
+      kind: "targetChoice",
+      holeId: ATTACK_TARGET_HOLE_ID,
+      value: enemyId,
+      spatialFacts: [
+        {
+          kind: "familiarDeliveredTouchSpellTarget",
+          casterId,
+          familiarId,
+          targetId: enemyId,
+          spellId: "cure_wounds",
+        },
+      ],
+    } as unknown as Parameters<typeof resolveBattleSubject>[0]["fills"][number];
+
+    const bypass = resolveBattleSubject({
+      state: cast.state,
+      subject: cureWoundsAct.subject,
+      fills: [forgedFamiliarDeliveryFill],
+    });
+
+    expect(bypass.tag).toBe("invalid");
+    expect(cast.state.combatants.get(familiarId)?.reactionAvailable).toBe(true);
+    expect(cast.state.currentTurnResources.spellSlotExpendedThisTurn).toBe(
+      false,
+    );
+  });
+
+  test("rejects non-Touch delivery and unavailable familiar Reactions before casting", () => {
+    const cast = castCatFamiliar(startSpellcasterFixtureBattle());
+    expect(cast.tag).toBe("resolved");
+    if (cast.tag !== "resolved") return;
+    const healingWordAct = discoverBattleActs(cast.state).find(
+      (act) =>
+        act.subject.tag === "bonusActionSpell" &&
+        act.subject.invocation.spellId === "healing_word",
+    );
+    expect(healingWordAct?.subject.tag).toBe("bonusActionSpell");
+    if (healingWordAct?.subject.tag !== "bonusActionSpell") return;
+
+    const nonTouch = deliverTouchSpellThroughFindFamiliar({
+      state: cast.state,
+      subject: healingWordAct.subject,
+      fills: [],
+      fact: {
+        kind: "findFamiliarWithin100FeetOfOwner",
+        ownerId: casterId,
+        familiarId,
+      },
+    });
+    expect(nonTouch.tag).toBe("invalid");
+    expect(cast.state.currentTurnResources.spellSlotExpendedThisTurn).toBe(
+      false,
+    );
+    expect(cast.state.combatants.get(familiarId)?.reactionAvailable).toBe(true);
+
+    const cureWoundsAct = discoverBattleActs(cast.state).find(
+      (act) =>
+        act.subject.tag === "actionSpell" &&
+        act.subject.invocation.spellId === "cure_wounds",
+    );
+    expect(cureWoundsAct?.subject.tag).toBe("actionSpell");
+    if (cureWoundsAct?.subject.tag !== "actionSpell") return;
+    const withoutReaction = {
+      ...cast.state,
+      combatants: new Map(cast.state.combatants).set(familiarId, {
+        ...cast.state.combatants.get(familiarId)!,
+        reactionAvailable: false,
+      }),
+    };
+    const blocked = deliverTouchSpellThroughFindFamiliar({
+      state: withoutReaction,
+      subject: cureWoundsAct.subject,
+      fills: [],
+      fact: {
+        kind: "findFamiliarWithin100FeetOfOwner",
+        ownerId: casterId,
+        familiarId,
+      },
+    });
+    expect(blocked.tag).toBe("invalid");
+    expect(withoutReaction.currentTurnResources.spellSlotExpendedThisTurn).toBe(
+      false,
+    );
   });
 
   test("snapshot schema encodes and rejects invalid familiar snapshots", () => {

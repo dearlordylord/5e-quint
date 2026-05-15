@@ -2049,14 +2049,16 @@
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/find-familiar-lifecycle.ts",
-        "packages/battle-runtime/src/find-familiar-state.ts"
+        "packages/battle-runtime/src/find-familiar-state.ts",
+        "packages/battle-runtime/src/find-familiar-telepathy.ts"
       ],
-      "sourceBoundary": "The runtime consumes the authored Find Familiar spell form catalog, caller-selected form and Celestial/Fey/Fiend type choice, caller-supplied unoccupied placement facts, caller-supplied familiar identity and Initiative facts, and caller-supplied held-item drop boundary facts. It records companion lifecycle and replacement state, inserts a present familiar as an allied combatant with its own Initiative turn and ordinary action/Reaction resources, allows supported non-attack actions, and rejects ordinary Find Familiar attacks.",
+      "sourceBoundary": "The runtime consumes the authored Find Familiar spell form catalog, caller-selected form and Celestial/Fey/Fiend type choice, caller-supplied unoccupied placement facts, caller-supplied familiar identity and Initiative facts, caller-supplied 100-foot connection facts, ordinary spell fills for Touch delivery, and caller-supplied held-item drop boundary facts. It records companion lifecycle and replacement state, inserts a present familiar as an allied combatant with its own Initiative turn and ordinary action/Reaction resources, allows supported non-attack actions, rejects ordinary Find Familiar attacks, projects telepathic communication without shared language, applies the caster Bonus Action shared-senses effect until the caster's next turn, and resolves Touch spell delivery atomically with the familiar Reaction spend.",
       "taskRefs": [
         "SRDINV84I2",
-        "SRDINV84I3"
+        "SRDINV84I3",
+        "SRDINV84I4"
       ],
-      "title": "Find Familiar owns companion lifecycle, replacement, selected form, and type override state",
+      "title": "Find Familiar owns companion lifecycle, replacement, form, type, telepathy, and touch-delivery state",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -3366,6 +3368,22 @@
         "spell.find-familiar-lifecycle"
       ],
       "taskId": "SRDINV84I3"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint ownership covers Find Familiar 100-foot telepathic connection projection without shared language, Bonus Action shared senses until the caster's next turn, and Touch spell delivery through a present familiar with atomic familiar Reaction spend.",
+      "profileIds": [
+        "spell.find-familiar-lifecycle"
+      ],
+      "taskId": "SRDINV84I4"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover telepathy range projection, shared-language independence, Bonus Action shared-senses duration and special-sense projection, Touch-only delivery, familiar Reaction spend, atomic cast/delivery failure, and no map-visibility derivation.",
+      "profileIds": [
+        "spell.find-familiar-lifecycle"
+      ],
+      "taskId": "SRDINV84I4"
     }
   ],
   "units": [
@@ -7455,10 +7473,6 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "SRDINV84I4",
-            "mechanic": "telepathy, shared senses, and touch-spell delivery through the present familiar identity"
-          },
-          {
             "followUpTaskId": "SRDINV86",
             "mechanic": "Pact of the Chain special familiar forms and familiar Reaction attack exception"
           }
@@ -7473,7 +7487,10 @@
           "one-familiar-per-caster lifecycle and atomic recast replacement",
           "caller-supplied Initiative and unoccupied-space placement facts",
           "ordinary Find Familiar attack and Opportunity Attack rejection while allowing supported non-attack actions",
-          "Magic-action temporary dismissal and reappearance, permanent dismissal, 0-HP disappearance, and held-item drop boundary events for 0-HP disappearance and pocket-dimension entry"
+          "Magic-action temporary dismissal and reappearance, permanent dismissal, 0-HP disappearance, and held-item drop boundary events for 0-HP disappearance and pocket-dimension entry",
+          "100-foot telepathic connection projection without shared-language requirement",
+          "Bonus Action shared sight, hearing, and special-sense benefits until the start of the caster's next turn",
+          "Touch-range spell delivery through a present familiar within 100 feet, atomically spending the familiar's Reaction with the spell invocation"
         ],
         "tag": "profile-subset-supported"
       },
@@ -7490,14 +7507,16 @@
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/find-familiar-lifecycle.ts",
-            "packages/battle-runtime/src/find-familiar-state.ts"
+            "packages/battle-runtime/src/find-familiar-state.ts",
+            "packages/battle-runtime/src/find-familiar-telepathy.ts"
           ],
-          "sourceBoundary": "The runtime consumes the authored Find Familiar spell form catalog, caller-selected form and Celestial/Fey/Fiend type choice, caller-supplied unoccupied placement facts, caller-supplied familiar identity and Initiative facts, and caller-supplied held-item drop boundary facts. It records companion lifecycle and replacement state, inserts a present familiar as an allied combatant with its own Initiative turn and ordinary action/Reaction resources, allows supported non-attack actions, and rejects ordinary Find Familiar attacks.",
+          "sourceBoundary": "The runtime consumes the authored Find Familiar spell form catalog, caller-selected form and Celestial/Fey/Fiend type choice, caller-supplied unoccupied placement facts, caller-supplied familiar identity and Initiative facts, caller-supplied 100-foot connection facts, ordinary spell fills for Touch delivery, and caller-supplied held-item drop boundary facts. It records companion lifecycle and replacement state, inserts a present familiar as an allied combatant with its own Initiative turn and ordinary action/Reaction resources, allows supported non-attack actions, rejects ordinary Find Familiar attacks, projects telepathic communication without shared language, applies the caster Bonus Action shared-senses effect until the caster's next turn, and resolves Touch spell delivery atomically with the familiar Reaction spend.",
           "taskRefs": [
             "SRDINV84I2",
-            "SRDINV84I3"
+            "SRDINV84I3",
+            "SRDINV84I4"
           ],
-          "title": "Find Familiar owns companion lifecycle, replacement, selected form, and type override state",
+          "title": "Find Familiar owns companion lifecycle, replacement, form, type, telepathy, and touch-delivery state",
           "verificationOwners": [
             {
               "kind": "qnt-proof",

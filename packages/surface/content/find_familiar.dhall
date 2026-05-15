@@ -11,14 +11,15 @@
 --   Beast that has a Challenge Rating of 0" is represented as an
 --   eligibility rule over the same Stat Block catalog.
 --
--- DEFERRED — spell-driven utility atoms:
---   • Telepathic connection (100 ft) and shared-senses bonus action:
---     encoded via control.telepathy.
+-- Runtime utility:
+--   • Telepathic connection (100 ft) and shared-senses bonus action are
+--     encoded via control.telepathy and promoted by battle-runtime.
 --   • "Your familiar can deliver the touch" (touch-spell proxy within
---     100 ft, costs the familiar's reaction): the underlying
---     deliver_touch_spell atom exists in the v4 effect vocabulary but
---     no EffectAtom variant carries it through this family yet.
---     Recorded here as a trait with no mechanical effect.
+--     100 ft, costs the familiar's reaction) is promoted by
+--     battle-runtime as a single cast/delivery procedure, not as a
+--     separate authored EffectAtom.
+--
+-- DEFERRED — remaining lifecycle details:
 --   • Pocket-dimension dismissal/recall (30 ft reappearance on Magic
 --     action): CreatureDismissal.manualDismiss = "magic_action"
 --     captures the sheathe/recall cycle at a coarse grain; the 30-ft
