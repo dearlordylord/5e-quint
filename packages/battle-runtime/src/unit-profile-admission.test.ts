@@ -17,14 +17,14 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30D heroism
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV58C faerie_fire
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30F resistance
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-held-light-emitter spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31A divine_favor
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31C divine_smite
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31D ensnaring_strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31E searing_smite
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31F true_strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31B hunters_mark
-// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV32B produce_flame
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV87A produce_flame
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84H shillelagh
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84A fire_bolt
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84B sorcerous_burst
@@ -8385,6 +8385,23 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
         dimAdditionalFeet: 20,
       }),
     );
+    expect(resolved.snapshot.lightEmitters).toEqual([
+      {
+        kind: "spellLightEmitter",
+        sourceSpellId: produceFlameUnitId,
+        sourceCombatantId: spellCasterId,
+        attachment: { kind: "combatant", combatantId: spellCasterId },
+        emission: {
+          kind: "brightAndDim",
+          brightRadiusFeet: movementFeet(20),
+          dimAdditionalFeet: movementFeet(20),
+        },
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(100),
+        },
+      },
+    ]);
     expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
       false,
     );
@@ -8482,6 +8499,24 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
         }),
       }),
     );
+    expect(resolved.snapshot.lightEmitters).toHaveLength(1);
+    expect(resolved.snapshot.lightEmitters[0]).toEqual(
+      expect.objectContaining({
+        kind: "spellLightEmitter",
+        sourceSpellId: produceFlameUnitId,
+        sourceCombatantId: spellCasterId,
+        attachment: { kind: "combatant", combatantId: spellCasterId },
+        emission: {
+          kind: "brightAndDim",
+          brightRadiusFeet: movementFeet(20),
+          dimAdditionalFeet: movementFeet(20),
+        },
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(100),
+        },
+      }),
+    );
   });
 
   test("produce_flame held light expires on its timed duration", () => {
@@ -8574,6 +8609,7 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
             effect.sourceSpellId === produceFlameUnitId,
         ),
     ).toBe(false);
+    expect(expired.snapshot.lightEmitters).toEqual([]);
   });
 
   test("produce_flame hurl is admitted only while the caster holds the flame", () => {
@@ -8648,7 +8684,7 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
     ]);
   });
 
-  test("produce_flame hurl resolves ranged spell attack Fire damage without ending the held flame", () => {
+  test("produce_flame hurl resolves ranged spell attack Fire damage and ends the held flame", () => {
     const spell = spellRecord(produceFlameUnitId);
     const state = spellBattle({
       cantrips: [spell],
@@ -8731,13 +8767,89 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
             effect.kind === "heldLight" &&
             effect.sourceSpellId === produceFlameUnitId,
         ),
-    ).toBe(true);
+    ).toBe(false);
+    expect(resolved.snapshot.lightEmitters).toEqual([]);
     expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
       false,
     );
     expect(resolved.state.currentTurnResources.spellSlotExpendedThisTurn).toBe(
       false,
     );
+  });
+
+  test("produce_flame hurl hit reaction window does not expose stale held light", () => {
+    const spell = spellRecord(produceFlameUnitId);
+    const state = spellBattle({
+      cantrips: [spell],
+      targetPreparedSpells: [spellRecord(shieldUnitId)],
+      targetHp: 20,
+      targetMaxHp: 20,
+    });
+    const lit = resolveBattleSubject({
+      state,
+      subject: bonusSpellAct({ state, spellId: produceFlameUnitId }).subject,
+      fills: [],
+    });
+    if (lit.tag !== "resolved") {
+      throw new Error("Expected Produce Flame held light to resolve.");
+    }
+    const hurl = spellAct({ state: lit.state, spellId: produceFlameUnitId });
+    const target = requireHole(hurl.initialHoles, "targetChoice");
+    const targetFill = spellTargetFill(
+      target,
+      produceFlameUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+    const attack = requireResultHole(
+      resolveBattleSubject({
+        state: lit.state,
+        subject: hurl.subject,
+        fills: [targetFill],
+      }),
+      "attackRoll",
+    );
+
+    const awaitingReaction = resolveBattleSubject({
+      state: lit.state,
+      subject: hurl.subject,
+      fills: [
+        targetFill,
+        attackRollFill(attack, { total: 18, naturalD20: 12 }),
+      ],
+    });
+
+    expect(awaitingReaction).toMatchObject({
+      tag: "needsHoles",
+      snapshot: { pendingReaction: { trigger: "attackHit" } },
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected Produce Flame hurl to open attack-hit window.");
+    }
+    expect(awaitingReaction.snapshot.lightEmitters).toEqual([]);
+    expect(
+      awaitingReaction.state.combatants
+        .get(spellCasterId)
+        ?.activeEffects.some(
+          (effect) =>
+            effect.kind === "heldLight" &&
+            effect.sourceSpellId === produceFlameUnitId,
+        ),
+    ).toBe(false);
+
+    const afterDecline = resolveBattleReaction({
+      state: awaitingReaction.state,
+      fill: reactionDecisionFill(
+        awaitingReaction.snapshot.pendingReaction!.decisionHole,
+        { kind: "decline", reactorId: spellTargetId },
+      ),
+    });
+
+    expect(afterDecline).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "rolledDice" }],
+      snapshot: { pendingReaction: null, lightEmitters: [] },
+    });
   });
 
   test("produce_flame hurl object miss spends the Magic action without object damage", () => {
@@ -8781,6 +8893,7 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
           { combatantId: spellTargetId },
         ],
         turn: { actionResources: [] },
+        lightEmitters: [],
       },
     });
     if (resolved.tag !== "resolved") {
@@ -8872,7 +8985,8 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
             effect.kind === "heldLight" &&
             effect.sourceSpellId === produceFlameUnitId,
         ),
-    ).toBe(true);
+    ).toBe(false);
+    expect(resolved.snapshot.lightEmitters).toEqual([]);
   });
 });
 
@@ -16187,6 +16301,7 @@ function spellBattle(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["spellcasting"];
+  readonly targetPreparedSpells?: readonly SpellRecord[];
   readonly casterClassLevels?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -16246,9 +16361,22 @@ function spellBattle(input: {
         ...(input.targetUnitRefs === undefined
           ? {}
           : { characterUnitRefs: input.targetUnitRefs }),
-        ...(input.targetSpellcasting === undefined
+        ...(input.targetSpellcasting === undefined &&
+        input.targetPreparedSpells === undefined
           ? {}
-          : { spellcasting: input.targetSpellcasting }),
+          : {
+              spellcasting: input.targetSpellcasting ?? {
+                sourceClassName: "wizard",
+                spellcastingAbilityModifier: abilityModifier(3),
+                proficiencyBonus: proficiencyBonus(2),
+                canCastSpells: true,
+                cantrips: [],
+                preparedSpells: input.targetPreparedSpells ?? [],
+                featurePreparedSpells: [],
+                invocationSpellAccesses: [],
+                spellSlots: [{ spellLevel: 1, count: 1 }],
+              },
+            }),
       }),
       ...(input.extraTargetIds ?? []).map((combatantId, index) =>
         characterCreature({

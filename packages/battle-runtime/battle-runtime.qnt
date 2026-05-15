@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.creature-type-protection-and-charm spell.find-familiar-lifecycle spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.creature-type-protection-and-charm spell.find-familiar-lifecycle spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points
@@ -25,6 +25,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-sanctuary-targeting-interdiction
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.creature-type-protection-and-charm
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-object-light
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-held-light-emitter
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-make-stable
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.find-familiar-lifecycle
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.reaction-hellish-rebuke spell.invocation-damage-save-or-attack
@@ -4997,6 +4998,35 @@ module battleRuntime {
       | _ => false
     })
 
+  pure def produceFlameHeldLightEmitter(durationTicks: int): LightEmitter =
+    SpellLightEmitter({
+      source: Fighter,
+      sourceSpell: ProduceFlame,
+      attachment: CombatantLightEmitter({ actor: Fighter }),
+      emission: BrightAndDimLightEmission({
+        brightRadiusFeet: produceFlameBrightLightRadiusFeet,
+        dimAdditionalFeet: produceFlameDimLightAdditionalFeet,
+      }),
+      expiresAt: DurationLightEmitterExpiration({ durationTicks: durationTicks }),
+    })
+
+  pure def produceFlameHeldLightEmitters(effects: Set[ActiveEffect]): Set[LightEmitter] =
+    effects
+      .map(effect => match effect {
+        | ProduceFlameHeldLight(data) => Set(produceFlameHeldLightEmitter(data.durationTicks))
+        | _ => Set()
+      })
+      .fold(Set(), (emitters, emitterSet) => emitters.union(emitterSet))
+
+  pure def battleRuntimeLightEmitters(state: BattleState): Set[LightEmitter] =
+    state.lightEmitters.union(produceFlameHeldLightEmitters(state.fighter.activeEffects))
+
+  pure def fighterWithoutProduceFlameHeldLight(state: BattleState): Combatant =
+    {
+      ...state.fighter,
+      activeEffects: activeEffectsWithoutProduceFlameHeldLight(state.fighter.activeEffects),
+    }
+
   pure def resolveProduceFlameHeldLight(state: BattleState): BattleState =
     if (
       currentActor(state) == Fighter and
@@ -5132,10 +5162,11 @@ module battleRuntime {
       state
     else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), 20))) {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
-      { ...rolled, actionAvailable: false }
+      { ...rolled, fighter: fighterWithoutProduceFlameHeldLight(rolled), actionAvailable: false }
     }
     else if (state.goblin.reactionAvailable and not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
-      openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
+      val rolled = recordFighterAttackRoll(revealFighterHidden(state))
+      openReactionWindow({ ...rolled, fighter: fighterWithoutProduceFlameHeldLight(rolled) }, {
         trigger: AttackHit,
         eligibleReactors: Set(Goblin),
         offeredReactors: Set(),
@@ -5146,7 +5177,7 @@ module battleRuntime {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
       val adjustedDamage = damageAfterAdjustments(damageRoll, Fire, Set(), Set(), Set())
       val damaged = applyDamageFromSource(state.goblin, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter)
-      { ...rolled, goblin: damaged, actionAvailable: false }
+      { ...rolled, fighter: fighterWithoutProduceFlameHeldLight(rolled), goblin: damaged, actionAvailable: false }
     }
 
   pure def damageAfterAdjustments(
@@ -10710,6 +10741,7 @@ module battleRuntime {
       assert(not(result.spellSlotExpendedThisTurn)),
       assert(produceFlameBrightLightRadiusFeet == 20),
       assert(produceFlameDimLightAdditionalFeet == 20),
+      assert(battleRuntimeLightEmitters(result).contains(produceFlameHeldLightEmitter(produceFlameDurationTicks))),
     }
   }
 
@@ -10720,6 +10752,7 @@ module battleRuntime {
     all {
       assert(recast.fighter.activeEffects.contains(ProduceFlameHeldLight({ durationTicks: produceFlameDurationTicks }))),
       assert(recast.fighter.activeEffects.size() == 1),
+      assert(battleRuntimeLightEmitters(recast) == Set(produceFlameHeldLightEmitter(produceFlameDurationTicks))),
     }
   }
 
@@ -10736,6 +10769,8 @@ module battleRuntime {
     all {
       assert(activeEffectsContainProduceFlameHeldLight(stillSameRound.fighter.activeEffects)),
       assert(not(activeEffectsContainProduceFlameHeldLight(nextRound.fighter.activeEffects))),
+      assert(battleRuntimeLightEmitters(stillSameRound).contains(produceFlameHeldLightEmitter(1))),
+      assert(not(battleRuntimeLightEmitters(nextRound).contains(produceFlameHeldLightEmitter(1)))),
     }
   }
 
@@ -10812,9 +10847,31 @@ module battleRuntime {
       assert(unlit == initialState),
       assert(hit.goblin.hp == 5),
       assert(not(hit.actionAvailable)),
-      assert(activeEffectsContainProduceFlameHeldLight(hit.fighter.activeEffects)),
+      assert(not(activeEffectsContainProduceFlameHeldLight(hit.fighter.activeEffects))),
+      assert(not(battleRuntimeLightEmitters(hit).contains(produceFlameHeldLightEmitter(produceFlameDurationTicks)))),
       assert(spellAttackDamageType(ProduceFlameHurlSpellAttack) == Fire),
       assert(spellAttackDamageActiveEffects(ProduceFlameHurlSpellAttack) == Set()),
+    }
+  }
+
+  run test_produce_flame_hurl_attack_hit_reaction_window_ends_held_light = {
+    val lit = resolveProduceFlameHeldLight(initialState)
+    val nextTurn = {
+      ...lit,
+      actionAvailable: true,
+      bonusActionAvailable: true,
+    }
+    val awaiting = resolveProduceFlameHurl(nextTurn, 15, 10, 5, true)
+    all {
+      assert(awaiting.interruptStack.length() == 1),
+      assert(pendingReactionFrame(awaiting.interruptStack[0]) == HasPendingReactionFrame({
+        trigger: AttackHit,
+        eligibleReactors: Set(Goblin),
+        offeredReactors: Set(),
+        continuation: ResumeProduceFlameHurl,
+      })),
+      assert(not(activeEffectsContainProduceFlameHeldLight(awaiting.fighter.activeEffects))),
+      assert(not(battleRuntimeLightEmitters(awaiting).contains(produceFlameHeldLightEmitter(produceFlameDurationTicks)))),
     }
   }
 
