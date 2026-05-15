@@ -17,13 +17,13 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Authored Surface Unit catalog admission | 143/429 | 33.3% |
 | Authored Surface executable catalog admission | 116/362 | 32% |
 | Installed Unit profile classification coverage | 143/144 | 99.3% |
-| Supported executable Unit coverage | 81/117 | 69.2% |
+| Supported executable Unit coverage | 82/117 | 70.1% |
 | QNT profile modeling coverage | 62/62 | 100% |
 | QNT proof coverage | 61/62 | 98.4% |
 | Runtime mapping coverage | 62/62 | 100% |
 | Runtime parity coverage | 62/62 | 100% |
-| Deterministic admission/projection coverage | 74/81 | 91.4% |
-| Selected identity MBT coverage | 10/81 | 12.3% |
+| Deterministic admission/projection coverage | 75/82 | 91.5% |
+| Selected identity MBT coverage | 10/82 | 12.2% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -123,6 +123,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `shield` | srd-5.2.1 | `spell.reaction-shield` |
 | `shield_of_faith` | srd-5.2.1 | `spell.scalar-buff` |
 | `shillelagh` | srd-5.2.1 | `spell.invocation-weapon-attack-override` |
+| `sleep` | srd-5.2.1 | `spell.invocation-sleep-target-admission`, `spell.invocation-sleep-repeat-save-lifecycle` |
 | `true_strike` | srd-5.2.1 | `spell.invocation-spell-hosted-weapon-attack` |
 | `eldritch_blast` | srd-5.2.1 | `spell.invocation-beam-sequence` |
 | `hellish_rebuke` | srd-5.2.1 | `spell.reaction-hellish-rebuke`, `spell.invocation-damage-save-or-attack` |
@@ -146,7 +147,6 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `jump` | srd-5.2.1 | `spell.invocation-jump-movement-replacement` | Bonus Action Spell Slot casting; touched willing creature targets; slot-scaled target count; one-minute spell-owned duration; once on each target turn use marker; 10-foot Movement spend for up to 30 feet of jump movement; caller-supplied legal landing facts; Prone outcome for caller-supplied failed Difficult Terrain landing Acrobatics facts | runtime-owned jump arc, pathfinding, collision, and final-position derivation (SRDINV55); runtime-owned Difficult Terrain landing Acrobatics check derivation (SRDINV55) |
 | `light` | srd-5.2.1 | `spell.invocation-object-light` | Magic Action cantrip cast with no Spell Slot spend; caller-supplied touched object identity, size, and worn/carried facts; Large-or-smaller object admission; rejection when the object is worn or carried by someone else; source-owned object-attached Bright Light 20-foot radius plus Dim Light for an additional 20 feet; one-hour duration cleanup; same-caster recast replacement of the prior Light emitter | opaque-cover suppression, map illumination, obscured-area derivation, Darkvision-adjusted sight, and colored-light presentation remain outside the object-emitter runtime boundary (SRDINV78) |
 | `protection_from_evil_and_good` | srd-5.2.1 | `spell.creature-type-protection-and-charm` | 1-action Spell Slot expenditure; concentration-owned protection active effect; attacker creature-type filter for attack-roll Disadvantage; scoped-creature possession-attempt prevention; scoped-creature Charmed and Frightened condition application prevention | classified gap: Advantage on new Saving Throws against active already-applied possession, Charmed, or Frightened effects from scoped creatures requires a future owning-effect repeat-save or possession-save boundary; no dedicated SRDINV60C implementation task (SRDINV66); RAW willing touched-creature target boundary beyond the runtime's current known-willing target fact (SRDINV66) |
-| `sleep` | srd-5.2.1 | `spell.invocation-sleep-target-admission`, `spell.invocation-sleep-repeat-save-lifecycle` | point-origin 5-foot-radius Sphere target admission; Wisdom Saving Throw holes for selected targets that are not automatic successes; Exhaustion-immunity automatic success derived from retained Stat Block condition-immunity facts; Magic action and Spell Slot spend; failed initial save applies Sleep-owned Incapacitated until the end of the target's next turn with a repeat Wisdom save; repeat success ends that target's Sleep effect; failed repeat save escalates to spell-owned Unconscious for the remaining Concentration duration; damage from any source ends that target's Sleep effect with Sleep-owned condition cleanup; caller-supplied adjacent action shakes a target out of Sleep's effect and spends the actor's action | creatures that do not sleep automatically succeed only when an executable non-sleeper fact is supported (SRDINV41) |
 | `thunderwave` | srd-5.2.1 | `spell.invocation-damage-save-or-attack` | self-origin 15-foot Cube Constitution Saving Throw boundary with table-supplied affected creatures; slot-scaled Thunder damage with half damage on successful saves; failed-save creature push consumed from caller-supplied legal destination or blocked-push facts; unsecured-object push disposition consumed from caller-supplied object facts; audible thunderous boom evidence within 300 feet | runtime-owned push geometry, collision/pathfinding, and final-position derivation (SRDINV55); broad object inventory simulation and sound propagation simulation (SRDINV55) |
 | `charm_person` | srd-5.2.1 | `spell.creature-type-protection-and-charm` | Humanoid creature-type target filter; Wisdom save-gated Charmed condition; hostile-target Wisdom save Advantage; 1-hour spell-owned condition duration; spell ends if caster or one of the caster's allies deals damage to the target; slot-scaled target count | Friendly disposition, social interaction effects, and target knowledge when the spell ends are not represented in battle runtime state (SRDINV41) |
 
@@ -831,6 +831,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `shield` | `spell.reaction-shield` | QMBT22 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `shield_of_faith` | `spell.scalar-buff` | SRDINV30A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `shillelagh` | `spell.invocation-weapon-attack-override` | SRDINV84H | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `sleep` | `spell.invocation-sleep-target-admission`, `spell.invocation-sleep-repeat-save-lifecycle` | SRDINV38A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `true_strike` | `spell.invocation-spell-hosted-weapon-attack` | SRDINV31F | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `eldritch_blast` | `spell.invocation-beam-sequence` | SRDINV39 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `hellish_rebuke` | `spell.reaction-hellish-rebuke`, `spell.invocation-damage-save-or-attack` | SRDINV69B | `packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts` |
@@ -845,7 +846,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `bard_bardic_inspiration` | `unit-feature.bardic-inspiration-grant`, `unit-feature.bardic-inspiration-failed-d20-test` | SRDINV72B | `packages/battle-runtime/src/index.test.ts` | later-level Bardic Inspiration die size increases beyond d6 (SRDINV78) |
 | `monk_martial_arts` | `unit-feature.martial-arts-attack-projection` | SRDINV73A | `packages/battle-runtime/src/unit-profile-admission.test.ts` | later-level Martial Arts die size increases beyond d6 (SRDINV78) |
 | `chill_touch` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV64 | `packages/battle-runtime/src/unit-profile-admission.test.ts` | non-combatant target eligibility for the SRD generic target wording (SRDINV34) |
-| `faerie_fire` | `spell.invocation-attack-roll-advantage-save` | SRDINV58C, SRDINV87B | `packages/battle-runtime/src/unit-profile-admission.test.ts` | map illumination, color rendering, illuminated-area projection, line of sight, and Darkvision interaction remain outside the object-emitter runtime boundary (SRDINV87E) |
+| `faerie_fire` | `spell.invocation-attack-roll-advantage-save` | SRDINV58C | `packages/battle-runtime/src/unit-profile-admission.test.ts` | map illumination, color rendering, illuminated-area projection, line of sight, and Darkvision interaction remain outside the object-emitter runtime boundary (SRDINV87E) |
 | `feather_fall` | `spell.invocation-feather-fall-mitigation` | SRDINV56A | `packages/battle-runtime/src/feather-fall-reaction-spell.test.ts` | fall-distance derivation, map elevation, and landing geometry simulation remain outside the runtime boundary (SRDINV55) |
 | `find_familiar` | `spell.find-familiar-lifecycle` | SRDINV84I5 | `packages/battle-runtime/src/find-familiar-lifecycle.test.ts` | unsupported familiar form attacks and generic command AI (SRDINV86) |
 | `fog_cloud` | `spell.invocation-fog-cloud-obscurement` | SRDINV84E | `packages/battle-runtime/src/index.test.ts` | automatic area membership, line of sight, map illumination, pathfinding, and wind derivation (SRDINV66) |
@@ -854,7 +855,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `jump` | `spell.invocation-jump-movement-replacement` | SRDINV53 | `packages/battle-runtime/src/unit-profile-admission.test.ts` | runtime-owned jump arc, pathfinding, collision, and final-position derivation (SRDINV55); runtime-owned Difficult Terrain landing Acrobatics check derivation (SRDINV55) |
 | `light` | `spell.invocation-object-light` | SRDINV70B | `packages/battle-runtime/src/unit-profile-admission.test.ts` | opaque-cover suppression, map illumination, obscured-area derivation, Darkvision-adjusted sight, and colored-light presentation remain outside the object-emitter runtime boundary (SRDINV78) |
 | `protection_from_evil_and_good` | `spell.creature-type-protection-and-charm` | SRDINV60A | `packages/battle-runtime/src/unit-profile-admission.test.ts` | classified gap: Advantage on new Saving Throws against active already-applied possession, Charmed, or Frightened effects from scoped creatures requires a future owning-effect repeat-save or possession-save boundary; no dedicated SRDINV60C implementation task (SRDINV66); RAW willing touched-creature target boundary beyond the runtime's current known-willing target fact (SRDINV66) |
-| `sleep` | `spell.invocation-sleep-target-admission`, `spell.invocation-sleep-repeat-save-lifecycle` | SRDINV38A | `packages/battle-runtime/src/unit-profile-admission.test.ts` | creatures that do not sleep automatically succeed only when an executable non-sleeper fact is supported (SRDINV41) |
 | `thunderwave` | `spell.invocation-damage-save-or-attack` | SRDINV51 | `packages/battle-runtime/src/unit-profile-admission.test.ts` | runtime-owned push geometry, collision/pathfinding, and final-position derivation (SRDINV55); broad object inventory simulation and sound propagation simulation (SRDINV55) |
 | `charm_person` | `spell.creature-type-protection-and-charm` | SRDINV37 | `packages/battle-runtime/src/unit-profile-admission.test.ts` | Friendly disposition, social interaction effects, and target knowledge when the spell ends are not represented in battle runtime state (SRDINV41) |
 
@@ -925,7 +925,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `detect_evil_and_good` | unsupported-profile | Detection/occlusion search semantics and Hallow discovery are not promoted as battle Unit profiles. |
 | `detect_magic` | unsupported-profile | Detection/concentration search semantics are not promoted as a battle Unit profile. |
 | `detect_poison_and_disease` | unsupported-profile | Detection/occlusion search semantics and poison/disease identification are not promoted as battle Unit profiles. |
-| `sleep` | profile-subset-supported | supported subset: point-origin 5-foot-radius Sphere target admission; Wisdom Saving Throw holes for selected targets that are not automatic successes; Exhaustion-immunity automatic success derived from retained Stat Block condition-immunity facts; Magic action and Spell Slot spend; failed initial save applies Sleep-owned Incapacitated until the end of the target's next turn with a repeat Wisdom save; repeat success ends that target's Sleep effect; failed repeat save escalates to spell-owned Unconscious for the remaining Concentration duration; damage from any source ends that target's Sleep effect with Sleep-owned condition cleanup; caller-supplied adjacent action shakes a target out of Sleep's effect and spends the actor's action; deferred: creatures that do not sleep automatically succeed only when an executable non-sleeper fact is supported (SRDINV41) |
 | `thunderwave` | profile-subset-supported | supported subset: self-origin 15-foot Cube Constitution Saving Throw boundary with table-supplied affected creatures; slot-scaled Thunder damage with half damage on successful saves; failed-save creature push consumed from caller-supplied legal destination or blocked-push facts; unsecured-object push disposition consumed from caller-supplied object facts; audible thunderous boom evidence within 300 feet; deferred: runtime-owned push geometry, collision/pathfinding, and final-position derivation (SRDINV55); broad object inventory simulation and sound propagation simulation (SRDINV55) |
 | `minor_illusion` | unsupported-profile | Sound/image illusion creation, physical-interaction reveal, faint rendering after Study, and recast expiry are illusion/exploration state outside promoted runtime owners. |
 | `charm_person` | profile-subset-supported | supported subset: Humanoid creature-type target filter; Wisdom save-gated Charmed condition; hostile-target Wisdom save Advantage; 1-hour spell-owned condition duration; spell ends if caster or one of the caster's allies deals damage to the target; slot-scaled target count; deferred: Friendly disposition, social interaction effects, and target knowledge when the spell ends are not represented in battle runtime state (SRDINV41) |
@@ -946,7 +945,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
 | srd-5.2.1 | unassigned | unsupported-profile | 46 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `rogue_expertise`, `rogue_thieves_cant`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `orc_darkvision`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `minor_illusion`, `armor_chain_mail`, `equipment_shield`, `weapon_club`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff` |
-| srd-5.2.1 | unassigned | profile-subset-supported | 16 | `bard_bardic_inspiration`, `monk_martial_arts`, `ranger_favored_enemy`, `chill_touch`, `faerie_fire`, `feather_fall`, `find_familiar`, `fog_cloud`, `grease`, `hunters_mark`, `jump`, `light`, `protection_from_evil_and_good`, `sleep`, `thunderwave`, `charm_person` |
+| srd-5.2.1 | unassigned | profile-subset-supported | 15 | `bard_bardic_inspiration`, `monk_martial_arts`, `ranger_favored_enemy`, `chill_touch`, `faerie_fire`, `feather_fall`, `find_familiar`, `fog_cloud`, `grease`, `hunters_mark`, `jump`, `light`, `protection_from_evil_and_good`, `thunderwave`, `charm_person` |
 | srd-5.2.1 | unassigned | missing | 1 | `dancing_lights` |
 
 ## Profile Claims By Task
@@ -992,6 +991,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 | SRDINV26 | completed-runtime-parity | `character-sheet.spellbook-ritual-invocation` |
 | SRDINV29B | completed-runtime-parity | `spell.invocation-condition-save` |
 | SRDINV38A | completed-runtime-parity | `spell.invocation-sleep-target-admission` |
+| SRDINV87D | qnt-proof | `spell.invocation-sleep-target-admission` |
+| SRDINV87D | completed-runtime-parity | `spell.invocation-sleep-target-admission` |
 | SRDINV38B | qnt-proof | `spell.invocation-sleep-repeat-save-lifecycle` |
 | SRDINV38B | completed-runtime-parity | `spell.invocation-sleep-repeat-save-lifecycle` |
 | SRDINV68A | completed-runtime-parity | `spell.invocation-sleep-repeat-save-lifecycle` |

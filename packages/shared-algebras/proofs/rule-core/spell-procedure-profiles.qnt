@@ -741,6 +741,12 @@ module spellProcedureProfiles {
     else
       PendingSleepRepeatSaveLifecycle({ hadIncapacitated: hadIncapacitated })
 
+  pure def sleepSavingThrowAutomaticallySucceeds(
+    targetDoesNotSleep: bool,
+    targetHasExhaustionImmunity: bool,
+  ): bool =
+    targetDoesNotSleep or targetHasExhaustionImmunity
+
   pure def sleepRepeatSaveLifecycle(
     pending: SleepRepeatSaveLifecycle,
     savingThrowSucceeded: bool,
@@ -1343,6 +1349,9 @@ module spellProcedureProfiles {
     val saved = sleepRepeatSaveLifecycle(pending, true, false)
     val unconscious = sleepRepeatSaveLifecycle(pending, false, false)
     all {
+      assert(sleepSavingThrowAutomaticallySucceeds(true, false)),
+      assert(sleepSavingThrowAutomaticallySucceeds(false, true)),
+      assert(not(sleepSavingThrowAutomaticallySucceeds(false, false))),
       assert(sleepInitialSaveLifecycle(true, true) == NoSleepRepeatSaveLifecycle),
       assert(pending == PendingSleepRepeatSaveLifecycle({ hadIncapacitated: true })),
       assert(saved == NoSleepRepeatSaveLifecycle),

@@ -1749,9 +1749,6 @@ function validateSleepTargetAdmissionSavingThrowOutcomes(input: {
   if (input.area === undefined) {
     return "Sleep Saving Throw outcomes require point-origin Sphere target facts.";
   }
-  if ("sleepNonSleeperFacts" in input.area) {
-    return "Sleep non-sleeper automatic-success facts are not supported yet.";
-  }
   if (!input.state.combatants.has(input.area.originAnchorId)) {
     return "Sleep point-origin Sphere origin anchor must be a combatant in this battle.";
   }
@@ -1767,9 +1764,23 @@ function validateSleepTargetAdmissionSavingThrowOutcomes(input: {
       return "Sleep point-origin Sphere target must be a combatant in this battle.";
     }
   }
+  const nonSleeperTargetIds = new Set<CombatantId>();
+  if ("sleepNonSleeperFacts" in input.area) {
+    for (const fact of input.area.sleepNonSleeperFacts) {
+      if (!selectedTargets.has(fact.targetId)) {
+        return "Sleep non-sleeper facts must match selected Sphere targets.";
+      }
+      if (nonSleeperTargetIds.has(fact.targetId)) {
+        return "Sleep non-sleeper facts must not duplicate targets.";
+      }
+      nonSleeperTargetIds.add(fact.targetId);
+    }
+  }
   const autoSuccessTargetIds = new Set(
     input.area.affectedTargetIds.filter((targetId) =>
-      sleepTargetHasExhaustionImmunity(input.state, targetId),
+      sleepTargetAutomaticallySucceeds(input.state, targetId, {
+        doesNotSleep: nonSleeperTargetIds.has(targetId),
+      }),
     ),
   );
   const nonAutomaticTargetIds = input.area.affectedTargetIds.filter(
@@ -1781,7 +1792,7 @@ function validateSleepTargetAdmissionSavingThrowOutcomes(input: {
       return "Sleep Saving Throw outcomes must match selected Sphere targets.";
     }
     if (autoSuccessTargetIds.has(outcome.targetId)) {
-      return "Sleep targets with Exhaustion Immunity automatically succeed and must not receive a rolled Saving Throw outcome.";
+      return "Sleep targets that do not sleep or have Exhaustion Immunity automatically succeed and must not receive a rolled Saving Throw outcome.";
     }
     if (outcomeTargetIds.has(outcome.targetId)) {
       return "Sleep Saving Throw outcomes must not duplicate targets.";
@@ -1840,6 +1851,14 @@ function validateGreaseGroundHazardSavingThrowOutcomes(input: {
   return outcomeTargetIds.size === selectedTargets.size
     ? null
     : "Grease Saving Throw outcomes must cover every table-supplied ground-area affected target.";
+}
+
+function sleepTargetAutomaticallySucceeds(
+  state: BattleState,
+  targetId: CombatantId,
+  facts: { readonly doesNotSleep: boolean },
+): boolean {
+  return facts.doesNotSleep || sleepTargetHasExhaustionImmunity(state, targetId);
 }
 
 function sleepTargetHasExhaustionImmunity(

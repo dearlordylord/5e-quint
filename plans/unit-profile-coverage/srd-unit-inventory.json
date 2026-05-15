@@ -156,13 +156,13 @@
     "spellPressureRows": 211,
     "levelOneBattleReadiness": {
       "denominator": 367,
-      "numerator": 295,
-      "percent": "80.4%",
+      "numerator": 298,
+      "percent": "81.2%",
       "rowsByStatus": {
-        "accepted": 229,
+        "accepted": 232,
         "accepted-no-battle-effect": 66,
         "battle-runtime-required": 28,
-        "partial-battle-runtime": 44
+        "partial-battle-runtime": 41
       }
     },
     "levelOneClassContainers": 12,
@@ -5565,7 +5565,7 @@
         "state": "installed",
         "unitId": "sleep"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -14848,7 +14848,7 @@
         "state": "installed",
         "unitId": "sleep"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -18387,7 +18387,7 @@
         "state": "installed",
         "unitId": "sleep"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {

@@ -23508,7 +23508,7 @@ describe("battle runtime", () => {
     });
   });
 
-  test("Sleep rejects rolled outcomes for Exhaustion-immune targets and unsupported non-sleeper facts", () => {
+  test("Sleep rejects rolled outcomes for automatic-success targets", () => {
     const state = startBattleRight({
       battleId: battleId("battle-sleep-auto-success"),
       combatants: [
@@ -23553,7 +23553,155 @@ describe("battle runtime", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Sleep targets with Exhaustion Immunity automatically succeed and must not receive a rolled Saving Throw outcome.",
+        "Sleep targets that do not sleep or have Exhaustion Immunity automatically succeed and must not receive a rolled Saving Throw outcome.",
+    });
+  });
+
+  test("Sleep non-sleeper facts automatically succeed without a save outcome", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-sleep-non-sleeper-auto-success"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            cantrips: [],
+            preparedSpells: [spellRecord("sleep")],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+        }),
+        characterSeed({
+          combatantId: goblinId,
+          displayName: "Target",
+          initiative: 10,
+          side: oppositionSide,
+        }),
+      ],
+    });
+    const subject = magicSubject("sleep");
+    const savingThrows = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "savingThrowOutcome",
+    );
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          {
+            kind: "savingThrowOutcome",
+            holeId: savingThrows.holeId,
+            value: {
+              area: {
+                originAnchorId: wizardId,
+                affectedTargetIds: [goblinId],
+                sleepNonSleeperFacts: [
+                  { kind: "doesNotSleep", targetId: goblinId },
+                ],
+              },
+              outcomes: [{ targetId: goblinId, succeeded: true }],
+            },
+          },
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Sleep targets that do not sleep or have Exhaustion Immunity automatically succeed and must not receive a rolled Saving Throw outcome.",
+    });
+
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          {
+            kind: "savingThrowOutcome",
+            holeId: savingThrows.holeId,
+            value: {
+              area: {
+                originAnchorId: wizardId,
+                affectedTargetIds: [goblinId],
+                sleepNonSleeperFacts: [
+                  { kind: "doesNotSleep", targetId: goblinId },
+                ],
+              },
+              outcomes: [],
+            },
+          },
+        ],
+      }),
+    );
+
+    const target = resolved.state.combatants.get(goblinId)!;
+    expect(target.conditions.directIncapacitated).toBe(false);
+    expect(target.activeEffects).toEqual([]);
+    expect(
+      resolved.state.currentTurnResources.actionResources.some(
+        (resource) => resource.source === "turn",
+      ),
+    ).toBe(false);
+    expect(resolved.state.currentTurnResources.spellSlotExpendedThisTurn).toBe(
+      true,
+    );
+  });
+
+  test("Sleep rejects duplicate or unselected non-sleeper facts", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-sleep-non-sleeper-validation"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            cantrips: [],
+            preparedSpells: [spellRecord("sleep")],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+        }),
+        characterSeed({
+          combatantId: goblinId,
+          displayName: "Target",
+          initiative: 10,
+          side: oppositionSide,
+        }),
+      ],
+    });
+    const subject = magicSubject("sleep");
+    const savingThrows = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "savingThrowOutcome",
+    );
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          {
+            kind: "savingThrowOutcome",
+            holeId: savingThrows.holeId,
+            value: {
+              area: {
+                originAnchorId: wizardId,
+                affectedTargetIds: [goblinId],
+                sleepNonSleeperFacts: [
+                  { kind: "doesNotSleep", targetId: fighterId },
+                ],
+              },
+              outcomes: [{ targetId: goblinId, succeeded: true }],
+            },
+          },
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: "Sleep non-sleeper facts must match selected Sphere targets.",
     });
 
     expect(
@@ -23567,9 +23715,10 @@ describe("battle runtime", () => {
             value: {
               area: {
                 originAnchorId: wizardId,
-                affectedTargetIds: [skeletonId],
+                affectedTargetIds: [goblinId],
                 sleepNonSleeperFacts: [
-                  { kind: "doesNotSleep", targetId: skeletonId },
+                  { kind: "doesNotSleep", targetId: goblinId },
+                  { kind: "doesNotSleep", targetId: goblinId },
                 ],
               },
               outcomes: [],
@@ -23579,8 +23728,7 @@ describe("battle runtime", () => {
       }),
     ).toMatchObject({
       tag: "invalid",
-      message:
-        "Sleep non-sleeper automatic-success facts are not supported yet.",
+      message: "Sleep non-sleeper facts must not duplicate targets.",
     });
   });
 

@@ -302,7 +302,7 @@ const BattleSpellAreaChoiceSchema = Schema.Union(
     ...BattleSpellAreaChoiceBaseSchema,
     kind: Schema.optionalWith(Schema.Never, { exact: true }),
     areaId: Schema.optionalWith(Schema.Never, { exact: true }),
-    sleepNonSleeperFacts: Schema.Array(BattleSleepNonSleeperFactSchema),
+    sleepNonSleeperFacts: Schema.NonEmptyArray(BattleSleepNonSleeperFactSchema),
   }),
   Schema.Struct({
     ...BattleSpellAreaChoiceBaseSchema,
@@ -1944,10 +1944,16 @@ type BattleSpellAreaChoiceEncoded = {
   | {
       readonly kind?: never;
       readonly areaId?: never;
-      readonly sleepNonSleeperFacts: readonly {
-        readonly kind: "doesNotSleep";
-        readonly targetId: string;
-      }[];
+      readonly sleepNonSleeperFacts: readonly [
+        {
+          readonly kind: "doesNotSleep";
+          readonly targetId: string;
+        },
+        ...{
+          readonly kind: "doesNotSleep";
+          readonly targetId: string;
+        }[],
+      ];
     }
   | {
       readonly kind: "faerieFireArea";

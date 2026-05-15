@@ -3283,7 +3283,10 @@ type BattleSpellAreaChoiceKind =
   | { readonly kind?: never; readonly sleepNonSleeperFacts?: never }
   | {
       readonly kind?: never;
-      readonly sleepNonSleeperFacts: readonly BattleSleepNonSleeperFact[];
+      readonly sleepNonSleeperFacts: readonly [
+        BattleSleepNonSleeperFact,
+        ...BattleSleepNonSleeperFact[],
+      ];
     }
   | {
       readonly kind: "faerieFireArea";

@@ -248,8 +248,8 @@ flowchart TD
   5-foot-radius Sphere targets. It asks for Wisdom Saving Throw outcomes only
   for selected creatures that are not automatic successes, derives
   Exhaustion-immunity automatic success from retained Stat Block condition
-  immunities, rejects non-sleeper facts until executable support lands, and
-  spends the Magic action plus Spell Slot. Failed saves record a typed
+  immunities, accepts caller-supplied non-sleeper facts as automatic successes,
+  and spends the Magic action plus Spell Slot. Failed saves record a typed
   per-target concentration-owned pending lifecycle that applies Incapacitated
   until that target's next end turn; the end-turn command then asks for the
   second Wisdom save and either removes that target's Sleep effect or escalates

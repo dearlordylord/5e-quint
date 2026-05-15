@@ -264,9 +264,9 @@ The support-profile parser surface should cover these profile families:
   admission profile for caller-supplied point-origin 5-foot-radius Sphere target
   sets. It produces Wisdom Saving Throw holes only for selected creatures that
   are not automatic successes; Exhaustion Immunity is derived from retained
-  Stat Block condition-immunity facts, while non-sleeper facts are explicitly
-  shaped but rejected until executable support lands. Failed initial saves
-  record a concentration-owned Sleep pending repeat-save lifecycle:
+  Stat Block condition-immunity facts, while caller-supplied non-sleeper facts
+  are accepted as automatic successes. Failed initial saves record a
+  concentration-owned Sleep pending repeat-save lifecycle:
   Incapacitated until that target's next end turn, then success ends that
   target's Sleep effect and failure escalates it to concentration-owned
   Unconscious. Damage from any source or an adjacent shake-awake action ends
@@ -779,8 +779,8 @@ Feature and spell resources:
   creatures in a point-origin 5-foot-radius Sphere, the runtime asks for Wisdom
   saves only for selected targets that are not automatic successes, derives
   Exhaustion-immunity automatic success from retained Stat Block condition
-  immunities, rejects non-sleeper facts until executable support lands, and
-  spends the Magic action plus Spell Slot. Failed saves apply pending
+  immunities, accepts caller-supplied non-sleeper facts as automatic successes,
+  and spends the Magic action plus Spell Slot. Failed saves apply pending
   concentration-owned Sleep Incapacitated until the target's next end turn,
   where the runtime asks for the second Wisdom save and either removes that
   target's Sleep effect or replaces it with concentration-owned Unconscious.

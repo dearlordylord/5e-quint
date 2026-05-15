@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.creature-type-protection-and-charm spell.find-familiar-lifecycle spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.creature-type-protection-and-charm spell.find-familiar-lifecycle spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points
@@ -11,6 +11,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-beam-sequence
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-damage-reduction
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-sleep-repeat-save-lifecycle
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-sleep-target-admission
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-hideous-laughter-repeat-save-lifecycle
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-grease-ground-hazard
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-fog-cloud-obscurement
@@ -6674,9 +6675,15 @@ module battleRuntime {
     target: Combatant,
     targetActor: Actor,
     savingThrowSucceeded: bool,
+    targetDoesNotSleep: bool,
+    targetHasExhaustionImmunity: bool,
     source: Actor,
-  ): Combatant =
-    match battleRuntimeSleepInitialSaveLifecycle(savingThrowSucceeded, target.incapacitated) {
+  ): Combatant = {
+    val automaticallySucceeded = battleRuntimeSleepSavingThrowAutomaticallySucceeds(
+      targetDoesNotSleep,
+      targetHasExhaustionImmunity,
+    )
+    match battleRuntimeSleepInitialSaveLifecycle(savingThrowSucceeded or automaticallySucceeded, target.incapacitated) {
       | BattleRuntimeNoSleepRepeatSaveLifecycle => target
       | BattleRuntimePendingSleepRepeatSaveLifecycle(data) => {
           val slept = {
@@ -6694,10 +6701,13 @@ module battleRuntime {
         }
       | BattleRuntimeUnconsciousSleepRepeatSaveLifecycle(_) => target
     }
+  }
 
   pure def resolveSleepTargetAdmission(
     state: BattleState,
     goblinSavingThrowSucceeded: bool,
+    goblinDoesNotSleep: bool,
+    goblinHasExhaustionImmunity: bool,
   ): BattleState =
     if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)))
       state
@@ -6706,7 +6716,15 @@ module battleRuntime {
       {
         ...withoutPrior,
         fighter: { ...withoutPrior.fighter, concentrating: true },
-        goblin: sleepInitialSaveTarget(withoutPrior, withoutPrior.goblin, Goblin, goblinSavingThrowSucceeded, Fighter),
+        goblin: sleepInitialSaveTarget(
+          withoutPrior,
+          withoutPrior.goblin,
+          Goblin,
+          goblinSavingThrowSucceeded,
+          goblinDoesNotSleep,
+          goblinHasExhaustionImmunity,
+          Fighter,
+        ),
         actionAvailable: false,
         spellSlotExpendedThisTurn: true,
       }
@@ -9714,7 +9732,7 @@ module battleRuntime {
   }
 
   run test_sleep_failed_initial_save_adds_pending_repeat_save_until_concentration = {
-    val slept = resolveSleepTargetAdmission(initialState, false)
+    val slept = resolveSleepTargetAdmission(initialState, false, false, false)
     val broken = breakConcentrationSpellEffects(slept, Fighter)
     all {
       assert(not(slept.actionAvailable)),
@@ -9733,8 +9751,25 @@ module battleRuntime {
     }
   }
 
+  run test_sleep_non_sleeper_and_exhaustion_immunity_auto_success = {
+    val nonSleeper = resolveSleepTargetAdmission(initialState, false, true, false)
+    val exhaustionImmune = resolveSleepTargetAdmission(initialState, false, false, true)
+    all {
+      assert(not(nonSleeper.actionAvailable)),
+      assert(nonSleeper.spellSlotExpendedThisTurn),
+      assert(nonSleeper.fighter.concentrating),
+      assert(not(nonSleeper.goblin.incapacitated)),
+      assert(not(combatantHasSleepEffect(nonSleeper.goblin))),
+      assert(not(exhaustionImmune.actionAvailable)),
+      assert(exhaustionImmune.spellSlotExpendedThisTurn),
+      assert(exhaustionImmune.fighter.concentrating),
+      assert(not(exhaustionImmune.goblin.incapacitated)),
+      assert(not(combatantHasSleepEffect(exhaustionImmune.goblin))),
+    }
+  }
+
   run test_sleep_repeat_save_success_removes_pending_effect = {
-    val slept = resolveSleepTargetAdmission(initialState, false)
+    val slept = resolveSleepTargetAdmission(initialState, false, false, false)
     val goblinTurn = endTurn(slept)
     val repeated = endTurnWithSleepRepeatSave(goblinTurn, true)
     all {
@@ -9749,7 +9784,7 @@ module battleRuntime {
       ...initialState,
       goblin: { ...initialState.goblin, concentrating: true, activeEffects: Set(MageArmor) },
     }
-    val slept = resolveSleepTargetAdmission(concentratingGoblin, false)
+    val slept = resolveSleepTargetAdmission(concentratingGoblin, false, false, false)
     all {
       assert(not(slept.goblin.concentrating)),
       assert(not(slept.goblin.activeEffects.contains(MageArmor))),
@@ -9763,7 +9798,7 @@ module battleRuntime {
   }
 
   run test_sleep_repeat_save_failure_escalates_to_unconscious_until_concentration = {
-    val slept = resolveSleepTargetAdmission(initialState, false)
+    val slept = resolveSleepTargetAdmission(initialState, false, false, false)
     val goblinTurn = endTurn(slept)
     val repeated = endTurnWithSleepRepeatSave(goblinTurn, false)
     val broken = breakConcentrationSpellEffects(repeated, Fighter)
@@ -9787,7 +9822,7 @@ module battleRuntime {
   }
 
   run test_sleep_repeat_save_failure_breaks_target_concentration = {
-    val slept = resolveSleepTargetAdmission(initialState, false)
+    val slept = resolveSleepTargetAdmission(initialState, false, false, false)
     val goblinTurn = endTurn(slept)
     val concentratingGoblinTurn = {
       ...goblinTurn,
@@ -9806,7 +9841,7 @@ module battleRuntime {
   }
 
   run test_sleep_damage_ends_pending_sleep_on_target = {
-    val slept = resolveSleepTargetAdmission(initialState, false)
+    val slept = resolveSleepTargetAdmission(initialState, false, false, false)
     val damaged = { ...slept, goblin: applyDamageFromSource(slept.goblin, 1, 1, true, OrdinaryDamage, Goblin) }
     all {
       assert(not(damaged.goblin.incapacitated)),
@@ -9815,7 +9850,7 @@ module battleRuntime {
   }
 
   run test_sleep_damage_ends_unconscious_sleep_and_leaves_prone = {
-    val slept = resolveSleepTargetAdmission(initialState, false)
+    val slept = resolveSleepTargetAdmission(initialState, false, false, false)
     val goblinTurn = endTurn(slept)
     val repeated = endTurnWithSleepRepeatSave(goblinTurn, false)
     val damaged = { ...repeated, goblin: applyDamageFromSource(repeated.goblin, 1, 1, true, OrdinaryDamage, Goblin) }
@@ -9898,7 +9933,7 @@ module battleRuntime {
   }
 
   run test_sleep_adjacent_action_shakes_target_awake = {
-    val slept = resolveSleepTargetAdmission(initialState, false)
+    val slept = resolveSleepTargetAdmission(initialState, false, false, false)
     val nextRoundFighterTurn = {
       ...slept,
       initiative: { round: 2, alreadyActed: List(), stillToAct: List(Fighter, Goblin) },
