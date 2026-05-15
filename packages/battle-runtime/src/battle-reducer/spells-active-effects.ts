@@ -5,6 +5,7 @@ import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { type Round as RoundType } from "@dnd/shared/types";
 import type {
+  Ability,
   DamageType,
   Skill,
   SpellRecord,
@@ -23,6 +24,7 @@ import {
   conditionHadNonSpellSourceBeforeSpellEffect,
 } from "./spell-condition-effects-helpers.ts";
 import {
+  type MarkedDamageRiderTransferState,
   type BattleActiveEffect,
   type BattleActiveEffectExpiration,
   type BattleCommandOption,
@@ -197,7 +199,13 @@ export function applySpellLightEmitterEffects(
             lightEmitterMatchesAttachment(emitter, attachment)
           ),
       ),
-      lightEmitterFromPostDamageRider(state, actorId, attachment, invocation, rider),
+      lightEmitterFromPostDamageRider(
+        state,
+        actorId,
+        attachment,
+        invocation,
+        rider,
+      ),
     ],
     state.lightEmitters,
   );
@@ -566,6 +574,46 @@ export function applyGreaseGroundHazardCastEffects(input: {
     ...input.state,
     combatants: applyGreaseProneToCombatants(combatants, input.failedTargetIds),
   };
+}
+
+export function applyFogCloudObscurementCastEffect(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly areaId: string;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "fogCloudObscurement" }
+  >;
+}): BattleState {
+  const combatants = new Map(input.state.combatants);
+  const caster = combatants.get(input.actorId);
+  if (caster === undefined) {
+    return input.state;
+  }
+  const replacing = caster.activeEffects.filter(
+    (effect) =>
+      effect.kind === "fogCloudObscurement" &&
+      effect.sourceSpellId === input.invocation.spell.id &&
+      effect.sourceCombatantId === input.actorId &&
+      effect.areaId === input.areaId,
+  );
+  const activeEffects = [
+    ...caster.activeEffects.filter((effect) => !replacing.includes(effect)),
+    {
+      kind: "fogCloudObscurement" as const,
+      sourceSpellId: input.invocation.spell.id,
+      sourceCombatantId: input.actorId,
+      areaId: input.areaId,
+      radiusFeet: input.invocation.targeting.radiusFeet,
+      expiresAt: {
+        kind: "concentration" as const,
+        combatantId: input.actorId,
+        durationTicks: input.invocation.durationTicks,
+      },
+    },
+  ];
+  combatants.set(input.actorId, { ...caster, activeEffects });
+  return { ...input.state, combatants };
 }
 
 export function applyGreaseProneToTarget(
@@ -1032,6 +1080,7 @@ export function applyMarkedDamageRiderSpellEffect(
     SupportedSpellInvocation,
     { readonly procedure: "markedDamageRider" }
   >,
+  selectedAbility?: Ability,
 ): BattleState {
   const caster = state.combatants.get(actorId);
   if (caster === undefined) {
@@ -1041,6 +1090,13 @@ export function applyMarkedDamageRiderSpellEffect(
     invocation.action === "transfer"
       ? invocation.activeEffect.expiresAt
       : invocation.expiresAt;
+  const transfer: MarkedDamageRiderTransferState = {
+    kind: "awaitingTargetDrop",
+    retargetTiming:
+      invocation.action === "transfer"
+        ? invocation.activeEffect.transfer.retargetTiming
+        : invocation.retargetTiming,
+  };
   const activeEffects = [
     ...caster.activeEffects.filter(
       (effect) =>
@@ -1055,7 +1111,13 @@ export function applyMarkedDamageRiderSpellEffect(
       sourceSpellId: invocation.spell.id,
       sourceCombatantId: actorId,
       targetCombatantId: targetId,
-      transferAvailable: false,
+      transfer,
+      abilityCheckDisadvantage:
+        invocation.action === "transfer"
+          ? invocation.activeEffect.abilityCheckDisadvantage
+          : selectedAbility === undefined
+            ? null
+            : { ability: selectedAbility },
       damage: invocation.damage,
       expiresAt: existingExpiresAt,
     },

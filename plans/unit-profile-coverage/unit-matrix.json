@@ -62,9 +62,9 @@
       "value": 142
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 76,
-      "numerator": 68,
-      "percent": "89.5%"
+      "denominator": 77,
+      "numerator": 69,
+      "percent": "89.6%"
     },
     "profileClassificationCoverage": {
       "denominator": 142,
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 76,
+      "denominator": 77,
       "numerator": 10,
-      "percent": "13.2%"
+      "percent": "13%"
     },
     "supportedProfileCoverage": {
       "denominator": 116,
-      "numerator": 76,
-      "percent": "65.5%"
+      "numerator": 77,
+      "percent": "66.4%"
     }
   },
   "metricSemantics": [
@@ -1165,6 +1165,33 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-fog-cloud-obscurement",
+      "profileKind": "table-caller",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts"
+      ],
+      "sourceBoundary": "Caller-supplied Fog Cloud area identity; runtime owns the spell source, slot-scaled Sphere radius, Heavily Obscured area projection, one-hour Concentration duration, and table-supplied strong-wind dispersal. Automatic area membership, line of sight, map illumination, pathfinding, and wind derivation remain outside the runtime boundary.",
+      "taskRefs": [
+        "SRDINV84E"
+      ],
+      "title": "Spell invocation creates a Concentration-owned Fog Cloud Heavily Obscured area",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
         },
         {
           "kind": "runtime-test",
@@ -3141,6 +3168,22 @@
         "spell.invocation-damage-save-or-attack"
       ],
       "taskId": "SRDINV84B"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Fog Cloud's caller-supplied fog area identity, level-1 20-foot Sphere radius, +20 feet per slot above 1 scaling, one-hour Concentration ownership, and strong-wind dispersal cleanup.",
+      "profileIds": [
+        "spell.invocation-fog-cloud-obscurement"
+      ],
+      "taskId": "SRDINV84E"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Fog Cloud discovery, spell-area fill admission, slot-scaled Heavily Obscured active-effect projection, Concentration cleanup, Spell Slot spending, and table-supplied strong-wind dispersal without adding automatic area membership, line of sight, illumination, pathfinding, or wind simulation.",
+      "profileIds": [
+        "spell.invocation-fog-cloud-obscurement"
+      ],
+      "taskId": "SRDINV84E"
     }
   ],
   "units": [
@@ -7246,14 +7289,66 @@
         "status": "installed"
       },
       "claim": {
-        "reason": "Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Fog Cloud's area-created Heavily Obscured projection, slot-scaled area geometry, or strong-wind dispersal lifecycle.",
-        "tag": "unsupported-profile"
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "SRDINV66",
+            "mechanic": "automatic area membership, line of sight, map illumination, pathfinding, and wind derivation"
+          }
+        ],
+        "profileIds": [
+          "spell.invocation-fog-cloud-obscurement"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "caller-supplied point-origin fog area identity",
+          "Concentration-owned Heavily Obscured area projection",
+          "20-foot radius at level 1 with +20 feet per slot above 1",
+          "one-hour Concentration duration cleanup",
+          "table-supplied strong-wind dispersal cleanup"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV84E"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-fog-cloud-obscurement",
+          "profileKind": "table-caller",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts"
+          ],
+          "sourceBoundary": "Caller-supplied Fog Cloud area identity; runtime owns the spell source, slot-scaled Sphere radius, Heavily Obscured area projection, one-hour Concentration duration, and table-supplied strong-wind dispersal. Automatic area membership, line of sight, map illumination, pathfinding, and wind derivation remain outside the runtime boundary.",
+          "taskRefs": [
+            "SRDINV84E"
+          ],
+          "title": "Spell invocation creates a Concentration-owned Fog Cloud Heavily Obscured area",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/fog_cloud.json",
       "unitId": "fog_cloud"
     },
@@ -7551,14 +7646,70 @@
         "status": "installed"
       },
       "claim": {
-        "reason": "Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Hex's curse retargeting, chosen-ability Ability Check Disadvantage, attack-hit Necrotic damage, or slot-scaled Concentration duration.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "spell.invocation-marked-damage-rider"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Bonus Action cast with Spell Slot spend",
+          "Concentration-owned curse identity on one combatant target",
+          "extra Necrotic damage when the caster hits the cursed target with an Attack Roll",
+          "cast-time chosen ability stored on the curse rider",
+          "Disadvantage on the cursed target's Ability Check holes for the chosen ability",
+          "Bonus Action retarget only after the cursed target drops to 0 Hit Points",
+          "slot-scaled Concentration maximum of 1 hour at slot 1, 4 hours at slot 2, 8 hours at slots 3-4, and 24 hours at slots 5+"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV84D"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-marked-damage-rider",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/character-battle-runtime/src/battle-character-build-projection.ts"
+          ],
+          "taskRefs": [
+            "SRDINV31B",
+            "SRDINV62",
+            "SRDINV77"
+          ],
+          "title": "Spell invocation creates a combat mark with attack-roll damage, Concentration duration, and 0-HP transfer",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/hex.json",
       "unitId": "hex"
     },

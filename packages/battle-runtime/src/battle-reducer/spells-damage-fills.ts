@@ -55,6 +55,7 @@ import {
   type BattleObjectDamageOutcome,
   type BattleSavingThrowRollModeProjection,
   type BattleSpellAttackRollHole,
+  type BattleSpellAbilityChoiceHole,
   type BattleSpellDamageRollHole,
   type BattleSpellDamageTypeChoiceHole,
   type BattleSpellHealingRollHole,
@@ -588,6 +589,33 @@ export function spellRollModifierSkillChoiceHole(
     label: `${invocation.spell.name} skill`,
     spell: invocation,
     choices: invocation.skillChoices ?? [],
+  };
+}
+
+export function spellAbilityChoiceHoleId(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "markedDamageRider"; readonly action: "cast" }
+  >,
+): BattleHoleId {
+  return holeId(`battle:spell:ability-choice:${invocation.spell.id}`);
+}
+
+export function spellAbilityChoiceHole(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "markedDamageRider"; readonly action: "cast" }
+  >,
+): BattleSpellAbilityChoiceHole {
+  return {
+    kind: "abilityChoice",
+    holeId: spellAbilityChoiceHoleId(invocation),
+    holeInstanceKey: holeInstanceKey(
+      `battle:spell:ability-choice:${invocation.spell.id}`,
+    ),
+    label: `${invocation.spell.name} ability`,
+    spell: invocation,
+    choices: invocation.abilityChoices ?? [],
   };
 }
 

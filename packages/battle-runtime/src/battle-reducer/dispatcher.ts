@@ -54,6 +54,7 @@ import {
 
 import {
   applyAttackDamageAmount,
+  breakBattleConcentration,
   concentrationSavingThrowHole,
 } from "./damage-apply.ts";
 
@@ -731,6 +732,12 @@ export function resolveBattleSubjectInternal(
     }
     if (
       subject.tag === "runtimeCommand" &&
+      subject.command === "disperseFogCloud"
+    ) {
+      return resolveDisperseFogCloudCommand({ ...input, subject });
+    }
+    if (
+      subject.tag === "runtimeCommand" &&
       subject.command === "standFromProne"
     ) {
       return resolveStandFromProneCommand(input);
@@ -796,6 +803,50 @@ export function resolveBattleSubjectInternal(
     return _exhaustive;
   })();
   return consumeOrCloseLegendaryActionWindow(input.subject, result);
+}
+
+function resolveDisperseFogCloudCommand(
+  input: BattleResolutionInput & {
+    readonly subject: Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "disperseFogCloud";
+      }
+    >;
+  },
+): BattleResolutionResult {
+  if (input.fills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Fog Cloud strong-wind dispersal uses no fills.",
+    );
+  }
+  const source = input.state.combatants.get(input.subject.sourceCombatantId);
+  const fogCloud = source?.activeEffects.find(
+    (effect) =>
+      effect.kind === "fogCloudObscurement" &&
+      effect.sourceSpellId === input.subject.sourceSpellId &&
+      effect.sourceCombatantId === input.subject.sourceCombatantId &&
+      effect.areaId === input.subject.areaId,
+  );
+  if (fogCloud === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Fog Cloud area is no longer active.",
+    );
+  }
+  const nextState = breakBattleConcentration(
+    input.state,
+    input.subject.sourceCombatantId,
+  );
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
 }
 
 function subjectSuppressedByCommandHalt(subject: BattleSubject): boolean {
@@ -1258,7 +1309,7 @@ export function resolveCastTriggeredReactionSpellCommand(
   const reactor = input.state.combatants.get(input.subject.reactorId);
   const invocation =
     reactor?.origin.kind === "character"
-      ? supportedSpellActs(reactor).find(
+      ? supportedSpellActs(reactor, input.state).find(
           (candidate) =>
             (candidate.procedure === "shieldReaction" ||
               candidate.procedure === "saveGatedDamage" ||
@@ -1772,7 +1823,7 @@ export function resolveCastAttackHitBonusActionSpellCommand(
       : undefined;
   const invocation =
     actor?.origin.kind === "character"
-      ? supportedSpellActs(actor).find(
+      ? supportedSpellActs(actor, input.state).find(
           (candidate) =>
             (candidate.procedure === "afterHitDamage" ||
               candidate.procedure === "afterHitSaveGatedCondition" ||
@@ -3359,7 +3410,7 @@ export function attackHitBonusActionSpellReactionChoices(
   ) {
     return [];
   }
-  return supportedSpellActs(actor).flatMap(
+  return supportedSpellActs(actor, state).flatMap(
     (invocation): readonly BattleReactionProcedureChoice[] => {
       if (
         (invocation.procedure !== "afterHitDamage" &&

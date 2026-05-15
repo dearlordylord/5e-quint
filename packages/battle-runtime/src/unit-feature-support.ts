@@ -2993,8 +2993,6 @@ function parseOngoingFeatureEffects(
       effect.kind === "modify_roll_advantage" &&
       effect.on.includes("attack_roll")
     ) {
-      const abilityFilter =
-        "abilityFilter" in effect ? effect.abilityFilter : undefined;
       if (effect.on.some((target) => target !== "attack_roll")) {
         return null;
       }
@@ -3003,7 +3001,9 @@ function parseOngoingFeatureEffects(
           effect.attackerTypeFilter !== undefined) ||
         ("skillFilter" in effect && effect.skillFilter !== undefined) ||
         ("conditionFilter" in effect && effect.conditionFilter !== undefined) ||
-        (abilityFilter !== undefined && !Array.isArray(abilityFilter)) ||
+        ("abilityFilter" in effect &&
+          effect.abilityFilter !== undefined &&
+          !Array.isArray(effect.abilityFilter)) ||
         ("saveAbilityFilter" in effect &&
           effect.saveAbilityFilter !== undefined) ||
         ("saveSourceFilter" in effect &&
@@ -3015,7 +3015,11 @@ function parseOngoingFeatureEffects(
       ) {
         return null;
       }
-      rollModifiers.push({
+      const abilityFilter: readonly Ability[] | undefined =
+        "abilityFilter" in effect && Array.isArray(effect.abilityFilter)
+          ? effect.abilityFilter
+          : undefined;
+      const rollModifier: OngoingFeatureRollModifier = {
         mode: effect.mode,
         affects:
           effect.affects === "rolls_against_self"
@@ -3023,7 +3027,8 @@ function parseOngoingFeatureEffects(
             : "selfRoll",
         on: "attackRoll",
         ...(abilityFilter === undefined ? {} : { abilityFilter }),
-      });
+      };
+      rollModifiers.push(rollModifier);
       continue;
     }
     if (effect.kind === "modify_damage_numeric") {

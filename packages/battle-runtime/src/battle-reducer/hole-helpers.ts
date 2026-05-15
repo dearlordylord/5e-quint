@@ -4,8 +4,9 @@
 // hideAbilityCheckHole, searchAbilityCheckHole, escapeSpellRestraintAbilityCheckHole (from H).
 
 import { Match } from "effect";
+import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { difficultyClass, type DifficultyClass } from "@dnd/shared/types";
-import type { UnitRecord } from "@dnd/surface/surface/types";
+import type { Ability, UnitRecord } from "@dnd/surface/surface/types";
 import type { CombatantId } from "../identity.ts";
 import type {
   BattleMovementSpeedKind,
@@ -81,7 +82,14 @@ export function bonusActionDashSubjectForSpeedKind(
   };
 }
 
-export function hideAbilityCheckHole(): BattleAbilityCheckHole {
+export function hideAbilityCheckHole(
+  state?: BattleState,
+  actorId?: CombatantId,
+): BattleAbilityCheckHole {
+  const rollMode =
+    state === undefined || actorId === undefined
+      ? undefined
+      : requiredAbilityCheckRollMode(state, actorId, "dex");
   return {
     holeInstanceKey: HIDE_ABILITY_CHECK_HOLE_INSTANCE,
     holeId: HIDE_ABILITY_CHECK_HOLE_ID,
@@ -90,12 +98,19 @@ export function hideAbilityCheckHole(): BattleAbilityCheckHole {
     ability: "dex",
     skill: "stealth",
     dc: HIDE_DC,
+    ...(rollMode === undefined ? {} : { rollMode }),
   };
 }
 
 export function searchAbilityCheckHole(
   dc: DifficultyClass,
+  state?: BattleState,
+  actorId?: CombatantId,
 ): BattleAbilityCheckHole {
+  const rollMode =
+    state === undefined || actorId === undefined
+      ? undefined
+      : requiredAbilityCheckRollMode(state, actorId, "wis");
   return {
     holeInstanceKey: SEARCH_ABILITY_CHECK_HOLE_INSTANCE,
     holeId: SEARCH_ABILITY_CHECK_HOLE_ID,
@@ -104,6 +119,7 @@ export function searchAbilityCheckHole(
     ability: "wis",
     skill: "perception",
     dc,
+    ...(rollMode === undefined ? {} : { rollMode }),
   };
 }
 
@@ -113,6 +129,7 @@ export function escapeSpellRestraintAbilityCheckHole(
   input: { readonly actorId: CombatantId; readonly targetId: CombatantId },
 ): BattleAbilityCheckHole {
   const dc = spellSaveDcForCaster(state, effect.sourceCombatantId);
+  const rollMode = requiredAbilityCheckRollMode(state, input.actorId, "str");
   return {
     holeInstanceKey: ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_INSTANCE,
     holeId: ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_ID,
@@ -121,10 +138,27 @@ export function escapeSpellRestraintAbilityCheckHole(
     ability: "str",
     skill: "athletics",
     dc: dc ?? difficultyClass(1),
+    ...(rollMode === undefined ? {} : { rollMode }),
     ...(input.actorId === input.targetId
       ? {}
       : { requiresTableSpatialFact: true }),
   };
+}
+
+export function requiredAbilityCheckRollMode(
+  state: BattleState,
+  actorId: CombatantId,
+  ability: Ability,
+): AttackRollMode | undefined {
+  const hasDisadvantage = [...state.combatants.values()].some((combatant) =>
+    combatant.activeEffects.some(
+      (effect) =>
+        effect.kind === "spellMarkedDamageRider" &&
+        effect.targetCombatantId === actorId &&
+        effect.abilityCheckDisadvantage?.ability === ability,
+    ),
+  );
+  return hasDisadvantage ? "disadvantage" : undefined;
 }
 
 export function needsHolesResult(
@@ -335,7 +369,8 @@ export function bonusActionStandardActionActs(
                 },
           label: alternateActionCostActionLabel(action),
           summary: `${alternateActionCostActionLabel(action)} as a Bonus Action.`,
-          initialHoles: action === "hide" ? [hideAbilityCheckHole()] : [],
+          initialHoles:
+            action === "hide" ? [hideAbilityCheckHole(state, actorId)] : [],
         }));
       }),
   );

@@ -63,6 +63,14 @@ export function supportedSpellInvocationRef(
       procedure: "greaseGroundHazard",
     };
   }
+  if (invocation.procedure === "fogCloudObscurement") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "fogCloudObscurement",
+    };
+  }
   if (invocation.procedure === "command") {
     return {
       tag: "spellSlot",

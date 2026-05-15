@@ -32,10 +32,12 @@ import { representedMovementSpeedKinds } from "./movement-speed.ts";
 import {
   scalarBuffInitialHoles,
   commandOptionChoiceHole,
+  spellAbilityChoiceHole,
   spellDamageTypeChoiceHole,
   spellBeamObjectTargetHole,
   spellBeamTargetHole,
   spellObjectTargetHole,
+  spellAreaChoiceHole,
   spellRollModifierSkillChoiceHole,
   spellSavingThrowAbility,
   spellSavingThrowOutcomeHole,
@@ -55,7 +57,7 @@ export function discoverSupportedSpellInvocations(
     return [];
   }
   const spellcastingPrevented = activeOngoingFeaturesPreventSpellcasting(actor);
-  return supportedSpellActs(actor).flatMap(
+  return supportedSpellActs(actor, state).flatMap(
     (invocation): readonly AvailableBattleAct[] => {
       if (invocation.procedure === "shieldReaction") {
         return [];
@@ -94,6 +96,21 @@ export function discoverSupportedSpellInvocations(
                 initialHoles: [targetHole, commandOptionChoiceHole(invocation)],
               },
             ];
+      }
+      if (invocation.procedure === "fogCloudObscurement") {
+        return [
+          {
+            subject: {
+              tag: "actionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: invocation.spell.name,
+            summary: `${spellActivationInvocationCastSummary(invocation)} The table supplies the fog area identity.`,
+            initialHoles: [spellAreaChoiceHole(invocation)],
+          },
+        ];
       }
       if (
         invocation.procedure === "saveGatedDamage" ||
@@ -287,6 +304,10 @@ export function discoverSupportedSpellInvocations(
       }
       if (invocation.procedure === "markedDamageRider") {
         const targetHole = spellTargetHole(state, actorId, invocation);
+        const initialHoles =
+          invocation.action === "cast" && invocation.abilityChoices !== null
+            ? [targetHole, spellAbilityChoiceHole(invocation)]
+            : [targetHole];
         return targetHole.choices.length === 0
           ? []
           : [
@@ -299,7 +320,7 @@ export function discoverSupportedSpellInvocations(
                 },
                 label: invocation.spell.name,
                 summary: spellInvocationCastSummary(invocation),
-                initialHoles: [targetHole],
+                initialHoles,
               },
             ];
       }
@@ -636,6 +657,7 @@ export function spellActivationInvocationCastSummary(
         | "sleepTargetAdmission"
         | "command"
         | "greaseGroundHazard"
+        | "fogCloudObscurement"
         | "jumpMovementReplacement"
         | "featherFallMitigation";
     }
@@ -737,6 +759,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "sleepTargetAdmission" &&
     invocation.procedure !== "command" &&
     invocation.procedure !== "greaseGroundHazard" &&
+    invocation.procedure !== "fogCloudObscurement" &&
     invocation.procedure !== "spellAttackBeamSequence" &&
     invocation.procedure !== "shieldReaction"
   );
@@ -772,6 +795,7 @@ export function readiedSpellAct(
     invocation.procedure === "sleepTargetAdmission" ||
     invocation.procedure === "command" ||
     invocation.procedure === "greaseGroundHazard" ||
+    invocation.procedure === "fogCloudObscurement" ||
     invocation.procedure === "shieldReaction" ||
     (invocation.procedure === "spellAttackDamage" &&
       invocation.damage.kind === "sorcerousBurstDamageTypeChoice") ||

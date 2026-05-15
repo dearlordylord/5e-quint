@@ -2,7 +2,7 @@
 // Owns classification and validation of supplied fills against spell replay holes.
 
 import { type AttackRollResult } from "@dnd/shared-algebras/runtime-hole-algebra";
-import type { Skill } from "@dnd/surface/surface/types";
+import type { Ability, Skill } from "@dnd/surface/surface/types";
 import {
   ATTACK_ROLL_HOLE_ID,
   ATTACK_TARGET_HOLE_ID,
@@ -11,6 +11,7 @@ import {
   type BattleAttackRollResult,
   type BattleCommandOption,
   type BattleFill,
+  type BattleFogCloudAreaChoice,
   type BattleHoleId,
   type BattleSpellSavingThrowOutcomeValue,
   type BattleSpellTargetAllocation,
@@ -31,7 +32,9 @@ import {
   commandOptionChoiceHoleId,
   spellDamageHole,
   spellDamageTypeChoiceHole,
+  spellAreaChoiceHoleId,
   spellObjectTargetHoleId,
+  spellAbilityChoiceHoleId,
   spellRollModifierSkillChoiceHoleId,
   spellSavingThrowOutcomeHoleId,
   spellTargetAllocationHoleId,
@@ -109,7 +112,9 @@ export type SpellFillSet =
         | BattleSpellSavingThrowOutcomeValue
         | undefined;
       readonly skillChoice: Skill | undefined;
+      readonly abilityChoice: Ability | undefined;
       readonly commandOptionChoice: BattleCommandOption | undefined;
+      readonly areaChoice: BattleFogCloudAreaChoice | undefined;
       readonly damageTypeChoice:
         | Extract<BattleFill, { readonly kind: "damageTypeChoice" }>
         | undefined;
@@ -184,7 +189,9 @@ export function spellFillSet(
       : [];
   let savingThrowOutcomes: BattleSpellSavingThrowOutcomeValue | undefined;
   let skillChoice: Skill | undefined;
+  let abilityChoice: Ability | undefined;
   let commandOptionChoice: BattleCommandOption | undefined;
+  let areaChoice: BattleFogCloudAreaChoice | undefined;
   let damageTypeChoice:
     | Extract<BattleFill, { readonly kind: "damageTypeChoice" }>
     | undefined;
@@ -335,6 +342,27 @@ export function spellFillSet(
             fact.kind === "spellObjectTargetSight",
         ),
       };
+      continue;
+    }
+
+    if (fill.kind === "spellAreaChoice") {
+      if (invocation.procedure !== "fogCloudObscurement") {
+        return {
+          tag: "invalid",
+          message: "Spell area choice does not match this spell act.",
+        };
+      }
+      if (fill.holeId !== spellAreaChoiceHoleId(invocation)) {
+        return {
+          tag: "invalid",
+          message:
+            "Spell area choice must use the selected spell act area-choice hole.",
+        };
+      }
+      if (areaChoice !== undefined) {
+        return { tag: "invalid", message: "Spell area was filled twice." };
+      }
+      areaChoice = fill.value;
       continue;
     }
 
@@ -567,6 +595,40 @@ export function spellFillSet(
       continue;
     }
 
+    if (fill.kind === "abilityChoice") {
+      if (
+        invocation.procedure !== "markedDamageRider" ||
+        invocation.action !== "cast" ||
+        invocation.abilityChoices === null
+      ) {
+        return {
+          tag: "invalid",
+          message: "Spell ability choice does not match this spell act.",
+        };
+      }
+      if (fill.holeId !== spellAbilityChoiceHoleId(invocation)) {
+        return {
+          tag: "invalid",
+          message:
+            "Spell ability choice must use the selected spell act ability-choice hole.",
+        };
+      }
+      if (!invocation.abilityChoices.includes(fill.value)) {
+        return {
+          tag: "invalid",
+          message: "Spell ability choice is not available for this spell.",
+        };
+      }
+      if (abilityChoice !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Spell ability choice was filled twice.",
+        };
+      }
+      abilityChoice = fill.value;
+      continue;
+    }
+
     if (fill.kind === "damageTypeChoice") {
       if (
         invocation.procedure !== "damageReduction" &&
@@ -757,7 +819,9 @@ export function spellFillSet(
     attackRoll,
     savingThrowOutcomes,
     skillChoice,
+    abilityChoice,
     commandOptionChoice,
+    areaChoice,
     damageTypeChoice,
     concentrationSavingThrows,
     damageDispositions,

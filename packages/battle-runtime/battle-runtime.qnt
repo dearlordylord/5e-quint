@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points
@@ -12,6 +12,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-damage-reduction
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-sleep-repeat-save-lifecycle
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-grease-ground-hazard
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-fog-cloud-obscurement
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-command-halt-grovel
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-command-drop-held-object
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-command-approach-route
@@ -250,6 +251,12 @@ module battleRuntime {
   //   minute, and forces Dexterity Saving Throws when the grease appears, when
   //   a creature enters the area, and when a creature ends its turn there; a
   //   failed save gives the Prone condition.
+  //   Spells/Descriptions-E-L.md lines 584-595, Rules-Glossary.md lines
+  //   239-247, 524-526, and 924-928, and UBIQUITOUS_LANGUAGE.md: Fog Cloud is a
+  //   level-1 Action spell that creates a caller-supplied 20-foot-radius
+  //   Sphere of fog, makes that area Heavily Obscured while Concentration
+  //   lasts up to 1 hour, increases the radius by 20 feet per slot above 1,
+  //   and ends early when the table supplies the strong-wind dispersal fact.
   //   Spells/Descriptions-A-D.md lines 820-835, Playing-the-Game.md lines
   //   533-551 and 634-640, Rules-Glossary.md lines 738-740 and 904-910,
   //   and UBIQUITOUS_LANGUAGE.md: Command is a level-1 Action spell whose
@@ -308,8 +315,9 @@ module battleRuntime {
 
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
+  type Ability = StrAbility | DexAbility | ConAbility | IntAbility | WisAbility | ChaAbility
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | FireBolt | EldritchBlast | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | Light | TrueStrike | Grease | Command | DissonantWhispers | FeatherFall | HellishRebuke | SorcerousBurst | SpareTheDying
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | FireBolt | EldritchBlast | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | Hex | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | Light | TrueStrike | Grease | FogCloud | Command | DissonantWhispers | FeatherFall | HellishRebuke | SorcerousBurst | SpareTheDying
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | StarryWispSpellAttack | FireBoltSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack | SorcerousBurstSpellAttack({ damageTypeChoice: BattleRuntimeSorcerousBurstDamageTypeChoice, spellcastingAbilityModifier: int, characterLevel: int })
   type FixedSpellAttackDamageInvocation = RayOfFrostFixedSpellAttack | PoisonSprayFixedSpellAttack | ChillTouchFixedSpellAttack | StarryWispFixedSpellAttack | FireBoltFixedSpellAttack | ShockingGraspFixedSpellAttack | GuidingBoltFixedSpellAttack | RayOfSicknessFixedSpellAttack | ProduceFlameHurlFixedSpellAttack
   type SpellAttackBeamSequenceInvocation =
@@ -340,11 +348,13 @@ module battleRuntime {
   type SpellActionCost = SpellMagicAction | SpellBonusAction
   type CommandOption = CommandGrovelOption | CommandHaltOption | CommandDropOption | CommandApproachOption | CommandFleeOption
 
-  type ActiveEffect = BardicInspirationDie({ source: Actor, dieSize: int, durationTicks: int }) | MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transferAvailable: bool, durationTicks: int }) | RayOfSicknessPoisoned | ChillTouchHitPointRegainPrevented({ source: Actor, expiresAtRound: int }) | StarryWispInvisibleBenefitDenied({ source: Actor, expiresAtRound: int }) | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | WeaponMasterySapNextAttackDisadvantage({ source: Actor }) | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodCreatureTypeProtection | ProduceFlameHeldLight({ durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
+  type MarkedDamageRiderTransfer = AwaitingTargetDrop | TransferAvailable | TransferAvailableAfterTurn({ actor: Actor, round: int })
+  type ActiveEffect = BardicInspirationDie({ source: Actor, dieSize: int, durationTicks: int }) | MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | HexDamageRider({ target: Actor, ability: Ability, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | RayOfSicknessPoisoned | ChillTouchHitPointRegainPrevented({ source: Actor, expiresAtRound: int }) | StarryWispInvisibleBenefitDenied({ source: Actor, expiresAtRound: int }) | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | WeaponMasterySapNextAttackDisadvantage({ source: Actor }) | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodCreatureTypeProtection | ProduceFlameHeldLight({ durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | FogCloudObscurement({ areaId: int, radiusFeet: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
   type PreventedProtectionCondition = PreventedCharmed | PreventedFrightened
   type PossessionAttemptDisposition = PossessionPreventedByCreatureTypeProtection | PossessionUnprevented
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
   type SavingThrowRollMode = NormalSavingThrow | AdvantageSavingThrow | DisadvantageSavingThrow
+  type AbilityCheckRollMode = NormalAbilityCheck | DisadvantageAbilityCheck
   type SpellSourceClass = SorcererSpellSource | NonSorcererSpellSource
   type RuntimeCreatureType = HumanoidCreature | BeastCreature | AberrationCreature | CelestialCreature | ElementalCreature | FeyCreature | FiendCreature | UndeadCreature
   type ObjectTarget =
@@ -1126,7 +1136,13 @@ module battleRuntime {
           })
         | HuntersMarkDamageRider(data) => HuntersMarkDamageRider({
             target: data.target,
-            transferAvailable: data.transferAvailable,
+            transfer: data.transfer,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
+        | HexDamageRider(data) => HexDamageRider({
+            target: data.target,
+            ability: data.ability,
+            transfer: data.transfer,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
         | SearingSmiteBurning(data) => SearingSmiteBurning({
@@ -1155,6 +1171,11 @@ module battleRuntime {
             areaId: data.areaId,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
+        | FogCloudObscurement(data) => FogCloudObscurement({
+            areaId: data.areaId,
+            radiusFeet: data.radiusFeet,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | BardicInspirationDie(data) => BardicInspirationDie({
             source: data.source,
             dieSize: data.dieSize,
@@ -1165,6 +1186,7 @@ module battleRuntime {
       .filter(effect => match effect {
         | DivineFavorWeaponDamageRider(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | HuntersMarkDamageRider(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | HexDamageRider(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | SearingSmiteBurning(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | AnimalFriendshipCharmed(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | CharmPersonCharmed(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
@@ -1172,6 +1194,7 @@ module battleRuntime {
         | JumpMovementReplacement(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | FeatherFallMitigation(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | GreaseGroundHazard(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | FogCloudObscurement(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | BardicInspirationDie(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | _ => true
       })
@@ -1185,13 +1208,13 @@ module battleRuntime {
       fighter: {
         ...state.fighter,
         concentrating: state.fighter.concentrating
-          and (not(activeEffectsContainHuntersMark(state.fighter.activeEffects)) or activeEffectsContainHuntersMark(fighterEffects)),
+          and (not(activeEffectsContainTimedConcentrationSpellEffect(state.fighter.activeEffects)) or activeEffectsContainTimedConcentrationSpellEffect(fighterEffects)),
         activeEffects: fighterEffects,
       },
       goblin: {
         ...state.goblin,
         concentrating: state.goblin.concentrating
-          and (not(activeEffectsContainHuntersMark(state.goblin.activeEffects)) or activeEffectsContainHuntersMark(goblinEffects)),
+          and (not(activeEffectsContainTimedConcentrationSpellEffect(state.goblin.activeEffects)) or activeEffectsContainTimedConcentrationSpellEffect(goblinEffects)),
         activeEffects: goblinEffects,
       },
     }
@@ -1262,6 +1285,7 @@ module battleRuntime {
         | ResistanceDamageReduction(_) => false
         | DivineFavorWeaponDamageRider(_) => false
         | HuntersMarkDamageRider(_) => false
+        | HexDamageRider(_) => false
         | RayOfSicknessPoisoned => false
         | ChillTouchHitPointRegainPrevented(_) => false
         | StarryWispInvisibleBenefitDenied(_) => false
@@ -1284,6 +1308,7 @@ module battleRuntime {
         | SleepPendingRepeatSave(_) => false
         | SleepUnconscious(_) => false
         | GreaseGroundHazard(_) => false
+        | FogCloudObscurement(_) => false
         | CommandPending(_) => false
       })) 13 + dexMod else baseAc
       val shieldBonus = if (effects.contains(ShieldArmorClassBonus)) 5 else 0
@@ -2601,6 +2626,7 @@ module battleRuntime {
         | HeroismTurnStartTemporaryHitPoints(_) => false
         | EnsnaringStrikeRestrained(_) => false
         | SearingSmiteBurning(_) => false
+        | FogCloudObscurement(_) => false
         | ResistanceDamageReduction(_) => false
         | SleepPendingRepeatSave(_) => false
         | SleepUnconscious(_) => false
@@ -2655,7 +2681,7 @@ module battleRuntime {
     {
       ...withoutSpellEffectConcentration,
       concentrating: false,
-      activeEffects: activeEffectsWithoutHuntersMark(withoutSpellEffectConcentration.activeEffects).exclude(Set(MageArmor)),
+      activeEffects: activeEffectsWithoutMarkedDamageRider(withoutSpellEffectConcentration.activeEffects).exclude(Set(MageArmor)),
     }
   }
 
@@ -4085,10 +4111,10 @@ module battleRuntime {
         fighter: {
           ...state.fighter,
           concentrating: true,
-          activeEffects: activeEffectsWithoutHuntersMark(state.fighter.activeEffects)
+            activeEffects: activeEffectsWithoutHuntersMark(state.fighter.activeEffects)
             .union(Set(HuntersMarkDamageRider({
               target: target,
-              transferAvailable: false,
+              transfer: AwaitingTargetDrop,
               durationTicks: huntersMarkDurationTicks(slotLevel),
             }))),
         },
@@ -4118,10 +4144,10 @@ module battleRuntime {
           fighter: {
             ...state.fighter,
             concentrating: true,
-            activeEffects: activeEffectsWithoutHuntersMark(state.fighter.activeEffects)
+              activeEffects: activeEffectsWithoutHuntersMark(state.fighter.activeEffects)
               .union(Set(HuntersMarkDamageRider({
                 target: target,
-                transferAvailable: false,
+                transfer: AwaitingTargetDrop,
                 durationTicks: huntersMarkDurationTicks(1),
               }))),
           },
@@ -4137,18 +4163,79 @@ module battleRuntime {
       currentActor(state) == Fighter and
       target == Goblin and
       state.bonusActionAvailable and
-      activeEffectsContainTransferableHuntersMark(state.fighter.activeEffects) and
+      activeEffectsContainTransferableHuntersMark(state, state.fighter.activeEffects) and
       state.fighter.concentrating
     )
       {
         ...state,
         fighter: {
           ...state.fighter,
-          activeEffects: activeEffectsWithoutHuntersMark(state.fighter.activeEffects)
+              activeEffects: activeEffectsWithoutHuntersMark(state.fighter.activeEffects)
             .union(Set(HuntersMarkDamageRider({
               target: target,
-              transferAvailable: false,
+              transfer: AwaitingTargetDrop,
               durationTicks: activeEffectsHuntersMarkDurationTicks(state.fighter.activeEffects),
+            }))),
+        },
+        bonusActionAvailable: false,
+      }
+    else
+      state
+
+  pure def hexDurationTicks(slotLevel: int): int =
+    if (slotLevel >= 5) 60 * 60 * 24
+    else if (slotLevel >= 3) 60 * 60 * 8
+    else if (slotLevel >= 2) 60 * 60 * 4
+    else 60 * 60
+
+  pure def resolveHex(state: BattleState, target: Actor, ability: Ability, slotLevel: int): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      target == Goblin and
+      slotLevel >= 1 and
+      state.bonusActionAvailable and
+      canExpendSpellSlotThisTurn(state) and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state))
+    )
+      {
+        ...state,
+        fighter: {
+          ...state.fighter,
+          concentrating: true,
+          activeEffects: activeEffectsWithoutHex(state.fighter.activeEffects)
+            .union(Set(HexDamageRider({
+              target: target,
+              ability: ability,
+              transfer: AwaitingTargetDrop,
+              durationTicks: hexDurationTicks(slotLevel),
+            }))),
+        },
+        bonusActionAvailable: false,
+        spellSlotExpendedThisTurn: true,
+      }
+    else
+      state
+
+  pure def transferHex(state: BattleState, target: Actor): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      target == Goblin and
+      state.bonusActionAvailable and
+      activeEffectsContainTransferableHex(state, state.fighter.activeEffects) and
+      state.fighter.concentrating
+    )
+      {
+        ...state,
+        fighter: {
+          ...state.fighter,
+          activeEffects: activeEffectsWithoutHex(state.fighter.activeEffects)
+            .union(Set(HexDamageRider({
+              target: target,
+              ability: activeEffectsHexAbility(state.fighter.activeEffects),
+              transfer: AwaitingTargetDrop,
+              durationTicks: activeEffectsHexDurationTicks(state.fighter.activeEffects),
             }))),
         },
         bonusActionAvailable: false,
@@ -4160,6 +4247,30 @@ module battleRuntime {
     effects.filter(effect => match effect {
       | HuntersMarkDamageRider(_) => false
       | _ => true
+    })
+
+  pure def activeEffectsWithoutHex(effects: Set[ActiveEffect]): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | HexDamageRider(_) => false
+      | _ => true
+    })
+
+  pure def activeEffectsWithoutMarkedDamageRider(effects: Set[ActiveEffect]): Set[ActiveEffect] =
+    activeEffectsWithoutHex(activeEffectsWithoutHuntersMark(effects))
+
+  pure def activeEffectsContainMarkedDamageRider(effects: Set[ActiveEffect]): bool =
+    effects.exists(effect => match effect {
+      | HuntersMarkDamageRider(_) => true
+      | HexDamageRider(_) => true
+      | _ => false
+    })
+
+  pure def activeEffectsContainTimedConcentrationSpellEffect(effects: Set[ActiveEffect]): bool =
+    effects.exists(effect => match effect {
+      | HuntersMarkDamageRider(_) => true
+      | HexDamageRider(_) => true
+      | FogCloudObscurement(_) => true
+      | _ => false
     })
 
   pure def activeEffectsContainHuntersMark(effects: Set[ActiveEffect]): bool =
@@ -4174,9 +4285,34 @@ module battleRuntime {
       | _ => 0
     }).fold(0, (highest, ticks) => if (highest > ticks) highest else ticks)
 
-  pure def activeEffectsContainTransferableHuntersMark(effects: Set[ActiveEffect]): bool =
+  pure def activeEffectsHexDurationTicks(effects: Set[ActiveEffect]): int =
+    effects.map(effect => match effect {
+      | HexDamageRider(data) => data.durationTicks
+      | _ => 0
+    }).fold(0, (highest, ticks) => if (highest > ticks) highest else ticks)
+
+  pure def activeEffectsHexAbility(effects: Set[ActiveEffect]): Ability =
+    effects.map(effect => match effect {
+      | HexDamageRider(data) => data.ability
+      | _ => StrAbility
+    }).fold(StrAbility, (selected, ability) => if (selected == StrAbility) ability else selected)
+
+  pure def markedDamageRiderTransferIsAvailable(state: BattleState, transfer: MarkedDamageRiderTransfer): bool =
+    match transfer {
+      | AwaitingTargetDrop => false
+      | TransferAvailable => true
+      | TransferAvailableAfterTurn(data) => data.actor != currentActor(state) or data.round != state.initiative.round
+    }
+
+  pure def activeEffectsContainTransferableHuntersMark(state: BattleState, effects: Set[ActiveEffect]): bool =
     effects.exists(effect => match effect {
-      | HuntersMarkDamageRider(data) => data.transferAvailable
+      | HuntersMarkDamageRider(data) => markedDamageRiderTransferIsAvailable(state, data.transfer)
+      | _ => false
+    })
+
+  pure def activeEffectsContainTransferableHex(state: BattleState, effects: Set[ActiveEffect]): bool =
+    effects.exists(effect => match effect {
+      | HexDamageRider(data) => markedDamageRiderTransferIsAvailable(state, data.transfer)
       | _ => false
     })
 
@@ -4185,6 +4321,18 @@ module battleRuntime {
       | HuntersMarkDamageRider(data) => data.target == target
       | _ => false
     })) huntersMarkDamageRoll else 0
+
+  pure def fighterHexDamage(hexDamageRoll: int, effects: Set[ActiveEffect], target: Actor): int =
+    if (effects.exists(effect => match effect {
+      | HexDamageRider(data) => data.target == target
+      | _ => false
+    })) hexDamageRoll else 0
+
+  pure def hexAbilityCheckRollMode(effects: Set[ActiveEffect], actor: Actor, ability: Ability): AbilityCheckRollMode =
+    if (effects.exists(effect => match effect {
+      | HexDamageRider(data) => data.target == actor and data.ability == ability
+      | _ => false
+    })) DisadvantageAbilityCheck else NormalAbilityCheck
 
   pure def rollModifierMaximumTargets(invocation: RollModifierSpell, slotLevel: int): int =
     match invocation {
@@ -4748,6 +4896,7 @@ module battleRuntime {
       | DivineFavor => true
       | DivineSmite => true
       | HuntersMark => true
+      | Hex => true
       | ShockingGrasp => false
       | GuidingBolt => true
       | RayOfSickness => true
@@ -4756,6 +4905,7 @@ module battleRuntime {
       | Light => false
       | TrueStrike => false
       | Grease => true
+      | FogCloud => true
       | Command => true
       | DissonantWhispers => true
       | FeatherFall => true
@@ -5984,6 +6134,10 @@ module battleRuntime {
 
   pure val greaseDurationTicks = 10
   pure val greaseAreaId = 1
+  pure val fogCloudDurationTicks = 600
+  pure val fogCloudAreaId = 2
+  pure val fogCloudBaseRadiusFeet = 20
+  pure val fogCloudRadiusFeetPerSlotAboveFirst = 20
 
   pure def activeEffectsWithoutGreaseGroundHazard(effects: Set[ActiveEffect], areaId: int): Set[ActiveEffect] =
     effects.filter(effect => match effect {
@@ -6059,6 +6213,53 @@ module battleRuntime {
     savingThrowSucceeded: bool,
   ): BattleState =
     endTurn(resolveGreaseGroundHazardSave(state, targetActor, areaId, savingThrowSucceeded))
+
+  pure def fogCloudRadiusFeet(slotLevel: int): int =
+    fogCloudBaseRadiusFeet + ((slotLevel - 1) * fogCloudRadiusFeetPerSlotAboveFirst)
+
+  pure def activeEffectsWithoutFogCloudObscurement(effects: Set[ActiveEffect], areaId: int): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | FogCloudObscurement(data) => data.areaId != areaId
+      | _ => true
+    })
+
+  pure def resolveFogCloud(
+    state: BattleState,
+    areaId: int,
+    slotLevel: int,
+  ): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)) or slotLevel < 1)
+      state
+    else {
+      val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
+      {
+        ...withoutPrior,
+        fighter: {
+          ...withoutPrior.fighter,
+          concentrating: true,
+          activeEffects: activeEffectsWithoutFogCloudObscurement(withoutPrior.fighter.activeEffects, areaId)
+            .union(Set(FogCloudObscurement({
+              areaId: areaId,
+              radiusFeet: fogCloudRadiusFeet(slotLevel),
+              durationTicks: fogCloudDurationTicks,
+            }))),
+        },
+        actionAvailable: false,
+        spellSlotExpendedThisTurn: true,
+      }
+    }
+
+  pure def fogCloudObscurementActive(state: BattleState, areaId: int): bool =
+    state.fighter.activeEffects.exists(effect => match effect {
+      | FogCloudObscurement(data) => data.areaId == areaId
+      | _ => false
+    })
+
+  pure def disperseFogCloudByStrongWind(state: BattleState, areaId: int): BattleState =
+    if (fogCloudObscurementActive(state, areaId))
+      breakConcentrationSpellEffects(state, Fighter)
+    else
+      state
 
   pure def commandMaxTargets(slotLevel: int): int =
     slotLevel
@@ -7276,6 +7477,7 @@ module battleRuntime {
       assert(expendedSlotsAfterInvocation(Bless, 0) == 1),
       assert(expendedSlotsAfterInvocation(Guidance, 0) == 0),
       assert(expendedSlotsAfterInvocation(Grease, 0) == 1),
+      assert(expendedSlotsAfterInvocation(FogCloud, 0) == 1),
       assert(expendedSlotsAfterInvocation(Command, 0) == 1),
     }
   }
@@ -7325,6 +7527,51 @@ module battleRuntime {
     all {
       assert(endTurnFailed.goblin.prone),
       assert(currentActor(endTurnFailed) == Fighter),
+    }
+  }
+
+  run test_fog_cloud_records_heavily_obscured_area_and_concentration = {
+    val resolved = resolveFogCloud(initialState, fogCloudAreaId, 1)
+    all {
+      assert(resolved.fighter.activeEffects.contains(FogCloudObscurement({
+        areaId: fogCloudAreaId,
+        radiusFeet: 20,
+        durationTicks: fogCloudDurationTicks,
+      }))),
+      assert(resolved.fighter.concentrating),
+      assert(not(resolved.actionAvailable)),
+      assert(resolved.spellSlotExpendedThisTurn),
+    }
+  }
+
+  run test_fog_cloud_slot_scaling_increases_radius_by_twenty_feet = {
+    val resolved = resolveFogCloud(initialState, fogCloudAreaId, 3)
+    all {
+      assert(fogCloudRadiusFeet(1) == 20),
+      assert(fogCloudRadiusFeet(3) == 60),
+      assert(resolved.fighter.activeEffects.contains(FogCloudObscurement({
+        areaId: fogCloudAreaId,
+        radiusFeet: 60,
+        durationTicks: fogCloudDurationTicks,
+      }))),
+    }
+  }
+
+  run test_fog_cloud_concentration_break_removes_obscurement = {
+    val resolved = resolveFogCloud(initialState, fogCloudAreaId, 1)
+    val broken = breakConcentrationSpellEffects(resolved, Fighter)
+    all {
+      assert(not(fogCloudObscurementActive(broken, fogCloudAreaId))),
+      assert(not(broken.fighter.concentrating)),
+    }
+  }
+
+  run test_fog_cloud_strong_wind_dispersal_removes_obscurement = {
+    val resolved = resolveFogCloud(initialState, fogCloudAreaId, 1)
+    val dispersed = disperseFogCloudByStrongWind(resolved, fogCloudAreaId)
+    all {
+      assert(not(fogCloudObscurementActive(dispersed, fogCloudAreaId))),
+      assert(not(dispersed.fighter.concentrating)),
     }
   }
 
@@ -7789,6 +8036,8 @@ module battleRuntime {
       assert(spellInvocationSpendsLevelOneSlot(DivineFavor)),
       assert(spellInvocationSpendsLevelOneSlot(DivineSmite)),
       assert(spellInvocationSpendsLevelOneSlot(HuntersMark)),
+      assert(spellInvocationSpendsLevelOneSlot(Hex)),
+      assert(spellInvocationSpendsLevelOneSlot(FogCloud)),
       assert(fighterDivineFavorDamage(3, Set(DivineFavorWeaponDamageRider({ durationTicks: 1 }))) == 3),
       assert(fighterDivineFavorDamage(3, Set()) == 0),
       assert(divineSmiteDamageDice(1, HumanoidCreature) == 2),
@@ -7803,9 +8052,26 @@ module battleRuntime {
       assert(not(resolveFavoredEnemyHuntersMark(initialState, Goblin, 2).state.spellSlotExpendedThisTurn)),
       assert(activeEffectsContainHuntersMark(resolveFavoredEnemyHuntersMark(initialState, Goblin, 2).state.fighter.activeEffects)),
       assert(resolveFavoredEnemyHuntersMark(initialState, Goblin, 0).state == initialState),
-      assert(fighterHuntersMarkDamage(4, Set(HuntersMarkDamageRider({ target: Goblin, transferAvailable: false, durationTicks: 600 })), Goblin) == 4),
-      assert(fighterHuntersMarkDamage(4, Set(HuntersMarkDamageRider({ target: Fighter, transferAvailable: false, durationTicks: 600 })), Goblin) == 0),
-      assert(resolveRayOfFrostWithDamageRoll({ ...initialState, fighter: { ...initialState.fighter, activeEffects: Set(HuntersMarkDamageRider({ target: Goblin, transferAvailable: false, durationTicks: 600 })) }, goblin: { ...initialState.goblin, reactionAvailable: false } }, 15, 10, fighterSpellAttackDamageRollWithHuntersMark(4, 6), true).goblin.hp == 0),
+      assert(fighterHuntersMarkDamage(4, Set(HuntersMarkDamageRider({ target: Goblin, transfer: AwaitingTargetDrop, durationTicks: 600 })), Goblin) == 4),
+      assert(fighterHuntersMarkDamage(4, Set(HuntersMarkDamageRider({ target: Fighter, transfer: AwaitingTargetDrop, durationTicks: 600 })), Goblin) == 0),
+      assert(fighterHexDamage(4, Set(HexDamageRider({ target: Goblin, ability: WisAbility, transfer: AwaitingTargetDrop, durationTicks: 600 })), Goblin) == 4),
+      assert(fighterHexDamage(4, Set(HexDamageRider({ target: Fighter, ability: WisAbility, transfer: AwaitingTargetDrop, durationTicks: 600 })), Goblin) == 0),
+      assert(hexAbilityCheckRollMode(Set(HexDamageRider({ target: Goblin, ability: WisAbility, transfer: AwaitingTargetDrop, durationTicks: 600 })), Goblin, WisAbility) == DisadvantageAbilityCheck),
+      assert(hexAbilityCheckRollMode(Set(HexDamageRider({ target: Goblin, ability: WisAbility, transfer: AwaitingTargetDrop, durationTicks: 600 })), Goblin, StrAbility) == NormalAbilityCheck),
+      assert(hexDurationTicks(1) == 3600),
+      assert(hexDurationTicks(2) == 14400),
+      assert(hexDurationTicks(3) == 28800),
+      assert(hexDurationTicks(4) == 28800),
+      assert(hexDurationTicks(5) == 86400),
+      assert(activeEffectsContainTransferableHex(
+        { ...initialState, initiative: { ...initialState.initiative, round: 1, stillToAct: List(Fighter, Goblin), alreadyActed: List() } },
+        Set(HexDamageRider({ target: Goblin, ability: WisAbility, transfer: TransferAvailableAfterTurn({ actor: Fighter, round: 1 }), durationTicks: 600 }))
+      ) == false),
+      assert(activeEffectsContainTransferableHex(
+        { ...initialState, initiative: { ...initialState.initiative, round: 1, stillToAct: List(Goblin), alreadyActed: List(Fighter) } },
+        Set(HexDamageRider({ target: Goblin, ability: WisAbility, transfer: TransferAvailableAfterTurn({ actor: Fighter, round: 1 }), durationTicks: 600 }))
+      )),
+      assert(resolveRayOfFrostWithDamageRoll({ ...initialState, fighter: { ...initialState.fighter, activeEffects: Set(HuntersMarkDamageRider({ target: Goblin, transfer: AwaitingTargetDrop, durationTicks: 600 })) }, goblin: { ...initialState.goblin, reactionAvailable: false } }, 15, 10, fighterSpellAttackDamageRollWithHuntersMark(4, 6), true).goblin.hp == 0),
       assert(attackBurstSaveDamageSpendsLevelOneSlot(IceKnifeAttackBurstSaveDamage)),
       assert(attackBurstSaveDamageAttackType(IceKnifeAttackBurstSaveDamage) == Piercing),
       assert(attackBurstSaveDamageBurstType(IceKnifeAttackBurstSaveDamage) == Cold),

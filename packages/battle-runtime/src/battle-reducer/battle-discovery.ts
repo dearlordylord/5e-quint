@@ -3,7 +3,7 @@
 // Mechanical move; no behavior change intended.
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.martial-arts-attack-projection unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.martial-arts-attack-projection unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-fog-cloud-obscurement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 import type {
   ActionEconomyState,
   RuntimeActionResource,
@@ -108,6 +108,7 @@ import { supportedUnitFeatureActs } from "./unit-features.ts";
 
 import type {
   AvailableBattleAct,
+  BattleActiveEffect,
   BattleCreatureState,
   BattleState,
   ClassFeatureExtraAttackActionResource,
@@ -118,6 +119,11 @@ import type {
   SupportedStatBlockBonusActionStandardAction,
   SupportedStatBlockMultiattack,
 } from "../battle-reducer.ts";
+
+type FogCloudObscurementEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "fogCloudObscurement" }
+>;
 import {
   SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS,
   discoverLegendaryActionActs,
@@ -219,6 +225,7 @@ export function discoverBattleActs(
   }
   if (state.currentTurnResources.commandHalt !== null) {
     acts.push(...greaseGroundHazardEndTurnActs(state, actorId));
+    acts.push(...fogCloudStrongWindDispersalActs(state, actorId));
     acts.push(endTurnAct(actorId));
     acts.push(...readiedSpellReleaseActs(state, actorId));
     acts.push(...discoverLegendaryActionActs(state));
@@ -351,7 +358,7 @@ export function discoverBattleActs(
       subject: { tag: "action", actorId, action: "hide" },
       label: "Hide",
       summary: "Make a Dexterity (Stealth) check to become hidden.",
-      initialHoles: [hideAbilityCheckHole()],
+      initialHoles: [hideAbilityCheckHole(state, actorId)],
     });
   }
   const hiddenTargets = hiddenSearchTargetChoices(state, actorId);
@@ -500,6 +507,7 @@ export function discoverBattleActs(
     });
   }
   acts.push(...greaseGroundHazardEndTurnActs(state, actorId));
+  acts.push(...fogCloudStrongWindDispersalActs(state, actorId));
   acts.push(endTurnAct(actorId));
   acts.push(...readiedSpellReleaseActs(state, actorId));
   acts.push(...discoverLegendaryActionActs(state));
@@ -600,6 +608,39 @@ function greaseGroundHazardSaveAct(
     initialHoles: [
       greaseGroundHazardSavingThrowOutcomeHole(actorId, effect, trigger),
     ],
+  };
+}
+
+function fogCloudStrongWindDispersalActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  return [...state.combatants.values()].flatMap((combatant) =>
+    combatant.activeEffects.flatMap(
+      (effect): readonly AvailableBattleAct[] =>
+        effect.kind === "fogCloudObscurement"
+          ? [fogCloudStrongWindDispersalAct(actorId, effect)]
+          : [],
+    ),
+  );
+}
+
+function fogCloudStrongWindDispersalAct(
+  actorId: CombatantId,
+  effect: FogCloudObscurementEffect,
+): AvailableBattleAct {
+  return {
+    subject: {
+      tag: "runtimeCommand",
+      actorId,
+      command: "disperseFogCloud",
+      sourceCombatantId: effect.sourceCombatantId,
+      sourceSpellId: spellId(effect.sourceSpellId),
+      areaId: effect.areaId,
+    },
+    label: "Disperse Fog Cloud",
+    summary: "End the table-supplied Fog Cloud area because of strong wind.",
+    initialHoles: [],
   };
 }
 
@@ -775,7 +816,9 @@ export function statBlockBonusActionOptionActs(
             label: option.option.name,
             summary: `Use ${option.option.name} to ${standardActionLabel(standardAction)} as a Bonus Action.`,
             initialHoles:
-              standardAction === "hide" ? [hideAbilityCheckHole()] : [],
+              standardAction === "hide"
+                ? [hideAbilityCheckHole(state, actorId)]
+                : [],
           },
         ];
       }),

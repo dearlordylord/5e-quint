@@ -57,7 +57,7 @@ export function triggeredReactionSpellChoices(
       ) {
         return [];
       }
-      return supportedSpellActs(reactor).flatMap(
+      return supportedSpellActs(reactor, state).flatMap(
         (invocation): readonly BattleReactionProcedureChoice[] => {
           if (
             (invocation.procedure !== "shieldReaction" &&
@@ -151,7 +151,7 @@ export function currentActorHasPendingSlottedSpellCast(
   if (caster?.origin.kind !== "character") {
     return false;
   }
-  return supportedSpellActs(caster).some(
+  return supportedSpellActs(caster, state).some(
     (candidate) =>
       candidate.spell.id === frame.spellId &&
       candidate.spell.id !== reactionInvocation.spell.id &&
