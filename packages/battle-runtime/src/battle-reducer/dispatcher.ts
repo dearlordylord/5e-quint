@@ -3136,6 +3136,10 @@ export function snapshotBattle(state: BattleState): BattleSnapshot {
       const combatant = state.combatants.get(id);
       return combatant == null ? [] : [combatantSnapshot(state, combatant)];
     }),
+    findFamiliars: [...state.findFamiliars].map(([ownerId, familiar]) => ({
+      ...familiar,
+      ownerId,
+    })),
     lightEmitters: battleLightEmitters(state),
     acts: discoverBattleActs(state),
     turn: battleTurnSnapshot(state.currentTurnResources),

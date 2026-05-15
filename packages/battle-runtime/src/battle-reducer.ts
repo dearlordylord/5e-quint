@@ -89,6 +89,10 @@ import {
 } from "./character-battle-resources.ts";
 import type { CharacterBattleClassLevel } from "./character-class-level.ts";
 import type {
+  FindFamiliarSnapshot,
+  FindFamiliarState,
+} from "./find-familiar-lifecycle.ts";
+import type {
   BattleObjectId,
   SpellId,
   BattleTablePositionId,
@@ -2723,6 +2727,7 @@ export type BattleState = {
   readonly battleId: BattleId;
   readonly initiative: InitiativeStack<CombatantId>;
   readonly combatants: ReadonlyMap<CombatantId, BattleCreatureState>;
+  readonly findFamiliars: ReadonlyMap<CombatantId, FindFamiliarState>;
   readonly objectOutlines: readonly BattleObjectOutline[];
   readonly lightEmitters: readonly BattleLightEmitter[];
   readonly hidePrerequisites: ReadonlyMap<CombatantId, BattleHidePrerequisite>;
@@ -3869,6 +3874,7 @@ export type BattleSnapshot = {
   readonly currentActorId: CombatantId;
   readonly turnOrder: readonly CombatantId[];
   readonly combatants: readonly BattleCreatureSnapshot[];
+  readonly findFamiliars: readonly FindFamiliarSnapshot[];
   readonly lightEmitters: readonly BattleLightEmitter[];
   readonly acts: readonly AvailableBattleAct[];
   readonly turn: BattleTurnSnapshot;

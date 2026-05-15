@@ -62,6 +62,11 @@ import {
   CombatantId,
   SpellId,
 } from "../identity.ts";
+import type {
+  FindFamiliarSnapshot,
+  FindFamiliarPlacement,
+} from "../find-familiar-lifecycle.ts";
+import type { FindFamiliarFormSelection } from "../find-familiar-forms.ts";
 import {
   BATTLE_ATTACK_RANGE_BANDS,
   COMMAND_OPTIONS,
@@ -70,6 +75,39 @@ import {
 } from "./domain-constants.ts";
 
 const BATTLE_SURFACE_SKILLS = SURFACE_SKILLS;
+const FindFamiliarFormSelectionSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("normalNamedForm"),
+    formId: Schema.NonEmptyTrimmedString,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("challengeRatingZeroBeast"),
+    statBlockId: Schema.NonEmptyTrimmedString,
+  }),
+  // Cast evidence is local to this union: the discriminants match
+  // FindFamiliarFormSelection exactly, and the id aliases are runtime
+  // non-empty strings whose provenance is checked when resolving the catalog.
+  // Effect Schema infers plain strings here and cannot preserve those imported
+  // content-id aliases through Schema.Union generics.
+) as unknown as Schema.Schema<FindFamiliarFormSelection>;
+const FindFamiliarCreatureTypeOverrideSchema = Schema.Literal(
+  "celestial",
+  "fey",
+  "fiend",
+);
+const FindFamiliarPlacementSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("unoccupiedSpaceWithinSpellRange"),
+    positionId: Schema.optionalWith(BattleTablePositionId, { exact: true }),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("unoccupiedSpaceWithin30Feet"),
+    positionId: Schema.optionalWith(BattleTablePositionId, { exact: true }),
+  }),
+  // Cast evidence is local to this union: both placement variants and their
+  // optional branded position ids are parsed here. Effect Schema keeps the
+  // structure but does not infer the imported discriminated-union alias.
+) as unknown as Schema.Schema<FindFamiliarPlacement>;
 // Hp is a branded non-negative integer number. Effect Schema validates the
 // runtime number shape here; the brand is erased at runtime, and Schema has no
 // helper that preserves this repo's nominal brand through numeric filters.
@@ -3545,12 +3583,41 @@ const BattleLightEmitterSchema = Schema.Union(
   }),
 );
 
+const FindFamiliarSnapshotSchema = Schema.Union(
+  Schema.Struct({
+    status: Schema.Literal("present"),
+    ownerId: CombatantId,
+    familiarId: CombatantId,
+    formSelection: FindFamiliarFormSelectionSchema,
+    creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
+    initiative: Schema.Number,
+    placement: FindFamiliarPlacementSchema,
+  }),
+  Schema.Struct({
+    status: Schema.Literal("temporarilyDismissed"),
+    ownerId: CombatantId,
+    formSelection: FindFamiliarFormSelectionSchema,
+    creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
+  }),
+  Schema.Struct({
+    status: Schema.Literal("disappearedAtZeroHitPoints"),
+    ownerId: CombatantId,
+    formSelection: FindFamiliarFormSelectionSchema,
+    creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
+  }),
+  // Cast evidence is local to this union: every snapshot variant is assembled
+  // from the exact field schemas above, including branded combatant ids and
+  // the familiar form/placement schemas. Effect Schema cannot infer the
+  // exported FindFamiliarSnapshot alias after composing those nested schemas.
+) as unknown as Schema.Schema<FindFamiliarSnapshot>;
+
 export const BattleSnapshotSchema = Schema.Struct({
   battleId: BattleId,
   round: Schema.Number,
   currentActorId: CombatantId,
   turnOrder: Schema.Array(CombatantId),
   combatants: Schema.Array(BattleCreatureSnapshotSchema),
+  findFamiliars: Schema.Array(FindFamiliarSnapshotSchema),
   lightEmitters: Schema.Array(BattleLightEmitterSchema),
   acts: Schema.Array(AvailableBattleActSchema),
   turn: BattleTurnSnapshotSchema,

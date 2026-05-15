@@ -21,8 +21,8 @@ This is the default `%` for level-1 readiness questions. A row counts only when 
 
 - accepted: 228
 - accepted-no-battle-effect: 69
-- battle-runtime-required: 26
-- partial-battle-runtime: 44
+- battle-runtime-required: 25
+- partial-battle-runtime: 45
 
 ### Level-1 Rows by Disposition
 

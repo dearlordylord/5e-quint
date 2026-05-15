@@ -72,23 +72,23 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 60,
-      "numerator": 60,
+      "denominator": 61,
+      "numerator": 61,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 60,
-      "numerator": 59,
-      "percent": "98.3%"
+      "denominator": 61,
+      "numerator": 60,
+      "percent": "98.4%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 60,
-      "numerator": 60,
+      "denominator": 61,
+      "numerator": 61,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 60,
-      "numerator": 60,
+      "denominator": 61,
+      "numerator": 61,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -2040,6 +2040,32 @@
           "ownerPath": "packages/battle-runtime/src/sanctuary-targeting-interdiction.test.ts"
         }
       ]
+    },
+    {
+      "id": "spell.find-familiar-lifecycle",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/find-familiar-lifecycle.ts",
+        "packages/battle-runtime/src/find-familiar-state.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the authored Find Familiar spell form catalog, caller-selected form and Celestial/Fey/Fiend type choice, caller-supplied unoccupied placement facts, caller-supplied familiar identity and Initiative facts, and caller-supplied held-item drop boundary facts. It records companion lifecycle and replacement state without admitting the familiar to ordinary combatant action discovery or Initiative turns.",
+      "taskRefs": [
+        "SRDINV84I2"
+      ],
+      "title": "Find Familiar owns companion lifecycle, replacement, selected form, and type override state",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/find-familiar-lifecycle.test.ts"
+        }
+      ]
     }
   ],
   "taskClaims": [
@@ -3307,6 +3333,22 @@
         "spell.invocation-weapon-attack-override"
       ],
       "taskId": "SRDINV84H"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint ownership covers Find Familiar companion lifecycle, one-familiar replacement, selected form and Celestial/Fey/Fiend type choice, caller-supplied Initiative and placement facts, temporary and permanent dismissal, 0-HP disappearance, reappearance, and held-item drop boundary events.",
+      "profileIds": [
+        "spell.find-familiar-lifecycle"
+      ],
+      "taskId": "SRDINV84I2"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Find Familiar lifecycle state creation without ordinary combatant insertion, chosen creature-type override projection, one-familiar replacement, temporary dismissal, permanent dismissal, 0-HP disappearance, Magic-action reappearance, and held-item drop boundary events.",
+      "profileIds": [
+        "spell.find-familiar-lifecycle"
+      ],
+      "taskId": "SRDINV84I2"
     }
   ],
   "units": [
@@ -7394,14 +7436,65 @@
         "status": "installed"
       },
       "claim": {
-        "reason": "Find Familiar's Spell Definition is catalog-installed, but promoted battle runtime does not yet execute familiar creation, chosen named form or CR 0 Beast stat-block resolution, caster-chosen Celestial/Fey/Fiend type, one-familiar lifecycle and replacement, independent Initiative, familiar turns, telepathy, touch-spell delivery, dismissal, or disappearance/reappearance.",
-        "tag": "unsupported-profile"
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "SRDINV84I3",
+            "mechanic": "familiar's own Initiative turn, action ownership, and rejection of ordinary familiar attacks"
+          },
+          {
+            "followUpTaskId": "SRDINV84I4",
+            "mechanic": "telepathy, shared senses, and touch-spell delivery through the present familiar identity"
+          },
+          {
+            "followUpTaskId": "SRDINV86",
+            "mechanic": "Pact of the Chain special familiar forms and familiar Reaction attack exception"
+          }
+        ],
+        "profileIds": [
+          "spell.find-familiar-lifecycle"
+        ],
+        "supportedMechanics": [
+          "companion lifecycle state creation without ordinary combatant insertion",
+          "chosen named form and CR 0 Beast Stat Block resolution from the SRD form catalog",
+          "caster-chosen Celestial, Fey, or Fiend creature type override projection",
+          "one-familiar-per-caster lifecycle and atomic recast replacement",
+          "caller-supplied Initiative and unoccupied-space placement facts",
+          "Magic-action temporary dismissal and reappearance, permanent dismissal, 0-HP disappearance, and held-item drop boundary events for 0-HP disappearance and pocket-dimension entry"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.find-familiar-lifecycle",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/find-familiar-lifecycle.ts",
+            "packages/battle-runtime/src/find-familiar-state.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the authored Find Familiar spell form catalog, caller-selected form and Celestial/Fey/Fiend type choice, caller-supplied unoccupied placement facts, caller-supplied familiar identity and Initiative facts, and caller-supplied held-item drop boundary facts. It records companion lifecycle and replacement state without admitting the familiar to ordinary combatant action discovery or Initiative turns.",
+          "taskRefs": [
+            "SRDINV84I2"
+          ],
+          "title": "Find Familiar owns companion lifecycle, replacement, selected form, and type override state",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/find-familiar-lifecycle.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/find_familiar.json",
       "unitId": "find_familiar"
     },

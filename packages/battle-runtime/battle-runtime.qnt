@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.creature-type-protection-and-charm spell.find-familiar-lifecycle spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points
@@ -26,6 +26,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.creature-type-protection-and-charm
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-object-light
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-make-stable
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.find-familiar-lifecycle
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.reaction-hellish-rebuke spell.invocation-damage-save-or-attack
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave
@@ -362,6 +363,39 @@ module battleRuntime {
   type MarkedDamageRiderTransfer = AwaitingTargetDrop | TransferAvailable | TransferAvailableAfterTurn({ actor: Actor, round: int })
   type ShillelaghWeapon = ShillelaghClub | ShillelaghQuarterstaff
   type HeldWeaponForShillelagh = HeldClub | HeldQuarterstaff | HeldOtherWeapon | HeldNoWeapon
+  type FindFamiliarForm = FindFamiliarCat | FindFamiliarRat | FindFamiliarBat
+  type FindFamiliarCreatureTypeOverride = FindFamiliarCelestial | FindFamiliarFey | FindFamiliarFiend
+  type FindFamiliarPlacement = FindFamiliarUnoccupiedSpaceWithinSpellRange | FindFamiliarUnoccupiedSpaceWithin30Feet
+  type FindFamiliarLifecycle =
+    | NoFindFamiliar
+    | PresentFindFamiliar({
+        owner: Actor,
+        familiar: Actor,
+        form: FindFamiliarForm,
+        creatureTypeOverride: FindFamiliarCreatureTypeOverride,
+        initiative: int,
+        placement: FindFamiliarPlacement,
+      })
+    | TemporarilyDismissedFindFamiliar({
+        owner: Actor,
+        form: FindFamiliarForm,
+        creatureTypeOverride: FindFamiliarCreatureTypeOverride,
+      })
+    | DisappearedAtZeroHitPointsFindFamiliar({
+        owner: Actor,
+        form: FindFamiliarForm,
+        creatureTypeOverride: FindFamiliarCreatureTypeOverride,
+      })
+  type FindFamiliarItemDropBoundaryEvent = {
+    owner: Actor,
+    familiar: Actor,
+    objectId: int,
+  }
+  type FindFamiliarLifecycleResult = {
+    lifecycle: FindFamiliarLifecycle,
+    itemDropBoundaryEvents: Set[FindFamiliarItemDropBoundaryEvent],
+    magicActionSpent: bool,
+  }
   type ActiveEffect = BardicInspirationDie({ source: Actor, dieSize: int, durationTicks: int }) | MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | HexDamageRider({ target: Actor, ability: Ability, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | RayOfSicknessPoisoned | ChillTouchHitPointRegainPrevented({ source: Actor, expiresAtRound: int }) | StarryWispInvisibleBenefitDenied({ source: Actor, expiresAtRound: int }) | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | WeaponMasterySapNextAttackDisadvantage({ source: Actor }) | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodCreatureTypeProtection | ProduceFlameHeldLight({ durationTicks: int }) | ShillelaghWeaponAttackOverride({ weapon: ShillelaghWeapon, damageDice: int, damageDieSize: int, spellcastingAbilityModifier: int, durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SanctuaryWard({ source: Actor, durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | HideousLaughterEffect({ source: Actor, target: Actor, hadProne: bool, hadIncapacitated: bool, durationTicks: int }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | FogCloudObscurement({ areaId: int, radiusFeet: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
   type PreventedProtectionCondition = PreventedCharmed | PreventedFrightened
   type PossessionAttemptDisposition = PossessionPreventedByCreatureTypeProtection | PossessionUnprevented
@@ -675,6 +709,154 @@ module battleRuntime {
       FIGHTER_RAGE_SOURCE_KEY -> NoActiveOngoingFeatureOccurrence,
       FIGHTER_RECKLESS_ATTACK_SOURCE_KEY -> NoActiveOngoingFeatureOccurrence,
     )
+
+  pure def castFindFamiliarLifecycle(
+    prior: FindFamiliarLifecycle,
+    ordinaryCombatants: Set[Actor],
+    owner: Actor,
+    familiar: Actor,
+    form: FindFamiliarForm,
+    creatureTypeOverride: FindFamiliarCreatureTypeOverride,
+    initiative: int
+  ): FindFamiliarLifecycle =
+    match prior {
+      | PresentFindFamiliar(present) =>
+        if (owner == present.owner and owner != present.familiar and not(ordinaryCombatants.contains(present.familiar))) {
+          PresentFindFamiliar({
+            owner: owner,
+            familiar: present.familiar,
+            form: form,
+            creatureTypeOverride: creatureTypeOverride,
+            initiative: initiative,
+            placement: FindFamiliarUnoccupiedSpaceWithinSpellRange,
+          })
+        } else prior
+      | _ =>
+        if (owner == familiar or ordinaryCombatants.contains(familiar)) prior
+        else
+          PresentFindFamiliar({
+            owner: owner,
+            familiar: familiar,
+            form: form,
+            creatureTypeOverride: creatureTypeOverride,
+            initiative: initiative,
+            placement: FindFamiliarUnoccupiedSpaceWithinSpellRange,
+          })
+    }
+
+  pure def temporarilyDismissFindFamiliarLifecycle(
+    prior: FindFamiliarLifecycle,
+    magicActionAvailable: bool,
+    heldObjectIds: Set[int]
+  ): FindFamiliarLifecycleResult =
+    match prior {
+      | PresentFindFamiliar(present) =>
+        if (magicActionAvailable) {
+          lifecycle: TemporarilyDismissedFindFamiliar({
+            owner: present.owner,
+            form: present.form,
+            creatureTypeOverride: present.creatureTypeOverride,
+          }),
+          itemDropBoundaryEvents: heldObjectIds.map(objectId => {
+            owner: present.owner,
+            familiar: present.familiar,
+            objectId: objectId,
+          }),
+          magicActionSpent: true,
+        } else {
+          lifecycle: prior,
+          itemDropBoundaryEvents: Set(),
+          magicActionSpent: false,
+        }
+      | _ => {
+          lifecycle: prior,
+          itemDropBoundaryEvents: Set(),
+          magicActionSpent: false,
+        }
+    }
+
+  pure def permanentlyDismissFindFamiliarLifecycle(
+    prior: FindFamiliarLifecycle
+  ): FindFamiliarLifecycleResult =
+    match prior {
+      | PresentFindFamiliar(_) => {
+          lifecycle: NoFindFamiliar,
+          itemDropBoundaryEvents: Set(),
+          magicActionSpent: false,
+        }
+      | TemporarilyDismissedFindFamiliar(_) => {
+          lifecycle: NoFindFamiliar,
+          itemDropBoundaryEvents: Set(),
+          magicActionSpent: false,
+        }
+      | DisappearedAtZeroHitPointsFindFamiliar(_) => {
+          lifecycle: NoFindFamiliar,
+          itemDropBoundaryEvents: Set(),
+          magicActionSpent: false,
+        }
+      | NoFindFamiliar => {
+          lifecycle: NoFindFamiliar,
+          itemDropBoundaryEvents: Set(),
+          magicActionSpent: false,
+        }
+    }
+
+  pure def reappearFindFamiliarLifecycle(
+    prior: FindFamiliarLifecycle,
+    ordinaryCombatants: Set[Actor],
+    familiar: Actor,
+    initiative: int,
+    magicActionAvailable: bool
+  ): FindFamiliarLifecycleResult =
+    match prior {
+      | TemporarilyDismissedFindFamiliar(absent) =>
+        if (magicActionAvailable and absent.owner != familiar and not(ordinaryCombatants.contains(familiar))) {
+          lifecycle: PresentFindFamiliar({
+            owner: absent.owner,
+            familiar: familiar,
+            form: absent.form,
+            creatureTypeOverride: absent.creatureTypeOverride,
+            initiative: initiative,
+            placement: FindFamiliarUnoccupiedSpaceWithin30Feet,
+          }),
+          itemDropBoundaryEvents: Set(),
+          magicActionSpent: true,
+        } else {
+          lifecycle: prior,
+          itemDropBoundaryEvents: Set(),
+          magicActionSpent: false,
+        }
+      | _ => {
+          lifecycle: prior,
+          itemDropBoundaryEvents: Set(),
+          magicActionSpent: false,
+        }
+    }
+
+  pure def zeroHitPointDisappearFindFamiliarLifecycle(
+    prior: FindFamiliarLifecycle,
+    heldObjectIds: Set[int]
+  ): FindFamiliarLifecycleResult =
+    match prior {
+      | PresentFindFamiliar(present) => {
+          lifecycle: DisappearedAtZeroHitPointsFindFamiliar({
+            owner: present.owner,
+            form: present.form,
+            creatureTypeOverride: present.creatureTypeOverride,
+          }),
+          itemDropBoundaryEvents: heldObjectIds.map(objectId => {
+            owner: present.owner,
+            familiar: present.familiar,
+            objectId: objectId,
+          }),
+          magicActionSpent: false,
+        }
+      | _ => {
+          lifecycle: prior,
+          itemDropBoundaryEvents: Set(),
+          magicActionSpent: false,
+        }
+    }
 
   type Combatant = {
     hp: int,
@@ -7340,6 +7522,181 @@ module battleRuntime {
 
   run test_initial_holes_cover_attack_target = {
     assert(openHoles(initialState).contains(TargetChoice))
+  }
+
+  run test_find_familiar_cast_and_recast_keeps_one_owner_record = {
+    val cat = castFindFamiliarLifecycle(
+      NoFindFamiliar,
+      Set(Fighter),
+      Fighter,
+      Goblin,
+      FindFamiliarCat,
+      FindFamiliarFey,
+      18
+    )
+    val rat = castFindFamiliarLifecycle(
+      cat,
+      Set(Fighter),
+      Fighter,
+      Fighter,
+      FindFamiliarRat,
+      FindFamiliarCelestial,
+      12
+    )
+
+    all {
+      assert(cat == PresentFindFamiliar({
+        owner: Fighter,
+        familiar: Goblin,
+        form: FindFamiliarCat,
+        creatureTypeOverride: FindFamiliarFey,
+        initiative: 18,
+        placement: FindFamiliarUnoccupiedSpaceWithinSpellRange,
+      })),
+      assert(rat == PresentFindFamiliar({
+        owner: Fighter,
+        familiar: Goblin,
+        form: FindFamiliarRat,
+        creatureTypeOverride: FindFamiliarCelestial,
+        initiative: 12,
+        placement: FindFamiliarUnoccupiedSpaceWithinSpellRange,
+      })),
+    }
+  }
+
+  run test_find_familiar_cast_rejects_ordinary_combatant_identity = {
+    val ownerCollision = castFindFamiliarLifecycle(
+      NoFindFamiliar,
+      Set(Fighter),
+      Fighter,
+      Fighter,
+      FindFamiliarCat,
+      FindFamiliarFey,
+      18
+    )
+    val ordinaryCombatantCollision = castFindFamiliarLifecycle(
+      NoFindFamiliar,
+      Set(Fighter, Goblin),
+      Fighter,
+      Goblin,
+      FindFamiliarCat,
+      FindFamiliarFey,
+      18
+    )
+
+    all {
+      assert(ownerCollision == NoFindFamiliar),
+      assert(ordinaryCombatantCollision == NoFindFamiliar),
+    }
+  }
+
+  run test_find_familiar_dismiss_reappear_and_drop_events = {
+    val present = castFindFamiliarLifecycle(
+      NoFindFamiliar,
+      Set(Fighter),
+      Fighter,
+      Goblin,
+      FindFamiliarBat,
+      FindFamiliarFiend,
+      16
+    )
+    val dismissed = temporarilyDismissFindFamiliarLifecycle(present, true, Set(1))
+    val blockedReappearance = reappearFindFamiliarLifecycle(
+      dismissed.lifecycle,
+      Set(Fighter),
+      Goblin,
+      15,
+      false
+    )
+    val blockedIdentityReappearance = reappearFindFamiliarLifecycle(
+      dismissed.lifecycle,
+      Set(Fighter, Goblin),
+      Goblin,
+      15,
+      true
+    )
+    val reappeared = reappearFindFamiliarLifecycle(
+      dismissed.lifecycle,
+      Set(Fighter),
+      Goblin,
+      15,
+      true
+    )
+    val forever = permanentlyDismissFindFamiliarLifecycle(reappeared.lifecycle)
+
+    all {
+      assert(dismissed.lifecycle == TemporarilyDismissedFindFamiliar({
+        owner: Fighter,
+        form: FindFamiliarBat,
+        creatureTypeOverride: FindFamiliarFiend,
+      })),
+      assert(dismissed.itemDropBoundaryEvents == Set({
+        owner: Fighter,
+        familiar: Goblin,
+        objectId: 1,
+      })),
+      assert(dismissed.magicActionSpent),
+      assert(blockedReappearance.lifecycle == dismissed.lifecycle),
+      assert(not(blockedReappearance.magicActionSpent)),
+      assert(blockedIdentityReappearance.lifecycle == dismissed.lifecycle),
+      assert(not(blockedIdentityReappearance.magicActionSpent)),
+      assert(reappeared.lifecycle == PresentFindFamiliar({
+        owner: Fighter,
+        familiar: Goblin,
+        form: FindFamiliarBat,
+        creatureTypeOverride: FindFamiliarFiend,
+        initiative: 15,
+        placement: FindFamiliarUnoccupiedSpaceWithin30Feet,
+      })),
+      assert(reappeared.magicActionSpent),
+      assert(forever.lifecycle == NoFindFamiliar),
+      assert(not(forever.magicActionSpent)),
+      assert(forever.itemDropBoundaryEvents == Set()),
+    }
+  }
+
+  run test_find_familiar_zero_hit_points_disappears_until_recast = {
+    val present = castFindFamiliarLifecycle(
+      NoFindFamiliar,
+      Set(Fighter),
+      Fighter,
+      Goblin,
+      FindFamiliarCat,
+      FindFamiliarFey,
+      18
+    )
+    val disappeared = zeroHitPointDisappearFindFamiliarLifecycle(present, Set(3))
+    val recast = castFindFamiliarLifecycle(
+      disappeared.lifecycle,
+      Set(Fighter),
+      Fighter,
+      Goblin,
+      FindFamiliarRat,
+      FindFamiliarFey,
+      17
+    )
+
+    all {
+      assert(disappeared.lifecycle == DisappearedAtZeroHitPointsFindFamiliar({
+        owner: Fighter,
+        form: FindFamiliarCat,
+        creatureTypeOverride: FindFamiliarFey,
+      })),
+      assert(disappeared.itemDropBoundaryEvents == Set({
+        owner: Fighter,
+        familiar: Goblin,
+        objectId: 3,
+      })),
+      assert(not(disappeared.magicActionSpent)),
+      assert(recast == PresentFindFamiliar({
+        owner: Fighter,
+        familiar: Goblin,
+        form: FindFamiliarRat,
+        creatureTypeOverride: FindFamiliarFey,
+        initiative: 17,
+        placement: FindFamiliarUnoccupiedSpaceWithinSpellRange,
+      })),
+    }
   }
 
   run test_hide_records_discovery_dc = {

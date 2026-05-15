@@ -4,25 +4,11 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
-
-
-
-
-
-
 import {
-createScoredInitiativeStack,
-insertAtOrderIndex,
-removeFromInitiative
+  createScoredInitiativeStack,
+  insertAtOrderIndex,
+  removeFromInitiative,
 } from "@dnd/shared-algebras/initiative-algebra";
-
-
-
-
-
-
-
-
 
 import { isNonEmptyReadonlyArray } from "effect/Array";
 
@@ -30,63 +16,35 @@ import * as Either from "effect/Either";
 
 import * as Option from "effect/Option";
 
+import type { BattleCreatureInit } from "../battle-init.ts";
 
-import type {
-BattleCreatureInit
-} from "../battle-init.ts";
-
-
-
-
-
+import { BattleId, CombatantId } from "../identity.ts";
 
 import {
-BattleId,
-CombatantId
-} from "../identity.ts";
-
-
-
-
-
-import {
-currentActorId,
-normalizeBattleGrapples
+  currentActorId,
+  normalizeBattleGrapples,
 } from "./creature-state-leaves.ts";
 
 import {
-battleCreatureStateFromInit,
-combatantInitiativeInsertionIndex,
-characterResourceInitIssue,
-characterSpellcastingInitIssue,
-hidePrerequisitesReferenceCombatantsIssue,
-positiveHpUnconsciousInitIssue
+  battleCreatureStateFromInit,
+  combatantInitiativeInsertionIndex,
+  characterResourceInitIssue,
+  characterSpellcastingInitIssue,
+  hidePrerequisitesReferenceCombatantsIssue,
+  positiveHpUnconsciousInitIssue,
 } from "./creature-state.ts";
 
+import { battleStateInitIssue } from "./domain-helpers.ts";
 
-
-import {
-battleStateInitIssue,
-} from "./domain-helpers.ts";
-
-
-
-import {
-resetBattleTurnResources
-} from "./turn-end-movement.ts";
-
-
+import { resetBattleTurnResources } from "./turn-end-movement.ts";
 
 import type {
-BattleCreatureState,
-BattleHidePrerequisite,
-BattleState,
-BattleStateInitIssue,
+  BattleCreatureState,
+  BattleHidePrerequisite,
+  BattleState,
+  BattleStateInitIssue,
 } from "../battle-reducer.ts";
-import {
-INITIAL_ROUND,
-INITIAL_TURN_RESOURCES,
-} from "../battle-reducer.ts";
+import { INITIAL_ROUND, INITIAL_TURN_RESOURCES } from "../battle-reducer.ts";
 export function startBattle(input: {
   readonly battleId: BattleId;
   readonly combatants: readonly BattleCreatureInit[];
@@ -112,7 +70,8 @@ export function startBattle(input: {
     if (characterResourceIssue !== null) {
       return characterResourceIssue;
     }
-    const characterSpellcastingIssue = characterSpellcastingInitIssue(combatant);
+    const characterSpellcastingIssue =
+      characterSpellcastingInitIssue(combatant);
     if (characterSpellcastingIssue !== null) {
       return characterSpellcastingIssue;
     }
@@ -153,6 +112,7 @@ export function startBattle(input: {
     battleId: input.battleId,
     initiative: initiative.right,
     combatants,
+    findFamiliars: new Map(),
     objectOutlines: [],
     lightEmitters: [],
     hidePrerequisites: new Map(input.hidePrerequisites ?? []),
@@ -165,8 +125,6 @@ export function startBattle(input: {
     legendaryActionWindow: null,
   });
 }
-
-
 
 export function addBattleCombatant(input: {
   readonly state: BattleState;
@@ -219,8 +177,6 @@ export function addBattleCombatant(input: {
   });
 }
 
-
-
 export function removeBattleCombatants(input: {
   readonly state: BattleState;
   readonly combatantIds: readonly CombatantId[];
@@ -259,11 +215,17 @@ export function removeBattleCombatants(input: {
         },
       ]),
   );
+  const findFamiliars = new Map(
+    [...input.state.findFamiliars].filter(
+      ([ownerId]) => !removeIds.has(ownerId),
+    ),
+  );
   return Either.right(
     normalizeBattleGrapples({
       ...input.state,
       initiative: initiativeOption.value,
       combatants,
+      findFamiliars,
       objectOutlines: input.state.objectOutlines.filter(
         (outline) =>
           !removeIds.has(outline.sourceCombatantId) &&

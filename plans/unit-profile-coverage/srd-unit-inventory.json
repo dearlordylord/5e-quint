@@ -161,8 +161,8 @@
       "rowsByStatus": {
         "accepted": 228,
         "accepted-no-battle-effect": 69,
-        "battle-runtime-required": 26,
-        "partial-battle-runtime": 44
+        "battle-runtime-required": 25,
+        "partial-battle-runtime": 45
       }
     },
     "levelOneClassContainers": 12,
@@ -17734,7 +17734,7 @@
         "state": "installed",
         "unitId": "find_familiar"
       },
-      "unitProfileDisposition": "unsupported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {
@@ -17744,11 +17744,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Unit matrix records unsupported-profile: Find Familiar's Spell Definition is catalog-installed, but promoted battle runtime does not yet execute familiar creation, chosen named form or CR 0 Beast stat-block resolution, caster-chosen Celestial/Fey/Fiend type, one-familiar lifecycle and replacement, independent Initiative, familiar turns, telepathy, touch-spell delivery, dismissal, or disappearance/reappearance. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
+          "evidence": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
           "status": "owner evidence required"
         }
       ],
-      "nextAction": "Unit matrix records unsupported-profile: Find Familiar's Spell Definition is catalog-installed, but promoted battle runtime does not yet execute familiar creation, chosen named form or CR 0 Beast stat-block resolution, caster-chosen Celestial/Fey/Fiend type, one-familiar lifecycle and replacement, independent Initiative, familiar turns, telepathy, touch-spell delivery, dismissal, or disappearance/reappearance. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
     },
     {
       "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_floating_disk",

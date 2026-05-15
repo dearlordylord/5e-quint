@@ -78,6 +78,22 @@ export {
   type PactOfTheChainSpecialFormRef,
 } from "./find-familiar-forms.ts";
 export {
+  applyFindFamiliarZeroHitPointDisappearance,
+  castFindFamiliar,
+  permanentlyDismissFindFamiliar,
+  reappearTemporarilyDismissedFindFamiliar,
+  temporarilyDismissFindFamiliar,
+  type FindFamiliarAbsentState,
+  type FindFamiliarCastInput,
+  type FindFamiliarLifecycleInputBase,
+  type FindFamiliarPlacement,
+  type FindFamiliarPresentState,
+  type FindFamiliarReappearanceInput,
+  type FindFamiliarSnapshot,
+  type FindFamiliarState,
+} from "./find-familiar-lifecycle.ts";
+export { findFamiliarCreatureTypeOverrideForOwner } from "./find-familiar-state.ts";
+export {
   BATTLE_REACTION_TRIGGERS,
   BATTLE_READIED_SPELL_TRIGGERS,
   type BattleReactionTrigger,
