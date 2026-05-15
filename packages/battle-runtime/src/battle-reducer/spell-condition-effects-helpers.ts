@@ -22,6 +22,27 @@ import type {
 } from "../battle-reducer.ts";
 import { battleCreatureType } from "./domain-helpers.ts";
 
+const HIDEOUS_LAUGHTER_CONDITIONS = [
+  "prone",
+  "incapacitated",
+] as const satisfies ReadonlyArray<Condition>;
+
+type ConditionApplyingActiveEffect =
+  | Extract<BattleActiveEffect, { readonly kind: "spellCondition" }>
+  | Extract<BattleActiveEffect, { readonly kind: "sleepPendingRepeatSave" }>
+  | Extract<BattleActiveEffect, { readonly kind: "sleepUnconscious" }>
+  | Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }>;
+
+type SingleConditionApplyingActiveEffect = Exclude<
+  ConditionApplyingActiveEffect,
+  Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }>
+>;
+
+type HideousLaughterEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "hideousLaughter" }
+>;
+
 export type BattlePossessionAttemptInput = {
   readonly state: BattleState;
   readonly sourceCombatantId: CombatantId;
@@ -191,7 +212,9 @@ function activeEffectDirectlyAppliesCondition(
     (effect.kind === "spellCondition" && effect.condition === condition) ||
     (effect.kind === "sleepPendingRepeatSave" &&
       condition === "incapacitated") ||
-    (effect.kind === "sleepUnconscious" && condition === "unconscious")
+    (effect.kind === "sleepUnconscious" && condition === "unconscious") ||
+    (effect.kind === "hideousLaughter" &&
+      (condition === "prone" || condition === "incapacitated"))
   );
 }
 
@@ -322,7 +345,7 @@ export function removeSleepEffectsFromTarget(
     return state;
   }
   const activeEffects = target.activeEffects.filter(
-    (effect) => !expiring.includes(effect),
+    (effect) => !expiring.some((expired) => expired === effect),
   );
   const nextCombatant: BattleCreatureState =
     target.positiveHpUnconscious === null
@@ -349,6 +372,90 @@ function isSleepEffect(effect: BattleActiveEffect): boolean {
   );
 }
 
+export function combatantHasHideousLaughterEffect(
+  combatant: BattleCreatureState | undefined,
+): combatant is BattleCreatureState {
+  return combatant?.activeEffects.some(isHideousLaughterEffect) === true;
+}
+
+export function removeHideousLaughterEffectFromTarget(
+  state: BattleState,
+  targetId: CombatantId,
+  expiringEffect: HideousLaughterEffect,
+): BattleState {
+  const target = state.combatants.get(targetId);
+  if (
+    target === undefined ||
+    !target.activeEffects.some((effect) => effect === expiringEffect)
+  ) {
+    return state;
+  }
+  const activeEffects = target.activeEffects.filter(
+    (effect) => effect !== expiringEffect,
+  );
+  const conditions = conditionsAfterExpiringHideousLaughterEffect(
+    target.conditions,
+    activeEffects,
+    expiringEffect,
+  );
+  const nextCombatant: BattleCreatureState =
+    target.positiveHpUnconscious === null
+      ? { ...target, activeEffects, conditions }
+      : { ...target, activeEffects };
+  const combatants = new Map(state.combatants).set(targetId, nextCombatant);
+  return {
+    ...state,
+    combatants: combatantsAfterHideousLaughterSpellEndedIfNoEffects(
+      combatants,
+      expiringEffect,
+    ),
+  };
+}
+
+export function combatantsAfterHideousLaughterSpellEndedIfNoEffects(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  source: HideousLaughterEffect,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  const spellStillActive = [...combatants.values()].some((combatant) =>
+    combatant.activeEffects.some((effect) =>
+      sameHideousLaughterSpellEffect(effect, source),
+    ),
+  );
+  if (spellStillActive) {
+    return combatants;
+  }
+  const sourceCombatant = combatants.get(source.sourceCombatantId);
+  if (
+    sourceCombatant === undefined ||
+    sourceCombatant.concentration?.effectKind !== "spellEffect" ||
+    sourceCombatant.concentration.sourceSpellId !== source.sourceSpellId
+  ) {
+    return combatants;
+  }
+  return new Map(combatants).set(source.sourceCombatantId, {
+    ...sourceCombatant,
+    concentration: null,
+  });
+}
+
+function isHideousLaughterEffect(effect: BattleActiveEffect): effect is Extract<
+  BattleActiveEffect,
+  { readonly kind: "hideousLaughter" }
+> {
+  return effect.kind === "hideousLaughter";
+}
+
+function sameHideousLaughterSpellEffect(
+  effect: BattleActiveEffect,
+  source: HideousLaughterEffect,
+): effect is HideousLaughterEffect {
+  return (
+    effect.kind === "hideousLaughter" &&
+    effect.sourceSpellId === source.sourceSpellId &&
+    effect.sourceCombatantId === source.sourceCombatantId
+  );
+}
+
 export function conditionsAfterApplyingSpellConditionEffects(
   conditions: ConditionState,
   activeEffects: readonly BattleActiveEffect[],
@@ -367,33 +474,16 @@ export function conditionsAfterApplyingSpellConditionEffects(
     conditions,
   );
   return activeEffects
-    .filter(
-      (
-        effect,
-      ): effect is
-        | Extract<BattleActiveEffect, { readonly kind: "spellCondition" }>
-        | Extract<
-            BattleActiveEffect,
-            { readonly kind: "sleepPendingRepeatSave" }
-          >
-        | Extract<BattleActiveEffect, { readonly kind: "sleepUnconscious" }> =>
-        effect.kind === "spellCondition" ||
-        effect.kind === "sleepPendingRepeatSave" ||
-        effect.kind === "sleepUnconscious",
-    )
-    .filter(
-      (effect) =>
-        !activeEffects.some(
-          (candidate) =>
-            candidate.kind === "conditionImmunity" &&
-            candidate.condition === activeEffectCondition(effect),
-        ),
-    )
-    .reduce(
-      (nextConditions, effect) =>
-        applyCondition(nextConditions, activeEffectCondition(effect)),
-      baseConditions,
-    );
+    .filter(isConditionApplyingActiveEffect)
+    .reduce((nextConditions, effect) => {
+      return activeEffectConditions(effect).reduce(
+        (conditionState, condition) =>
+          conditionImmunities.some((immunity) => immunity.condition === condition)
+            ? conditionState
+            : applyCondition(conditionState, condition),
+        nextConditions,
+      );
+    }, baseConditions);
 }
 
 export function conditionsAfterExpiringSpellConditionEffects(
@@ -402,21 +492,15 @@ export function conditionsAfterExpiringSpellConditionEffects(
   expiringEffects: readonly BattleActiveEffect[],
 ): ConditionState {
   return expiringEffects
-    .filter(
-      (
-        effect,
-      ): effect is
-        | Extract<BattleActiveEffect, { readonly kind: "spellCondition" }>
-        | Extract<
-            BattleActiveEffect,
-            { readonly kind: "sleepPendingRepeatSave" }
-          >
-        | Extract<BattleActiveEffect, { readonly kind: "sleepUnconscious" }> =>
-        effect.kind === "spellCondition" ||
-        effect.kind === "sleepPendingRepeatSave" ||
-        effect.kind === "sleepUnconscious",
-    )
+    .filter(isConditionApplyingActiveEffect)
     .reduce((nextConditions, effect) => {
+      if (effect.kind === "hideousLaughter") {
+        return conditionsAfterExpiringHideousLaughterEffect(
+          nextConditions,
+          remainingEffects,
+          effect,
+        );
+      }
       const condition = activeEffectCondition(effect);
       const stillHasSpellSource = remainingEffects.some((remaining) =>
         activeEffectDirectlyAppliesCondition(remaining, condition),
@@ -427,14 +511,51 @@ export function conditionsAfterExpiringSpellConditionEffects(
     }, conditions);
 }
 
+function isConditionApplyingActiveEffect(
+  effect: BattleActiveEffect,
+): effect is ConditionApplyingActiveEffect {
+  return (
+    effect.kind === "spellCondition" ||
+    effect.kind === "sleepPendingRepeatSave" ||
+    effect.kind === "sleepUnconscious" ||
+    effect.kind === "hideousLaughter"
+  );
+}
+
+function activeEffectConditions(
+  effect: ConditionApplyingActiveEffect,
+): readonly Condition[] {
+  return effect.kind === "hideousLaughter"
+    ? HIDEOUS_LAUGHTER_CONDITIONS
+    : [activeEffectCondition(effect)];
+}
+
 function activeEffectCondition(
-  effect:
-    | Extract<BattleActiveEffect, { readonly kind: "spellCondition" }>
-    | Extract<BattleActiveEffect, { readonly kind: "sleepPendingRepeatSave" }>
-    | Extract<BattleActiveEffect, { readonly kind: "sleepUnconscious" }>,
+  effect: SingleConditionApplyingActiveEffect,
 ): Condition {
   if (effect.kind === "spellCondition") return effect.condition;
   return effect.kind === "sleepPendingRepeatSave"
     ? "incapacitated"
     : "unconscious";
+}
+
+function conditionsAfterExpiringHideousLaughterEffect(
+  conditions: ConditionState,
+  remainingEffects: readonly BattleActiveEffect[],
+  expiringEffect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "hideousLaughter" }
+  >,
+): ConditionState {
+  const withoutProne =
+    remainingEffects.some((remaining) =>
+      activeEffectDirectlyAppliesCondition(remaining, "prone"),
+    ) || expiringEffect.conditionHadNonSpellProneSource
+      ? conditions
+      : removeCondition(conditions, "prone");
+  return remainingEffects.some((remaining) =>
+    activeEffectDirectlyAppliesCondition(remaining, "incapacitated"),
+  ) || expiringEffect.conditionHadNonSpellIncapacitatedSource
+    ? withoutProne
+    : removeCondition(withoutProne, "incapacitated");
 }

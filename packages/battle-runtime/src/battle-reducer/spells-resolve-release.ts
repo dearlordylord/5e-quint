@@ -49,6 +49,7 @@ import {
   activeMarkedDamageRiderEffect,
   activeMarkedDamageRiders,
 } from "./damage-helpers.ts";
+import { hideousLaughterDamageRepeatSaveFillCheck } from "./hideous-laughter-repeat-save.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { expendSpellSlot } from "./spell-effects.ts";
@@ -973,6 +974,23 @@ export function resolveSpellRelease(
       damageDispositionHole,
     ]);
   }
+  const hideousLaughterSaveCheck = hideousLaughterDamageRepeatSaveFillCheck({
+    target,
+    damageAmount: spellDamageAmount,
+    fills: fillSet.hideousLaughterDamageRepeatSaves,
+  });
+  if (hideousLaughterSaveCheck.tag === "needsHoles") {
+    return needsHolesResult(input.state, input.subject, [
+      ...hideousLaughterSaveCheck.holes,
+    ]);
+  }
+  if (hideousLaughterSaveCheck.tag === "invalid") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      hideousLaughterSaveCheck.message,
+    );
+  }
   const releaseResolutionState =
     invocation.procedure === "spellAttackDamage" && fillSet.attackRoll != null
       ? recordAttackRollMissToHitReplacementUsed(
@@ -1019,6 +1037,8 @@ export function resolveSpellRelease(
         target.combatantId,
       ),
       spellMarkedDamageRiders,
+      hideousLaughterDamageRepeatSaves:
+        fillSet.hideousLaughterDamageRepeatSaves,
       damageSourceId: input.subject.actorId,
     },
   );

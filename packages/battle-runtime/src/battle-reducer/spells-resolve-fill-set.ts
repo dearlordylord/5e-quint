@@ -23,6 +23,7 @@ import {
 } from "../battle-reducer.ts";
 import type { BattleObjectId, CombatantId } from "../identity.ts";
 import { isSpellDamageReductionRollFill } from "./damage-helpers.ts";
+import { isHideousLaughterDamageRepeatSaveFill } from "./hideous-laughter-repeat-save.ts";
 import {
   spellBurstDamageHole,
   spellBeamAttackRollHoleId,
@@ -122,6 +123,10 @@ export type SpellFillSet =
         BattleFill,
         { readonly kind: "concentrationSavingThrow" }
       >[];
+      readonly hideousLaughterDamageRepeatSaves: readonly Extract<
+        BattleFill,
+        { readonly kind: "savingThrowOutcome" }
+      >[];
       readonly damageDispositions: readonly Extract<
         BattleFill,
         { readonly kind: "attackDamageDisposition" }
@@ -198,6 +203,10 @@ export function spellFillSet(
   const concentrationSavingThrows: Extract<
     BattleFill,
     { readonly kind: "concentrationSavingThrow" }
+  >[] = [];
+  const hideousLaughterDamageRepeatSaves: Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
   >[] = [];
   const damageDispositions: Extract<
     BattleFill,
@@ -400,6 +409,7 @@ export function spellFillSet(
         invocation.procedure !== "rollModifier" &&
         invocation.procedure !== "damageReduction" &&
         invocation.procedure !== "saveGatedCondition" &&
+        invocation.procedure !== "hideousLaughter" &&
         invocation.procedure !== "command" &&
         invocation.procedure !== "jumpMovementReplacement" &&
         invocation.procedure !== "featherFallMitigation" &&
@@ -415,6 +425,8 @@ export function spellFillSet(
         (invocation.procedure === "scalarBuff" &&
           !isScalarBuffTargetListInvocation(invocation)) ||
         (invocation.procedure === "saveGatedCondition" &&
+          !isTargetListSpellInvocation(invocation)) ||
+        (invocation.procedure === "hideousLaughter" &&
           !isTargetListSpellInvocation(invocation)) ||
         (invocation.procedure === "command" &&
           !isTargetListSpellInvocation(invocation))
@@ -484,6 +496,20 @@ export function spellFillSet(
     }
 
     if (fill.kind === "savingThrowOutcome") {
+      if (isHideousLaughterDamageRepeatSaveFill(fill)) {
+        if (
+          hideousLaughterDamageRepeatSaves.some(
+            (candidate) => candidate.holeId === fill.holeId,
+          )
+        ) {
+          return {
+            tag: "invalid",
+            message: "Hideous Laughter repeat save was filled twice.",
+          };
+        }
+        hideousLaughterDamageRepeatSaves.push(fill);
+        continue;
+      }
       if (
         invocation.procedure !== "attackBurstSaveDamage" &&
         invocation.procedure !== "saveGatedDamage" &&
@@ -491,6 +517,7 @@ export function spellFillSet(
         invocation.procedure !== "afterHitSaveGatedCondition" &&
         invocation.procedure !== "saveGatedAttackRollAdvantage" &&
         invocation.procedure !== "sleepTargetAdmission" &&
+        invocation.procedure !== "hideousLaughter" &&
         invocation.procedure !== "command" &&
         invocation.procedure !== "greaseGroundHazard" &&
         !(
@@ -824,6 +851,7 @@ export function spellFillSet(
     areaChoice,
     damageTypeChoice,
     concentrationSavingThrows,
+    hideousLaughterDamageRepeatSaves,
     damageDispositions,
     damageRoll,
     movement,
@@ -843,6 +871,7 @@ export function spellFillSetSavingThrowTargeting(
         invocation.procedure === "afterHitSaveGatedCondition" ||
         invocation.procedure === "saveGatedAttackRollAdvantage" ||
         invocation.procedure === "sleepTargetAdmission" ||
+        invocation.procedure === "hideousLaughter" ||
         invocation.procedure === "command" ||
         invocation.procedure === "greaseGroundHazard"
       ? invocation.targeting

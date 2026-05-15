@@ -21,6 +21,10 @@ import {
   zeroHitPointReplacementDispositionHole,
 } from "./attack-damage-apply.ts";
 import { concentrationSavingThrowHole } from "./damage-apply.ts";
+import {
+  hideousLaughterDamageRepeatSaveFillCheck,
+  hideousLaughterDamageRepeatSaveFillsForTarget,
+} from "./hideous-laughter-repeat-save.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
@@ -237,6 +241,46 @@ export function resolvePreparedSlotSpellAct(input: {
       ...missingDamageDispositionHoles,
     ]);
   }
+  const hideousLaughterSaveChecks = targetAllocation.allocations.map(
+    (allocation, allocationIndex) => {
+      const target = input.input.state.combatants.get(allocation.targetId);
+      if (target === undefined) {
+        return { tag: "ok" as const, holes: [] };
+      }
+      return hideousLaughterDamageRepeatSaveFillCheck({
+        target,
+        damageAmount: repeatedDamageAllocationSpellDamageAmount(
+          target,
+          input.invocation,
+          input.fillSet.damageRoll!,
+          allocationIndex,
+          allocation.count,
+        ),
+        fills: hideousLaughterDamageRepeatSaveFillsForTarget(
+          target,
+          input.fillSet.hideousLaughterDamageRepeatSaves,
+        ),
+      });
+    },
+  );
+  const invalidHideousLaughterSaveCheck = hideousLaughterSaveChecks.find(
+    (check) => check.tag === "invalid",
+  );
+  if (invalidHideousLaughterSaveCheck?.tag === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      invalidHideousLaughterSaveCheck.message,
+    );
+  }
+  const missingHideousLaughterSaveHoles = hideousLaughterSaveChecks.flatMap(
+    (check) => (check.tag === "needsHoles" ? [...check.holes] : []),
+  );
+  if (missingHideousLaughterSaveHoles.length > 0) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      ...missingHideousLaughterSaveHoles,
+    ]);
+  }
 
   const damaged = targetAllocation.allocations.reduce(
     (state, allocation, allocationIndex) => {
@@ -272,6 +316,11 @@ export function resolvePreparedSlotSpellAct(input: {
             input.fillSet.damageDispositions,
             allocation.targetId,
           ),
+          hideousLaughterDamageRepeatSaves:
+            hideousLaughterDamageRepeatSaveFillsForTarget(
+              target,
+              input.fillSet.hideousLaughterDamageRepeatSaves,
+            ),
           damageSourceId: input.actorId,
         },
       );

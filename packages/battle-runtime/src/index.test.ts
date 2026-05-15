@@ -23925,7 +23925,6 @@ describe("battle runtime", () => {
       battleId: battleId("battle-hunters-mark-concentration"),
       combatants: [
         characterSeed({
-          combatantId: wizardId,
           displayName: "Wizard",
           initiative: 20,
           spellcasting: wizardSpellcasting({
@@ -24038,7 +24037,6 @@ describe("battle runtime", () => {
       battleId: battleId("battle-hex"),
       combatants: [
         characterSeed({
-          combatantId: wizardId,
           displayName: "Wizard",
           initiative: 20,
           spellcasting: wizardSpellcasting({

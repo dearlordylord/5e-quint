@@ -91,6 +91,9 @@ import {
 } from "./domain-constants.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
+import {
+  hideousLaughterDamageRepeatSaveFillCheck,
+} from "./hideous-laughter-repeat-save.ts";
 
 import {
   attackCanCarryKnockOutChoice,
@@ -648,6 +651,24 @@ export function resolveSelectedAttackProcedure(
         "Concentration Saving Throw fill is only valid for a concentrating damaged target.",
       );
     }
+    const hideousLaughterSaveCheck =
+      hideousLaughterDamageRepeatSaveFillCheck({
+        target: spellReduction.target,
+        damageAmount: reducedFixedDamageAmount,
+        fills: fillSet.hideousLaughterDamageRepeatSaves,
+      });
+    if (hideousLaughterSaveCheck.tag === "needsHoles") {
+      return needsHolesResult(sapRedirectState, input.subject, [
+        ...hideousLaughterSaveCheck.holes,
+      ]);
+    }
+    if (hideousLaughterSaveCheck.tag === "invalid") {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        hideousLaughterSaveCheck.message,
+      );
+    }
     const spent = spendAttackProcedure(
       applyAttackDamageAmount(
         sapRedirectState,
@@ -659,6 +680,7 @@ export function resolveSelectedAttackProcedure(
         [],
         undefined,
         primaryConcentrationSavingThrow,
+        fillSet.hideousLaughterDamageRepeatSaves,
       ),
       input.subject.actorId,
       attack,
@@ -932,6 +954,24 @@ export function resolveSelectedAttackProcedure(
         "Concentration Saving Throw fill is only valid for a concentrating damaged target.",
       );
     }
+    const hideousLaughterSaveCheck =
+      hideousLaughterDamageRepeatSaveFillCheck({
+        target: spellReduction.target,
+        damageAmount: reducedDamageAmount,
+        fills: fillSet.hideousLaughterDamageRepeatSaves,
+      });
+    if (hideousLaughterSaveCheck.tag === "needsHoles") {
+      return needsHolesResult(sapRedirectState, input.subject, [
+        ...hideousLaughterSaveCheck.holes,
+      ]);
+    }
+    if (hideousLaughterSaveCheck.tag === "invalid") {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        hideousLaughterSaveCheck.message,
+      );
+    }
     const spent = spendAttackProcedure(
       applyAttackDamageAmount(
         sapRedirectState,
@@ -943,6 +983,7 @@ export function resolveSelectedAttackProcedure(
         selectedDamageRiders,
         selectedDamageDiceChoice ?? undefined,
         primaryConcentrationSavingThrow,
+        fillSet.hideousLaughterDamageRepeatSaves,
       ),
       input.subject.actorId,
       attack,

@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-object-light spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-object-light spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 import type {
   ActionEconomyState,
   RuntimeActionResource,
@@ -579,6 +579,19 @@ export type BattleActiveEffect =
   | (BattleSpellEffectBase & {
       readonly kind: "sleepUnconscious";
       readonly conditionHadNonSpellSource: boolean;
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "concentration" }
+      >;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "hideousLaughter";
+      readonly conditionHadNonSpellProneSource: boolean;
+      readonly conditionHadNonSpellIncapacitatedSource: boolean;
+      readonly save: {
+        readonly ability: Extract<Ability, "wis">;
+        readonly dc: DcSource;
+      };
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
         { readonly kind: "concentration" }
@@ -1692,6 +1705,7 @@ export type TargetListSpellInvocation =
         { readonly kind: "targetList" }
       >;
     })
+  | Extract<SupportedSpellInvocation, { readonly procedure: "hideousLaughter" }>
   | Extract<
       SupportedSpellInvocation,
       { readonly procedure: "creatureTypeProtection" }
@@ -2182,6 +2196,17 @@ export type SupportedSpellInvocation =
   | {
       readonly access: PreparedSpellAccess;
       readonly resource: SpellSlotInvocationResource;
+      readonly procedure: "hideousLaughter";
+      readonly spell: SpellRecord;
+      readonly actionCost: "magicAction";
+      readonly ability: Extract<Ability, "wis">;
+      readonly dc: DcSource;
+      readonly targeting: Extract<SpellTargeting, { readonly kind: "targetList" }>;
+      readonly rangeFeet: MovementFeet;
+    }
+  | {
+      readonly access: PreparedSpellAccess;
+      readonly resource: SpellSlotInvocationResource;
       readonly procedure: "greaseGroundHazard";
       readonly spell: SpellRecord;
       readonly ability: Extract<Ability, "dex">;
@@ -2328,6 +2353,7 @@ type AnySupportedDamageSpellInvocation = Exclude<
       | "saveGatedCondition"
       | "saveGatedAttackRollAdvantage"
       | "sleepTargetAdmission"
+      | "hideousLaughter"
       | "command"
       | "greaseGroundHazard"
       | "fogCloudObscurement"
@@ -2904,6 +2930,7 @@ export type BattleSpellTargetListHole = {
         | "directHitPointRestoration"
         | "rollModifier"
         | "saveGatedCondition"
+        | "hideousLaughter"
         | "creatureTypeProtection"
         | "damageReduction"
         | "scalarBuff"
@@ -3026,6 +3053,27 @@ export type BattleSleepRepeatSavingThrowOutcomeHole = {
     readonly targetId: CombatantId;
     readonly sourceSpellId: SpellRecord["id"];
     readonly sourceCombatantId: CombatantId;
+    readonly save: {
+      readonly ability: Extract<Ability, "wis">;
+      readonly dc: DcSource;
+    };
+  };
+  readonly ability: Extract<Ability, "wis">;
+  readonly dc: DcSource;
+  readonly areaChoices: readonly [];
+  readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
+};
+export type BattleHideousLaughterRepeatTrigger = "endTurn" | "damage";
+export type BattleHideousLaughterRepeatSavingThrowOutcomeHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "savingThrowOutcome";
+  readonly label: string;
+  readonly hideousLaughterRepeatSave: {
+    readonly targetId: CombatantId;
+    readonly sourceSpellId: SpellRecord["id"];
+    readonly sourceCombatantId: CombatantId;
+    readonly trigger: BattleHideousLaughterRepeatTrigger;
     readonly save: {
       readonly ability: Extract<Ability, "wis">;
       readonly dc: DcSource;
@@ -3171,6 +3219,7 @@ export type BattleSpellSavingThrowOutcomeHole = {
         | "afterHitSaveGatedCondition"
         | "saveGatedAttackRollAdvantage"
         | "sleepTargetAdmission"
+        | "hideousLaughter"
         | "command"
         | "greaseGroundHazard";
     }
@@ -3342,6 +3391,7 @@ export type BattleHole =
   | BattleSpellSavingThrowOutcomeHole
   | BattleSpellTurnStartSavingThrowOutcomeHole
   | BattleSleepRepeatSavingThrowOutcomeHole
+  | BattleHideousLaughterRepeatSavingThrowOutcomeHole
   | BattleGreaseGroundHazardSavingThrowOutcomeHole
   | BattleUnitFeatureSavingThrowOutcomeHole
   | BattleUnitFeatureRollHole

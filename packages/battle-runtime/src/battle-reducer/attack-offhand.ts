@@ -66,6 +66,7 @@ import {
   needsHolesResult,
   revealHidden,
 } from "./hole-helpers.ts";
+import { hideousLaughterDamageRepeatSaveFillCheck } from "./hideous-laughter-repeat-save.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 
 import {
@@ -564,6 +565,23 @@ function resolveBonusActionAttack(
         "Concentration Saving Throw fill is only valid for a concentrating damaged target.",
       );
     }
+    const hideousLaughterSaveCheck = hideousLaughterDamageRepeatSaveFillCheck({
+      target: spellReduction.target,
+      damageAmount,
+      fills: fillSet.hideousLaughterDamageRepeatSaves,
+    });
+    if (hideousLaughterSaveCheck.tag === "needsHoles") {
+      return needsHolesResult(attackRolledState, input.subject, [
+        ...hideousLaughterSaveCheck.holes,
+      ]);
+    }
+    if (hideousLaughterSaveCheck.tag === "invalid") {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        hideousLaughterSaveCheck.message,
+      );
+    }
     const damaged = applyAttackDamageAmount(
       spellReducedState,
       input.subject.actorId,
@@ -574,6 +592,7 @@ function resolveBonusActionAttack(
       selectedDamageRiders,
       selectedDamageDiceChoice ?? undefined,
       fillSet.concentrationSavingThrow,
+      fillSet.hideousLaughterDamageRepeatSaves,
     );
     const spent = spendOffHandBonusAction(damaged);
     if (spent.tag === "invalid") {

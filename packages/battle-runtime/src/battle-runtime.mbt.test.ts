@@ -823,6 +823,7 @@ function createStarryWispObjectDriver() {
 function createEldritchBlastDriver() {
   return defineDriver(eldritchBlastDriverSchema, () => {
     let state = eldritchBlastBattle();
+    let projectionState = state;
     const subject = eldritchBlastSubject();
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = discoverSpellHoles(state, subject);
@@ -831,6 +832,7 @@ function createEldritchBlastDriver() {
 
     function reset(): void {
       state = eldritchBlastBattle();
+      projectionState = state;
       fills = [];
       holes = discoverSpellHoles(state, subject);
       lastResult = "init";
@@ -841,12 +843,13 @@ function createEldritchBlastDriver() {
       lastResult = result.tag;
       if (result.tag === "resolved") {
         state = result.state;
+        projectionState = result.state;
         holes = [];
         lastInvalidReason = "";
         return;
       }
       if (result.tag === "needsHoles") {
-        state = result.state;
+        projectionState = result.state;
         holes = result.holes;
         lastInvalidReason = "";
         return;
@@ -915,7 +918,7 @@ function createEldritchBlastDriver() {
       step: () => {},
       getState: () =>
         projectEldritchBlastMbtState(
-          state,
+          projectionState,
           holes,
           lastResult,
           lastInvalidReason,

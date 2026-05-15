@@ -7,6 +7,7 @@ import {
   holeId,
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
+import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { Condition, CreatureType } from "@dnd/shared/game-facts";
 import { movementFeet } from "@dnd/shared/types";
 import type { DamageType, SpellRecord } from "@dnd/surface/surface/types";
@@ -41,6 +42,9 @@ export const CHROMATIC_ORB_CONTINUATION_LIMIT_KINDS = [
   "max_leaps_from_slot_level",
   "exclude_already_targeted_in_same_cast",
 ] as const;
+export const HIDEOUS_LAUGHTER_REPEAT_SAVE_HOLE_KEY_PREFIX =
+  "battle:hideous-laughter-repeat-save:";
+export const HIDEOUS_LAUGHTER_DURATION_TICKS = elapsedTimeTicks(10);
 export const ELDRITCH_BLAST_BEAM_COUNT_TIERS = [
   { atLevel: 5, value: 2 },
   { atLevel: 11, value: 3 },

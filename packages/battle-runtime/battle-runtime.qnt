@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points
@@ -11,6 +11,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-beam-sequence
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-damage-reduction
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-sleep-repeat-save-lifecycle
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-hideous-laughter-repeat-save-lifecycle
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-grease-ground-hazard
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-fog-cloud-obscurement
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-command-halt-grovel
@@ -317,7 +318,7 @@ module battleRuntime {
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
   type Ability = StrAbility | DexAbility | ConAbility | IntAbility | WisAbility | ChaAbility
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | FireBolt | EldritchBlast | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | Hex | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | Light | TrueStrike | Grease | FogCloud | Command | DissonantWhispers | FeatherFall | HellishRebuke | SorcerousBurst | SpareTheDying
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | FireBolt | EldritchBlast | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | Hex | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | Light | TrueStrike | Grease | FogCloud | Command | DissonantWhispers | FeatherFall | HellishRebuke | SorcerousBurst | SpareTheDying | HideousLaughter
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | StarryWispSpellAttack | FireBoltSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack | SorcerousBurstSpellAttack({ damageTypeChoice: BattleRuntimeSorcerousBurstDamageTypeChoice, spellcastingAbilityModifier: int, characterLevel: int })
   type FixedSpellAttackDamageInvocation = RayOfFrostFixedSpellAttack | PoisonSprayFixedSpellAttack | ChillTouchFixedSpellAttack | StarryWispFixedSpellAttack | FireBoltFixedSpellAttack | ShockingGraspFixedSpellAttack | GuidingBoltFixedSpellAttack | RayOfSicknessFixedSpellAttack | ProduceFlameHurlFixedSpellAttack
   type SpellAttackBeamSequenceInvocation =
@@ -349,7 +350,7 @@ module battleRuntime {
   type CommandOption = CommandGrovelOption | CommandHaltOption | CommandDropOption | CommandApproachOption | CommandFleeOption
 
   type MarkedDamageRiderTransfer = AwaitingTargetDrop | TransferAvailable | TransferAvailableAfterTurn({ actor: Actor, round: int })
-  type ActiveEffect = BardicInspirationDie({ source: Actor, dieSize: int, durationTicks: int }) | MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | HexDamageRider({ target: Actor, ability: Ability, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | RayOfSicknessPoisoned | ChillTouchHitPointRegainPrevented({ source: Actor, expiresAtRound: int }) | StarryWispInvisibleBenefitDenied({ source: Actor, expiresAtRound: int }) | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | WeaponMasterySapNextAttackDisadvantage({ source: Actor }) | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodCreatureTypeProtection | ProduceFlameHeldLight({ durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | FogCloudObscurement({ areaId: int, radiusFeet: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
+  type ActiveEffect = BardicInspirationDie({ source: Actor, dieSize: int, durationTicks: int }) | MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | HexDamageRider({ target: Actor, ability: Ability, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | RayOfSicknessPoisoned | ChillTouchHitPointRegainPrevented({ source: Actor, expiresAtRound: int }) | StarryWispInvisibleBenefitDenied({ source: Actor, expiresAtRound: int }) | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | WeaponMasterySapNextAttackDisadvantage({ source: Actor }) | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodCreatureTypeProtection | ProduceFlameHeldLight({ durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | HideousLaughterEffect({ source: Actor, target: Actor, hadProne: bool, hadIncapacitated: bool, durationTicks: int }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | FogCloudObscurement({ areaId: int, radiusFeet: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
   type PreventedProtectionCondition = PreventedCharmed | PreventedFrightened
   type PossessionAttemptDisposition = PossessionPreventedByCreatureTypeProtection | PossessionUnprevented
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
@@ -1167,6 +1168,13 @@ module battleRuntime {
         | FeatherFallMitigation(data) => FeatherFallMitigation({
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
+        | HideousLaughterEffect(data) => HideousLaughterEffect({
+            source: data.source,
+            target: data.target,
+            hadProne: data.hadProne,
+            hadIncapacitated: data.hadIncapacitated,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | GreaseGroundHazard(data) => GreaseGroundHazard({
             areaId: data.areaId,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
@@ -1193,29 +1201,80 @@ module battleRuntime {
         | ProduceFlameHeldLight(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | JumpMovementReplacement(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | FeatherFallMitigation(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | HideousLaughterEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | GreaseGroundHazard(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | FogCloudObscurement(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | BardicInspirationDie(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | _ => true
       })
 
+  pure def activeEffectsContainHideousLaughterFrom(effects: Set[ActiveEffect], source: Actor): bool =
+    effects.exists(effect => match effect {
+      | HideousLaughterEffect(data) => data.source == source
+      | _ => false
+    })
+
+  pure def hideousLaughterEffectsExpiringAfterRoundTick(effects: Set[ActiveEffect]): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | HideousLaughterEffect(data) =>
+          not(battleRuntimeTimedSpellEffectRemainsActive(battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks)))
+      | _ => false
+    })
+
+  pure def combatantAfterHideousLaughterDurationTick(target: Combatant, tickedEffects: Set[ActiveEffect]): Combatant = {
+    val expiring = hideousLaughterEffectsExpiringAfterRoundTick(target.activeEffects)
+    val hasExpiring = expiring.size() > 0
+    val remainingHideous = tickedEffects.exists(effect => match effect {
+      | HideousLaughterEffect(_) => true
+      | _ => false
+    })
+    val expiringHadProne = expiring.exists(effect => match effect {
+      | HideousLaughterEffect(data) => data.hadProne
+      | _ => false
+    })
+    val expiringHadIncapacitated = expiring.exists(effect => match effect {
+      | HideousLaughterEffect(data) => data.hadIncapacitated
+      | _ => false
+    })
+    {
+      ...target,
+      prone: if (hasExpiring and not(remainingHideous)) expiringHadProne else target.prone,
+      incapacitated: if (hasExpiring and not(remainingHideous)) expiringHadIncapacitated else target.incapacitated,
+      activeEffects: tickedEffects,
+    }
+  }
+
   pure def tickRoundDurationSpellEffects(state: BattleState): BattleState = {
     val fighterEffects = tickDurationActiveEffects(state.fighter.activeEffects)
     val goblinEffects = tickDurationActiveEffects(state.goblin.activeEffects)
+    val fighterTimedConcentrationBefore =
+      activeEffectsContainTimedConcentrationSpellEffect(state.fighter.activeEffects)
+        or activeEffectsContainHideousLaughterFrom(state.fighter.activeEffects, Fighter)
+        or activeEffectsContainHideousLaughterFrom(state.goblin.activeEffects, Fighter)
+    val fighterTimedConcentrationAfter =
+      activeEffectsContainTimedConcentrationSpellEffect(fighterEffects)
+        or activeEffectsContainHideousLaughterFrom(fighterEffects, Fighter)
+        or activeEffectsContainHideousLaughterFrom(goblinEffects, Fighter)
+    val goblinTimedConcentrationBefore =
+      activeEffectsContainTimedConcentrationSpellEffect(state.goblin.activeEffects)
+        or activeEffectsContainHideousLaughterFrom(state.fighter.activeEffects, Goblin)
+        or activeEffectsContainHideousLaughterFrom(state.goblin.activeEffects, Goblin)
+    val goblinTimedConcentrationAfter =
+      activeEffectsContainTimedConcentrationSpellEffect(goblinEffects)
+        or activeEffectsContainHideousLaughterFrom(fighterEffects, Goblin)
+        or activeEffectsContainHideousLaughterFrom(goblinEffects, Goblin)
     {
       ...state,
       lightEmitters: tickDurationLightEmitters(state.lightEmitters),
       fighter: {
-        ...state.fighter,
+        ...combatantAfterHideousLaughterDurationTick(state.fighter, fighterEffects),
         concentrating: state.fighter.concentrating
-          and (not(activeEffectsContainTimedConcentrationSpellEffect(state.fighter.activeEffects)) or activeEffectsContainTimedConcentrationSpellEffect(fighterEffects)),
-        activeEffects: fighterEffects,
+          and (not(fighterTimedConcentrationBefore) or fighterTimedConcentrationAfter),
       },
       goblin: {
-        ...state.goblin,
+        ...combatantAfterHideousLaughterDurationTick(state.goblin, goblinEffects),
         concentrating: state.goblin.concentrating
-          and (not(activeEffectsContainTimedConcentrationSpellEffect(state.goblin.activeEffects)) or activeEffectsContainTimedConcentrationSpellEffect(goblinEffects)),
-        activeEffects: goblinEffects,
+          and (not(goblinTimedConcentrationBefore) or goblinTimedConcentrationAfter),
       },
     }
   }
@@ -1307,6 +1366,7 @@ module battleRuntime {
         | FeatherFallMitigation(_) => false
         | SleepPendingRepeatSave(_) => false
         | SleepUnconscious(_) => false
+        | HideousLaughterEffect(_) => false
         | GreaseGroundHazard(_) => false
         | FogCloudObscurement(_) => false
         | CommandPending(_) => false
@@ -2630,6 +2690,7 @@ module battleRuntime {
         | ResistanceDamageReduction(_) => false
         | SleepPendingRepeatSave(_) => false
         | SleepUnconscious(_) => false
+        | HideousLaughterEffect(_) => false
         | _ => true
       })
 
@@ -3391,8 +3452,12 @@ module battleRuntime {
     stateWithFighterMovementStep(state, battleRuntimeHelpAttack(movementProjectionForFighter(state, WalkSpeedKind), true))
 
   pure def standFighterFromProne(state: BattleState): BattleState = {
-    val step = battleRuntimeStandFromProne(movementProjectionForFighter(state, WalkSpeedKind))
-    stateWithFighterMovementStep(state, step)
+    if (combatantHasHideousLaughter(state.fighter))
+      state
+    else {
+      val step = battleRuntimeStandFromProne(movementProjectionForFighter(state, WalkSpeedKind))
+      stateWithFighterMovementStep(state, step)
+    }
   }
 
   pure def movementRemainingForFighter(state: BattleState): int = {
@@ -4912,6 +4977,7 @@ module battleRuntime {
       | HellishRebuke => true
       | SorcerousBurst => false
       | SpareTheDying => false
+      | HideousLaughter => true
     }
 
   pure def canExpendSpellSlotThisTurn(state: BattleState): bool =
@@ -6131,6 +6197,128 @@ module battleRuntime {
             state
       }
     }
+
+  pure def hideousLaughterMaxTargets(slotLevel: int): int =
+    if (slotLevel <= 1) 1 else slotLevel
+
+  pure def hideousLaughterDurationTicks: int = 10
+
+  pure def activeEffectsWithoutHideousLaughter(effects: Set[ActiveEffect], source: Actor, targetActor: Actor): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | HideousLaughterEffect(data) => not(data.source == source and data.target == targetActor)
+      | _ => true
+    })
+
+  pure def hideousLaughterEffect(source: Actor, targetActor: Actor, target: Combatant): ActiveEffect =
+    HideousLaughterEffect({
+      source: source,
+      target: targetActor,
+      hadProne: target.prone,
+      hadIncapacitated: target.incapacitated,
+      durationTicks: hideousLaughterDurationTicks,
+    })
+
+  pure def combatantWithoutHideousLaughter(target: Combatant, source: Actor, targetActor: Actor): Combatant = {
+    val hadHideousLaughter = target.activeEffects.exists(effect => match effect {
+      | HideousLaughterEffect(data) => data.source == source and data.target == targetActor
+      | _ => false
+    })
+    val hadProne = target.activeEffects.exists(effect => match effect {
+      | HideousLaughterEffect(data) => data.source == source and data.target == targetActor and data.hadProne
+      | _ => false
+    })
+    val hadIncapacitated = target.activeEffects.exists(effect => match effect {
+      | HideousLaughterEffect(data) => data.source == source and data.target == targetActor and data.hadIncapacitated
+      | _ => false
+    })
+    {
+      ...target,
+      prone: if (hadHideousLaughter) hadProne else target.prone,
+      incapacitated: if (hadHideousLaughter) hadIncapacitated else target.incapacitated,
+      activeEffects: activeEffectsWithoutHideousLaughter(target.activeEffects, source, targetActor),
+    }
+  }
+
+  pure def hideousLaughterTarget(
+    target: Combatant,
+    targetActor: Actor,
+    savingThrowSucceeded: bool,
+    source: Actor,
+  ): Combatant =
+    if (savingThrowSucceeded)
+      target
+    else {
+      val withoutPrior = combatantWithoutHideousLaughter(target, source, targetActor)
+      val laughed = {
+        ...withoutPrior,
+        prone: true,
+        incapacitated: true,
+        activeEffects: withoutPrior.activeEffects.union(Set(hideousLaughterEffect(source, targetActor, withoutPrior))),
+      }
+      breakConcentrationFromSleepAppliedIncapacitated(laughed, targetActor)
+    }
+
+  pure def resolveHideousLaughter(
+    state: BattleState,
+    goblinSavingThrowSucceeded: bool,
+    slotLevel: int,
+  ): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)) or hideousLaughterMaxTargets(slotLevel) < 1)
+      state
+    else {
+      val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
+      {
+        ...withoutPrior,
+        fighter: { ...withoutPrior.fighter, concentrating: true },
+        goblin: hideousLaughterTarget(withoutPrior.goblin, Goblin, goblinSavingThrowSucceeded, Fighter),
+        actionAvailable: false,
+        spellSlotExpendedThisTurn: true,
+      }
+    }
+
+  pure def hideousLaughterRepeatSaveDue(effects: Set[ActiveEffect], actor: Actor): bool =
+    effects.exists(effect => match effect {
+      | HideousLaughterEffect(data) => data.target == actor
+      | _ => false
+    })
+
+  pure def hideousLaughterRepeatSaveHoles(state: BattleState): Set[Hole] =
+    match currentActor(state) {
+      | Fighter => if (hideousLaughterRepeatSaveDue(state.fighter.activeEffects, Fighter)) Set(SavingThrowOutcome) else Set()
+      | Goblin => if (hideousLaughterRepeatSaveDue(state.goblin.activeEffects, Goblin)) Set(SavingThrowOutcome) else Set()
+    }
+
+  pure def endTurnWithHideousLaughterRepeatSave(state: BattleState, savingThrowSucceeded: bool): BattleState =
+    match currentActor(state) {
+      | Fighter =>
+        if (hideousLaughterRepeatSaveDue(state.fighter.activeEffects, Fighter) and savingThrowSucceeded)
+          endTurn({ ...state, fighter: combatantWithoutHideousLaughter(state.fighter, Goblin, Fighter) })
+        else
+          endTurn(state)
+      | Goblin =>
+        if (hideousLaughterRepeatSaveDue(state.goblin.activeEffects, Goblin) and savingThrowSucceeded)
+          endTurn({ ...state, goblin: combatantWithoutHideousLaughter(state.goblin, Fighter, Goblin) })
+        else
+          endTurn(state)
+    }
+
+  pure def hideousLaughterDamageRepeatSaveRollMode(target: Combatant): SavingThrowRollMode =
+    if (target.activeEffects.exists(effect => match effect { | HideousLaughterEffect(_) => true | _ => false }))
+      AdvantageSavingThrow
+    else
+      NormalSavingThrow
+
+  pure def combatantAfterHideousLaughterDamageRepeatSave(target: Combatant, source: Actor, targetActor: Actor, damage: int, savingThrowSucceeded: bool): Combatant =
+    if (damage > 0 and savingThrowSucceeded)
+      combatantWithoutHideousLaughter(target, source, targetActor)
+    else
+      target
+
+  pure def combatantHasHideousLaughter(target: Combatant): bool =
+    target.activeEffects.exists(effect => match effect {
+      | HideousLaughterEffect(_) => true
+      | _ => false
+    })
 
   pure val greaseDurationTicks = 10
   pure val greaseAreaId = 1
@@ -8715,6 +8903,77 @@ module battleRuntime {
       assert(damaged.goblin.prone),
       assert(not(combatantHasSleepEffect(damaged.goblin))),
     }
+  }
+
+  run test_hideous_laughter_failed_save_applies_conditions_and_concentration = {
+    val laughed = resolveHideousLaughter(initialState, false, 1)
+    all {
+      assert(laughed.goblin.prone),
+      assert(laughed.goblin.incapacitated),
+      assert(laughed.fighter.concentrating),
+      assert(laughed.goblin.activeEffects.contains(HideousLaughterEffect({
+        source: Fighter,
+        target: Goblin,
+        hadProne: false,
+        hadIncapacitated: false,
+        durationTicks: hideousLaughterDurationTicks,
+      }))),
+      assert(hideousLaughterMaxTargets(1) == 1),
+      assert(hideousLaughterMaxTargets(2) == 2),
+      assert(hideousLaughterDurationTicks == 10),
+    }
+  }
+
+  run test_hideous_laughter_expires_after_one_minute_duration = {
+    val expiring = {
+      ...initialState,
+      fighter: { ...initialState.fighter, concentrating: true },
+      goblin: {
+        ...initialState.goblin,
+        prone: true,
+        incapacitated: true,
+        activeEffects: Set(HideousLaughterEffect({
+          source: Fighter,
+          target: Goblin,
+          hadProne: false,
+          hadIncapacitated: false,
+          durationTicks: 1,
+        })),
+      },
+    }
+    val expired = tickRoundDurationSpellEffects(expiring)
+    all {
+      assert(not(expired.fighter.concentrating)),
+      assert(not(expired.goblin.prone)),
+      assert(not(expired.goblin.incapacitated)),
+      assert(not(combatantHasHideousLaughter(expired.goblin))),
+    }
+  }
+
+  run test_hideous_laughter_repeat_and_damage_saves_end_effect = {
+    val laughed = resolveHideousLaughter(initialState, false, 1)
+    val goblinTurn = endTurn(laughed)
+    val repeated = endTurnWithHideousLaughterRepeatSave(goblinTurn, true)
+    val damaged = combatantAfterHideousLaughterDamageRepeatSave(laughed.goblin, Fighter, Goblin, 1, true)
+    all {
+      assert(hideousLaughterRepeatSaveHoles(goblinTurn) == Set(SavingThrowOutcome)),
+      assert(not(repeated.goblin.prone)),
+      assert(not(repeated.goblin.incapacitated)),
+      assert(not(combatantHasHideousLaughter(repeated.goblin))),
+      assert(hideousLaughterDamageRepeatSaveRollMode(laughed.goblin) == AdvantageSavingThrow),
+      assert(not(damaged.prone)),
+      assert(not(damaged.incapacitated)),
+      assert(not(combatantHasHideousLaughter(damaged))),
+    }
+  }
+
+  run test_hideous_laughter_suppresses_standing_from_prone = {
+    val laughedAtFighter = {
+      ...initialState,
+      fighter: hideousLaughterTarget(initialState.fighter, Fighter, false, Goblin),
+    }
+    val stood = standFighterFromProne(laughedAtFighter)
+    assert(stood == laughedAtFighter)
   }
 
   run test_sleep_adjacent_action_shakes_target_awake = {

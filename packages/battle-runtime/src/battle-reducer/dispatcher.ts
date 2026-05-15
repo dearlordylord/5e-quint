@@ -75,6 +75,7 @@ import {
   damageAmountByTypeEntriesAfterScalarReduction,
 } from "./attack-damage-events.ts";
 import { battleCreatureType } from "./domain-helpers.ts";
+import { hideousLaughterDamageRepeatSaveFillCheck } from "./hideous-laughter-repeat-save.ts";
 import {
   reactionModifierReductionRoll,
   reactionRollOrDamageReductionChoices,
@@ -1723,6 +1724,23 @@ function resolveHellishRebukeReactionSpellCommand(
       damageDispositionHole,
     ]);
   }
+  const hideousLaughterSaveCheck = hideousLaughterDamageRepeatSaveFillCheck({
+    target,
+    damageAmount,
+    fills: fillSet.hideousLaughterDamageRepeatSaves,
+  });
+  if (hideousLaughterSaveCheck.tag === "needsHoles") {
+    return needsHolesResult(input.state, input.subject, [
+      ...hideousLaughterSaveCheck.holes,
+    ]);
+  }
+  if (hideousLaughterSaveCheck.tag === "invalid") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      hideousLaughterSaveCheck.message,
+    );
+  }
   const castingState = spellRequiresVerbal(input.invocation.spell)
     ? revealHidden(input.state, input.subject.reactorId)
     : input.state;
@@ -1740,6 +1758,8 @@ function resolveHellishRebukeReactionSpellCommand(
         fillSet.damageDispositions,
         input.frame.damageSourceId,
       ),
+      hideousLaughterDamageRepeatSaves:
+        fillSet.hideousLaughterDamageRepeatSaves,
       damageSourceId: input.subject.reactorId,
     },
   );

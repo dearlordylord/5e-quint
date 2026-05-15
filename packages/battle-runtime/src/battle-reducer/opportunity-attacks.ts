@@ -50,6 +50,7 @@ import {
   snapshotBattle,
 } from "./dispatcher.ts";
 import { needsHolesResult, revealHidden } from "./hole-helpers.ts";
+import { hideousLaughterDamageRepeatSaveFillCheck } from "./hideous-laughter-repeat-save.ts";
 import {
   attackHitTriggerKind,
   attackKindForDeflectRedirect,
@@ -402,6 +403,23 @@ export function resolveOpportunityAttackCommand(
         "Concentration Saving Throw fill is only valid for a concentrating damaged target.",
       );
     }
+    const hideousLaughterSaveCheck = hideousLaughterDamageRepeatSaveFillCheck({
+      target: spellReduction.target,
+      damageAmount: reducedFixedDamageAmount,
+      fills: fillSet.hideousLaughterDamageRepeatSaves,
+    });
+    if (hideousLaughterSaveCheck.tag === "needsHoles") {
+      return needsHolesResult(attackRolledState, input.subject, [
+        ...hideousLaughterSaveCheck.holes,
+      ]);
+    }
+    if (hideousLaughterSaveCheck.tag === "invalid") {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        hideousLaughterSaveCheck.message,
+      );
+    }
     const nextState = applyAttackDamageAmount(
       spellReducedState,
       subject.reactorId,
@@ -412,6 +430,7 @@ export function resolveOpportunityAttackCommand(
       [],
       undefined,
       fillSet.concentrationSavingThrow,
+      fillSet.hideousLaughterDamageRepeatSaves,
     );
     const reactionWindow = maybeOpenReactionWindow(
       nextState,
@@ -598,6 +617,23 @@ export function resolveOpportunityAttackCommand(
       );
     }
   }
+  const hideousLaughterSaveCheck = hideousLaughterDamageRepeatSaveFillCheck({
+    target: spellReduction.target,
+    damageAmount: reducedDamageAmount,
+    fills: fillSet.hideousLaughterDamageRepeatSaves,
+  });
+  if (hideousLaughterSaveCheck.tag === "needsHoles") {
+    return needsHolesResult(attackRolledState, input.subject, [
+      ...hideousLaughterSaveCheck.holes,
+    ]);
+  }
+  if (hideousLaughterSaveCheck.tag === "invalid") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      hideousLaughterSaveCheck.message,
+    );
+  }
   const nextState = applyAttackDamageAmount(
     spellReducedState,
     subject.reactorId,
@@ -608,6 +644,7 @@ export function resolveOpportunityAttackCommand(
     selectedDamageRiders,
     selectedDamageDiceChoice ?? undefined,
     fillSet.concentrationSavingThrow,
+    fillSet.hideousLaughterDamageRepeatSaves,
   );
   const reactionWindow = maybeOpenReactionWindow(
     nextState,

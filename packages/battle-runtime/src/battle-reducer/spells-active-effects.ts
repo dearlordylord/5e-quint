@@ -1,7 +1,10 @@
 // Spell active-effect application extracted from spells-holes-fills.ts.
 
 import { Match } from "effect";
-import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
+import {
+  applyCondition,
+  hasCondition,
+} from "@dnd/shared-algebras/conditions-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { type Round as RoundType } from "@dnd/shared/types";
 import type {
@@ -44,6 +47,7 @@ import {
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import type { BattleObjectId } from "../identity.ts";
+import { HIDEOUS_LAUGHTER_DURATION_TICKS } from "./domain-constants.ts";
 
 export const FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND = 60;
 
@@ -523,6 +527,65 @@ export function applySleepPendingRepeatSaveEffects(
   }
   const effected: BattleState = { ...state, combatants };
   return targetIds.reduce(
+    (nextState, targetId) => breakBattleConcentration(nextState, targetId),
+    effected,
+  );
+}
+
+export function applyHideousLaughterEffects(
+  state: BattleState,
+  actorId: CombatantId,
+  targetIds: readonly CombatantId[],
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "hideousLaughter" }
+  >,
+): BattleState {
+  const combatants = new Map(state.combatants);
+  for (const targetId of targetIds) {
+    const target = combatants.get(targetId);
+    if (target === undefined) {
+      continue;
+    }
+    const replacing = target.activeEffects.filter(
+      (effect) =>
+        effect.kind === "hideousLaughter" &&
+        effect.sourceSpellId === invocation.spell.id &&
+        effect.sourceCombatantId === actorId,
+    );
+    const activeEffects = [
+      ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
+      {
+        kind: "hideousLaughter" as const,
+        sourceSpellId: invocation.spell.id,
+        sourceCombatantId: actorId,
+        conditionHadNonSpellProneSource:
+          conditionHadNonSpellSourceBeforeSpellEffect(target, "prone"),
+        conditionHadNonSpellIncapacitatedSource:
+          conditionHadNonSpellSourceBeforeSpellEffect(target, "incapacitated"),
+        save: {
+          ability: invocation.ability,
+          dc: invocation.dc,
+        },
+        expiresAt: {
+          kind: "concentration" as const,
+          combatantId: actorId,
+          durationTicks: HIDEOUS_LAUGHTER_DURATION_TICKS,
+        },
+      },
+    ];
+    const affectedTarget = battleCreatureWithSpellActiveEffects(
+      target,
+      activeEffects,
+    );
+    combatants.set(targetId, affectedTarget);
+  }
+  const effected: BattleState = { ...state, combatants };
+  const incapacitatedTargetIds = targetIds.filter((targetId) => {
+    const target = combatants.get(targetId);
+    return target !== undefined && hasCondition(target.conditions, "incapacitated");
+  });
+  return incapacitatedTargetIds.reduce(
     (nextState, targetId) => breakBattleConcentration(nextState, targetId),
     effected,
   );

@@ -34,6 +34,10 @@ import {
 import { extendSavingThrowOngoingFeatures } from "./attack-roll.ts";
 import { combatantCanTakeReactions } from "./creature-state.ts";
 import { concentrationSavingThrowHole } from "./damage-apply.ts";
+import {
+  hideousLaughterDamageRepeatSaveFillCheck,
+  hideousLaughterDamageRepeatSaveFillsForTarget,
+} from "./hideous-laughter-repeat-save.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { applyBattleMovement } from "./readied-release.ts";
@@ -42,6 +46,7 @@ import {
   applyCommandPendingEffects,
   applyFailedSaveAttackRollAdvantageEffects,
   applyGreaseGroundHazardCastEffects,
+  applyHideousLaughterEffects,
   applySleepPendingRepeatSaveEffects,
   applyFailedSaveSpellActiveEffects,
   applyFailedSaveSpellConditionEffects,
@@ -291,6 +296,124 @@ export function resolveSleepTargetAdmissionSpellAct(input: {
   const nextState = extendSavingThrowOngoingFeatures(effected, input.actorId, [
     ...selectedTargetIds,
   ]);
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+export function resolveHideousLaughterSpellAct(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "hideousLaughter" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  const targetHole = spellTargetListHole(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+  );
+  if (input.fillSet.targetList === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      targetHole,
+    ]);
+  }
+  if (
+    input.fillSet.targetId !== undefined ||
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.concentrationSavingThrows.length > 0 ||
+    input.fillSet.damageDispositions.length > 0
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Hideous Laughter uses target-list and Saving Throw outcome fills.",
+    );
+  }
+  const targetValidation = validateSpellTargetList(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+    input.fillSet.targetList.targetIds,
+    input.fillSet.targetList.spatialFacts,
+  );
+  if (targetValidation !== null) {
+    return invalidResult(input.input.state, "invalidFill", targetValidation);
+  }
+  const savingThrowHole = spellSavingThrowOutcomeHole(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+  );
+  if (input.fillSet.savingThrowOutcomes === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      savingThrowHole,
+    ]);
+  }
+  const savingThrowValidation = validateSavingThrowOutcomes(
+    input.fillSet.savingThrowOutcomes,
+    savingThrowHole,
+    input.input.state,
+    input.actorId,
+    undefined,
+    input.fillSet.targetList.targetIds,
+  );
+  if (savingThrowValidation !== null) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      savingThrowValidation,
+    );
+  }
+  const failedTargets = input.fillSet.savingThrowOutcomes.outcomes.flatMap(
+    (outcome) => (outcome.succeeded ? [] : [outcome.targetId]),
+  );
+  if (failedTargets.length > 0) {
+    const saveFailedReactionWindow = maybeOpenReactionWindow(
+      input.input.state,
+      {
+        trigger: "saveFailed",
+        targetId: failedTargets[0]!,
+        sourceSpellId: input.invocation.spell.id,
+        continuation: {
+          kind: "replay",
+          subject:
+            input.input.reactionContinuationSubject ?? input.input.subject,
+          fills: input.input.fills,
+        },
+      },
+      input.input.suppressedReactionTrigger,
+    );
+    if (saveFailedReactionWindow !== null) {
+      return saveFailedReactionWindow;
+    }
+  }
+  const resourced = spendSpellCastResources({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+    startConcentration: failedTargets.length > 0,
+  });
+  if (resourced.tag === "invalid") {
+    return resourced;
+  }
+  const effected = applyHideousLaughterEffects(
+    resourced.state,
+    input.actorId,
+    failedTargets,
+    input.invocation,
+  );
+  const nextState = extendSavingThrowOngoingFeatures(
+    effected,
+    input.actorId,
+    input.fillSet.targetList.targetIds,
+  );
   return {
     tag: "resolved",
     state: nextState,
@@ -592,10 +715,49 @@ export function resolveSaveGateDamageSpellAct(input: {
       ...missingDamageDispositionHoles,
     ]);
   }
+  const hideousLaughterSaveChecks = damageTargets.map((targetId) => {
+    const target = input.input.state.combatants.get(targetId);
+    if (target === undefined) {
+      return { tag: "ok" as const, holes: [] };
+    }
+    return hideousLaughterDamageRepeatSaveFillCheck({
+      target,
+      damageAmount: spellDamageAmountForTarget(
+        target,
+        input.invocation,
+        damageRoll,
+        saveDamageResultForTarget(targetId),
+      ),
+      fills: hideousLaughterDamageRepeatSaveFillsForTarget(
+        target,
+        input.fillSet.hideousLaughterDamageRepeatSaves,
+      ),
+    });
+  });
+  const invalidHideousLaughterSaveCheck = hideousLaughterSaveChecks.find(
+    (check) => check.tag === "invalid",
+  );
+  if (invalidHideousLaughterSaveCheck?.tag === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      invalidHideousLaughterSaveCheck.message,
+    );
+  }
+  const missingHideousLaughterSaveHoles = hideousLaughterSaveChecks.flatMap(
+    (check) => (check.tag === "needsHoles" ? [...check.holes] : []),
+  );
+  if (missingHideousLaughterSaveHoles.length > 0) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      ...missingHideousLaughterSaveHoles,
+    ]);
+  }
   const damaged = damageTargets.reduce(
     (state, targetId) =>
       applySpellDamage(state, targetId, input.invocation, damageRoll, false, {
         concentrationSavingThrow: concentrationSaveByTargetId.get(targetId),
+        hideousLaughterDamageRepeatSaves:
+          input.fillSet.hideousLaughterDamageRepeatSaves,
         saveDamageResult: saveDamageResultForTarget(targetId),
         damageDisposition: damageDispositionForTarget(
           damageDispositionHoles,
@@ -1338,7 +1500,9 @@ export function validateSavingThrowOutcomes(
       targeting.kind === "selfOriginCube") &&
     value.area.originAnchorId !== actorId
   ) {
-    return "Self-origin save-gate spell area must originate from the caster.";
+    return targeting.kind === "selfOriginCone"
+      ? "Self-origin Cone save-gate spell area must originate from the caster."
+      : "Self-origin Cube save-gate spell area must originate from the caster.";
   }
   if (
     targeting.kind === "primaryTargetOriginEmanation" &&

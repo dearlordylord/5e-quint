@@ -25,6 +25,7 @@ import {
   WEAPON_MASTERY_CLEAVE_DECISION_HOLE_ID,
   WEAPON_MASTERY_CLEAVE_TARGET_HOLE_ID,
 } from "./domain-constants.ts";
+import { isHideousLaughterDamageRepeatSaveFill } from "./hideous-laughter-repeat-save.ts";
 
 export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
   let targetId: CombatantId | undefined;
@@ -57,6 +58,10 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
   let weaponMasteryToppleSavingThrow:
     | Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>
     | undefined;
+  const hideousLaughterDamageRepeatSaves: Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[] = [];
   let weaponMasteryCleaveDecision:
     | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
     | undefined;
@@ -176,6 +181,24 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     }
 
     if (
+      fill.kind === "savingThrowOutcome" &&
+      isHideousLaughterDamageRepeatSaveFill(fill)
+    ) {
+      if (
+        hideousLaughterDamageRepeatSaves.some(
+          (candidate) => candidate.holeId === fill.holeId,
+        )
+      ) {
+        return {
+          tag: "invalid",
+          message: "Hideous Laughter damage repeat save was filled twice.",
+        };
+      }
+      hideousLaughterDamageRepeatSaves.push(fill);
+      continue;
+    }
+
+    if (
       fill.kind === "rolledDice" &&
       fill.holeId ===
         ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_DAMAGE_HOLE_ID
@@ -287,6 +310,7 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     attackRoll,
     concentrationSavingThrow,
     concentrationSavingThrows,
+    hideousLaughterDamageRepeatSaves,
     damageDisposition,
     damageDispositionFilled,
     damageRoll,

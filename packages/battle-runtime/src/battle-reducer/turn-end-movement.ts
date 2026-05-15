@@ -77,6 +77,12 @@ import {
 
 import { maybeOpenReactionWindow, snapshotBattle } from "./dispatcher.ts";
 
+import {
+  hideousLaughterDamageRepeatSaveFillCheck,
+  hideousLaughterDamageRepeatSaveFillsForTarget,
+  hideousLaughterRepeatSavingThrowOutcomeHole,
+} from "./hideous-laughter-repeat-save.ts";
+
 import { needsHolesResult } from "./hole-helpers.ts";
 export { resolveOpportunityAttackCommand } from "./opportunity-attacks.ts";
 export {
@@ -101,6 +107,7 @@ import {
 import { invalidResult } from "./result-helpers.ts";
 
 import {
+  combatantsAfterHideousLaughterSpellEndedIfNoEffects,
   conditionsAfterApplyingSpellConditionEffects,
   conditionsAfterExpiringSpellConditionEffects,
   conditionHadNonSpellSourceBeforeSpellEffect,
@@ -142,6 +149,7 @@ import type {
   BattleGreaseGroundDifficultTerrainMovementFact,
   BattleGrappleLink,
   BattleGreaseGroundHazardSavingThrowOutcomeHole,
+  BattleHideousLaughterRepeatSavingThrowOutcomeHole,
   BattleHeldObjectFactsHole,
   BattleHoleId,
   BattleJumpMovementReplacementFact,
@@ -175,11 +183,19 @@ export function resolveEndTurn(
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[] = [],
+  hideousLaughterRepeatSaves: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[] = [],
   spellTurnStartDamageRolls: readonly Extract<
     BattleFill,
     { readonly kind: "rolledDice" }
   >[] = [],
   spellTurnStartSaves: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[] = [],
+  spellTurnStartHideousLaughterDamageRepeatSaves: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[] = [],
@@ -247,8 +263,14 @@ export function resolveEndTurn(
     state.initiative.round,
     sleepRepeatSaves,
   );
+  const combatantsAfterHideousLaughterRepeatSaves =
+    applyHideousLaughterRepeatSaveFills(
+      combatantsAfterSleepRepeatSaves,
+      currentActorId(state),
+      hideousLaughterRepeatSaves,
+    );
   const combatantsAfterEndEffects = expireEndOfTurnEffects(
-    combatantsAfterSleepRepeatSaves,
+    combatantsAfterHideousLaughterRepeatSaves,
     currentActorId(state),
     state.initiative.round,
   );
@@ -286,6 +308,7 @@ export function resolveEndTurn(
     spellTurnStartSaves,
     concentrationSavingThrows,
     damageDispositions,
+    spellTurnStartHideousLaughterDamageRepeatSaves,
   ).combatants;
   const combatantsAfterDurationTick =
     Number(initiative.round) > Number(state.initiative.round)
@@ -561,6 +584,10 @@ function applySpellTurnStartDamage(
     | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
     | undefined,
   damageDisposition: ReturnType<typeof damageDispositionForTarget>,
+  hideousLaughterDamageRepeatSaves: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[],
 ): BattleState {
   const target = state.combatants.get(targetId);
   if (target === undefined) {
@@ -573,6 +600,7 @@ function applySpellTurnStartDamage(
     {
       concentrationSavingThrow,
       damageDisposition,
+      hideousLaughterDamageRepeatSaves,
       damageSourceId: effect.sourceCombatantId,
     },
   );
@@ -629,6 +657,10 @@ function validateSpellTurnStartSavingThrowOutcome(
 type SleepPendingRepeatSaveEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "sleepPendingRepeatSave" }
+>;
+type HideousLaughterEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "hideousLaughter" }
 >;
 type DurationActiveEffect = Extract<
   Exclude<
@@ -691,6 +723,16 @@ function sleepRepeatSavingThrowOutcomeFor(
     { readonly kind: "savingThrowOutcome" }
   >[],
   hole: BattleSleepRepeatSavingThrowOutcomeHole,
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
+  return fills.find((fill) => fill.holeId === hole.holeId);
+}
+
+function hideousLaughterRepeatSavingThrowOutcomeFor(
+  fills: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[],
+  hole: BattleHideousLaughterRepeatSavingThrowOutcomeHole,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
   return fills.find((fill) => fill.holeId === hole.holeId);
 }
@@ -1749,6 +1791,81 @@ function applySleepRepeatSaveFills(
   }, combatants);
 }
 
+function hideousLaughterEffects(
+  combatant: BattleCreatureState | undefined,
+): readonly HideousLaughterEffect[] {
+  return combatant === undefined
+    ? []
+    : combatant.activeEffects.filter(
+        (effect): effect is HideousLaughterEffect =>
+          effect.kind === "hideousLaughter",
+      );
+}
+
+function applyHideousLaughterRepeatSaveFills(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  actorId: CombatantId,
+  saves: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[],
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  const actor = combatants.get(actorId);
+  const effects = hideousLaughterEffects(actor);
+  if (actor === undefined || effects.length === 0) {
+    return combatants;
+  }
+  return effects.reduce((nextCombatants, effect) => {
+    const hole = hideousLaughterRepeatSavingThrowOutcomeHole(
+      actorId,
+      effect,
+      "endTurn",
+    );
+    const save = hideousLaughterRepeatSavingThrowOutcomeFor(saves, hole);
+    if (save?.value.outcomes[0]?.succeeded !== true) {
+      return nextCombatants;
+    }
+    return removeHideousLaughterEffectFromCombatants(
+      nextCombatants,
+      actorId,
+      effect,
+    );
+  }, combatants);
+}
+
+function removeHideousLaughterEffectFromCombatants(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  targetId: CombatantId,
+  expiringEffect: HideousLaughterEffect,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  const target = combatants.get(targetId);
+  if (
+    target === undefined ||
+    !target.activeEffects.some((effect) => effect === expiringEffect)
+  ) {
+    return combatants;
+  }
+  const activeEffects = target.activeEffects.filter(
+    (effect) => effect !== expiringEffect,
+  );
+  const nextCombatant: BattleCreatureState =
+    target.positiveHpUnconscious === null
+      ? {
+          ...target,
+          activeEffects,
+          conditions: conditionsAfterExpiringSpellConditionEffects(
+            target.conditions,
+            activeEffects,
+            [expiringEffect],
+          ),
+        }
+      : { ...target, activeEffects };
+  return combatantsAfterHideousLaughterSpellEndedIfNoEffects(
+    new Map(combatants).set(targetId, nextCombatant),
+    expiringEffect,
+  );
+}
+
 function battleCreatureWithActiveEffectsAndConditions(
   combatant: BattleCreatureState,
   activeEffects: readonly BattleActiveEffect[],
@@ -1798,6 +1915,10 @@ function applyStartTurnSpellDamageFills(
     BattleFill,
     { readonly kind: "attackDamageDisposition" }
   >[],
+  hideousLaughterDamageRepeatSaves: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[],
 ): BattleState {
   const actor = state.combatants.get(actorId);
   const effects = spellTurnStartDamageEffects(actor);
@@ -1828,6 +1949,10 @@ function applyStartTurnSpellDamageFills(
         startTurnDamageDispositionHoles(nextState, actorId, [{ effect, roll }]),
         damageDispositions,
         actorId,
+      ),
+      hideousLaughterDamageRepeatSaveFillsForTarget(
+        target,
+        hideousLaughterDamageRepeatSaves,
       ),
     );
     if (effect.kind !== "spellTurnStartDamageAndSave") {
@@ -2169,6 +2294,19 @@ export function resolveEndTurnCommand(
   const sleepRepeatSaveHoles = sleepRepeatSaveRequests.map(
     (request) => request.hole,
   );
+  const hideousLaughterRepeatSaveRequests = hideousLaughterEffects(actor).map(
+    (effect) => ({
+      effect,
+      hole: hideousLaughterRepeatSavingThrowOutcomeHole(
+        actorId,
+        effect,
+        "endTurn",
+      ),
+    }),
+  );
+  const hideousLaughterRepeatSaveHoles = hideousLaughterRepeatSaveRequests.map(
+    (request) => request.hole,
+  );
   const needsDeathSavingThrow = startTurnDeathSavingThrowRequired(nextActor);
   const rechargeHole = statBlockRechargeRollHole(nextActor);
   const startTurnDamageEffects = spellTurnStartDamageEffects(nextActor);
@@ -2194,6 +2332,7 @@ export function resolveEndTurnCommand(
   );
   const initialHoles = [
     ...sleepRepeatSaveHoles,
+    ...hideousLaughterRepeatSaveHoles,
     ...(needsDeathSavingThrow ? [deathSavingThrowHole(nextActorId)] : []),
     ...(rechargeHole === null ? [] : [rechargeHole]),
     ...startTurnDamageHoles,
@@ -2255,6 +2394,15 @@ export function resolveEndTurnCommand(
     );
     return fill === undefined ? [] : [fill];
   });
+  const hideousLaughterRepeatSaves = hideousLaughterRepeatSaveRequests.flatMap(
+    (request) => {
+      const fill = hideousLaughterRepeatSavingThrowOutcomeFor(
+        savingThrowOutcomeFills,
+        request.hole,
+      );
+      return fill === undefined ? [] : [fill];
+    },
+  );
   const missingSleepRepeatSaveHoles = sleepRepeatSaveRequests.flatMap(
     (request) =>
       sleepRepeatSavingThrowOutcomeFor(
@@ -2267,6 +2415,20 @@ export function resolveEndTurnCommand(
   if (missingSleepRepeatSaveHoles.length > 0) {
     return needsHolesResult(input.state, input.subject, [
       ...missingSleepRepeatSaveHoles,
+    ]);
+  }
+  const missingHideousLaughterRepeatSaveHoles =
+    hideousLaughterRepeatSaveRequests.flatMap((request) =>
+      hideousLaughterRepeatSavingThrowOutcomeFor(
+        savingThrowOutcomeFills,
+        request.hole,
+      ) === undefined
+        ? [request.hole]
+        : [],
+    );
+  if (missingHideousLaughterRepeatSaveHoles.length > 0) {
+    return needsHolesResult(input.state, input.subject, [
+      ...missingHideousLaughterRepeatSaveHoles,
     ]);
   }
   const startTurnDamageRolls = startTurnDamageRequests.flatMap((request) => {
@@ -2335,8 +2497,62 @@ export function resolveEndTurnCommand(
       ...missingStartTurnSaveHoles,
     ]);
   }
+  const startTurnHideousLaughterDamageRepeatSaveChecks =
+    startTurnDamageRollRequests.map((request) =>
+      nextActor === undefined
+        ? { tag: "ok" as const, holes: [] }
+        : hideousLaughterDamageRepeatSaveFillCheck({
+            target: nextActor,
+            damageAmount: spellTurnStartDamageAmount(
+              nextActor,
+              request.effect,
+              request.roll,
+            ),
+            fills: hideousLaughterDamageRepeatSaveFillsForTarget(
+              nextActor,
+              savingThrowOutcomeFills,
+            ),
+          }),
+    );
+  const invalidStartTurnHideousLaughterDamageRepeatSaveCheck =
+    startTurnHideousLaughterDamageRepeatSaveChecks.find(
+      (check) => check.tag === "invalid",
+    );
+  if (invalidStartTurnHideousLaughterDamageRepeatSaveCheck?.tag === "invalid") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      invalidStartTurnHideousLaughterDamageRepeatSaveCheck.message,
+    );
+  }
+  const startTurnHideousLaughterDamageRepeatSaveHoles =
+    startTurnHideousLaughterDamageRepeatSaveChecks.flatMap((check) =>
+      check.tag === "needsHoles" || check.tag === "ok" ? [...check.holes] : [],
+    );
+  const missingStartTurnHideousLaughterDamageRepeatSaveHoles =
+    startTurnHideousLaughterDamageRepeatSaveChecks.flatMap((check) =>
+      check.tag === "needsHoles" ? [...check.holes] : [],
+    );
+  if (missingStartTurnHideousLaughterDamageRepeatSaveHoles.length > 0) {
+    return needsHolesResult(input.state, input.subject, [
+      ...missingStartTurnHideousLaughterDamageRepeatSaveHoles,
+    ]);
+  }
+  const startTurnHideousLaughterDamageRepeatSaves =
+    startTurnHideousLaughterDamageRepeatSaveHoles.flatMap((hole) => {
+      const fill = hideousLaughterRepeatSavingThrowOutcomeFor(
+        savingThrowOutcomeFills,
+        hole,
+      );
+      return fill === undefined ? [] : [fill];
+    });
   const savingThrowOutcomeHoleIds = new Set<BattleHoleId>(
-    [...sleepRepeatSaveHoles, ...startTurnSaveHoles].map((hole) => hole.holeId),
+    [
+      ...sleepRepeatSaveHoles,
+      ...hideousLaughterRepeatSaveHoles,
+      ...startTurnSaveHoles,
+      ...startTurnHideousLaughterDamageRepeatSaveHoles,
+    ].map((hole) => hole.holeId),
   );
   if (
     input.fills.some(
@@ -2353,7 +2569,10 @@ export function resolveEndTurnCommand(
   }
   if (
     savingThrowOutcomeFills.length !==
-    sleepRepeatSaves.length + startTurnSaves.length
+    sleepRepeatSaves.length +
+      hideousLaughterRepeatSaves.length +
+      startTurnSaves.length +
+      startTurnHideousLaughterDamageRepeatSaves.length
   ) {
     return invalidResult(
       input.state,
@@ -2372,6 +2591,31 @@ export function resolveEndTurnCommand(
     const validation = validateSleepRepeatSavingThrowOutcome(
       fill.value,
       actorId,
+    );
+    if (validation !== null) {
+      return invalidResult(input.state, "invalidFill", validation);
+    }
+  }
+  for (const request of hideousLaughterRepeatSaveRequests) {
+    const fill = hideousLaughterRepeatSavingThrowOutcomeFor(
+      savingThrowOutcomeFills,
+      request.hole,
+    );
+    if (fill === undefined) {
+      continue;
+    }
+    const validation = validateSleepRepeatSavingThrowOutcome(
+      fill.value,
+      actorId,
+    );
+    if (validation !== null) {
+      return invalidResult(input.state, "invalidFill", validation);
+    }
+  }
+  for (const fill of startTurnHideousLaughterDamageRepeatSaves) {
+    const validation = validateSleepRepeatSavingThrowOutcome(
+      fill.value,
+      nextActorId,
     );
     if (validation !== null) {
       return invalidResult(input.state, "invalidFill", validation);
@@ -2545,8 +2789,10 @@ export function resolveEndTurnCommand(
       ? rechargeRollFill.value
       : undefined,
     sleepRepeatSaves,
+    hideousLaughterRepeatSaves,
     startTurnDamageRolls,
     startTurnSaves,
+    startTurnHideousLaughterDamageRepeatSaves,
     concentrationSavingThrowFills,
     damageDispositionFills,
   );
@@ -2836,6 +3082,9 @@ export function standFromProneCostFeet(
 ): number | null {
   const actor = state.combatants.get(actorId);
   if (actor === undefined || !hasCondition(actor.conditions, "prone")) {
+    return null;
+  }
+  if (hideousLaughterEffects(actor).length > 0) {
     return null;
   }
   const speed = effectiveWalkSpeed(

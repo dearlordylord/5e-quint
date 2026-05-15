@@ -35,6 +35,10 @@ import {
 import { activeEffectArmorClass } from "./creature-state.ts";
 import { concentrationSavingThrowHole } from "./damage-apply.ts";
 import { activeMarkedDamageRiders } from "./damage-helpers.ts";
+import {
+  hideousLaughterDamageRepeatSaveFillCheck,
+  hideousLaughterDamageRepeatSaveFillsForTarget,
+} from "./hideous-laughter-repeat-save.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
@@ -267,6 +271,9 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
           critical,
         )
       : 0;
+  const attackDamageEventKey = String(
+    iceKnifeDamageDispositionHoleKey("attack", target.combatantId).holeId,
+  );
   const attackDamageDispositionHole =
     attackDamageAmount > 0
       ? zeroHitPointReplacementDispositionHole({
@@ -311,6 +318,29 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
       missingAttackDamageDispositionHoles,
     );
   }
+  const attackHideousLaughterSaveCheck =
+    hideousLaughterDamageRepeatSaveFillCheck({
+      target,
+      damageAmount: attackDamageAmount,
+      fills: hideousLaughterDamageRepeatSaveFillsForTarget(
+        target,
+        input.fillSet.hideousLaughterDamageRepeatSaves,
+        attackDamageEventKey,
+      ),
+      damageEventKey: attackDamageEventKey,
+    });
+  if (attackHideousLaughterSaveCheck.tag === "needsHoles") {
+    return needsHolesResult(attackRolledState, input.input.subject, [
+      ...attackHideousLaughterSaveCheck.holes,
+    ]);
+  }
+  if (attackHideousLaughterSaveCheck.tag === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      attackHideousLaughterSaveCheck.message,
+    );
+  }
 
   const damagedByAttack =
     hit && input.fillSet.attackBurstDamageRoll !== undefined
@@ -327,6 +357,13 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
               target.combatantId,
             ),
             spellMarkedDamageRiders,
+            hideousLaughterDamageRepeatSaves:
+              hideousLaughterDamageRepeatSaveFillsForTarget(
+                target,
+                input.fillSet.hideousLaughterDamageRepeatSaves,
+                attackDamageEventKey,
+              ),
+            hideousLaughterDamageRepeatSaveEventKey: attackDamageEventKey,
             damageSourceId: input.actorId,
           },
         )
@@ -522,6 +559,43 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
       ),
     ]),
   );
+  const burstHideousLaughterSaveChecks = failedTargets.map((targetId) => {
+    const damagedTarget = damagedByAttack.combatants.get(targetId);
+    const damageAmount = burstDamageByTargetId.get(targetId) ?? 0;
+    const burstDamageEventKey = String(
+      iceKnifeDamageDispositionHoleKey("burst", targetId).holeId,
+    );
+    return damagedTarget === undefined
+      ? { tag: "ok" as const, holes: [] }
+      : hideousLaughterDamageRepeatSaveFillCheck({
+          target: damagedTarget,
+          damageAmount,
+          fills: hideousLaughterDamageRepeatSaveFillsForTarget(
+            damagedTarget,
+            input.fillSet.hideousLaughterDamageRepeatSaves,
+            burstDamageEventKey,
+          ),
+          damageEventKey: burstDamageEventKey,
+        });
+  });
+  const invalidBurstHideousLaughterSaveCheck =
+    burstHideousLaughterSaveChecks.find((check) => check.tag === "invalid");
+  if (invalidBurstHideousLaughterSaveCheck?.tag === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      invalidBurstHideousLaughterSaveCheck.message,
+    );
+  }
+  const missingBurstHideousLaughterSaveHoles =
+    burstHideousLaughterSaveChecks.flatMap((check) =>
+      check.tag === "needsHoles" ? [...check.holes] : [],
+    );
+  if (missingBurstHideousLaughterSaveHoles.length > 0) {
+    return needsHolesResult(damagedByAttack, input.input.subject, [
+      ...missingBurstHideousLaughterSaveHoles,
+    ]);
+  }
 
   const damagedByAttackWithConcentration =
     hit && input.fillSet.attackBurstDamageRoll !== undefined
@@ -541,6 +615,13 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
               target.combatantId,
             ),
             spellMarkedDamageRiders,
+            hideousLaughterDamageRepeatSaves:
+              hideousLaughterDamageRepeatSaveFillsForTarget(
+                target,
+                input.fillSet.hideousLaughterDamageRepeatSaves,
+                attackDamageEventKey,
+              ),
+            hideousLaughterDamageRepeatSaveEventKey: attackDamageEventKey,
             damageSourceId: input.actorId,
           },
         )
@@ -552,21 +633,33 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
           const damageAmount = burstDamageByTargetId.get(targetId);
           return damageAmount === undefined
             ? state
-            : applyPreparedSlotSpellDamage(
-                state,
-                targetId,
-                damageAmount,
-                {
-                  concentrationSavingThrow:
-                    concentrationSaveByTargetId.get(targetId),
-                  damageDisposition: damageDispositionForTarget(
-                    burstDamageDispositionHoles,
-                    input.fillSet.damageDispositions,
-                    targetId,
-                  ),
-                  damageSourceId: input.actorId,
-                },
-              );
+            : applyPreparedSlotSpellDamage(state, targetId, damageAmount, {
+                concentrationSavingThrow:
+                  concentrationSaveByTargetId.get(targetId),
+                damageDisposition: damageDispositionForTarget(
+                  burstDamageDispositionHoles,
+                  input.fillSet.damageDispositions,
+                  targetId,
+                ),
+                hideousLaughterDamageRepeatSaves: (() => {
+                  const damagedTarget =
+                    damagedByAttack.combatants.get(targetId);
+                  return damagedTarget === undefined
+                    ? []
+                    : hideousLaughterDamageRepeatSaveFillsForTarget(
+                        damagedTarget,
+                        input.fillSet.hideousLaughterDamageRepeatSaves,
+                        String(
+                          iceKnifeDamageDispositionHoleKey("burst", targetId)
+                            .holeId,
+                        ),
+                      );
+                })(),
+                hideousLaughterDamageRepeatSaveEventKey: String(
+                  iceKnifeDamageDispositionHoleKey("burst", targetId).holeId,
+                ),
+                damageSourceId: input.actorId,
+              });
         }, damagedByAttackWithConcentration);
 
   const spentResources = spendSpellCastResources({

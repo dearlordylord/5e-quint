@@ -117,11 +117,13 @@ export function discoverSupportedSpellInvocations(
         invocation.procedure === "saveGatedCondition" ||
         invocation.procedure === "saveGatedAttackRollAdvantage" ||
         invocation.procedure === "sleepTargetAdmission" ||
+        invocation.procedure === "hideousLaughter" ||
         invocation.procedure === "greaseGroundHazard"
       ) {
         if (
           invocation.targeting.kind === "singleCombatant" ||
-          (invocation.procedure === "saveGatedCondition" &&
+          ((invocation.procedure === "saveGatedCondition" ||
+            invocation.procedure === "hideousLaughter") &&
             invocation.targeting.kind === "targetList")
         ) {
           const targetHole =
@@ -655,6 +657,7 @@ export function spellActivationInvocationCastSummary(
         | "saveGatedCondition"
         | "saveGatedAttackRollAdvantage"
         | "sleepTargetAdmission"
+        | "hideousLaughter"
         | "command"
         | "greaseGroundHazard"
         | "fogCloudObscurement"
@@ -757,6 +760,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "saveGatedCondition" &&
     invocation.procedure !== "saveGatedAttackRollAdvantage" &&
     invocation.procedure !== "sleepTargetAdmission" &&
+    invocation.procedure !== "hideousLaughter" &&
     invocation.procedure !== "command" &&
     invocation.procedure !== "greaseGroundHazard" &&
     invocation.procedure !== "fogCloudObscurement" &&
@@ -793,6 +797,7 @@ export function readiedSpellAct(
     invocation.procedure === "saveGatedCondition" ||
     invocation.procedure === "saveGatedAttackRollAdvantage" ||
     invocation.procedure === "sleepTargetAdmission" ||
+    invocation.procedure === "hideousLaughter" ||
     invocation.procedure === "command" ||
     invocation.procedure === "greaseGroundHazard" ||
     invocation.procedure === "fogCloudObscurement" ||

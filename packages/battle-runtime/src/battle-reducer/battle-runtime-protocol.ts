@@ -198,6 +198,10 @@ export type AttackFillSet =
         BattleFill,
         { readonly kind: "concentrationSavingThrow" }
       >[];
+      readonly hideousLaughterDamageRepeatSaves: readonly Extract<
+        BattleFill,
+        { readonly kind: "savingThrowOutcome" }
+      >[];
       readonly damageDisposition: BattleAttackDamageDisposition;
       readonly damageDispositionFilled: boolean;
       readonly damageRoll: BattleRolledDiceFill | undefined;

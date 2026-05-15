@@ -48,6 +48,10 @@ import {
   spellDamageReductionRollHole,
 } from "./damage-helpers.ts";
 import { concentrationSavingThrowHole } from "./damage-apply.ts";
+import {
+  hideousLaughterDamageRepeatSaveFillCheck,
+  hideousLaughterDamageRepeatSaveFillsForTarget,
+} from "./hideous-laughter-repeat-save.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import {
@@ -193,9 +197,7 @@ export function resolveSpellAttackBeamSequenceAct(input: {
     tag: "resolved",
     state: afterDamageReactionWindow.state,
     snapshot: snapshotBattle(afterDamageReactionWindow.state),
-    ...(objectDamages.length === 0
-      ? {}
-      : { objectDamages }),
+    ...(objectDamages.length === 0 ? {} : { objectDamages }),
   };
 }
 
@@ -359,9 +361,7 @@ function resolveEldritchBlastCreatureBeam(input: {
         damageTypes: [
           ...new Set([
             ...spellDamageTypes(input.invocation),
-            ...spellMarkedDamageRiders.map(
-              (rider) => rider.damage.damageType,
-            ),
+            ...spellMarkedDamageRiders.map((rider) => rider.damage.damageType),
           ]),
         ],
         continuation: {
@@ -420,9 +420,7 @@ function resolveEldritchBlastCreatureBeam(input: {
     spellMarkedDamageRiders,
     critical,
   );
-  const spellReductionRollHoleForBeam = (
-    reduction: SpellDamageReductionRoll,
-  ) =>
+  const spellReductionRollHoleForBeam = (reduction: SpellDamageReductionRoll) =>
     spellBeamDamageReductionRollHole(
       input.invocation,
       input.beamIndex,
@@ -486,6 +484,13 @@ function resolveEldritchBlastCreatureBeam(input: {
       concentrationSave,
     ]);
   }
+  const damageEventKey = String(
+    spellBeamDamageDispositionHoleKey(
+      input.invocation,
+      input.beamIndex,
+      spellReduction.target.combatantId,
+    ).holeId,
+  );
   const damageDispositionHole = zeroHitPointReplacementDispositionHole({
     damageSourceId: input.actorId,
     target: spellReduction.target,
@@ -525,6 +530,30 @@ function resolveEldritchBlastCreatureBeam(input: {
       damageDispositionHole,
     ]);
   }
+  const relevantHideousLaughterDamageRepeatSaves =
+    hideousLaughterDamageRepeatSaveFillsForTarget(
+      spellReduction.target,
+      input.fillSet.hideousLaughterDamageRepeatSaves,
+      damageEventKey,
+    );
+  const hideousLaughterSaveCheck = hideousLaughterDamageRepeatSaveFillCheck({
+    target: spellReduction.target,
+    damageAmount: spellDamageAmount,
+    fills: relevantHideousLaughterDamageRepeatSaves,
+    damageEventKey,
+  });
+  if (hideousLaughterSaveCheck.tag === "needsHoles") {
+    return needsHolesResult(attackRolledState, input.input.subject, [
+      ...hideousLaughterSaveCheck.holes,
+    ]);
+  }
+  if (hideousLaughterSaveCheck.tag === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      hideousLaughterSaveCheck.message,
+    );
+  }
   const damaged = applySpellDamage(
     attackRolledState,
     target.combatantId,
@@ -541,6 +570,9 @@ function resolveEldritchBlastCreatureBeam(input: {
       spellMarkedDamageRiders,
       spellDamageReductionRoll: spellReductionRoll,
       spellDamageReductionRollHoleForReduction: spellReductionRollHoleForBeam,
+      hideousLaughterDamageRepeatSaves:
+        relevantHideousLaughterDamageRepeatSaves,
+      hideousLaughterDamageRepeatSaveEventKey: damageEventKey,
       damageSourceId: input.actorId,
     },
   );
@@ -548,6 +580,7 @@ function resolveEldritchBlastCreatureBeam(input: {
     ...(spellReductionRoll === undefined ? [] : [spellReductionRoll.holeId]),
     ...(concentrationFill === undefined ? [] : [concentrationFill.holeId]),
     ...relevantDamageDispositionFills.map((fill) => fill.holeId),
+    ...relevantHideousLaughterDamageRepeatSaves.map((fill) => fill.holeId),
   ];
   return {
     tag: "resolved",
@@ -561,13 +594,11 @@ function resolveEldritchBlastCreatureBeam(input: {
               damageSourceId: input.actorId,
               damagedId: target.combatantId,
               damageAmount: toDamageAmount(spellDamageAmount),
-              reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage(
-                {
-                  facts: input.target.spatialFacts,
-                  damagedId: target.combatantId,
-                  damageSourceId: input.actorId,
-                },
-              ),
+              reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
+                facts: input.target.spatialFacts,
+                damagedId: target.combatantId,
+                damageSourceId: input.actorId,
+              }),
             },
           ],
     usedExtraFillHoleIds,

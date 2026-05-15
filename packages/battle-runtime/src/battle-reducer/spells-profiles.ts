@@ -52,6 +52,7 @@ import {
   supportedPreparedCommandProfile,
   supportedPreparedSaveGateDamageProfile,
   supportedPreparedGreaseGroundHazardProfile,
+  supportedPreparedHideousLaughterProfile,
   supportedPreparedSleepTargetAdmissionProfile,
 } from "./spells-profiles-save-gates.ts";
 import { sameStringSet } from "./spells-profile-shared.ts";
@@ -106,6 +107,7 @@ export {
   supportedPreparedCommandProfile,
   supportedPreparedSaveGateDamageProfile,
   supportedPreparedGreaseGroundHazardProfile,
+  supportedPreparedHideousLaughterProfile,
   supportedPreparedSleepTargetAdmissionProfile,
   supportedRepeatedEffectCount,
   supportedSaveGateConditionSpell,
@@ -178,6 +180,9 @@ export function supportedSpellActs(
         spell,
         spellcasting.spellSlots,
       ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedHideousLaughterProfile(spell, spellcasting.spellSlots),
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedGreaseGroundHazardProfile(

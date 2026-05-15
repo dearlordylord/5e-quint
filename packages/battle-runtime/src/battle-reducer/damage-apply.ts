@@ -85,13 +85,23 @@ import {
 } from "./damage-helpers.ts";
 import { concentrationSavingThrowDc } from "./domain-helpers.ts";
 import {
+  hideousLaughterRepeatSavingThrowOutcomeHole,
+  validateHideousLaughterRepeatSavingThrowOutcome,
+} from "./hideous-laughter-repeat-save.ts";
+import {
   conditionsAfterExpiringSpellConditionEffects,
+  removeHideousLaughterEffectFromTarget,
   removeSleepEffectsFromTarget,
 } from "./spell-condition-effects-helpers.ts";
 import {
   sameStatBlockPartKey,
   statBlockLimitedUseForPart,
 } from "./statblock.ts";
+
+type HideousLaughterEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "hideousLaughter" }
+>;
 
 export function breakBattleConcentration(
   state: BattleState,
@@ -181,6 +191,11 @@ export function applyBattleHitPointDamage(input: {
   readonly concentrationSavingThrow?:
     | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
     | undefined;
+  readonly hideousLaughterDamageRepeatSaves?: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[];
+  readonly hideousLaughterDamageRepeatSaveEventKey?: string | undefined;
 }): BattleState {
   const damaged = applyHpDamage(input.target, input.damageAmount, {
     deathFailuresAtZeroHp: input.deathFailuresAtZeroHp,
@@ -217,9 +232,18 @@ export function applyBattleHitPointDamage(input: {
           targetId,
         )
       : afterConcentration;
+  const afterSleep =
+    input.damageAmount > 0
+      ? removeSleepEffectsFromTarget(afterCasterOrAllyDamageEscapes, targetId)
+      : afterCasterOrAllyDamageEscapes;
   return input.damageAmount > 0
-    ? removeSleepEffectsFromTarget(afterCasterOrAllyDamageEscapes, targetId)
-    : afterCasterOrAllyDamageEscapes;
+    ? applyHideousLaughterDamageRepeatSaves(
+        afterSleep,
+        targetId,
+        input.hideousLaughterDamageRepeatSaves ?? [],
+        input.hideousLaughterDamageRepeatSaveEventKey,
+      )
+    : afterSleep;
 }
 
 export function applyAttackDamage(
@@ -271,9 +295,51 @@ export function applyAttackDamage(
     damageDisposition: fillSet.damageDisposition,
     damageSourceId: attackerId,
     concentrationSavingThrow: fillSet.concentrationSavingThrow,
+    hideousLaughterDamageRepeatSaves: fillSet.hideousLaughterDamageRepeatSaves,
   });
   return normalizeBattleGrapples(
     recordAttackDamageUnitsUsed(afterDamage, attackDamageRiders),
+  );
+}
+
+function applyHideousLaughterDamageRepeatSaves(
+  state: BattleState,
+  targetId: CombatantId,
+  fills: readonly Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>[],
+  damageEventKey: string | undefined,
+): BattleState {
+  const target = state.combatants.get(targetId);
+  if (target === undefined) {
+    return state;
+  }
+  const succeededEffects = target.activeEffects
+    .filter(
+      (effect): effect is HideousLaughterEffect =>
+        effect.kind === "hideousLaughter",
+    )
+    .filter((effect) => {
+      const hole = hideousLaughterRepeatSavingThrowOutcomeHole(
+        targetId,
+        effect,
+        "damage",
+        damageEventKey,
+      );
+      const fill = fills.find((candidate) => candidate.holeId === hole.holeId);
+      if (
+        fill === undefined ||
+        validateHideousLaughterRepeatSavingThrowOutcome(
+          fill.value,
+          targetId,
+        ) !== null
+      ) {
+        return false;
+      }
+      return fill.value.outcomes[0]?.succeeded === true;
+    });
+  return succeededEffects.reduce(
+    (nextState, effect) =>
+      removeHideousLaughterEffectFromTarget(nextState, targetId, effect),
+    state,
   );
 }
 
@@ -290,6 +356,10 @@ export function applyAttackDamageAmount(
     BattleFill,
     { readonly kind: "concentrationSavingThrow" }
   >,
+  hideousLaughterDamageRepeatSaves: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[] = [],
 ): BattleState {
   const target = state.combatants.get(targetId);
   if (target == null) {
@@ -303,6 +373,7 @@ export function applyAttackDamageAmount(
     damageDisposition,
     damageSourceId: attackerId,
     concentrationSavingThrow,
+    hideousLaughterDamageRepeatSaves,
   });
   return normalizeBattleGrapples(
     recordAttackDamageUnitsUsed(

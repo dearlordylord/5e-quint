@@ -57,6 +57,7 @@ export function isTargetListSpellInvocation(
     invocation.procedure === "damageReduction" ||
     (invocation.procedure === "saveGatedCondition" &&
       invocation.targeting.kind === "targetList") ||
+    invocation.procedure === "hideousLaughter" ||
     invocation.procedure === "command" ||
     invocation.procedure === "creatureTypeProtection" ||
     invocation.procedure ===

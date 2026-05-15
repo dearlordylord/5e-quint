@@ -650,6 +650,7 @@ export function spellSavingThrowOutcomeHole(
         | "saveGatedCondition"
         | "saveGatedAttackRollAdvantage"
         | "sleepTargetAdmission"
+        | "hideousLaughter"
         | "command"
         | "greaseGroundHazard";
     }
@@ -711,6 +712,7 @@ export function spellSavingThrowAbility(
         | "saveGatedCondition"
         | "saveGatedAttackRollAdvantage"
         | "sleepTargetAdmission"
+        | "hideousLaughter"
         | "command"
         | "greaseGroundHazard";
     }
@@ -736,6 +738,7 @@ export function spellSavingThrowTargeting(
         | "saveGatedCondition"
         | "saveGatedAttackRollAdvantage"
         | "sleepTargetAdmission"
+        | "hideousLaughter"
         | "command"
         | "greaseGroundHazard";
     }
@@ -1101,6 +1104,10 @@ type SpellDamageContext = {
   readonly concentrationSavingThrow?:
     | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
     | undefined;
+  readonly hideousLaughterDamageRepeatSaves?:
+    | readonly Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>[]
+    | undefined;
+  readonly hideousLaughterDamageRepeatSaveEventKey?: string | undefined;
   readonly saveDamageResult?: SaveDamageResult | undefined;
   readonly damageDisposition?: BattleAttackDamageDisposition | undefined;
   readonly spellMarkedDamageRiders?:
@@ -1129,6 +1136,8 @@ export function applySpellDamage(
   }
   const {
     concentrationSavingThrow,
+    hideousLaughterDamageRepeatSaves,
+    hideousLaughterDamageRepeatSaveEventKey,
     saveDamageResult = "full",
     damageDisposition = { kind: "ordinaryDamage" },
     spellMarkedDamageRiders = [],
@@ -1164,6 +1173,12 @@ export function applySpellDamage(
     damageDisposition,
     damageSourceId,
     concentrationSavingThrow,
+    ...(hideousLaughterDamageRepeatSaves === undefined
+      ? {}
+      : { hideousLaughterDamageRepeatSaves }),
+    ...(hideousLaughterDamageRepeatSaveEventKey === undefined
+      ? {}
+      : { hideousLaughterDamageRepeatSaveEventKey }),
   });
 }
 
@@ -1171,6 +1186,10 @@ type PreparedSlotSpellDamageContext = {
   readonly concentrationSavingThrow?:
     | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
     | undefined;
+  readonly hideousLaughterDamageRepeatSaves?:
+    | readonly Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>[]
+    | undefined;
+  readonly hideousLaughterDamageRepeatSaveEventKey?: string | undefined;
   readonly damageDisposition?: BattleAttackDamageDisposition | undefined;
   readonly damageSourceId?: CombatantId | undefined;
 };
@@ -1187,6 +1206,8 @@ export function applyPreparedSlotSpellDamage(
   }
   const {
     concentrationSavingThrow,
+    hideousLaughterDamageRepeatSaves,
+    hideousLaughterDamageRepeatSaveEventKey,
     damageDisposition = { kind: "ordinaryDamage" },
     damageSourceId,
   } = context;
@@ -1198,6 +1219,12 @@ export function applyPreparedSlotSpellDamage(
     damageDisposition,
     damageSourceId,
     concentrationSavingThrow,
+    ...(hideousLaughterDamageRepeatSaves === undefined
+      ? {}
+      : { hideousLaughterDamageRepeatSaves }),
+    ...(hideousLaughterDamageRepeatSaveEventKey === undefined
+      ? {}
+      : { hideousLaughterDamageRepeatSaveEventKey }),
   });
 }
 

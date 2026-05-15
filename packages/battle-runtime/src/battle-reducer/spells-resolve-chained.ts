@@ -43,6 +43,11 @@ import {
   concentrationSavingThrowHole,
 } from "./damage-apply.ts";
 import { damageAmountAfterTargetAdjustments } from "./damage-helpers.ts";
+import {
+  hideousLaughterDamageRepeatSaveFillCheck,
+  hideousLaughterDamageRepeatSaveFillsForTarget,
+  isHideousLaughterDamageRepeatSaveFill,
+} from "./hideous-laughter-repeat-save.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
@@ -89,6 +94,10 @@ export type ChainedSpellFillSet =
         BattleFill,
         { readonly kind: "concentrationSavingThrow" }
       >[];
+      readonly hideousLaughterDamageRepeatSaves: readonly Extract<
+        BattleFill,
+        { readonly kind: "savingThrowOutcome" }
+      >[];
       readonly damageDispositions: readonly Extract<
         BattleFill,
         { readonly kind: "attackDamageDisposition" }
@@ -128,6 +137,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
   let targeted: readonly CombatantId[] = [];
   const afterDamageEvents: BattleAfterDamageEvent[] = [];
   const concentrationHoles: BattleConcentrationSavingThrowHole[] = [];
+  const hideousLaughterDamageRepeatSaveHoleIds = new Set<string>();
   const damageDispositionHoles: BattleAttackDamageDispositionHole[] = [];
   const maxLeaps = Number(input.invocation.resource.slotLevel);
 
@@ -295,6 +305,9 @@ export function resolveChainedSpellAttackDamageAct(input: {
       const extraFillValidation = validateChainedSpellFollowUpFills({
         concentrationHoles,
         concentrationFills: fillSet.concentrationSavingThrows,
+        hideousLaughterDamageRepeatSaveHoleIds,
+        hideousLaughterDamageRepeatSaveFills:
+          fillSet.hideousLaughterDamageRepeatSaves,
         damageDispositionHoles,
         damageDispositionFills: fillSet.damageDispositions,
       });
@@ -357,6 +370,12 @@ export function resolveChainedSpellAttackDamageAct(input: {
       selectedDamageType,
       step.damageRoll,
     );
+    const damageEventKey = [
+      "battle:spell:chained-damage-event",
+      input.invocation.spell.id,
+      stepIndex,
+      target.combatantId,
+    ].join(":");
     const concentrationSave = concentrationSavingThrowHole(
       target,
       damageAmount,
@@ -392,6 +411,31 @@ export function resolveChainedSpellAttackDamageAct(input: {
         ]);
       }
     }
+    const hideousLaughterSaveCheck = hideousLaughterDamageRepeatSaveFillCheck({
+      target,
+      damageAmount,
+      fills: hideousLaughterDamageRepeatSaveFillsForTarget(
+        target,
+        fillSet.hideousLaughterDamageRepeatSaves,
+        damageEventKey,
+      ),
+      damageEventKey,
+    });
+    if (hideousLaughterSaveCheck.tag === "needsHoles") {
+      return needsHolesResult(replayState, input.input.subject, [
+        ...hideousLaughterSaveCheck.holes,
+      ]);
+    }
+    if (hideousLaughterSaveCheck.tag === "invalid") {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        hideousLaughterSaveCheck.message,
+      );
+    }
+    for (const hole of hideousLaughterSaveCheck.holes) {
+      hideousLaughterDamageRepeatSaveHoleIds.add(String(hole.holeId));
+    }
     replayState = applyChainedSpellDamage(
       replayState,
       target.combatantId,
@@ -410,6 +454,12 @@ export function resolveChainedSpellAttackDamageAct(input: {
         fillSet.damageDispositions,
         target.combatantId,
       ),
+      hideousLaughterDamageRepeatSaveFillsForTarget(
+        target,
+        fillSet.hideousLaughterDamageRepeatSaves,
+        damageEventKey,
+      ),
+      damageEventKey,
     );
     afterDamageEvents.push({
       damageSourceId: input.actorId,
@@ -436,6 +486,9 @@ export function resolveChainedSpellAttackDamageAct(input: {
       const extraFillValidation = validateChainedSpellFollowUpFills({
         concentrationHoles,
         concentrationFills: fillSet.concentrationSavingThrows,
+        hideousLaughterDamageRepeatSaveHoleIds,
+        hideousLaughterDamageRepeatSaveFills:
+          fillSet.hideousLaughterDamageRepeatSaves,
         damageDispositionHoles,
         damageDispositionFills: fillSet.damageDispositions,
       });
@@ -525,6 +578,10 @@ export function chainedSpellFillSet(
     BattleFill,
     { readonly kind: "concentrationSavingThrow" }
   >[] = [];
+  const hideousLaughterDamageRepeatSaves: Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[] = [];
   const damageDispositions: Extract<
     BattleFill,
     { readonly kind: "attackDamageDisposition" }
@@ -604,6 +661,23 @@ export function chainedSpellFillSet(
       concentrationSavingThrows.push(fill);
       continue;
     }
+    if (
+      fill.kind === "savingThrowOutcome" &&
+      isHideousLaughterDamageRepeatSaveFill(fill)
+    ) {
+      if (
+        hideousLaughterDamageRepeatSaves.some(
+          (candidate) => candidate.holeId === fill.holeId,
+        )
+      ) {
+        return {
+          tag: "invalid",
+          message: "Hideous Laughter repeat save was filled twice.",
+        };
+      }
+      hideousLaughterDamageRepeatSaves.push(fill);
+      continue;
+    }
     if (fill.kind === "attackDamageDisposition") {
       if (
         damageDispositions.some((candidate) => candidate.holeId === fill.holeId)
@@ -627,6 +701,7 @@ export function chainedSpellFillSet(
     damageType,
     steps,
     concentrationSavingThrows,
+    hideousLaughterDamageRepeatSaves,
     damageDispositions,
   };
 }
@@ -691,6 +766,11 @@ export function validateChainedSpellFollowUpFills(input: {
     BattleFill,
     { readonly kind: "concentrationSavingThrow" }
   >[];
+  readonly hideousLaughterDamageRepeatSaveHoleIds: ReadonlySet<string>;
+  readonly hideousLaughterDamageRepeatSaveFills: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[];
   readonly damageDispositionHoles: readonly BattleAttackDamageDispositionHole[];
   readonly damageDispositionFills: readonly Extract<
     BattleFill,
@@ -706,6 +786,14 @@ export function validateChainedSpellFollowUpFills(input: {
     )
   ) {
     return "Concentration Saving Throw fill is only valid for a concentrating damaged target.";
+  }
+  if (
+    input.hideousLaughterDamageRepeatSaveFills.some(
+      (fill) =>
+        !input.hideousLaughterDamageRepeatSaveHoleIds.has(String(fill.holeId)),
+    )
+  ) {
+    return "Hideous Laughter repeat save fills are only valid for a damaged target affected by Hideous Laughter.";
   }
   return damageDispositionFillsValidation({
     holes: input.damageDispositionHoles,
@@ -789,6 +877,11 @@ export function applyChainedSpellDamage(
     | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
     | undefined,
   damageDisposition: BattleAttackDamageDisposition,
+  hideousLaughterDamageRepeatSaves: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[] = [],
+  hideousLaughterDamageRepeatSaveEventKey?: string,
 ): BattleState {
   const target = state.combatants.get(targetId);
   if (target === undefined) {
@@ -807,5 +900,7 @@ export function applyChainedSpellDamage(
     deathFailuresAtZeroHp: critical ? 2 : 1,
     damageDisposition,
     concentrationSavingThrow,
+    hideousLaughterDamageRepeatSaves,
+    hideousLaughterDamageRepeatSaveEventKey,
   });
 }

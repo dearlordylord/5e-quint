@@ -17,13 +17,13 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Authored Surface Unit catalog admission | 141/429 | 32.9% |
 | Authored Surface executable catalog admission | 115/362 | 31.8% |
 | Installed Unit profile classification coverage | 142/142 | 100% |
-| Supported executable Unit coverage | 77/116 | 66.4% |
-| QNT profile modeling coverage | 57/57 | 100% |
-| QNT proof coverage | 56/57 | 98.2% |
-| Runtime mapping coverage | 57/57 | 100% |
-| Runtime parity coverage | 57/57 | 100% |
-| Deterministic admission/projection coverage | 69/77 | 89.6% |
-| Selected identity MBT coverage | 10/77 | 13% |
+| Supported executable Unit coverage | 78/116 | 67.2% |
+| QNT profile modeling coverage | 58/58 | 100% |
+| QNT proof coverage | 57/58 | 98.3% |
+| Runtime mapping coverage | 58/58 | 100% |
+| Runtime parity coverage | 58/58 | 100% |
+| Deterministic admission/projection coverage | 70/78 | 89.7% |
+| Selected identity MBT coverage | 10/78 | 12.8% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -123,6 +123,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `true_strike` | srd-5.2.1 | `spell.invocation-spell-hosted-weapon-attack` |
 | `eldritch_blast` | srd-5.2.1 | `spell.invocation-beam-sequence` |
 | `hellish_rebuke` | srd-5.2.1 | `spell.reaction-hellish-rebuke`, `spell.invocation-damage-save-or-attack` |
+| `hideous_laughter` | srd-5.2.1 | `spell.invocation-hideous-laughter-repeat-save-lifecycle` |
 | `mycelium_step` | classic-2024-non-srd-mechanics | `unit-feature.alternate-action-cost` |
 
 ## Profile Subset Supported Unit Claims
@@ -830,6 +831,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `true_strike` | `spell.invocation-spell-hosted-weapon-attack` | SRDINV31F | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `eldritch_blast` | `spell.invocation-beam-sequence` | SRDINV39 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `hellish_rebuke` | `spell.reaction-hellish-rebuke`, `spell.invocation-damage-save-or-attack` | SRDINV69B | `packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts` |
+| `hideous_laughter` | `spell.invocation-hideous-laughter-repeat-save-lifecycle` | SRDINV84F | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `mycelium_step` | `unit-feature.alternate-action-cost` | QMBT21 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 
 ## Profile Subset Deterministic Admission/Projection Evidence
@@ -926,7 +928,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `thunderwave` | profile-subset-supported | supported subset: self-origin 15-foot Cube Constitution Saving Throw boundary with table-supplied affected creatures; slot-scaled Thunder damage with half damage on successful saves; failed-save creature push consumed from caller-supplied legal destination or blocked-push facts; unsecured-object push disposition consumed from caller-supplied object facts; audible thunderous boom evidence within 300 feet; deferred: runtime-owned push geometry, collision/pathfinding, and final-position derivation (SRDINV55); broad object inventory simulation and sound propagation simulation (SRDINV55) |
 | `minor_illusion` | unsupported-profile | Sound/image illusion creation, physical-interaction reveal, faint rendering after Study, and recast expiry are illusion/exploration state outside promoted runtime owners. |
 | `charm_person` | profile-subset-supported | supported subset: Humanoid creature-type target filter; Wisdom save-gated Charmed condition; hostile-target Wisdom save Advantage; 1-hour spell-owned condition duration; spell ends if caster or one of the caster's allies deals damage to the target; slot-scaled target count; deferred: Friendly disposition, social interaction effects, and target knowledge when the spell ends are not represented in battle runtime state (SRDINV41) |
-| `hideous_laughter` | unsupported-profile | Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Hideous Laughter's multi-trigger repeat saves, damage-triggered repeat-save Advantage, or Prone self-end suppression. |
 | `armor_chain_mail` | unsupported-profile | Equipment AC data is authored but not represented as an executable Unit profile row. |
 | `equipment_shield` | unsupported-profile | Shield equipment AC data is authored but not represented as an executable Unit profile row. |
 | `weapon_dagger` | unsupported-profile | Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix. |
@@ -942,7 +943,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
-| srd-5.2.1 | unassigned | unsupported-profile | 49 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `rogue_expertise`, `rogue_thieves_cant`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `orc_darkvision`, `find_familiar`, `sanctuary`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `shillelagh`, `minor_illusion`, `hideous_laughter`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff` |
+| srd-5.2.1 | unassigned | unsupported-profile | 48 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `rogue_expertise`, `rogue_thieves_cant`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `orc_darkvision`, `find_familiar`, `sanctuary`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `shillelagh`, `minor_illusion`, `armor_chain_mail`, `equipment_shield`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff` |
 | srd-5.2.1 | unassigned | profile-subset-supported | 16 | `bard_bardic_inspiration`, `monk_martial_arts`, `ranger_favored_enemy`, `chill_touch`, `faerie_fire`, `feather_fall`, `fog_cloud`, `grease`, `hunters_mark`, `jump`, `light`, `protection_from_evil_and_good`, `produce_flame`, `sleep`, `thunderwave`, `charm_person` |
 
 ## Profile Claims By Task
@@ -1097,6 +1098,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 | SRDINV84B | completed-runtime-parity | `spell.invocation-damage-save-or-attack` |
 | SRDINV84E | qnt-proof | `spell.invocation-fog-cloud-obscurement` |
 | SRDINV84E | completed-runtime-parity | `spell.invocation-fog-cloud-obscurement` |
+| SRDINV84F | qnt-proof | `spell.invocation-hideous-laughter-repeat-save-lifecycle` |
+| SRDINV84F | completed-runtime-parity | `spell.invocation-hideous-laughter-repeat-save-lifecycle` |
 
 ## Supported Profiles Lacking Runtime Parity
 

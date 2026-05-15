@@ -15,13 +15,13 @@ This is a Unit/catalog backlog denominator, not RAW span coverage and not an MBT
 
 This is the default `%` for level-1 readiness questions. A row counts only when the Unit/source fact is loaded, character-creation availability is covered where applicable, and battle-relevant behavior is fully usable in battle. Rows with no battle effect count as accepted only through explicit non-runtime or catalog-only closure.
 
-- Accepted: 290/367 (79%)
+- Accepted: 293/367 (79.8%)
 
 #### Level-1 Battle Readiness by Status
 
-- accepted: 221
+- accepted: 224
 - accepted-no-battle-effect: 69
-- battle-runtime-required: 33
+- battle-runtime-required: 30
 - partial-battle-runtime: 44
 
 ### Level-1 Rows by Disposition
@@ -45,8 +45,8 @@ This is the default `%` for level-1 readiness questions. A row counts only when 
 
 ### Spell Unit Pressure by Disposition
 
-- catalog-installed-owner-evidence-present: 128
-- catalog-installed-owner-evidence-required: 8
+- catalog-installed-owner-evidence-present: 131
+- catalog-installed-owner-evidence-required: 5
 - catalog-only/dead-for-now: 75
 
 ## Recommended Ralph Batches

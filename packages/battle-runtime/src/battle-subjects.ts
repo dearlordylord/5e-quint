@@ -86,6 +86,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "saveGatedCondition",
   "saveGatedAttackRollAdvantage",
   "sleepTargetAdmission",
+  "hideousLaughter",
   "greaseGroundHazard",
   "fogCloudObscurement",
   "command",

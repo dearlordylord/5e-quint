@@ -65,6 +65,7 @@ import {
   damageAmountByTypeAfterTargetAdjustments,
   spellDamageReductionRollForTarget,
 } from "./damage-helpers.ts";
+import { hideousLaughterDamageRepeatSaveFillCheck } from "./hideous-laughter-repeat-save.ts";
 import { needsHolesResult, revealHidden } from "./hole-helpers.ts";
 import { applyDashToActor } from "./attack-resolution.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -146,6 +147,7 @@ export {
 export {
   resolveCommandSpellAct,
   resolveGreaseGroundHazardSpellAct,
+  resolveHideousLaughterSpellAct,
   resolveSaveGateAttackRollAdvantageSpellAct,
   resolveSaveGateConditionSpellAct,
   resolveSaveGateDamageSpellAct,
@@ -197,6 +199,7 @@ import { resolveAttackBurstSaveDamageSpellAct } from "./spells-resolve-attack-bu
 import {
   resolveCommandSpellAct,
   resolveGreaseGroundHazardSpellAct,
+  resolveHideousLaughterSpellAct,
   resolveSaveGateAttackRollAdvantageSpellAct,
   resolveSaveGateConditionSpellAct,
   resolveSaveGateDamageSpellAct,
@@ -340,6 +343,7 @@ export function resolveSpellAct(
       invocation.procedure === "afterHitTimedDamageAndSave" ||
       invocation.procedure === "saveGatedCondition" ||
       invocation.procedure === "saveGatedAttackRollAdvantage" ||
+      invocation.procedure === "hideousLaughter" ||
       invocation.procedure === "command" ||
       invocation.procedure === "fogCloudObscurement" ||
       invocation.procedure === "spellAttackBeamSequence")
@@ -472,6 +476,14 @@ export function resolveSpellAct(
   }
   if (invocation.procedure === "sleepTargetAdmission") {
     return resolveSleepTargetAdmissionSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "hideousLaughter") {
+    return resolveHideousLaughterSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
@@ -1021,6 +1033,23 @@ export function resolveSpellAct(
       damageDispositionHole,
     ]);
   }
+  const hideousLaughterSaveCheck = hideousLaughterDamageRepeatSaveFillCheck({
+    target: spellReduction.target,
+    damageAmount: spellDamageAmount,
+    fills: fillSet.hideousLaughterDamageRepeatSaves,
+  });
+  if (hideousLaughterSaveCheck.tag === "needsHoles") {
+    return needsHolesResult(spellResolutionState, input.subject, [
+      ...hideousLaughterSaveCheck.holes,
+    ]);
+  }
+  if (hideousLaughterSaveCheck.tag === "invalid") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      hideousLaughterSaveCheck.message,
+    );
+  }
   const damaged = applySpellDamage(
     spellResolutionState,
     target.combatantId,
@@ -1036,6 +1065,8 @@ export function resolveSpellAct(
       ),
       spellMarkedDamageRiders,
       spellDamageReductionRoll: spellReductionRoll,
+      hideousLaughterDamageRepeatSaves:
+        fillSet.hideousLaughterDamageRepeatSaves,
       damageSourceId: subject.actorId,
     },
   );

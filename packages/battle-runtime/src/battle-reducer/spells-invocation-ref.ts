@@ -55,6 +55,14 @@ export function supportedSpellInvocationRef(
       procedure: "sleepTargetAdmission",
     };
   }
+  if (invocation.procedure === "hideousLaughter") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "hideousLaughter",
+    };
+  }
   if (invocation.procedure === "greaseGroundHazard") {
     return {
       tag: "spellSlot",

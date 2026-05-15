@@ -87,6 +87,19 @@ type SleepTargetAdmissionPhase = Extract<
     };
   };
 };
+type HideousLaughterPhase = Extract<
+  ActivationPhase,
+  { readonly kind: "save_gate" }
+> & {
+  readonly ability: "wis";
+  readonly attachment: {
+    readonly kind: "hole";
+    readonly value: {
+      readonly kind: "target";
+      readonly selection: TargetSelection;
+    };
+  };
+};
 
 type ExplodingMaxDieThresholdTier = {
   readonly atLevel: number;
@@ -277,6 +290,35 @@ export function supportedPreparedSleepTargetAdmissionProfile(
         dc: sleep.phase.dc,
         targeting: sleep.targeting,
         rangeFeet: sleep.rangeFeet,
+      },
+    ];
+  });
+}
+
+export function supportedPreparedHideousLaughterProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  const hideousLaughter = hideousLaughterSpell(spell);
+  if (hideousLaughter === null) {
+    return [];
+  }
+
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    return [
+      {
+        access: { tag: "prepared" },
+        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        procedure: "hideousLaughter",
+        spell,
+        actionCost: "magicAction",
+        ability: hideousLaughter.phase.ability,
+        dc: hideousLaughter.phase.dc,
+        targeting: hideousLaughter.targeting(slot.spellLevel),
+        rangeFeet: hideousLaughter.rangeFeet,
       },
     ];
   });
@@ -572,6 +614,100 @@ function isSleepTargetAdmissionPhase(
     repeatSave.onSuccess === "ends_on_target" &&
     repeatFailure?.kind === "apply_condition" &&
     repeatFailure.condition === "unconscious"
+  );
+}
+
+function hideousLaughterSpell(spell: SpellRecord): {
+  readonly phase: HideousLaughterPhase;
+  readonly targeting: (
+    slotLevel: SpellSlotLevel,
+  ) => Extract<SpellTargeting, { readonly kind: "targetList" }>;
+  readonly rangeFeet: MovementFeet;
+} | null {
+  if (spell.mechanics.family !== "activation") {
+    return null;
+  }
+  const phase = spell.mechanics.phases[0];
+  if (
+    spell.name !== "Hideous Laughter" ||
+    spell.provenance.kind !== "srd-5.2.1" ||
+    spell.provenance.section !== "Spells/Descriptions-E-L#Hideous Laughter" ||
+    spell.mechanics.level !== 1 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "point" ||
+    spell.mechanics.range.feet !== 30 ||
+    spell.mechanics.duration.kind !== "concentration" ||
+    spell.mechanics.duration.upTo.unit !== "minute" ||
+    spell.mechanics.duration.upTo.amount !== 1 ||
+    spell.mechanics.phases.length !== 1 ||
+    !isHideousLaughterPhase(phase)
+  ) {
+    return null;
+  }
+  const targetCountBySlot = commandTargetCountBySlot(
+    phase.attachment.value.selection,
+    spell.mechanics.level,
+  );
+  if (targetCountBySlot === null) {
+    return null;
+  }
+  return {
+    phase,
+    targeting: (slotLevel) => ({
+      kind: "targetList",
+      minTargets: 1,
+      maxTargets: targetCountBySlot(slotLevel),
+    }),
+    rangeFeet: movementFeet(spell.mechanics.range.feet),
+  };
+}
+
+function isHideousLaughterPhase(
+  phase: ActivationPhase | undefined,
+): phase is HideousLaughterPhase {
+  const failedEffects =
+    phase?.kind === "save_gate" && phase.onFail.kind === "composite"
+      ? phase.onFail.effects
+      : [];
+  const repeatSaves =
+    phase?.kind === "save_gate" ? (phase.repeatSaves ?? []) : [];
+  return (
+    phase?.kind === "save_gate" &&
+    phase.ability === "wis" &&
+    phase.dc.kind === "caster_spell_save_dc" &&
+    phase.onSuccess.kind === "none" &&
+    phase.attachment.kind === "hole" &&
+    phase.attachment.value.kind === "target" &&
+    failedEffects.length === 3 &&
+    failedEffects.filter(
+      (effect) =>
+        effect.kind === "apply_condition" && effect.condition === "prone",
+    ).length === 1 &&
+    failedEffects.filter(
+      (effect) =>
+        effect.kind === "apply_condition" &&
+        effect.condition === "incapacitated",
+    ).length === 1 &&
+    failedEffects.filter(
+      (effect) =>
+        effect.kind === "suppress_condition_self_end" &&
+        effect.condition === "prone",
+    ).length === 1 &&
+    repeatSaves.length === 2 &&
+    repeatSaves.some(
+      (repeatSave) =>
+        repeatSave.cadence === "end_of_target_turn" &&
+        repeatSave.rollMode === undefined &&
+        repeatSave.onSuccess === "ends_on_target" &&
+        repeatSave.onFailAgain === undefined,
+    ) &&
+    repeatSaves.some(
+      (repeatSave) =>
+        repeatSave.cadence === "on_target_takes_damage" &&
+        repeatSave.rollMode === "advantage" &&
+        repeatSave.onSuccess === "ends_on_target" &&
+        repeatSave.onFailAgain === undefined,
+    )
   );
 }
 

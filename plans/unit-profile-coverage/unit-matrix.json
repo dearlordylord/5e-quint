@@ -62,9 +62,9 @@
       "value": 142
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 77,
-      "numerator": 69,
-      "percent": "89.6%"
+      "denominator": 78,
+      "numerator": 70,
+      "percent": "89.7%"
     },
     "profileClassificationCoverage": {
       "denominator": 142,
@@ -72,34 +72,34 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 57,
-      "numerator": 57,
+      "denominator": 58,
+      "numerator": 58,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 57,
-      "numerator": 56,
-      "percent": "98.2%"
+      "denominator": 58,
+      "numerator": 57,
+      "percent": "98.3%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 57,
-      "numerator": 57,
+      "denominator": 58,
+      "numerator": 58,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 57,
-      "numerator": 57,
+      "denominator": 58,
+      "numerator": 58,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 77,
+      "denominator": 78,
       "numerator": 10,
-      "percent": "13%"
+      "percent": "12.8%"
     },
     "supportedProfileCoverage": {
       "denominator": 116,
-      "numerator": 77,
-      "percent": "66.4%"
+      "numerator": 78,
+      "percent": "67.2%"
     }
   },
   "metricSemantics": [
@@ -1965,6 +1965,31 @@
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
         }
       ]
+    },
+    {
+      "id": "spell.invocation-hideous-laughter-repeat-save-lifecycle",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "The runtime consumes authored Hideous Laughter spell facts, caller-selected targets, and Saving Throw outcomes; target geometry, laughter capability, and damage source adjudication remain caller/table facts.",
+      "taskRefs": [
+        "SRDINV84F"
+      ],
+      "title": "Spell invocation applies Hideous Laughter conditions and repeat-save cleanup",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        }
+      ]
     }
   ],
   "taskClaims": [
@@ -3184,6 +3209,22 @@
         "spell.invocation-fog-cloud-obscurement"
       ],
       "taskId": "SRDINV84E"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint ownership covers Hideous Laughter's failed-save Prone and Incapacitated lifecycle, end-turn repeat-save cleanup, damage-triggered repeat-save Advantage, Prone self-end suppression, and slot-scaled target count.",
+      "profileIds": [
+        "spell.invocation-hideous-laughter-repeat-save-lifecycle"
+      ],
+      "taskId": "SRDINV84F"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Hideous Laughter discovery, target-list and Wisdom save fills, failed-save Prone and Incapacitated application, Prone self-end suppression, end-turn repeat save cleanup, damage-triggered repeat save Advantage, Spell Slot target scaling, and Concentration-owned effect cleanup.",
+      "profileIds": [
+        "spell.invocation-hideous-laughter-repeat-save-lifecycle"
+      ],
+      "taskId": "SRDINV84F"
     }
   ],
   "units": [
@@ -10377,14 +10418,61 @@
         "status": "installed"
       },
       "claim": {
-        "reason": "Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Hideous Laughter's multi-trigger repeat saves, damage-triggered repeat-save Advantage, or Prone self-end suppression.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "spell.invocation-hideous-laughter-repeat-save-lifecycle"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Action-time level-1 Spell Slot casting with Concentration",
+          "Wisdom Saving Throw against caster spell save DC",
+          "slot-scaled target count of one additional target per Spell Slot level above 1",
+          "failed-save Prone and Incapacitated conditions",
+          "Prone self-end suppression while Hideous Laughter remains active",
+          "end-of-target-turn Wisdom repeat save ending the spell on success",
+          "damage-triggered Wisdom repeat save with Advantage ending the spell on success",
+          "Concentration cleanup for spell-owned Prone and Incapacitated effects"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV84F"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-hideous-laughter-repeat-save-lifecycle",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "The runtime consumes authored Hideous Laughter spell facts, caller-selected targets, and Saving Throw outcomes; target geometry, laughter capability, and damage source adjudication remain caller/table facts.",
+          "taskRefs": [
+            "SRDINV84F"
+          ],
+          "title": "Spell invocation applies Hideous Laughter conditions and repeat-save cleanup",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/hideous_laughter.json",
       "unitId": "hideous_laughter"
     },

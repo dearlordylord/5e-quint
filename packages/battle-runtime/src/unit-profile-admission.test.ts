@@ -31,6 +31,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV70B light
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV38A sleep
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV50D2 command
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84F hideous_laughter
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV39 eldritch_blast
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV40 grease
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield
@@ -57,7 +58,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV72A bard_bardic_inspiration
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV75A sorcerer_innate_sorcery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV73A monk_martial_arts
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider spell.scalar-buff
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -71,7 +72,10 @@ import {
   armorClass,
   defaultArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
-import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
+import {
+  applyCondition,
+  hasCondition,
+} from "@dnd/shared-algebras/conditions-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { classLevel } from "@dnd/shared/types";
@@ -162,11 +166,14 @@ import {
   type SupportedSpellInvocation,
 } from "./index.ts";
 import type {
+  BattleActiveEffect,
   SpellMarkedDamageRider,
   SupportedDamageSpellInvocation,
 } from "./battle-reducer.ts";
 import { characterBattleResourceForUnit } from "./character-battle-resources.ts";
 import { conditionApplicationPreventedByCreatureTypeProtection } from "./battle-reducer/spell-condition-effects-helpers.ts";
+import { battleCreatureStateWithKnockOutPreservedConditions } from "./battle-reducer/creature-state.ts";
+import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
 import { applyFailedSaveSpellConditionEffects } from "./battle-reducer/spells-active-effects.ts";
 import {
   applyPreparedSlotSpellDamage,
@@ -175,7 +182,9 @@ import {
   validateSpellDamageFill,
 } from "./battle-reducer/spells-damage-fills.ts";
 import { supportedPreparedHellishRebukeReactionSpellProfile } from "./battle-reducer/spells-profiles.ts";
+import { hideousLaughterRepeatSavingThrowOutcomeHole } from "./battle-reducer/hideous-laughter-repeat-save.ts";
 import {
+  supportedPreparedHideousLaughterProfile,
   supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedSaveGateConditionProfile,
   supportedPreparedSleepTargetAdmissionProfile,
@@ -238,6 +247,8 @@ const searingSmiteUnitId = "searing_smite";
 const trueStrikeUnitId = "true_strike";
 const iceKnifeUnitId = "ice_knife";
 const sleepUnitId = "sleep";
+const hideousLaughterUnitId = "hideous_laughter";
+const hideousLaughterDurationTicks = elapsedTimeTicks(10);
 const thunderwaveUnitId = "thunderwave";
 const dissonantWhispersUnitId = "dissonant_whispers";
 const monkDeflectAttacksUnitId = "monk_deflect_attacks";
@@ -3287,6 +3298,1384 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
         targeting: { kind: "pointOriginSphere", radiusFeet: 5 },
       }),
     ]);
+  });
+
+  test("Hideous Laughter applies Prone and Incapacitated until a repeat save succeeds", () => {
+    const spell = spellRecord(hideousLaughterUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = spellAct({
+      state,
+      spellId: hideousLaughterUnitId,
+      slotLevel: 2,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(
+        hideousLaughterUnitId,
+        2,
+        "hideousLaughter",
+      ),
+      mode: { tag: "cast" },
+    });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    expect(targetHole).toEqual(
+      expect.objectContaining({
+        minTargets: 1,
+        maxTargets: 2,
+      }),
+    );
+    const targetFill = spellTargetListFill(
+      targetHole,
+      spellCasterId,
+      hideousLaughterUnitId,
+      [spellTargetId],
+    );
+    const needsSave = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    });
+    const initialSave = requireResultHole(needsSave, "savingThrowOutcome");
+    const cast = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        savingThrowOutcomeFill(initialSave, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Hideous Laughter cast to resolve.");
+    }
+    const laughed = requireCombatant(cast.state, spellTargetId);
+    expect(hasCondition(laughed.conditions, "prone")).toBe(true);
+    expect(hasCondition(laughed.conditions, "incapacitated")).toBe(true);
+    expect(laughed.activeEffects).toEqual([
+      expect.objectContaining({
+        kind: "hideousLaughter",
+        sourceSpellId: hideousLaughterUnitId,
+        sourceCombatantId: spellCasterId,
+        expiresAt: {
+          kind: "concentration",
+          combatantId: spellCasterId,
+          durationTicks: hideousLaughterDurationTicks,
+        },
+      }),
+    ]);
+
+    const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+    expect(
+      discoverBattleActs(targetTurn.state).some(
+        (candidate) =>
+          candidate.subject.tag === "runtimeCommand" &&
+          candidate.subject.command === "standFromProne" &&
+          candidate.subject.actorId === spellTargetId,
+      ),
+    ).toBe(false);
+
+    const needsRepeatSave = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellTargetId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+    const repeatSave = requireResultHole(needsRepeatSave, "savingThrowOutcome");
+    expect(repeatSave).toEqual(
+      expect.objectContaining({
+        hideousLaughterRepeatSave: expect.objectContaining({
+          targetId: spellTargetId,
+          trigger: "endTurn",
+        }),
+        targetRollModes: [],
+      }),
+    );
+    const cleared = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellTargetId,
+        command: "endTurn",
+      },
+      fills: [
+        savingThrowOutcomeFill(repeatSave, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+      ],
+    });
+    if (cleared.tag !== "resolved") {
+      throw new Error("Expected Hideous Laughter repeat save to resolve.");
+    }
+    const target = requireCombatant(cleared.state, spellTargetId);
+    expect(hasCondition(target.conditions, "prone")).toBe(false);
+    expect(hasCondition(target.conditions, "incapacitated")).toBe(false);
+    expect(target.activeEffects).toEqual([]);
+    expect(
+      requireCombatant(cleared.state, spellCasterId).concentration,
+    ).toBeNull();
+
+    const hideousLaughterEffect = laughed.activeEffects.find(
+      (effect) => effect.kind === "hideousLaughter",
+    );
+    if (hideousLaughterEffect === undefined) {
+      throw new Error("Expected Hideous Laughter active effect.");
+    }
+    const damageSaveHole = hideousLaughterRepeatSavingThrowOutcomeHole(
+      spellTargetId,
+      hideousLaughterEffect,
+      "damage",
+    );
+    expect(damageSaveHole.targetRollModes).toEqual([
+      { targetId: spellTargetId, rollMode: "advantage" },
+    ]);
+    const damaged = applyBattleHitPointDamage({
+      state: cast.state,
+      target: laughed,
+      damageAmount: 1,
+      deathFailuresAtZeroHp: 1,
+      damageSourceId: spellCasterId,
+      hideousLaughterDamageRepeatSaves: [
+        savingThrowOutcomeFill(damageSaveHole, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+      ],
+    });
+    const damagedTarget = requireCombatant(damaged, spellTargetId);
+    expect(hasCondition(damagedTarget.conditions, "prone")).toBe(false);
+    expect(hasCondition(damagedTarget.conditions, "incapacitated")).toBe(false);
+    expect(damagedTarget.activeEffects).toEqual([]);
+    expect(requireCombatant(damaged, spellCasterId).concentration).toBeNull();
+
+    const expiringEffect = {
+      ...hideousLaughterEffect,
+      expiresAt: {
+        kind: "concentration" as const,
+        combatantId: spellCasterId,
+        durationTicks: elapsedTimeTicks(1),
+      },
+    };
+    const expiringState: BattleState = {
+      ...cast.state,
+      combatants: new Map(cast.state.combatants)
+        .set(spellCasterId, {
+          ...requireCombatant(cast.state, spellCasterId),
+          concentration: {
+            sourceSpellId: hideousLaughterUnitId,
+            effectKind: "spellEffect",
+          },
+        })
+        .set(spellTargetId, {
+          ...laughed,
+          activeEffects: [expiringEffect],
+        }),
+    };
+    const expiringTargetTurn = endTurn({
+      state: expiringState,
+      actorId: spellCasterId,
+    });
+    if (expiringTargetTurn.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+    const expiringRepeatSaveHole = hideousLaughterRepeatSavingThrowOutcomeHole(
+      spellTargetId,
+      expiringEffect,
+      "endTurn",
+    );
+    const expired = endTurn({
+      state: expiringTargetTurn.state,
+      actorId: spellTargetId,
+      fills: [
+        savingThrowOutcomeFill(expiringRepeatSaveHole, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    if (expired.tag !== "resolved") {
+      throw new Error("Expected Hideous Laughter duration expiry to resolve.");
+    }
+    const expiredCaster = requireCombatant(expired.state, spellCasterId);
+    const expiredTarget = requireCombatant(expired.state, spellTargetId);
+    expect(expiredCaster.concentration).toBeNull();
+    expect(hasCondition(expiredTarget.conditions, "prone")).toBe(false);
+    expect(hasCondition(expiredTarget.conditions, "incapacitated")).toBe(false);
+    expect(
+      expiredTarget.activeEffects.some(
+        (effect) => effect.kind === "hideousLaughter",
+      ),
+    ).toBe(false);
+
+    const fireBoltSpell = spellRecord(fireBoltUnitId);
+    const spellDamageState = spellBattle({
+      cantrips: [fireBoltSpell],
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const hideousAct = spellAct({
+      state: spellDamageState,
+      spellId: hideousLaughterUnitId,
+    });
+    const hideousTarget = requireHole(
+      hideousAct.initialHoles,
+      "spellTargetList",
+    );
+    const hideousTargetFill = spellTargetListFill(
+      hideousTarget,
+      spellCasterId,
+      hideousLaughterUnitId,
+      [spellTargetId],
+    );
+    const hideousInitialSave = requireResultHole(
+      resolveBattleSubject({
+        state: spellDamageState,
+        subject: hideousAct.subject,
+        fills: [hideousTargetFill],
+      }),
+      "savingThrowOutcome",
+    );
+    const hideousCast = resolveBattleSubject({
+      state: spellDamageState,
+      subject: hideousAct.subject,
+      fills: [
+        hideousTargetFill,
+        savingThrowOutcomeFill(hideousInitialSave, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    if (hideousCast.tag !== "resolved") {
+      throw new Error("Expected Hideous Laughter cast to resolve.");
+    }
+    const targetTurnForDamage = endTurn({
+      state: hideousCast.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurnForDamage.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+    const targetEndTurnNeedsSave = resolveBattleSubject({
+      state: targetTurnForDamage.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellTargetId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+    const targetEndTurnRepeatSave = requireResultHole(
+      targetEndTurnNeedsSave,
+      "savingThrowOutcome",
+    );
+    const casterTurn = resolveBattleSubject({
+      state: targetTurnForDamage.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellTargetId,
+        command: "endTurn",
+      },
+      fills: [
+        savingThrowOutcomeFill(targetEndTurnRepeatSave, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    if (casterTurn.tag !== "resolved") {
+      throw new Error("Expected target End Turn to resolve.");
+    }
+    const fireBoltAct = spellAct({
+      state: casterTurn.state,
+      spellId: fireBoltUnitId,
+    });
+    const fireBoltTarget = requireHole(
+      fireBoltAct.initialHoles,
+      "targetChoice",
+    );
+    const fireBoltTargetFill = spellTargetFill(
+      fireBoltTarget,
+      fireBoltUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+    const fireBoltAttack = requireResultHole(
+      resolveBattleSubject({
+        state: casterTurn.state,
+        subject: fireBoltAct.subject,
+        fills: [fireBoltTargetFill],
+      }),
+      "attackRoll",
+    );
+    const fireBoltDamage = requireResultHole(
+      resolveBattleSubject({
+        state: casterTurn.state,
+        subject: fireBoltAct.subject,
+        fills: [
+          fireBoltTargetFill,
+          attackRollFill(fireBoltAttack, { total: 18, naturalD20: 12 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    const spellDamageNeedsRepeatSave = resolveBattleSubject({
+      state: casterTurn.state,
+      subject: fireBoltAct.subject,
+      fills: [
+        fireBoltTargetFill,
+        attackRollFill(fireBoltAttack, { total: 18, naturalD20: 12 }),
+        damageRollFillWithGroups(fireBoltDamage, [[4]]),
+      ],
+    });
+    const spellDamageRepeatSave = requireResultHole(
+      spellDamageNeedsRepeatSave,
+      "savingThrowOutcome",
+    );
+    expect(spellDamageRepeatSave).toEqual(
+      expect.objectContaining({
+        hideousLaughterRepeatSave: expect.objectContaining({
+          targetId: spellTargetId,
+          trigger: "damage",
+        }),
+        targetRollModes: [{ targetId: spellTargetId, rollMode: "advantage" }],
+      }),
+    );
+    expect(
+      resolveBattleSubject({
+        state: casterTurn.state,
+        subject: fireBoltAct.subject,
+        fills: [
+          fireBoltTargetFill,
+          attackRollFill(fireBoltAttack, { total: 18, naturalD20: 12 }),
+          damageRollFillWithGroups(fireBoltDamage, [[4]]),
+          savingThrowOutcomeFill(spellDamageRepeatSave, [
+            { targetId: spellCasterId, succeeded: true },
+          ]),
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+    expect(
+      resolveBattleSubject({
+        state: casterTurn.state,
+        subject: fireBoltAct.subject,
+        fills: [
+          fireBoltTargetFill,
+          attackRollFill(fireBoltAttack, { total: 18, naturalD20: 12 }),
+          damageRollFillWithGroups(fireBoltDamage, [[4]]),
+          savingThrowOutcomeFill(spellDamageRepeatSave, [
+            { targetId: spellTargetId, succeeded: false },
+            { targetId: spellTargetId, succeeded: true },
+          ]),
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+  });
+
+  test("Hideous Laughter does not leave Concentration after all initial saves succeed", () => {
+    const spell = spellRecord(hideousLaughterUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const act = spellAct({
+      state,
+      spellId: hideousLaughterUnitId,
+    });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    const targetFill = spellTargetListFill(
+      targetHole,
+      spellCasterId,
+      hideousLaughterUnitId,
+      [spellTargetId],
+    );
+    const initialSave = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill],
+      }),
+      "savingThrowOutcome",
+    );
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        savingThrowOutcomeFill(initialSave, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+      ],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Hideous Laughter cast to resolve.");
+    }
+    const caster = requireCombatant(resolved.state, spellCasterId);
+    const target = requireCombatant(resolved.state, spellTargetId);
+    expect(caster.concentration).toBeNull();
+    expect(hasCondition(target.conditions, "prone")).toBe(false);
+    expect(hasCondition(target.conditions, "incapacitated")).toBe(false);
+    expect(
+      target.activeEffects.some(
+        (effect) => effect.kind === "hideousLaughter",
+      ),
+    ).toBe(false);
+  });
+
+  test("Hideous Laughter applies each condition independently of condition immunity", () => {
+    const castWithConditionImmunity = (
+      immuneCondition: "prone" | "incapacitated",
+    ) => {
+      const spell = spellRecord(hideousLaughterUnitId);
+      const baseState = spellBattle({ preparedSpells: [spell] });
+      const baseTarget = requireCombatant(baseState, spellTargetId);
+      const state: BattleState = {
+        ...baseState,
+        combatants: new Map(baseState.combatants).set(spellTargetId, {
+          ...baseTarget,
+          activeEffects: [
+            ...baseTarget.activeEffects,
+            {
+              kind: "conditionImmunity",
+              sourceSpellId: heroismUnitId,
+              sourceCombatantId: spellCasterId,
+              condition: immuneCondition,
+              expiresAt: {
+                kind: "duration",
+                durationTicks: elapsedTimeTicks(600),
+              },
+            },
+          ],
+        }),
+      };
+      const act = spellAct({ state, spellId: hideousLaughterUnitId });
+      const targetHole = requireHole(act.initialHoles, "spellTargetList");
+      const targetFill = spellTargetListFill(
+        targetHole,
+        spellCasterId,
+        hideousLaughterUnitId,
+        [spellTargetId],
+      );
+      const initialSave = requireResultHole(
+        resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [targetFill],
+        }),
+        "savingThrowOutcome",
+      );
+      const resolved = resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          targetFill,
+          savingThrowOutcomeFill(initialSave, [
+            { targetId: spellTargetId, succeeded: false },
+          ]),
+        ],
+      });
+      if (resolved.tag !== "resolved") {
+        throw new Error("Expected Hideous Laughter cast to resolve.");
+      }
+      return requireCombatant(resolved.state, spellTargetId);
+    };
+
+    const proneImmuneTarget = castWithConditionImmunity("prone");
+    expect(hasCondition(proneImmuneTarget.conditions, "prone")).toBe(false);
+    expect(hasCondition(proneImmuneTarget.conditions, "incapacitated")).toBe(
+      true,
+    );
+    expect(
+      proneImmuneTarget.activeEffects.some(
+        (effect) => effect.kind === "hideousLaughter",
+      ),
+    ).toBe(true);
+
+    const incapacitatedImmuneTarget =
+      castWithConditionImmunity("incapacitated");
+    expect(hasCondition(incapacitatedImmuneTarget.conditions, "prone")).toBe(
+      true,
+    );
+    expect(
+      hasCondition(incapacitatedImmuneTarget.conditions, "incapacitated"),
+    ).toBe(false);
+    expect(
+      incapacitatedImmuneTarget.activeEffects.some(
+        (effect) => effect.kind === "hideousLaughter",
+      ),
+    ).toBe(true);
+  });
+
+  test("Hideous Laughter repeat saves clear only the saved effect", () => {
+    const spell = spellRecord(hideousLaughterUnitId);
+    const baseState = spellBattle({
+      preparedSpells: [spell],
+      targetHp: 20,
+      targetMaxHp: 20,
+    });
+    const target = requireCombatant(baseState, spellTargetId);
+    const firstEffect = {
+      kind: "hideousLaughter",
+      sourceSpellId: hideousLaughterUnitId,
+      sourceCombatantId: spellCasterId,
+      conditionHadNonSpellProneSource: false,
+      conditionHadNonSpellIncapacitatedSource: false,
+      save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
+      expiresAt: {
+        kind: "concentration",
+        combatantId: spellCasterId,
+        durationTicks: hideousLaughterDurationTicks,
+      },
+    } satisfies Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }>;
+    const secondEffect = {
+      ...firstEffect,
+      sourceCombatantId: spellTargetId,
+      expiresAt: {
+        kind: "concentration",
+        combatantId: spellTargetId,
+        durationTicks: hideousLaughterDurationTicks,
+      },
+    } satisfies Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }>;
+    const affectedTarget = battleCreatureStateWithKnockOutPreservedConditions(
+      target,
+      applyCondition(
+        applyCondition(target.conditions, "prone"),
+        "incapacitated",
+      ),
+    );
+    const state: BattleState = {
+      ...baseState,
+      combatants: new Map(baseState.combatants).set(spellTargetId, {
+        ...affectedTarget,
+        activeEffects: [firstEffect, secondEffect],
+      }),
+    };
+
+    const damageSaveHole = hideousLaughterRepeatSavingThrowOutcomeHole(
+      spellTargetId,
+      firstEffect,
+      "damage",
+    );
+    const afterDamage = applyBattleHitPointDamage({
+      state,
+      target: requireCombatant(state, spellTargetId),
+      damageAmount: 1,
+      deathFailuresAtZeroHp: 1,
+      hideousLaughterDamageRepeatSaves: [
+        savingThrowOutcomeFill(damageSaveHole, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+      ],
+    });
+    const damageTarget = requireCombatant(afterDamage, spellTargetId);
+    expect(
+      damageTarget.activeEffects.filter(
+        (effect) => effect.kind === "hideousLaughter",
+      ),
+    ).toEqual([expect.objectContaining({ sourceCombatantId: spellTargetId })]);
+    expect(hasCondition(damageTarget.conditions, "prone")).toBe(true);
+    expect(hasCondition(damageTarget.conditions, "incapacitated")).toBe(true);
+
+    const secondDamageSaveHole = hideousLaughterRepeatSavingThrowOutcomeHole(
+      spellTargetId,
+      secondEffect,
+      "damage",
+    );
+    const afterAllDamageSaves = applyBattleHitPointDamage({
+      state,
+      target: requireCombatant(state, spellTargetId),
+      damageAmount: 1,
+      deathFailuresAtZeroHp: 1,
+      hideousLaughterDamageRepeatSaves: [
+        savingThrowOutcomeFill(damageSaveHole, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+        savingThrowOutcomeFill(secondDamageSaveHole, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+      ],
+    });
+    const allDamageSavesTarget = requireCombatant(
+      afterAllDamageSaves,
+      spellTargetId,
+    );
+    expect(
+      allDamageSavesTarget.activeEffects.some(
+        (effect) => effect.kind === "hideousLaughter",
+      ),
+    ).toBe(false);
+    expect(hasCondition(allDamageSavesTarget.conditions, "prone")).toBe(false);
+    expect(hasCondition(allDamageSavesTarget.conditions, "incapacitated")).toBe(
+      false,
+    );
+
+    const targetTurn = endTurn({ state, actorId: spellCasterId });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+    const firstEndTurnHole = hideousLaughterRepeatSavingThrowOutcomeHole(
+      spellTargetId,
+      firstEffect,
+      "endTurn",
+    );
+    const secondEndTurnHole = hideousLaughterRepeatSavingThrowOutcomeHole(
+      spellTargetId,
+      secondEffect,
+      "endTurn",
+    );
+    const afterEndTurn = endTurn({
+      state: targetTurn.state,
+      actorId: spellTargetId,
+      fills: [
+        savingThrowOutcomeFill(firstEndTurnHole, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+        savingThrowOutcomeFill(secondEndTurnHole, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    if (afterEndTurn.tag !== "resolved") {
+      throw new Error("Expected target End Turn to resolve.");
+    }
+    const endTurnTarget = requireCombatant(afterEndTurn.state, spellTargetId);
+    expect(
+      endTurnTarget.activeEffects.filter(
+        (effect) => effect.kind === "hideousLaughter",
+      ),
+    ).toEqual([expect.objectContaining({ sourceCombatantId: spellTargetId })]);
+    expect(hasCondition(endTurnTarget.conditions, "prone")).toBe(true);
+    expect(hasCondition(endTurnTarget.conditions, "incapacitated")).toBe(true);
+  });
+
+  test("Hideous Laughter does not break Concentration when Incapacitated immunity prevents Incapacitated", () => {
+    const spell = spellRecord(hideousLaughterUnitId);
+    const baseState = spellBattle({ preparedSpells: [spell] });
+    const target = requireCombatant(baseState, spellTargetId);
+    const targetConcentration = {
+      sourceSpellId: heroismUnitId,
+      effectKind: "spellEffect" as const,
+    };
+    const state: BattleState = {
+      ...baseState,
+      combatants: new Map(baseState.combatants).set(spellTargetId, {
+        ...target,
+        concentration: targetConcentration,
+        activeEffects: [
+          ...target.activeEffects,
+          {
+            kind: "conditionImmunity",
+            sourceSpellId: heroismUnitId,
+            sourceCombatantId: spellTargetId,
+            condition: "incapacitated",
+            expiresAt: {
+              kind: "duration",
+              durationTicks: elapsedTimeTicks(600),
+            },
+          },
+          {
+            kind: "turnStartTemporaryHitPoints",
+            sourceSpellId: heroismUnitId,
+            sourceCombatantId: spellTargetId,
+            amount: 3,
+            expiresAt: {
+              kind: "concentration",
+              combatantId: spellTargetId,
+            },
+          },
+        ],
+      }),
+    };
+    const act = spellAct({ state, spellId: hideousLaughterUnitId });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    const targetFill = spellTargetListFill(
+      targetHole,
+      spellCasterId,
+      hideousLaughterUnitId,
+      [spellTargetId],
+    );
+    const initialSave = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill],
+      }),
+      "savingThrowOutcome",
+    );
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        savingThrowOutcomeFill(initialSave, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Hideous Laughter cast to resolve.");
+    }
+    const resolvedTarget = requireCombatant(resolved.state, spellTargetId);
+    expect(hasCondition(resolvedTarget.conditions, "prone")).toBe(true);
+    expect(hasCondition(resolvedTarget.conditions, "incapacitated")).toBe(
+      false,
+    );
+    expect(resolvedTarget.concentration).toEqual(targetConcentration);
+    expect(
+      resolvedTarget.activeEffects.some(
+        (effect) => effect.kind === "turnStartTemporaryHitPoints",
+      ),
+    ).toBe(true);
+  });
+
+  test("Hideous Laughter asks for an Advantage repeat save after start-turn spell damage", () => {
+    const spell = spellRecord(hideousLaughterUnitId);
+    const baseState = spellBattle({
+      preparedSpells: [spell],
+      targetHp: 20,
+      targetMaxHp: 20,
+    });
+    const target = requireCombatant(baseState, spellTargetId);
+    const targetWithConditions =
+      battleCreatureStateWithKnockOutPreservedConditions(
+        target,
+        applyCondition(
+          applyCondition(
+            applyCondition(target.conditions, "restrained"),
+            "prone",
+          ),
+          "incapacitated",
+        ),
+      );
+    const state: BattleState = {
+      ...baseState,
+      combatants: new Map(baseState.combatants).set(spellTargetId, {
+        ...targetWithConditions,
+        activeEffects: [
+          ...target.activeEffects,
+          {
+            kind: "spellCondition",
+            sourceSpellId: ensnaringStrikeUnitId,
+            sourceCombatantId: spellCasterId,
+            condition: "restrained",
+            conditionHadNonSpellSource: false,
+            escape: null,
+            turnStartDamage: {
+              expr: { dice: 1, dieSize: 6 },
+              damageType: "piercing",
+            },
+            expiresAt: {
+              kind: "concentration",
+              combatantId: spellCasterId,
+            },
+          },
+          {
+            kind: "hideousLaughter",
+            sourceSpellId: hideousLaughterUnitId,
+            sourceCombatantId: spellCasterId,
+            conditionHadNonSpellProneSource: false,
+            conditionHadNonSpellIncapacitatedSource: false,
+            save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
+            expiresAt: {
+              kind: "concentration",
+              combatantId: spellCasterId,
+              durationTicks: hideousLaughterDurationTicks,
+            },
+          },
+        ],
+      }),
+    };
+
+    const awaitingTurnStartDamage = endTurn({
+      state,
+      actorId: spellCasterId,
+    });
+    const turnStartDamage = requireResultHole(
+      awaitingTurnStartDamage,
+      "rolledDice",
+    );
+    const awaitingHideousLaughterDamageSave = endTurn({
+      state,
+      actorId: spellCasterId,
+      fills: [damageRollFillWithGroups(turnStartDamage, [[4]])],
+    });
+    const damageRepeatSave = requireResultHole(
+      awaitingHideousLaughterDamageSave,
+      "savingThrowOutcome",
+    );
+    expect(damageRepeatSave).toEqual(
+      expect.objectContaining({
+        hideousLaughterRepeatSave: expect.objectContaining({
+          targetId: spellTargetId,
+          trigger: "damage",
+        }),
+        targetRollModes: [{ targetId: spellTargetId, rollMode: "advantage" }],
+      }),
+    );
+
+    const resolved = endTurn({
+      state,
+      actorId: spellCasterId,
+      fills: [
+        damageRollFillWithGroups(turnStartDamage, [[4]]),
+        savingThrowOutcomeFill(damageRepeatSave, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+      ],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected start-turn damage repeat save to resolve.");
+    }
+    const resolvedTarget = requireCombatant(resolved.state, spellTargetId);
+    expect(resolvedTarget.hp).toBe(Hp(16));
+    expect(hasCondition(resolvedTarget.conditions, "prone")).toBe(false);
+    expect(hasCondition(resolvedTarget.conditions, "incapacitated")).toBe(
+      false,
+    );
+    expect(
+      resolvedTarget.activeEffects.some(
+        (effect) => effect.kind === "hideousLaughter",
+      ),
+    ).toBe(false);
+  });
+
+  test("Hideous Laughter asks for a fresh damage repeat save for each same-target Eldritch Blast beam", () => {
+    const spell = spellRecord(eldritchBlastUnitId);
+    const baseState = spellBattle({
+      cantrips: [spell],
+      casterClassLevels: [{ className: "warlock", level: classLevel(5) }],
+      targetHp: 20,
+      targetMaxHp: 20,
+    });
+    const target = requireCombatant(baseState, spellTargetId);
+    const hideousLaughterEffect = {
+      kind: "hideousLaughter",
+      sourceSpellId: hideousLaughterUnitId,
+      sourceCombatantId: spellCasterId,
+      conditionHadNonSpellProneSource: false,
+      conditionHadNonSpellIncapacitatedSource: false,
+      save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
+      expiresAt: {
+        kind: "concentration",
+        combatantId: spellCasterId,
+        durationTicks: hideousLaughterDurationTicks,
+      },
+    } satisfies Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }>;
+    const affectedTarget = battleCreatureStateWithKnockOutPreservedConditions(
+      target,
+      applyCondition(
+        applyCondition(target.conditions, "prone"),
+        "incapacitated",
+      ),
+    );
+    const state: BattleState = {
+      ...baseState,
+      combatants: new Map(baseState.combatants)
+        .set(spellCasterId, {
+          ...requireCombatant(baseState, spellCasterId),
+          concentration: {
+            sourceSpellId: hideousLaughterUnitId,
+            effectKind: "spellEffect",
+          },
+        })
+        .set(spellTargetId, {
+          ...affectedTarget,
+          activeEffects: [hideousLaughterEffect],
+        }),
+    };
+    const act = spellAct({ state, spellId: eldritchBlastUnitId });
+    const targetFills = act.initialHoles
+      .filter(
+        (
+          hole,
+        ): hole is Extract<BattleHole, { readonly kind: "targetChoice" }> =>
+          hole.kind === "targetChoice",
+      )
+      .map((hole) =>
+        spellTargetFill(
+          hole,
+          eldritchBlastUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+      );
+
+    const firstAttackRoll = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: targetFills,
+      }),
+      "attackRoll",
+    );
+    const afterFirstAttackFills = [
+      ...targetFills,
+      attackRollFill(firstAttackRoll, { total: 18, naturalD20: 12 }),
+    ];
+    const firstDamage = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: afterFirstAttackFills,
+      }),
+      "rolledDice",
+    );
+    const afterFirstDamageFills = [
+      ...afterFirstAttackFills,
+      damageRollFillWithGroups(firstDamage, [[4]]),
+    ];
+    const firstRepeatSave = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: afterFirstDamageFills,
+      }),
+      "savingThrowOutcome",
+    );
+    expect(firstRepeatSave).toEqual(
+      expect.objectContaining({
+        hideousLaughterRepeatSave: expect.objectContaining({
+          targetId: spellTargetId,
+          trigger: "damage",
+        }),
+        targetRollModes: [{ targetId: spellTargetId, rollMode: "advantage" }],
+      }),
+    );
+
+    const afterFirstRepeatSaveFills = [
+      ...afterFirstDamageFills,
+      savingThrowOutcomeFill(firstRepeatSave, [
+        { targetId: spellTargetId, succeeded: false },
+      ]),
+    ];
+    const secondAttackRoll = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: afterFirstRepeatSaveFills,
+      }),
+      "attackRoll",
+    );
+    const afterSecondAttackFills = [
+      ...afterFirstRepeatSaveFills,
+      attackRollFill(secondAttackRoll, { total: 18, naturalD20: 12 }),
+    ];
+    const secondDamage = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: afterSecondAttackFills,
+      }),
+      "rolledDice",
+    );
+    const afterSecondDamageFills = [
+      ...afterSecondAttackFills,
+      damageRollFillWithGroups(secondDamage, [[4]]),
+    ];
+    const secondRepeatSave = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: afterSecondDamageFills,
+      }),
+      "savingThrowOutcome",
+    );
+    expect(String(secondRepeatSave.holeId)).not.toBe(
+      String(firstRepeatSave.holeId),
+    );
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        ...afterSecondDamageFills,
+        savingThrowOutcomeFill(secondRepeatSave, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+      ],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Eldritch Blast beam sequence to resolve.");
+    }
+    const resolvedTarget = requireCombatant(resolved.state, spellTargetId);
+    expect(resolvedTarget.hp).toBe(Hp(12));
+    expect(hasCondition(resolvedTarget.conditions, "prone")).toBe(false);
+    expect(hasCondition(resolvedTarget.conditions, "incapacitated")).toBe(
+      false,
+    );
+    expect(
+      resolvedTarget.activeEffects.some(
+        (effect) => effect.kind === "hideousLaughter",
+      ),
+    ).toBe(false);
+    expect(
+      requireCombatant(resolved.state, spellCasterId).concentration,
+    ).toBeNull();
+  });
+
+  test("Hideous Laughter asks for fresh damage repeat saves for Ice Knife attack and burst damage", () => {
+    const spell = spellRecord(iceKnifeUnitId);
+    const baseState = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+      targetHp: 20,
+      targetMaxHp: 20,
+    });
+    const target = requireCombatant(baseState, spellTargetId);
+    const hideousLaughterEffect = {
+      kind: "hideousLaughter",
+      sourceSpellId: hideousLaughterUnitId,
+      sourceCombatantId: spellCasterId,
+      conditionHadNonSpellProneSource: false,
+      conditionHadNonSpellIncapacitatedSource: false,
+      save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
+      expiresAt: {
+        kind: "concentration",
+        combatantId: spellCasterId,
+        durationTicks: hideousLaughterDurationTicks,
+      },
+    } satisfies Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }>;
+    const affectedTarget = battleCreatureStateWithKnockOutPreservedConditions(
+      target,
+      applyCondition(
+        applyCondition(target.conditions, "prone"),
+        "incapacitated",
+      ),
+    );
+    const state: BattleState = {
+      ...baseState,
+      combatants: new Map(baseState.combatants).set(spellTargetId, {
+        ...affectedTarget,
+        activeEffects: [hideousLaughterEffect],
+      }),
+    };
+    const act = spellAct({ state, spellId: iceKnifeUnitId });
+    const targetFill = spellTargetFill(
+      requireHole(act.initialHoles, "targetChoice"),
+      iceKnifeUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+    const attackRoll = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill],
+      }),
+      "attackRoll",
+    );
+    const attackDamage = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          targetFill,
+          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    const afterAttackDamageFills = [
+      targetFill,
+      attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+      damageRollFillWithGroups(attackDamage, [[5]]),
+    ];
+    const attackRepeatSave = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: afterAttackDamageFills,
+      }),
+      "savingThrowOutcome",
+    );
+    expect(attackRepeatSave).toEqual(
+      expect.objectContaining({
+        hideousLaughterRepeatSave: expect.objectContaining({
+          targetId: spellTargetId,
+          trigger: "damage",
+        }),
+        targetRollModes: [{ targetId: spellTargetId, rollMode: "advantage" }],
+      }),
+    );
+
+    const afterAttackRepeatFills = [
+      ...afterAttackDamageFills,
+      savingThrowOutcomeFill(attackRepeatSave, [
+        { targetId: spellTargetId, succeeded: false },
+      ]),
+    ];
+    const burstSave = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: afterAttackRepeatFills,
+      }),
+      "savingThrowOutcome",
+    );
+    const burstSaveFill: Extract<
+      BattleFill,
+      { readonly kind: "savingThrowOutcome" }
+    > = {
+      kind: "savingThrowOutcome",
+      holeId: burstSave.holeId,
+      value: {
+        area: {
+          originAnchorId: spellTargetId,
+          affectedTargetIds: [spellTargetId],
+        },
+        outcomes: [{ targetId: spellTargetId, succeeded: false }],
+      },
+    };
+    const burstDamage = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [...afterAttackRepeatFills, burstSaveFill],
+      }),
+      "rolledDice",
+    );
+    const afterBurstDamageFills = [
+      ...afterAttackRepeatFills,
+      burstSaveFill,
+      damageRollFillWithGroups(burstDamage, [[2, 2]]),
+    ];
+    const burstRepeatSave = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: afterBurstDamageFills,
+      }),
+      "savingThrowOutcome",
+    );
+    expect(String(burstRepeatSave.holeId)).not.toBe(
+      String(attackRepeatSave.holeId),
+    );
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        ...afterBurstDamageFills,
+        savingThrowOutcomeFill(burstRepeatSave, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+      ],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Ice Knife damage repeat saves to resolve.");
+    }
+    const resolvedTarget = requireCombatant(resolved.state, spellTargetId);
+    expect(resolvedTarget.hp).toBe(Hp(11));
+    expect(hasCondition(resolvedTarget.conditions, "prone")).toBe(false);
+    expect(hasCondition(resolvedTarget.conditions, "incapacitated")).toBe(
+      false,
+    );
+    expect(
+      resolvedTarget.activeEffects.some(
+        (effect) => effect.kind === "hideousLaughter",
+      ),
+    ).toBe(false);
+  });
+
+  test("Hideous Laughter ordinary weapon damage repeat save can end the effect", () => {
+    const baseStateResult = startBattle({
+      battleId: battleId("unit-profile-hideous-laughter-weapon-damage"),
+      combatants: [
+        characterCreature({
+          combatantId: spellCasterId,
+          displayName: "Attacker",
+          initiative: 20,
+          side: partySide,
+          attack: zeroAbilityWeaponAttack("weapon_longsword"),
+        }),
+        characterCreature({
+          combatantId: spellTargetId,
+          displayName: "Target",
+          initiative: 10,
+          side: oppositionSide,
+          currentHp: 20,
+          maxHp: 20,
+        }),
+      ],
+    });
+    expect(Either.isRight(baseStateResult)).toBe(true);
+    if (Either.isLeft(baseStateResult)) {
+      throw new Error(baseStateResult.left.message);
+    }
+    const baseState = baseStateResult.right;
+    const target = requireCombatant(baseState, spellTargetId);
+    const hideousLaughterEffect = {
+      kind: "hideousLaughter",
+      sourceSpellId: hideousLaughterUnitId,
+      sourceCombatantId: spellCasterId,
+      conditionHadNonSpellProneSource: false,
+      conditionHadNonSpellIncapacitatedSource: false,
+      save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
+      expiresAt: {
+        kind: "concentration",
+        combatantId: spellCasterId,
+        durationTicks: hideousLaughterDurationTicks,
+      },
+    } satisfies Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }>;
+    const affectedTarget = battleCreatureStateWithKnockOutPreservedConditions(
+      target,
+      applyCondition(
+        applyCondition(target.conditions, "prone"),
+        "incapacitated",
+      ),
+    );
+    const state: BattleState = {
+      ...baseState,
+      combatants: new Map(baseState.combatants).set(spellTargetId, {
+        ...affectedTarget,
+        activeEffects: [hideousLaughterEffect],
+      }),
+    };
+    const subject = weaponAttackSubject("Longsword");
+    const targetHole = requireResultHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const targetFill = attackTargetFill(
+      targetHole,
+      spellCasterId,
+      spellTargetId,
+      "Longsword",
+    );
+    const attackRollHole = requireResultHole(
+      resolveBattleSubject({ state, subject, fills: [targetFill] }),
+      "attackRoll",
+    );
+    const attackRoll = attackRollFill(attackRollHole, {
+      total: 18,
+      naturalD20: 12,
+    });
+    const damageHole = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFill, attackRoll],
+      }),
+      "rolledDice",
+    );
+    const damageRoll = damageRollFillWithGroups(damageHole, [[4]]);
+    const repeatSaveHole = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFill, attackRoll, damageRoll],
+      }),
+      "savingThrowOutcome",
+    );
+    expect(repeatSaveHole).toEqual(
+      expect.objectContaining({
+        hideousLaughterRepeatSave: expect.objectContaining({
+          targetId: spellTargetId,
+          trigger: "damage",
+        }),
+        targetRollModes: [{ targetId: spellTargetId, rollMode: "advantage" }],
+      }),
+    );
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFill,
+        attackRoll,
+        damageRoll,
+        savingThrowOutcomeFill(repeatSaveHole, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+      ],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected weapon damage repeat save to resolve.");
+    }
+    const resolvedTarget = requireCombatant(resolved.state, spellTargetId);
+    expect(resolvedTarget.hp).toBe(Hp(16));
+    expect(hasCondition(resolvedTarget.conditions, "prone")).toBe(false);
+    expect(hasCondition(resolvedTarget.conditions, "incapacitated")).toBe(
+      false,
+    );
+    expect(
+      resolvedTarget.activeEffects.some(
+        (effect) => effect.kind === "hideousLaughter",
+      ),
+    ).toBe(false);
+  });
+
+  test("Hideous Laughter admission rejects unsupported failed-save and repeat-save branches", () => {
+    const spell = spellRecord(hideousLaughterUnitId);
+    const spellSlots = [
+      {
+        spellLevel: spellSlotLevel(1),
+        count: resourceCount(1),
+        expended: resourceCount(0),
+      },
+    ];
+
+    expect(
+      supportedPreparedHideousLaughterProfile(spell, spellSlots),
+    ).toHaveLength(1);
+
+    expect(
+      supportedPreparedHideousLaughterProfile(
+        hideousLaughterWithPhase(spell, (phase) => {
+          if (phase.onFail.kind !== "composite") {
+            throw new Error("Expected Hideous Laughter composite failure.");
+          }
+          return {
+            ...phase,
+            onFail: {
+              ...phase.onFail,
+              effects: [
+                ...phase.onFail.effects,
+                { kind: "apply_condition", condition: "charmed" },
+              ],
+            },
+          } satisfies ActivationPhase;
+        }),
+        spellSlots,
+      ),
+    ).toEqual([]);
+
+    expect(
+      supportedPreparedHideousLaughterProfile(
+        hideousLaughterWithPhase(spell, (phase) => {
+          if (phase.repeatSaves === undefined) {
+            throw new Error("Expected Hideous Laughter repeat saves.");
+          }
+          const repeatSaves = phase.repeatSaves.map((repeatSave) =>
+            repeatSave.cadence === "on_target_takes_damage"
+              ? {
+                  ...repeatSave,
+                  onFailAgain: {
+                    kind: "apply_condition",
+                    condition: "charmed",
+                  } satisfies EffectAtom,
+                }
+              : repeatSave,
+          );
+          const firstRepeatSave = repeatSaves[0];
+          if (firstRepeatSave === undefined) {
+            throw new Error("Expected Hideous Laughter repeat save.");
+          }
+          return {
+            ...phase,
+            repeatSaves: [firstRepeatSave, ...repeatSaves.slice(1)],
+          } satisfies ActivationPhase;
+        }),
+        spellSlots,
+      ),
+    ).toEqual([]);
   });
 
   test("repeat-save phases are rejected by non-repeat save-gate profiles", () => {
@@ -14258,6 +15647,28 @@ function spellWithSaveGateRepeatSaves(
     mechanics: {
       ...base.mechanics,
       phases: [repeatPhase],
+    },
+  } as SpellRecord;
+}
+
+function hideousLaughterWithPhase(
+  base: SpellRecord,
+  mapPhase: (
+    phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>,
+  ) => ActivationPhase,
+): SpellRecord {
+  if (base.mechanics.family !== "activation") {
+    throw new Error("Expected Hideous Laughter activation mechanics.");
+  }
+  const phase = base.mechanics.phases[0];
+  if (phase?.kind !== "save_gate") {
+    throw new Error("Expected Hideous Laughter save gate.");
+  }
+  return {
+    ...base,
+    mechanics: {
+      ...base.mechanics,
+      phases: [mapPhase(phase)],
     },
   } as SpellRecord;
 }
