@@ -70,58 +70,66 @@
     },
     "school": "conjuration",
     "creature": {
-      "kind": "inline",
-      "statBlock": {
-        "abilityScores": {
-          "cha": 7,
-          "con": 8,
-          "dex": 13,
-          "int": 2,
-          "str": 3,
-          "wis": 12
+      "kind": "familiar_form_catalog",
+      "normalForms": [
+        {
+          "displayName": "Bat",
+          "formId": "bat",
+          "statBlockId": "stat_block_bat"
         },
-        "ac": {
-          "kind": "literal",
-          "value": 11
+        {
+          "displayName": "Cat",
+          "formId": "cat",
+          "statBlockId": "stat_block_cat"
         },
-        "actions": {},
-        "creatureType": {
-          "kind": "choice",
-          "label": "creature type",
-          "options": ["celestial", "fey", "fiend"]
+        {
+          "displayName": "Frog",
+          "formId": "frog",
+          "statBlockId": "stat_block_frog"
         },
-        "displayName": "Familiar (CR-0 Beast form)",
-        "hp": {
-          "kind": "literal",
-          "value": 1
+        {
+          "displayName": "Hawk",
+          "formId": "hawk",
+          "statBlockId": "stat_block_hawk"
         },
-        "size": "tiny",
-        "speeds": [
-          {
-            "feet": {
-              "kind": "literal",
-              "value": 5
-            },
-            "kind": "walk"
-          },
-          {
-            "feet": {
-              "kind": "literal",
-              "value": 60
-            },
-            "kind": "fly"
-          }
-        ],
-        "traits": [
-          {
-            "description": "While your familiar is within 100 feet of you, you can communicate with it telepathically. As a Bonus Action, you can see through the familiar's eyes and hear what it hears until the start of your next turn.",
-            "name": "Telepathic Connection"
-          },
-          {
-            "description": "When you cast a spell with a range of touch, your familiar can deliver the touch. Your familiar must be within 100 feet of you, and it must take a Reaction to deliver the touch when you cast the spell.",
-            "name": "Touch-Spell Delivery"
-          }
-        ]
+        {
+          "displayName": "Lizard",
+          "formId": "lizard",
+          "statBlockId": "stat_block_lizard"
+        },
+        {
+          "displayName": "Octopus",
+          "formId": "octopus",
+          "statBlockId": "stat_block_octopus"
+        },
+        {
+          "displayName": "Owl",
+          "formId": "owl",
+          "statBlockId": "stat_block_owl"
+        },
+        {
+          "displayName": "Rat",
+          "formId": "rat",
+          "statBlockId": "stat_block_rat"
+        },
+        {
+          "displayName": "Raven",
+          "formId": "raven",
+          "statBlockId": "stat_block_raven"
+        },
+        {
+          "displayName": "Spider",
+          "formId": "spider",
+          "statBlockId": "stat_block_spider"
+        },
+        {
+          "displayName": "Weasel",
+          "formId": "weasel",
+          "statBlockId": "stat_block_weasel"
+        }
+      ],
+      "additionalNormalFormEligibility": {
+        "kind": "challengeRatingZeroBeast"
       }
     }
   },

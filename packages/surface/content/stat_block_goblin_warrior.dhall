@@ -87,6 +87,7 @@ let shortbow : Attack =
 in  { id = "stat_block_goblin_warrior"
 , kind = "statBlock"
 , name = "Goblin Warrior"
+, challengeRating = 0.25
 , provenance =
   { kind = "srd-5.2.1"
   , section = "Monsters/Monsters-E-G.md:721-748"

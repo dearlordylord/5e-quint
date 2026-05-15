@@ -4053,11 +4053,15 @@ function traceCreatureSaveGate(
   idx: number,
 ): void {
   const resId = ctx.ids("res");
+  const targetLabel =
+    "area" in sg
+      ? `area: ${describeAreaShapeFixed(sg.area)}`
+      : `target: one creature within ${sg.target.rangeFeet} ft.`;
   ctx.nodes.push({
     id: resId,
     category: "resolution",
     atomKind: "save_gate",
-    label: `save_gate [${ctx.kind} ${idx}: ${sg.name}]\n${sg.ability.toUpperCase()} save\nDC: ${describeDc(sg.dc)}\narea: ${describeAreaShapeFixed(sg.area)}${maTag(sg.multiattackCount)}`,
+    label: `save_gate [${ctx.kind} ${idx}: ${sg.name}]\n${sg.ability.toUpperCase()} save\nDC: ${describeDc(sg.dc)}\n${targetLabel}${maTag(sg.multiattackCount)}`,
   });
   ctx.edges.push({ from: ctx.procId, to: resId, relation: "grants" });
   ctx.edges.push({ from: resId, to: ctx.compId, relation: "attaches_to" });
@@ -4209,6 +4213,10 @@ function describeSpawnedCreatureStatBlock(
       return describeCreatureStatBlock(creature.statBlock);
     case "catalog_ref":
       return `${creature.displayName} / catalog_ref(${creature.monsterId})`;
+    case "familiar_form_catalog":
+      return `familiar forms / ${creature.normalForms
+        .map((form) => `${form.displayName}:${form.statBlockId}`)
+        .join(", ")} / ${creature.additionalNormalFormEligibility.kind}`;
     default: {
       const _exhaustive: never = creature;
       return _exhaustive;
@@ -4224,6 +4232,8 @@ function describeSpawnedCreatureDisplayName(
       return creature.statBlock.displayName;
     case "catalog_ref":
       return creature.displayName;
+    case "familiar_form_catalog":
+      return "Familiar";
     default: {
       const _exhaustive: never = creature;
       return _exhaustive;

@@ -2956,6 +2956,7 @@ export const CreatureSenseSchema = Schema.Struct({
 
 export const CreatureNamedAttackRollSchema = Schema.Struct({
   name: Schema.String,
+  description: optionalExact(Schema.String),
   attackType: Schema.Literal("melee", "ranged"),
   attackBonus: StatBlockValueSchema,
   reachFeet: optionalExact(Schema.Number),
@@ -2970,16 +2971,30 @@ export const CreatureNamedAttackRollSchema = Schema.Struct({
   limitedUse: optionalExact(Schema.suspend(() => CreatureLimitedUseSchema)),
 });
 
-export const CreatureNamedSaveGateSchema = Schema.Struct({
+const CreatureNamedSaveGateBaseSchemaFields = {
   name: Schema.String,
+  description: optionalExact(Schema.String),
   ability: AbilitySchema,
   dc: DcSourceSchema,
-  area: AreaShapeDescriptorSchema,
   onFail: EffectAtomSchema,
   onSuccess: SaveSuccessOutcomeSchema,
   multiattackCount: optionalExact(StatBlockValueSchema),
   limitedUse: optionalExact(Schema.suspend(() => CreatureLimitedUseSchema)),
-});
+} as const;
+
+export const CreatureNamedSaveGateSchema = Schema.Union(
+  strictStruct({
+    ...CreatureNamedSaveGateBaseSchemaFields,
+    area: AreaShapeDescriptorSchema,
+  }),
+  strictStruct({
+    ...CreatureNamedSaveGateBaseSchemaFields,
+    target: Schema.Struct({
+      kind: Schema.Literal("one_creature_in_range"),
+      rangeFeet: Schema.Number,
+    }),
+  }),
+);
 
 export const CreatureNamedSupportSchema = Schema.Struct({
   name: Schema.String,
@@ -3006,12 +3021,19 @@ export const CreatureNamedActionOptionSchema = Schema.Struct({
   limitedUse: optionalExact(Schema.suspend(() => CreatureLimitedUseSchema)),
 });
 
+export const CreatureNamedSpecialActionSchema = Schema.Struct({
+  name: Schema.String,
+  description: Schema.String,
+  limitedUse: optionalExact(Schema.suspend(() => CreatureLimitedUseSchema)),
+});
+
 export const CreatureActionsSchema = Schema.Struct({
   multiattacks: optionalExact(nonEmpty(CreatureNamedMultiattackSchema)),
   attacks: optionalExact(nonEmpty(CreatureNamedAttackRollSchema)),
   saves: optionalExact(nonEmpty(CreatureNamedSaveGateSchema)),
   supports: optionalExact(nonEmpty(CreatureNamedSupportSchema)),
   actionOptions: optionalExact(nonEmpty(CreatureNamedActionOptionSchema)),
+  specials: optionalExact(nonEmpty(CreatureNamedSpecialActionSchema)),
 });
 
 export const CreatureLimitedUseSchema = Schema.Union(
@@ -3065,6 +3087,11 @@ export const CreatureSavingThrowModifierSchema = Schema.Struct({
   modifier: Schema.Number.pipe(Schema.int()),
 });
 
+export const CreatureSkillModifierSchema = Schema.Struct({
+  skill: SkillSchema,
+  modifier: Schema.Number.pipe(Schema.int()),
+});
+
 export const CreatureStatBlockSchema = Schema.Struct({
   displayName: Schema.String,
   size: Schema.Union(SizeSchema, CastTimeChoiceSizeSchema),
@@ -3080,6 +3107,7 @@ export const CreatureStatBlockSchema = Schema.Struct({
   savingThrowModifiers: optionalExact(
     nonEmpty(CreatureSavingThrowModifierSchema),
   ),
+  skillModifiers: optionalExact(nonEmpty(CreatureSkillModifierSchema)),
   saveProficiencies: optionalExact(nonEmpty(AbilitySchema)),
   vulnerabilities: optionalExact(CreatureVulnerabilityListSchema),
   resistances: optionalExact(CreatureResistanceListSchema),
@@ -3217,6 +3245,19 @@ export const SpawnedCreatureStatBlockSchema = Schema.Union(
     kind: Schema.Literal("catalog_ref"),
     monsterId: Schema.String,
     displayName: Schema.String,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("familiar_form_catalog"),
+    normalForms: nonEmpty(
+      Schema.Struct({
+        formId: Schema.NonEmptyTrimmedString,
+        statBlockId: Schema.NonEmptyTrimmedString,
+        displayName: Schema.NonEmptyTrimmedString,
+      }),
+    ),
+    additionalNormalFormEligibility: Schema.Struct({
+      kind: Schema.Literal("challengeRatingZeroBeast"),
+    }),
   }),
 );
 

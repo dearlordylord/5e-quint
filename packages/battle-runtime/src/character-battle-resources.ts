@@ -27,6 +27,10 @@ import {
   bonusActionDashTemporaryHitPointsProfileForUnit,
   requireCharacterClassLevel,
 } from "./unit-feature-support.ts";
+import {
+  pactOfTheChainFindFamiliarFormEligibilityForSpell,
+  type PactOfTheChainFindFamiliarFormEligibility,
+} from "./find-familiar-forms.ts";
 
 export type CharacterBattleResourceInit = {
   readonly unit: UnitRecord;
@@ -77,51 +81,10 @@ const FIND_FAMILIAR_SPELL_ID = "find_familiar" satisfies SpellRecord["id"];
 const FIND_FAMILIAR_SPELL_NAME = "Find Familiar" satisfies SpellRecord["name"];
 const FIND_FAMILIAR_SPELL_PROVENANCE_SECTION =
   "Spells/Descriptions-E-L#Find Familiar";
-export const FIND_FAMILIAR_NAMED_FORM_REFS = [
-  "bat",
-  "cat",
-  "frog",
-  "hawk",
-  "lizard",
-  "octopus",
-  "owl",
-  "rat",
-  "raven",
-  "spider",
-  "weasel",
-] as const;
-export const FIND_FAMILIAR_ADDITIONAL_FORM_ELIGIBILITY = {
-  kind: "challengeRatingZeroBeast",
-} as const;
-export const PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS = [
-  "imp",
-  "pseudodragon",
-  "quasit",
-  "skeleton",
-  "sphinx_of_wonder",
-  "sprite",
-  "venomous_snake",
-] as const;
-export type FindFamiliarNamedFormRef =
-  (typeof FIND_FAMILIAR_NAMED_FORM_REFS)[number];
-export type FindFamiliarAdditionalFormEligibility =
-  typeof FIND_FAMILIAR_ADDITIONAL_FORM_ELIGIBILITY;
-export type PactOfTheChainSpecialFormRef =
-  (typeof PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS)[number];
-export type PactOfTheChainFindFamiliarFormEligibility = {
-  readonly namedNormalForms: typeof FIND_FAMILIAR_NAMED_FORM_REFS;
-  readonly additionalNormalFormEligibility: FindFamiliarAdditionalFormEligibility;
-  readonly specialForms: typeof PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS;
-};
 export type PactOfTheChainFindFamiliarInvocationMode = {
   readonly action: "magicAction";
   readonly resource: "noSpellSlot";
 };
-export const PACT_OF_THE_CHAIN_FIND_FAMILIAR_FORM_ELIGIBILITY = {
-  namedNormalForms: FIND_FAMILIAR_NAMED_FORM_REFS,
-  additionalNormalFormEligibility: FIND_FAMILIAR_ADDITIONAL_FORM_ELIGIBILITY,
-  specialForms: PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS,
-} as const satisfies PactOfTheChainFindFamiliarFormEligibility;
 export const PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE = {
   action: "magicAction",
   resource: "noSpellSlot",
@@ -203,7 +166,7 @@ export type CharacterBattleInvocationSpellAccessState =
       readonly tag: "pactOfTheChainFindFamiliar";
       readonly spell: PactOfTheChainFindFamiliarSpellRecord;
       readonly invocationMode: typeof PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE;
-      readonly eligibleForms: typeof PACT_OF_THE_CHAIN_FIND_FAMILIAR_FORM_ELIGIBILITY;
+      readonly eligibleForms: PactOfTheChainFindFamiliarFormEligibility;
     };
 
 type CharacterBattleInvocationSpellAccessParseResult =
@@ -331,11 +294,21 @@ export function parseCharacterBattleInvocationSpellAccesses(
         message: "Pact of the Chain Spell Access must grant Find Familiar.",
       };
     }
+    const eligibleForms = pactOfTheChainFindFamiliarFormEligibilityForSpell(
+      access.spell,
+    );
+    if (eligibleForms === null) {
+      return {
+        tag: "issue",
+        message:
+          "Pact of the Chain Find Familiar access requires familiar form catalog references.",
+      };
+    }
     parsed.push({
       tag: access.tag,
       spell: access.spell,
       invocationMode: PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
-      eligibleForms: PACT_OF_THE_CHAIN_FIND_FAMILIAR_FORM_ELIGIBILITY,
+      eligibleForms,
     });
   }
   return {

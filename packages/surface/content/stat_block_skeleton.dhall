@@ -61,6 +61,7 @@ let shortbow : Attack =
 in  { id = "stat_block_skeleton"
     , kind = "statBlock"
     , name = "Skeleton"
+    , challengeRating = 0.25
     , provenance =
       { kind = "srd-5.2.1"
       , section = "Monsters/Monsters-P-S.md:1152-1175"

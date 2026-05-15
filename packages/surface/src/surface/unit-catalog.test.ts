@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import { Either, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
+import findFamiliarInput from "../../content/find_familiar.json";
 import {
   ActivationPhaseSchema,
   AudibleEffectSchema,
@@ -1439,6 +1440,97 @@ describe("SRD Unit catalog boundary", () => {
         }),
       ]);
     }
+  });
+
+  test("installs Find Familiar with catalog-backed familiar form references", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const findFamiliar = result.catalog.requireUnit("find_familiar");
+
+      expect(findFamiliar.kind).toBe("spell");
+      if (findFamiliar.kind !== "spell") {
+        throw new Error("Expected Find Familiar spell record.");
+      }
+      expect(findFamiliar.mechanics.family).toBe("spawned_creature");
+      if (findFamiliar.mechanics.family !== "spawned_creature") {
+        throw new Error("Expected spawned creature mechanics.");
+      }
+      expect(findFamiliar.mechanics.creature).toEqual({
+        kind: "familiar_form_catalog",
+        normalForms: [
+          { displayName: "Bat", formId: "bat", statBlockId: "stat_block_bat" },
+          { displayName: "Cat", formId: "cat", statBlockId: "stat_block_cat" },
+          {
+            displayName: "Frog",
+            formId: "frog",
+            statBlockId: "stat_block_frog",
+          },
+          {
+            displayName: "Hawk",
+            formId: "hawk",
+            statBlockId: "stat_block_hawk",
+          },
+          {
+            displayName: "Lizard",
+            formId: "lizard",
+            statBlockId: "stat_block_lizard",
+          },
+          {
+            displayName: "Octopus",
+            formId: "octopus",
+            statBlockId: "stat_block_octopus",
+          },
+          { displayName: "Owl", formId: "owl", statBlockId: "stat_block_owl" },
+          { displayName: "Rat", formId: "rat", statBlockId: "stat_block_rat" },
+          {
+            displayName: "Raven",
+            formId: "raven",
+            statBlockId: "stat_block_raven",
+          },
+          {
+            displayName: "Spider",
+            formId: "spider",
+            statBlockId: "stat_block_spider",
+          },
+          {
+            displayName: "Weasel",
+            formId: "weasel",
+            statBlockId: "stat_block_weasel",
+          },
+        ],
+        additionalNormalFormEligibility: {
+          kind: "challengeRatingZeroBeast",
+        },
+      });
+    }
+  });
+
+  test("rejects blank Find Familiar form catalog references", () => {
+    expect(
+      Either.isLeft(
+        decodeUnitRecordEither({
+          ...findFamiliarInput,
+          mechanics: {
+            ...findFamiliarInput.mechanics,
+            creature: {
+              kind: "familiar_form_catalog",
+              normalForms: [
+                {
+                  displayName: " ",
+                  formId: "",
+                  statBlockId: "\t",
+                },
+              ],
+              additionalNormalFormEligibility: {
+                kind: "challengeRatingZeroBeast",
+              },
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
   });
 
   test("authors Fighter 2 grants through canonical feature Unit ids", () => {

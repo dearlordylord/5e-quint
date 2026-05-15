@@ -669,6 +669,7 @@ function baseStatBlockRecord(id: string): StatBlockRecord {
     id,
     kind: "statBlock",
     name: id,
+    challengeRating: 0.25,
     provenance: {
       kind: "srd-5.2.1",
       section: "QMBT6 typed fixture",
