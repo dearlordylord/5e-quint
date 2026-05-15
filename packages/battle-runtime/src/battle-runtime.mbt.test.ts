@@ -3065,6 +3065,16 @@ function lightEmitterExpirationFromQuint(
       ),
     };
   }
+  if (tag === "ConcentrationLightEmitterExpiration") {
+    const fields = quintVariantRecordValue(
+      raw,
+      "ConcentrationLightEmitterExpiration",
+    );
+    return {
+      kind: "concentration",
+      combatantId: actorIdFromQuint(fields["actor"], "actor"),
+    };
+  }
 
   throw new Error(`Unknown Quint light emitter expiration variant: ${tag}`);
 }

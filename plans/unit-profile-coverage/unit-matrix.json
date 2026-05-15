@@ -2602,7 +2602,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime admission and reducer tests for Faerie Fire point-origin Cube targeting, Dexterity save outcomes, concentration cleanup, and one concentration-owned outline effect that grants sight-gated attack-roll Advantage and denies Invisible benefits for failed-save creatures. Dim Light remains deferred.",
+      "note": "Focused battle-runtime admission and reducer tests for Faerie Fire point-origin Cube targeting, Dexterity save outcomes, concentration cleanup, and one concentration-owned outline effect that grants sight-gated attack-roll Advantage and denies Invisible benefits for failed-save creatures.",
       "profileIds": [
         "spell.invocation-attack-roll-advantage-save"
       ],
@@ -2639,6 +2639,22 @@
         "spell.invocation-attack-roll-advantage-save"
       ],
       "taskId": "SRDINV58C"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Faerie Fire affected-creature and affected-object Dim Light emitters derived from concentration-owned outline effects.",
+      "profileIds": [
+        "spell.invocation-attack-roll-advantage-save"
+      ],
+      "taskId": "SRDINV87B"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission tests cover Faerie Fire affected-creature and affected-object Dim Light emitter projection plus concentration cleanup through the existing outline lifecycle.",
+      "profileIds": [
+        "spell.invocation-attack-roll-advantage-save"
+      ],
+      "taskId": "SRDINV87B"
     },
     {
       "claimKind": "qnt-proof",
@@ -7265,8 +7281,8 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "SRDINV70A",
-            "mechanic": "Dim Light emitted by affected creatures and objects"
+            "followUpTaskId": "SRDINV87E",
+            "mechanic": "map illumination, color rendering, illuminated-area projection, line of sight, and Darkvision interaction remain outside the object-emitter runtime boundary"
           }
         ],
         "profileIds": [
@@ -7280,7 +7296,8 @@
           "Dexterity save-gated affected creatures",
           "Concentration-owned outline effect that grants attack-roll Advantage against failed-save affected creatures when the attacker can see them and denies benefits from the Invisible condition",
           "caller-supplied object ids for objects in the Cube create concentration-owned object outline projections",
-          "object-target spell attacks consume caller-supplied object sight facts to grant attack-roll Advantage against outlined objects"
+          "object-target spell attacks consume caller-supplied object sight facts to grant attack-roll Advantage against outlined objects",
+          "affected creatures and objects shed concentration-owned Dim Light emitter facts in a 10-foot radius attached to their outline effects"
         ],
         "tag": "profile-subset-supported"
       },

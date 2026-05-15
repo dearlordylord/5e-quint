@@ -6,7 +6,7 @@ import {
   hasCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { type Round as RoundType } from "@dnd/shared/types";
+import { movementFeet, type Round as RoundType } from "@dnd/shared/types";
 import type {
   Ability,
   DamageType,
@@ -50,6 +50,7 @@ import type { BattleObjectId } from "../identity.ts";
 import { HIDEOUS_LAUGHTER_DURATION_TICKS } from "./domain-constants.ts";
 
 export const FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND = 60;
+export const FAERIE_FIRE_DIM_LIGHT_RADIUS_FEET = movementFeet(10);
 
 export type SaveGatedAttackRollAdvantageInvocation = Extract<
   SupportedSpellInvocation,
@@ -147,32 +148,76 @@ export function applySpellActiveEffects(
 export function battleLightEmitters(
   state: BattleState,
 ): readonly BattleLightEmitter[] {
-  const heldLightEmitters = [...state.combatants.values()].flatMap(
+  const outlineLightEmitters = [...state.combatants.values()].flatMap(
     (combatant): readonly BattleLightEmitter[] =>
       combatant.activeEffects.flatMap(
         (effect): readonly BattleLightEmitter[] =>
-          effect.kind === "heldLight"
+          effect.kind === "faerieFireOutline"
             ? [
-                {
-                  kind: "spellLightEmitter",
-                  sourceSpellId: effect.sourceSpellId,
-                  sourceCombatantId: effect.sourceCombatantId,
-                  attachment: {
-                    kind: "combatant",
-                    combatantId: combatant.combatantId,
-                  },
-                  emission: {
-                    kind: "brightAndDim",
-                    brightRadiusFeet: effect.brightRadiusFeet,
-                    dimAdditionalFeet: effect.dimAdditionalFeet,
-                  },
-                  expiresAt: effect.expiresAt,
-                },
+                faerieFireCombatantDimLightEmitter(
+                  combatant.combatantId,
+                  effect,
+                ),
               ]
-            : [],
+            : effect.kind === "heldLight"
+              ? [
+                  {
+                    kind: "spellLightEmitter",
+                    sourceSpellId: effect.sourceSpellId,
+                    sourceCombatantId: effect.sourceCombatantId,
+                    attachment: {
+                      kind: "combatant",
+                      combatantId: combatant.combatantId,
+                    },
+                    emission: {
+                      kind: "brightAndDim",
+                      brightRadiusFeet: effect.brightRadiusFeet,
+                      dimAdditionalFeet: effect.dimAdditionalFeet,
+                    },
+                    expiresAt: effect.expiresAt,
+                  },
+                ]
+              : [],
       ),
   );
-  return [...state.lightEmitters, ...heldLightEmitters];
+  return [
+    ...state.lightEmitters,
+    ...outlineLightEmitters,
+    ...state.objectOutlines.map(faerieFireObjectDimLightEmitter),
+  ];
+}
+
+function faerieFireCombatantDimLightEmitter(
+  combatantId: CombatantId,
+  effect: Extract<BattleActiveEffect, { readonly kind: "faerieFireOutline" }>,
+): BattleLightEmitter {
+  return {
+    kind: "spellLightEmitter",
+    sourceSpellId: effect.sourceSpellId,
+    sourceCombatantId: effect.sourceCombatantId,
+    attachment: { kind: "combatant", combatantId },
+    emission: {
+      kind: "dim",
+      radiusFeet: FAERIE_FIRE_DIM_LIGHT_RADIUS_FEET,
+    },
+    expiresAt: effect.expiresAt,
+  };
+}
+
+function faerieFireObjectDimLightEmitter(
+  outline: BattleObjectOutline,
+): BattleLightEmitter {
+  return {
+    kind: "spellLightEmitter",
+    sourceSpellId: outline.sourceSpellId,
+    sourceCombatantId: outline.sourceCombatantId,
+    attachment: { kind: "object", objectId: outline.objectId },
+    emission: {
+      kind: "dim",
+      radiusFeet: FAERIE_FIRE_DIM_LIGHT_RADIUS_FEET,
+    },
+    expiresAt: outline.expiresAt,
+  };
 }
 
 export function applySpellLightEmitterEffects(
@@ -583,7 +628,9 @@ export function applyHideousLaughterEffects(
   const effected: BattleState = { ...state, combatants };
   const incapacitatedTargetIds = targetIds.filter((targetId) => {
     const target = combatants.get(targetId);
-    return target !== undefined && hasCondition(target.conditions, "incapacitated");
+    return (
+      target !== undefined && hasCondition(target.conditions, "incapacitated")
+    );
   });
   return incapacitatedTargetIds.reduce(
     (nextState, targetId) => breakBattleConcentration(nextState, targetId),

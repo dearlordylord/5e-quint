@@ -475,6 +475,7 @@ module battleRuntime {
     | BrightAndDimLightEmission({ brightRadiusFeet: int, dimAdditionalFeet: int })
   type LightEmitterExpiration =
     | EndOfTurnLightEmitterExpiration({ actor: Actor, round: int })
+    | ConcentrationLightEmitterExpiration({ actor: Actor })
     | DurationLightEmitterExpiration({ durationTicks: int })
   type LightEmitter =
     | SpellLightEmitter({
@@ -1299,6 +1300,7 @@ module battleRuntime {
     emitters.filter(emitter => match emitter {
       | SpellLightEmitter(data) => match data.expiresAt {
           | EndOfTurnLightEmitterExpiration(expiresAt) => expiresAt.actor != actor or expiresAt.round != round
+          | ConcentrationLightEmitterExpiration(_) => true
           | DurationLightEmitterExpiration(_) => true
         }
       | ObjectInvisibleRevealLightEmitter(data) => data.expiresAtActor != actor or data.expiresAtRound != round
@@ -1319,6 +1321,7 @@ module battleRuntime {
             else
               emitter
           | EndOfTurnLightEmitterExpiration(_) => emitter
+          | ConcentrationLightEmitterExpiration(_) => emitter
         }
         | ObjectInvisibleRevealLightEmitter(_) => emitter
       })
@@ -1327,6 +1330,7 @@ module battleRuntime {
           | DurationLightEmitterExpiration(expiresAt) =>
             battleRuntimeTimedSpellEffectRemainsActive(expiresAt.durationTicks)
           | EndOfTurnLightEmitterExpiration(_) => true
+          | ConcentrationLightEmitterExpiration(_) => true
         }
         | ObjectInvisibleRevealLightEmitter(_) => true
       })
@@ -4927,6 +4931,8 @@ module battleRuntime {
 
   pure def produceFlameDurationTicks: int = 100
 
+  pure def faerieFireDimLightRadiusFeet: int = 10
+
   pure def lightBrightLightRadiusFeet: int = 20
 
   pure def lightDimLightAdditionalFeet: int = 20
@@ -5018,8 +5024,37 @@ module battleRuntime {
       })
       .fold(Set(), (emitters, emitterSet) => emitters.union(emitterSet))
 
+  pure def faerieFireCombatantDimLightEmitters(actor: Actor, effects: Set[ActiveEffect]): Set[LightEmitter] =
+    effects
+      .map(effect => match effect {
+        | FaerieFireOutline => Set(SpellLightEmitter({
+            source: Fighter,
+            sourceSpell: FaerieFire,
+            attachment: CombatantLightEmitter({ actor: actor }),
+            emission: DimLightEmission({ radiusFeet: faerieFireDimLightRadiusFeet }),
+            expiresAt: ConcentrationLightEmitterExpiration({ actor: Fighter }),
+          }))
+        | _ => Set()
+      })
+      .fold(Set(), (emitters, emitterSet) => emitters.union(emitterSet))
+
+  pure def faerieFireObjectDimLightEmitters(outlines: Set[ObjectOutline]): Set[LightEmitter] =
+    outlines.map(outline => match outline {
+      | FaerieFireObjectOutline(data) => SpellLightEmitter({
+          source: data.source,
+          sourceSpell: FaerieFire,
+          attachment: ObjectLightEmitter({ object: data.object }),
+          emission: DimLightEmission({ radiusFeet: faerieFireDimLightRadiusFeet }),
+          expiresAt: ConcentrationLightEmitterExpiration({ actor: data.source }),
+        })
+    })
+
   pure def battleRuntimeLightEmitters(state: BattleState): Set[LightEmitter] =
-    state.lightEmitters.union(produceFlameHeldLightEmitters(state.fighter.activeEffects))
+    state.lightEmitters
+      .union(produceFlameHeldLightEmitters(state.fighter.activeEffects))
+      .union(faerieFireCombatantDimLightEmitters(Fighter, state.fighter.activeEffects))
+      .union(faerieFireCombatantDimLightEmitters(Goblin, state.goblin.activeEffects))
+      .union(faerieFireObjectDimLightEmitters(state.objectOutlines))
 
   pure def fighterWithoutProduceFlameHeldLight(state: BattleState): Combatant =
     {
@@ -9553,10 +9588,25 @@ module battleRuntime {
       assert(lit.fighter.concentrating),
       assert(not(lit.fighter.activeEffects.contains(FaerieFireOutline))),
       assert(lit.goblin.activeEffects.contains(FaerieFireOutline)),
+      assert(faerieFireDimLightRadiusFeet == 10),
+      assert(battleRuntimeLightEmitters(lit).contains(SpellLightEmitter({
+        source: Fighter,
+        sourceSpell: FaerieFire,
+        attachment: CombatantLightEmitter({ actor: Goblin }),
+        emission: DimLightEmission({ radiusFeet: faerieFireDimLightRadiusFeet }),
+        expiresAt: ConcentrationLightEmitterExpiration({ actor: Fighter }),
+      }))),
       assert(activeEffectsDenyInvisibleBenefit(lit.goblin.activeEffects)),
       assert(spellAttackRollModeFromActiveEffects(Set(), lit.goblin.activeEffects, true) == AdvantageSpellAttackRoll),
       assert(spellAttackRollModeFromActiveEffects(Set(), lit.goblin.activeEffects, false) == NormalSpellAttackRoll),
       assert(not(broken.goblin.activeEffects.contains(FaerieFireOutline))),
+      assert(not(battleRuntimeLightEmitters(broken).contains(SpellLightEmitter({
+        source: Fighter,
+        sourceSpell: FaerieFire,
+        attachment: CombatantLightEmitter({ actor: Goblin }),
+        emission: DimLightEmission({ radiusFeet: faerieFireDimLightRadiusFeet }),
+        expiresAt: ConcentrationLightEmitterExpiration({ actor: Fighter }),
+      })))),
       assert(not(activeEffectsDenyInvisibleBenefit(broken.goblin.activeEffects))),
     }
   }
@@ -9566,11 +9616,25 @@ module battleRuntime {
     val broken = breakConcentrationSpellEffects(lit, Fighter)
     all {
       assert(lit.objectOutlines.contains(FaerieFireObjectOutline({ source: Fighter, object: FaerieFireObjectTarget }))),
+      assert(battleRuntimeLightEmitters(lit).contains(SpellLightEmitter({
+        source: Fighter,
+        sourceSpell: FaerieFire,
+        attachment: ObjectLightEmitter({ object: FaerieFireObjectTarget }),
+        emission: DimLightEmission({ radiusFeet: faerieFireDimLightRadiusFeet }),
+        expiresAt: ConcentrationLightEmitterExpiration({ actor: Fighter }),
+      }))),
       assert(objectOutlinesDenyInvisibleBenefit(lit.objectOutlines, FaerieFireObjectTarget)),
       assert(spellObjectAttackRollModeFromActiveEffects(Set(), lit.objectOutlines, FaerieFireObjectTarget, true) == AdvantageSpellAttackRoll),
       assert(spellObjectAttackRollModeFromActiveEffects(Set(), lit.objectOutlines, FaerieFireObjectTarget, false) == NormalSpellAttackRoll),
       assert(spellObjectAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), lit.objectOutlines, FaerieFireObjectTarget, true) == NormalSpellAttackRoll),
       assert(not(broken.objectOutlines.contains(FaerieFireObjectOutline({ source: Fighter, object: FaerieFireObjectTarget })))),
+      assert(not(battleRuntimeLightEmitters(broken).contains(SpellLightEmitter({
+        source: Fighter,
+        sourceSpell: FaerieFire,
+        attachment: ObjectLightEmitter({ object: FaerieFireObjectTarget }),
+        emission: DimLightEmission({ radiusFeet: faerieFireDimLightRadiusFeet }),
+        expiresAt: ConcentrationLightEmitterExpiration({ actor: Fighter }),
+      })))),
       assert(not(objectOutlinesDenyInvisibleBenefit(broken.objectOutlines, FaerieFireObjectTarget))),
     }
   }

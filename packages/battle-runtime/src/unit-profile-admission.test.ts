@@ -3726,9 +3726,7 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
     expect(hasCondition(target.conditions, "prone")).toBe(false);
     expect(hasCondition(target.conditions, "incapacitated")).toBe(false);
     expect(
-      target.activeEffects.some(
-        (effect) => effect.kind === "hideousLaughter",
-      ),
+      target.activeEffects.some((effect) => effect.kind === "hideousLaughter"),
     ).toBe(false);
   });
 
@@ -3836,7 +3834,10 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
         combatantId: spellCasterId,
         durationTicks: hideousLaughterDurationTicks,
       },
-    } satisfies Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }>;
+    } satisfies Extract<
+      BattleActiveEffect,
+      { readonly kind: "hideousLaughter" }
+    >;
     const secondEffect = {
       ...firstEffect,
       sourceCombatantId: spellTargetId,
@@ -3845,7 +3846,10 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
         combatantId: spellTargetId,
         durationTicks: hideousLaughterDurationTicks,
       },
-    } satisfies Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }>;
+    } satisfies Extract<
+      BattleActiveEffect,
+      { readonly kind: "hideousLaughter" }
+    >;
     const affectedTarget = battleCreatureStateWithKnockOutPreservedConditions(
       target,
       applyCondition(
@@ -4170,7 +4174,10 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
         combatantId: spellCasterId,
         durationTicks: hideousLaughterDurationTicks,
       },
-    } satisfies Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }>;
+    } satisfies Extract<
+      BattleActiveEffect,
+      { readonly kind: "hideousLaughter" }
+    >;
     const affectedTarget = battleCreatureStateWithKnockOutPreservedConditions(
       target,
       applyCondition(
@@ -4344,7 +4351,10 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
         combatantId: spellCasterId,
         durationTicks: hideousLaughterDurationTicks,
       },
-    } satisfies Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }>;
+    } satisfies Extract<
+      BattleActiveEffect,
+      { readonly kind: "hideousLaughter" }
+    >;
     const affectedTarget = battleCreatureStateWithKnockOutPreservedConditions(
       target,
       applyCondition(
@@ -4526,7 +4536,10 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
         combatantId: spellCasterId,
         durationTicks: hideousLaughterDurationTicks,
       },
-    } satisfies Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }>;
+    } satisfies Extract<
+      BattleActiveEffect,
+      { readonly kind: "hideousLaughter" }
+    >;
     const affectedTarget = battleCreatureStateWithKnockOutPreservedConditions(
       target,
       applyCondition(
@@ -8004,6 +8017,16 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
         }),
       ],
     );
+    expect(resolved.snapshot.lightEmitters).toEqual([
+      {
+        kind: "spellLightEmitter",
+        sourceSpellId: faerieFireUnitId,
+        sourceCombatantId: spellCasterId,
+        attachment: { kind: "combatant", combatantId: spellTargetId },
+        emission: { kind: "dim", radiusFeet: movementFeet(10) },
+        expiresAt: { kind: "concentration", combatantId: spellCasterId },
+      },
+    ]);
 
     const afterCasterTurn = resolveBattleSubject({
       state: resolved.state,
@@ -8228,9 +8251,22 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
         expiresAt: { kind: "concentration", combatantId: spellCasterId },
       },
     ]);
-    expect(
-      breakBattleConcentration(resolved.state, spellCasterId).objectOutlines,
-    ).toEqual([]);
+    expect(resolved.snapshot.lightEmitters).toEqual([
+      {
+        kind: "spellLightEmitter",
+        sourceSpellId: faerieFireUnitId,
+        sourceCombatantId: spellCasterId,
+        attachment: { kind: "object", objectId },
+        emission: { kind: "dim", radiusFeet: movementFeet(10) },
+        expiresAt: { kind: "concentration", combatantId: spellCasterId },
+      },
+    ]);
+    const concentrationBroken = breakBattleConcentration(
+      resolved.state,
+      spellCasterId,
+    );
+    expect(concentrationBroken.objectOutlines).toEqual([]);
+    expect(snapshotBattle(concentrationBroken).lightEmitters).toEqual([]);
   });
 
   test("faerie_fire object area facts require the Faerie Fire spell identity", () => {
@@ -9057,13 +9093,19 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
       casterClassLevels: [{ className: "druid", level: 17 }],
     });
     const act = bonusSpellAct({ state, spellId: shillelaghUnitId });
-    const cast = resolveBattleSubject({ state, subject: act.subject, fills: [] });
+    const cast = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [],
+    });
     expect(cast).toMatchObject({ tag: "resolved" });
     if (cast.tag !== "resolved") {
       throw new Error("Expected Shillelagh to resolve.");
     }
 
-    expect(cast.state.combatants.get(spellCasterId)?.activeEffects).toContainEqual(
+    expect(
+      cast.state.combatants.get(spellCasterId)?.activeEffects,
+    ).toContainEqual(
       expect.objectContaining({
         kind: "spellWeaponAttackOverride",
         sourceSpellId: shillelaghUnitId,
@@ -9129,12 +9171,18 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
       casterClassLevels: [{ className: "druid", level: 5 }],
     });
     const act = bonusSpellAct({ state, spellId: shillelaghUnitId });
-    const cast = resolveBattleSubject({ state, subject: act.subject, fills: [] });
+    const cast = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [],
+    });
     if (cast.tag !== "resolved") {
       throw new Error("Expected Club Shillelagh to resolve.");
     }
 
-    expect(cast.state.combatants.get(spellCasterId)?.activeEffects).toContainEqual(
+    expect(
+      cast.state.combatants.get(spellCasterId)?.activeEffects,
+    ).toContainEqual(
       expect.objectContaining({
         kind: "spellWeaponAttackOverride",
         sourceSpellId: shillelaghUnitId,
