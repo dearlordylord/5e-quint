@@ -22,7 +22,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | QNT proof coverage | 59/60 | 98.3% |
 | Runtime mapping coverage | 60/60 | 100% |
 | Runtime parity coverage | 60/60 | 100% |
-| Deterministic admission/projection coverage | 72/80 | 90% |
+| Deterministic admission/projection coverage | 73/80 | 91.3% |
 | Selected identity MBT coverage | 10/80 | 12.5% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
@@ -820,6 +820,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `searing_smite` | `spell.invocation-after-hit-timed-damage-save` | SRDINV31E | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `shocking_grasp` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28D | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `sorcerous_burst` | `spell.invocation-damage-save-or-attack` | SRDINV84B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `spare_the_dying` | `spell.invocation-make-stable` | SRDINV84C | `packages/battle-runtime/src/index.test.ts` |
 | `starry_wisp` | `spell.invocation-damage-save-or-attack` | SRDINV59B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `vicious_mockery` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28D | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `mage_armor` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |

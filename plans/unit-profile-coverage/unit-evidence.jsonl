@@ -80,6 +80,7 @@
 {"unitId":"produce_flame","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV32B","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"fire_bolt","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84A","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"sorcerous_burst","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84B","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
+{"unitId":"spare_the_dying","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84C","ownerPath":"packages/battle-runtime/src/index.test.ts"}}
 {"unitId":"hex","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84D","ownerPath":"packages/battle-runtime/src/index.test.ts"}}
 {"unitId":"starry_wisp","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV59B","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"light","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV70B","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}

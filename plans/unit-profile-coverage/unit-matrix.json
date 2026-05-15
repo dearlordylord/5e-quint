@@ -63,8 +63,8 @@
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 80,
-      "numerator": 72,
-      "percent": "90%"
+      "numerator": 73,
+      "percent": "91.3%"
     },
     "profileClassificationCoverage": {
       "denominator": 143,
@@ -9255,7 +9255,13 @@
         "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV84C"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [
