@@ -60,19 +60,25 @@ line-of-sight computation, or magical Darkness interactions.
 7. As a user, I want an unseen attacker to gain RAW Advantage only when the
    table has established that the target cannot see the attacker, so that
    hidden and invisible combatants behave correctly.
-8. As a user, I want Hide to depend on explicit table-established
+8. As a user, I want mutual unseen-attacker and unseen-target facts to cancel
+   to a normal attack roll, so that fighting in Darkness or similar symmetric
+   sight failure follows RAW Advantage/Disadvantage rules.
+9. As a Rogue player, I want sight-created Advantage or Disadvantage to feed
+   the final attack-roll mode used by Sneak Attack, so that Sneak Attack
+   eligibility follows the same roll facts as the attack itself.
+10. As a user, I want Hide to depend on explicit table-established
    circumstances, so that runtime does not guess whether terrain, foliage,
    cover, or line of sight makes hiding legal.
-9. As a developer, I want light, obscurement, cover, and sight to remain
+11. As a developer, I want light, obscurement, cover, and sight to remain
    separately named concepts, so that later Darkness, Darkvision, Blindsight,
    and Truesight work does not require undoing a collapsed model.
-10. As a developer, I want rule holes to carry reducer-derived requirements
+12. As a developer, I want rule holes to carry reducer-derived requirements
     and fills to carry only table facts, so that callers cannot accidentally
     restate or disagree with authored RAW constants.
-11. As a developer, I want source facts to be durable only when runtime owns
+13. As a developer, I want source facts to be durable only when runtime owns
     their lifetime, so that battle state does not duplicate table projection
     facts such as "A can see B right now."
-12. As a maintainer, I want Darkness called out as a deferred pressure case, so
+14. As a maintainer, I want Darkness called out as a deferred pressure case, so
     that the first slice does not falsely claim to cover magical Darkness.
 
 ## Implementation Decisions
@@ -103,6 +109,19 @@ line-of-sight computation, or magical Darkness interactions.
 - Durable battle state should not store pairwise `canSee` values. Sight is a
   projection witness supplied for a specific action, reaction, search, Hide, or
   targeting resolution.
+- Sight witnesses used for attacks should be directional. Model the two RAW
+  questions separately: whether the attacker can see the target and whether the
+  target can see the attacker. Do not infer one direction from the other.
+- Attack-roll mode must be computed from the final set of Advantage and
+  Disadvantage sources. If the attacker cannot see the target, the roll has a
+  Disadvantage source. If the target cannot see the attacker, the roll has an
+  Advantage source. If both apply, the attack roll has neither Advantage nor
+  Disadvantage because RAW cancellation applies.
+- Downstream rules that depend on attack-roll Advantage or Disadvantage must
+  consume the final combined attack-roll mode, not one sight source in
+  isolation. For example, Rogue Sneak Attack uses whether the attack roll has
+  Advantage and, for the ally-near-target alternative, whether the Rogue has
+  Disadvantage on the attack roll.
 - Runtime may store Hidden and Invisible state because those are battle
   mechanical facts with runtime-owned lifetimes and consequences.
 - Hide eligibility should be a table-supplied basis, not a runtime geometry
@@ -147,6 +166,9 @@ line-of-sight computation, or magical Darkness interactions.
 - Witness tests should cover:
   - unseen target imposes attack Disadvantage when witnessed;
   - unseen attacker grants attack Advantage when witnessed;
+  - mutual unseen attacker and unseen target cancel to a normal attack roll;
+  - the final combined attack-roll mode is the fact consumed by dependent
+    rules such as Sneak Attack eligibility;
   - Total Cover blocks direct targeting where the modeled rule requires it;
   - Hide eligibility succeeds only with an accepted prerequisite witness;
   - fills cannot restate or override reducer-owned RAW constants.
@@ -168,6 +190,10 @@ line-of-sight computation, or magical Darkness interactions.
 - SRD 5.2.1 "Unseen Attackers and Targets" defines unseen-target
   Disadvantage, unseen-attacker Advantage, and hidden-location reveal after an
   attack.
+- SRD 5.2.1 "Advantage/Disadvantage" defines cancellation: if both apply to
+  the same D20 Test, the roll has neither.
+- SRD 5.2.1 Rogue "Sneak Attack" depends on the attack roll's final Advantage
+  or Disadvantage state.
 - Produce Flame, Faerie Fire, Starry Wisp, Light, Dancing Lights, Continual
   Flame, Fog Cloud, Web, Insect Plague, Sleet Storm, and Stinking Cloud are the
   initial pressure examples for emitters and obscurement zones.
