@@ -74,7 +74,13 @@ let wizard =
               { kind = "prepared_from_spellbook"
               , choose = 4
               , spellIds =
-                [ "detect_magic", "mage_armor", "magic_missile", "sleep" ]
+                [ "detect_magic"
+                , "mage_armor"
+                , "magic_missile"
+                , "shield"
+                , "sleep"
+                , "thunderwave"
+                ]
               , changeOn = { kind = "long_rest" }
               }
           , spellSlotProjection =

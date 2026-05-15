@@ -34,6 +34,7 @@ import clericDivineOrderInput from "../../content/cleric_divine_order.json";
 import colorSprayInput from "../../content/color_spray.json";
 import commandInput from "../../content/command.json";
 import cureWoundsInput from "../../content/cure_wounds.json";
+import dancingLightsInput from "../../content/dancing_lights.json";
 import divineFavorInput from "../../content/divine_favor.json";
 import divineSmiteInput from "../../content/divine_smite.json";
 import druidDruidicInput from "../../content/druid_druidic.json";
@@ -323,6 +324,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     colorSprayInput,
     commandInput,
     cureWoundsInput,
+    dancingLightsInput,
     dissonantWhispersInput,
     divineFavorInput,
     divineSmiteInput,

@@ -73,7 +73,9 @@
         "detect_magic",
         "mage_armor",
         "magic_missile",
-        "sleep"
+        "shield",
+        "sleep",
+        "thunderwave"
       ]
     },
     "spellSlotProjection": {

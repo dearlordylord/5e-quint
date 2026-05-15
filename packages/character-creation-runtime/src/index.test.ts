@@ -3080,12 +3080,7 @@ describe("character creation finalization", () => {
             "sleep",
             "thunderwave",
           ],
-          preparedSpells: [
-            "detect_magic",
-            "mage_armor",
-            "magic_missile",
-            "sleep",
-          ],
+          preparedSpells: ["detect_magic", "magic_missile", "shield", "sleep"],
           spellcastingFocuses: ["arcane_focus", "spellbook"],
         },
       ],
@@ -4576,8 +4571,8 @@ function completeWizardDraft(): CharacterDraft {
         choiceFill(
           testUnitHoleId("class_wizard", "wizard_prepared_spell_choices"),
           "detect_magic",
-          "mage_armor",
           "magic_missile",
+          "shield",
           "sleep",
         ),
         choiceFill(
