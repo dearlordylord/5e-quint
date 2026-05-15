@@ -341,25 +341,25 @@ Keep it synchronized with the DAG table and task details.
       "number": 323,
       "id": "SRDINV87A",
       "status": "ready-for-implementation-after-light-research",
-      "title": "Harden Existing MCP Multi-Actor Battle Demo Without New Companion Architecture"
+      "title": "Promote Produce Flame Held-Light Runtime"
     },
     {
       "number": 324,
       "id": "SRDINV87B",
       "status": "ready-for-implementation-after-light-research",
-      "title": "Exercise Recently Promoted Level-1 Battle Units Through MCP"
+      "title": "Promote Faerie Fire Dim Light Emission Runtime"
     },
     {
       "number": 325,
       "id": "SRDINV87C",
-      "status": "ready-for-research",
-      "title": "Audit MCP Character Creation Readiness for All Level-1 Classes"
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote Hunter's Mark Finding Advantage Runtime"
     },
     {
       "number": 326,
       "id": "SRDINV87D",
       "status": "ready-for-implementation-after-light-research",
-      "title": "Improve MCP Battle Fact-Fill Ergonomics for Supported Runtime Facts"
+      "title": "Promote Sleep Non-Sleeper Auto-Success Runtime"
     },
     {
       "number": 327,
@@ -450,12 +450,12 @@ Keep it synchronized with the DAG table and task details.
 | 319   | SRDINV84I3 - Promote Familiar Turn and No-Attack Action Gate       | done | SRDINV84I2                                                                                                                                                                               | SRDINV84I4, SRDINV84I5, SRDINV86                                                                                   | [SRDINV84I research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV84I_FIND_FAMILIAR_COMPANION_RUNTIME_SPLIT_RESEARCH.md), [SRDINV85 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV85_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Find Familiar](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Action](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Initiative](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                           | Completed: present familiars are allied combatants with their own Initiative turn, action, Reaction, and Movement resources; supported non-attack actions remain available, while ordinary Find Familiar attacks and Opportunity Attacks are rejected.                                                                                                                                                                                                       |
 | 320   | SRDINV84I4 - Promote Telepathic Connection and Touch-Spell Delivery | done            | SRDINV84I2, SRDINV84I3                                                                                                                                                                   | SRDINV86                                                                                                           | [SRDINV84I research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV84I_FIND_FAMILIAR_COMPANION_RUNTIME_SPLIT_RESEARCH.md), [SRDINV85 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV85_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Find Familiar](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Telepathy](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [Reaction](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                             | Completed: promoted the 100-foot telepathic communication projection without shared-language requirement, caster Bonus Action shared senses until the start of the caster's next turn, and Touch-range spell delivery through a present familiar with atomic familiar Reaction spend. |
 | 321   | SRDINV84I5 - Promote Pact of the Chain Familiar Reaction Attack    | done            | SRDINV84I2, SRDINV84I3                                                                                                                                                                   | SRDINV86                                                                                                           | [SRDINV84I research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV84I_FIND_FAMILIAR_COMPANION_RUNTIME_SPLIT_RESEARCH.md), [SRDINV85 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV85_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [Pact of the Chain](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Warlock.md), [Find Familiar](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Reaction](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                         | Completed: Pact of the Chain now requires selected Pact access, a present owned familiar, one owner Attack-action attack to forgo, familiar Reaction availability, and a supported familiar Stat Block action attack; resolution spends the owner attack and familiar Reaction atomically through the shared Stat Block attack path.                                                                                                                                                                             |
-| 322   | SRDINV86 - Recursive Level-1 Battle Feature Planning Review        | done | SRDINV84I1, SRDINV84I2, SRDINV84I3, SRDINV84I4, SRDINV84I5                                                                                                                               | SRDINV87A                                                                                                           | [SRDINV86 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV86_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [SRDINV85 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV85_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [SRDINV84I research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV84I_FIND_FAMILIAR_COMPANION_RUNTIME_SPLIT_RESEARCH.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                      | Completed: reviewed SRDINV84I1-I5, added missing Find Familiar deterministic evidence, refreshed inventory artifacts, recorded remaining subset/unsupported battle-adjacent rows with owners, and closed the Find Familiar runtime lane; spawned-companion MCP admission remains deferred behind broader level-1 coverage.                                                                      |
-| 323   | SRDINV87A - Harden Existing MCP Multi-Actor Battle Demo Without New Companion Architecture | ready-for-implementation-after-light-research | SRDINV86                                                                                                                                                                                  | SRDINV87B, SRDINV87C, SRDINV87E                                                                                    | [end-user MCP vertical test](/workspace/typescript/dnd/packages/mcp/src/end-user-vertical.acceptance.test.ts), [manual MCP latest abilities notes](/workspace/typescript/dnd/plans/manual-mcp-battle-latest-abilities-20260514.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Harden the existing MCP battle demo that already starts several characters and monsters: verify it is fully client-driven, checks meaningful outcomes across multiple turns, and remains free of preexisting companion admission work. |
-| 324   | SRDINV87B - Exercise Recently Promoted Level-1 Battle Units Through MCP | ready-for-implementation-after-light-research | SRDINV87A                                                                                                                                                                                 | SRDINV87D, SRDINV87E                                                                                               | [SRDINV83 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV83_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [SRDINV86 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV86_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [end-user MCP vertical test](/workspace/typescript/dnd/packages/mcp/src/end-user-vertical.acceptance.test.ts), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Add MCP-level coverage for supported recently promoted level-1 runtime units, favoring public-table behavior over new mechanics: Sanctuary, Shillelagh, Hideous Laughter, Fog Cloud, Grease, Hex/Hunter's Mark, and class combat features that are already runtime-backed. |
-| 325   | SRDINV87C - Audit MCP Character Creation Readiness for All Level-1 Classes | ready-for-research | SRDINV86                                                                                                                                                                                  | SRDINV87D, SRDINV87E                                                                                               | [character MCP PRD](/workspace/typescript/dnd/PRD_CHARACTER_MCP_SURFACE.md), [character creation PRD](/workspace/typescript/dnd/PRD_CHARACTER_CREATION.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | For every SRD level-1 class, verify whether MCP character creation can select required level-1 battle units and produce a battle-admissible character; add missing public creation/finalization coverage or append precise follow-up tasks. |
-| 326   | SRDINV87D - Improve MCP Battle Fact-Fill Ergonomics for Supported Runtime Facts | ready-for-implementation-after-light-research | SRDINV87A, SRDINV87B, SRDINV87C                                                                                                                                                         | SRDINV87E                                                                                                           | [MCP battle tools](/workspace/typescript/dnd/packages/mcp/src), [SRDINV86 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV86_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [ASSUMPTIONS.md](/workspace/typescript/dnd/ASSUMPTIONS.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | If MCP scenarios still require internal-only knowledge to fill table-supplied spatial, visibility, held-item, or spell-resolution facts, make those existing facts discoverable and fillable through stable MCP labels without adding map geometry or duplicate runtime state. |
-| 327   | SRDINV87E - Recursive Level-1 Battle Coverage Planning Review      | ready-for-research | SRDINV87A, SRDINV87B, SRDINV87C, SRDINV87D                                                                                                                                               | next concrete batch unless accepted battle coverage is 100%                                                        | [SRDINV86 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV86_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Recompute the user's default acceptance metric: level-1 character creation content loads, battle-relevant units are available, and supported units are usable in battle through MCP/runtime; append the next runnable batch unless that metric is genuinely complete or every remainder is owner-accepted non-battle/non-runtime. |
+| 322   | SRDINV86 - Recursive Level-1 Battle Feature Planning Review        | done | SRDINV84I1, SRDINV84I2, SRDINV84I3, SRDINV84I4, SRDINV84I5                                                                                                                               | SRDINV87A                                                                                                           | [SRDINV86 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV86_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [SRDINV85 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV85_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [SRDINV84I research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV84I_FIND_FAMILIAR_COMPANION_RUNTIME_SPLIT_RESEARCH.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)                                                                                                                                                                      | Completed: reviewed SRDINV84I1-I5, added missing Find Familiar deterministic evidence, refreshed inventory artifacts, recorded remaining subset/unsupported battle-adjacent rows with owners, and closed the Find Familiar runtime lane.                                                                      |
+| 323   | SRDINV87A - Promote Produce Flame Held-Light Runtime               | ready-for-implementation-after-light-research | SRDINV86                                                                                                                                                                                  | SRDINV87E                                                                                                           | [SRDINV70A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV70A_LIGHT_ILLUMINATION_RUNTIME_BOUNDARY_RESEARCH.md), [Produce Flame](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-M-P.md), [Light](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Produce Flame's held flame as a source-owned Bright/Dim Light emitter using the existing object-light boundary, with recast/hurl/end cleanup and no map illumination derivation. |
+| 324   | SRDINV87B - Promote Faerie Fire Dim Light Emission Runtime         | ready-for-implementation-after-light-research | SRDINV86                                                                                                                                                                                  | SRDINV87E                                                                                                           | [SRDINV58B research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV58B_FAERIE_FIRE_OBJECT_LIGHT_BOUNDARY_RESEARCH.md), [SRDINV70A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV70A_LIGHT_ILLUMINATION_RUNTIME_BOUNDARY_RESEARCH.md), [Faerie Fire](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote Faerie Fire's affected-creature/object Dim Light emission as concentration-owned emitter facts attached to the existing outline effects, without deriving visibility, color rendering, or map illumination. |
+| 325   | SRDINV87C - Promote Hunter's Mark Finding Advantage Runtime        | ready-for-implementation-after-light-research | SRDINV86                                                                                                                                                                                  | SRDINV87E                                                                                                           | [Hunter's Mark](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md), [Favored Enemy](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Ranger.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote the caller-supplied Wisdom (Perception or Survival) Advantage roll mode to find the marked target for Hunter's Mark and Ranger Favored Enemy, reusing existing mark ownership and avoiding generic exploration search state. |
+| 326   | SRDINV87D - Promote Sleep Non-Sleeper Auto-Success Runtime         | ready-for-implementation-after-light-research | SRDINV86                                                                                                                                                                                  | SRDINV87E                                                                                                           | [Sleep](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md), [SRDINV38 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV38_SLEEP_SAVE_LOOP_RESEARCH.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Promote an executable non-sleeper fact for Sleep so creatures that do not sleep automatically succeed on Sleep saves, alongside the existing Exhaustion-immunity automatic-success path. |
+| 327   | SRDINV87E - Recursive Level-1 Battle Coverage Planning Review      | ready-for-research | SRDINV87A, SRDINV87B, SRDINV87C, SRDINV87D                                                                                                                                               | next concrete batch unless accepted battle coverage is 100%                                                        | [SRDINV86 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV86_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md), [SRD inventory report](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md), [UNIT_REPORT](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md), [ACTIVE_PLAN](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md), [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md) | Recompute the user's default acceptance metric: level-1 character creation content loads, battle-relevant units are available, and supported units are usable through promoted battle-runtime paths; append the next runnable batch unless that metric is genuinely complete or every remainder is owner-accepted non-battle/non-runtime. |
 
 ## Task Details
 
@@ -2067,9 +2067,9 @@ Completed: reviewed SRDINV84I1-I5, closed the remaining Find Familiar
 owner-evidence drift by adding deterministic admission/projection evidence,
 refreshed `SRD_UNIT_INVENTORY.md`, `srd-unit-inventory.json`,
 `UNIT_REPORT.md`, and `unit-matrix.json`, and closed the Find Familiar runtime
-lane. Spawned-companion MCP admission remains intentionally deferred behind
-broader level-1 battle coverage; SRDINV87A starts with MCP end-user scenario
-coverage that does not require new companion architecture.
+lane. The next batch resumes ordinary level-1 runtime closure work against
+remaining subset-supported rows, starting with light-emitter, finding-advantage,
+and Sleep automatic-success slices.
 
 Verification: RAW/source review for Find Familiar, Pact of the Chain, Action,
 Attack action, Bonus Action, Initiative, Magic Action, Reaction, and Telepathy
@@ -2077,141 +2077,142 @@ plus `UBIQUITOUS_LANGUAGE.md`; active-plan consistency across Ralph index, DAG
 table, and task details; `pnpm unit-profile-coverage:check --write`;
 `/simplify` convergence recorded in the SRDINV86 review.
 
-### Task 323 - SRDINV87A - Harden Existing MCP Multi-Actor Battle Demo Without New Companion Architecture
+### Task 323 - SRDINV87A - Promote Produce Flame Held-Light Runtime
 
 Status: `ready-for-implementation-after-light-research`
 
 Depends on: SRDINV86
-
-Blocks: SRDINV87B, SRDINV87C, SRDINV87E
-
-Research / plan:
-[end-user MCP vertical test](/workspace/typescript/dnd/packages/mcp/src/end-user-vertical.acceptance.test.ts),
-[manual MCP latest abilities notes](/workspace/typescript/dnd/plans/manual-mcp-battle-latest-abilities-20260514.md),
-[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md),
-[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
-
-Scope: inspect and harden the existing MCP end-user battle demo that already
-starts several characters and monsters through public MCP surfaces. Confirm the
-flow is fully client-driven from character creation through battle summary,
-remove any leftover test-only shortcuts, and add missing assertions where the
-current scenario is too shallow: multiple-turn order, character and monster HP
-changes, spell slot/resource consumption, reaction consumption, persisted
-character state after `end_battle`, and selected stat block provenance. Keep
-the scenario deterministic with stable ids and explicit dice/fact fills.
-
-Out of scope: preexisting companion admission, generic spawned-companion
-architecture, Find Steed, Summon Dragon, reanimation, animated objects,
-Polymorph-style target replacement, and map geometry derivation. If Find
-Familiar can be exercised only by adding companion admission, leave it out of
-this task and record the deferral.
-
-Verification: RAW/source review for every rule exercised by the scenario and
-`UBIQUITOUS_LANGUAGE.md`; deterministic MCP acceptance test using stable ids
-and explicit dice/fact fills; package-local MCP test run for the updated
-acceptance test; `/simplify` convergence, minimum two rounds unless the final
-changeset is trivial. MBT only if scenario work exposes a runtime behavior
-change.
-
-### Task 324 - SRDINV87B - Exercise Recently Promoted Level-1 Battle Units Through MCP
-
-Status: `ready-for-implementation-after-light-research`
-
-Depends on: SRDINV87A
-
-Blocks: SRDINV87D, SRDINV87E
-
-Research / plan:
-[SRDINV83 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV83_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md),
-[SRDINV86 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV86_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md),
-[end-user MCP vertical test](/workspace/typescript/dnd/packages/mcp/src/end-user-vertical.acceptance.test.ts),
-[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md),
-[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
-
-Scope: add MCP-level coverage for a focused subset of recently promoted
-level-1 runtime units that can be exercised without adding new mechanics.
-Prefer public-table behavior that improves confidence in the several-actor
-scenario: Sanctuary targeting interdiction, Shillelagh weapon projection,
-Hideous Laughter repeat saves, Fog Cloud caller-supplied obscurement, Grease
-caller-supplied area/save facts, Hex or Hunter's Mark damage riders, and
-class combat features that are already runtime-backed. Split coverage into
-small acceptance tests if one scenario would become brittle.
-
-Out of scope: unsupported map/pathfinding derivation, automatic area
-membership, preexisting companion admission, new spell implementations, and
-using MCP tests as a substitute for runtime parity tests when runtime behavior
-changes.
-
-Verification: RAW/source review for each exercised unit and
-`UBIQUITOUS_LANGUAGE.md`; MCP acceptance tests for the selected supported
-units; `pnpm --filter @dnd/mcp test -- end-user-vertical.acceptance.test.ts`
-or the package-local equivalent; update `UNIT_REPORT.md` only if evidence
-metadata changes; `/simplify` convergence, minimum two rounds unless the final
-changeset is trivial.
-
-### Task 325 - SRDINV87C - Audit MCP Character Creation Readiness for All Level-1 Classes
-
-Status: `ready-for-research`
-
-Depends on: SRDINV86
-
-Blocks: SRDINV87D, SRDINV87E
-
-Research / plan:
-[character MCP PRD](/workspace/typescript/dnd/PRD_CHARACTER_MCP_SURFACE.md),
-[character creation PRD](/workspace/typescript/dnd/PRD_CHARACTER_CREATION.md),
-[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md),
-[SRD_UNIT_INVENTORY.md](/workspace/typescript/dnd/plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md),
-[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
-
-Scope: for every SRD level-1 class, verify whether MCP character creation can
-select the required level-1 battle units and produce a character that can be
-admitted to battle. Add focused public MCP coverage for missing happy paths
-where the underlying content/runtime already exists. If a class cannot be made
-battle-admissible because a required runtime unit is missing, append a precise
-follow-up task instead of papering over the gap.
-
-Out of scope: companion architecture, new runtime mechanics, and broad UI work.
-This is an MCP creation/admission readiness audit, not a feature implementation
-catch-all.
-
-Verification: RAW/source review for class level-1 creation choices and
-`UBIQUITOUS_LANGUAGE.md`; public MCP tests or a generated audit fixture that
-covers every SRD level-1 class; package-local MCP test run; update
-`UNIT_REPORT.md` only if evidence metadata changes; `/simplify` convergence,
-minimum two rounds unless the final changeset is trivial.
-
-### Task 326 - SRDINV87D - Improve MCP Battle Fact-Fill Ergonomics for Supported Runtime Facts
-
-Status: `ready-for-implementation-after-light-research`
-
-Depends on: SRDINV87A, SRDINV87B, SRDINV87C
 
 Blocks: SRDINV87E
 
 Research / plan:
-[MCP battle tools](/workspace/typescript/dnd/packages/mcp/src),
-[SRDINV86 review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV86_RECURSIVE_LEVEL_1_BATTLE_FEATURE_REVIEW.md),
-[ASSUMPTIONS.md](/workspace/typescript/dnd/ASSUMPTIONS.md),
+[SRDINV70A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV70A_LIGHT_ILLUMINATION_RUNTIME_BOUNDARY_RESEARCH.md),
+[Produce Flame](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-M-P.md),
+[Light](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md),
 [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
 
-Scope: inspect the expanded MCP scenario from SRDINV87B and identify any
-supported runtime fact that still requires test authors or MCP users to know
-internal hole ids, runtime-only field names, or private spell-resolution
-structure. Improve the MCP discovery/fill surface so table-supplied facts for
-supported level-1 behavior are exposed with stable labels and enough context:
-current actor, target ids, action/spell source, held-item facts, visibility or
-obscurement facts, and caller-supplied spatial facts where the runtime already
-accepts them. Reuse existing runtime facts and holes; do not create a parallel
-MCP state model.
+Scope: promote Produce Flame's held flame as a source-owned Bright Light
+20-foot radius plus Dim Light 20 additional feet emitter while the held-flame
+state is active. Reuse the existing Light object-emitter/runtime projection
+where possible instead of adding a parallel illumination state. Ensure the
+emitter ends when the flame is hurled, dismissed/expired, or replaced by a
+new held flame, and that the hurl attack path cannot leave stale light facts.
 
-Out of scope: deriving geometry, line of sight, area membership, inventory,
-or AI command behavior that the runtime intentionally leaves caller-supplied.
+Out of scope: map illumination rendering, opaque-cover suppression,
+Darkvision-adjusted sight, colored-light presentation, object targeting beyond
+the already promoted hurl branch, and generic light-source architecture beyond
+the facts needed by Produce Flame.
 
-Verification: targeted MCP tests showing the new labels/context are discoverable
-and fill the existing runtime facts; no duplicated runtime state in MCP;
-package-local MCP test run; `/simplify` convergence, minimum two rounds unless
-the final changeset is trivial. MBT only if runtime behavior changes.
+Verification: RAW/source review for Produce Flame's held flame light text,
+Light emitter vocabulary, and `UBIQUITOUS_LANGUAGE.md`; package-local Quint
+updates before runtime divergence; focused runtime tests for held-light
+projection, recast/replacement, hurl cleanup, expiration cleanup, and no stale
+emitter facts; `pnpm unit-profile-coverage:check --write` if evidence changes;
+`pnpm quality`; `/simplify` convergence, minimum two rounds unless the final
+changeset is trivial. MBT only if active-effect sequencing changes require it.
+
+### Task 324 - SRDINV87B - Promote Faerie Fire Dim Light Emission Runtime
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: SRDINV86
+
+Blocks: SRDINV87E
+
+Research / plan:
+[SRDINV58B research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV58B_FAERIE_FIRE_OBJECT_LIGHT_BOUNDARY_RESEARCH.md),
+[SRDINV70A research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV70A_LIGHT_ILLUMINATION_RUNTIME_BOUNDARY_RESEARCH.md),
+[Faerie Fire](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Faerie Fire's affected-creature and affected-object Dim Light
+emission as concentration-owned emitter facts attached to existing outline
+effects. Reuse the shared light/emitter projection from Light where possible;
+the outline and light facts should clean up together on Concentration end,
+expiration, or affected-object/creature cleanup.
+
+Out of scope: deriving who is inside the Cube, map illumination, color
+rendering, line of sight, Darkvision interaction, and any change to the
+already promoted attack-Advantage or Invisible-benefit denial behavior.
+
+Verification: RAW/source review for Faerie Fire's Dim Light emission, object
+outline wording, and `UBIQUITOUS_LANGUAGE.md`; package-local Quint updates
+before runtime divergence; focused runtime tests for creature/object emitter
+projection and Concentration cleanup; `pnpm unit-profile-coverage:check --write`
+if evidence changes; `pnpm quality`; `/simplify` convergence, minimum two
+rounds unless the final changeset is trivial. MBT only if active-effect
+sequencing changes require it.
+
+### Task 325 - SRDINV87C - Promote Hunter's Mark Finding Advantage Runtime
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: SRDINV86
+
+Blocks: SRDINV87E
+
+Research / plan:
+[Hunter's Mark](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[Favored Enemy](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Ranger.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote Hunter's Mark's Advantage on Wisdom (Perception or Survival)
+checks to find the marked target as a roll-mode projection tied to the existing
+mark owner/effect. The projection should apply only while the mark is active,
+only for the caster who owns the mark, only for the marked target, and only for
+the two named skills. Ranger Favored Enemy should benefit through its existing
+Hunter's Mark access and free-cast path without duplicating feature state.
+
+Out of scope: generic exploration search state, automatic target tracking,
+hidden-object discovery, non-Hunter's-Mark ability-check advantage, and
+later-level Favored Enemy free-cast count scaling.
+
+Verification: RAW/source review for Hunter's Mark finding Advantage, Favored
+Enemy spell access, Ability Check/Skill vocabulary, and
+`UBIQUITOUS_LANGUAGE.md`; package-local Quint updates before runtime
+divergence if the authoritative model owns ability-check roll modes; focused
+runtime tests for Perception/Survival Advantage, nonmatching skills, non-owner
+checks, mark transfer/removal cleanup, and Favored Enemy free-cast ownership;
+`pnpm unit-profile-coverage:check --write` if evidence changes; `pnpm quality`;
+`/simplify` convergence, minimum two rounds unless the final changeset is
+trivial. MBT only if runtime roll-mode sequencing changes require it.
+
+### Task 326 - SRDINV87D - Promote Sleep Non-Sleeper Auto-Success Runtime
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: SRDINV86
+
+Blocks: SRDINV87E
+
+Research / plan:
+[Sleep](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-S-Z.md),
+[SRDINV38 research](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV38_SLEEP_SAVE_LOOP_RESEARCH.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: promote an executable non-sleeper fact for Sleep so targets that do not
+sleep automatically succeed on Sleep saves, alongside the existing
+Exhaustion-immunity automatic-success path. Prefer a typed caller-supplied or
+Stat Block-derived sleep-eligibility fact that narrows before the save-hole
+workflow, so non-sleepers do not receive unnecessary Wisdom save holes.
+
+Out of scope: broad creature biology modeling, monster catalog inference beyond
+facts already present or explicitly supplied, Unconscious lifecycle changes,
+damage cleanup changes, shake-awake changes, and social/exploration sleep
+semantics.
+
+Verification: RAW/source review for Sleep automatic success, Unconscious,
+Incapacitated, and `UBIQUITOUS_LANGUAGE.md`; package-local Quint updates before
+runtime divergence; focused runtime tests for non-sleeper automatic success,
+normal target save holes, Exhaustion-immunity behavior preservation, repeat
+save lifecycle preservation, and cleanup behavior; `pnpm
+unit-profile-coverage:check --write` if evidence changes; `pnpm quality`;
+`/simplify` convergence, minimum two rounds unless the final changeset is
+trivial. MBT only if Sleep sequencing changes require it.
 
 ### Task 327 - SRDINV87E - Recursive Level-1 Battle Coverage Planning Review
 
@@ -2230,13 +2231,13 @@ Research / plan:
 
 Scope: recompute the user's default acceptance metric: level-1 character
 creation content loads, all battle-related level-1 units are available on
-eligible characters, and units with battle effects are usable in battle through
-the MCP/runtime path unless the unit has no battle effect and is therefore
-useful by catalog admission alone. Compare that metric to the generated Unit
-runtime metrics, the SRD inventory rows, the supported executable Unit set, and
-the MCP acceptance surface. Append the next concrete runnable batch unless the
-metric is genuinely 100% or every remaining row is explicitly owner-accepted
-as non-battle/non-runtime.
+eligible characters, and units with battle effects are usable through the
+promoted battle-runtime path unless the unit has no battle effect and is
+therefore useful by catalog admission alone. Compare that metric to the
+generated Unit runtime metrics, the SRD inventory rows, the supported
+executable Unit set, and the battle-runtime acceptance surface. Append the
+next concrete runnable batch unless the metric is genuinely 100% or every
+remaining row is explicitly owner-accepted as non-battle/non-runtime.
 
 Out of scope: treating ACTIVE_PLAN exhaustion, a closed lane, or supported
 profile coverage as product completion. If the acceptance metric is not 100%,
