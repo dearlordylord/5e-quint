@@ -7,6 +7,7 @@ import {
 } from "@dnd/shared/types";
 import type { BattleReactionTrigger } from "../battle-reaction-triggers.ts";
 import {
+  ATTACK_TARGET_HOLE_ID,
   isTargetListSpellInvocation,
   openAfterDamageSequenceReactionWindow,
   spendReaction,
@@ -15,6 +16,7 @@ import {
   type ActionSpellBattleResolutionInput,
   type BattleHoleId,
   type BattleAfterDamageEvent,
+  type BattleFill,
   type BattleResolutionResult,
   type BattleSpellAreaChoice,
   type BattleSpellSavingThrowOutcomeHole,
@@ -42,6 +44,7 @@ import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { applyBattleMovement } from "./readied-release.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
+import { sanctuaryTargetingInterdictionCheck } from "./sanctuary-targeting-interdiction.ts";
 import {
   applyCommandPendingEffects,
   applyFailedSaveAttackRollAdvantageEffects,
@@ -67,7 +70,7 @@ import {
 
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 
-import { type SpellFillSet } from "./spells-resolve-fill-set.ts";
+import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
 
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import {
@@ -493,6 +496,91 @@ export function resolveSaveGateDamageSpellAct(input: {
         "invalidFill",
         "Spell target must be a combatant within the selected spell's supported range.",
       );
+    }
+    const sanctuaryCheck = sanctuaryTargetingInterdictionCheck({
+      state: input.input.state,
+      triggeringCombatantId: input.actorId,
+      wardedCombatantId: target.combatantId,
+      triggeringTargetEventId: ATTACK_TARGET_HOLE_ID,
+      fills: input.input.fills,
+    });
+    if (sanctuaryCheck.tag === "needsHoles") {
+      return needsHolesResult(input.input.state, input.input.subject, [
+        sanctuaryCheck.hole,
+      ]);
+    }
+    if (sanctuaryCheck.tag === "invalid") {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        sanctuaryCheck.message,
+      );
+    }
+    if (sanctuaryCheck.tag === "lost") {
+      return spendSpellCastResources({
+        state: input.input.state,
+        actorId: input.actorId,
+        invocation: input.invocation,
+        errorState: input.input.state,
+      });
+    }
+    if (sanctuaryCheck.tag === "newTarget") {
+      const replacementTarget = input.input.state.combatants.get(
+        sanctuaryCheck.targetId,
+      );
+      if (
+        replacementTarget === undefined ||
+        !spellTargetIsLegal(
+          input.input.state,
+          input.actorId,
+          replacementTarget.combatantId,
+          input.invocation,
+          sanctuaryCheck.spatialFacts,
+        )
+      ) {
+        return invalidResult(
+          input.input.state,
+          "invalidFill",
+          "Sanctuary replacement spell target must be legal for the selected spell.",
+        );
+      }
+      const originalTargetFill = input.input.fills.find(
+        (
+          fill,
+        ): fill is Extract<BattleFill, { readonly kind: "targetChoice" }> =>
+          fill.kind === "targetChoice" && fill.value === target.combatantId,
+      );
+      if (originalTargetFill === undefined) {
+        return invalidResult(
+          input.input.state,
+          "invalidFill",
+          "Sanctuary replacement requires the original spell target fill.",
+        );
+      }
+      const rewrittenFills = input.input.fills
+        .filter((fill) => fill.kind !== "sanctuaryInterdictionOutcome")
+        .map((fill) =>
+          fill === originalTargetFill
+            ? {
+                ...fill,
+                value: replacementTarget.combatantId,
+                spatialFacts: sanctuaryCheck.spatialFacts,
+              }
+            : fill,
+        );
+      const rewrittenFillSet = spellFillSet(rewrittenFills, input.invocation);
+      if (rewrittenFillSet.tag !== "ok") {
+        return invalidResult(
+          input.input.state,
+          "invalidFill",
+          rewrittenFillSet.message,
+        );
+      }
+      return resolveSaveGateDamageSpellAct({
+        ...input,
+        input: { ...input.input, fills: rewrittenFills },
+        fillSet: rewrittenFillSet,
+      });
     }
   }
   if (input.fillSet.attackRoll !== undefined) {

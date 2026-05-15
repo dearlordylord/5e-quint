@@ -23,6 +23,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
+  snapshotBattle,
 } from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
 import {
@@ -51,6 +52,7 @@ import {
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
+import { sanctuaryTargetingInterdictionCheck } from "./sanctuary-targeting-interdiction.ts";
 import {
   chainedSpellAttackRollHole,
   chainedSpellAttackRollHoleId,
@@ -194,6 +196,107 @@ export function resolveChainedSpellAttackDamageAct(input: {
       );
     }
     targeted = [...targeted, target.combatantId];
+
+    const targetEventId = chainedSpellTargetHoleId(input.invocation, stepIndex);
+    const sanctuaryCheck = sanctuaryTargetingInterdictionCheck({
+      state: replayState,
+      triggeringCombatantId: input.actorId,
+      wardedCombatantId: target.combatantId,
+      triggeringTargetEventId: targetEventId,
+      fills: input.input.fills,
+    });
+    if (sanctuaryCheck.tag === "needsHoles") {
+      return needsHolesResult(replayState, input.input.subject, [
+        sanctuaryCheck.hole,
+      ]);
+    }
+    if (sanctuaryCheck.tag === "invalid") {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        sanctuaryCheck.message,
+      );
+    }
+    if (sanctuaryCheck.tag === "lost") {
+      if (input.spendsCastResources === false) {
+        return {
+          tag: "resolved",
+          state: replayState,
+          snapshot: snapshotBattle(replayState),
+        };
+      }
+      return spendSpellCastResources({
+        state: replayState,
+        actorId: input.actorId,
+        invocation: input.invocation,
+        errorState: input.input.state,
+      });
+    }
+    if (sanctuaryCheck.tag === "newTarget") {
+      const replacementTarget = replayState.combatants.get(
+        sanctuaryCheck.targetId,
+      );
+      const replacementIsLegal =
+        replacementTarget !== undefined &&
+        (stepIndex === 0
+          ? spellTargetIsLegal(
+              replayState,
+              input.actorId,
+              replacementTarget.combatantId,
+              input.invocation,
+              sanctuaryCheck.spatialFacts,
+            )
+          : chainedSpellLeapTargetIsLegal(
+              input.invocation,
+              targeted[stepIndex - 1],
+              replacementTarget.combatantId,
+              sanctuaryCheck.spatialFacts,
+            ));
+      if (replacementTarget === undefined || !replacementIsLegal) {
+        return invalidResult(
+          input.input.state,
+          "invalidFill",
+          stepIndex === 0
+            ? "Sanctuary replacement Chromatic Orb target must be legal for the selected spell."
+            : "Sanctuary replacement Chromatic Orb leap target must be different and within 30 feet of the previous target.",
+        );
+      }
+      const originalTargetFill = input.input.fills.find(
+        (
+          fill,
+        ): fill is Extract<BattleFill, { readonly kind: "targetChoice" }> =>
+          fill.kind === "targetChoice" && fill.holeId === targetEventId,
+      );
+      if (originalTargetFill === undefined) {
+        return invalidResult(
+          input.input.state,
+          "invalidFill",
+          "Sanctuary replacement requires the original Chromatic Orb target fill.",
+        );
+      }
+      const fills = input.input.fills.map(
+        (fill): BattleFill =>
+          fill === originalTargetFill
+            ? {
+                ...fill,
+                value: replacementTarget.combatantId,
+                spatialFacts: sanctuaryCheck.spatialFacts,
+              }
+            : fill,
+      );
+      const replacementFillSet = chainedSpellFillSet(fills, input.invocation);
+      if (replacementFillSet.tag === "invalid") {
+        return invalidResult(
+          input.input.state,
+          "invalidFill",
+          replacementFillSet.message,
+        );
+      }
+      return resolveChainedSpellAttackDamageAct({
+        ...input,
+        input: { ...input.input, fills },
+      });
+    }
 
     if (stepIndex === 0 && input.opensSpellCastReactionWindow !== false) {
       const spellCastReactionWindow = maybeOpenReactionWindow(
@@ -688,6 +791,9 @@ export function chainedSpellFillSet(
         };
       }
       damageDispositions.push(fill);
+      continue;
+    }
+    if (fill.kind === "sanctuaryInterdictionOutcome") {
       continue;
     }
     return {

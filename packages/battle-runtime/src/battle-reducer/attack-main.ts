@@ -91,9 +91,11 @@ import {
 } from "./domain-constants.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
+import { hideousLaughterDamageRepeatSaveFillCheck } from "./hideous-laughter-repeat-save.ts";
 import {
-  hideousLaughterDamageRepeatSaveFillCheck,
-} from "./hideous-laughter-repeat-save.ts";
+  battleStateAfterSanctuaryEarlyEndForActor,
+  sanctuaryTargetingInterdictionCheck,
+} from "./sanctuary-targeting-interdiction.ts";
 
 import {
   attackCanCarryKnockOutChoice,
@@ -106,6 +108,7 @@ import {
   selectedWeaponDamageDiceRollChoice,
 } from "./statblock-attacks.ts";
 
+import { ATTACK_TARGET_HOLE_ID } from "../battle-reducer.ts";
 import type {
   AttackBattleResolutionInput,
   BattleAttackHostSubject,
@@ -218,6 +221,76 @@ export function resolveSelectedAttackProcedure(
     );
   }
 
+  const sanctuaryCheck = sanctuaryTargetingInterdictionCheck({
+    state: input.state,
+    triggeringCombatantId: input.subject.actorId,
+    wardedCombatantId: target.combatantId,
+    triggeringTargetEventId: ATTACK_TARGET_HOLE_ID,
+    fills: input.fills,
+  });
+  if (sanctuaryCheck.tag === "needsHoles") {
+    return needsHolesResult(input.state, input.subject, [sanctuaryCheck.hole]);
+  }
+  if (sanctuaryCheck.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", sanctuaryCheck.message);
+  }
+  if (sanctuaryCheck.tag === "lost") {
+    return spendAttackProcedure(input.state, input.subject.actorId, attack);
+  }
+  if (sanctuaryCheck.tag === "newTarget") {
+    const replacementTarget = input.state.combatants.get(
+      sanctuaryCheck.targetId,
+    );
+    if (
+      replacementTarget === undefined ||
+      replacementTarget.combatantId === input.subject.actorId ||
+      !attackTargetIsLegal(
+        input.state,
+        input.subject.actorId,
+        replacementTarget.combatantId,
+        attack,
+        sanctuaryCheck.spatialFacts,
+      )
+    ) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Sanctuary replacement attack target must be legal for the selected attack.",
+      );
+    }
+    const originalTargetFill = input.fills.find(
+      (fill): fill is Extract<BattleFill, { readonly kind: "targetChoice" }> =>
+        fill.kind === "targetChoice" && fill.value === target.combatantId,
+    );
+    if (originalTargetFill === undefined) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Sanctuary replacement requires the original attack target fill.",
+      );
+    }
+    return resolveSelectedAttackProcedure(
+      {
+        ...input,
+        fills: [
+          ...input.fills
+            .filter((fill) => fill.kind !== "sanctuaryInterdictionOutcome")
+            .map((fill) =>
+              fill === originalTargetFill
+                ? {
+                    ...fill,
+                    value: replacementTarget.combatantId,
+                    spatialFacts: sanctuaryCheck.spatialFacts,
+                  }
+                : fill,
+            ),
+        ],
+      },
+      attack,
+      spendAttackProcedure,
+    );
+  }
+
   if (fillSet.attackRoll == null) {
     if (fillSet.damageRoll != null || fillSet.damageDispositionFilled) {
       return invalidResult(
@@ -326,10 +399,14 @@ export function resolveSelectedAttackProcedure(
     );
   }
   const hit = ordinaryHit || missToHitReplacement !== null;
+  const sanctuaryAttackRollState = battleStateAfterSanctuaryEarlyEndForActor(
+    input.state,
+    input.subject.actorId,
+  );
   const attackRolledState = recordAttackRollMissToHitReplacementUsed(
     consumeHelpAttackForAttackRoll(
       recordAttackRollOngoingFeatures(
-        revealHidden(input.state, input.subject.actorId),
+        revealHidden(sanctuaryAttackRollState, input.subject.actorId),
         input.subject.actorId,
         target.combatantId,
         activatedOngoingFeatureProfile,
@@ -651,12 +728,11 @@ export function resolveSelectedAttackProcedure(
         "Concentration Saving Throw fill is only valid for a concentrating damaged target.",
       );
     }
-    const hideousLaughterSaveCheck =
-      hideousLaughterDamageRepeatSaveFillCheck({
-        target: spellReduction.target,
-        damageAmount: reducedFixedDamageAmount,
-        fills: fillSet.hideousLaughterDamageRepeatSaves,
-      });
+    const hideousLaughterSaveCheck = hideousLaughterDamageRepeatSaveFillCheck({
+      target: spellReduction.target,
+      damageAmount: reducedFixedDamageAmount,
+      fills: fillSet.hideousLaughterDamageRepeatSaves,
+    });
     if (hideousLaughterSaveCheck.tag === "needsHoles") {
       return needsHolesResult(sapRedirectState, input.subject, [
         ...hideousLaughterSaveCheck.holes,
@@ -954,12 +1030,11 @@ export function resolveSelectedAttackProcedure(
         "Concentration Saving Throw fill is only valid for a concentrating damaged target.",
       );
     }
-    const hideousLaughterSaveCheck =
-      hideousLaughterDamageRepeatSaveFillCheck({
-        target: spellReduction.target,
-        damageAmount: reducedDamageAmount,
-        fills: fillSet.hideousLaughterDamageRepeatSaves,
-      });
+    const hideousLaughterSaveCheck = hideousLaughterDamageRepeatSaveFillCheck({
+      target: spellReduction.target,
+      damageAmount: reducedDamageAmount,
+      fills: fillSet.hideousLaughterDamageRepeatSaves,
+    });
     if (hideousLaughterSaveCheck.tag === "needsHoles") {
       return needsHolesResult(sapRedirectState, input.subject, [
         ...hideousLaughterSaveCheck.holes,

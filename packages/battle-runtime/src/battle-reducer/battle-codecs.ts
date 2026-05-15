@@ -43,6 +43,7 @@ import type {
   BattleObjectIgnitionOutcome,
   BattleShovePushOutcome,
   BattleSpellAreaChoice,
+  BattleTargetSpatialFact,
   SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import {
@@ -458,6 +459,185 @@ const BattleObjectIgnitionDispositionSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("flammableUnattended") }),
   Schema.Struct({ kind: Schema.Literal("notFlammable") }),
   Schema.Struct({ kind: Schema.Literal("wornOrCarried") }),
+);
+
+const BattleTargetSpatialFactSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("attackTargetInMeleeReach"),
+    actorId: CombatantId,
+    targetId: CombatantId,
+    attackName: Schema.String,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("cleaveSecondTargetWithin5FeetOfFirstTarget"),
+    attackerId: CombatantId,
+    firstTargetId: CombatantId,
+    secondTargetId: CombatantId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("attackTargetInRangedRange"),
+    actorId: CombatantId,
+    targetId: CombatantId,
+    attackName: Schema.String,
+    rangeBand: Schema.Literal(...BATTLE_ATTACK_RANGE_BANDS),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("spellTarget"),
+    casterId: CombatantId,
+    targetId: CombatantId,
+    spellId: Schema.String,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("spellTargetKnownWilling"),
+    casterId: CombatantId,
+    targetId: CombatantId,
+    spellId: Schema.String,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("spellObjectTarget"),
+    casterId: CombatantId,
+    objectId: BattleObjectId,
+    spellId: Schema.String,
+    rangeFeet: MovementFeet,
+    armorClass: BattleArmorClassSchema,
+    damageDisposition: BattleObjectDamageDispositionSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("spellObjectIgnition"),
+    casterId: CombatantId,
+    objectId: BattleObjectId,
+    spellId: Schema.String,
+    disposition: BattleObjectIgnitionDispositionSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("spellObjectTargetSight"),
+    casterId: CombatantId,
+    objectId: BattleObjectId,
+    spellId: Schema.String,
+    attackerCanSeeObject: Schema.Boolean,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("spellObjectLightTarget"),
+    casterId: CombatantId,
+    objectId: BattleObjectId,
+    spellId: Schema.String,
+    size: Schema.Literal(
+      "tiny",
+      "small",
+      "medium",
+      "large",
+      "huge",
+      "gargantuan",
+    ),
+    wornOrCarried: Schema.Union(
+      Schema.Struct({ kind: Schema.Literal("nobody") }),
+      Schema.Struct({ kind: Schema.Literal("caster") }),
+      Schema.Struct({
+        kind: Schema.Literal("someoneElse"),
+        relation: Schema.Literal("worn", "carried"),
+      }),
+    ),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("spellLeapTargetWithinRange"),
+    previousTargetId: CombatantId,
+    targetId: CombatantId,
+    spellId: Schema.String,
+    rangeFeet: MovementFeet,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("spellTargetsInPointOriginSphere"),
+    casterId: CombatantId,
+    spellId: Schema.String,
+    areaId: Schema.String,
+    radiusFeet: MovementFeet,
+    targetIds: Schema.Array(CombatantId),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("helpAttackTargetWithin5Feet"),
+    helperId: CombatantId,
+    targetEnemyId: CombatantId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("meleeRedirectTargetWithin5Feet"),
+    sourceId: CombatantId,
+    targetId: CombatantId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("rangedRedirectTargetWithin60FeetWithoutTotalCover"),
+    sourceId: CombatantId,
+    targetId: CombatantId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("bardicInspirationTargetWithinRange"),
+    bardId: CombatantId,
+    targetId: CombatantId,
+    unitId: Schema.String,
+    rangeFeet: MovementFeet,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("bardicInspirationTargetCanHear"),
+    bardId: CombatantId,
+    targetId: CombatantId,
+    unitId: Schema.String,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("reactionRollOrDamageReductionTargetWithinRange"),
+    reactorId: CombatantId,
+    targetId: CombatantId,
+    unitId: Schema.String,
+    rangeFeet: MovementFeet,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("reactionSpellDamagerVisibleWithinRange"),
+    reactorId: CombatantId,
+    damageSourceId: CombatantId,
+    spellId: Schema.String,
+    rangeFeet: MovementFeet,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("featherFallTriggerSelfOrVisibleCreatureWithinRange"),
+    reactorId: CombatantId,
+    fallingCreatureId: CombatantId,
+    spellId: Schema.String,
+    rangeFeet: MovementFeet,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("featherFallTargetFallingWithinRange"),
+    casterId: CombatantId,
+    targetId: CombatantId,
+    spellId: Schema.String,
+    rangeFeet: MovementFeet,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("grappleTargetWithinReach"),
+    grapplerId: CombatantId,
+    targetId: CombatantId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("shoveTargetWithinReach"),
+    shoverId: CombatantId,
+    targetId: CombatantId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("spellRestraintEscapeActorWithinTargetReach"),
+    actorId: CombatantId,
+    targetId: CombatantId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("sleepShakeAwakeActorWithin5Feet"),
+    actorId: CombatantId,
+    targetId: CombatantId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("sneakAttackAllyWithin5FeetOfTarget"),
+    attackerId: CombatantId,
+    targetId: CombatantId,
+    allyId: CombatantId,
+  }),
+) as unknown as Schema.Schema<BattleTargetSpatialFact, unknown, never>;
+const BattleTargetSpatialFactsSchema = Schema.Array(
+  BattleTargetSpatialFactSchema,
 );
 
 export const BattleObjectDamageOutcomeSchema = Schema.Union(
@@ -1211,6 +1391,20 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("sanctuaryTargetingInterdiction"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      targeting: Schema.Struct({
+        kind: Schema.Literal("targetList"),
+        minTargets: Schema.Literal(1),
+        maxTargets: Schema.Literal(1),
+      }),
+      activeEffect: BattleRuntimeObjectSchema,
+      rangeFeet: MovementFeet,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("featherFallMitigation"),
       spell: BattleRuntimeObjectSchema,
       targeting: Schema.Struct({
@@ -1609,6 +1803,19 @@ export const BattleHoleSchema = Schema.Union(
     actorId: CombatantId,
     targetId: CombatantId,
     dc: DifficultyClass,
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("sanctuaryInterdictionOutcome"),
+    label: Schema.String,
+    sourceSpellId: Schema.String,
+    sourceCombatantId: CombatantId,
+    wardedCombatantId: CombatantId,
+    triggeringCombatantId: CombatantId,
+    triggeringTargetEventId: BattleHoleIdSchema,
+    ability: Schema.Literal("wis"),
+    dc: DcSourceSchema,
+    choices: Schema.Array(CombatantId),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2157,6 +2364,22 @@ type BattleFillEncoded =
         | {
             readonly kind: "zeroHitPointReplacement";
             readonly unitId: string;
+          };
+    }
+  | {
+      readonly kind: "sanctuaryInterdictionOutcome";
+      readonly holeId: string;
+      readonly value:
+        | { readonly saveSucceeded: true }
+        | {
+            readonly saveSucceeded: false;
+            readonly outcome:
+              | { readonly kind: "loseAttackOrSpell" }
+              | {
+                  readonly kind: "newTarget";
+                  readonly targetId: string;
+                  readonly spatialFacts: readonly unknown[];
+                };
           };
     }
   | {
@@ -2907,6 +3130,28 @@ export const BattleFillSchema: Schema.Schema<
             Schema.Struct({
               kind: Schema.Literal("pushAway"),
               disposition: BattleThunderwavePushDispositionSchema,
+            }),
+          ),
+        }),
+      ),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("sanctuaryInterdictionOutcome"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Union(
+        Schema.Struct({
+          saveSucceeded: Schema.Literal(true),
+        }),
+        Schema.Struct({
+          saveSucceeded: Schema.Literal(false),
+          outcome: Schema.Union(
+            Schema.Struct({
+              kind: Schema.Literal("loseAttackOrSpell"),
+            }),
+            Schema.Struct({
+              kind: Schema.Literal("newTarget"),
+              targetId: CombatantId,
+              spatialFacts: BattleTargetSpatialFactsSchema,
             }),
           ),
         }),

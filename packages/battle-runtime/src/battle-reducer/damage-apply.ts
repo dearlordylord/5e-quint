@@ -88,6 +88,7 @@ import {
   hideousLaughterRepeatSavingThrowOutcomeHole,
   validateHideousLaughterRepeatSavingThrowOutcome,
 } from "./hideous-laughter-repeat-save.ts";
+import { battleStateAfterSanctuaryEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
 import {
   conditionsAfterExpiringSpellConditionEffects,
   removeHideousLaughterEffectFromTarget,
@@ -232,10 +233,17 @@ export function applyBattleHitPointDamage(input: {
           targetId,
         )
       : afterConcentration;
+  const afterSanctuaryEarlyEnd =
+    input.damageAmount > 0 && input.damageSourceId !== undefined
+      ? battleStateAfterSanctuaryEarlyEndForActor(
+          afterCasterOrAllyDamageEscapes,
+          input.damageSourceId,
+        )
+      : afterCasterOrAllyDamageEscapes;
   const afterSleep =
     input.damageAmount > 0
-      ? removeSleepEffectsFromTarget(afterCasterOrAllyDamageEscapes, targetId)
-      : afterCasterOrAllyDamageEscapes;
+      ? removeSleepEffectsFromTarget(afterSanctuaryEarlyEnd, targetId)
+      : afterSanctuaryEarlyEnd;
   return input.damageAmount > 0
     ? applyHideousLaughterDamageRepeatSaves(
         afterSleep,
@@ -305,7 +313,10 @@ export function applyAttackDamage(
 function applyHideousLaughterDamageRepeatSaves(
   state: BattleState,
   targetId: CombatantId,
-  fills: readonly Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>[],
+  fills: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[],
   damageEventKey: string | undefined,
 ): BattleState {
   const target = state.combatants.get(targetId);

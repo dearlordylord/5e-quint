@@ -2,64 +2,51 @@
 // Covers healing, scalar buffs, roll modifiers, protection, damage reduction,
 // and condition-immunity/temporary-hit-point procedures.
 
-import {
-spendAction,
-spendActivationResource
-} from "@dnd/shared-algebras/action-economy-algebra";
 import { resetDeathSaveRuntimeState } from "@dnd/shared-algebras/death-saves-algebra";
-import { Either } from "effect";
 import {
-maybeOpenReactionWindow,
-snapshotBattle,
-type ActionSpellBattleResolutionInput,
-type BattleResolutionResult,
-type BonusActionSpellBattleResolutionInput,
-type SupportedSpellInvocation
+  maybeOpenReactionWindow,
+  snapshotBattle,
+  type ActionSpellBattleResolutionInput,
+  type BattleResolutionResult,
+  type BonusActionSpellBattleResolutionInput,
+  type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
-import {
-applyHpHealing,
-breakBattleConcentration
-} from "./damage-apply.ts";
-import {
-needsHolesResult
-} from "./hole-helpers.ts";
+import { applyHpHealing, breakBattleConcentration } from "./damage-apply.ts";
+import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
+import { spellHealingAmount } from "./spell-effects.ts";
 import {
-expendSpellSlot,
-spellHealingAmount
-} from "./spell-effects.ts";
-import {
-applyConditionImmunityAndTurnStartTemporaryHitPointsEffects,
-applyCreatureTypeProtectionSpellEffect,
-applyDamageReductionSpellEffect,
-applyJumpMovementReplacementSpellEffect,
-applyRollModifierSpellEffect,
-applyScalarBuffSpellEffect,
-spellDamageTypeChoiceHole,
-spellHealingRollHole,
-spellScalarBuffRollHole,
-spellTargetHole,
-spellTargetIsLegal,
-spellTargetListHole,
-validateSpellTargetList,
-validateScalarBuffTemporaryHitPointsFill,
-validateSpellHealingFill
+  applyConditionImmunityAndTurnStartTemporaryHitPointsEffects,
+  applyCreatureTypeProtectionSpellEffect,
+  applyDamageReductionSpellEffect,
+  applyJumpMovementReplacementSpellEffect,
+  applyRollModifierSpellEffect,
+  applyScalarBuffSpellEffect,
+  spellDamageTypeChoiceHole,
+  spellHealingRollHole,
+  spellScalarBuffRollHole,
+  spellTargetHole,
+  spellTargetIsLegal,
+  spellTargetListHole,
+  validateSpellTargetList,
+  validateScalarBuffTemporaryHitPointsFill,
+  validateSpellHealingFill,
 } from "./spells-holes-fills.ts";
 import {
-markSpellSlotExpendedThisTurn
-} from "./spells-profiles.ts";
-
-import {
-spellRequiresConcentration,
-spendSpellCastResources,
-startSpellEffectConcentration,
+  spellRequiresConcentration,
+  spendSpellCastResources,
 } from "./spells-resolve-resources.ts";
 
-
-import { conditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection,creatureTypeProtectionSpellTargetSelection,healingSpellTargetSelection,rollModifierSpellAffectedTargets,rollModifierSpellSkillSelection,rollModifierSpellTargetSelection,scalarBuffSpellTargetSelection } from "./spells-resolve-target-selection.ts";
-
-
+import {
+  conditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection,
+  creatureTypeProtectionSpellTargetSelection,
+  healingSpellTargetSelection,
+  rollModifierSpellAffectedTargets,
+  rollModifierSpellSkillSelection,
+  rollModifierSpellTargetSelection,
+  scalarBuffSpellTargetSelection,
+} from "./spells-resolve-target-selection.ts";
 
 import { type SpellFillSet } from "./spells-resolve-fill-set.ts";
 
@@ -149,43 +136,12 @@ export function resolvePreparedHealingSpellAct(input: {
           ),
         };
   }, input.input.state);
-  const spent =
-    input.invocation.actionCost === "bonusAction"
-      ? spendActivationResource(healed.currentTurnResources, {
-          kind: "bonusAction",
-        })
-      : spendAction(healed.currentTurnResources, "magic");
-  if (Either.isLeft(spent)) {
-    return invalidResult(
-      input.input.state,
-      "staleSubject",
-      input.invocation.actionCost === "bonusAction"
-        ? "Bonus Action spell is no longer available for the current actor."
-        : "Magic action is no longer available for the current actor.",
-    );
-  }
-  const slotTurnResources = markSpellSlotExpendedThisTurn(spent.right);
-  if (Either.isLeft(slotTurnResources)) {
-    return invalidResult(
-      input.input.state,
-      "staleSubject",
-      "This turn has already expended a Spell Slot.",
-    );
-  }
-  const slotted = expendSpellSlot(
-    healed,
-    input.actorId,
-    input.invocation.resource.slotLevel,
-  );
-  const nextState = {
-    ...slotted,
-    currentTurnResources: slotTurnResources.right,
-  };
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
+  return spendSpellCastResources({
+    state: healed,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
 }
 
 export function resolveMakeStableSpellAct(input: {
@@ -273,15 +229,6 @@ export function resolveMakeStableSpellAct(input: {
     );
   }
 
-  const spent = spendAction(input.input.state.currentTurnResources, "magic");
-  if (Either.isLeft(spent)) {
-    return invalidResult(
-      input.input.state,
-      "staleSubject",
-      "Magic action is no longer available for the current actor.",
-    );
-  }
-
   const nextTarget = {
     ...target,
     zeroHpLifecycle: {
@@ -289,19 +236,19 @@ export function resolveMakeStableSpellAct(input: {
       deathSaves: { ...resetDeathSaveRuntimeState(), stable: true },
     },
   };
-  const nextState = {
+  const effected = {
     ...input.input.state,
-    currentTurnResources: spent.right,
     combatants: new Map(input.input.state.combatants).set(
       target.combatantId,
       nextTarget,
     ),
   };
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
+  return spendSpellCastResources({
+    state: effected,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
 }
 
 export function resolveScalarBuffSpellAct(input: {
@@ -393,46 +340,19 @@ export function resolveScalarBuffSpellAct(input: {
     input.invocation,
     input.fillSet.healingRoll,
   );
-  const spent =
-    input.invocation.actionCost === "bonusAction"
-      ? spendActivationResource(effected.currentTurnResources, {
-          kind: "bonusAction",
-        })
-      : spendAction(effected.currentTurnResources, "magic");
-  if (Either.isLeft(spent)) {
-    return invalidResult(
-      input.input.state,
-      "staleSubject",
-      input.invocation.actionCost === "bonusAction"
-        ? "Bonus Action spell is no longer available for the current actor."
-        : "Magic action is no longer available for the current actor.",
-    );
-  }
-  const slotTurnResources = markSpellSlotExpendedThisTurn(spent.right);
-  if (Either.isLeft(slotTurnResources)) {
-    return invalidResult(
-      input.input.state,
-      "staleSubject",
-      "This turn has already expended a Spell Slot.",
-    );
-  }
-  const slotted = expendSpellSlot(
-    effected,
-    input.actorId,
-    input.invocation.resource.slotLevel,
-  );
-  const resourced = {
-    ...slotted,
-    currentTurnResources: slotTurnResources.right,
-  };
-  const nextState = spellRequiresConcentration(input.invocation)
-    ? startSpellEffectConcentration(resourced, input.actorId, input.invocation)
-    : resourced;
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
+  const resourced = spendSpellCastResources({
+    state: effected,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
+  return resourced.tag === "invalid"
+    ? resourced
+    : {
+        tag: "resolved",
+        state: resourced.state,
+        snapshot: snapshotBattle(resourced.state),
+      };
 }
 
 export function resolveRollModifierSpellAct(input: {
@@ -814,38 +734,12 @@ export function resolveJumpMovementReplacementSpellAct(input: {
     input.fillSet.targetList.targetIds,
     input.invocation,
   );
-  const spent = spendActivationResource(effected.currentTurnResources, {
-    kind: "bonusAction",
+  return spendSpellCastResources({
+    state: effected,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
   });
-  if (Either.isLeft(spent)) {
-    return invalidResult(
-      input.input.state,
-      "staleSubject",
-      "Bonus Action spell is no longer available for the current actor.",
-    );
-  }
-  const slotTurnResources = markSpellSlotExpendedThisTurn(spent.right);
-  if (Either.isLeft(slotTurnResources)) {
-    return invalidResult(
-      input.input.state,
-      "staleSubject",
-      "This turn has already expended a Spell Slot.",
-    );
-  }
-  const slotted = expendSpellSlot(
-    effected,
-    input.actorId,
-    input.invocation.resource.slotLevel,
-  );
-  const nextState = {
-    ...slotted,
-    currentTurnResources: slotTurnResources.right,
-  };
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
 }
 
 export function resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct(input: {
@@ -916,39 +810,17 @@ export function resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct(i
     targetSelection.targetIds,
     input.invocation,
   );
-  const spent = spendAction(effected.currentTurnResources, "magic");
-  if (Either.isLeft(spent)) {
-    return invalidResult(
-      input.input.state,
-      "staleSubject",
-      "Magic action is no longer available for the current actor.",
-    );
-  }
-  const slotTurnResources = markSpellSlotExpendedThisTurn(spent.right);
-  if (Either.isLeft(slotTurnResources)) {
-    return invalidResult(
-      input.input.state,
-      "staleSubject",
-      "This turn has already expended a Spell Slot.",
-    );
-  }
-  const slotted = expendSpellSlot(
-    effected,
-    input.actorId,
-    input.invocation.resource.slotLevel,
-  );
-  const resourced = {
-    ...slotted,
-    currentTurnResources: slotTurnResources.right,
-  };
-  const nextState = startSpellEffectConcentration(
-    resourced,
-    input.actorId,
-    input.invocation,
-  );
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
+  const resourced = spendSpellCastResources({
+    state: effected,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
+  return resourced.tag === "invalid"
+    ? resourced
+    : {
+        tag: "resolved",
+        state: resourced.state,
+        snapshot: snapshotBattle(resourced.state),
+      };
 }

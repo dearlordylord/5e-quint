@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points
@@ -22,6 +22,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-feather-fall-mitigation
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-forced-reaction-movement
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-jump-movement-replacement
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-sanctuary-targeting-interdiction
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.creature-type-protection-and-charm
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-object-light
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-make-stable
@@ -348,9 +349,11 @@ module battleRuntime {
   type RollModifierSpell = BaneRollModifier | BlessRollModifier | GuidanceRollModifier
   type SpellActionCost = SpellMagicAction | SpellBonusAction
   type CommandOption = CommandGrovelOption | CommandHaltOption | CommandDropOption | CommandApproachOption | CommandFleeOption
+  type SanctuaryTargetingTrigger = SanctuaryAttackRollTargeting | SanctuaryDamagingSpellTargeting | SanctuaryAreaOfEffectTargeting
+  type SanctuaryInterdictionOutcome = SanctuarySaveSucceeded | SanctuaryLoseAttackOrSpell | SanctuaryChooseNewTarget({ target: Actor })
 
   type MarkedDamageRiderTransfer = AwaitingTargetDrop | TransferAvailable | TransferAvailableAfterTurn({ actor: Actor, round: int })
-  type ActiveEffect = BardicInspirationDie({ source: Actor, dieSize: int, durationTicks: int }) | MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | HexDamageRider({ target: Actor, ability: Ability, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | RayOfSicknessPoisoned | ChillTouchHitPointRegainPrevented({ source: Actor, expiresAtRound: int }) | StarryWispInvisibleBenefitDenied({ source: Actor, expiresAtRound: int }) | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | WeaponMasterySapNextAttackDisadvantage({ source: Actor }) | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodCreatureTypeProtection | ProduceFlameHeldLight({ durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | HideousLaughterEffect({ source: Actor, target: Actor, hadProne: bool, hadIncapacitated: bool, durationTicks: int }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | FogCloudObscurement({ areaId: int, radiusFeet: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
+  type ActiveEffect = BardicInspirationDie({ source: Actor, dieSize: int, durationTicks: int }) | MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | HexDamageRider({ target: Actor, ability: Ability, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | RayOfSicknessPoisoned | ChillTouchHitPointRegainPrevented({ source: Actor, expiresAtRound: int }) | StarryWispInvisibleBenefitDenied({ source: Actor, expiresAtRound: int }) | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | WeaponMasterySapNextAttackDisadvantage({ source: Actor }) | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodCreatureTypeProtection | ProduceFlameHeldLight({ durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SanctuaryWard({ source: Actor, durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | HideousLaughterEffect({ source: Actor, target: Actor, hadProne: bool, hadIncapacitated: bool, durationTicks: int }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | FogCloudObscurement({ areaId: int, radiusFeet: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
   type PreventedProtectionCondition = PreventedCharmed | PreventedFrightened
   type PossessionAttemptDisposition = PossessionPreventedByCreatureTypeProtection | PossessionUnprevented
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
@@ -1168,6 +1171,10 @@ module battleRuntime {
         | FeatherFallMitigation(data) => FeatherFallMitigation({
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
+        | SanctuaryWard(data) => SanctuaryWard({
+            source: data.source,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | HideousLaughterEffect(data) => HideousLaughterEffect({
             source: data.source,
             target: data.target,
@@ -1201,6 +1208,7 @@ module battleRuntime {
         | ProduceFlameHeldLight(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | JumpMovementReplacement(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | FeatherFallMitigation(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | SanctuaryWard(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | HideousLaughterEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | GreaseGroundHazard(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | FogCloudObscurement(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
@@ -1364,6 +1372,7 @@ module battleRuntime {
         | ExpeditiousRetreatDashBonusAction => false
         | JumpMovementReplacement(_) => false
         | FeatherFallMitigation(_) => false
+        | SanctuaryWard(_) => false
         | SleepPendingRepeatSave(_) => false
         | SleepUnconscious(_) => false
         | HideousLaughterEffect(_) => false
@@ -3211,6 +3220,129 @@ module battleRuntime {
   pure def featherFallMitigationActiveEffect(): ActiveEffect =
     FeatherFallMitigation({ durationTicks: 10 })
 
+  pure def sanctuaryWardActiveEffect(source: Actor): ActiveEffect =
+    SanctuaryWard({ source: source, durationTicks: 10 })
+
+  pure def activeEffectsWithoutSanctuaryWard(effects: Set[ActiveEffect]): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | SanctuaryWard(_) => false
+      | _ => true
+    })
+
+  pure def activeEffectsContainSanctuaryWard(effects: Set[ActiveEffect]): bool =
+    effects.exists(effect => match effect {
+      | SanctuaryWard(_) => true
+      | _ => false
+    })
+
+  pure def activeEffectsSanctuaryWardDurationTicks(effects: Set[ActiveEffect]): int =
+    effects.map(effect => match effect {
+      | SanctuaryWard(data) => data.durationTicks
+      | _ => 0
+    }).fold(0, (highest, ticks) => if (highest > ticks) highest else ticks)
+
+  pure def combatantWithSanctuaryWard(target: Combatant, source: Actor): Combatant =
+    {
+      ...target,
+      activeEffects: activeEffectsWithoutSanctuaryWard(target.activeEffects).union(Set(sanctuaryWardActiveEffect(source))),
+    }
+
+  pure def stateWithActorCombatant(state: BattleState, actor: Actor, combatant: Combatant): BattleState =
+    match actor {
+      | Fighter => { ...state, fighter: combatant }
+      | Goblin => { ...state, goblin: combatant }
+    }
+
+  pure def combatantForActor(state: BattleState, actor: Actor): Combatant =
+    match actor {
+      | Fighter => state.fighter
+      | Goblin => state.goblin
+    }
+
+  pure def battleStateAfterSanctuaryEarlyEndForActor(state: BattleState, actor: Actor): BattleState = {
+    val combatant = combatantForActor(state, actor)
+    stateWithActorCombatant(state, actor, {
+      ...combatant,
+      activeEffects: activeEffectsWithoutSanctuaryWard(combatant.activeEffects),
+    })
+  }
+
+  pure def resolveSanctuarySpell(state: BattleState, target: Actor): BattleState =
+    if (
+      currentActor(state) != Fighter or
+      not(state.bonusActionAvailable) or
+      state.fighter.unconscious or
+      state.fighter.incapacitated or
+      fighterHasRage(state) or
+      not(canExpendSpellSlotThisTurn(state))
+    )
+      state
+    else {
+      val afterCasterEarlyEnd = battleStateAfterSanctuaryEarlyEndForActor(state, Fighter)
+      val targetCombatant = combatantForActor(afterCasterEarlyEnd, target)
+      stateWithActorCombatant(
+        {
+          ...afterCasterEarlyEnd,
+          bonusActionAvailable: false,
+          spellSlotExpendedThisTurn: true,
+        },
+        target,
+        combatantWithSanctuaryWard(targetCombatant, Fighter),
+      )
+    }
+
+  pure def wardTargetingInterdictionApplies(
+    trigger: SanctuaryTargetingTrigger,
+  ): bool =
+    match trigger {
+      | SanctuaryAttackRollTargeting => true
+      | SanctuaryDamagingSpellTargeting => true
+      | SanctuaryAreaOfEffectTargeting => false
+    }
+
+  pure def wardInterdictionLosesAttackOrSpell(
+    outcome: SanctuaryInterdictionOutcome,
+  ): bool =
+    match outcome {
+      | SanctuarySaveSucceeded => false
+      | SanctuaryLoseAttackOrSpell => true
+      | SanctuaryChooseNewTarget(_) => false
+    }
+
+  pure def wardInterdictionTarget(
+    warded: Actor,
+    outcome: SanctuaryInterdictionOutcome,
+  ): Actor =
+    match outcome {
+      | SanctuarySaveSucceeded => warded
+      | SanctuaryLoseAttackOrSpell => warded
+      | SanctuaryChooseNewTarget(data) => data.target
+    }
+
+  pure def sanctuaryTargetingInterdictionOutcomeApplies(
+    state: BattleState,
+    warded: Actor,
+    trigger: SanctuaryTargetingTrigger,
+    outcome: SanctuaryInterdictionOutcome,
+  ): bool =
+    activeEffectsContainSanctuaryWard(combatantForActor(state, warded).activeEffects) and
+    wardTargetingInterdictionApplies(trigger) and
+    not(wardInterdictionLosesAttackOrSpell(outcome))
+
+  pure def sanctuaryTargetingInterdictionResolvedTarget(
+    state: BattleState,
+    warded: Actor,
+    trigger: SanctuaryTargetingTrigger,
+    outcome: SanctuaryInterdictionOutcome,
+  ): Actor =
+    if (
+      activeEffectsContainSanctuaryWard(combatantForActor(state, warded).activeEffects) and
+      wardTargetingInterdictionApplies(trigger)
+    )
+      wardInterdictionTarget(warded, outcome)
+    else
+      warded
+
   pure def activeFeatherFallDescentRateCapFeetPerRound(effects: Set[ActiveEffect]): int =
     if (effects.exists(effect => match effect {
       | FeatherFallMitigation(_) => true
@@ -4884,7 +5016,7 @@ module battleRuntime {
       state
 
   pure def recordFighterAttackRoll(state: BattleState): BattleState =
-    { ...extendRageWithAttackRoll(state, Goblin), attackRollMadeThisTurn: true }
+    { ...battleStateAfterSanctuaryEarlyEndForActor(extendRageWithAttackRoll(state, Goblin), Fighter), attackRollMadeThisTurn: true }
 
   pure def extendRageWithEnemySavingThrow(state: BattleState, target: Actor): BattleState =
     if (currentActor(state) == Fighter and actorsAreEnemies(Fighter, target) and fighterHasRoundExtendedRage(state))
@@ -10506,6 +10638,70 @@ module battleRuntime {
       assert(resolved.goblin.hp == 3),
       assert(not(resolved.actionAvailable)),
       assert(resolved.interruptStack == []),
+    }
+  }
+
+  run test_sanctuary_targeting_interdiction_trigger_scope = {
+    val warded = resolveSanctuarySpell(initialState, Goblin)
+    all {
+      assert(activeEffectsContainSanctuaryWard(warded.goblin.activeEffects)),
+      assert(activeEffectsSanctuaryWardDurationTicks(warded.goblin.activeEffects) == 10),
+      assert(activeEffectsSanctuaryWardDurationTicks(tickDurationActiveEffects(warded.goblin.activeEffects)) == 9),
+      assert(wardTargetingInterdictionApplies(SanctuaryAttackRollTargeting)),
+      assert(wardTargetingInterdictionApplies(SanctuaryDamagingSpellTargeting)),
+      assert(not(wardTargetingInterdictionApplies(SanctuaryAreaOfEffectTargeting))),
+      assert(sanctuaryTargetingInterdictionOutcomeApplies(
+        warded,
+        Goblin,
+        SanctuaryAttackRollTargeting,
+        SanctuarySaveSucceeded,
+      )),
+      assert(not(sanctuaryTargetingInterdictionOutcomeApplies(
+        warded,
+        Goblin,
+        SanctuaryAreaOfEffectTargeting,
+        SanctuarySaveSucceeded,
+      ))),
+    }
+  }
+
+  run test_sanctuary_targeting_interdiction_outcomes = {
+    val warded = resolveSanctuarySpell(initialState, Goblin)
+    all {
+      assert(wardInterdictionLosesAttackOrSpell(SanctuaryLoseAttackOrSpell)),
+      assert(not(wardInterdictionLosesAttackOrSpell(SanctuarySaveSucceeded))),
+      assert(not(sanctuaryTargetingInterdictionOutcomeApplies(
+        warded,
+        Goblin,
+        SanctuaryAttackRollTargeting,
+        SanctuaryLoseAttackOrSpell,
+      ))),
+      assert(sanctuaryTargetingInterdictionResolvedTarget(
+        warded,
+        Goblin,
+        SanctuaryAttackRollTargeting,
+        SanctuarySaveSucceeded,
+      ) == Goblin),
+      assert(sanctuaryTargetingInterdictionResolvedTarget(
+        warded,
+        Goblin,
+        SanctuaryDamagingSpellTargeting,
+        SanctuaryChooseNewTarget({ target: Fighter }),
+      ) == Fighter),
+    }
+  }
+
+  run test_sanctuary_early_end_lifecycle = {
+    val fighterWarded = resolveSanctuarySpell(initialState, Fighter)
+    val afterAttackRoll = recordFighterAttackRoll(fighterWarded)
+    val afterSpellCast = resolveSanctuarySpell({ ...fighterWarded, bonusActionAvailable: true, spellSlotExpendedThisTurn: false }, Goblin)
+    val afterDamage = battleStateAfterSanctuaryEarlyEndForActor(fighterWarded, Fighter)
+    all {
+      assert(activeEffectsContainSanctuaryWard(fighterWarded.fighter.activeEffects)),
+      assert(not(activeEffectsContainSanctuaryWard(afterAttackRoll.fighter.activeEffects))),
+      assert(not(activeEffectsContainSanctuaryWard(afterSpellCast.fighter.activeEffects))),
+      assert(activeEffectsContainSanctuaryWard(afterSpellCast.goblin.activeEffects)),
+      assert(not(activeEffectsContainSanctuaryWard(afterDamage.fighter.activeEffects))),
     }
   }
 }

@@ -15,6 +15,7 @@ import {
   type ActionSpellBattleResolutionInput,
   type BattleAfterDamageEvent,
   type BattleConcentrationSavingThrowHole,
+  type BattleFill,
   type BattleObjectDamageOutcome,
   type BattleResolutionResult,
   type BattleSpellDamageReductionRollHole,
@@ -41,6 +42,7 @@ import {
 import { activeEffectArmorClass } from "./creature-state.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
+import { sanctuaryTargetingInterdictionCheck } from "./sanctuary-targeting-interdiction.ts";
 import {
   activeMarkedDamageRiders,
   applyAvailableSpellDamageReduction,
@@ -77,7 +79,16 @@ import type {
   SpellFillSet,
   SpellBeamFillSet,
 } from "./spells-resolve-fill-set.ts";
+import { spellFillSet } from "./spells-resolve-fill-set.ts";
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
+
+type ResolvedSpellBeam = {
+  readonly tag: "resolved";
+  readonly state: ActionSpellBattleResolutionInput["state"];
+  readonly objectDamages: readonly BattleObjectDamageOutcome[];
+  readonly afterDamageEvents: readonly BattleAfterDamageEvent[];
+  readonly usedExtraFillHoleIds: readonly string[];
+};
 
 export function resolveSpellAttackBeamSequenceAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
@@ -155,6 +166,9 @@ export function resolveSpellAttackBeamSequenceAct(input: {
     if (resolved.tag !== "resolved") {
       return resolved;
     }
+    if (!isResolvedSpellBeam(resolved)) {
+      return resolved;
+    }
     state = resolved.state;
     objectDamages.push(...resolved.objectDamages);
     afterDamageEvents.push(...resolved.afterDamageEvents);
@@ -212,15 +226,7 @@ function resolveEldritchBlastBeam(input: {
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly beam: SpellBeamFillSet;
   readonly beamIndex: number;
-}):
-  | {
-      readonly tag: "resolved";
-      readonly state: ActionSpellBattleResolutionInput["state"];
-      readonly objectDamages: readonly BattleObjectDamageOutcome[];
-      readonly afterDamageEvents: readonly BattleAfterDamageEvent[];
-      readonly usedExtraFillHoleIds: readonly string[];
-    }
-  | Exclude<BattleResolutionResult, { readonly tag: "resolved" }> {
+}): ResolvedSpellBeam | BattleResolutionResult {
   const target = input.beam.target;
   if (target === undefined) {
     return invalidResult(
@@ -249,15 +255,7 @@ function resolveEldritchBlastCreatureBeam(input: {
     NonNullable<SpellBeamFillSet["target"]>,
     { readonly kind: "combatant" }
   >;
-}):
-  | {
-      readonly tag: "resolved";
-      readonly state: ActionSpellBattleResolutionInput["state"];
-      readonly objectDamages: readonly BattleObjectDamageOutcome[];
-      readonly afterDamageEvents: readonly BattleAfterDamageEvent[];
-      readonly usedExtraFillHoleIds: readonly string[];
-    }
-  | Exclude<BattleResolutionResult, { readonly tag: "resolved" }> {
+}): ResolvedSpellBeam | BattleResolutionResult {
   const target = input.state.combatants.get(input.target.targetId);
   if (
     target === undefined ||
@@ -281,6 +279,94 @@ function resolveEldritchBlastCreatureBeam(input: {
     target.combatantId,
     input.invocation,
   );
+  const originalTargetHole = spellBeamTargetHole(
+    input.state,
+    input.actorId,
+    input.invocation,
+    input.beamIndex,
+  );
+  const sanctuaryCheck = sanctuaryTargetingInterdictionCheck({
+    state: input.state,
+    triggeringCombatantId: input.actorId,
+    wardedCombatantId: target.combatantId,
+    triggeringTargetEventId: originalTargetHole.holeId,
+    fills: input.input.fills,
+  });
+  if (sanctuaryCheck.tag === "needsHoles") {
+    return needsHolesResult(input.state, input.input.subject, [
+      sanctuaryCheck.hole,
+    ]);
+  }
+  if (sanctuaryCheck.tag === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      sanctuaryCheck.message,
+    );
+  }
+  if (sanctuaryCheck.tag === "lost") {
+    return spendSpellCastResources({
+      state: input.state,
+      actorId: input.actorId,
+      invocation: input.invocation,
+      errorState: input.input.state,
+    });
+  }
+  if (sanctuaryCheck.tag === "newTarget") {
+    const replacementTarget = input.state.combatants.get(
+      sanctuaryCheck.targetId,
+    );
+    if (
+      replacementTarget === undefined ||
+      !spellTargetIsLegal(
+        input.state,
+        input.actorId,
+        replacementTarget.combatantId,
+        input.invocation,
+        sanctuaryCheck.spatialFacts,
+      )
+    ) {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        "Sanctuary replacement Eldritch Blast beam target must be legal for the selected spell.",
+      );
+    }
+    const originalTargetFill = input.input.fills.find(
+      (fill): fill is Extract<BattleFill, { readonly kind: "targetChoice" }> =>
+        fill.kind === "targetChoice" &&
+        fill.holeId === originalTargetHole.holeId,
+    );
+    if (originalTargetFill === undefined) {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        "Sanctuary replacement requires the original Eldritch Blast beam target fill.",
+      );
+    }
+    const fills = input.input.fills
+      .filter((fill) => fill.kind !== "sanctuaryInterdictionOutcome")
+      .map(
+        (fill): BattleFill =>
+          fill === originalTargetFill
+            ? {
+                ...fill,
+                value: replacementTarget.combatantId,
+                spatialFacts: sanctuaryCheck.spatialFacts,
+              }
+            : fill,
+      );
+    const fillSet = spellFillSet(fills, input.invocation);
+    if (fillSet.tag === "invalid") {
+      return invalidResult(input.input.state, "invalidFill", fillSet.message);
+    }
+    return resolveSpellAttackBeamSequenceAct({
+      input: { ...input.input, fills },
+      actorId: input.actorId,
+      invocation: input.invocation,
+      fillSet,
+    });
+  }
   if (input.beam.attackRoll === undefined) {
     return needsHolesResult(input.state, input.input.subject, [
       spellBeamAttackRollHole(
@@ -603,6 +689,14 @@ function resolveEldritchBlastCreatureBeam(input: {
           ],
     usedExtraFillHoleIds,
   };
+}
+
+function isResolvedSpellBeam(
+  result:
+    | Extract<BattleResolutionResult, { readonly tag: "resolved" }>
+    | ResolvedSpellBeam,
+): result is ResolvedSpellBeam {
+  return "afterDamageEvents" in result && "usedExtraFillHoleIds" in result;
 }
 
 function resolveEldritchBlastObjectBeam(input: {

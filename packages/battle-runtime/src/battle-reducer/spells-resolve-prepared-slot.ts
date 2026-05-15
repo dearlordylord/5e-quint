@@ -9,8 +9,11 @@ import {
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleAfterDamageEvent,
+  type BattleFill,
   type BattleHoleId,
   type BattleResolutionResult,
+  type BattleSpellTargetAllocationSpatialFact,
+  type BattleTargetSpatialFact,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
@@ -28,6 +31,10 @@ import {
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
+import {
+  battleStateAfterSanctuaryEarlyEndForActor,
+  sanctuaryTargetingInterdictionCheck,
+} from "./sanctuary-targeting-interdiction.ts";
 import { expendSpellSlot } from "./spell-effects.ts";
 import {
   applyPreparedSlotSpellDamage,
@@ -41,6 +48,8 @@ import {
 import { markSpellSlotExpendedThisTurn } from "./spells-profiles.ts";
 
 import { type SpellFillSet } from "./spells-resolve-fill-set.ts";
+import { spellFillSet } from "./spells-resolve-fill-set.ts";
+import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 export function resolvePreparedSlotSpellRelease(input: {
@@ -110,6 +119,129 @@ export function resolvePreparedSlotSpellAct(input: {
       "invalidFill",
       allocationValidation,
     );
+  }
+
+  for (const allocation of targetAllocation.allocations) {
+    const sanctuaryCheck = sanctuaryTargetingInterdictionCheck({
+      state: input.input.state,
+      triggeringCombatantId: input.actorId,
+      wardedCombatantId: allocation.targetId,
+      triggeringTargetEventId: allocationHole.holeId,
+      fills: input.input.fills,
+    });
+    if (sanctuaryCheck.tag === "notWarded") {
+      continue;
+    }
+    if (sanctuaryCheck.tag === "saveSucceeded") {
+      continue;
+    }
+    if (sanctuaryCheck.tag === "needsHoles") {
+      return needsHolesResult(input.input.state, input.input.subject, [
+        sanctuaryCheck.hole,
+      ]);
+    }
+    if (sanctuaryCheck.tag === "invalid") {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        sanctuaryCheck.message,
+      );
+    }
+    if (sanctuaryCheck.tag === "lost") {
+      return input.spendsCastResources === false
+        ? {
+            tag: "resolved",
+            state: input.input.state,
+            snapshot: snapshotBattle(input.input.state),
+          }
+        : spendSpellCastResources({
+            state: input.input.state,
+            actorId: input.actorId,
+            invocation: input.invocation,
+            errorState: input.input.state,
+          });
+    }
+
+    const replacementFacts = spellAllocationSpatialFacts(
+      sanctuaryCheck.spatialFacts,
+    );
+    if (replacementFacts === null) {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        "Sanctuary replacement Magic Missile target must include allocation-compatible spell target facts.",
+      );
+    }
+    const replacementTarget = input.input.state.combatants.get(
+      sanctuaryCheck.targetId,
+    );
+    if (replacementTarget === undefined) {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        "Sanctuary replacement Magic Missile target must be a combatant in this battle.",
+      );
+    }
+    const originalAllocationFill = input.input.fills.find(
+      (
+        fill,
+      ): fill is Extract<
+        BattleFill,
+        { readonly kind: "spellTargetAllocation" }
+      > =>
+        fill.kind === "spellTargetAllocation" &&
+        fill.holeId === allocationHole.holeId,
+    );
+    if (originalAllocationFill === undefined) {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        "Sanctuary replacement requires the original Magic Missile allocation fill.",
+      );
+    }
+    const allocationCounts = new Map<CombatantId, number>();
+    for (const currentAllocation of targetAllocation.allocations) {
+      const targetId =
+        currentAllocation.targetId === allocation.targetId
+          ? replacementTarget.combatantId
+          : currentAllocation.targetId;
+      allocationCounts.set(
+        targetId,
+        (allocationCounts.get(targetId) ?? 0) + currentAllocation.count,
+      );
+    }
+    const allocations = Array.from(allocationCounts, ([targetId, count]) => ({
+      targetId,
+      count,
+    }));
+    const spatialFacts = [
+      ...originalAllocationFill.spatialFacts.filter(
+        (fact) =>
+          fact.kind !== "spellTarget" || fact.targetId !== allocation.targetId,
+      ),
+      ...replacementFacts,
+    ];
+    const fills = input.input.fills
+      .filter((fill) => fill.kind !== "sanctuaryInterdictionOutcome")
+      .map(
+        (fill): BattleFill =>
+          fill === originalAllocationFill
+            ? {
+                ...fill,
+                value: { allocations },
+                spatialFacts,
+              }
+            : fill,
+      );
+    const fillSet = spellFillSet(fills, input.invocation);
+    if (fillSet.tag === "invalid") {
+      return invalidResult(input.input.state, "invalidFill", fillSet.message);
+    }
+    return resolvePreparedSlotSpellAct({
+      ...input,
+      input: { ...input.input, fills },
+      fillSet,
+    });
   }
 
   if (input.opensSpellCastReactionWindow !== false) {
@@ -282,6 +414,13 @@ export function resolvePreparedSlotSpellAct(input: {
     ]);
   }
 
+  const spellEffectState =
+    input.spendsCastResources === false
+      ? input.input.state
+      : battleStateAfterSanctuaryEarlyEndForActor(
+          input.input.state,
+          input.actorId,
+        );
   const damaged = targetAllocation.allocations.reduce(
     (state, allocation, allocationIndex) => {
       const target = state.combatants.get(allocation.targetId);
@@ -325,7 +464,7 @@ export function resolvePreparedSlotSpellAct(input: {
         },
       );
     },
-    input.input.state,
+    spellEffectState,
   );
   if (input.spendsCastResources === false) {
     return {
@@ -405,4 +544,15 @@ export function resolvePreparedSlotSpellAct(input: {
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
+}
+
+function spellAllocationSpatialFacts(
+  facts: readonly BattleTargetSpatialFact[],
+): readonly BattleSpellTargetAllocationSpatialFact[] | null {
+  const allocationFacts = facts.filter(
+    (fact): fact is BattleSpellTargetAllocationSpatialFact =>
+      fact.kind === "spellTarget" ||
+      fact.kind === "reactionSpellDamagerVisibleWithinRange",
+  );
+  return allocationFacts.length === facts.length ? allocationFacts : null;
 }

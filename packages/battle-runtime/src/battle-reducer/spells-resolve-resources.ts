@@ -16,6 +16,7 @@ import type { CombatantId } from "../identity.ts";
 import { breakBattleConcentration } from "./damage-apply.ts";
 import { snapshotBattle } from "./dispatcher.ts";
 import { invalidResult } from "./result-helpers.ts";
+import { battleStateAfterSanctuaryEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
 import { expendSpellSlot } from "./spell-effects.ts";
 import { markSpellSlotExpendedThisTurn } from "./spells-profiles.ts";
 import { clearPendingAttackRollMissToHitReplacementSelection } from "./statblock-attacks.ts";
@@ -26,17 +27,22 @@ export function spendSpellCastResources(input: {
   readonly invocation: SupportedSpellInvocation;
   readonly errorState: BattleState;
   readonly startConcentration?: boolean;
+  readonly skipSanctuarySpellCastEarlyEnd?: boolean;
 }): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
+  const spellCastState =
+    input.skipSanctuarySpellCastEarlyEnd === true
+      ? input.state
+      : battleStateAfterSanctuaryEarlyEndForActor(input.state, input.actorId);
   const actionCost =
     "actionCost" in input.invocation
       ? input.invocation.actionCost
       : "magicAction";
   const spent =
     actionCost === "bonusAction"
-      ? spendActivationResource(input.state.currentTurnResources, {
+      ? spendActivationResource(spellCastState.currentTurnResources, {
           kind: "bonusAction",
         })
-      : spendAction(input.state.currentTurnResources, "magic");
+      : spendAction(spellCastState.currentTurnResources, "magic");
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.errorState,
@@ -50,8 +56,8 @@ export function spendSpellCastResources(input: {
     input.startConcentration ?? spellRequiresConcentration(input.invocation);
   if (input.invocation.resource.tag === "none") {
     const afterPriorConcentration = spellRequiresConcentration(input.invocation)
-      ? breakBattleConcentration(input.state, input.actorId)
-      : input.state;
+      ? breakBattleConcentration(spellCastState, input.actorId)
+      : spellCastState;
     const resourced = {
       ...afterPriorConcentration,
       currentTurnResources: clearPendingAttackRollMissToHitReplacementSelection(
@@ -88,8 +94,8 @@ export function spendSpellCastResources(input: {
     );
   }
   const afterPriorConcentration = spellRequiresConcentration(input.invocation)
-    ? breakBattleConcentration(input.state, input.actorId)
-    : input.state;
+    ? breakBattleConcentration(spellCastState, input.actorId)
+    : spellCastState;
   const slotted = expendSpellSlot(
     afterPriorConcentration,
     input.actorId,

@@ -62,9 +62,9 @@
       "value": 142
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 78,
-      "numerator": 70,
-      "percent": "89.7%"
+      "denominator": 79,
+      "numerator": 71,
+      "percent": "89.9%"
     },
     "profileClassificationCoverage": {
       "denominator": 142,
@@ -72,34 +72,34 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 58,
-      "numerator": 58,
+      "denominator": 59,
+      "numerator": 59,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 58,
-      "numerator": 57,
+      "denominator": 59,
+      "numerator": 58,
       "percent": "98.3%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 58,
-      "numerator": 58,
+      "denominator": 59,
+      "numerator": 59,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 58,
-      "numerator": 58,
+      "denominator": 59,
+      "numerator": 59,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 78,
+      "denominator": 79,
       "numerator": 10,
-      "percent": "12.8%"
+      "percent": "12.7%"
     },
     "supportedProfileCoverage": {
       "denominator": 116,
-      "numerator": 78,
-      "percent": "67.2%"
+      "numerator": 79,
+      "percent": "68.1%"
     }
   },
   "metricSemantics": [
@@ -1990,6 +1990,31 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
         }
       ]
+    },
+    {
+      "id": "spell.invocation-sanctuary-targeting-interdiction",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the authored Sanctuary spell, caller-selected ward target, caller-supplied original and replacement target spatial facts, and table-supplied Wisdom Saving Throw outcome; area-effect membership and target legality facts remain caller/table inputs.",
+      "taskRefs": [
+        "SRDINV84G"
+      ],
+      "title": "Spell invocation wards one creature and interdicts direct attack-roll or damaging-spell targeting",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/sanctuary-targeting-interdiction.test.ts"
+        }
+      ]
     }
   ],
   "taskClaims": [
@@ -3225,6 +3250,22 @@
         "spell.invocation-hideous-laughter-repeat-save-lifecycle"
       ],
       "taskId": "SRDINV84F"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Sanctuary's Bonus Action ward application, one-minute ward duration, attack-roll and damaging-spell targeting triggers, area-effect exclusion, successful-save pass-through, failed-save loss, failed-save new-target outcome, and early-end lifecycle.",
+      "profileIds": [
+        "spell.invocation-sanctuary-targeting-interdiction"
+      ],
+      "taskId": "SRDINV84G"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Sanctuary Bonus Action discovery and target-list ward application, attack and direct damaging spell interdiction, area-effect exclusion, save success pass-through, failed-save loss, failed-save legal retargeting, and early-end cleanup on warded attack roll, spell cast, or damage dealt.",
+      "profileIds": [
+        "spell.invocation-sanctuary-targeting-interdiction"
+      ],
+      "taskId": "SRDINV84G"
     }
   ],
   "units": [
@@ -8856,14 +8897,62 @@
         "status": "installed"
       },
       "claim": {
-        "reason": "Surface Spell Definition facts are authored, but promoted battle runtime does not yet execute Sanctuary's warded-target Wisdom-save targeting interdiction, choose-new-target-or-lose outcome, area-effect exclusion, or early-end lifecycle.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "spell.invocation-sanctuary-targeting-interdiction"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Bonus Action level-1 Spell Slot casting that wards one creature within range",
+          "one-minute active ward duration",
+          "direct attack-roll and damaging-spell targeting interdiction against the warded creature",
+          "area-effect exclusion",
+          "Wisdom Saving Throw against caster spell save DC",
+          "failed-save lose-attack-or-spell outcome",
+          "failed-save choose-new-target outcome with target legality rechecked",
+          "successful-save pass-through",
+          "early-end cleanup when the warded creature makes an attack roll, casts a spell, or deals damage"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/sanctuary-targeting-interdiction.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV84G"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-sanctuary-targeting-interdiction",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the authored Sanctuary spell, caller-selected ward target, caller-supplied original and replacement target spatial facts, and table-supplied Wisdom Saving Throw outcome; area-effect membership and target legality facts remain caller/table inputs.",
+          "taskRefs": [
+            "SRDINV84G"
+          ],
+          "title": "Spell invocation wards one creature and interdicts direct attack-roll or damaging-spell targeting",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/sanctuary-targeting-interdiction.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/sanctuary.json",
       "unitId": "sanctuary"
     },

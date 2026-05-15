@@ -227,6 +227,10 @@ export function spellFillSet(
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
     | undefined;
   for (const fill of fills) {
+    if (fill.kind === "sanctuaryInterdictionOutcome") {
+      continue;
+    }
+
     if (fill.kind === "targetChoice" && fill.holeId === ATTACK_TARGET_HOLE_ID) {
       if (targetId !== undefined) {
         return { tag: "invalid", message: "Spell target was filled twice." };
@@ -413,6 +417,7 @@ export function spellFillSet(
         invocation.procedure !== "command" &&
         invocation.procedure !== "jumpMovementReplacement" &&
         invocation.procedure !== "featherFallMitigation" &&
+        invocation.procedure !== "sanctuaryTargetingInterdiction" &&
         invocation.procedure !==
           "conditionImmunityAndTurnStartTemporaryHitPoints"
       ) {
@@ -429,6 +434,8 @@ export function spellFillSet(
         (invocation.procedure === "hideousLaughter" &&
           !isTargetListSpellInvocation(invocation)) ||
         (invocation.procedure === "command" &&
+          !isTargetListSpellInvocation(invocation)) ||
+        (invocation.procedure === "sanctuaryTargetingInterdiction" &&
           !isTargetListSpellInvocation(invocation))
       ) {
         return {

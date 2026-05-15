@@ -3176,6 +3176,9 @@ function projectHole(hole: BattleHole): MbtHole {
   if (hole.kind === "spellAreaChoice") {
     throw new Error("Battle runtime MBT does not model spell area holes.");
   }
+  if (hole.kind === "sanctuaryInterdictionOutcome") {
+    throw new Error("Battle runtime MBT does not model Sanctuary holes.");
+  }
   return Match.value(hole).pipe(
     Match.when({ kind: "targetChoice" }, () => "TargetChoice" as const),
     Match.when(

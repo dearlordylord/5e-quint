@@ -118,6 +118,14 @@ export function supportedSpellInvocationRef(
       procedure: "featherFallMitigation",
     };
   }
+  if (invocation.procedure === "sanctuaryTargetingInterdiction") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "sanctuaryTargetingInterdiction",
+    };
+  }
   if (invocation.procedure === "objectLight") {
     return {
       tag: "cantrip",

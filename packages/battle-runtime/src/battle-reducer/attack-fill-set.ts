@@ -73,6 +73,10 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     | undefined;
   let weaponMasteryCleaveDamageRoll: BattleRolledDiceFill | undefined;
   for (const fill of fills) {
+    if (fill.kind === "sanctuaryInterdictionOutcome") {
+      continue;
+    }
+
     if (
       fill.kind === "unitFeatureDecision" &&
       fill.holeId === WEAPON_MASTERY_CLEAVE_DECISION_HOLE_ID

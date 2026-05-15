@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-object-light spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-object-light spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 import type {
   ActionEconomyState,
   RuntimeActionResource,
@@ -731,6 +731,17 @@ export type BattleActiveEffect =
     })
   | (BattleSpellEffectBase & {
       readonly kind: "featherFallMitigation";
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "duration" }
+      >;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "sanctuaryWard";
+      readonly save: {
+        readonly ability: Extract<Ability, "wis">;
+        readonly dc: DcSource;
+      };
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
         { readonly kind: "duration" }
@@ -1718,6 +1729,10 @@ export type TargetListSpellInvocation =
       SupportedSpellInvocation,
       { readonly procedure: "featherFallMitigation" }
     >
+  | Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "sanctuaryTargetingInterdiction" }
+    >
   | Extract<SupportedSpellInvocation, { readonly procedure: "command" }>
   | Extract<
       SupportedSpellInvocation,
@@ -1817,6 +1832,23 @@ export type JumpMovementReplacementSpellInvocation = {
   readonly activeEffect: Extract<
     BattleActiveEffect,
     { readonly kind: "jumpMovementReplacement" }
+  >;
+  readonly rangeFeet: MovementFeet;
+};
+export type SanctuaryTargetingInterdictionSpellInvocation = {
+  readonly access: PreparedSpellAccess;
+  readonly resource: SpellSlotInvocationResource;
+  readonly procedure: "sanctuaryTargetingInterdiction";
+  readonly spell: SpellRecord;
+  readonly actionCost: "bonusAction";
+  readonly targeting: {
+    readonly kind: "targetList";
+    readonly minTargets: 1;
+    readonly maxTargets: 1;
+  };
+  readonly activeEffect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "sanctuaryWard" }
   >;
   readonly rangeFeet: MovementFeet;
 };
@@ -2201,7 +2233,10 @@ export type SupportedSpellInvocation =
       readonly actionCost: "magicAction";
       readonly ability: Extract<Ability, "wis">;
       readonly dc: DcSource;
-      readonly targeting: Extract<SpellTargeting, { readonly kind: "targetList" }>;
+      readonly targeting: Extract<
+        SpellTargeting,
+        { readonly kind: "targetList" }
+      >;
       readonly rangeFeet: MovementFeet;
     }
   | {
@@ -2288,6 +2323,7 @@ export type SupportedSpellInvocation =
       >;
       readonly rangeFeet: MovementFeet;
     }
+  | SanctuaryTargetingInterdictionSpellInvocation
   | PersistentArmorSpellInvocation
   | {
       readonly access: PreparedSpellAccess;
@@ -2346,6 +2382,7 @@ type AnySupportedDamageSpellInvocation = Exclude<
       | "markedDamageRider"
       | "expeditiousRetreatDash"
       | "jumpMovementReplacement"
+      | "sanctuaryTargetingInterdiction"
       | "featherFallMitigation"
       | "heldLight"
       | "objectLight"
@@ -2937,6 +2974,7 @@ export type BattleSpellTargetListHole = {
         | "conditionImmunityAndTurnStartTemporaryHitPoints"
         | "jumpMovementReplacement"
         | "featherFallMitigation"
+        | "sanctuaryTargetingInterdiction"
         | "command";
     }
   >;
@@ -3361,6 +3399,34 @@ export type BattleShoveOutcomeHole = {
   readonly targetId: CombatantId;
   readonly dc: DifficultyClass;
 };
+export type BattleSanctuaryInterdictionOutcome =
+  | {
+      readonly saveSucceeded: true;
+    }
+  | {
+      readonly saveSucceeded: false;
+      readonly outcome:
+        | { readonly kind: "loseAttackOrSpell" }
+        | {
+            readonly kind: "newTarget";
+            readonly targetId: CombatantId;
+            readonly spatialFacts: readonly BattleTargetSpatialFact[];
+          };
+    };
+export type BattleSanctuaryInterdictionOutcomeHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "sanctuaryInterdictionOutcome";
+  readonly label: string;
+  readonly sourceSpellId: SpellRecord["id"];
+  readonly sourceCombatantId: CombatantId;
+  readonly wardedCombatantId: CombatantId;
+  readonly triggeringCombatantId: CombatantId;
+  readonly triggeringTargetEventId: BattleHoleId;
+  readonly ability: Extract<Ability, "wis">;
+  readonly dc: DcSource;
+  readonly choices: readonly CombatantId[];
+};
 export type BattleAttackDamageDispositionHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -3404,6 +3470,7 @@ export type BattleHole =
   | BattleAbilityCheckHole
   | BattleGrappleOutcomeHole
   | BattleShoveOutcomeHole
+  | BattleSanctuaryInterdictionOutcomeHole
   | BattleAttackDamageDispositionHole;
 
 export type BattleAttackRollResult = AttackRollResult & {
@@ -3540,6 +3607,11 @@ export type BattleFill =
       readonly kind: "attackDamageDisposition";
       readonly holeId: BattleHoleId;
       readonly value: BattleAttackDamageDisposition;
+    }
+  | {
+      readonly kind: "sanctuaryInterdictionOutcome";
+      readonly holeId: BattleHoleId;
+      readonly value: BattleSanctuaryInterdictionOutcome;
     }
   | {
       readonly kind: "reactionDecision";

@@ -16093,7 +16093,7 @@ describe("battle runtime", () => {
           condition: "charmed",
           expiresAt: {
             kind: "duration",
-            durationTicks: { amount: 600 },
+            durationTicks: elapsedTimeTicks(600),
           },
           escape: { kind: "targetDamagedByCasterOrAlly" },
           turnStartDamage: null,
@@ -16132,7 +16132,7 @@ describe("battle runtime", () => {
       ability: "dex",
       dc: { kind: "caster_spell_save_dc" },
       targeting: { kind: "pointOriginCube", sideFeet: movementFeet(10) },
-      durationTicks: { amount: 10 },
+      durationTicks: elapsedTimeTicks(10),
       rangeFeet: movementFeet(60),
     };
 
@@ -16161,6 +16161,55 @@ describe("battle runtime", () => {
           value: {
             area: invalidGreaseArea,
             outcomes: [{ targetId: goblinId, succeeded: false }],
+          },
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test("Sanctuary interdiction codec admits only Wisdom save holes", () => {
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleHoleSchema)({
+          kind: "sanctuaryInterdictionOutcome",
+          holeId: holeId("battle:test:invalid-sanctuary-save"),
+          holeInstanceKey: holeInstanceKey(
+            "battle:test:invalid-sanctuary-save",
+          ),
+          label: "Invalid Sanctuary save",
+          sourceSpellId: "sanctuary",
+          sourceCombatantId: wizardId,
+          wardedCombatantId: wizardId,
+          triggeringCombatantId: goblinId,
+          triggeringTargetEventId: holeId(
+            "battle:test:invalid-sanctuary-target-event",
+          ),
+          ability: "str",
+          dc: { kind: "caster_spell_save_dc" },
+          choices: [fighterId],
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test("Sanctuary replacement target fills reject malformed spatial facts", () => {
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleFillSchema)({
+          kind: "sanctuaryInterdictionOutcome",
+          holeId: holeId("battle:test:invalid-sanctuary-replacement-fact"),
+          value: {
+            saveSucceeded: false,
+            outcome: {
+              kind: "newTarget",
+              targetId: fighterId,
+              spatialFacts: [
+                {
+                  kind: "notBattleTargetSpatialFact",
+                  targetId: fighterId,
+                },
+              ],
+            },
           },
         }),
       ),
@@ -24265,9 +24314,7 @@ describe("battle runtime", () => {
       }),
     );
 
-    expect(dispersed.state.combatants.get(wizardId)?.activeEffects).toEqual(
-      [],
-    );
+    expect(dispersed.state.combatants.get(wizardId)?.activeEffects).toEqual([]);
     expect(dispersed.state.combatants.get(wizardId)?.concentration).toBeNull();
   });
 
@@ -24326,8 +24373,9 @@ describe("battle runtime", () => {
       endTurn({
         state: requireResolved(
           endTurn({
-            state: requireResolved(endTurn({ state: hexed, actorId: fighterId }))
-              .state,
+            state: requireResolved(
+              endTurn({ state: hexed, actorId: fighterId }),
+            ).state,
             actorId: goblinId,
           }),
         ).state,
@@ -24367,8 +24415,9 @@ describe("battle runtime", () => {
       endTurn({
         state: requireResolved(
           endTurn({
-            state: requireResolved(endTurn({ state: dropped, actorId: fighterId }))
-              .state,
+            state: requireResolved(
+              endTurn({ state: dropped, actorId: fighterId }),
+            ).state,
             actorId: goblinId,
           }),
         ).state,
@@ -24388,14 +24437,18 @@ describe("battle runtime", () => {
         state: laterTurn,
         subject: transferAct.subject,
         fills: [
-          targetFill(findHole(transferAct.initialHoles, "targetChoice"), skeletonId, [
-            {
-              kind: "spellTarget",
-              casterId: fighterId,
-              targetId: skeletonId,
-              spellId: "hex",
-            },
-          ]),
+          targetFill(
+            findHole(transferAct.initialHoles, "targetChoice"),
+            skeletonId,
+            [
+              {
+                kind: "spellTarget",
+                casterId: fighterId,
+                targetId: skeletonId,
+                spellId: "hex",
+              },
+            ],
+          ),
         ],
       }),
     ).state;
@@ -26293,7 +26346,10 @@ function fogCloudBattle(battleIdValue: string): BattleState {
 function castFogCloud(
   battleIdValue: string,
   areaId: string,
-): Extract<ReturnType<typeof resolveBattleSubject>, { readonly tag: "resolved" }> {
+): Extract<
+  ReturnType<typeof resolveBattleSubject>,
+  { readonly tag: "resolved" }
+> {
   const state = fogCloudBattle(battleIdValue);
   const subject = magicSubject("fog_cloud");
   const area = requireHole(
@@ -28480,46 +28536,46 @@ function magicSubject(
                 ? spellSlotInvocationRef(spellId, 1, "sleepTargetAdmission")
                 : spellId === "spare_the_dying"
                   ? cantripSpellInvocationRef(spellId, "makeStable")
-                    : spellId === "ice_knife"
+                  : spellId === "ice_knife"
+                    ? spellSlotInvocationRef(
+                        spellId,
+                        1,
+                        "attackBurstSaveDamage",
+                      )
+                    : spellId === "fog_cloud"
                       ? spellSlotInvocationRef(
                           spellId,
                           1,
-                          "attackBurstSaveDamage",
+                          "fogCloudObscurement",
                         )
-                      : spellId === "fog_cloud"
-                        ? spellSlotInvocationRef(
-                            spellId,
-                            1,
-                            "fogCloudObscurement",
-                          )
-                    : spellId === "vicious_mockery"
-                      ? cantripSpellInvocationRef(spellId, "saveGatedDamage")
-                      : spellId === "guiding_bolt" ||
-                          spellId === "ray_of_sickness"
-                        ? spellSlotInvocationRef(
-                            spellId,
-                            1,
-                            "spellAttackDamage",
-                          )
-                        : spellId === "eldritch_blast"
-                          ? cantripSpellInvocationRef(
+                      : spellId === "vicious_mockery"
+                        ? cantripSpellInvocationRef(spellId, "saveGatedDamage")
+                        : spellId === "guiding_bolt" ||
+                            spellId === "ray_of_sickness"
+                          ? spellSlotInvocationRef(
                               spellId,
-                              "spellAttackBeamSequence",
+                              1,
+                              "spellAttackDamage",
                             )
-                          : spellId === "ray_of_frost" ||
-                              spellId === "poison_spray" ||
-                              spellId === "chill_touch" ||
-                              spellId === "shocking_grasp" ||
-                              spellId === "fire_bolt" ||
-                              spellId === "starry_wisp"
+                          : spellId === "eldritch_blast"
                             ? cantripSpellInvocationRef(
                                 spellId,
-                                "spellAttackDamage",
+                                "spellAttackBeamSequence",
                               )
-                            : cantripSpellInvocationRef(
-                                spellId,
-                                "saveGatedDamage",
-                              ),
+                            : spellId === "ray_of_frost" ||
+                                spellId === "poison_spray" ||
+                                spellId === "chill_touch" ||
+                                spellId === "shocking_grasp" ||
+                                spellId === "fire_bolt" ||
+                                spellId === "starry_wisp"
+                              ? cantripSpellInvocationRef(
+                                  spellId,
+                                  "spellAttackDamage",
+                                )
+                              : cantripSpellInvocationRef(
+                                  spellId,
+                                  "saveGatedDamage",
+                                ),
     mode: { tag: "cast" },
   };
 }

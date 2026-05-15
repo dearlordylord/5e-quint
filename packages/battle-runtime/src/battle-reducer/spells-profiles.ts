@@ -83,6 +83,7 @@ import {
   supportedPreparedWeaponDamageRiderSpellProfile,
 } from "./spells-profiles-support.ts";
 export * from "./spells-profiles-support.ts";
+import { supportedPreparedSanctuaryTargetingInterdictionSpellProfile } from "./sanctuary-targeting-interdiction.ts";
 export {
   animalFriendshipSaveGateConditionSpell,
   areaSaveGateSpellRangeFeet,
@@ -271,6 +272,13 @@ export function supportedSpellActs(
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedJumpMovementReplacementSpellProfile(
+        actor.combatantId,
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedSanctuaryTargetingInterdictionSpellProfile(
         actor.combatantId,
         spell,
         spellcasting.spellSlots,
@@ -479,7 +487,10 @@ export function supportedCantripMakeStableSpellProfile(
       ? phase.attachment.value.selection
       : null;
   const effect = phase?.kind === "direct" ? phase.effects?.[0] : undefined;
-  const rangeFeet = spareTheDyingRangeFeet(spell.mechanics.range, characterLevel);
+  const rangeFeet = spareTheDyingRangeFeet(
+    spell.mechanics.range,
+    characterLevel,
+  );
   const stateFilter =
     targetSelection !== null &&
     "stateFilter" in targetSelection &&
@@ -535,8 +546,7 @@ export function supportedPreparedFogCloudObscurementProfile(
     "shape" in attachment.value
       ? attachment.value
       : null;
-  const radius =
-    area?.shape.kind === "sphere" ? area.shape.radiusFeet : null;
+  const radius = area?.shape.kind === "sphere" ? area.shape.radiusFeet : null;
   if (
     spell.name !== "Fog Cloud" ||
     spell.provenance.kind !== "srd-5.2.1" ||

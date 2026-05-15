@@ -340,7 +340,10 @@ export function discoverSupportedSpellInvocations(
           initialHoles: [],
         }));
       }
-      if (invocation.procedure === "jumpMovementReplacement") {
+      if (
+        invocation.procedure === "jumpMovementReplacement" ||
+        invocation.procedure === "sanctuaryTargetingInterdiction"
+      ) {
         const targetHole = spellTargetListHole(state, actorId, invocation);
         return targetHole.choices.length === 0
           ? []
@@ -621,6 +624,9 @@ export function spellInvocationCastSummary(
   if (invocation.procedure === "jumpMovementReplacement") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
+  if (invocation.procedure === "sanctuaryTargetingInterdiction") {
+    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+  }
   if (invocation.procedure === "featherFallMitigation") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
@@ -662,6 +668,7 @@ export function spellActivationInvocationCastSummary(
         | "greaseGroundHazard"
         | "fogCloudObscurement"
         | "jumpMovementReplacement"
+        | "sanctuaryTargetingInterdiction"
         | "featherFallMitigation";
     }
   >,
@@ -693,6 +700,9 @@ export function spellSubjectTagForInvocation(
     return "bonusActionSpell";
   }
   if (invocation.procedure === "jumpMovementReplacement") {
+    return "bonusActionSpell";
+  }
+  if (invocation.procedure === "sanctuaryTargetingInterdiction") {
     return "bonusActionSpell";
   }
   if (
@@ -757,6 +767,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "markedDamageRider" &&
     invocation.procedure !== "expeditiousRetreatDash" &&
     invocation.procedure !== "jumpMovementReplacement" &&
+    invocation.procedure !== "sanctuaryTargetingInterdiction" &&
     invocation.procedure !== "saveGatedCondition" &&
     invocation.procedure !== "saveGatedAttackRollAdvantage" &&
     invocation.procedure !== "sleepTargetAdmission" &&
@@ -785,6 +796,7 @@ export function readiedSpellAct(
     invocation.procedure === "markedDamageRider" ||
     invocation.procedure === "expeditiousRetreatDash" ||
     invocation.procedure === "jumpMovementReplacement" ||
+    invocation.procedure === "sanctuaryTargetingInterdiction" ||
     invocation.procedure === "afterHitDamage" ||
     invocation.procedure === "spellAttackBeamSequence" ||
     invocation.procedure === "afterHitSaveGatedCondition" ||

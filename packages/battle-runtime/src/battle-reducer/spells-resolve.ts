@@ -26,11 +26,13 @@ import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import type { DamageType } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import {
+  ATTACK_TARGET_HOLE_ID,
   activeOngoingFeaturesPreventSpellcasting,
   attackRollIsCriticalHit,
   maybeOpenReactionWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
+  type BattleFill,
   type BattleResolutionResult,
   type BonusActionDashSpellBattleResolutionInput,
   type BonusActionSpellBattleResolutionInput,
@@ -93,6 +95,7 @@ import {
   spellObjectAttackRollHole,
   spellObjectIgnitionFact,
   spellTargetHole,
+  spellTargetListHole,
   spellTargetIsLegal,
   supportedSpellInvocationMatchesRef,
   validateSpellDamageFill,
@@ -206,6 +209,11 @@ import {
   resolveSleepTargetAdmissionSpellAct,
 } from "./spells-resolve-save-gates.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
+import {
+  battleStateAfterSanctuaryEarlyEndForActor,
+  combatantWithSanctuaryWard,
+  sanctuaryTargetingInterdictionCheck,
+} from "./sanctuary-targeting-interdiction.ts";
 
 import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
 
@@ -346,6 +354,7 @@ export function resolveSpellAct(
       invocation.procedure === "hideousLaughter" ||
       invocation.procedure === "command" ||
       invocation.procedure === "fogCloudObscurement" ||
+      invocation.procedure === "sanctuaryTargetingInterdiction" ||
       invocation.procedure === "spellAttackBeamSequence")
   ) {
     return invalidResult(
@@ -668,6 +677,82 @@ export function resolveSpellAct(
       "invalidFill",
       "Spell target must be a combatant within the selected spell's supported range.",
     );
+  }
+
+  if (isSupportedDamageSpellInvocation(invocationForResolution)) {
+    const sanctuaryCheck = sanctuaryTargetingInterdictionCheck({
+      state: castingState,
+      triggeringCombatantId: subject.actorId,
+      wardedCombatantId: target.combatantId,
+      triggeringTargetEventId: ATTACK_TARGET_HOLE_ID,
+      fills: input.fills,
+    });
+    if (sanctuaryCheck.tag === "needsHoles") {
+      return needsHolesResult(castingState, input.subject, [
+        sanctuaryCheck.hole,
+      ]);
+    }
+    if (sanctuaryCheck.tag === "invalid") {
+      return invalidResult(input.state, "invalidFill", sanctuaryCheck.message);
+    }
+    if (sanctuaryCheck.tag === "lost") {
+      return spendSpellCastResources({
+        state: castingState,
+        actorId: subject.actorId,
+        invocation: invocationForResolution,
+        errorState: input.state,
+      });
+    }
+    if (sanctuaryCheck.tag === "newTarget") {
+      const replacementTarget = input.state.combatants.get(
+        sanctuaryCheck.targetId,
+      );
+      if (
+        replacementTarget === undefined ||
+        !spellTargetIsLegal(
+          input.state,
+          subject.actorId,
+          replacementTarget.combatantId,
+          invocationForResolution,
+          sanctuaryCheck.spatialFacts,
+        )
+      ) {
+        return invalidResult(
+          input.state,
+          "invalidFill",
+          "Sanctuary replacement spell target must be legal for the selected spell.",
+        );
+      }
+      const originalTargetFill = input.fills.find(
+        (
+          fill,
+        ): fill is Extract<BattleFill, { readonly kind: "targetChoice" }> =>
+          fill.kind === "targetChoice" && fill.value === target.combatantId,
+      );
+      if (originalTargetFill === undefined) {
+        return invalidResult(
+          input.state,
+          "invalidFill",
+          "Sanctuary replacement requires the original spell target fill.",
+        );
+      }
+      return resolveSpellAct({
+        ...input,
+        fills: [
+          ...input.fills
+            .filter((fill) => fill.kind !== "sanctuaryInterdictionOutcome")
+            .map((fill) =>
+              fill === originalTargetFill
+                ? {
+                    ...fill,
+                    value: replacementTarget.combatantId,
+                    spatialFacts: sanctuaryCheck.spatialFacts,
+                  }
+                : fill,
+            ),
+        ],
+      });
+    }
   }
 
   if (invocationForResolution.procedure === "persistentArmorEffect") {
@@ -1429,6 +1514,14 @@ export function resolveBonusActionSpellAct(
         "Bonus Action spell subject requires a supported Bonus Action spell act.",
       );
     }
+  } else if (invocation.procedure === "sanctuaryTargetingInterdiction") {
+    if (invocation.actionCost !== "bonusAction") {
+      return invalidResult(
+        input.state,
+        "unsupportedSubject",
+        "Bonus Action spell subject requires a supported Bonus Action spell act.",
+      );
+    }
   } else if (
     invocation.procedure !== "directHitPointRestoration" ||
     invocation.actionCost !== "bonusAction"
@@ -1509,6 +1602,14 @@ export function resolveBonusActionSpellAct(
   }
   if (invocation.procedure === "jumpMovementReplacement") {
     return resolveJumpMovementReplacementSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "sanctuaryTargetingInterdiction") {
+    return resolveSanctuaryTargetingInterdictionSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
@@ -1608,7 +1709,11 @@ export function resolveBonusActionDashSpellAct(
     return spellCastReactionWindow;
   }
 
-  const spent = spendActivationResource(castingState.currentTurnResources, {
+  const spellCastState = battleStateAfterSanctuaryEarlyEndForActor(
+    castingState,
+    subject.actorId,
+  );
+  const spent = spendActivationResource(spellCastState.currentTurnResources, {
     kind: "bonusAction",
   });
   if (Either.isLeft(spent)) {
@@ -1627,7 +1732,7 @@ export function resolveBonusActionDashSpellAct(
     );
   }
   const afterPriorConcentration = breakBattleConcentration(
-    castingState,
+    spellCastState,
     subject.actorId,
   );
   const slotted = expendSpellSlot(
@@ -1667,4 +1772,61 @@ export function resolveBonusActionDashSpellAct(
     state: dashed,
     snapshot: snapshotBattle(dashed),
   };
+}
+
+function resolveSanctuaryTargetingInterdictionSpellAct(input: {
+  readonly input: BonusActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "sanctuaryTargetingInterdiction" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  const targetList = input.fillSet.targetList;
+  if (targetList === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      spellTargetListHole(input.input.state, input.actorId, input.invocation),
+    ]);
+  }
+  if (targetList.targetIds.length !== 1) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Sanctuary must target exactly one creature.",
+    );
+  }
+  const targetId = targetList.targetIds[0]!;
+  const spellCastState = battleStateAfterSanctuaryEarlyEndForActor(
+    input.input.state,
+    input.actorId,
+  );
+  const target = spellCastState.combatants.get(targetId);
+  if (
+    target === undefined ||
+    !spellTargetIsLegal(
+      spellCastState,
+      input.actorId,
+      targetId,
+      input.invocation,
+      targetList.spatialFacts,
+    )
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Sanctuary target must be a combatant within range.",
+    );
+  }
+  const combatants = new Map(spellCastState.combatants).set(
+    targetId,
+    combatantWithSanctuaryWard(target, input.invocation),
+  );
+  return spendSpellCastResources({
+    state: { ...spellCastState, combatants },
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+    skipSanctuarySpellCastEarlyEnd: true,
+  });
 }

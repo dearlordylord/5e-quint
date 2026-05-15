@@ -8,12 +8,14 @@ import {
 } from "@dnd/shared-algebras/attack-roll-algebra";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import {
+  ATTACK_TARGET_HOLE_ID,
   attackRollIsCriticalHit,
   maybeOpenReactionWindow,
   openAfterDamageSequenceReactionWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleAfterDamageEvent,
+  type BattleFill,
   type BattleHoleId,
   type BattleResolutionResult,
   type SupportedSpellInvocation,
@@ -42,6 +44,7 @@ import {
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
+import { sanctuaryTargetingInterdictionCheck } from "./sanctuary-targeting-interdiction.ts";
 import {
   applyPreparedSlotSpellDamage,
   applySpellDamage,
@@ -67,6 +70,7 @@ import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 import { validateSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
 
 import { type SpellFillSet } from "./spells-resolve-fill-set.ts";
+import { spellFillSet } from "./spells-resolve-fill-set.ts";
 
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 export function resolveAttackBurstSaveDamageSpellAct(input: {
@@ -99,6 +103,88 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
       "invalidFill",
       "Spell target must be a combatant within the selected spell's supported range.",
     );
+  }
+
+  const sanctuaryCheck = sanctuaryTargetingInterdictionCheck({
+    state: input.input.state,
+    triggeringCombatantId: input.actorId,
+    wardedCombatantId: target.combatantId,
+    triggeringTargetEventId: ATTACK_TARGET_HOLE_ID,
+    fills: input.input.fills,
+  });
+  if (sanctuaryCheck.tag === "needsHoles") {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      sanctuaryCheck.hole,
+    ]);
+  }
+  if (sanctuaryCheck.tag === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      sanctuaryCheck.message,
+    );
+  }
+  if (sanctuaryCheck.tag === "lost") {
+    return spendSpellCastResources({
+      state: input.input.state,
+      actorId: input.actorId,
+      invocation: input.invocation,
+      errorState: input.input.state,
+    });
+  }
+  if (sanctuaryCheck.tag === "newTarget") {
+    const replacementTarget = input.input.state.combatants.get(
+      sanctuaryCheck.targetId,
+    );
+    if (
+      replacementTarget === undefined ||
+      !spellTargetIsLegal(
+        input.input.state,
+        input.actorId,
+        replacementTarget.combatantId,
+        input.invocation,
+        sanctuaryCheck.spatialFacts,
+      )
+    ) {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        "Sanctuary replacement Ice Knife target must be legal for the selected spell.",
+      );
+    }
+    const originalTargetFill = input.input.fills.find(
+      (fill): fill is Extract<BattleFill, { readonly kind: "targetChoice" }> =>
+        fill.kind === "targetChoice" && fill.value === target.combatantId,
+    );
+    if (originalTargetFill === undefined) {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        "Sanctuary replacement requires the original Ice Knife target fill.",
+      );
+    }
+    const fills = input.input.fills
+      .filter((fill) => fill.kind !== "sanctuaryInterdictionOutcome")
+      .map(
+        (fill): BattleFill =>
+          fill === originalTargetFill
+            ? {
+                ...fill,
+                value: replacementTarget.combatantId,
+                spatialFacts: sanctuaryCheck.spatialFacts,
+              }
+            : fill,
+      );
+    const fillSet = spellFillSet(fills, input.invocation);
+    if (fillSet.tag === "invalid") {
+      return invalidResult(input.input.state, "invalidFill", fillSet.message);
+    }
+    return resolveAttackBurstSaveDamageSpellAct({
+      input: { ...input.input, fills },
+      actorId: input.actorId,
+      invocation: input.invocation,
+      fillSet,
+    });
   }
 
   const spellCastReactionWindow = maybeOpenReactionWindow(

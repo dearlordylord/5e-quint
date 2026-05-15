@@ -95,3 +95,4 @@
 {"unitId":"hellish_rebuke","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV69B","ownerPath":"packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"}}
 {"unitId":"thunderwave","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV51","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"dissonant_whispers","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV52","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
+{"unitId":"sanctuary","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84G","ownerPath":"packages/battle-runtime/src/sanctuary-targeting-interdiction.test.ts"}}
