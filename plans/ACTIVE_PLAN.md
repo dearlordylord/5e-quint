@@ -358,7 +358,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 326,
       "id": "SRDINV87D",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Sleep Non-Sleeper Auto-Success Runtime"
     },
     {
