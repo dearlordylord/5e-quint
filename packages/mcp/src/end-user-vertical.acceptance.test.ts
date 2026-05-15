@@ -531,14 +531,18 @@ describe("end-user MCP vertical", () => {
       ]),
     );
 
-    fillBattleSubject(root, magicSubject("wizard", "ray_of_frost"), {
-      kind: "targetChoice",
-      holeId: "battle:attack:target",
-      value: "skeleton",
-    });
+    fillBattleSubject(
+      root,
+      cantripSubject("wizard", "ray_of_frost", "spellAttackDamage"),
+      {
+        kind: "targetChoice",
+        holeId: "battle:attack:target",
+        value: "skeleton",
+      },
+    );
     const afterRayMiss = fillBattleSubject(
       root,
-      magicSubject("wizard", "ray_of_frost"),
+      cantripSubject("wizard", "ray_of_frost", "spellAttackDamage"),
       {
         kind: "attackRoll",
         holeId: "battle:attack:roll",
@@ -646,14 +650,18 @@ describe("end-user MCP vertical", () => {
       currentActorId: "wizard",
     });
 
-    fillBattleSubject(root, magicSubject("wizard", "magic_missile"), {
-      kind: "spellTargetAllocation",
-      holeId: "battle:spell:target-allocation:magic_missile",
-      value: { allocations: [{ targetId: "skeleton", count: 3 }] },
-    });
+    fillBattleSubject(
+      root,
+      spellSlotSubject("wizard", "magic_missile", "repeatedDamageAllocation"),
+      {
+        kind: "spellTargetAllocation",
+        holeId: "battle:spell:target-allocation:magic_missile",
+        value: { allocations: [{ targetId: "skeleton", count: 3 }] },
+      },
+    );
     const afterMagicMissile = fillBattleSubject(
       root,
-      magicSubject("wizard", "magic_missile"),
+      spellSlotSubject("wizard", "magic_missile", "repeatedDamageAllocation"),
       {
         kind: "rolledDice",
         holeId: "battle:spell:damage-result:magic_missile:3d4+3-force",
@@ -701,6 +709,344 @@ describe("end-user MCP vertical", () => {
         spellSlots: [{ count: 2, expended: 1, spellLevel: 1 }],
       }),
     ]);
+  });
+
+  test("starts the battle demo through MCP character creation and start_battle", () => {
+    const root = createMcpCompositionRoot();
+    const fighterDraftId = "draft:demo-fighter-two";
+    const wizardDraftId = "draft:demo-wizard-one";
+    const bardDraftId = "draft:demo-bard-one";
+
+    createAndFinalizeFighterTwo(root, fighterDraftId);
+    const wizard = createAndFinalizeWizardOne(root, wizardDraftId);
+    expect(wizard.finalization).toMatchObject({
+      tag: "ready",
+      build: {
+        spellcasting: {
+          sources: [
+            expect.objectContaining({
+              preparedSpells: expect.arrayContaining([
+                "magic_missile",
+                "shield",
+              ]),
+            }),
+          ],
+        },
+      },
+    });
+    createAndFinalizeBardOne(root, bardDraftId);
+
+    const started = callTool(root, "start_battle", {
+      battleId: "battle:mcp-demo-scenario",
+      initialCombatants: [
+        statBlockCombatant("goblin-a", "stat_block_goblin_warrior", 22),
+        characterCombatant(bardDraftId, "bard", 21),
+        characterCombatant(fighterDraftId, "fighter", 20),
+        characterCombatant(wizardDraftId, "wizard", 19),
+        statBlockCombatant("goblin-b", "stat_block_goblin_warrior", 18),
+        statBlockCombatant("skeleton-a", "stat_block_skeleton", 16),
+        statBlockCombatant("skeleton-b", "stat_block_skeleton", 14),
+      ],
+    });
+    if (started.snapshot === undefined) {
+      throw new Error(JSON.stringify(started));
+    }
+    expect(started.snapshot).toMatchObject({
+      currentActorId: "goblin-a",
+      turnOrder: [
+        "goblin-a",
+        "bard",
+        "fighter",
+        "wizard",
+        "goblin-b",
+        "skeleton-a",
+        "skeleton-b",
+      ],
+    });
+
+    resolveAttackWithShieldReaction(root);
+    expect(combatant(root, "wizard")).toMatchObject({
+      hp: 8,
+      reactionAvailable: false,
+      origin: expect.objectContaining({
+        spellcasting: {
+          spellSlots: [{ spellLevel: 1, count: 2, expended: 1 }],
+        },
+      }),
+    });
+    endTurn(root, "goblin-a");
+
+    grantBardicInspiration(root);
+    expect(combatant(root, "bard").origin.resources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          unitId: "bard_bardic_inspiration",
+          usesRemaining: 1,
+        }),
+      ]),
+    );
+    endTurn(root, "bard");
+
+    resolveWeaponAttack(root, {
+      actorId: "fighter",
+      attackName: "Flail",
+      targetId: "skeleton-a",
+      total: 18,
+      naturalD20: 15,
+      damageResults: [1],
+    });
+    expect(combatant(root, "skeleton-a")).toMatchObject({ hp: 5 });
+    callTool(root, "resolve_battle_act", {
+      subject: unitFeatureSubject("fighter", "fighter_action_surge"),
+    });
+    resolveWeaponAttack(root, {
+      actorId: "fighter",
+      attackName: "Flail",
+      targetId: "skeleton-a",
+      total: 18,
+      naturalD20: 15,
+      damageResults: [1],
+    });
+    expect(combatant(root, "skeleton-a")).toMatchObject({
+      hp: 0,
+      zeroHpLifecycle: { dead: true },
+    });
+    endTurn(root, "fighter");
+
+    fillBattleSubject(
+      root,
+      spellSlotSubject("wizard", "magic_missile", "repeatedDamageAllocation"),
+      {
+        kind: "spellTargetAllocation",
+        holeId: "battle:spell:target-allocation:magic_missile",
+        value: { allocations: [{ targetId: "goblin-a", count: 3 }] },
+      },
+    );
+    fillBattleSubject(
+      root,
+      spellSlotSubject("wizard", "magic_missile", "repeatedDamageAllocation"),
+      {
+        kind: "rolledDice",
+        holeId: "battle:spell:damage-result:magic_missile:3d4+3-force",
+        value: [{ results: [3, 3, 2] }],
+      },
+    );
+    expect(combatant(root, "goblin-a")).toMatchObject({
+      hp: 0,
+      zeroHpLifecycle: { dead: true },
+    });
+    expect(combatant(root, "wizard").origin.spellcasting.spellSlots).toEqual([
+      { spellLevel: 1, count: 2, expended: 2 },
+    ]);
+    endTurn(root, "wizard");
+
+    resolveWeaponAttack(root, {
+      actorId: "goblin-b",
+      attackName: "Scimitar",
+      targetId: "bard",
+      total: 16,
+      naturalD20: 12,
+      damageResults: [4],
+    });
+    expect(combatant(root, "bard")).toMatchObject({ hp: 4 });
+    endTurn(root, "goblin-b");
+    endTurn(root, "skeleton-a");
+
+    resolveWeaponAttack(root, {
+      actorId: "skeleton-b",
+      attackName: "Shortsword",
+      targetId: "bard",
+      total: 18,
+      naturalD20: 15,
+      damageResults: [5],
+    });
+    expect(combatant(root, "bard")).toMatchObject({ hp: 0 });
+    endTurn(root, "skeleton-b");
+    endTurn(root, "goblin-a", 5);
+    expect(combatant(root, "bard").zeroHpLifecycle).toMatchObject({
+      deathSaves: { failures: 1, successes: 0 },
+    });
+    endTurn(root, "bard");
+
+    resolveWeaponAttack(root, {
+      actorId: "fighter",
+      attackName: "Flail",
+      targetId: "skeleton-b",
+      total: 18,
+      naturalD20: 15,
+      damageResults: [1],
+    });
+    expect(combatant(root, "skeleton-b")).toMatchObject({ hp: 5 });
+    endTurn(root, "fighter");
+
+    fillBattleSubject(
+      root,
+      cantripSubject("wizard", "ray_of_frost", "spellAttackDamage"),
+      {
+        kind: "targetChoice",
+        holeId: "battle:attack:target",
+        value: "goblin-b",
+      },
+    );
+    fillBattleSubject(
+      root,
+      cantripSubject("wizard", "ray_of_frost", "spellAttackDamage"),
+      {
+        kind: "attackRoll",
+        holeId: "battle:attack:roll",
+        value: { total: 16, naturalD20: 11 },
+      },
+    );
+    fillBattleSubject(
+      root,
+      cantripSubject("wizard", "ray_of_frost", "spellAttackDamage"),
+      {
+        kind: "rolledDice",
+        holeId: "battle:spell:damage-result:ray_of_frost:1d8-cold",
+        value: [{ results: [4] }],
+      },
+    );
+    expect(combatant(root, "goblin-b")).toMatchObject({ hp: 6 });
+    endTurn(root, "wizard");
+
+    resolveWeaponAttack(root, {
+      actorId: "goblin-b",
+      attackName: "Scimitar",
+      targetId: "bard",
+      total: 16,
+      naturalD20: 12,
+      damageResults: [2],
+    });
+    expect(combatant(root, "bard").zeroHpLifecycle).toMatchObject({
+      deathSaves: { failures: 2, successes: 0 },
+    });
+    endTurn(root, "goblin-b");
+    endTurn(root, "skeleton-a");
+
+    resolveWeaponAttack(root, {
+      actorId: "skeleton-b",
+      attackName: "Shortsword",
+      targetId: "bard",
+      total: 18,
+      naturalD20: 15,
+      damageResults: [4],
+    });
+    expect(combatant(root, "bard").zeroHpLifecycle).toMatchObject({
+      deathSaves: { failures: 3, successes: 0 },
+      dead: true,
+    });
+    endTurn(root, "skeleton-b");
+
+    endTurn(root, "goblin-a");
+    endTurn(root, "bard");
+    resolveWeaponAttack(root, {
+      actorId: "fighter",
+      attackName: "Flail",
+      targetId: "skeleton-b",
+      total: 18,
+      naturalD20: 15,
+      damageResults: [1],
+    });
+    expect(combatant(root, "skeleton-b")).toMatchObject({
+      hp: 0,
+      zeroHpLifecycle: { dead: true },
+    });
+    endTurn(root, "fighter");
+
+    fillBattleSubject(
+      root,
+      cantripSubject("wizard", "ray_of_frost", "spellAttackDamage"),
+      {
+        kind: "targetChoice",
+        holeId: "battle:attack:target",
+        value: "goblin-b",
+      },
+    );
+    fillBattleSubject(
+      root,
+      cantripSubject("wizard", "ray_of_frost", "spellAttackDamage"),
+      {
+        kind: "attackRoll",
+        holeId: "battle:attack:roll",
+        value: { total: 16, naturalD20: 11 },
+      },
+    );
+    fillBattleSubject(
+      root,
+      cantripSubject("wizard", "ray_of_frost", "spellAttackDamage"),
+      {
+        kind: "rolledDice",
+        holeId: "battle:spell:damage-result:ray_of_frost:1d8-cold",
+        value: [{ results: [4] }],
+      },
+    );
+    expect(combatant(root, "goblin-b")).toMatchObject({ hp: 2 });
+    endTurn(root, "wizard");
+
+    resolveWeaponAttack(root, {
+      actorId: "goblin-b",
+      attackName: "Scimitar",
+      targetId: "fighter",
+      total: 20,
+      naturalD20: 18,
+      damageResults: [5],
+    });
+    expect(combatant(root, "fighter")).toMatchObject({ hp: 13 });
+    endTurn(root, "goblin-b");
+    endTurn(root, "skeleton-a");
+    endTurn(root, "skeleton-b");
+    endTurn(root, "goblin-a");
+    endTurn(root, "bard");
+
+    fillBattleSubject(
+      root,
+      unitFeatureSubject("fighter", "fighter_second_wind"),
+      {
+        kind: "rolledDice",
+        holeId: "battle:unit-feature:fighter_second_wind:healing-roll",
+        value: [{ results: [5] }],
+      },
+    );
+    expect(combatant(root, "fighter")).toMatchObject({ hp: 20 });
+    resolveWeaponAttack(root, {
+      actorId: "fighter",
+      attackName: "Flail",
+      targetId: "goblin-b",
+      total: 18,
+      naturalD20: 15,
+      damageResults: [1],
+    });
+    expect(callTool(root, "read_battle_state", {}).snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: "goblin-a",
+          hp: 0,
+          zeroHpLifecycle: expect.objectContaining({ dead: true }),
+        }),
+        expect.objectContaining({
+          combatantId: "goblin-b",
+          hp: 0,
+          zeroHpLifecycle: expect.objectContaining({ dead: true }),
+        }),
+        expect.objectContaining({
+          combatantId: "skeleton-a",
+          hp: 0,
+          zeroHpLifecycle: expect.objectContaining({ dead: true }),
+        }),
+        expect.objectContaining({
+          combatantId: "skeleton-b",
+          hp: 0,
+          zeroHpLifecycle: expect.objectContaining({ dead: true }),
+        }),
+        expect.objectContaining({
+          combatantId: "bard",
+          hp: 0,
+          zeroHpLifecycle: expect.objectContaining({ dead: true }),
+        }),
+        expect.objectContaining({ combatantId: "fighter", hp: 20 }),
+        expect.objectContaining({ combatantId: "wizard", hp: 8 }),
+      ]),
+    );
   });
 });
 
@@ -876,8 +1222,8 @@ function createAndFinalizeWizardOne(
       choiceFill(
         unitHoleId("class_wizard", "wizard_prepared_spell_choices"),
         "detect_magic",
-        "mage_armor",
         "magic_missile",
+        "shield",
         "sleep",
       ),
       choiceFill(
@@ -924,23 +1270,352 @@ function createAndFinalizeWizardOne(
   return callTool(root, "finalize_character", { draftId });
 }
 
+function createAndFinalizeBardOne(
+  root: ReturnType<typeof createMcpCompositionRoot>,
+  draftId: string,
+) {
+  callTool(root, "create_character_draft", { draftId });
+  callTool(root, "fill_creation_holes", {
+    draftId,
+    expectedRevision: 0,
+    fills: [
+      choiceFill(
+        "cc:draft:draft.progression.initial",
+        "10:class_bard:level_1:maximum_hit_die",
+      ),
+      choiceFill("cc:draft:draft.background", "background_soldier"),
+      choiceFill("cc:draft:draft.species", "species_orc"),
+      {
+        kind: "abilityScores",
+        holeId: "cc:draft:draft.abilityScoreGeneration",
+        method: "standardArray",
+        value: { str: 8, dex: 14, con: 13, int: 10, wis: 12, cha: 15 },
+      },
+      choiceFill("cc:draft:draft.languages", "Dwarvish", "Goblin"),
+      choiceFill("cc:draft:draft.alignment", "lawful_good"),
+    ],
+  });
+  callTool(root, "fill_creation_holes", {
+    draftId,
+    expectedRevision: 1,
+    fills: [
+      choiceFill(
+        unitHoleId("class_bard", "class_skill_proficiency_choice"),
+        "arcana",
+        "perception",
+        "persuasion",
+      ),
+      choiceFill(
+        unitHoleId("class_bard", "class_tool_proficiency_choice"),
+        "tool:tool_lute",
+        "tool:tool_flute",
+        "tool:tool_drum",
+      ),
+      choiceFill(
+        unitHoleId("class_bard", "class_equipment_choice"),
+        "option_b",
+      ),
+      choiceFill(
+        unitHoleId("class_bard", "class_cantrip_choices"),
+        "dancing_lights",
+        "vicious_mockery",
+      ),
+      choiceFill(
+        unitHoleId("class_bard", "class_prepared_spell_choices"),
+        "charm_person",
+        "color_spray",
+        "dissonant_whispers",
+        "healing_word",
+      ),
+      choiceFill(
+        unitHoleId("background_soldier", "background_ability_score_increase"),
+        "two_and_one:str:con",
+      ),
+      choiceFill(
+        unitHoleId("background_soldier", "background_tool_choice"),
+        "tool_dice_set",
+      ),
+      choiceFill(
+        unitHoleId("background_soldier", "background_equipment_choice"),
+        "option_b",
+      ),
+    ],
+  });
+  callTool(root, "fill_creation_holes", {
+    draftId,
+    expectedRevision: 2,
+    fills: [
+      choiceFill(
+        unitHoleId("class_bard", "equipment_purchase"),
+        "weapon_longsword",
+        "weapon_dagger",
+        "equipment_shield",
+      ),
+    ],
+  });
+  callTool(root, "fill_creation_holes", {
+    draftId,
+    expectedRevision: 3,
+    fills: [
+      choiceFill(loadoutHoleId("equipment_shield", "shield"), "wielded"),
+      choiceFill(
+        loadoutHoleId("weapon_longsword", "weapon"),
+        "wielded_one_handed",
+      ),
+    ],
+  });
+  return callTool(root, "finalize_character", { draftId });
+}
+
+function characterCombatant(
+  draftId: string,
+  combatantId: string,
+  initiative: number,
+) {
+  return {
+    kind: "characterSession",
+    characterId: testCharacterId(draftId),
+    combatantId,
+    initiative,
+    side: "party",
+  };
+}
+
+function statBlockCombatant(
+  combatantId: string,
+  statBlockId: string,
+  initiative: number,
+) {
+  return {
+    kind: "statBlock",
+    statBlockId,
+    combatantId,
+    initiative,
+    side: "opposition",
+  };
+}
+
+function combatant(
+  root: ReturnType<typeof createMcpCompositionRoot>,
+  combatantId: string,
+) {
+  const found = callTool(
+    root,
+    "read_battle_state",
+    {},
+  ).snapshot.combatants.find(
+    (candidate: { readonly combatantId: string }) =>
+      candidate.combatantId === combatantId,
+  );
+  if (found === undefined)
+    throw new Error(`Expected combatant: ${combatantId}`);
+  return found;
+}
+
+function requireHole(
+  holes: readonly {
+    readonly kind: string;
+    readonly holeId: string;
+    readonly rollMode?: string;
+  }[],
+  kind: string,
+) {
+  const hole = holes.find((candidate) => candidate.kind === kind);
+  if (hole === undefined) throw new Error(`Expected battle hole: ${kind}`);
+  return hole;
+}
+
+function resolveAttackWithShieldReaction(
+  root: ReturnType<typeof createMcpCompositionRoot>,
+) {
+  const subject = attackSubject("goblin-a", "Scimitar");
+  const target = fillBattleSubject(root, subject, {
+    kind: "targetChoice",
+    holeId: "battle:attack:target",
+    value: "wizard",
+  });
+  const attackRoll = requireHole(target.result.holes, "attackRoll");
+  const afterRoll = fillBattleSubject(root, subject, {
+    kind: "attackRoll",
+    holeId: attackRoll.holeId,
+    value: {
+      total: 14,
+      naturalD20: 10,
+      ...("rollMode" in attackRoll ? { rollMode: attackRoll.rollMode } : {}),
+    },
+  });
+  const reactionHole = requireHole(afterRoll.result.holes, "reactionDecision");
+  const shieldChoice = afterRoll.snapshot.pendingReaction.choices.find(
+    (choice: {
+      readonly kind: string;
+      readonly invocation?: { readonly spellId?: string };
+    }) =>
+      choice.kind === "castTriggeredReactionSpell" &&
+      choice.invocation?.spellId === "shield",
+  );
+  if (shieldChoice === undefined) throw new Error("Expected Shield reaction.");
+  return callTool(root, "fill_battle_hole", {
+    subject: afterRoll.result.subject ?? subject,
+    fill: {
+      kind: "reactionDecision",
+      holeId: reactionHole.holeId,
+      value: {
+        kind: "resolve",
+        reactorId: "wizard",
+        choice: {
+          kind: "castTriggeredReactionSpell",
+          invocation: shieldChoice.invocation,
+          fills: [],
+        },
+      },
+    },
+  });
+}
+
+function grantBardicInspiration(
+  root: ReturnType<typeof createMcpCompositionRoot>,
+) {
+  const subject = unitFeatureSubject("bard", "bard_bardic_inspiration");
+  const act = callTool(root, "discover_battle_acts", {}).snapshot.acts.find(
+    (candidate: {
+      readonly subject?: {
+        readonly tag?: string;
+        readonly actorId?: string;
+        readonly unitId?: string;
+      };
+    }) =>
+      candidate.subject?.tag === subject.tag &&
+      candidate.subject.actorId === subject.actorId &&
+      candidate.subject.unitId === subject.unitId,
+  );
+  if (act === undefined) throw new Error("Expected Bardic Inspiration act.");
+  const target = requireHole(act.initialHoles, "targetChoice");
+  return callTool(root, "fill_battle_hole", {
+    subject: act.subject,
+    fill: {
+      kind: "targetChoice",
+      holeId: target.holeId,
+      value: "fighter",
+      spatialFacts: [
+        {
+          kind: "bardicInspirationTargetWithinRange",
+          bardId: "bard",
+          targetId: "fighter",
+          unitId: "bard_bardic_inspiration",
+          rangeFeet: 60,
+        },
+      ],
+    },
+  });
+}
+
+function resolveWeaponAttack(
+  root: ReturnType<typeof createMcpCompositionRoot>,
+  input: {
+    readonly actorId: string;
+    readonly attackName: string;
+    readonly targetId: string;
+    readonly total: number;
+    readonly naturalD20: number;
+    readonly damageResults: readonly number[];
+  },
+) {
+  const subject = attackSubject(input.actorId, input.attackName);
+  const target = fillBattleSubject(root, subject, {
+    kind: "targetChoice",
+    holeId: "battle:attack:target",
+    value: input.targetId,
+  });
+  const attackRoll = requireHole(target.result.holes, "attackRoll");
+  const afterAttackRoll = fillBattleSubject(
+    root,
+    target.result.subject ?? subject,
+    {
+      kind: "attackRoll",
+      holeId: attackRoll.holeId,
+      value: {
+        total: input.total,
+        naturalD20: input.naturalD20,
+        ...("rollMode" in attackRoll ? { rollMode: attackRoll.rollMode } : {}),
+      },
+    },
+  );
+  const damage = requireHole(afterAttackRoll.result.holes, "rolledDice");
+  const afterDamage = fillBattleSubject(
+    root,
+    afterAttackRoll.result.subject ?? subject,
+    {
+      kind: "rolledDice",
+      holeId: damage.holeId,
+      value: [{ results: input.damageResults }],
+    },
+  );
+  if (afterDamage.result?.tag !== "needsHoles") return afterDamage;
+  const disposition = afterDamage.result.holes.find(
+    (hole: { readonly kind: string }) =>
+      hole.kind === "attackDamageDisposition",
+  );
+  if (disposition === undefined) return afterDamage;
+  return callTool(root, "fill_battle_hole", {
+    subject: afterDamage.result.subject ?? subject,
+    fill: {
+      kind: "attackDamageDisposition",
+      holeId: disposition.holeId,
+      value: { kind: "ordinaryDamage" },
+    },
+  });
+}
+
+function endTurn(
+  root: ReturnType<typeof createMcpCompositionRoot>,
+  actorId: string,
+  deathSaveRoll?: number,
+) {
+  const result = callTool(root, "end_turn", { actorId });
+  if (result.result?.tag !== "needsHoles") return result;
+  const deathSave = result.result.holes.find(
+    (hole: { readonly kind: string }) => hole.kind === "deathSavingThrow",
+  );
+  if (deathSave === undefined || deathSaveRoll === undefined) {
+    throw new Error(`Unexpected End Turn holes for ${actorId}`);
+  }
+  return callTool(root, "fill_battle_hole", {
+    subject: result.result.subject ?? {
+      tag: "runtimeCommand",
+      actorId,
+      command: "endTurn",
+    },
+    fill: {
+      kind: "deathSavingThrow",
+      holeId: deathSave.holeId,
+      value: deathSaveRoll,
+    },
+  });
+}
+
 function attackSubject(actorId: string, attackName: string) {
   return { tag: "action", actorId, action: "attack", attackName };
 }
 
-function magicSubject(actorId: string, spellId: string) {
+function cantripSubject(actorId: string, spellId: string, procedure: string) {
   return {
     tag: "actionSpell",
     actorId,
-    invocation:
-      spellId === "magic_missile"
-        ? {
-            tag: "spellSlot",
-            spellId,
-            slotLevel: 1,
-            procedure: "repeatedDamageAllocation",
-          }
-        : { tag: "cantrip", spellId, procedure: "spellAttackDamage" },
+    invocation: { tag: "cantrip", spellId, procedure },
+    mode: { tag: "cast" },
+  };
+}
+
+function spellSlotSubject(actorId: string, spellId: string, procedure: string) {
+  return {
+    tag: "actionSpell",
+    actorId,
+    invocation: {
+      tag: "spellSlot",
+      spellId,
+      slotLevel: 1,
+      procedure,
+    },
     mode: { tag: "cast" },
   };
 }
@@ -953,7 +1628,8 @@ function fillBattleSubject(
   root: ReturnType<typeof createMcpCompositionRoot>,
   subject:
     | ReturnType<typeof attackSubject>
-    | ReturnType<typeof magicSubject>
+    | ReturnType<typeof cantripSubject>
+    | ReturnType<typeof spellSlotSubject>
     | ReturnType<typeof unitFeatureSubject>,
   fill: {
     readonly kind:

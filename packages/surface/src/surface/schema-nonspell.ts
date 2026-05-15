@@ -1094,6 +1094,13 @@ const ClassSpellAccessSchema = Schema.Struct({
 const distinctStrings = (values: readonly string[]): boolean =>
   new Set(values).size === values.length;
 
+const sameStringSet = (
+  left: readonly string[],
+  right: readonly string[],
+): boolean =>
+  left.length === right.length &&
+  left.every((value) => right.some((candidate) => candidate === value));
+
 const distinctSlotLevels = (
   slots: readonly { readonly spellLevel: number }[],
 ): boolean => distinctStrings(slots.map((slot) => slot.spellLevel.toString()));
@@ -1641,7 +1648,7 @@ export const WizardSpellcastingCreationSchema = Schema.Struct({
           spellcasting.cantripAccess.spellIds.length ||
         spellcasting.spellbookAccess.choose !==
           spellcasting.spellbookAccess.spells.length ||
-        spellcasting.preparedAccess.choose !==
+        spellcasting.preparedAccess.choose >
           spellcasting.preparedAccess.spellIds.length
       ) {
         return false;
@@ -1664,27 +1671,24 @@ export const WizardSpellcastingCreationSchema = Schema.Struct({
         return false;
       }
 
-      const spellbookById = new Map(
-        spellcasting.spellbookAccess.spells.map((spell) => [
-          spell.spellId,
-          spell.spellLevel,
-        ]),
-      );
       const availableSlotLevels = new Set(
         spellcasting.spellSlotProjection.slots
           .filter((slot) => slot.count > 0)
           .map((slot) => slot.spellLevel),
       );
 
-      return spellcasting.preparedAccess.spellIds.every((spellId) => {
-        const spellLevel = spellbookById.get(spellId);
+      const availableSpellbookSpellIds = spellcasting.spellbookAccess.spells
+        .filter((spell) => availableSlotLevels.has(spell.spellLevel))
+        .map((spell) => spell.spellId);
 
-        return spellLevel !== undefined && availableSlotLevels.has(spellLevel);
-      });
+      return sameStringSet(
+        spellcasting.preparedAccess.spellIds,
+        availableSpellbookSpellIds,
+      );
     },
     {
       message: () =>
-        "Wizard spellcasting choices must match their counts, be unique, and prepare only spellbook spells with available Spell Slot levels.",
+        "Wizard spellcasting choices must match cantrip and spellbook counts, provide enough unique prepared spell options, and prepare only spellbook spells with available Spell Slot levels.",
     },
   ),
 );

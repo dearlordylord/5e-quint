@@ -202,7 +202,14 @@ describe("character-creation Surface records", () => {
           preparedAccess: {
             choose: 4,
             kind: "prepared_from_spellbook",
-            spellIds: ["detect_magic", "mage_armor", "magic_missile", "sleep"],
+            spellIds: [
+              "detect_magic",
+              "mage_armor",
+              "magic_missile",
+              "shield",
+              "sleep",
+              "thunderwave",
+            ],
           },
           spellSlotProjection: {
             kind: "leveled_spell_slots",
@@ -1318,6 +1325,26 @@ describe("character-creation Surface records", () => {
           ...classWizardInput,
           spellcasting: {
             ...classWizardInput.spellcasting,
+            preparedAccess: {
+              ...classWizardInput.spellcasting.preparedAccess,
+              spellIds: [
+                "detect_magic",
+                "mage_armor",
+                "magic_missile",
+                "shield",
+              ],
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+
+    expect(
+      Either.isLeft(
+        decodeUnitRecordEither({
+          ...classWizardInput,
+          spellcasting: {
+            ...classWizardInput.spellcasting,
             spellbookAccess: {
               ...classWizardInput.spellcasting.spellbookAccess,
               spells: [
@@ -1357,7 +1384,7 @@ describe("character-creation Surface records", () => {
             ...classWizardInput.spellcasting,
             preparedAccess: {
               ...classWizardInput.spellcasting.preparedAccess,
-              choose: 5,
+              choose: 7,
             },
           },
         }),

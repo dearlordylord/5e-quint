@@ -293,6 +293,7 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
       creationChoiceOptionId("detect_magic"),
       creationChoiceOptionId("mage_armor"),
       creationChoiceOptionId("magic_missile"),
+      creationChoiceOptionId("shield"),
       creationChoiceOptionId("sleep"),
     ],
     [BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY]: [
