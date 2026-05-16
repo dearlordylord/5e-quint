@@ -159,8 +159,8 @@
       "numerator": 367,
       "percent": "100%",
       "rowsByStatus": {
-        "accepted": 277,
-        "accepted-no-battle-effect": 90
+        "accepted": 278,
+        "accepted-no-battle-effect": 89
       }
     },
     "levelOneClassContainers": 12,
@@ -15545,13 +15545,13 @@
         "state": "installed",
         "unitId": "warlock_eldritch_invocations"
       },
-      "unitProfileDisposition": "unsupported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "unit-claim",
-        "kind": "selection-grant-container",
-        "owner": "selected Eldritch Invocation option Unit",
-        "reason": "The class feature chooses an invocation option; individual invocation Units own executable pressure."
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "future Warlock invocation advancement/replacement owner",
+        "reason": "The remaining invocation replacement and prerequisite-retention mechanics occur after the level-1 invocation choice has already been finalized.; The remaining invocation gain, prerequisite, and repeatability mechanics occur after the level-1 invocation choice has already been finalized."
       },
       "ownerEvidence": [
         {
@@ -15566,7 +15566,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic",

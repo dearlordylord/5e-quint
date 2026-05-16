@@ -5530,19 +5530,68 @@
         "status": "installed"
       },
       "claim": {
-        "battleReadinessClosure": {
-          "kind": "selection-grant-container",
-          "owner": "selected Eldritch Invocation option Unit",
-          "reason": "The class feature chooses an invocation option; individual invocation Units own executable pressure."
-        },
-        "reason": "Invocation choice source facts are authored; individual invocation option execution is outside this class-feature Unit profile.",
-        "tag": "unsupported-profile"
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "later-level-only",
+              "owner": "future Warlock invocation advancement/replacement owner",
+              "reason": "The remaining invocation replacement and prerequisite-retention mechanics occur after the level-1 invocation choice has already been finalized."
+            },
+            "followUpTaskId": "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
+            "mechanic": "Warlock-level invocation replacement when gaining a Warlock level, including the prerequisite-retention rule that blocks replacing an invocation required by another selected invocation"
+          },
+          {
+            "battleReadinessClosure": {
+              "kind": "later-level-only",
+              "owner": "future Warlock invocation advancement/replacement owner",
+              "reason": "The remaining invocation gain, prerequisite, and repeatability mechanics occur after the level-1 invocation choice has already been finalized."
+            },
+            "followUpTaskId": "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
+            "mechanic": "Later-level invocation gains from the Warlock Invocations column, including prerequisite gating and duplicate-selection enforcement across retained invocations"
+          }
+        ],
+        "profileIds": [
+          "character-creation.eldritch-invocation-choice"
+        ],
+        "supportedMechanics": [
+          "Level 1 Warlock character creation discovers the Eldritch Invocation choice from the Surface class-feature record",
+          "Character Creation admits the level-1 eligible invocation options by filtering the SRD invocation option catalog to options with no prerequisites at level 1",
+          "Character Creation finalizes one selected invocation as selected Eldritch Invocation ownership with selectedFromUnitId warlock_eldritch_invocations",
+          "Selected invocation execution remains owned by the selected invocation option profiles"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "AT-L1-05"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.eldritch-invocation-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Warlock Eldritch Invocations class-feature choice plus the runtime SRD invocation option catalog; selected invocation execution remains owned by selected invocation profiles.",
+          "taskRefs": [
+            "AT-L1-03S"
+          ],
+          "title": "Character Creation finalizes Eldritch Invocation choices as selected invocation ownership",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/warlock_eldritch_invocations.json",
       "unitId": "warlock_eldritch_invocations"
     },

@@ -112,6 +112,7 @@ import {
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.class-feature-option-projection
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.skill-expertise-choice
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-03 fighter_fighting_style
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-05 warlock_eldritch_invocations
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -2881,9 +2882,9 @@ describe("character creation finalization", () => {
         choiceKey: "eldritch_invocations",
       },
     });
-    expect(
-      invocationHole?.kind === "choice" ? invocationHole.options : [],
-    ).toEqual(
+    const invocationOptions =
+      invocationHole?.kind === "choice" ? invocationHole.options : [];
+    expect(invocationOptions).toEqual(
       SRD_ELDRITCH_INVOCATION_OPTIONS.filter(
         (option) => option.prerequisites.length === 0,
       ).map((option) => ({
@@ -2891,6 +2892,26 @@ describe("character creation finalization", () => {
         label: option.label,
       })),
     );
+    const invocationOptionIds = invocationOptions.map(
+      (option) => option.optionId,
+    );
+    expect(invocationOptionIds).toEqual(
+      expect.arrayContaining([
+        creationChoiceOptionId("armor_of_shadows"),
+        creationChoiceOptionId("eldritch_mind"),
+        creationChoiceOptionId("pact_of_the_blade"),
+        creationChoiceOptionId("pact_of_the_chain"),
+        creationChoiceOptionId("pact_of_the_tome"),
+      ]),
+    );
+    const prerequisiteGatedOptionIds = [
+      creationChoiceOptionId("agonizing_blast"),
+      creationChoiceOptionId("devils_sight"),
+      creationChoiceOptionId("thirsting_blade"),
+    ] as const;
+    for (const prerequisiteGatedOptionId of prerequisiteGatedOptionIds) {
+      expect(invocationOptionIds).not.toContain(prerequisiteGatedOptionId);
+    }
   });
 
   test("finalizes a selected Warlock Eldritch Invocation as option ownership, not a retained Unit ref", () => {

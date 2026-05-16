@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L1C-AT05",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Warlock Eldritch Invocations Character Profile"
     },
     {
@@ -51,6 +51,12 @@
       "id": "L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT",
       "status": "ready-for-implementation-after-light-research",
       "title": "Fighter Fighting Style Advancement Replacement"
+    },
+    {
+      "number": 9,
+      "id": "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Warlock Eldritch Invocation Lifecycle"
     }
   ]
 }
@@ -85,6 +91,7 @@ Every Ralph prompt for this loop must include:
 | `L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT` Fighter Fighting Style advancement replacement | `fighter_fighting_style` | Fighter-level replacement of an already chosen Fighting Style feat when gaining Fighter levels |
 | `AT-L1-04` Weapon Mastery character/rest profile | `barbarian_weapon_mastery`, `fighter_weapon_mastery`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery` | initial choice plus Long Rest reselection support |
 | `AT-L1-05` Warlock Eldritch Invocations profile | `warlock_eldritch_invocations` | level-1 invocation choice evidence; all-level lifecycle guard |
+| `L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE` Warlock Eldritch Invocation lifecycle | `warlock_eldritch_invocations` | later-level invocation gains, Warlock-level replacement, prerequisite-retention lockout, and duplicate-selection enforcement |
 | `AT-L1-06` Cleric/Druid order profile | `cleric_divine_order`, `druid_primal_order` | Divine/Primal Order option projection |
 | `AT-L1-07` Rogue Expertise profile | `rogue_expertise` | level-1 two-skill Expertise choice evidence; level 6 lifecycle guard |
 | `AT-L1-08` Wizard Arcane Recovery profile | `wizard_arcane_recovery` | Character Sheet Short Rest Spell Slot recovery profile |
@@ -100,6 +107,9 @@ Every Ralph prompt for this loop must include:
 5. Implement `L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT` after `AT-L1-03`
    when promoting `fighter_fighting_style` from the level-1 subset to all-level
    support.
+6. Implement `L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE` after `AT-L1-05`
+   when promoting `warlock_eldritch_invocations` from the level-1 subset to
+   all-level support.
 
 ## Scope
 
@@ -136,7 +146,8 @@ Lifecycle gates:
   execution evidence, but it does not satisfy the container Long Rest
   reselection gate and should not be recreated here.
 - `warlock_eldritch_invocations` needs replacement/gain and prerequisite
-  retention ownership before all-level support.
+  retention ownership before all-level support. The concrete follow-up is
+  `L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE`.
 - `rogue_expertise` needs the Rogue level 6 additional Expertise grant owned
   before all-level support.
 
@@ -194,12 +205,13 @@ For `AT-L1-08`:
 | ---: | --- | --- | --- | --- |
 | 1 | L1C-AT03S - Character Creation Support Scaffold | done | none | Shared profiles/markers only; no Unit claim conversion. |
 | 2 | L1C-AT03 - Fighter Fighting Style Character Profile | done | L1C-AT03S | Level-1 slice with advancement lifecycle guard. |
-| 3 | L1C-AT05 - Warlock Eldritch Invocations Character Profile | ready-for-implementation-after-light-research | L1C-AT03S | Level-1 slice with invocation lifecycle guard. |
+| 3 | L1C-AT05 - Warlock Eldritch Invocations Character Profile | done | L1C-AT03S | Level-1 slice with invocation lifecycle guard. |
 | 4 | L1C-AT06 - Cleric And Druid Order Character Profiles | ready-for-implementation-after-light-research | L1C-AT03S | Divine/Primal Order projection. |
 | 5 | L1C-AT07 - Rogue Expertise Character Profile | ready-for-implementation-after-light-research | L1C-AT03S | Level-1 slice with level 6 Expertise guard. |
 | 6 | L1C-AT08 - Wizard Arcane Recovery Character Sheet Profile | ready-for-implementation-after-light-research | none | Character Sheet Short Rest Spell Slot recovery. |
 | 7 | L1C-AT04 - Weapon Mastery Character And Rest Profile | ready-for-implementation-after-light-research | L1C-AT03S | Includes Long Rest reselection support; selected mastery-property MBT does not satisfy this gate. |
 | 8 | L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT - Fighter Fighting Style Advancement Replacement | ready-for-implementation-after-light-research | L1C-AT03 | Required before `fighter_fighting_style` can move from level-1 subset support to all-level support. |
+| 9 | L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE - Warlock Eldritch Invocation Lifecycle | ready-for-implementation-after-light-research | L1C-AT05 | Required before `warlock_eldritch_invocations` can move from level-1 subset support to all-level support. |
 
 ## Task Details
 
@@ -299,7 +311,7 @@ Plan Impact:
 
 ### Task 3 - L1C-AT05 - Warlock Eldritch Invocations Character Profile
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Implement `AT-L1-05` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
@@ -440,3 +452,39 @@ Plan Impact:
 
 - Preserve unowned Long Rest reselection work as a concrete follow-up if the
   task cannot close it.
+
+### Task 9 - L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE - Warlock Eldritch Invocation Lifecycle
+
+Status: `ready-for-implementation-after-light-research`
+
+Implement the residual all-level lifecycle mechanics for
+`warlock_eldritch_invocations`.
+
+Scope:
+
+- Own only `warlock_eldritch_invocations`.
+- Reuse `character-creation.eldritch-invocation-choice` from Task 1.
+- Evidence later-level invocation gains from the Warlock Invocations column.
+- Evidence Warlock-level invocation replacement with prerequisite gating.
+- Evidence the prerequisite-retention lockout: an invocation cannot be replaced
+  while another selected invocation has it as a prerequisite.
+- Evidence duplicate-selection enforcement unless an invocation description says
+  otherwise.
+- Convert `warlock_eldritch_invocations` from `profile-subset-supported` to
+  all-level `supported-profile` only after the full lifecycle is owned.
+- Keep individual invocation execution owned by selected invocation profiles.
+
+Verification:
+
+- Read `.references/srd-5.2.1/Classes/Warlock.md` and
+  `UBIQUITOUS_LANGUAGE.md` before changing modeled behavior.
+- `pnpm unit-profile-coverage:check --write`
+- `pnpm unit-profile-coverage:check`
+- `pnpm --filter @dnd/character-creation-runtime test` if runtime/test marker
+  files are touched beyond comments
+- `/simplify` convergence, minimum two rounds
+
+Plan Impact:
+
+- Add follow-up tasks only for newly discovered durable invocation lifecycle
+  gaps.
