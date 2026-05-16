@@ -616,112 +616,6 @@
       "unitId": "fighter_weapon_mastery"
     },
     {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "table-spatial-derivation"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain table/spatial derivations.",
-      "sourceRecordPath": "packages/surface/content/fog_cloud.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Druid spell list Fog Cloud",
-          "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_fog_cloud",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 212,
-            "lineStart": 212,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Ranger spell list Fog Cloud",
-          "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_fog_cloud",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 171,
-            "lineStart": 171,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Fog Cloud",
-          "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_fog_cloud",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 254,
-            "lineStart": 254,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Fog Cloud",
-          "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_fog_cloud",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 175,
-            "lineStart": 175,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "fog_cloud"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "table-spatial-derivation"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Automatic area membership, pathfinding, and grid geometry derivation remain table/spatial derivations.",
-      "sourceRecordPath": "packages/surface/content/grease.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Grease",
-          "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_grease",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 255,
-            "lineStart": 255,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Grease",
-          "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_grease",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 176,
-            "lineStart": 176,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "grease"
-    },
-    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -1290,7 +1184,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 64,
+      "count": 66,
       "description": "Full support exists at the Unit profile boundary for strict level-1 accounting.",
       "status": "supported-profile",
       "unitIds": [
@@ -1319,6 +1213,8 @@
         "feather_fall",
         "fighter_second_wind",
         "fire_bolt",
+        "fog_cloud",
+        "grease",
         "guidance",
         "guiding_bolt",
         "healing_word",
@@ -1361,27 +1257,6 @@
       ]
     },
     {
-      "count": 14,
-      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
-      "status": "open-profile-accounting",
-      "unitIds": [
-        "barbarian_weapon_mastery",
-        "cleric_divine_order",
-        "druid_primal_order",
-        "fighter_fighting_style",
-        "fighter_weapon_mastery",
-        "fog_cloud",
-        "grease",
-        "paladin_weapon_mastery",
-        "ranger_weapon_mastery",
-        "rogue_expertise",
-        "rogue_weapon_mastery",
-        "thunderwave",
-        "warlock_eldritch_invocations",
-        "wizard_arcane_recovery"
-      ]
-    },
-    {
       "count": 12,
       "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
@@ -1398,6 +1273,25 @@
         "rogue_thieves_cant",
         "silent_image",
         "speak_with_animals"
+      ]
+    },
+    {
+      "count": 12,
+      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
+      "status": "open-profile-accounting",
+      "unitIds": [
+        "barbarian_weapon_mastery",
+        "cleric_divine_order",
+        "druid_primal_order",
+        "fighter_fighting_style",
+        "fighter_weapon_mastery",
+        "paladin_weapon_mastery",
+        "ranger_weapon_mastery",
+        "rogue_expertise",
+        "rogue_weapon_mastery",
+        "thunderwave",
+        "warlock_eldritch_invocations",
+        "wizard_arcane_recovery"
       ]
     },
     {
@@ -1423,18 +1317,18 @@
     },
     "strictRuntimeProfileSupport": {
       "denominator": 93,
-      "numerator": 64,
-      "percent": "68.8%"
+      "numerator": 66,
+      "percent": "71%"
     },
     "strictTargetClosure": {
       "denominator": 93,
-      "numerator": 79,
-      "percent": "84.9%"
+      "numerator": 81,
+      "percent": "87.1%"
     }
   },
   "openFrontier": [
     {
-      "count": 14,
+      "count": 12,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
@@ -1443,8 +1337,6 @@
         "druid_primal_order",
         "fighter_fighting_style",
         "fighter_weapon_mastery",
-        "fog_cloud",
-        "grease",
         "paladin_weapon_mastery",
         "ranger_weapon_mastery",
         "rogue_expertise",
@@ -3731,17 +3623,17 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 120,
     "groupsByClaimTag": {
-      "profile-subset-supported": 7,
-      "supported-profile": 64,
+      "profile-subset-supported": 5,
+      "supported-profile": 66,
       "unsupported-profile": 22
     },
     "groupsByStatus": {
       "closed-later-level-only": 3,
       "closed-runtime-detached-table-adjudication": 12,
-      "open-profile-accounting": 14,
-      "supported-profile": 64
+      "open-profile-accounting": 12,
+      "supported-profile": 66
     },
-    "nonSupportedFrontier": 29,
+    "nonSupportedFrontier": 27,
     "strictDenominator": 93
   }
 }

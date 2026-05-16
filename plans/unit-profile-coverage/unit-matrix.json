@@ -62,8 +62,8 @@
       "value": 144
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 90,
-      "numerator": 90,
+      "denominator": 92,
+      "numerator": 92,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 90,
+      "denominator": 92,
       "numerator": 47,
-      "percent": "52.2%"
+      "percent": "51.1%"
     },
     "supportedProfileCoverage": {
       "denominator": 117,
-      "numerator": 90,
-      "percent": "76.9%"
+      "numerator": 92,
+      "percent": "78.6%"
     }
   },
   "metricSemantics": [
@@ -1164,7 +1164,7 @@
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
       ],
-      "sourceBoundary": "Caller-supplied Grease ground-area identity and per-trigger membership; caller-supplied total-distance and Grease-distance Movement facts for Difficult Terrain cost. Automatic area membership, pathfinding, and grid geometry remain outside the runtime boundary.",
+      "sourceBoundary": "The runtime consumes typed table-supplied Grease ground-area identity and affected-target membership witnesses for appearance saves, table-triggered enter-area/end-turn save subjects for active hazards, and typed total-distance plus Grease-distance Movement facts for Difficult Terrain cost. Automatic area membership, pathfinding, path selection, and grid geometry derivation remain runtime-detached table adjudication/presentation outside this profile.",
       "taskRefs": [
         "SRDINV40",
         "SRDINV57"
@@ -1196,7 +1196,7 @@
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts"
       ],
-      "sourceBoundary": "Caller-supplied Fog Cloud area identity; runtime owns the spell source, slot-scaled Sphere radius, Heavily Obscured area projection, one-hour Concentration duration, and table-supplied strong-wind dispersal. Automatic area membership, line of sight, map illumination, pathfinding, and wind derivation remain outside the runtime boundary.",
+      "sourceBoundary": "The runtime consumes typed table-supplied Fog Cloud area identity and a typed table-triggered strong-wind dispersal command; runtime owns the spell source, slot-scaled Sphere radius, Heavily Obscured area projection, one-hour Concentration duration, and cleanup. Automatic area membership, line-of-sight drawing, map illumination, pathfinding, and wind derivation remain runtime-detached table adjudication/presentation outside this profile.",
       "taskRefs": [
         "SRDINV84E"
       ],
@@ -8081,17 +8081,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "SRDINV66 table/spatial owner",
-              "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain table/spatial derivations."
-            },
-            "followUpTaskId": "SRDINV66",
-            "mechanic": "automatic area membership, line of sight, map illumination, pathfinding, and wind derivation"
-          }
-        ],
         "profileIds": [
           "spell.invocation-fog-cloud-obscurement"
         ],
@@ -8099,13 +8088,14 @@
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
         ],
         "supportedMechanics": [
-          "caller-supplied point-origin fog area identity",
+          "typed table-supplied point-origin fog area identity witness",
           "Concentration-owned Heavily Obscured area projection",
-          "20-foot radius at level 1 with +20 feet per slot above 1",
-          "one-hour Concentration duration cleanup",
-          "table-supplied strong-wind dispersal cleanup"
+          "20-foot Sphere radius at level 1 with +20 feet per slot above 1",
+          "one-hour Concentration duration and Concentration-break cleanup",
+          "typed table-triggered strong-wind dispersal command cleanup for the active fog area",
+          "residual checklist: automatic area membership, line-of-sight drawing, map illumination, pathfinding, and wind derivation are runtime-detached table adjudication/presentation; the promoted runtime consumes the fog area identity witness and typed strong-wind command and does not derive area membership, line of sight, map illumination, pathfinding, or wind"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -8129,7 +8119,7 @@
             "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts"
           ],
-          "sourceBoundary": "Caller-supplied Fog Cloud area identity; runtime owns the spell source, slot-scaled Sphere radius, Heavily Obscured area projection, one-hour Concentration duration, and table-supplied strong-wind dispersal. Automatic area membership, line of sight, map illumination, pathfinding, and wind derivation remain outside the runtime boundary.",
+          "sourceBoundary": "The runtime consumes typed table-supplied Fog Cloud area identity and a typed table-triggered strong-wind dispersal command; runtime owns the spell source, slot-scaled Sphere radius, Heavily Obscured area projection, one-hour Concentration duration, and cleanup. Automatic area membership, line-of-sight drawing, map illumination, pathfinding, and wind derivation remain runtime-detached table adjudication/presentation outside this profile.",
           "taskRefs": [
             "SRDINV84E"
           ],
@@ -8215,17 +8205,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "SRDINV66 table/spatial owner",
-              "reason": "Automatic area membership, pathfinding, and grid geometry derivation remain table/spatial derivations."
-            },
-            "followUpTaskId": "SRDINV66",
-            "mechanic": "automatic area membership, pathfinding, and grid geometry derivation for Grease movement"
-          }
-        ],
         "profileIds": [
           "spell.invocation-grease-ground-hazard"
         ],
@@ -8233,13 +8212,14 @@
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
         ],
         "supportedMechanics": [
-          "one-minute Grease ground hazard lifecycle keyed by caller-supplied ground-area id",
-          "on-cast Dexterity Saving Throw for caller-supplied affected creatures",
+          "one-minute Grease ground hazard lifecycle keyed by typed table-supplied ground-area id",
+          "on-cast Dexterity Saving Throw consumes typed table-supplied affected-target membership witnesses for creatures standing in the Grease area",
           "Prone application on failed Grease saves",
-          "table-triggered enter-area and end-turn-in-area Dexterity save procedures",
-          "caller-supplied Grease Difficult Terrain movement facts that validate active hazard identity and spend total Movement distance plus one extra foot per foot moved through Grease"
+          "table-triggered enter-area and end-turn-in-area Dexterity save procedures keyed by the active hazard identity",
+          "typed table-supplied Grease Difficult Terrain movement facts validate active hazard identity and spend total Movement distance plus one extra foot per foot moved through Grease",
+          "residual checklist: automatic area membership, pathfinding, path selection, and grid geometry derivation for Grease movement are runtime-detached table adjudication/presentation; the promoted runtime consumes ground-area, affected-target, per-trigger save, and movement-distance witnesses and does not derive area membership, paths, or grid geometry"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -8263,7 +8243,7 @@
             "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
             "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
           ],
-          "sourceBoundary": "Caller-supplied Grease ground-area identity and per-trigger membership; caller-supplied total-distance and Grease-distance Movement facts for Difficult Terrain cost. Automatic area membership, pathfinding, and grid geometry remain outside the runtime boundary.",
+          "sourceBoundary": "The runtime consumes typed table-supplied Grease ground-area identity and affected-target membership witnesses for appearance saves, table-triggered enter-area/end-turn save subjects for active hazards, and typed total-distance plus Grease-distance Movement facts for Difficult Terrain cost. Automatic area membership, pathfinding, path selection, and grid geometry derivation remain runtime-detached table adjudication/presentation outside this profile.",
           "taskRefs": [
             "SRDINV40",
             "SRDINV57"
