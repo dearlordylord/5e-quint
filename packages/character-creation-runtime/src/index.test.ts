@@ -106,6 +106,12 @@ import {
   proficiencyGrantSubjectOption,
 } from "./choice-option-codecs.ts";
 
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.class-feature-feat-choice
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.weapon-mastery-choice
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.eldritch-invocation-choice
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.class-feature-option-projection
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.skill-expertise-choice
+
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
 });

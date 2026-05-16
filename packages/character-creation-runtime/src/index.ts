@@ -140,6 +140,13 @@ export {
   type UnitCatalog,
   type UnitRef,
 } from "./types.ts";
+
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.class-feature-feat-choice
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.weapon-mastery-choice
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.eldritch-invocation-choice
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.class-feature-option-projection
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.skill-expertise-choice
+
 export {
   LEVEL_ONE_ELDRITCH_INVOCATION_OPTIONS,
   SRD_ELDRITCH_INVOCATION_OPTIONS,

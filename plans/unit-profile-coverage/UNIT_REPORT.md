@@ -1142,6 +1142,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | SRDINV84I4 | completed-runtime-parity | `spell.find-familiar-lifecycle` |
 | SRDINV84I5 | qnt-proof | `spell.find-familiar-lifecycle` |
 | SRDINV84I5 | completed-runtime-parity | `spell.find-familiar-lifecycle` |
+| AT-L1-03S | completed-runtime-parity | `character-creation.class-feature-feat-choice`, `character-creation.weapon-mastery-choice`, `character-creation.eldritch-invocation-choice`, `character-creation.class-feature-option-projection`, `character-creation.skill-expertise-choice` |
 | SRDINV87A | qnt-proof | `spell.invocation-held-light-emitter` |
 | SRDINV87A | completed-runtime-parity | `spell.invocation-held-light-emitter` |
 | SRDINV88A | qnt-proof | `spell.invocation-dancing-lights-movable-dim-light` |

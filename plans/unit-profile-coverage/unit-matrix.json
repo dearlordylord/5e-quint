@@ -2140,6 +2140,101 @@
           "ownerPath": "packages/battle-runtime/src/find-familiar-lifecycle.test.ts"
         }
       ]
+    },
+    {
+      "id": "character-creation.class-feature-feat-choice",
+      "profileKind": "character-creation",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "Surface class-feature grant_feat records plus Character Draft Unit-backed selections; selected feat execution remains owned by the selected feat Unit profile.",
+      "taskRefs": [
+        "AT-L1-03S"
+      ],
+      "title": "Character Creation finalizes class-feature feat choices as selected build feature refs",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-creation.weapon-mastery-choice",
+      "profileKind": "character-creation",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "Surface Weapon Mastery class-feature records plus class weapon proficiencies and Character Draft selections; mastery-property execution remains owned by selected mastery Unit profiles.",
+      "taskRefs": [
+        "AT-L1-03S"
+      ],
+      "title": "Character Creation finalizes Weapon Mastery weapon choices as selected class-choice refs",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-creation.eldritch-invocation-choice",
+      "profileKind": "character-creation",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "Warlock Eldritch Invocations class-feature choice plus the runtime SRD invocation option catalog; selected invocation execution remains owned by selected invocation profiles.",
+      "taskRefs": [
+        "AT-L1-03S"
+      ],
+      "title": "Character Creation finalizes Eldritch Invocation choices as selected invocation ownership",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-creation.class-feature-option-projection",
+      "profileKind": "character-creation",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "Surface class-feature option records such as Divine Order and Primal Order projected from accepted Character Draft selections into CharacterBuild facts.",
+      "taskRefs": [
+        "AT-L1-03S"
+      ],
+      "title": "Character Creation projects class-feature option choices into build facts",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-creation.skill-expertise-choice",
+      "profileKind": "character-creation",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "Surface grant-expertise class-feature choices over existing CharacterBuild skill proficiencies projected into Expertise proficiency levels.",
+      "taskRefs": [
+        "AT-L1-03S"
+      ],
+      "title": "Character Creation finalizes skill Expertise choices into build proficiency levels",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ]
     }
   ],
   "taskClaims": [
@@ -3511,6 +3606,18 @@
         "spell.find-familiar-lifecycle"
       ],
       "taskId": "SRDINV84I5"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Creation runtime tests and support-profile owner markers cover shared class-feature feat, Weapon Mastery, Eldritch Invocation, class-feature option projection, and skill Expertise choice boundaries.",
+      "profileIds": [
+        "character-creation.class-feature-feat-choice",
+        "character-creation.weapon-mastery-choice",
+        "character-creation.eldritch-invocation-choice",
+        "character-creation.class-feature-option-projection",
+        "character-creation.skill-expertise-choice"
+      ],
+      "taskId": "AT-L1-03S"
     },
     {
       "claimKind": "qnt-proof",
