@@ -23,7 +23,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Runtime mapping coverage | 62/62 | 100% |
 | Runtime parity coverage | 62/62 | 100% |
 | Deterministic admission/projection coverage | 85/85 | 100% |
-| Selected identity MBT coverage | 28/85 | 32.9% |
+| Selected identity MBT coverage | 47/85 | 55.3% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -875,29 +875,48 @@ This raw inventory lists authored Surface records that are absent from the insta
 | --- | --- | --- | --- |
 | `fighter_second_wind` | `unit-feature.self-bonus-action-healing` | QMBT7 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `fighter_action_surge` | `unit-feature.action-surge-resource` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
-| `fighter_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | SRDINV91D | `packages/battle-runtime/src/battle-runtime.mbt.test.ts` |
+| `fighter_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | extra-attack-count-scaling | `packages/battle-runtime/src/battle-runtime.mbt.test.ts` |
 | `fighter_improved_critical` | `unit-feature.weapon-critical-range-19` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `barbarian_rage` | `unit-feature.bonus-action-ongoing-rage` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `barbarian_reckless_attack` | `unit-feature.first-attack-roll-reckless-advantage` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `barbarian_fast_movement` | `unit-feature.passive-speed-bonus` | movement-forced-movement | `packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts` |
 | `bard_cutting_words` | `unit-feature.reaction-roll-or-damage-reduction` | reaction-interruption | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `monk_deflect_attacks` | `unit-feature.attack-damage-reduction-zero-damage-redirect` | reaction-interruption | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `rogue_cunning_action` | `unit-feature.alternate-action-cost` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `rogue_evasion` | `unit-feature.save-damage-replacement` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `rogue_uncanny_dodge` | `unit-feature.reaction-roll-or-damage-reduction` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `rogue_sneak_attack` | `unit-feature.attack-damage-rider` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
-| `feat_archery` | `unit-feature.passive-ranged-attack-roll-bonus` | SRDINV91D | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
-| `defense` | `unit-feature.passive-armor-class-bonus` | SRDINV91D | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `feat_archery` | `unit-feature.passive-ranged-attack-roll-bonus` | passive-and-zero-hp-features | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `defense` | `unit-feature.passive-armor-class-bonus` | passive-and-zero-hp-features | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `feat_savage_attacker` | `unit-feature.weapon-damage-dice-roll-choice` | QMBT31 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `paladin_lay_on_hands` | `character-sheet.healing-resource-action` | healing-stabilization | `packages/character-sheet-runtime/src/healing-resource-selected-identity.mbt.test.ts` |
+| `ranger_roving` | `unit-feature.passive-speed-kind-grants` | movement-forced-movement | `packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts` |
 | `mastery_cleave` | `unit-feature.weapon-mastery-cleave` | weapon-mastery-properties | `packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts` |
 | `mastery_sap` | `unit-feature.weapon-mastery-sap` | weapon-mastery-properties | `packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts` |
 | `mastery_topple` | `unit-feature.weapon-mastery-topple` | weapon-mastery-properties | `packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts` |
-| `orc_relentless_endurance` | `unit-feature.zero-hit-point-replacement` | SRDINV91D | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
-| `acid_splash` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV91D | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
+| `orc_relentless_endurance` | `unit-feature.zero-hit-point-replacement` | passive-and-zero-hp-features | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `acid_splash` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | spell-procedure-core | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
+| `bane` | `spell.invocation-roll-modifier` | roll-modifier-buff | `packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts` |
+| `bless` | `spell.invocation-roll-modifier` | roll-modifier-buff | `packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts` |
+| `chill_touch` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | attack-spell-shape | `packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts` |
 | `color_spray` | `spell.invocation-condition-save` | condition-saving-throw-lifecycle | `packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts` |
+| `command` | `spell.invocation-command-halt-grovel`, `spell.invocation-command-drop-held-object`, `spell.invocation-command-approach-route`, `spell.invocation-command-flee-route` | movement-forced-movement | `packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts` |
+| `cure_wounds` | `spell.hit-point-restoration` | healing-stabilization | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
+| `dissonant_whispers` | `spell.invocation-damage-save-or-attack`, `spell.invocation-forced-reaction-movement` | movement-forced-movement | `packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts` |
 | `entangle` | `spell.invocation-condition-save` | condition-saving-throw-lifecycle | `packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts` |
-| `ray_of_frost` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV91D | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
-| `magic_missile` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV91D | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
+| `expeditious_retreat` | `spell.invocation-expeditious-retreat-dash` | movement-forced-movement | `packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts` |
+| `fire_bolt` | `spell.invocation-damage-save-or-attack` | attack-spell-shape | `packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts` |
+| `guidance` | `spell.invocation-roll-modifier` | roll-modifier-buff | `packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts` |
+| `guiding_bolt` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | attack-spell-shape | `packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts` |
+| `inflict_wounds` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | attack-spell-shape | `packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts` |
+| `ray_of_frost` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | spell-procedure-core | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
+| `resistance` | `spell.invocation-damage-reduction` | roll-modifier-buff | `packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts` |
+| `shocking_grasp` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | attack-spell-shape | `packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts` |
+| `spare_the_dying` | `spell.invocation-make-stable` | healing-stabilization | `packages/battle-runtime/src/healing-stabilization-selected-identity.mbt.test.ts` |
+| `magic_missile` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | spell-procedure-core | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
+| `healing_word` | `spell.hit-point-restoration` | healing-stabilization | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
 | `shield` | `spell.reaction-shield` | reaction-interruption | `packages/battle-runtime/src/reaction-spell-selected-identity.mbt.test.ts` |
+| `shield_of_faith` | `spell.scalar-buff` | roll-modifier-buff | `packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts` |
 | `sleep` | `spell.invocation-sleep-target-admission`, `spell.invocation-sleep-repeat-save-lifecycle` | condition-saving-throw-lifecycle | `packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts` |
 | `hellish_rebuke` | `spell.reaction-hellish-rebuke`, `spell.invocation-damage-save-or-attack` | reaction-interruption | `packages/battle-runtime/src/reaction-spell-selected-identity.mbt.test.ts` |
 | `hideous_laughter` | `spell.invocation-hideous-laughter-repeat-save-lifecycle` | condition-saving-throw-lifecycle | `packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts` |

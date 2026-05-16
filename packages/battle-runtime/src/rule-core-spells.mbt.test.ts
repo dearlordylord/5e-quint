@@ -1,9 +1,12 @@
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt SRDINV91D magic_missile ray_of_frost acid_splash
-// UNIT-IDENTITY-MBT-REPLAY: SRDINV91D magic_missile doMagicMissileNeedsAllocation doMagicMissileLow doReadySpellHold doReleaseReadiedSpell
-// UNIT-IDENTITY-MBT-REPLAY: SRDINV91D ray_of_frost doRayOfFrostNeedsTarget doRayOfFrostNeedsAttackRoll doRayOfFrostNeedsDamageRoll doRayOfFrostMiss doRayOfFrostHit doRayOfFrostCritical
-// UNIT-IDENTITY-MBT-REPLAY: SRDINV91D acid_splash doAcidSplashNeedsSavingThrow doAcidSplashNeedsDamageRoll doAcidSplashAllSuccess doAcidSplashOneFail
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt spell-procedure-core magic_missile ray_of_frost acid_splash
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt healing-stabilization healing_word cure_wounds
+// UNIT-IDENTITY-MBT-REPLAY: spell-procedure-core magic_missile doMagicMissileNeedsAllocation doMagicMissileLow doReadySpellHold doReleaseReadiedSpell
+// UNIT-IDENTITY-MBT-REPLAY: spell-procedure-core ray_of_frost doRayOfFrostNeedsTarget doRayOfFrostNeedsAttackRoll doRayOfFrostNeedsDamageRoll doRayOfFrostMiss doRayOfFrostHit doRayOfFrostCritical
+// UNIT-IDENTITY-MBT-REPLAY: spell-procedure-core acid_splash doAcidSplashNeedsSavingThrow doAcidSplashNeedsDamageRoll doAcidSplashAllSuccess doAcidSplashOneFail
+// UNIT-IDENTITY-MBT-REPLAY: healing-stabilization healing_word doHealingWordNeedsTarget doHealingWordNeedsHealingRoll doHealingWordWounded doHealingWordZeroHp
+// UNIT-IDENTITY-MBT-REPLAY: healing-stabilization cure_wounds doCureWoundsNeedsTarget doCureWoundsNeedsHealingRoll doCureWoundsWounded
 import * as path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
@@ -167,7 +170,7 @@ type SelectedUnitIdentityReplaySequence = {
   readonly expected: RuleCoreSpellProjection;
 };
 type SelectedUnitIdentityReplay = {
-  readonly taskId: "SRDINV91D";
+  readonly taskId: "spell-procedure-core" | "healing-stabilization";
   readonly unitId: string;
   readonly actions: readonly RuleCoreSpellDriverAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
@@ -177,7 +180,7 @@ const selectedUnitRuntimeBoundaryIds = new Set<string>();
 
 const selectedUnitIdentityReplays = [
   {
-    taskId: "SRDINV91D",
+    taskId: "spell-procedure-core",
     unitId: "magic_missile",
     actions: [
       "doMagicMissileNeedsAllocation",
@@ -233,7 +236,7 @@ const selectedUnitIdentityReplays = [
     ],
   },
   {
-    taskId: "SRDINV91D",
+    taskId: "spell-procedure-core",
     unitId: "ray_of_frost",
     actions: [
       "doRayOfFrostNeedsTarget",
@@ -299,7 +302,7 @@ const selectedUnitIdentityReplays = [
     ],
   },
   {
-    taskId: "SRDINV91D",
+    taskId: "spell-procedure-core",
     unitId: "acid_splash",
     actions: [
       "doAcidSplashNeedsSavingThrow",
@@ -338,6 +341,98 @@ const selectedUnitIdentityReplays = [
         expected: expectedSpellProjection({
           actionAvailable: false,
           targetHp: 9,
+          lastResult: "resolved",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "healing-stabilization",
+    unitId: "healing_word",
+    actions: [
+      "doHealingWordNeedsTarget",
+      "doHealingWordNeedsHealingRoll",
+      "doHealingWordWounded",
+      "doHealingWordZeroHp",
+    ],
+    sequences: [
+      {
+        name: "target-hole",
+        actions: ["doHealingWordNeedsTarget"],
+        expected: expectedSpellProjection({
+          targetHp: 4,
+          holes: ["TargetChoice"],
+          lastResult: "needsHoles",
+        }),
+      },
+      {
+        name: "healing-roll-hole",
+        actions: ["doHealingWordNeedsHealingRoll"],
+        expected: expectedSpellProjection({
+          targetHp: 4,
+          holes: ["DamageRoll"],
+          lastResult: "needsHoles",
+        }),
+      },
+      {
+        name: "wounded-target",
+        actions: ["doHealingWordWounded"],
+        expected: expectedSpellProjection({
+          bonusActionAvailable: false,
+          targetHp: 12,
+          spellSlotSpentThisTurn: true,
+          level1SlotsRemaining: 1,
+          lastResult: "resolved",
+        }),
+      },
+      {
+        name: "zero-hp-target",
+        actions: ["doHealingWordZeroHp"],
+        expected: expectedSpellProjection({
+          bonusActionAvailable: false,
+          targetHp: 5,
+          spellSlotSpentThisTurn: true,
+          level1SlotsRemaining: 1,
+          lastResult: "resolved",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "healing-stabilization",
+    unitId: "cure_wounds",
+    actions: [
+      "doCureWoundsNeedsTarget",
+      "doCureWoundsNeedsHealingRoll",
+      "doCureWoundsWounded",
+    ],
+    sequences: [
+      {
+        name: "target-hole",
+        actions: ["doCureWoundsNeedsTarget"],
+        expected: expectedSpellProjection({
+          targetHp: 4,
+          holes: ["TargetChoice"],
+          lastResult: "needsHoles",
+        }),
+      },
+      {
+        name: "healing-roll-hole",
+        actions: ["doCureWoundsNeedsHealingRoll"],
+        expected: expectedSpellProjection({
+          targetHp: 4,
+          holes: ["DamageRoll"],
+          lastResult: "needsHoles",
+        }),
+      },
+      {
+        name: "wounded-target",
+        actions: ["doCureWoundsWounded"],
+        expected: expectedSpellProjection({
+          actionAvailable: false,
+          targetHp: 12,
+          spellSlotSpentThisTurn: true,
+          level1SlotsRemaining: 1,
           lastResult: "resolved",
         }),
       },
@@ -1529,7 +1624,7 @@ function healingSpellSubject(
     tag: subjectTag,
     actorId: casterId,
     invocation: spellSlotInvocationRef(
-      spellId,
+      recordSelectedUnitRuntimeBoundaryId(spellId),
       slotLevel,
       "directHitPointRestoration",
     ),
