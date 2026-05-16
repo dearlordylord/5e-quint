@@ -12727,13 +12727,13 @@
         "state": "installed",
         "unitId": "rogue_expertise"
       },
-      "unitProfileDisposition": "unsupported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "unit-claim",
-        "kind": "outside-battle-runtime",
-        "owner": "character-creation-runtime",
-        "reason": "Expertise is a character-creation skill choice boundary, not a promoted battle Unit profile."
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "future Rogue level 6 Expertise owner",
+        "reason": "The remaining Expertise grant occurs at Rogue level 6 after the level-1 two-skill Expertise choice has already been finalized."
       },
       "ownerEvidence": [
         {

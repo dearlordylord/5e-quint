@@ -1137,14 +1137,14 @@
     },
     {
       "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
+      "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "outside-battle-runtime"
+        "later-level-only"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "Expertise is a character-creation skill choice boundary, not a promoted battle Unit profile.",
+      "reason": "The remaining Expertise grant occurs at Rogue level 6 after the level-1 two-skill Expertise choice has already been finalized.",
       "sourceRecordPath": "packages/surface/content/rogue_expertise.json",
       "sourceRows": [
         {
@@ -1160,8 +1160,8 @@
           }
         }
       ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
+      "status": "closed-later-level-only",
+      "strictTargetClosed": true,
       "unitId": "rogue_expertise"
     },
     {
@@ -1539,7 +1539,7 @@
       ]
     },
     {
-      "count": 16,
+      "count": 15,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
@@ -1555,7 +1555,6 @@
         "paladin_weapon_mastery",
         "ranger_favored_enemy",
         "ranger_weapon_mastery",
-        "rogue_expertise",
         "rogue_weapon_mastery",
         "thunderwave",
         "wizard_arcane_recovery"
@@ -1577,6 +1576,18 @@
     },
     {
       "count": 5,
+      "description": "The level-1 behavior is complete and every remaining residual is later-level-only.",
+      "status": "closed-later-level-only",
+      "unitIds": [
+        "bard_bardic_inspiration",
+        "fighter_fighting_style",
+        "monk_martial_arts",
+        "rogue_expertise",
+        "warlock_eldritch_invocations"
+      ]
+    },
+    {
+      "count": 5,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -1585,17 +1596,6 @@
         "identify",
         "silent_image",
         "speak_with_animals"
-      ]
-    },
-    {
-      "count": 4,
-      "description": "The level-1 behavior is complete and every remaining residual is later-level-only.",
-      "status": "closed-later-level-only",
-      "unitIds": [
-        "bard_bardic_inspiration",
-        "fighter_fighting_style",
-        "monk_martial_arts",
-        "warlock_eldritch_invocations"
       ]
     }
   ],
@@ -1616,13 +1616,13 @@
     },
     "strictTargetClosure": {
       "denominator": 93,
-      "numerator": 72,
-      "percent": "77.4%"
+      "numerator": 73,
+      "percent": "78.5%"
     }
   },
   "openFrontier": [
     {
-      "count": 16,
+      "count": 15,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
@@ -1638,7 +1638,6 @@
         "paladin_weapon_mastery",
         "ranger_favored_enemy",
         "ranger_weapon_mastery",
-        "rogue_expertise",
         "rogue_weapon_mastery",
         "thunderwave",
         "wizard_arcane_recovery"
@@ -3934,14 +3933,14 @@
     "candidateUnitIdsBeforeExclusions": 120,
     "groupsByClaimTag": {
       "missing": 5,
-      "profile-subset-supported": 14,
+      "profile-subset-supported": 15,
       "supported-profile": 61,
-      "unsupported-profile": 13
+      "unsupported-profile": 12
     },
     "groupsByStatus": {
-      "closed-later-level-only": 4,
+      "closed-later-level-only": 5,
       "closed-runtime-detached-table-adjudication": 7,
-      "open-profile-accounting": 16,
+      "open-profile-accounting": 15,
       "open-runtime-behavior": 5,
       "supported-profile": 61
     },

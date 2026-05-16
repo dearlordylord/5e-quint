@@ -31,8 +31,14 @@
     {
       "number": 5,
       "id": "L1C-AT07",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Rogue Expertise Character Profile"
+    },
+    {
+      "number": 16,
+      "id": "L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Rogue Expertise Level 6 Grant"
     },
     {
       "number": 6,
@@ -130,6 +136,7 @@ Every Ralph prompt for this loop must include:
 | `L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE` Warlock Eldritch Invocation lifecycle | `warlock_eldritch_invocations` | later-level invocation gains, Warlock-level replacement, prerequisite-retention lockout, and duplicate-selection enforcement |
 | `AT-L1-06` Cleric/Druid order profile | `cleric_divine_order`, `druid_primal_order` | Divine/Primal Order option projection |
 | `AT-L1-07` Rogue Expertise profile | `rogue_expertise` | level-1 two-skill Expertise choice evidence; level 6 lifecycle guard |
+| `L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT` Rogue Expertise level 6 grant | `rogue_expertise` | later-level additional two-skill Expertise choice |
 | `AT-L1-08` Wizard Arcane Recovery profile | `wizard_arcane_recovery` | Character Sheet Short Rest Spell Slot recovery profile |
 | `AT-L1X-01`, `AT-L1X-05`, `AT-L1X-06`, `AT-L1X-08`, `AT-L1X-09`, `AT-L1X-12` item/environment no-matrix decisions | missing spell pressures | owner decisions for item, inventory, object-control, equipment, and environment candidates |
 
@@ -147,6 +154,8 @@ Every Ralph prompt for this loop must include:
 6. Implement `L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE` after `AT-L1-05`
    when promoting `warlock_eldritch_invocations` from the level-1 subset to
    all-level support.
+7. Implement `L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT` after `AT-L1-07` when
+   promoting `rogue_expertise` from the level-1 subset to all-level support.
 
 ## Scope
 
@@ -186,7 +195,8 @@ Lifecycle gates:
   retention ownership before all-level support. The concrete follow-up is
   `L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE`.
 - `rogue_expertise` needs the Rogue level 6 additional Expertise grant owned
-  before all-level support.
+  before all-level support. The concrete follow-up is
+  `L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT`.
 
 For `AT-L1-08`:
 
@@ -244,7 +254,8 @@ For `AT-L1-08`:
 | 2 | L1C-AT03 - Fighter Fighting Style Character Profile | done | L1C-AT03S | Level-1 slice with advancement lifecycle guard. |
 | 3 | L1C-AT05 - Warlock Eldritch Invocations Character Profile | done | L1C-AT03S | Level-1 slice with invocation lifecycle guard. |
 | 4 | L1C-AT06 - Cleric And Druid Order Character Profiles | done | L1C-AT03S | Divine/Primal Order projection. |
-| 5 | L1C-AT07 - Rogue Expertise Character Profile | ready-for-implementation-after-light-research | L1C-AT03S | Level-1 slice with level 6 Expertise guard. |
+| 5 | L1C-AT07 - Rogue Expertise Character Profile | done | L1C-AT03S | Level-1 slice with level 6 Expertise guard. |
+| 16 | L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT - Rogue Expertise Level 6 Grant | ready-for-implementation-after-light-research | L1C-AT07 | Required before `rogue_expertise` can move from level-1 subset support to all-level support. |
 | 6 | L1C-AT08 - Wizard Arcane Recovery Character Sheet Profile | ready-for-implementation-after-light-research | none | Character Sheet Short Rest Spell Slot recovery. |
 | 7 | L1C-AT04 - Weapon Mastery Character And Rest Profile | ready-for-implementation-after-light-research | L1C-AT03S | Includes Long Rest reselection support; selected mastery-property MBT does not satisfy this gate. |
 | 8 | L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT - Fighter Fighting Style Advancement Replacement | ready-for-implementation-after-light-research | L1C-AT03 | Required before `fighter_fighting_style` can move from level-1 subset support to all-level support. |
@@ -409,7 +420,7 @@ Plan Impact:
 
 ### Task 5 - L1C-AT07 - Rogue Expertise Character Profile
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Implement `AT-L1-07` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
@@ -435,6 +446,38 @@ Verification:
 Plan Impact:
 
 - Preserve unowned level 6 Expertise work as a concrete follow-up.
+
+### Task 16 - L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT - Rogue Expertise Level 6 Grant
+
+Status: `ready-for-implementation-after-light-research`
+
+Implement the residual all-level Rogue Expertise grant left by Task 5.
+
+Scope:
+
+- Own only `rogue_expertise`.
+- Preserve the level-1 `character-creation.skill-expertise-choice` evidence
+  from `L1C-AT07`.
+- Read `.references/srd-5.2.1/Classes/Rogue.md` Level 1 Expertise and
+  `UBIQUITOUS_LANGUAGE.md` before changing claim/profile text.
+- Evidence or implement the Rogue level 6 additional Expertise grant of two
+  more skill proficiencies of the player's choice.
+- Convert `rogue_expertise` from `profile-subset-supported` to all-level
+  `supported-profile` only after the level 6 grant is owned without duplicating
+  existing CharacterBuild proficiency state.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`
+- `pnpm unit-profile-coverage:check`
+- `pnpm --filter @dnd/character-creation-runtime test` if runtime/test marker
+  files are touched beyond comments
+- `/simplify` convergence, minimum two rounds
+
+Plan Impact:
+
+- Close this task only when all-level Rogue Expertise support has runtime/test
+  owner evidence, not from the level-1 choice evidence alone.
 
 ### Task 6 - L1C-AT08 - Wizard Arcane Recovery Character Sheet Profile
 

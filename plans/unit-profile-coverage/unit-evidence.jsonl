@@ -137,6 +137,7 @@
 {"unitId":"warlock_eldritch_invocations","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-05","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"cleric_divine_order","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-06","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"druid_primal_order","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-06","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
+{"unitId":"rogue_expertise","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-07","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"barbarian_unarmored_defense","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV91B","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"monk_unarmored_defense","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV91B","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"paladin_lay_on_hands","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV91B","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
