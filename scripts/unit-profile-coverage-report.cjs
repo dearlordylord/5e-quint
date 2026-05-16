@@ -842,6 +842,7 @@ function renderReport(
 
 module.exports = {
   buildMatrix,
+  percent,
   renderReport,
   stable,
 };

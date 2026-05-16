@@ -165,6 +165,11 @@ function coveragePaths(root) {
     report: path.join(coverageDir, "UNIT_REPORT.md"),
     srdUnitInventory: path.join(coverageDir, "srd-unit-inventory.json"),
     srdUnitInventoryReport: path.join(coverageDir, "SRD_UNIT_INVENTORY.md"),
+    level1FullSupport: path.join(coverageDir, "level1-full-support.json"),
+    level1FullSupportReport: path.join(
+      coverageDir,
+      "LEVEL1_FULL_SUPPORT.md",
+    ),
   };
 }
 
