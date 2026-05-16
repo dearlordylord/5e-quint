@@ -22,7 +22,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | QNT proof coverage | 61/62 | 98.4% |
 | Runtime mapping coverage | 62/62 | 100% |
 | Runtime parity coverage | 62/62 | 100% |
-| Deterministic admission/projection coverage | 78/85 | 91.8% |
+| Deterministic admission/projection coverage | 85/85 | 100% |
 | Selected identity MBT coverage | 10/85 | 11.8% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
@@ -768,9 +768,11 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `fighter_tactical_mind` | `unit-feature.failed-ability-check-resource-boost` | QMBT62 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `fighter_improved_critical` | `unit-feature.weapon-critical-range-19` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `barbarian_rage` | `unit-feature.bonus-action-ongoing-rage` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `barbarian_unarmored_defense` | `character-sheet.armor-class-base-formula` | SRDINV91B | `packages/character-sheet-runtime/src/index.test.ts` |
 | `barbarian_reckless_attack` | `unit-feature.first-attack-roll-reckless-advantage` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `barbarian_fast_movement` | `unit-feature.passive-speed-bonus` | QMBT40 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `bard_cutting_words` | `unit-feature.reaction-roll-or-damage-reduction` | QMBT65 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `monk_unarmored_defense` | `character-sheet.armor-class-base-formula` | SRDINV91B | `packages/character-sheet-runtime/src/index.test.ts` |
 | `monk_deflect_attacks` | `unit-feature.attack-damage-reduction-zero-damage-redirect` | QMBT59 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `rogue_cunning_action` | `unit-feature.alternate-action-cost` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `rogue_evasion` | `unit-feature.save-damage-replacement` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
@@ -778,13 +780,18 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `rogue_sneak_attack` | `unit-feature.attack-damage-rider` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `sorcerer_innate_sorcery` | `unit-feature.innate-sorcery-activation` | SRDINV75A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `sorcerer_innate_sorcery` | `unit-feature.innate-sorcery-activation` | SRDINV75B | `packages/battle-runtime/src/index.test.ts` |
+| `wizard_ritual_adept` | `character-sheet.spellbook-ritual-invocation` | SRDINV91B | `packages/character-sheet-runtime/src/index.test.ts` |
 | `feat_archery` | `unit-feature.passive-ranged-attack-roll-bonus` | QMBT27 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `feat_boon_of_combat_prowess` | `unit-feature.attack-roll-miss-to-hit-replacement` | QMBT56 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `defense` | `unit-feature.passive-armor-class-bonus` | QMBT18 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `feat_savage_attacker` | `unit-feature.weapon-damage-dice-roll-choice` | QMBT31 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `paladin_lay_on_hands` | `character-sheet.healing-resource-action` | SRDINV91B | `packages/character-sheet-runtime/src/index.test.ts` |
 | `paladin_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | QMBT37 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `ranger_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | QMBT37 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `ranger_roving` | `unit-feature.passive-speed-kind-grants` | QMBT44 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `mastery_cleave` | `unit-feature.weapon-mastery-cleave` | SRDINV91B | `packages/character-battle-runtime/src/index.test.ts` |
+| `mastery_sap` | `unit-feature.weapon-mastery-sap` | SRDINV91B | `packages/character-battle-runtime/src/index.test.ts` |
+| `mastery_topple` | `unit-feature.weapon-mastery-topple` | SRDINV91B | `packages/character-battle-runtime/src/index.test.ts` |
 | `orc_adrenaline_rush` | `unit-feature.bonus-action-dash-temporary-hit-points` | QMBT53 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `orc_relentless_endurance` | `unit-feature.zero-hit-point-replacement` | QMBT47 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `acid_splash` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |

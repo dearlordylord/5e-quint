@@ -82,13 +82,13 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 337,
       "id": "SRDINV91B",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Close Deterministic Admission Projection Stragglers"
     },
     {
       "number": 338,
       "id": "SRDINV91C",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Prove Condition-Save Spell Invocation Profile"
     },
     {
@@ -110,8 +110,8 @@ Keep it synchronized with the DAG table and task details.
 | 334 | SRDINV90A - Model Battle Readiness Owner-Accepted Closures | done | SRDINV89D | SRDINV90B | SRDINV89D review, SRD_UNIT_INVENTORY, UNIT_REPORT, unit-claims.jsonl, unit-matrix.json, UBIQUITOUS_LANGUAGE | Completed: level-1 battle readiness now consumes explicit Unit-claim/deferred-owner closure facts for non-battle, later-level, table/spatial, social/knowledge, companion-AI, and outside-runtime residuals; refreshed readiness is 367/367 (100%) without counting catalog admission alone. |
 | 335 | SRDINV90B - Recursive Level-1 Battle Readiness Closure Review | done | SRDINV90A | SRDINV91A | SRDINV89D review, refreshed SRD inventory report, refreshed UNIT_REPORT, ACTIVE_PLAN, UBIQUITOUS_LANGUAGE, SRDINV90B review | Completed: post-SRDINV90A product readiness is 367/367 (100%) with zero remaining battle-runtime-required or partial-battle-runtime rows. This closes only the product-readiness classifier lane; it does not close supported executable profile expansion, proof, deterministic admission, or MBT coverage planning. |
 | 336 | SRDINV91A - Recursive Battle Runtime Coverage Frontier Review | done | SRDINV90B | SRDINV91B-SRDINV91D | SRDINV91A review, SRDINV90B review, refreshed SRD inventory report, UNIT_REPORT, unit-matrix.json, unit-claims.jsonl, ACTIVE_PLAN, UBIQUITOUS_LANGUAGE | Completed: product readiness remains 367/367 (100%) and separate frontier metrics remain supported executable Unit coverage 85/117 (72.6%), deterministic admission/projection 78/85 (91.8%), QNT proof 61/62 (98.4%), and selected identity MBT 10/85 (11.8%). Appended concrete follow-ups for deterministic evidence stragglers, the condition-save QNT proof gap, and a selected-identity MBT evidence batch. |
-| 337 | SRDINV91B - Close Deterministic Admission Projection Stragglers | ready-for-implementation-after-light-research | SRDINV91A | SRDINV91C, SRDINV91D | SRDINV91A review, UNIT_REPORT deterministic evidence tables, unit-matrix.json, Barbarian/Monk/Paladin/Wizard class text, Equipment mastery properties, UBIQUITOUS_LANGUAGE | Add deterministic catalog/support/projection evidence for the seven supported-profile identities that currently lack it: Barbarian Unarmored Defense, Monk Unarmored Defense, Wizard Ritual Adept, Paladin Lay On Hands, mastery_cleave, mastery_sap, and mastery_topple. Prefer existing admission/projection tests and manifests; do not add duplicate state beside existing profile/runtime owners. |
-| 338 | SRDINV91C - Prove Condition-Save Spell Invocation Profile | blocked | SRDINV91B | SRDINV91D | SRDINV91A review, Color Spray, Entangle, Rules Glossary conditions and saving throws, packages/battle-runtime/battle-runtime.qnt, UBIQUITOUS_LANGUAGE | Add QNT proof evidence for `spell.invocation-condition-save`, currently the lone QNT proof coverage gap. Scope the proof to already-supported condition-save semantics such as Color Spray's save-gated Blinded duration and Entangle's save-gated Restrained ownership/cleanup; keep area membership and pathfinding caller supplied. |
+| 337 | SRDINV91B - Close Deterministic Admission Projection Stragglers | done | SRDINV91A | SRDINV91C, SRDINV91D | SRDINV91A review, UNIT_REPORT deterministic evidence tables, unit-matrix.json, Barbarian/Monk/Paladin/Wizard class text, Equipment mastery properties, UBIQUITOUS_LANGUAGE | Completed: deterministic admission/projection evidence now covers all seven supported-profile stragglers: Barbarian Unarmored Defense, Monk Unarmored Defense, Wizard Ritual Adept, Paladin Lay On Hands, mastery_cleave, mastery_sap, and mastery_topple. Generated deterministic admission/projection coverage is 85/85 (100%). |
+| 338 | SRDINV91C - Prove Condition-Save Spell Invocation Profile | ready-for-implementation-after-light-research | SRDINV91B | SRDINV91D | SRDINV91A review, Color Spray, Entangle, Rules Glossary conditions and saving throws, packages/battle-runtime/battle-runtime.qnt, UBIQUITOUS_LANGUAGE | Add QNT proof evidence for `spell.invocation-condition-save`, currently the lone QNT proof coverage gap. Scope the proof to already-supported condition-save semantics such as Color Spray's save-gated Blinded duration and Entangle's save-gated Restrained ownership/cleanup; keep area membership and pathfinding caller supplied. |
 | 339 | SRDINV91D - Select Identity MBT Frontier Evidence Batch | blocked | SRDINV91B, SRDINV91C | next recursive coverage review | SRDINV91A review, UNIT_REPORT selected identity MBT table, battle-runtime MBT protocol, UBIQUITOUS_LANGUAGE | Choose and implement the next small selected-identity MBT evidence batch after deterministic/proof gaps are closed. Start with representative identities across high-value profile families rather than broad MBT exploration; likely candidates include Extra Attack, Bardic Inspiration, Martial Arts, weapon mastery identities, and one or two supported spell identities with existing deterministic admission evidence. |
 
 ## Task Details
@@ -328,7 +328,7 @@ SRDINV91A review note.
 
 ### Task 337 - SRDINV91B - Close Deterministic Admission Projection Stragglers
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: SRDINV91A
 
@@ -369,9 +369,29 @@ generated artifacts change; `pnpm unit-profile-coverage:check`; focused package
 tests for any touched admission/projection files; `/simplify` convergence,
 minimum two rounds unless the final changeset is trivial.
 
+Completed: added deterministic admission/projection evidence for
+`barbarian_unarmored_defense`, `monk_unarmored_defense`,
+`wizard_ritual_adept`, `paladin_lay_on_hands`, `mastery_cleave`,
+`mastery_sap`, and `mastery_topple` using existing Character Sheet and
+Character Battle runtime owner tests. Refreshed `UNIT_REPORT.md` and
+`unit-matrix.json`; deterministic admission/projection coverage is now 85/85
+(100%).
+
+Verification completed:
+RAW/source review for the seven supported-profile identities in local SRD 5.2.1
+text; `UBIQUITOUS_LANGUAGE.md` terminology check; `pnpm
+unit-profile-coverage:check --write`; `pnpm unit-profile-coverage:check`;
+`pnpm --filter @dnd/character-sheet-runtime exec vitest run src/index.test.ts`;
+`pnpm --filter @dnd/character-battle-runtime exec vitest run src/index.test.ts`;
+`pnpm --filter @dnd/character-sheet-runtime typecheck`; `pnpm --filter
+@dnd/character-battle-runtime typecheck`; two local simplify passes. `pnpm
+quality` stopped on unrelated baseline lint in `packages/mcp/src/battle-tools.ts`
+(`max-lines`, 432 > 420), outside the SRDINV91B touched surface. MBT was not
+run because no reducer or QNT semantics changed.
+
 ### Task 338 - SRDINV91C - Prove Condition-Save Spell Invocation Profile
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: SRDINV91B
 

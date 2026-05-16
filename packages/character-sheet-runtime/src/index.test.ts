@@ -42,6 +42,7 @@ import {
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.armor-class-base-formula
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.healing-resource-action
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.spellbook-ritual-invocation
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B barbarian_unarmored_defense monk_unarmored_defense paladin_lay_on_hands wizard_ritual_adept
 
 const build = armorClassBuild({ startingClass: "class_fighter" });
 

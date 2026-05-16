@@ -791,6 +791,16 @@ function installedSpellUnitOwnerClassification(
 
 function installedLevelOneOwnerClassification(row, ownerEvidenceSources) {
   if (row.levelBand !== "level-1") return undefined;
+  const characterSheetEvidence = ownerEvidenceSources.characterSheet.get(
+    row.id,
+  );
+  if (characterSheetEvidence) {
+    return {
+      kind: "evidence-present",
+      owner: "character-sheet-runtime",
+      evidence: characterSheetEvidence,
+    };
+  }
   const battleRuntimeEvidence = row.candidateUnitId
     ? ownerEvidenceSources.battleRuntime.get(row.candidateUnitId)
     : undefined;
@@ -809,16 +819,6 @@ function installedLevelOneOwnerClassification(row, ownerEvidenceSources) {
       kind: "evidence-present",
       owner: "character-creation-runtime",
       evidence: characterCreationEvidence,
-    };
-  }
-  const characterSheetEvidence = ownerEvidenceSources.characterSheet.get(
-    row.id,
-  );
-  if (characterSheetEvidence) {
-    return {
-      kind: "evidence-present",
-      owner: "character-sheet-runtime",
-      evidence: characterSheetEvidence,
     };
   }
   if (isPrimaryAbilityRow(row)) {

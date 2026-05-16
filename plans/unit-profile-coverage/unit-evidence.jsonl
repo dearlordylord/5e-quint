@@ -100,3 +100,10 @@
 {"unitId":"sanctuary","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84G","ownerPath":"packages/battle-runtime/src/sanctuary-targeting-interdiction.test.ts"}}
 {"unitId":"shillelagh","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84H","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"find_familiar","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84I5","ownerPath":"packages/battle-runtime/src/find-familiar-lifecycle.test.ts"}}
+{"unitId":"barbarian_unarmored_defense","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV91B","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
+{"unitId":"monk_unarmored_defense","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV91B","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
+{"unitId":"paladin_lay_on_hands","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV91B","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
+{"unitId":"wizard_ritual_adept","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV91B","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
+{"unitId":"mastery_sap","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV91B","ownerPath":"packages/character-battle-runtime/src/index.test.ts"}}
+{"unitId":"mastery_topple","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV91B","ownerPath":"packages/character-battle-runtime/src/index.test.ts"}}
+{"unitId":"mastery_cleave","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV91B","ownerPath":"packages/character-battle-runtime/src/index.test.ts"}}
