@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L1C-AT03S",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Character Creation Support Scaffold"
     },
     {
@@ -181,7 +181,7 @@ For `AT-L1-08`:
 
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
-| 1 | L1C-AT03S - Character Creation Support Scaffold | ready-for-implementation-after-light-research | none | Shared profiles/markers only; no Unit claim conversion. |
+| 1 | L1C-AT03S - Character Creation Support Scaffold | done | none | Shared profiles/markers only; no Unit claim conversion. |
 | 2 | L1C-AT03 - Fighter Fighting Style Character Profile | ready-for-implementation-after-light-research | L1C-AT03S | Level-1 slice with advancement lifecycle guard. |
 | 3 | L1C-AT05 - Warlock Eldritch Invocations Character Profile | ready-for-implementation-after-light-research | L1C-AT03S | Level-1 slice with invocation lifecycle guard. |
 | 4 | L1C-AT06 - Cleric And Druid Order Character Profiles | ready-for-implementation-after-light-research | L1C-AT03S | Divine/Primal Order projection. |
@@ -193,7 +193,7 @@ For `AT-L1-08`:
 
 ### Task 1 - L1C-AT03S - Character Creation Support Scaffold
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Implement `AT-L1-03S` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
