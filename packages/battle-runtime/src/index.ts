@@ -57,6 +57,7 @@ export {
   type CharacterBattleSpellSlotInit,
   type CharacterBattleSpellSlotExpenditureInit,
   type CharacterBattleSpellSlotState,
+  type CharacterBattleSpellbookRitualSpellAccessInit,
   type CharacterBattleSpellcastingInit,
   type CharacterBattleSpellcastingState,
   type PactOfTheChainFindFamiliarInvocationMode,
@@ -80,12 +81,14 @@ export {
   type PactOfTheChainSpecialFormRef,
 } from "./find-familiar-forms.ts";
 export {
+  admitPresentFindFamiliarToBattle,
   applyFindFamiliarZeroHitPointDisappearance,
   castFindFamiliar,
   permanentlyDismissFindFamiliar,
   reappearTemporarilyDismissedFindFamiliar,
   temporarilyDismissFindFamiliar,
   type FindFamiliarAbsentState,
+  type FindFamiliarBattleAdmissionInput,
   type FindFamiliarCastInput,
   type FindFamiliarLifecycleInputBase,
   type FindFamiliarPlacement,

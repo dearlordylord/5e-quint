@@ -86,28 +86,11 @@ export function startBattle(input: {
   );
   if (hidePrerequisiteIssue !== null) return hidePrerequisiteIssue;
 
-  const orderedEntries = input.combatants
-    .map((combatant, callerOrder) => ({ combatant, callerOrder }))
-    .sort(
-      (left, right) =>
-        right.combatant.initiative - left.combatant.initiative ||
-        left.callerOrder - right.callerOrder,
-    )
-    .map(({ combatant }) => ({
-      creature: combatant.combatantId,
-      initiative: combatant.initiative,
-    }));
-  if (!isNonEmptyReadonlyArray(orderedEntries)) {
-    return battleStateInitIssue("startBattle requires at least one combatant.");
-  }
-
-  const initiative = createScoredInitiativeStack<CombatantId>(
-    orderedEntries,
-    INITIAL_ROUND,
-  );
-  if (Either.isLeft(initiative)) {
-    return battleStateInitIssue(initiative.left);
-  }
+  const initiative = createInitialInitiativeForCombatants({
+    combatants: input.combatants,
+    emptyRosterMessage: "startBattle requires at least one combatant.",
+  });
+  if (Either.isLeft(initiative)) return Either.left(initiative.left);
   return Either.right({
     battleId: input.battleId,
     initiative: initiative.right,
@@ -124,6 +107,54 @@ export function startBattle(input: {
     interruptStack: [],
     legendaryActionWindow: null,
   });
+}
+
+type InitialInitiativeCombatant = Pick<
+  BattleCreatureState,
+  "combatantId" | "initiative"
+>;
+
+export function createInitialInitiativeForCombatants(input: {
+  readonly combatants: readonly InitialInitiativeCombatant[];
+  readonly initialCombatantOrder?: ReadonlyMap<CombatantId, number>;
+  readonly emptyRosterMessage: string;
+}): Either.Either<BattleState["initiative"], BattleStateInitIssue> {
+  if (input.initialCombatantOrder !== undefined) {
+    for (const combatant of input.combatants) {
+      if (!input.initialCombatantOrder.has(combatant.combatantId)) {
+        return battleStateInitIssue(
+          "Initial combatant order must include every combatant.",
+        );
+      }
+    }
+  }
+  const orderedEntries = input.combatants
+    .map((combatant, insertionOrder) => ({
+      combatant,
+      callerOrder:
+        input.initialCombatantOrder?.get(combatant.combatantId) ??
+        insertionOrder,
+    }))
+    .sort(
+      (left, right) =>
+        right.combatant.initiative - left.combatant.initiative ||
+        left.callerOrder - right.callerOrder,
+    )
+    .map(({ combatant }) => ({
+      creature: combatant.combatantId,
+      initiative: combatant.initiative,
+    }));
+  if (!isNonEmptyReadonlyArray(orderedEntries)) {
+    return battleStateInitIssue(input.emptyRosterMessage);
+  }
+
+  const initiative = createScoredInitiativeStack<CombatantId>(
+    orderedEntries,
+    INITIAL_ROUND,
+  );
+  return Either.isLeft(initiative)
+    ? battleStateInitIssue(initiative.left)
+    : Either.right(initiative.right);
 }
 
 export function addBattleCombatant(input: {
@@ -296,9 +327,7 @@ function findFamiliarsAfterCombatantRemoval(
     [...state.findFamiliars].filter(
       ([ownerId, familiar]) =>
         !removeIds.has(ownerId) &&
-        !(
-          familiar.status === "present" && removeIds.has(familiar.familiarId)
-        ),
+        !(familiar.status === "present" && removeIds.has(familiar.familiarId)),
     ),
   );
 }

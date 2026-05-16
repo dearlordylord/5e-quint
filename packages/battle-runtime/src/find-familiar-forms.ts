@@ -15,6 +15,12 @@ const FIND_FAMILIAR_CREATURE_TYPE_OVERRIDE_TYPE_SET = new Set<CreatureType>(
   FIND_FAMILIAR_CREATURE_TYPE_OVERRIDE_TYPES,
 );
 
+type PactOfTheChainSpecialFormRefShape = {
+  readonly formId: string;
+  readonly statBlockId: string;
+  readonly displayName: string;
+};
+
 export const PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS = [
   {
     formId: "imp",
@@ -51,7 +57,10 @@ export const PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS = [
     statBlockId: "stat_block_venomous_snake",
     displayName: "Venomous Snake",
   },
-] as const;
+] as const satisfies readonly [
+  PactOfTheChainSpecialFormRefShape,
+  ...PactOfTheChainSpecialFormRefShape[],
+];
 
 type SpawnedCreatureMechanics = Extract<
   SpellRecord["mechanics"],

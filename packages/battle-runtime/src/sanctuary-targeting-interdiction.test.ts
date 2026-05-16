@@ -896,6 +896,7 @@ function battleWithSanctuary(
             srdSpellRecord(magicMissileUnitId),
           ],
           featurePreparedSpells: [],
+          spellbookRitualSpellAccesses: [],
           invocationSpellAccesses: [],
           spellSlots: [{ spellLevel: 1, count: 2 }],
         },

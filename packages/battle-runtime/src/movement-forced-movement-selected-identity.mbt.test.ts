@@ -628,6 +628,7 @@ function movementForcedMovementSpellBattle(
         preparedSpells: input.preparedSpells ?? [],
         featurePreparedSpells: [],
         invocationSpellAccesses: [],
+        spellbookRitualSpellAccesses: [],
         spellSlots: input.spellSlots ?? [{ spellLevel: 1, count: 2 }],
       },
       classLevels: [{ className: input.sourceClassName ?? "wizard", level: 1 }],

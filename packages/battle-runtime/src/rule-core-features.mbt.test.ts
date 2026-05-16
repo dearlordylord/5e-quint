@@ -1565,6 +1565,7 @@ function evasionBattle(): BattleState {
           cantrips: [dexHalfDamageCantrip()],
           preparedSpells: [],
           featurePreparedSpells: [],
+          spellbookRitualSpellAccesses: [],
           invocationSpellAccesses: [],
           spellSlots: [],
         },
