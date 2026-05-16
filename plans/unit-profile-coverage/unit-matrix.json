@@ -62,8 +62,8 @@
       "value": 144
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 94,
-      "numerator": 94,
+      "denominator": 95,
+      "numerator": 95,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 94,
+      "denominator": 95,
       "numerator": 47,
-      "percent": "50%"
+      "percent": "49.5%"
     },
     "supportedProfileCoverage": {
       "denominator": 117,
-      "numerator": 94,
-      "percent": "80.3%"
+      "numerator": 95,
+      "percent": "81.2%"
     }
   },
   "metricSemantics": [
@@ -2199,6 +2199,25 @@
       ]
     },
     {
+      "id": "character-creation.class-feature-advancement-replacement",
+      "profileKind": "character-creation",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "CharacterBuild progression plus Surface class-feature grant_feat options; replacement is accepted only as part of a class-level gain and rewrites selected CharacterBuild feature refs without parallel selection state.",
+      "taskRefs": [
+        "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE"
+      ],
+      "title": "Character Creation advances CharacterBuild class levels with class-feature replacement refs",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
       "id": "character-creation.weapon-mastery-choice",
       "profileKind": "character-creation",
       "qntOwners": [],
@@ -3744,6 +3763,14 @@
         "spell.invocation-dancing-lights-movable-dim-light"
       ],
       "taskId": "SRDINV89C"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused character-creation runtime tests cover CharacterBuild class-level gain with Fighter Fighting Style replacement as one advancement operation.",
+      "profileIds": [
+        "character-creation.class-feature-advancement-replacement"
+      ],
+      "taskId": "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE"
     }
   ],
   "units": [
@@ -4042,26 +4069,22 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "later-level-only",
-              "owner": "future Character Creation advancement/replacement owner",
-              "reason": "The current Character Creation fill reducer appends Unit-choice fills and discovery suppresses already-selected class-feature holes; replacing an owned Fighting Style when a Fighter level is gained needs an explicit advancement/replacement boundary before the all-level lifecycle is supported."
-            },
-            "followUpTaskId": "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE",
-            "mechanic": "Fighter-level advancement replacement of an already-chosen Fighting Style feat whenever the character gains another Fighter level through a supported advancement/replacement operation"
-          }
-        ],
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "selected Fighting Style feat Unit",
+          "reason": "The class feature owns Fighting Style selection and Fighter-level replacement; selected Fighting Style feat Units own executable battle pressure."
+        },
         "profileIds": [
-          "character-creation.class-feature-feat-choice"
+          "character-creation.class-feature-feat-choice",
+          "character-creation.class-feature-advancement-replacement"
         ],
         "supportedMechanics": [
           "Level 1 Fighter character creation discovers the Fighting Style feat choice from the Surface class-feature record",
           "Character Creation admits one selected Fighting Style feat and finalizes it as a selected CharacterBuild feature ref with selectedFromUnitId fighter_fighting_style",
+          "When a Fighter level is gained, Character Creation can replace the existing selected Fighting Style feat ref with a different supported Fighting Style feat ref in the same advancement operation",
           "Selected Fighting Style feat execution remains owned by the selected feat Unit profile"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -4086,6 +4109,25 @@
             "AT-L1-03S"
           ],
           "title": "Character Creation finalizes class-feature feat choices as selected build feature refs",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-creation.class-feature-advancement-replacement",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "CharacterBuild progression plus Surface class-feature grant_feat options; replacement is accepted only as part of a class-level gain and rewrites selected CharacterBuild feature refs without parallel selection state.",
+          "taskRefs": [
+            "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE"
+          ],
+          "title": "Character Creation advances CharacterBuild class levels with class-feature replacement refs",
           "verificationOwners": [
             {
               "kind": "runtime-test",

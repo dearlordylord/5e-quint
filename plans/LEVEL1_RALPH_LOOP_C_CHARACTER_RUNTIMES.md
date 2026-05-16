@@ -61,7 +61,7 @@
     {
       "number": 17,
       "id": "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Character Advancement Replacement Lifecycle"
     },
     {
@@ -158,9 +158,9 @@ Every Ralph prompt for this loop must include:
 5. `L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT` is complete: the current
    creation fill workflow does not own replacement of finalized choices when a
    class level is gained.
-6. Research and implement
-   `L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE` before promoting
-   `fighter_fighting_style` from the level-1 subset to all-level support.
+6. `L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE` is complete: Character
+   Creation owns the shared post-finalization class-level gain boundary needed
+   to promote `fighter_fighting_style` to all-level support.
 7. Implement `L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE` after `AT-L1-05`
    when promoting `warlock_eldritch_invocations` from the level-1 subset to
    all-level support.
@@ -192,12 +192,10 @@ For Unit-specific Character Creation tasks:
 
 Lifecycle gates:
 
-- `fighter_fighting_style` needs a shared advancement/replacement boundary
-  before all-level support. `L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT`
-  established that the current Character Creation fill reducer appends
-  Unit-choice fills and discovery suppresses already-selected class-feature
-  holes. The concrete follow-up is
-  `L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE`.
+- `fighter_fighting_style` all-level support is closed by
+  `L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE`: Character Creation owns
+  Fighter-level replacement of the finalized selected Fighting Style feat ref
+  without adding a second selected-option store.
 - Weapon Mastery containers need initial choice and Long Rest reselection support
   before all-level support.
 - The existing selected identity MBT evidence for `mastery_cleave`,
@@ -269,7 +267,7 @@ For `AT-L1-08`:
 | 6 | L1C-AT08 - Wizard Arcane Recovery Character Sheet Profile | done | none | Character Sheet Short Rest Spell Slot recovery. |
 | 7 | L1C-AT04 - Weapon Mastery Character And Rest Profile | done | L1C-AT03S | Includes Long Rest reselection support; selected mastery-property MBT does not satisfy this gate. |
 | 8 | L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT - Fighter Fighting Style Advancement Replacement | done | L1C-AT03 | Retargeted remaining all-level work to `L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE`. |
-| 17 | L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE - Character Advancement Replacement Lifecycle | ready-for-research | L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT | Required before `fighter_fighting_style` can move from level-1 subset support to all-level support. |
+| 17 | L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE - Character Advancement Replacement Lifecycle | done | L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT | Shared CharacterBuild class-level gain boundary promoted `fighter_fighting_style` to all-level support. |
 | 9 | L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE - Warlock Eldritch Invocation Lifecycle | ready-for-implementation-after-light-research | L1C-AT05 | Required before `warlock_eldritch_invocations` can move from level-1 subset support to all-level support. |
 | 10 | L1C-L1X-01 - Create Or Destroy Water No-Matrix Decision | ready-for-research | none | Decide environment/fog owner; no Unit claim without admitted UnitRecord. |
 | 11 | L1C-L1X-05 - Floating Disk No-Matrix Decision | ready-for-research | none | Decide object/inventory movement owner. |
@@ -582,7 +580,7 @@ Plan Impact:
 
 ### Task 17 - L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE - Character Advancement Replacement Lifecycle
 
-Status: `ready-for-research`
+Status: `done`
 
 Research and implement the shared advancement/replacement boundary needed for
 class features that replace already finalized choices when a class level is
@@ -632,6 +630,9 @@ Scope:
 - Reuse `character-creation.eldritch-invocation-choice` from Task 1.
 - Evidence later-level invocation gains from the Warlock Invocations column.
 - Evidence Warlock-level invocation replacement with prerequisite gating.
+- Reuse the shared CharacterBuild class-level gain boundary from
+  `L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE`; do not add separate
+  selected invocation state.
 - Evidence the prerequisite-retention lockout: an invocation cannot be replaced
   while another selected invocation has it as a prerequisite.
 - Evidence duplicate-selection enforcement unless an invocation description says

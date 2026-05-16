@@ -39,6 +39,7 @@ import {
   SRD_ELDRITCH_INVOCATION_OPTIONS,
   UNIT_CHOICE_KEYS,
   abilityScoreAssignment,
+  advanceCharacterBuildClassLevel,
   classUnitIdFromUnitId,
   createCharacterDraft,
   creationChoiceOptionId,
@@ -47,6 +48,7 @@ import {
   draftRevision,
   fillCreationHoles,
   finalizeCharacterDraft,
+  fighterLevelGainWithFightingStyleReplacement,
   loadoutEquipmentUnitId,
   loadoutSourceHoleIdText,
   loadoutSourceKey,
@@ -75,6 +77,7 @@ import {
   type LoadoutSlot,
   type UnitCatalog,
   type CharacterProgression,
+  type CharacterBuildClassLevelGain,
   type ClassHitPointRule,
 } from "./index.ts";
 import { classFeatureGrantChoiceHoles } from "./discovery.ts";
@@ -112,6 +115,7 @@ import {
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.eldritch-invocation-choice
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.class-feature-option-projection
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.skill-expertise-choice
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.class-feature-advancement-replacement
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-03 fighter_fighting_style
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-05 warlock_eldritch_invocations
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-06 cleric_divine_order druid_primal_order
@@ -148,6 +152,20 @@ function expectRight<T, E>(result: Either.Either<T, E>): T {
   expect(Either.isRight(result)).toBe(true);
 
   return result.right;
+}
+
+function finalizedCompleteManifestBuild(): CharacterBuild {
+  const result = finalizeCharacterDraft({
+    draft: completeManifestDraft(),
+    unitLibrary,
+  });
+  if (result.tag !== "ready") {
+    throw new Error(
+      `Expected complete manifest finalization to be ready, received ${result.tag}`,
+    );
+  }
+
+  return result.build;
 }
 
 function testProgression(
@@ -2572,6 +2590,157 @@ describe("character creation finalization", () => {
     ).toContain("fighter_action_surge");
   });
 
+  test("advances a finalized Fighter build and replaces Fighting Style in one level-gain operation", () => {
+    const build = finalizedCompleteManifestBuild();
+    const fighterClassUnitId = expectRight(
+      classUnitIdFromUnitId({
+        unitLibrary,
+        classUnitId: "class_fighter",
+      }),
+    );
+    const levelGain = expectRight(
+      fighterLevelGainWithFightingStyleReplacement({
+        unitLibrary,
+        classUnitId: fighterClassUnitId,
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        selectedFeatUnitId: "feat_archery",
+      }),
+    );
+
+    const result = expectRight(
+      advanceCharacterBuildClassLevel({
+        build,
+        unitLibrary,
+        levelGain,
+      }),
+    );
+
+    expect(result.progression).toEqual({
+      startingClass: "class_fighter",
+      advancements: [
+        {
+          classUnitId: "class_fighter",
+          hitPointRule: { tag: "fixedHigherLevelGain" },
+        },
+      ],
+    });
+    expect(
+      selectedBuildClassChoiceUnitIds(result, "fighter_fighting_style"),
+    ).toEqual(["feat_archery"]);
+    expect(
+      selectedBuildClassChoiceUnitIds(result, "fighter_weapon_mastery"),
+    ).toEqual(["weapon_longsword", "weapon_spear", "weapon_flail"]);
+    const unitRefIds = characterBuildUnitRefs(result, unitLibrary).map(
+      (ref) => ref.unitId,
+    );
+    expect(unitRefIds).toEqual(
+      expect.arrayContaining([
+        "fighter_action_surge",
+        "fighter_tactical_mind",
+        "feat_archery",
+      ]),
+    );
+    expect(unitRefIds).not.toContain("defense");
+  });
+
+  test("advances a finalized Fighter build without duplicating Fighting Style state", () => {
+    const build = finalizedCompleteManifestBuild();
+    const fighterClassUnitId = expectRight(
+      classUnitIdFromUnitId({
+        unitLibrary,
+        classUnitId: "class_fighter",
+      }),
+    );
+    const levelGain = {
+      tag: "classLevelGain",
+      classUnitId: fighterClassUnitId,
+      hitPointRule: { tag: "fixedHigherLevelGain" },
+    } as const satisfies CharacterBuildClassLevelGain;
+
+    const result = expectRight(
+      advanceCharacterBuildClassLevel({
+        build,
+        unitLibrary,
+        levelGain,
+      }),
+    );
+
+    expect(computeTotalLevel(result.progression)).toBe(2);
+    expect(
+      selectedBuildClassChoiceUnitIds(result, "fighter_fighting_style"),
+    ).toEqual(["defense"]);
+  });
+
+  test("rejects replacing Fighting Style with the already-selected feat", () => {
+    const build = finalizedCompleteManifestBuild();
+    const fighterClassUnitId = expectRight(
+      classUnitIdFromUnitId({
+        unitLibrary,
+        classUnitId: "class_fighter",
+      }),
+    );
+    const levelGain = expectRight(
+      fighterLevelGainWithFightingStyleReplacement({
+        unitLibrary,
+        classUnitId: fighterClassUnitId,
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        selectedFeatUnitId: "defense",
+      }),
+    );
+    const result = advanceCharacterBuildClassLevel({
+      build,
+      unitLibrary,
+      levelGain,
+    });
+
+    expect(result).toMatchObject({
+      _tag: "Left",
+      left: { code: "sameFightingStyleReplacement" },
+    });
+  });
+
+  test("rejects Fighting Style replacement outside Fighting Style feat options", () => {
+    const fighterClassUnitId = expectRight(
+      classUnitIdFromUnitId({
+        unitLibrary,
+        classUnitId: "class_fighter",
+      }),
+    );
+
+    const result = fighterLevelGainWithFightingStyleReplacement({
+      unitLibrary,
+      classUnitId: fighterClassUnitId,
+      hitPointRule: { tag: "fixedHigherLevelGain" },
+      selectedFeatUnitId: "feat_savage_attacker",
+    });
+
+    expect(result).toMatchObject({
+      _tag: "Left",
+      left: { code: "nonFightingStyleFeat" },
+    });
+  });
+
+  test("rejects Fighting Style replacement outside a Fighter level gain", () => {
+    const wizardClassUnitId = expectRight(
+      classUnitIdFromUnitId({
+        unitLibrary,
+        classUnitId: "class_wizard",
+      }),
+    );
+
+    const result = fighterLevelGainWithFightingStyleReplacement({
+      unitLibrary,
+      classUnitId: wizardClassUnitId,
+      hitPointRule: { tag: "fixedHigherLevelGain" },
+      selectedFeatUnitId: "feat_archery",
+    });
+
+    expect(result).toMatchObject({
+      _tag: "Left",
+      left: { code: "nonFighterClassLevelGain" },
+    });
+  });
+
   test("retains selected subclass Unit refs in finalized builds", () => {
     const profile = CHARACTER_CREATION_SUPPORT_PROFILE as unknown as {
       supportedProgressions: CharacterProgression[];
@@ -4375,6 +4544,18 @@ function selectedChoiceOptionIds(
     selection.source.unitId === unitId &&
     selection.source.choiceKey === choiceKey
       ? selection.options.map((option) => option.optionId)
+      : [],
+  );
+}
+
+function selectedBuildClassChoiceUnitIds(
+  build: CharacterBuild,
+  selectedFromUnitId: UnitRecord["id"],
+): readonly UnitRecord["id"][] {
+  return build.features.flatMap((feature) =>
+    feature.kind === "selectedClassChoice" &&
+    feature.selectedFromUnitId === selectedFromUnitId
+      ? [feature.unitId]
       : [],
   );
 }

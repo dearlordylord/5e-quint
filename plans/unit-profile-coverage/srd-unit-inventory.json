@@ -164,8 +164,8 @@
       "numerator": 367,
       "percent": "100%",
       "rowsByStatus": {
-        "accepted": 278,
-        "accepted-no-battle-effect": 89
+        "accepted": 277,
+        "accepted-no-battle-effect": 90
       }
     },
     "levelOneClassContainers": 12,
@@ -9172,13 +9172,13 @@
         "state": "installed",
         "unitId": "fighter_fighting_style"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "future Character Creation advancement/replacement owner",
-        "reason": "The current Character Creation fill reducer appends Unit-choice fills and discovery suppresses already-selected class-feature holes; replacing an owned Fighting Style when a Fighter level is gained needs an explicit advancement/replacement boundary before the all-level lifecycle is supported."
+        "source": "unit-claim",
+        "kind": "selection-grant-container",
+        "owner": "selected Fighting Style feat Unit",
+        "reason": "The class feature owns Fighting Style selection and Fighter-level replacement; selected Fighting Style feat Units own executable battle pressure."
       },
       "ownerEvidence": [
         {
@@ -9188,12 +9188,12 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV1B level-1 Fighter support profile; Fighter progression discovers and fills the Fighting Style Unit-backed choice, finalizes the selected feat ref, and projects it through CharacterBuild feature Unit refs.",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV1B level-1 Fighter support profile; Fighter progression discovers and fills the Fighting Style Unit-backed choice, finalizes the selected feat ref, and can replace that ref when a Fighter level is gained through the CharacterBuild advancement boundary.",
           "status": "owner evidence present"
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "accepted"
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/fighter:level-1:class-feature-grant:fighter_second_wind",

@@ -8,7 +8,7 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 
 | Metric | Covered |
 | --- | ---: |
-| Strict runtime/profile support | 68/93 (73.1%) |
+| Strict runtime/profile support | 69/93 (74.2%) |
 | Strict target closure | 79/93 (84.9%) |
 | Product readiness | 367/367 (100%) |
 
@@ -21,17 +21,17 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | SRD pressure with no Unit matrix row | 14 |
 | Non-executable class containers | 12 |
 | Strict executable denominator | 93 |
-| Non-supported frontier | 25 |
+| Non-supported frontier | 24 |
 
 ## Status Groups
 
 | Status | Count | Units |
 | --- | ---: | --- |
-| supported-profile | 68 | `acid_splash`, `animal_friendship`, `bane`, `barbarian_rage`, `barbarian_unarmored_defense`, `barbarian_weapon_mastery`, `bless`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_divine_order`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `false_life`, `fighter_second_wind`, `fighter_weapon_mastery`, `fire_bolt`, `guidance`, `guiding_bolt`, `healing_word`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `ice_knife`, `inflict_wounds`, `longstrider`, `mage_armor`, `magic_missile`, `monk_unarmored_defense`, `paladin_lay_on_hands`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `ranger_weapon_mastery`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_expertise`, `rogue_sneak_attack`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `searing_smite`, `shield`, `shield_of_faith`, `shillelagh`, `shocking_grasp`, `sleep`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `starry_wisp`, `true_strike`, `vicious_mockery`, `wizard_arcane_recovery`, `wizard_ritual_adept` |
+| supported-profile | 69 | `acid_splash`, `animal_friendship`, `bane`, `barbarian_rage`, `barbarian_unarmored_defense`, `barbarian_weapon_mastery`, `bless`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_divine_order`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `false_life`, `fighter_fighting_style`, `fighter_second_wind`, `fighter_weapon_mastery`, `fire_bolt`, `guidance`, `guiding_bolt`, `healing_word`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `ice_knife`, `inflict_wounds`, `longstrider`, `mage_armor`, `magic_missile`, `monk_unarmored_defense`, `paladin_lay_on_hands`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `ranger_weapon_mastery`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_expertise`, `rogue_sneak_attack`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `searing_smite`, `shield`, `shield_of_faith`, `shillelagh`, `shocking_grasp`, `sleep`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `starry_wisp`, `true_strike`, `vicious_mockery`, `wizard_arcane_recovery`, `wizard_ritual_adept` |
 | open-profile-accounting | 9 | `faerie_fire`, `feather_fall`, `fog_cloud`, `grease`, `hunters_mark`, `jump`, `light`, `ranger_favored_enemy`, `thunderwave` |
 | closed-runtime-detached-table-adjudication | 7 | `charm_person`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `druid_druidic`, `minor_illusion`, `rogue_thieves_cant` |
 | open-runtime-behavior | 5 | `alarm`, `comprehend_languages`, `identify`, `silent_image`, `speak_with_animals` |
-| closed-later-level-only | 4 | `bard_bardic_inspiration`, `fighter_fighting_style`, `monk_martial_arts`, `warlock_eldritch_invocations` |
+| closed-later-level-only | 3 | `bard_bardic_inspiration`, `monk_martial_arts`, `warlock_eldritch_invocations` |
 
 ## Open Frontier
 
@@ -54,7 +54,6 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | `druid_druidic` | closed-runtime-detached-table-adjudication | unsupported-profile | installed | outside-runtime-presentation-exploration | Language, hidden-message, and non-battle prepared-spell source facts are outside promoted battle runtime. |
 | `faerie_fire` | open-profile-accounting | profile-subset-supported | installed | table-spatial-derivation | Color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary. |
 | `feather_fall` | open-profile-accounting | profile-subset-supported | installed | table-spatial-derivation | Fall-distance derivation, map elevation, and landing geometry simulation remain table/spatial derivations. |
-| `fighter_fighting_style` | closed-later-level-only | profile-subset-supported | installed | later-level-only | The current Character Creation fill reducer appends Unit-choice fills and discovery suppresses already-selected class-feature holes; replacing an owned Fighting Style when a Fighter level is gained needs an explicit advancement/replacement boundary before the all-level lifecycle is supported. |
 | `fog_cloud` | open-profile-accounting | profile-subset-supported | installed | table-spatial-derivation | Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain table/spatial derivations. |
 | `grease` | open-profile-accounting | profile-subset-supported | installed | table-spatial-derivation | Automatic area membership, pathfinding, and grid geometry derivation remain table/spatial derivations. |
 | `hunters_mark` | open-profile-accounting | profile-subset-supported | installed | social-knowledge-effect | Wisdom (Perception or Survival) Advantage to find the marked target is ability-check roll-mode state outside the promoted damage-rider runtime. |

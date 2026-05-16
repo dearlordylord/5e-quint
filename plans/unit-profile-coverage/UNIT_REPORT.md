@@ -17,13 +17,13 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Authored Surface Unit catalog admission | 143/429 | 33.3% |
 | Authored Surface executable catalog admission | 116/362 | 32% |
 | Installed Unit profile classification coverage | 144/144 | 100% |
-| Supported executable Unit coverage | 94/117 | 80.3% |
+| Supported executable Unit coverage | 95/117 | 81.2% |
 | QNT profile modeling coverage | 62/62 | 100% |
 | QNT proof coverage | 62/62 | 100% |
 | Runtime mapping coverage | 62/62 | 100% |
 | Runtime parity coverage | 62/62 | 100% |
-| Deterministic admission/projection coverage | 94/94 | 100% |
-| Selected identity MBT coverage | 47/94 | 50% |
+| Deterministic admission/projection coverage | 95/95 | 100% |
+| Selected identity MBT coverage | 47/95 | 49.5% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -47,6 +47,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Unit | Collection | Profiles |
 | --- | --- | --- |
+| `fighter_fighting_style` | srd-5.2.1 | `character-creation.class-feature-feat-choice`, `character-creation.class-feature-advancement-replacement` |
 | `fighter_second_wind` | srd-5.2.1 | `unit-feature.self-bonus-action-healing` |
 | `fighter_weapon_mastery` | srd-5.2.1 | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` |
 | `fighter_action_surge` | srd-5.2.1 | `unit-feature.action-surge-resource` |
@@ -146,7 +147,6 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Unit | Collection | Profiles | Supported Mechanics | Deferred Mechanics |
 | --- | --- | --- | --- | --- |
-| `fighter_fighting_style` | srd-5.2.1 | `character-creation.class-feature-feat-choice` | Level 1 Fighter character creation discovers the Fighting Style feat choice from the Surface class-feature record; Character Creation admits one selected Fighting Style feat and finalizes it as a selected CharacterBuild feature ref with selectedFromUnitId fighter_fighting_style; Selected Fighting Style feat execution remains owned by the selected feat Unit profile | Fighter-level advancement replacement of an already-chosen Fighting Style feat whenever the character gains another Fighter level through a supported advancement/replacement operation (L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE) |
 | `bard_bardic_inspiration` | srd-5.2.1 | `unit-feature.bardic-inspiration-grant`, `unit-feature.bardic-inspiration-failed-d20-test` | Bonus Action grant to another creature within 60 feet who can see or hear the Bard; one Bardic Inspiration die per creature; one-hour die ownership; d6 grant and Charisma-modifier use pool minimum; spending the Bardic Inspiration die after an already-failed attack roll, Saving Throw, or Ability Check | later-level Bardic Inspiration die size increases beyond d6 (SRDINV78) |
 | `monk_martial_arts` | srd-5.2.1 | `unit-feature.martial-arts-attack-projection` | while unarmored and not wielding a Shield, and unarmed or wielding only Monk weapons, eligible Unarmed Strikes and Monk weapons may use Dexterity instead of Strength for attack and damage rolls; eligible Unarmed Strikes and eligible one-die Monk weapons may replace lower damage dice with the level-1 d6 Martial Arts die; eligible promoted Unarmed Strike Grapple and Shove save DCs may use Dexterity through the projected Unarmed Strike ability modifier; while the same Martial Arts eligibility gate holds, the Monk can make an Unarmed Strike as a Bonus Action without an Attack-action prerequisite | later-level Martial Arts die size increases beyond d6 (SRDINV78) |
 | `ranger_favored_enemy` | srd-5.2.1 | `spell.invocation-marked-damage-rider` | always-prepared Hunter's Mark access through retained prepared Spell Access; two-use Favored Enemy Long Rest free-cast resource at Ranger level 1; free-cast Hunter's Mark uses the existing marked damage rider, target gate, Concentration ownership, and Bonus Action cost; normal Spell Slot Hunter's Mark casting remains available when the free-cast resource is exhausted | later-level Favored Enemy free-cast count scaling beyond two uses (SRDINV78); Hunter's Mark Perception/Survival finding Advantage remains deferred to ability-check roll-mode work (SRDINV66) |
@@ -773,6 +773,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Unit | Profiles | Task | Owner |
 | --- | --- | --- | --- |
+| `fighter_fighting_style` | `character-creation.class-feature-feat-choice`, `character-creation.class-feature-advancement-replacement` | AT-L1-03 | `packages/character-creation-runtime/src/index.test.ts` |
 | `fighter_second_wind` | `unit-feature.self-bonus-action-healing` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `fighter_weapon_mastery` | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` | AT-L1-04 | `packages/character-sheet-runtime/src/index.test.ts` |
 | `fighter_action_surge` | `unit-feature.action-surge-resource` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
@@ -874,7 +875,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Unit | Profiles | Task | Owner | Deferred Mechanics |
 | --- | --- | --- | --- | --- |
-| `fighter_fighting_style` | `character-creation.class-feature-feat-choice` | AT-L1-03 | `packages/character-creation-runtime/src/index.test.ts` | Fighter-level advancement replacement of an already-chosen Fighting Style feat whenever the character gains another Fighter level through a supported advancement/replacement operation (L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE) |
 | `bard_bardic_inspiration` | `unit-feature.bardic-inspiration-grant`, `unit-feature.bardic-inspiration-failed-d20-test` | SRDINV72A | `packages/battle-runtime/src/unit-profile-admission.test.ts` | later-level Bardic Inspiration die size increases beyond d6 (SRDINV78) |
 | `bard_bardic_inspiration` | `unit-feature.bardic-inspiration-grant`, `unit-feature.bardic-inspiration-failed-d20-test` | SRDINV72B | `packages/battle-runtime/src/index.test.ts` | later-level Bardic Inspiration die size increases beyond d6 (SRDINV78) |
 | `monk_martial_arts` | `unit-feature.martial-arts-attack-projection` | SRDINV73A | `packages/battle-runtime/src/unit-profile-admission.test.ts` | later-level Martial Arts die size increases beyond d6 (SRDINV78) |
@@ -962,7 +962,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `species_orc` | unsupported-profile | Species container record; executable pressure lives on species trait Units. |
 | `subclass_fighter_champion` | unsupported-profile | Subclass container record; executable pressure lives on granted feature Units. |
 | `subclass_wizard_evoker` | unsupported-profile | Subclass container record; no promoted execution profile yet. |
-| `fighter_fighting_style` | profile-subset-supported | supported subset: Level 1 Fighter character creation discovers the Fighting Style feat choice from the Surface class-feature record; Character Creation admits one selected Fighting Style feat and finalizes it as a selected CharacterBuild feature ref with selectedFromUnitId fighter_fighting_style; Selected Fighting Style feat execution remains owned by the selected feat Unit profile; deferred: Fighter-level advancement replacement of an already-chosen Fighting Style feat whenever the character gains another Fighter level through a supported advancement/replacement operation (L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE) |
 | `bard_bardic_inspiration` | profile-subset-supported | supported subset: Bonus Action grant to another creature within 60 feet who can see or hear the Bard; one Bardic Inspiration die per creature; one-hour die ownership; d6 grant and Charisma-modifier use pool minimum; spending the Bardic Inspiration die after an already-failed attack roll, Saving Throw, or Ability Check; deferred: later-level Bardic Inspiration die size increases beyond d6 (SRDINV78) |
 | `druid_druidic` | unsupported-profile | Language, hidden-message, and prepared-spell source facts are authored; exploration/language execution is not promoted as a battle Unit profile. |
 | `monk_martial_arts` | profile-subset-supported | supported subset: while unarmored and not wielding a Shield, and unarmed or wielding only Monk weapons, eligible Unarmed Strikes and Monk weapons may use Dexterity instead of Strength for attack and damage rolls; eligible Unarmed Strikes and eligible one-die Monk weapons may replace lower damage dice with the level-1 d6 Martial Arts die; eligible promoted Unarmed Strike Grapple and Shove save DCs may use Dexterity through the projected Unarmed Strike ability modifier; while the same Martial Arts eligibility gate holds, the Monk can make an Unarmed Strike as a Bonus Action without an Attack-action prerequisite; deferred: later-level Martial Arts die size increases beyond d6 (SRDINV78) |
@@ -1002,7 +1001,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
 | srd-5.2.1 | unassigned | unsupported-profile | 35 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `druid_druidic`, `rogue_thieves_cant`, `feat_ability_score_improvement`, `orc_darkvision`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `minor_illusion`, `armor_chain_mail`, `equipment_shield`, `weapon_club`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff` |
-| srd-5.2.1 | unassigned | profile-subset-supported | 15 | `fighter_fighting_style`, `bard_bardic_inspiration`, `monk_martial_arts`, `ranger_favored_enemy`, `warlock_eldritch_invocations`, `faerie_fire`, `feather_fall`, `find_familiar`, `fog_cloud`, `grease`, `hunters_mark`, `jump`, `light`, `thunderwave`, `charm_person` |
+| srd-5.2.1 | unassigned | profile-subset-supported | 14 | `bard_bardic_inspiration`, `monk_martial_arts`, `ranger_favored_enemy`, `warlock_eldritch_invocations`, `faerie_fire`, `feather_fall`, `find_familiar`, `fog_cloud`, `grease`, `hunters_mark`, `jump`, `light`, `thunderwave`, `charm_person` |
 
 ## Profile Claims By Task
 
@@ -1186,6 +1185,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | SRDINV87B | completed-runtime-parity | `spell.invocation-attack-roll-advantage-save` |
 | SRDINV89C | qnt-proof | `spell.invocation-object-light`, `spell.invocation-attack-roll-advantage-save`, `spell.invocation-held-light-emitter`, `spell.invocation-dancing-lights-movable-dim-light` |
 | SRDINV89C | completed-runtime-parity | `spell.invocation-object-light`, `spell.invocation-attack-roll-advantage-save`, `spell.invocation-held-light-emitter`, `spell.invocation-dancing-lights-movable-dim-light` |
+| L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE | completed-runtime-parity | `character-creation.class-feature-advancement-replacement` |
 
 ## Supported Profiles Lacking Runtime Parity
 

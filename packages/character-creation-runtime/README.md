@@ -30,6 +30,7 @@ Stat Block, and not in-play Character Sheet state.
 | Unit catalog                              | `discoverCreationHoles`         | fillable `CreationHole[]`      |
 | caller-submitted batch of `CreationFill`s | `fillCreationHoles`             | accepted/rejected draft update |
 | complete legal draft plus Unit facts      | `finalizeCharacterDraft`        | finalized `CharacterBuild`     |
+| finalized `CharacterBuild` plus level gain | `advanceCharacterBuildClassLevel` | advanced `CharacterBuild`      |
 | finalized `CharacterBuild`                | application composition outside | battle creature initialization |
 
 `@dnd/character-creation-runtime` must not import `@dnd/battle-runtime` or the
@@ -62,6 +63,12 @@ The progression fill is atomic. `draft.progression.initial` selects the durable
 Character Progression profile in one choice: starting class plus any post-start
 advancement entries. There is no later level-1 class-entry hole for MCP
 or replay callers to keep synchronized with a starting-class field.
+
+Post-finalization class advancement is also atomic. `advanceCharacterBuildClassLevel`
+appends one class level to `CharacterBuild.progression`; class-feature
+replacement choices that RAW ties to that level gain, such as Fighter Fighting
+Style replacement, are accepted only inside that operation and rewrite the
+existing selected class-choice feature ref.
 
 ## Fill Issue Vocabulary
 
@@ -105,6 +112,8 @@ This package supports these character-creation profiles:
 - retained SRD level-1 class-feature Unit refs, plus supported acquisition
   choices for Divine Order, Primal Order, Rogue Expertise, and Warlock
   Eldritch Invocations;
+- Fighter Fighting Style replacement when a Fighter level is gained, retaining
+  one selected Fighting Style feat ref on `CharacterBuild`;
 - supported level-1 Weapon Mastery choices for Fighter, Barbarian, Paladin,
   Ranger, and Rogue as retained build Unit refs for selected weapons;
 - Orc species;
@@ -139,7 +148,9 @@ array positions.
 CharacterBuild equipment item ids use the `CharacterEquipmentItemId` source/key
 isomorphism. They identify a durable build equipment item slot plus its selected
 equipment Unit id without leaving `main:<unit>` and `off:<unit>` string
-composition in build projection code.
+composition in build projection code. CharacterBuild class-feature replacement
+rewrites the existing selected class-choice feature ref; it does not add a
+second selected-option store beside `CharacterBuild.features`.
 
 Accepted option ids are protocol choices. When a selected option references a
 Unit, the draft records the Unit reference rather than treating the

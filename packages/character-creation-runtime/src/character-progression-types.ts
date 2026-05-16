@@ -131,6 +131,34 @@ export function characterProgressionEntry(input: {
       });
 }
 
+export function characterProgressionWithClassLevelGain(input: {
+  readonly progression: CharacterProgression;
+  readonly classUnitId: ClassUnitId;
+  readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+}): Either.Either<CharacterProgression, CharacterProgressionLevelIssue> {
+  const nextCharacterLevel = 2 + input.progression.advancements.length;
+  if (
+    !CHARACTER_CLASS_LEVELS.some((level) => level === nextCharacterLevel)
+  ) {
+    return Either.left({
+      code: "invalidCharacterClassLevel",
+      classLevel: nextCharacterLevel,
+    });
+  }
+
+  const entry = characterProgressionEntry({
+    classUnitId: input.classUnitId,
+    characterLevel: characterClassLevel(nextCharacterLevel),
+    hitPointRule: input.hitPointRule,
+  });
+  if (Either.isLeft(entry)) return Either.left(entry.left);
+
+  return Either.right({
+    startingClass: input.progression.startingClass,
+    advancements: [...input.progression.advancements, entry.right],
+  });
+}
+
 export function hitPointRuleOptionSuffix(
   rule: ClassHitPointRule,
 ): "maximum_hit_die" | "fixed_hp_gain" {

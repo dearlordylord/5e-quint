@@ -718,7 +718,7 @@
     "srd521:classes/fighter:level-1:class-feature-grant:fighter_fighting_style": {
       "taskId": "SRDINV1B",
       "profile": "level-1 Fighter support profile",
-      "summary": "Fighter progression discovers and fills the Fighting Style Unit-backed choice, finalizes the selected feat ref, and projects it through CharacterBuild feature Unit refs.",
+      "summary": "Fighter progression discovers and fills the Fighting Style Unit-backed choice, finalizes the selected feat ref, and can replace that ref when a Fighter level is gained through the CharacterBuild advancement boundary.",
       "discovery": [
         "packages/character-creation-runtime/src/discovery.ts:discoverClassFeatureGrantHoles"
       ],
@@ -731,10 +731,12 @@
         "packages/character-creation-runtime/src/finalization.ts:unitChoiceSelections"
       ],
       "buildProjection": [
-        "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds"
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds",
+        "packages/character-creation-runtime/src/character-build-advancement.ts:advanceCharacterBuildClassLevel"
       ],
       "tests": [
-        "packages/character-creation-runtime/src/index.test.ts:finalizes supported Fighter 1 build"
+        "packages/character-creation-runtime/src/index.test.ts:finalizes supported Fighter 1 build",
+        "packages/character-creation-runtime/src/index.test.ts:advances a finalized Fighter build and replaces Fighting Style in one level-gain operation"
       ]
     },
     "srd521:classes/fighter:level-1:core-trait:fighter_armor_training": {

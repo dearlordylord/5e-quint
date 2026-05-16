@@ -146,6 +146,7 @@ export {
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.eldritch-invocation-choice
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.class-feature-option-projection
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.skill-expertise-choice
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.class-feature-advancement-replacement
 
 export {
   LEVEL_ONE_ELDRITCH_INVOCATION_OPTIONS,
@@ -190,6 +191,7 @@ export {
   classLevelForUnit,
   classUnitId,
   computeTotalLevel,
+  characterProgressionWithClassLevelGain,
   characterTotalLevelHitPointRule,
   hitPointRuleLabel,
   hitPointRuleOptionSuffix,
@@ -206,6 +208,18 @@ export {
   type ClassHitPointRule,
   type LevelOneClassHitPointRule,
 } from "./character-progression-types.ts";
+export {
+  advanceCharacterBuildClassLevel,
+  fighterClassUnitId,
+  fighterLevelGainWithFightingStyleReplacement,
+  fightingStyleFeatUnitId,
+  type CharacterBuildAdvancementIssue,
+  type CharacterBuildClassLevelGain,
+  type CharacterBuildFighterFightingStyleReplacementLevelGain,
+  type CharacterBuildPlainClassLevelGain,
+  type FighterClassUnitId,
+  type FightingStyleFeatUnitId,
+} from "./character-build-advancement.ts";
 export {
   BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY,
   BACKGROUND_EQUIPMENT_CHOICE_KEY,
@@ -226,6 +240,7 @@ export {
   PHASE1_BACKGROUND_TOOL_OPTION_ID,
   PHASE1_CLASS_EQUIPMENT_OPTION_ID,
   PHASE1_CLASS_FIGHTER_UNIT_ID,
+  PHASE1_FIGHTING_STYLE_ARCHERY_UNIT_ID,
   PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
   PHASE1_LOADOUT_ARMOR_OPTION_ID,
   PHASE1_LOADOUT_SHIELD_OPTION_ID,

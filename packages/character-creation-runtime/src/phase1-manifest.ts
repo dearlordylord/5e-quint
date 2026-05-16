@@ -67,6 +67,7 @@ export const PHASE1_WEAPON_FLAIL_UNIT_ID = "weapon_flail";
 export const PHASE1_WEAPON_SHORTSWORD_UNIT_ID = "weapon_shortsword";
 export const PHASE1_SHIELD_UNIT_ID = "equipment_shield";
 export const PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID = "defense";
+export const PHASE1_FIGHTING_STYLE_ARCHERY_UNIT_ID = "feat_archery";
 
 export const SUPPORTED_BACKGROUND_UNIT_IDS = [
   PHASE1_BACKGROUND_SOLDIER_UNIT_ID,
@@ -121,6 +122,7 @@ export const SUPPORTED_FIGHTER_SKILL_OPTION_IDS = [
 ] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
 export const SUPPORTED_FIGHTING_STYLE_OPTION_IDS = [
   creationChoiceOptionId(PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID),
+  creationChoiceOptionId(PHASE1_FIGHTING_STYLE_ARCHERY_UNIT_ID),
 ] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
 export const PHASE1_WEAPON_MASTERY_UNIT_IDS = [
   PHASE1_WEAPON_LONGSWORD_UNIT_ID,

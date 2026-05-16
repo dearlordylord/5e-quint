@@ -562,35 +562,6 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "later-level-only"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "The current Character Creation fill reducer appends Unit-choice fills and discovery suppresses already-selected class-feature holes; replacing an owned Fighting Style when a Fighter level is gained needs an explicit advancement/replacement boundary before the all-level lifecycle is supported.",
-      "sourceRecordPath": "packages/surface/content/fighter_fighting_style.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Fighter Fighting Style",
-          "id": "srd521:classes/fighter:level-1:class-feature-grant:fighter_fighting_style",
-          "levelBand": "level-1",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 61,
-            "lineStart": 56,
-            "path": ".references/srd-5.2.1/Classes/Fighter.md"
-          }
-        }
-      ],
-      "status": "closed-later-level-only",
-      "strictTargetClosed": true,
-      "unitId": "fighter_fighting_style"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
         "table-spatial-derivation"
       ],
       "collectionId": "srd-5.2.1",
@@ -1268,7 +1239,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 68,
+      "count": 69,
       "description": "Full support exists at the Unit profile boundary for strict level-1 accounting.",
       "status": "supported-profile",
       "unitIds": [
@@ -1296,6 +1267,7 @@
         "entangle",
         "expeditious_retreat",
         "false_life",
+        "fighter_fighting_style",
         "fighter_second_wind",
         "fighter_weapon_mastery",
         "fire_bolt",
@@ -1385,12 +1357,11 @@
       ]
     },
     {
-      "count": 4,
+      "count": 3,
       "description": "The level-1 behavior is complete and every remaining residual is later-level-only.",
       "status": "closed-later-level-only",
       "unitIds": [
         "bard_bardic_inspiration",
-        "fighter_fighting_style",
         "monk_martial_arts",
         "warlock_eldritch_invocations"
       ]
@@ -1402,14 +1373,14 @@
       "numerator": 367,
       "percent": "100%",
       "rowsByStatus": {
-        "accepted": 278,
-        "accepted-no-battle-effect": 89
+        "accepted": 277,
+        "accepted-no-battle-effect": 90
       }
     },
     "strictRuntimeProfileSupport": {
       "denominator": 93,
-      "numerator": 68,
-      "percent": "73.1%"
+      "numerator": 69,
+      "percent": "74.2%"
     },
     "strictTargetClosure": {
       "denominator": 93,
@@ -3724,18 +3695,18 @@
     "candidateUnitIdsBeforeExclusions": 120,
     "groupsByClaimTag": {
       "missing": 5,
-      "profile-subset-supported": 14,
-      "supported-profile": 68,
+      "profile-subset-supported": 13,
+      "supported-profile": 69,
       "unsupported-profile": 6
     },
     "groupsByStatus": {
-      "closed-later-level-only": 4,
+      "closed-later-level-only": 3,
       "closed-runtime-detached-table-adjudication": 7,
       "open-profile-accounting": 9,
       "open-runtime-behavior": 5,
-      "supported-profile": 68
+      "supported-profile": 69
     },
-    "nonSupportedFrontier": 25,
+    "nonSupportedFrontier": 24,
     "strictDenominator": 93
   }
 }
