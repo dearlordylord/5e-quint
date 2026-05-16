@@ -188,6 +188,21 @@ Detailed historical decisions live in
 this section is intentionally changed with the corresponding package docs and
 tests.
 
+Not every table-owned rule fact is a runtime input. Keep these cases separate:
+
+- **Table-supplied runtime witnesses** are facts the table/caller/session gives
+  to an owning runtime through a typed input, hole, or fill. The runtime consumes
+  the witness and applies the modeled mechanical consequence, but it does not
+  derive the table observation. Examples include area membership, sight, cover,
+  range, falling, landing, legal destination, movement-cost, and object
+  disposition facts.
+- **Runtime-detached table adjudication** is table work the application does not
+  model or consume for the current product goal. It should not create runtime
+  holes, durable state, support profiles, or battle/character outcomes merely to
+  mark coverage. Examples include Alarm's ward narration, Identify's information
+  disclosure, language conversation, broad detection result narration, and
+  illusion/social adjudication that does not feed a modeled procedure.
+
 ## Designing Ownership
 
 Design starts from the rule and its state-transition consequence, not from the
