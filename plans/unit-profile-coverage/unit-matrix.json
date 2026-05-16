@@ -4701,10 +4701,10 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "outside-runtime-presentation-exploration",
-          "owner": "exploration/language owner",
-          "reason": "Language, hidden-message, and non-battle prepared-spell source facts are outside promoted battle runtime."
+          "owner": "runtime-detached hidden-message/language adjudication owner",
+          "reason": "Druidic hidden-message spotting, Investigation adjudication, and deciphering are runtime-detached table adjudication outside promoted battle runtime; Druidic language and always-prepared Speak with Animals Spell Access remain character-owned source facts."
         },
-        "reason": "Language, hidden-message, and prepared-spell source facts are authored; exploration/language execution is not promoted as a battle Unit profile.",
+        "reason": "Druidic known-language and always-prepared Speak with Animals Spell Access source facts are authored as character-owned facts; hidden-message discovery and deciphering are runtime-detached table adjudication, so no battle Unit profile is promoted.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
@@ -5312,10 +5312,10 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "outside-runtime-presentation-exploration",
-          "owner": "exploration/language owner",
-          "reason": "Thieves' Cant is a language/communication source fact outside promoted battle runtime."
+          "owner": "runtime-detached language/communication adjudication owner",
+          "reason": "Thieves' Cant communication adjudication is runtime-detached table adjudication outside promoted battle runtime; Thieves' Cant and the additional Character Creation language choice remain character-owned source facts."
         },
-        "reason": "Language source facts are authored; exploration/language execution is not promoted as a battle Unit profile.",
+        "reason": "Thieves' Cant and the additional language-choice source fact are authored as character-owned facts; communication adjudication is runtime-detached table adjudication, so no battle Unit profile is promoted.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
@@ -10260,10 +10260,10 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "outside-runtime-presentation-exploration",
-          "owner": "exploration/detection owner",
-          "reason": "Sensing, occlusion, and Hallow discovery are exploration/detection state outside promoted battle runtime."
+          "owner": "runtime-detached detection adjudication owner",
+          "reason": "Sensing, occlusion, and Hallow discovery are runtime-detached exploration/detection table adjudication outside promoted battle runtime."
         },
-        "reason": "Detection/occlusion search semantics and Hallow discovery are not promoted as battle Unit profiles.",
+        "reason": "Detection/occlusion search semantics and Hallow discovery are runtime-detached exploration table adjudication, not promoted battle Unit profiles.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
@@ -10283,10 +10283,10 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "outside-runtime-presentation-exploration",
-          "owner": "exploration/detection owner",
-          "reason": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime."
+          "owner": "runtime-detached detection adjudication owner",
+          "reason": "Magic sensing, aura viewing, and school identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime."
         },
-        "reason": "Detection/concentration search semantics are not promoted as a battle Unit profile.",
+        "reason": "Detection/concentration search semantics are runtime-detached exploration table adjudication, not a promoted battle Unit profile.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
@@ -10306,10 +10306,10 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "outside-runtime-presentation-exploration",
-          "owner": "exploration/detection owner",
-          "reason": "Poison, disease, creature-kind sensing, occlusion, and identification are exploration/detection state outside promoted battle runtime."
+          "owner": "runtime-detached detection adjudication owner",
+          "reason": "Poison, disease, creature-kind sensing, occlusion, and identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime."
         },
-        "reason": "Detection/occlusion search semantics and poison/disease identification are not promoted as battle Unit profiles.",
+        "reason": "Detection/occlusion search semantics and poison/disease identification are runtime-detached exploration table adjudication, not promoted battle Unit profiles.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
@@ -11229,10 +11229,10 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "outside-runtime-presentation-exploration",
-          "owner": "illusion/exploration owner",
-          "reason": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are illusion/exploration state outside promoted battle runtime."
+          "owner": "runtime-detached illusion adjudication owner",
+          "reason": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are runtime-detached illusion/exploration table adjudication outside promoted battle runtime."
         },
-        "reason": "Sound/image illusion creation, physical-interaction reveal, faint rendering after Study, and recast expiry are illusion/exploration state outside promoted runtime owners.",
+        "reason": "Sound/image illusion creation, physical-interaction reveal, faint rendering after Study, and recast expiry are runtime-detached illusion/exploration table adjudication outside promoted runtime owners.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
@@ -11255,7 +11255,7 @@
             "battleReadinessClosure": {
               "kind": "social-knowledge-effect",
               "owner": "SRDINV41 social/knowledge owner",
-              "reason": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are social/knowledge state outside promoted battle runtime."
+              "reason": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are runtime-detached social/knowledge table adjudication outside promoted battle runtime."
             },
             "followUpTaskId": "SRDINV41",
             "mechanic": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are not represented in battle runtime state"
@@ -11800,6 +11800,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached security/exploration adjudication owner",
+          "reason": "Warded area truth, intrusion events, designated exceptions, audible or mental alarm presentation, and sleep wake-up results are runtime-detached table adjudication outside promoted battle runtime."
+        },
+        "reason": "Intrusion ward placement, designated non-triggering creatures, audible or mental alert delivery, and sleep wake-up adjudication are runtime-detached table adjudication, not a promoted battle Unit profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -12646,6 +12656,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached language/information adjudication owner",
+          "reason": "Language comprehension, signed and written text access, page-reading time, and secret-message exclusion are runtime-detached table adjudication outside promoted battle runtime."
+        },
+        "reason": "Literal language, signed-language, and written-language comprehension; page-reading pace; and secret-message exclusion are runtime-detached information-disclosure table adjudication, not a promoted battle Unit profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -13510,6 +13530,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached item/information adjudication owner",
+          "reason": "Magic item properties, Attunement and charge knowledge, ongoing-spell identification, spell-origin naming, and creature spell-effect information are runtime-detached table adjudication outside promoted battle runtime."
+        },
+        "reason": "Magic item, magical object, ongoing-spell, and creature spell-effect information disclosure is runtime-detached table adjudication, not a promoted battle Unit profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -15652,6 +15682,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached illusion adjudication owner",
+          "reason": "Image content, movement appearance, physical interaction, Study action adjudication, and seeing-through behavior are runtime-detached table adjudication outside promoted battle runtime."
+        },
+        "reason": "Visual illusion content, movement presentation, physical-interaction reveal, Study adjudication, and see-through results are runtime-detached illusion table adjudication, not a promoted battle Unit profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -15688,6 +15728,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached social/language adjudication owner",
+          "reason": "Beast conversation, Influence action options, and information remembered by Beasts are runtime-detached table adjudication outside promoted battle runtime."
+        },
+        "reason": "Beast communication, Influence options, and local-information disclosure are runtime-detached social table adjudication, not a promoted battle Unit profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",

@@ -128,29 +128,6 @@ const catalogOnlyClosures = new Map([
   ],
 ]);
 
-const authoredSpellUnitCatalogOnlyClosures = new Map([
-  [
-    "alarm",
-    "Intrusion wards, designated exceptions, audible or mental alerts, and sleep wake-up effects are exploration/security state outside the current promoted runtime owners.",
-  ],
-  [
-    "comprehend_languages",
-    "Language comprehension, signed-language understanding, page-reading time, and secret-message exclusion are exploration/communication effects outside promoted runtime owners.",
-  ],
-  [
-    "identify",
-    "Magic item property discovery, Attunement and charge knowledge, ongoing-spell identification, and object/creature investigation are exploration/item-inspection effects outside promoted runtime owners.",
-  ],
-  [
-    "silent_image",
-    "Moveable visual illusion state, Magic action repositioning, physical-interaction reveal, and Study action adjudication are illusion/exploration state outside promoted runtime owners.",
-  ],
-  [
-    "speak_with_animals",
-    "Beast communication, Influence action options, and local-information discovery are exploration/social effects outside promoted runtime owners.",
-  ],
-]);
-
 const spellUnitExecutableFollowUpBatches = [];
 
 const spellUnitExecutableFollowUps = new Map(
@@ -335,6 +312,18 @@ function isBattleReadinessClosure(value) {
     battleReadinessClosureKinds.has(value.kind) &&
     typeof value.owner === "string" &&
     value.owner.length > 0
+  );
+}
+
+function isAuthoredSpellUnitCatalogOnlyClosure(row) {
+  return (
+    row.rowKind === "spell-unit-pressure" &&
+    (row.levelBand === "spell-level-0" ||
+      row.levelBand === "spell-level-1") &&
+    row.authoredContent?.state === "authored-record-present" &&
+    row.catalogAdmission?.state === "not-installed" &&
+    row.unitProfileDisposition === "unsupported-profile" &&
+    row.battleReadinessClosure?.source === "unit-claim"
   );
 }
 
@@ -684,10 +673,6 @@ function nextAction(
     if (spellUnitClassification?.kind === "catalog-only-closure") {
       return spellUnitClassification.reason;
     }
-    const authoredClosure = authoredSpellUnitCatalogOnlyClosures.get(
-      row.candidateUnitId,
-    );
-    if (authoredClosure !== undefined) return authoredClosure;
     return "Decide whether to admit/support, or keep catalog-only closure counted.";
   }
   if (disposition === "missing-authored-record") {
@@ -3308,7 +3293,7 @@ function validateSrdUnitInventory(report) {
       row.catalogAdmission.state === "not-installed"
     ) {
       const reviewed =
-        authoredSpellUnitCatalogOnlyClosures.has(row.candidateUnitId) ||
+        isAuthoredSpellUnitCatalogOnlyClosure(row) ||
         spellUnitExecutableFollowUps.has(row.candidateUnitId);
       if (!reviewed) {
         issues.push(
@@ -3316,7 +3301,7 @@ function validateSrdUnitInventory(report) {
         );
       }
       if (
-        authoredSpellUnitCatalogOnlyClosures.has(row.candidateUnitId) &&
+        isAuthoredSpellUnitCatalogOnlyClosure(row) &&
         row.finalDisposition !== "catalog-only/dead-for-now"
       ) {
         issues.push(
@@ -3332,27 +3317,6 @@ function validateSrdUnitInventory(report) {
           `${row.id} is an authored Spell Unit executable follow-up but is not classified catalog-authored-executable-follow-up or needs-surface-widening.`,
         );
       }
-    }
-  }
-  for (const unitId of authoredSpellUnitCatalogOnlyClosures.keys()) {
-    const row = report.rows.find(
-      (candidate) =>
-        candidate.rowKind === "spell-unit-pressure" &&
-        candidate.candidateUnitId === unitId,
-    );
-    if (row === undefined) {
-      issues.push(
-        `Authored Spell Unit catalog-only closure references unknown row ${unitId}.`,
-      );
-      continue;
-    }
-    if (
-      row.authoredContent.state !== "authored-record-present" ||
-      row.catalogAdmission.state !== "not-installed"
-    ) {
-      issues.push(
-        `Authored Spell Unit catalog-only closure ${unitId} must reference an authored, not-installed Spell Unit row.`,
-      );
     }
   }
   for (const batch of spellUnitExecutableFollowUpBatches) {
@@ -3375,7 +3339,7 @@ function validateSrdUnitInventory(report) {
         );
         continue;
       }
-      if (authoredSpellUnitCatalogOnlyClosures.has(unitId)) {
+      if (isAuthoredSpellUnitCatalogOnlyClosure(row)) {
         issues.push(
           `Spell Unit executable follow-up batch ${batch.id} also marks ${unitId} as catalog-only closure.`,
         );
@@ -3445,13 +3409,19 @@ function validateSrdUnitInventory(report) {
       candidate.unitProfileDisposition === "unsupported-profile" &&
       candidate.battleReadinessClosure !== undefined,
   )) {
-    if (
-      row.authoredContent.state !== "authored-record-present" ||
+    const authoredRecordPresent =
+      row.authoredContent.state === "authored-record-present";
+    const installedClosureInvalid =
+      !authoredRecordPresent ||
       row.catalogAdmission.state !== "installed" ||
-      row.finalDisposition !== "catalog-only/dead-for-now"
-    ) {
+      row.finalDisposition !== "catalog-only/dead-for-now";
+    const authoredNotInstalledClosureInvalid =
+      !authoredRecordPresent ||
+      row.catalogAdmission.state !== "not-installed" ||
+      row.finalDisposition !== "catalog-only/dead-for-now";
+    if (installedClosureInvalid && authoredNotInstalledClosureInvalid) {
       issues.push(
-        `Installed Spell Unit catalog-only closure ${row.candidateUnitId} must reference an authored, installed Spell Unit row classified catalog-only/dead-for-now.`,
+        `Spell Unit catalog-only closure ${row.candidateUnitId} must reference either an authored, installed Spell Unit row classified catalog-only/dead-for-now or an authored not-installed Spell Unit row classified catalog-only/dead-for-now.`,
       );
     }
   }
